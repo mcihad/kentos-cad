@@ -7398,6 +7398,41 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_SUPERELEVATIONS_TRANSITIONS.into(),
+            version: crate::ROAD_SUPERELEVATIONS_TRANSITIONS_VERSION,
+            title: "Geçiş öner".into(),
+            summary: "Kurplardan kurulan bir dever çizelgesinin her kurbu için geçişi önerir; hiçbir şey yazmaz (docs/adr/0940). Geçiş boyu (runoff) göreli eğimden: kurbun kendi geçişindeki en dik kenar eğimi G çizelgenin dönme ekseni ve genişletmesiyle okunur ve L·G/Δ en kısa geçiştir. Runout L·|n|/e. Klotoid konfordan (Shortt): v·(v²/R − g·e)/C, v = V/3,6; kaydırmadan: √(24·p·R) en az, √(24·p_max·R) en çok. Klotoidli kurpta geçiş klotoidin üstündedir: en az klotoid boyu, teğet payı 0. Klotoidsiz kurpta teğet payı onTangent'tir. Ardışık iki kurbun teğetteki geçişleri (runout + payı) aradaki teğete sığmalıdır. mostRelative, speed, comfort, shift, mostShift, onTangent ve step (yukarı yuvarlama) standardındır, KentOS sayı vermez. Cevap: her kurbun TS, ST, yarıçap, dever, klotoidleri, şimdiki geçişi ve göreli eğimi, göreli eğimden geçiş, konfor ve kaydırma klotoidleri, önerilen geçiş ve payı, runout ve tam deverli boy; bulgular (spiralShort, spiralLong, full, tangent). \
+                      Uyarılar: superelevation_transition_conflict. Retler: invalid_superelevation_transition, not_a_road_project, unknown_superelevation, unknown_road_template."
+                .into(),
+            aliases: vec!["gecis".into(), "runoff".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SuperelevationsTransitions>(),
+            output: schema::<crate::SuperelevationsTransitioned>(),
+            plan: Some(schema::<crate::SuperelevationsTransitioned>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "1:200 göreli eğim, 80 km/sa'te C 0,6 m/s³, kaydırma 0,20–1,0 m, teğet payı 0,67, 5 m'ye yuvarla".into(),
+                input: json!({
+                    "superelevation": "Ana aks deveri",
+                    "template": "Tip 1",
+                    "mostRelative": 0.005,
+                    "speed": 80.0,
+                    "comfort": 0.6,
+                    "shift": 0.2,
+                    "mostShift": 1.0,
+                    "onTangent": 0.67,
+                    "step": 5.0
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_EDIT.into(),
             version: crate::ROAD_CORRIDORS_EDIT_VERSION,
             title: "Koridoru düzenle".into(),
@@ -14556,6 +14591,9 @@ mod tests {
                     crate::ROAD_SUPERELEVATIONS_WIDEN => {
                         serde_json::from_value::<crate::SuperelevationsWiden>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_SUPERELEVATIONS_TRANSITIONS => {
+                        serde_json::from_value::<crate::SuperelevationsTransitions>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_CORRIDORS_EDIT => {
                         serde_json::from_value::<crate::CorridorsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15392,6 +15430,10 @@ mod tests {
                         }
                         crate::ROAD_SUPERELEVATIONS_WIDEN => {
                             serde_json::from_value::<crate::SuperelevationsWidened>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SUPERELEVATIONS_TRANSITIONS => {
+                            serde_json::from_value::<crate::SuperelevationsTransitioned>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_EDIT => {

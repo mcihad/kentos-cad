@@ -81,6 +81,7 @@ UNITS: dict[str, str] = {
     "value": "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
     "km/h": "Kilometre bölü saat.",
     "m/s2": "Metre bölü saniye kare: ivme ve yavaşlama.",
+    "m/s3": "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor).",
     "s": "Saniye.",
     "day-min": "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir).",
     "system": "Adı verilen koordinat sisteminin kendi birimi.",
@@ -77727,6 +77728,147 @@ class SuperRowDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SuperTransitionFinding(_Model):
+    """What the proposal finds (docs/adr/0940): a clothoid shorter than comfort and its shift ask (`spiralShort`) or longer
+    than the most shift allows (`spiralLong`), a curve too short to reach full superelevation with the runoff proposed
+    (`full`), two curves whose transitions do not fit the tangent between them (`tangent`, its PI the pair); the value
+    and the limit (m) and in words.
+    Attributes:
+        value: Unit: m.
+        limit: Unit: m.
+    """
+    kind: str
+    pi: str
+    value: float
+    limit: float
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["pi"] = self.pi
+        out["value"] = float(self.value)
+        out["limit"] = float(self.limit)
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperTransitionFinding:
+        return cls(
+            kind=data["kind"],
+            pi=data["pi"],
+            value=float(data["value"]),
+            limit=float(data["limit"]),
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperTransitionRow(_Model):
+    """A curve's transition: its PI, TS and ST, radius, rate (percent) and clothoids now; its runoff, share on the tangent
+    and largest relative gradient now (none where the curve alone does not build); and what is proposed: the runoff by
+    the relative gradient, the clothoids by comfort, by the least and the most shift and the shortest of them, the
+    runoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held
+    at full superelevation.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        radius: Unit: m.
+        rate: Unit: percent.
+        spiral_in: Unit: m.
+        spiral_out: Unit: m.
+        runoff_now: Unit: m.
+        on_tangent_now: Unit: 1.
+        full: Unit: m.
+        gradient_now: Unit: 1.
+        on_tangent: Unit: 1.
+        runoff: Unit: m.
+        runoff_gradient: Unit: m.
+        runout: Unit: m.
+        spiral: Unit: m.
+        spiral_comfort: Unit: m.
+        spiral_most: Unit: m.
+        spiral_shift: Unit: m.
+    """
+    pi: str
+    from_: float
+    to: float
+    radius: float
+    rate: float
+    spiral_in: float
+    spiral_out: float
+    runoff_now: float
+    on_tangent_now: float
+    full: float | None | Unset = UNSET
+    gradient_now: float | None | Unset = UNSET
+    on_tangent: float | None | Unset = UNSET
+    runoff: float | None | Unset = UNSET
+    runoff_gradient: float | None | Unset = UNSET
+    runout: float | None | Unset = UNSET
+    spiral: float | None | Unset = UNSET
+    spiral_comfort: float | None | Unset = UNSET
+    spiral_most: float | None | Unset = UNSET
+    spiral_shift: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pi"] = self.pi
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["radius"] = float(self.radius)
+        out["rate"] = float(self.rate)
+        out["spiralIn"] = float(self.spiral_in)
+        out["spiralOut"] = float(self.spiral_out)
+        out["runoffNow"] = float(self.runoff_now)
+        out["onTangentNow"] = float(self.on_tangent_now)
+        if self.full is not UNSET:
+            out["full"] = None if self.full is None else float(self.full)
+        if self.gradient_now is not UNSET:
+            out["gradientNow"] = None if self.gradient_now is None else float(self.gradient_now)
+        if self.on_tangent is not UNSET:
+            out["onTangent"] = None if self.on_tangent is None else float(self.on_tangent)
+        if self.runoff is not UNSET:
+            out["runoff"] = None if self.runoff is None else float(self.runoff)
+        if self.runoff_gradient is not UNSET:
+            out["runoffGradient"] = None if self.runoff_gradient is None else float(self.runoff_gradient)
+        if self.runout is not UNSET:
+            out["runout"] = None if self.runout is None else float(self.runout)
+        if self.spiral is not UNSET:
+            out["spiral"] = None if self.spiral is None else float(self.spiral)
+        if self.spiral_comfort is not UNSET:
+            out["spiralComfort"] = None if self.spiral_comfort is None else float(self.spiral_comfort)
+        if self.spiral_most is not UNSET:
+            out["spiralMost"] = None if self.spiral_most is None else float(self.spiral_most)
+        if self.spiral_shift is not UNSET:
+            out["spiralShift"] = None if self.spiral_shift is None else float(self.spiral_shift)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperTransitionRow:
+        return cls(
+            pi=data["pi"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            radius=float(data["radius"]),
+            rate=float(data["rate"]),
+            spiral_in=float(data["spiralIn"]),
+            spiral_out=float(data["spiralOut"]),
+            runoff_now=float(data["runoffNow"]),
+            on_tangent_now=float(data["onTangentNow"]),
+            full=UNSET if "full" not in data else None if data["full"] is None else float(data["full"]),
+            gradient_now=UNSET if "gradientNow" not in data else None if data["gradientNow"] is None else float(data["gradientNow"]),
+            on_tangent=UNSET if "onTangent" not in data else None if data["onTangent"] is None else float(data["onTangent"]),
+            runoff=UNSET if "runoff" not in data else None if data["runoff"] is None else float(data["runoff"]),
+            runoff_gradient=UNSET if "runoffGradient" not in data else None if data["runoffGradient"] is None else float(data["runoffGradient"]),
+            runout=UNSET if "runout" not in data else None if data["runout"] is None else float(data["runout"]),
+            spiral=UNSET if "spiral" not in data else None if data["spiral"] is None else float(data["spiral"]),
+            spiral_comfort=UNSET if "spiralComfort" not in data else None if data["spiralComfort"] is None else float(data["spiralComfort"]),
+            spiral_most=UNSET if "spiralMost" not in data else None if data["spiralMost"] is None else float(data["spiralMost"]),
+            spiral_shift=UNSET if "spiralShift" not in data else None if data["spiralShift"] is None else float(data["spiralShift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SuperelevationDef(_Model):
     """A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross
     slopes of the left and the right side (percent, outward; falling outward negative) and how it is had.
@@ -78076,6 +78218,95 @@ class SuperelevationsQuery(_Model):
         return cls(
             stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
             superelevation=data.get("superelevation", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsTransitioned(_Model):
+    """Output of `road.superelevations.transitions` v1: each curve's transition in station order and what is found."""
+    superelevation: str
+    rows: list[SuperTransitionRow]
+    findings: list[SuperTransitionFinding]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevation"] = self.superelevation
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsTransitioned:
+        return cls(
+            superelevation=data["superelevation"],
+            rows=[SuperTransitionRow.from_json(e0) for e0 in data["rows"]],
+            findings=[SuperTransitionFinding.from_json(e0) for e0 in data["findings"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsTransitions(_Model):
+    """Input of `road.superelevations.transitions` v1 (plan/road.md Y34, docs/adr/0940): each curve's transition proposed
+    for a schedule made from its curves, on a template's traveled way (its lanes' widths). The limits are the design
+    standard's and none is given by KentOS: the most relative gradient (per one, 0.005 is 1:200) gives the shortest
+    runoff; the design `speed` (km/h) with the `comfort` rate (m/s³) the clothoid by comfort (Shortt); the least and the
+    most `shift` (m) the clothoid by its shift; `onTangent` the runoff's share before a curve without clothoids; `step`
+    rounds the runoff up (m).
+
+    Refusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`,
+    `invalid_superelevation_transition` (a limit not above 0 or not under its bound, the comfort without a speed, a share
+    not in [0, 1], a schedule written by station, a template without a lane on a side).
+    Attributes:
+        comfort: Unit: m/s3.
+        most_relative: Unit: 1.
+        most_shift: Unit: m.
+        on_tangent: Unit: 1.
+        shift: Unit: m.
+        speed: Unit: km/h.
+        step: Unit: m.
+    """
+    superelevation: str
+    template: str
+    comfort: float | None | Unset = UNSET
+    most_relative: float | None | Unset = UNSET
+    most_shift: float | None | Unset = UNSET
+    on_tangent: float | None | Unset = UNSET
+    shift: float | None | Unset = UNSET
+    speed: float | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevation"] = self.superelevation
+        out["template"] = self.template
+        if self.comfort is not UNSET:
+            out["comfort"] = None if self.comfort is None else float(self.comfort)
+        if self.most_relative is not UNSET:
+            out["mostRelative"] = None if self.most_relative is None else float(self.most_relative)
+        if self.most_shift is not UNSET:
+            out["mostShift"] = None if self.most_shift is None else float(self.most_shift)
+        if self.on_tangent is not UNSET:
+            out["onTangent"] = None if self.on_tangent is None else float(self.on_tangent)
+        if self.shift is not UNSET:
+            out["shift"] = None if self.shift is None else float(self.shift)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsTransitions:
+        return cls(
+            superelevation=data["superelevation"],
+            template=data["template"],
+            comfort=UNSET if "comfort" not in data else None if data["comfort"] is None else float(data["comfort"]),
+            most_relative=UNSET if "mostRelative" not in data else None if data["mostRelative"] is None else float(data["mostRelative"]),
+            most_shift=UNSET if "mostShift" not in data else None if data["mostShift"] is None else float(data["mostShift"]),
+            on_tangent=UNSET if "onTangent" not in data else None if data["onTangent"] is None else float(data["onTangent"]),
+            shift=UNSET if "shift" not in data else None if data["shift"] is None else float(data["shift"]),
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
         )
 
 
@@ -110128,6 +110359,8 @@ __all__ = [
     "SuperCritical",
     "SuperCurveDef",
     "SuperRowDef",
+    "SuperTransitionFinding",
+    "SuperTransitionRow",
     "SuperelevationDef",
     "SuperelevationFinding",
     "SuperelevationMethod",
@@ -110139,6 +110372,8 @@ __all__ = [
     "SuperelevationsEdit",
     "SuperelevationsQueried",
     "SuperelevationsQuery",
+    "SuperelevationsTransitioned",
+    "SuperelevationsTransitions",
     "SuperelevationsWiden",
     "SuperelevationsWidened",
     "SuperelevationsWritten",

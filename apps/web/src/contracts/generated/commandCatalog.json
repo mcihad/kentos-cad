@@ -39891,6 +39891,185 @@
       ]
     },
     {
+      "id": "road.superelevations.transitions",
+      "version": 1,
+      "title": "Geçiş öner",
+      "summary": "Kurplardan kurulan bir dever çizelgesinin her kurbu için geçişi önerir; hiçbir şey yazmaz (docs/adr/0940). Geçiş boyu (runoff) göreli eğimden: kurbun kendi geçişindeki en dik kenar eğimi G çizelgenin dönme ekseni ve genişletmesiyle okunur ve L·G/Δ en kısa geçiştir. Runout L·|n|/e. Klotoid konfordan (Shortt): v·(v²/R − g·e)/C, v = V/3,6; kaydırmadan: √(24·p·R) en az, √(24·p_max·R) en çok. Klotoidli kurpta geçiş klotoidin üstündedir: en az klotoid boyu, teğet payı 0. Klotoidsiz kurpta teğet payı onTangent'tir. Ardışık iki kurbun teğetteki geçişleri (runout + payı) aradaki teğete sığmalıdır. mostRelative, speed, comfort, shift, mostShift, onTangent ve step (yukarı yuvarlama) standardındır, KentOS sayı vermez. Cevap: her kurbun TS, ST, yarıçap, dever, klotoidleri, şimdiki geçişi ve göreli eğimi, göreli eğimden geçiş, konfor ve kaydırma klotoidleri, önerilen geçiş ve payı, runout ve tam deverli boy; bulgular (spiralShort, spiralLong, full, tangent). Uyarılar: superelevation_transition_conflict. Retler: invalid_superelevation_transition, not_a_road_project, unknown_superelevation, unknown_road_template.",
+      "aliases": [
+        "gecis",
+        "runoff"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.superelevations.transitions` v1 (plan/road.md Y34, docs/adr/0940): each curve's transition proposed\nfor a schedule made from its curves, on a template's traveled way (its lanes' widths). The limits are the design\nstandard's and none is given by KentOS: the most relative gradient (per one, 0.005 is 1:200) gives the shortest\nrunoff; the design `speed` (km/h) with the `comfort` rate (m/s³) the clothoid by comfort (Shortt); the least and the\nmost `shift` (m) the clothoid by its shift; `onTangent` the runoff's share before a curve without clothoids; `step`\nrounds the runoff up (m).\n\nRefusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`,\n`invalid_superelevation_transition` (a limit not above 0 or not under its bound, the comfort without a speed, a share\nnot in [0, 1], a schedule written by station, a template without a lane on a side).",
+        "properties": {
+          "comfort": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m/s3"
+          },
+          "mostRelative": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "mostShift": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "onTangent": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "shift": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "speed": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "km/h"
+          },
+          "step": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "superelevation": {
+            "type": "string"
+          },
+          "template": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "superelevation",
+          "template"
+        ],
+        "title": "SuperelevationsTransitions",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.transitions` v1: each curve's transition in station order and what is found.",
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/SuperTransitionFinding"
+            },
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/SuperTransitionRow"
+            },
+            "type": "array"
+          },
+          "superelevation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "superelevation",
+          "rows",
+          "findings"
+        ],
+        "title": "SuperelevationsTransitioned",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.transitions` v1: each curve's transition in station order and what is found.",
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/SuperTransitionFinding"
+            },
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/SuperTransitionRow"
+            },
+            "type": "array"
+          },
+          "superelevation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "superelevation",
+          "rows",
+          "findings"
+        ],
+        "title": "SuperelevationsTransitioned",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_superelevation_transition",
+          "not_a_road_project",
+          "unknown_superelevation",
+          "unknown_road_template"
+        ],
+        "warnings": [
+          "superelevation_transition_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "1:200 göreli eğim, 80 km/sa'te C 0,6 m/s³, kaydırma 0,20–1,0 m, teğet payı 0,67, 5 m'ye yuvarla",
+          "input": {
+            "comfort": 0.6,
+            "mostRelative": 0.005,
+            "mostShift": 1.0,
+            "onTangent": 0.67,
+            "shift": 0.2,
+            "speed": 80.0,
+            "step": 5.0,
+            "superelevation": "Ana aks deveri",
+            "template": "Tip 1"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.corridors.edit",
       "version": 1,
       "title": "Koridoru düzenle",
@@ -85756,6 +85935,18 @@
       "meaning": "Dever denetimi sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "invalid_superelevation_transition",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dever geçiş önerisi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "superelevation_transition_conflict",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Önerilen geçişler kurulamıyor: bir kurp tam devere varamıyor ya da iki kurbun geçişleri aradaki teğete sığmıyor."
+    },
+    {
       "code": "superelevation_limit_broken",
       "kind": "warning",
       "retryable": false,
@@ -91837,6 +92028,10 @@
     {
       "unit": "m/s2",
       "meaning": "Metre bölü saniye kare: ivme ve yavaşlama."
+    },
+    {
+      "unit": "m/s3",
+      "meaning": "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor)."
     },
     {
       "unit": "s",
@@ -162444,6 +162639,178 @@
         "station",
         "left",
         "right"
+      ],
+      "type": "object"
+    },
+    "SuperTransitionFinding": {
+      "description": "What the proposal finds (docs/adr/0940): a clothoid shorter than comfort and its shift ask (`spiralShort`) or longer\nthan the most shift allows (`spiralLong`), a curve too short to reach full superelevation with the runoff proposed\n(`full`), two curves whose transitions do not fit the tangent between them (`tangent`, its PI the pair); the value\nand the limit (m) and in words.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "message": {
+          "type": "string"
+        },
+        "pi": {
+          "type": "string"
+        },
+        "value": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "kind",
+        "pi",
+        "value",
+        "limit",
+        "message"
+      ],
+      "type": "object"
+    },
+    "SuperTransitionRow": {
+      "description": "A curve's transition: its PI, TS and ST, radius, rate (percent) and clothoids now; its runoff, share on the tangent\nand largest relative gradient now (none where the curve alone does not build); and what is proposed: the runoff by\nthe relative gradient, the clothoids by comfort, by the least and the most shift and the shortest of them, the\nrunoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held\nat full superelevation.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "full": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "gradientNow": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "onTangent": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "onTangentNow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "pi": {
+          "type": "string"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "rate": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "runoff": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "runoffGradient": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "runoffNow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "runout": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "spiral": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "spiralComfort": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "spiralIn": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "spiralMost": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "spiralOut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "spiralShift": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pi",
+        "from",
+        "to",
+        "radius",
+        "rate",
+        "spiralIn",
+        "spiralOut",
+        "runoffNow",
+        "onTangentNow"
       ],
       "type": "object"
     },

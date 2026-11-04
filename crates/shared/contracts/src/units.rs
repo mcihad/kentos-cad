@@ -115,6 +115,7 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     ("km/h", "Kilometre bölü saat."),
     ("m/s2", "Metre bölü saniye kare: ivme ve yavaşlama."),
+    ("m/s3", "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor)."),
     ("s", "Saniye."),
     (
         "day-min",

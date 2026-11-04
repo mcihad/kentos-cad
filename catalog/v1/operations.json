@@ -2674,9 +2674,10 @@
         "road.superelevations.edit",
         "road.superelevations.query",
         "road.superelevations.check",
-        "road.superelevations.widen"
+        "road.superelevations.widen",
+        "road.superelevations.transitions"
       ],
-      "note": "Dever penceresi çizelgeyi yazdıkça çekirdekle kurar ve diyagramı çizer; Kaydet ve Aksa yeniden bağla road.superelevations.edit ile yazar (plan/road.md Y6, ADR 0904); denetimi road.superelevations.check ile okur (Y27, ADR 0931); genişletme önerisini road.superelevations.widen ile okur (Y28, ADR 0932)."
+      "note": "Dever penceresi çizelgeyi yazdıkça çekirdekle kurar ve diyagramı çizer; Kaydet ve Aksa yeniden bağla road.superelevations.edit ile yazar (plan/road.md Y6, ADR 0904); denetimi road.superelevations.check ile okur (Y27, ADR 0931); genişletme önerisini road.superelevations.widen ile okur (Y28, ADR 0932); geçiş önerisini road.superelevations.transitions ile okur (Y34, ADR 0940)."
     },
     "superelevation.new": {
       "level": "semantic",

@@ -56,6 +56,7 @@ const ALL_CURVES: &str = "Bütün kurplar";
 const METHODS: [&str; 2] = ["Kurplardan", "Km satırlarından"];
 pub(crate) const PIVOT: &str = "Dönme ekseni";
 pub(crate) const WIDEN: &str = "Genişletme öner…";
+pub(crate) const TRANSITION: &str = "Geçiş öner…";
 pub(crate) const SPEED: &str = "Proje hızı (km/sa)";
 pub(crate) const FRICTION: &str = "En büyük sürtünme";
 pub(crate) const RELATIVE: &str = "En dik göreli eğim (1:n)";
@@ -179,6 +180,20 @@ impl Row {
         missing
     }
 
+    /// Geçiş önerisi's runoffs and shares into the curves' cells (none: the cell kept).
+    pub(crate) fn set_transitions(&mut self, proposed: &[(String, Option<f64>, Option<f64>)]) {
+        for (pi, runoff, share) in proposed {
+            if let Some(c) = self.curves.iter_mut().find(|c| c[0].trim() == pi) {
+                if let Some(v) = runoff {
+                    c[2] = trimmed((v * 1000.0).round() / 1000.0);
+                }
+                if let Some(v) = share {
+                    c[3] = trimmed(*v);
+                }
+            }
+        }
+    }
+
     pub(crate) fn def(&self) -> Result<SuperelevationDef, String> {
         let method = if self.method == 0 {
             let mut curves = Vec::new();
@@ -238,6 +253,8 @@ pub struct Window {
     pub(crate) list: Listed,
     /// Genişletme önerisi over the window (widening_window.rs, docs/adr/0932 §4).
     pub(crate) widen: Option<Box<crate::widening_window::Widen>>,
+    /// Geçiş önerisi over the window (transition_window.rs, docs/adr/0940 §4).
+    pub(crate) transition: Option<Box<crate::transition_window::Transition>>,
 }
 
 #[derive(Debug, Clone)]
@@ -245,6 +262,9 @@ pub enum Event {
     /// Genişletme öner…: the widening window on the chosen schedule.
     OpenWiden,
     Widen(crate::widening_window::Event),
+    /// Geçiş öner…: the transition window on the chosen schedule.
+    OpenTransition,
+    Transition(crate::transition_window::Event),
     Choose(usize),
     New,
     Remove,
@@ -363,6 +383,14 @@ impl App {
                 self.widening_event(e);
                 return Task::none();
             }
+            Event::OpenTransition => {
+                self.open_transition();
+                return Task::none();
+            }
+            Event::Transition(e) => {
+                self.transition_event(e);
+                return Task::none();
+            }
             _ => {}
         }
         let alignments = self.superelevation_alignments();
@@ -473,7 +501,7 @@ impl App {
                 return Task::none();
             }
             // Answered before the window is borrowed.
-            Event::OpenWiden | Event::Widen(_) => return Task::none(),
+            Event::OpenWiden | Event::Widen(_) | Event::OpenTransition | Event::Transition(_) => return Task::none(),
             Event::AllCurves => {
                 let pis: Vec<String> = w.curves.iter().map(|c| c.0.clone()).collect();
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
@@ -592,6 +620,9 @@ impl App {
         if let Some(x) = &w.widen {
             return self.widening_view(w, x);
         }
+        if let Some(x) = &w.transition {
+            return self.transition_view(x);
+        }
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let alignments = self.superelevation_alignments();
         let stale_of = |r: &Row| {
@@ -638,6 +669,7 @@ impl App {
             .close_caption(CANCEL)
             .ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove)))
             .ghost(WIDEN, chosen.is_some_and(|r| r.def().is_ok()).then(|| msg(Event::OpenWiden)))
+            .ghost(TRANSITION, chosen.is_some_and(|r| r.method == 0 && r.def().is_ok()).then(|| msg(Event::OpenTransition)))
             .ghost(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind)));
         if let Some(r) = chosen {
             let normal = r.def().ok().map(|d| (d.normal_left, d.normal_right));
@@ -812,8 +844,22 @@ impl App {
                 other => return Err(format!("“{}” penceresinde {other} yok", crate::widening_window::TITLE)),
             });
         }
+        if w.transition.is_some() {
+            use crate::transition_window::{APPLY, BACK, Event as X, FIELDS as TF};
+            let x = |e: X| msg(Event::Transition(e));
+            return Ok(match control {
+                Control::Press(APPLY) => Some(x(X::Apply)),
+                Control::Press(BACK) => Some(x(X::Back)),
+                Control::Fill(name, text) => match TF.iter().position(|f| *f == name) {
+                    Some(k) => Some(x(X::Field(k, text.to_owned()))),
+                    None => return Err(format!("“{}” penceresinde “{name}” alanı yok", crate::transition_window::TITLE)),
+                },
+                other => return Err(format!("“{}” penceresinde {other} yok", crate::transition_window::TITLE)),
+            });
+        }
         Ok(match control {
             Control::Press(WIDEN) => Some(msg(Event::OpenWiden)),
+            Control::Press(TRANSITION) => Some(msg(Event::OpenTransition)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),

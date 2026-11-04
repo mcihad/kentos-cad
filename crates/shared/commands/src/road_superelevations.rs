@@ -305,6 +305,8 @@ pub struct SuperelevationsChecked {
 
 pub const ROAD_SUPERELEVATIONS_WIDEN: &str = "road.superelevations.widen";
 pub const ROAD_SUPERELEVATIONS_WIDEN_VERSION: u32 = 1;
+pub const ROAD_SUPERELEVATIONS_TRANSITIONS: &str = "road.superelevations.transitions";
+pub const ROAD_SUPERELEVATIONS_TRANSITIONS_VERSION: u32 = 1;
 
 /// AASHTO's two forms of the width on a curve (docs/adr/0932 §1): `standard` `N(U + C) + (N − 1)·F_A + Z`, `simple`
 /// `N(U + C)`.
@@ -420,4 +422,153 @@ pub struct SuperelevationsWidened {
     pub method: WideningMethod,
     pub curves: Vec<WideningRow>,
     pub unturnable: Vec<String>,
+}
+
+/// Input of `road.superelevations.transitions` v1 (plan/road.md Y34, docs/adr/0940): each curve's transition proposed
+/// for a schedule made from its curves, on a template's traveled way (its lanes' widths). The limits are the design
+/// standard's and none is given by KentOS: the most relative gradient (per one, 0.005 is 1:200) gives the shortest
+/// runoff; the design `speed` (km/h) with the `comfort` rate (m/s³) the clothoid by comfort (Shortt); the least and the
+/// most `shift` (m) the clothoid by its shift; `onTangent` the runoff's share before a curve without clothoids; `step`
+/// rounds the runoff up (m).
+///
+/// Refusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`,
+/// `invalid_superelevation_transition` (a limit not above 0 or not under its bound, the comfort without a speed, a share
+/// not in [0, 1], a schedule written by station, a template without a lane on a side).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationsTransitions {
+    pub superelevation: String,
+    pub template: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub most_relative: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub speed: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/s3")))]
+    pub comfort: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub shift: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub most_shift: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub on_tangent: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: Option<f64>,
+}
+
+/// A curve's transition: its PI, TS and ST, radius, rate (percent) and clothoids now; its runoff, share on the tangent
+/// and largest relative gradient now (none where the curve alone does not build); and what is proposed: the runoff by
+/// the relative gradient, the clothoids by comfort, by the least and the most shift and the shortest of them, the
+/// runoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held
+/// at full superelevation.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperTransitionRow {
+    pub pi: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub rate: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral_in: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral_out: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub runoff_now: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub on_tangent_now: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub gradient_now: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub runoff_gradient: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral_comfort: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral_shift: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral_most: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub spiral: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub runoff: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub on_tangent: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub runout: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub full: Option<f64>,
+}
+
+/// What the proposal finds (docs/adr/0940): a clothoid shorter than comfort and its shift ask (`spiralShort`) or longer
+/// than the most shift allows (`spiralLong`), a curve too short to reach full superelevation with the runoff proposed
+/// (`full`), two curves whose transitions do not fit the tangent between them (`tangent`, its PI the pair); the value
+/// and the limit (m) and in words.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperTransitionFinding {
+    pub kind: String,
+    pub pi: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub value: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub limit: f64,
+    pub message: String,
+}
+
+/// Output of `road.superelevations.transitions` v1: each curve's transition in station order and what is found.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationsTransitioned {
+    pub superelevation: String,
+    pub rows: Vec<SuperTransitionRow>,
+    pub findings: Vec<SuperTransitionFinding>,
 }

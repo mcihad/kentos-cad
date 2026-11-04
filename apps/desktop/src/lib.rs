@@ -261,6 +261,7 @@ mod profile_lengths_window;
 mod profile_window;
 mod section_window;
 mod superelevation_window;
+mod transition_window;
 mod widening_window;
 mod corridor_window;
 mod volume_window;
@@ -346,6 +347,7 @@ mod section_window_tests;
 #[cfg(test)]
 mod superelevation_window_tests;
 #[cfg(test)]
+mod transition_window_tests;
 mod widening_window_tests;
 #[cfg(test)]
 mod corridor_window_tests;

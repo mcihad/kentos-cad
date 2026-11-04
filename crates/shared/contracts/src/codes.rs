@@ -656,6 +656,12 @@ codes! {
     /// A warning: an alignment or a profile breaks the design rules given (docs/adr/0922 §3).
     /// A refusal: a superelevation check's question is not valid (docs/adr/0931 §2).
     INVALID_SUPERELEVATION_CHECK = "invalid_superelevation_check", Failed, false, "Dever denetimi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A transition proposal asked that is not right: a limit, the comfort without a speed, a share, a schedule by
+    /// station (docs/adr/0940).
+    INVALID_SUPERELEVATION_TRANSITION = "invalid_superelevation_transition", Failed, false, "Dever geçiş önerisi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the transitions proposed do not build: a curve too short for them or two curves' transitions
+    /// overlapping on the tangent between them (docs/adr/0940).
+    SUPERELEVATION_TRANSITION_CONFLICT = "superelevation_transition_conflict", Warning, false, "Önerilen geçişler kurulamıyor: bir kurp tam devere varamıyor ya da iki kurbun geçişleri aradaki teğete sığmıyor.";
     /// A warning: a superelevation breaks the given relative gradient or side friction (docs/adr/0931 §2).
     SUPERELEVATION_LIMIT_BROKEN = "superelevation_limit_broken", Warning, false, "Dever çizelgesi verilen göreli eğim ya da yanal sürtünme sınırını aşıyor.";
     /// A refusal: a widening's question is not valid (docs/adr/0932 §3).
