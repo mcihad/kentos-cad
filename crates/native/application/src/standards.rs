@@ -299,6 +299,30 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
                 message,
             );
         }
+        if !standard.line_types.is_empty()
+            && let Some(pattern) = n.style.line_pattern.as_deref()
+        {
+            issue(
+                StandardIssueKind::LayerLineType,
+                &n.name,
+                Some(&n.id),
+                Some(
+                    standard
+                        .line_types
+                        .iter()
+                        .map(|t| t.name())
+                        .collect::<Vec<_>>()
+                        .join(","),
+                ),
+                Some(pattern.to_owned()),
+                0,
+                false,
+                format!(
+                    "“{}” katmanı “{}” adlı özel çizgi tipini kullanıyor; standart yerleşik çizgi tipleri tarif ediyor. Eşlemeyi elle değerlendirin.",
+                    n.name, pattern
+                ),
+            );
+        }
         if !standard.line_types.is_empty() && !standard.line_types.contains(&n.style.line_type) {
             issue(
                 StandardIssueKind::LayerLineType,
@@ -459,7 +483,11 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
         if let Some(t) = b.look.line_type {
             by_type[LineType::ALL.iter().position(|x| *x == t).unwrap_or(0)] += 1;
         }
-        if b.color.is_some() || b.line_weight.is_some() || b.look.line_type.is_some() {
+        if b.color.is_some()
+            || b.line_weight.is_some()
+            || b.look.line_type.is_some()
+            || b.look.line_pattern.is_some()
+        {
             own += 1;
         }
     }

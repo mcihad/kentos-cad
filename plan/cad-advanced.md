@@ -1802,6 +1802,12 @@ bulgunun kaldığını doğrular. Gerçek çizim standardı penceresinde P_SHX b
 ve açıklaması görüldü; ekran görüntüsü repo dışında. Sürümlü paket ve diğer
 kabul koşulları açık olduğundan madde `[~]` kalır.
 
+Standartta açıkça tanımlanmayan fakat adlandırma kuralına uyan ek katmanlardaki
+özel çizgi tipleri ve nesnenin kendi özel çizgi tipi de artık denetlenir.
+İki ayrı bulgu ve kaynak çizimin değişmemesi komut testiyle; A-DETAY ve bir
+nesneye ait bulgular gerçek arayüzde doğrulandı. Bu, paket kapsamının tamamı
+değildir.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

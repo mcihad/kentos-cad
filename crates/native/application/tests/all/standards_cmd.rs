@@ -129,3 +129,26 @@ fn named_layer_pattern_is_reported_and_preserved_by_standard_application() {
             .any(|i| i.found.as_deref() == Some("WATER") && !i.fixable)
     );
 }
+
+#[test]
+fn named_entity_and_allowed_layer_patterns_are_not_mistaken_for_bylayer() {
+    let raw = json!({"format":"kentos.document","version":1,"name":"Standart","settings":{"srid":0,
+      "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100},
+      "origin":{"x":0,"y":0},"layers":[{"id":"a","name":"A-DETAY","type":"layer","visible":true,
+      "locked":false,"expanded":true,"style":{"color":"ink","lineType":"continuous","lineWeight":0.5,"linePattern":"GAS"},"children":[]}],
+      "activeLayer":"a","entities":[{"kind":"line","id":1,"layerId":"a","attrs":{},"linePattern":"WATER","a":{"x":0.,"y":0.},"b":{"x":2.,"y":0.}}],"styles":{"items":[],"categories":[]}});
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let before = doc.to_snapshot_v2();
+    let findings = standards::issues(&doc, &standard);
+    assert!(findings.iter().any(|i| i.layer.as_deref() == Some("a")
+        && i.found.as_deref() == Some("GAS")
+        && !i.fixable));
+    assert!(
+        findings
+            .iter()
+            .any(|i| i.kind == kentos_commands::StandardIssueKind::OwnLook && i.objects == 1)
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
