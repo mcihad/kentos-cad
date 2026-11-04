@@ -1316,6 +1316,7 @@ class CreateOperation(_StrEnum):
     - ``platforms``: `road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.
     - ``cloudTerrain``: A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).
     - ``drainage``: `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
+    - ``lowConfidence``: `road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları
     """
     SWEPT = "swept"
     PARALLEL = "parallel"
@@ -1367,9 +1368,10 @@ class CreateOperation(_StrEnum):
     PLATFORMS = "platforms"
     CLOUD_TERRAIN = "cloudTerrain"
     DRAINAGE = "drainage"
+    LOW_CONFIDENCE = "lowConfidence"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -79249,6 +79251,89 @@ class TerrainsCoverage(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainsCoverageDraw(_Model):
+    """Input of `road.terrains.lowconfidence` v1 (docs/adr/0920 §5): a terrain surface's estimated areas, its triangles
+    with a plan edge longer than `longest` (the user's), drawn on `layerId` as closed polylines, their outlines (the
+    low confidence areas' 2D polygons); with `outline` the surface's own outline too (where data is), with `labels` each
+    estimated area's area at its outline's centre. One undo step “Düşük güvenli alanları çiz”.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_coverage` (longest not positive),
+    `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `layer_not_found`, `not_a_layer`, `layer_locked`.
+    Warnings: `layer_hidden`.
+    Attributes:
+        longest: Unit: m.
+    """
+    surface: str
+    longest: float
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    labels: bool | Unset = UNSET
+    outline: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["longest"] = float(self.longest)
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        if self.outline is not UNSET:
+            out["outline"] = self.outline
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCoverageDraw:
+        return cls(
+            surface=data["surface"],
+            longest=float(data["longest"]),
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data.get("labels", UNSET),
+            outline=data.get("outline", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsCoverageDrawn(_Model):
+    """Output of `road.terrains.lowconfidence` v1, and its plan: the surface, how many estimated areas (outer outlines)
+    and holes in them, their area, the objects written (in the plan, none) and the revision.
+    Attributes:
+        areas: Unit: count.
+        holes: Unit: count.
+        area: Unit: area.
+    """
+    surface: str
+    areas: int
+    holes: int
+    area: float
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["areas"] = self.areas
+        out["holes"] = self.holes
+        out["area"] = float(self.area)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCoverageDrawn:
+        return cls(
+            surface=data["surface"],
+            areas=data["areas"],
+            holes=data["holes"],
+            area=float(data["area"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsCovered(_Model):
     """Output of `road.terrains.coverage` v1: areas in plan. The surface's whole area; with a boundary, the boundary's,
     the surface inside it, the no-data rest and the surface outside, and the share covered (0–1); the estimated part of
@@ -107003,6 +107088,8 @@ __all__ = [
     "TerrainsContoured",
     "TerrainsContours",
     "TerrainsCoverage",
+    "TerrainsCoverageDraw",
+    "TerrainsCoverageDrawn",
     "TerrainsCovered",
     "TerrainsCreate",
     "TerrainsEdit",

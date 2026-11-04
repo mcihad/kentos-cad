@@ -27,6 +27,9 @@ UID = quality.UID
 UNCHANGED = quality.UNCHANGED
 SX, TX = quality.SX, quality.TX
 PX = 6000.0
+HX = 12000.0
+# A lattice with wide and narrow columns and rows: its 1 × 1 middle square is a hole among the wide ones.
+HOLED_LATTICE = [(HX + x, float(y), 50.0 + 0.01 * x + 0.02 * y) for y in (0, 4, 5, 9) for x in (0, 4, 5, 9)]
 UIDS = {}
 
 
@@ -53,6 +56,8 @@ def setup(work="road"):
     base = {"type": "layer", "visible": True, "locked": False, "expanded": True,
             "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}
     s["layers"].append({"id": "sinir", "name": "Sınır", **copy.deepcopy(base)})
+    s["layers"].append({"id": "delikli", "name": "Delikli", **copy.deepcopy(base)})
+    s["layers"].append({"id": "kapsam", "name": "Kapsam", **copy.deepcopy(base)})
     k = max(e["id"] for e in s["entities"])
 
     def add(e, name):
@@ -70,6 +75,12 @@ def setup(work="road"):
     add({"kind": "polyline", "pts": pts(RECT)}, "open")
     add({"kind": "polyline", "pts": pts(RECT), "bulges": [0.0, 0.3, 0.0, 0.0], "closed": True}, "bulged")
     add({"kind": "polygon", "pts": pts([(SX, 0.0), (SX + 1, 0.0)])}, "flat")
+    for n, (x, y, z) in enumerate(HOLED_LATTICE):
+        k += 1
+        s["entities"].append({"kind": "point", "id": k, "layerId": "delikli", "attrs": {}, "p": {"x": x, "y": y}, "z": z})
+        s["uids"].append(UID.format(k))
+    if work == "road":
+        s["settings"]["road"]["surfaces"].append({"id": "t-12", "name": "Delikli", "points": {"layers": ["delikli"]}})
     return s
 
 
@@ -104,9 +115,13 @@ def clip_box(ring, x0, x1, y0, y1):
     return abs(shoelace(poly)) if len(poly) >= 3 else 0.0
 
 
+CORNERS = {**quality.CORNERS, "t-12": HOLED_LATTICE}
+NAMES = {**quality.NAMES, "t-12": "Delikli"}
+
+
 def lattice(sid):
-    xs = sorted({p[0] for p in quality.CORNERS[sid]})
-    ys = sorted({p[1] for p in quality.CORNERS[sid]})
+    xs = sorted({p[0] for p in CORNERS[sid]})
+    ys = sorted({p[1] for p in CORNERS[sid]})
     return [(xs[i], xs[i + 1], ys[j], ys[j + 1]) for j in range(len(ys) - 1) for i in range(len(xs) - 1)]
 
 
@@ -114,7 +129,7 @@ def answer(inp):
     longest = inp.get("longest")
     if longest is not None and not longest > 0:
         raise Refused("invalid_coverage", "Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı.", "longest")
-    sid = next((k for k, v in quality.NAMES.items() if inp["surface"] in (k, v)), inp["surface"])
+    sid = next((k for k, v in NAMES.items() if inp["surface"] in (k, v)), inp["surface"])
     region = RINGS[next(k for k, u in UIDS.items() if u == inp["boundary"])] if "boundary" in inp else None
     surface_area = covered = estimated = longest_edge = 0.0
     tri = 0
@@ -144,7 +159,7 @@ def answer(inp):
             del out["share"]
         if gap > 1e-6 * max(b, 1.0):
             warns.append({"code": "terrain_no_data",
-                          "message": f"“{quality.NAMES[sid]}” yüzeyi sınırın {gap:.1f} m²'sini örtmüyor "
+                          "message": f"“{NAMES[sid]}” yüzeyi sınırın {gap:.1f} m²'sini örtmüyor "
                                      f"(%{100 * gap / b:.1f}); orada veri yok, arazisi bilinmiyor.", "path": "boundary"})
     else:
         out["covered"] = covered
@@ -183,6 +198,7 @@ def cases():
     q("Delikli alan sınırı", {"surface": "t-5", "boundary": b("holed"), "longest": 2.0})
     q("Yüzeye değmeyen sınır", {"surface": "t-6", "boundary": b("far")})
     q("Terasın tamamı", {"surface": "Teras", "longest": 1.5})
+    q("Delikli yüzey, ortadaki kare ölçülmüş", {"surface": "t-12", "longest": 3.0})
     # Refusals.
     bad = "Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı."
     q("Kenar boyu sıfır", {"surface": "t-10", "longest": 0.0}, refused("invalid_coverage", bad, "longest"))
@@ -203,24 +219,189 @@ def cases():
     return out
 
 
+# ── road.terrains.lowconfidence ───────────────────────────────────────────────────────────────────────────────────
+def outlines(squares):
+    """The union's outlines of axis-aligned squares (each a triangle pair: the diagonal cancels inside): edges used
+    once, directed with the square on the left, chained end to start (rightmost turn at a shared corner), straight-on
+    corners dropped; each from its least corner, in that order."""
+    count, directed = {}, []
+    for x0, x1, y0, y1 in squares:
+        ring = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+        for k in range(4):
+            a, b = ring[k], ring[(k + 1) % 4]
+            key = (min(a, b), max(a, b))
+            count[key] = count.get(key, 0) + 1
+            directed.append((a, b))
+    nxt = {}
+    for a, b in directed:
+        if count[(min(a, b), max(a, b))] == 1:
+            nxt.setdefault(a, []).append(b)
+    import math
+    loops = []
+    while any(nxt.values()):
+        start = min(v for v, outs in nxt.items() if outs)
+        ring, prev, cur = [start], start, nxt[start].pop()
+        while cur != start:
+            ring.append(cur)
+            outs = nxt[cur]
+            din = (cur[0] - prev[0], cur[1] - prev[1])
+
+            def turn(o, din=din, cur=cur):
+                d = (o[0] - cur[0], o[1] - cur[1])
+                return math.atan2(din[0] * d[1] - din[1] * d[0], din[0] * d[0] + din[1] * d[1])
+            k = min(range(len(outs)), key=lambda i: turn(outs[i]))
+            prev, cur = cur, outs.pop(k)
+        n = len(ring)
+        kept = [ring[i] for i in range(n)
+                if abs((ring[i][0] - ring[i - 1][0]) * (ring[(i + 1) % n][1] - ring[i][1])
+                       - (ring[i][1] - ring[i - 1][1]) * (ring[(i + 1) % n][0] - ring[i][0])) > 1e-12]
+        if len(kept) < 3:
+            continue
+        first = min(range(len(kept)), key=lambda i: kept[i])
+        loops.append(kept[first:] + kept[:first])
+    loops.sort(key=lambda r: r[0])
+    return loops
+
+
+def inside(ring, p):
+    hit = False
+    for i in range(len(ring)):
+        a, b = ring[i], ring[(i + 1) % len(ring)]
+        if (a[1] > p[1]) != (b[1] > p[1]) and p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]):
+            hit = not hit
+    return hit
+
+
+def centre(ring):
+    a = cx = cy = 0.0
+    for i in range(len(ring)):
+        p, q = ring[i], ring[(i + 1) % len(ring)]
+        c = p[0] * q[1] - q[0] * p[1]
+        a += c
+        cx += (p[0] + q[0]) * c
+        cy += (p[1] + q[1]) * c
+    return [cx / (3 * a), cy / (3 * a)]
+
+
+def drawing(inp):
+    sid = next((k for k, v in NAMES.items() if inp["surface"] in (k, v)), inp["surface"])
+    squares = lattice(sid)
+    est = [q for q in squares if ((q[1] - q[0]) ** 2 + (q[3] - q[2]) ** 2) ** 0.5 > inp["longest"]]
+    loops = outlines(est)
+    outers = [r for r in loops if shoelace(r) > 0]
+    holes = [r for r in loops if shoelace(r) < 0]
+    objects = [{"kind": "polyline", "pts": pts(r), "closed": True} for r in loops]
+    total = 0.0
+    for o in outers:
+        own = sum(-shoelace(h) for h in holes
+                  if inside(o, h[0]) and not any(x is not o and inside(x, h[0]) and shoelace(x) < shoelace(o)
+                                                 for x in outers))
+        a = shoelace(o) - own
+        total += a
+        if inp.get("labels"):
+            c = centre(o)
+            objects.append({"kind": "text", "p": {"x": c[0], "y": c[1]}, "text": f"Düşük güven · {a:.1f} m²".replace(".", ","),
+                            "height": 2.5})
+    if inp.get("outline"):
+        objects += [{"kind": "polyline", "pts": pts(r), "closed": True} for r in outlines(squares)]
+    return sid, objects, len(outers), len(holes), total
+
+
+def draw_cases():
+    out = []
+    base = setup()
+    first = max(e["id"] for e in base["entities"]) + 1
+    refused = quality.analysis.failed
+    stepped = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
+
+    def ok(name, inp, plan=False, undo=False):
+        sid, objects, areas, holes, area = drawing(inp)
+        result = {"status": "completed", "output": {"surface": sid, "areas": areas, "holes": holes, "area": area,
+                                                    "uids": ["$any"] * len(objects), "revision": "$any" if plan else "$current"},
+                  "warnings": []}
+        if inp["layerId"] == "gizli":
+            result["warnings"] = [{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                                   "path": "layerId"}]
+        expect = dict(UNCHANGED) if plan or not objects else dict(stepped)
+        if not plan and objects:
+            expect["fields"] = {str(first + i): o for i, o in enumerate(objects)}
+        steps = [{"op": "plan" if plan else "execute", "input": inp, "result": result, "expect": expect, "within": W}]
+        if undo:
+            steps.append({"op": "undo", "returns": "Düşük güvenli alanları çiz",
+                          "expect": {"canUndo": False, "canRedo": True, "ids": [e["id"] for e in base["entities"]]}})
+        out.append({"name": name, "steps": steps})
+
+    def no(name, inp, result, setup_=None):
+        c = {"name": name, "steps": [{"op": "execute", "input": inp, "result": result, "expect": UNCHANGED, "within": W}]}
+        if setup_:
+            c["setup"] = setup_
+        out.append(c)
+
+    ok("Seyrek yüzeyin tahmin edilen alanı", {"surface": "t-10", "longest": 3.0, "layerId": "kapsam"}, undo=True)
+    ok("Alanıyla", {"surface": "Seyrek", "longest": 3.0, "layerId": "kapsam", "labels": True})
+    ok("Yüzeyin dış çizgisiyle", {"surface": "t-10", "longest": 3.0, "layerId": "kapsam", "outline": True, "labels": True})
+    ok("Delikli tahmin alanı", {"surface": "t-12", "longest": 3.0, "layerId": "kapsam", "labels": True})
+    ok("Yalnız iri kareler, dört ayrı alan", {"surface": "t-12", "longest": 4.5, "layerId": "kapsam", "labels": True})
+    ok("Terasın her yeri", {"surface": "t-6", "longest": 1.2, "layerId": "kapsam", "labels": True})
+    ok("Tahmin yok, yalnız dış çizgi", {"surface": "t-6", "longest": 2.0, "layerId": "kapsam", "outline": True})
+    ok("Planı yazmaz", {"surface": "t-12", "longest": 3.0, "layerId": "kapsam", "labels": True}, plan=True)
+    ok("Gizli katmana uyarıyla", {"surface": "t-10", "longest": 3.0, "layerId": "gizli"})
+    ok("Seyrek ve dar sınır", {"surface": "t-10", "longest": 1.0, "layerId": "kapsam", "labels": True})
+    ok("Delikli, dış çizgisiyle", {"surface": "t-12", "longest": 3.0, "layerId": "kapsam", "outline": True, "labels": True})
+    ok("Tahmin yok, hiçbir şey çizilmez", {"surface": "t-6", "longest": 2.0, "layerId": "kapsam"})
+    # Refusals.
+    bad = "Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı."
+    no("Kenar boyu sıfır", {"surface": "t-10", "longest": 0.0, "layerId": "kapsam"}, refused("invalid_coverage", bad, "longest"))
+    no("Olmayan yüzey", {"surface": "yok", "longest": 3.0, "layerId": "kapsam"},
+       refused("unknown_terrain", "“yok” kimlikli ya da adlı yüzey projede yok.", "surface"))
+    no("Olmayan katman", {"surface": "t-10", "longest": 3.0, "layerId": "yok"},
+       refused("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    no("Kilitli katman", {"surface": "t-10", "longest": 3.0, "layerId": "kilitli"},
+       refused("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı "
+               "etkinleştirin.", "layerId"))
+    no("Katman grubu", {"surface": "t-10", "longest": 3.0, "layerId": "grup"},
+       {"status": "failed", "error": {"code": "not_a_layer", "message": "$any", "path": "layerId"}})
+    no("Geçersiz beklenen sürüm", {"surface": "t-10", "longest": 3.0, "layerId": "kapsam", "expectedRevision": "on"},
+       refused("invalid_revision", "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. "
+               "Sürümü belgeden ya da komutun planından alın.", "expectedRevision"))
+    no("Eski sürüme göre", {"surface": "t-10", "longest": 3.0, "layerId": "kapsam", "expectedRevision": "41"},
+       {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra "
+        "değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision",
+        "revision": "$current"}})
+    no("Yol projesi değil", {"surface": "t-10", "longest": 3.0, "layerId": "kapsam"},
+       refused("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+       setup_="$map")
+    return out
+
+
 def main():
-    found = cases()
-    for c in found:
-        if c.get("setup") == "$map":
-            c["setup"] = setup(work="map")
-    doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.coverage", "commandVersion": 1,
-           "title": "Yüzeyin kapsamı: proje sınırında örtülen, verisiz ve tahmin edilen alan",
-           "note": "scripts/fixtures/road_terrain_coverage_cases.py'den; kafes yüzeylerin kareleri, sınırın halkaları "
-                   "karelerle Sutherland–Hodgman ile kırpılarak, ADR 0920 §2'nin kuralıyla; KentOS kodu olmadan.",
-           "setup": setup(), "cases": found}
-    text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
-    path = OUT / "road.terrains.coverage.json"
-    if "--check" in sys.argv:
-        if not path.exists() or path.read_text() != text:
-            sys.exit("güncel değil: road.terrains.coverage.json")
-    else:
-        path.write_text(text)
-    print(f"road.terrains.coverage.json: {len(found)} durum")
+    docs = {
+        "road.terrains.coverage.json": ("road.terrains.coverage",
+                                        "Yüzeyin kapsamı: proje sınırında örtülen, verisiz ve tahmin edilen alan", cases()),
+        "road.terrains.lowconfidence.json": ("road.terrains.lowconfidence",
+                                             "Düşük güvenli alanları çiz: tahmin edilen üçgenlerin dış çizgileri",
+                                             draw_cases()),
+    }
+    stale = []
+    for name, (command, title, found) in docs.items():
+        for c in found:
+            if c.get("setup") == "$map":
+                c["setup"] = setup(work="map")
+        doc = {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
+               "note": "scripts/fixtures/road_terrain_coverage_cases.py'den; kafes yüzeylerin kareleri, sınırın halkaları "
+                       "karelerle Sutherland–Hodgman ile kırpılarak, tahmin edilen karelerin birleşiminin dış çizgileri, "
+                       "ADR 0920'nin kuralıyla; KentOS kodu olmadan.",
+               "setup": setup(), "cases": found}
+        text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+        path = OUT / name
+        if "--check" in sys.argv:
+            if not path.exists() or path.read_text() != text:
+                stale.append(name)
+        else:
+            path.write_text(text)
+        print(f"{name}: {len(found)} durum")
+    if stale:
+        sys.exit(f"güncel değil: {stale}")
 
 
 if __name__ == "__main__":

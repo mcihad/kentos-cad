@@ -45,6 +45,18 @@ sınırın tamamını örtmüyorsa verisiz kalan yer bilinmeyen arazidir, boş a
 Yüzey analizi penceresinde Kapsam kipi: sınır nesnesi, en uzun kenar; alanlar ve paylar, planda yüzeyin ölçülen ve
 tahmin edilen üçgenleri ve sınır.
 
+### §5 Düşük güvenli alanlar
+
+`road.terrains.lowconfidence` v1, tek geri alma adımı “Düşük güvenli alanları çiz”. Kenarı `longest`'ı aşan
+üçgenlerin birleşiminin dış çizgileri katmana kapalı çoklu çizgi olarak yazılır: yalnız bir seçili üçgenin kenarı olan
+kenarlar, üçgen solda kalacak yönde, uçtan uca zincirlenir. İki dış çizginin değdiği köşede en sağa dönüş seçilir;
+düz giden köşeler atılır. Dış çizgi saat yönünün tersine, delik saat yönünde döner. Her biri en küçük köşesinden
+(x, sonra y) başlar ve bu sırayla yazılır. ASPRS'in teslim ettiği 2B düşük güvenli alan çokgenleri bunlardır.
+`labels` ile her dış çizginin ortasına alanı yazılır (dış halka eksi içindeki delikler). `outline` ile yüzeyin kendi
+dış çizgisi de yazılır, yani verinin olduğu yer. Tahmin yoksa ve dış çizgi istenmemişse hiçbir şey yazılmaz.
+Ret: `invalid_revision`, `revision_conflict`, `invalid_coverage`, `not_a_road_project`, `unknown_terrain`,
+`terrain_unbuildable`, katmanın retleri; uyarı `layer_hidden`.
+
 ## Açıklar
 
-- Yaylı sınır, çok parçalı sınır, düşük güvenli alanların çokgen olarak yazılması ve nokta yoğunluğu ızgarası açık.
+- Yaylı sınır, çok parçalı sınır, nokta yoğunluğu ızgarası ve alan olarak (delikleriyle) yazım açık.

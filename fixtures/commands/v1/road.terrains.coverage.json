@@ -4,7 +4,7 @@
  "command": "road.terrains.coverage",
  "commandVersion": 1,
  "title": "Yüzeyin kapsamı: proje sınırında örtülen, verisiz ve tahmin edilen alan",
- "note": "scripts/fixtures/road_terrain_coverage_cases.py'den; kafes yüzeylerin kareleri, sınırın halkaları karelerle Sutherland–Hodgman ile kırpılarak, ADR 0920 §2'nin kuralıyla; KentOS kodu olmadan.",
+ "note": "scripts/fixtures/road_terrain_coverage_cases.py'den; kafes yüzeylerin kareleri, sınırın halkaları karelerle Sutherland–Hodgman ile kırpılarak, tahmin edilen karelerin birleşiminin dış çizgileri, ADR 0920'nin kuralıyla; KentOS kodu olmadan.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -117,6 +117,15 @@
       "points": {
        "layers": [
         "sivri"
+       ]
+      }
+     },
+     {
+      "id": "t-12",
+      "name": "Delikli",
+      "points": {
+       "layers": [
+        "delikli"
        ]
       }
      }
@@ -920,6 +929,34 @@
    {
     "id": "sinir",
     "name": "Sınır",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "delikli",
+    "name": "Delikli",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapsam",
+    "name": "Kapsam",
     "type": "layer",
     "visible": true,
     "locked": false,
@@ -11709,6 +11746,182 @@
     "id": 964,
     "layerId": "sinir",
     "attrs": {}
+   },
+   {
+    "kind": "point",
+    "id": 965,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12000.0,
+     "y": 0.0
+    },
+    "z": 50.0
+   },
+   {
+    "kind": "point",
+    "id": 966,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12004.0,
+     "y": 0.0
+    },
+    "z": 50.04
+   },
+   {
+    "kind": "point",
+    "id": 967,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12005.0,
+     "y": 0.0
+    },
+    "z": 50.05
+   },
+   {
+    "kind": "point",
+    "id": 968,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12009.0,
+     "y": 0.0
+    },
+    "z": 50.09
+   },
+   {
+    "kind": "point",
+    "id": 969,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12000.0,
+     "y": 4.0
+    },
+    "z": 50.08
+   },
+   {
+    "kind": "point",
+    "id": 970,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12004.0,
+     "y": 4.0
+    },
+    "z": 50.12
+   },
+   {
+    "kind": "point",
+    "id": 971,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12005.0,
+     "y": 4.0
+    },
+    "z": 50.129999999999995
+   },
+   {
+    "kind": "point",
+    "id": 972,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12009.0,
+     "y": 4.0
+    },
+    "z": 50.17
+   },
+   {
+    "kind": "point",
+    "id": 973,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12000.0,
+     "y": 5.0
+    },
+    "z": 50.1
+   },
+   {
+    "kind": "point",
+    "id": 974,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12004.0,
+     "y": 5.0
+    },
+    "z": 50.14
+   },
+   {
+    "kind": "point",
+    "id": 975,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12005.0,
+     "y": 5.0
+    },
+    "z": 50.15
+   },
+   {
+    "kind": "point",
+    "id": 976,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12009.0,
+     "y": 5.0
+    },
+    "z": 50.190000000000005
+   },
+   {
+    "kind": "point",
+    "id": 977,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12000.0,
+     "y": 9.0
+    },
+    "z": 50.18
+   },
+   {
+    "kind": "point",
+    "id": 978,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12004.0,
+     "y": 9.0
+    },
+    "z": 50.22
+   },
+   {
+    "kind": "point",
+    "id": 979,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12005.0,
+     "y": 9.0
+    },
+    "z": 50.23
+   },
+   {
+    "kind": "point",
+    "id": 980,
+    "layerId": "delikli",
+    "attrs": {},
+    "p": {
+     "x": 12009.0,
+     "y": 9.0
+    },
+    "z": 50.27
    }
   ],
   "uids": [
@@ -12675,7 +12888,23 @@
    "0192f600-7c3e-7d4a-9b1e-000000000961",
    "0192f600-7c3e-7d4a-9b1e-000000000962",
    "0192f600-7c3e-7d4a-9b1e-000000000963",
-   "0192f600-7c3e-7d4a-9b1e-000000000964"
+   "0192f600-7c3e-7d4a-9b1e-000000000964",
+   "0192f600-7c3e-7d4a-9b1e-000000000965",
+   "0192f600-7c3e-7d4a-9b1e-000000000966",
+   "0192f600-7c3e-7d4a-9b1e-000000000967",
+   "0192f600-7c3e-7d4a-9b1e-000000000968",
+   "0192f600-7c3e-7d4a-9b1e-000000000969",
+   "0192f600-7c3e-7d4a-9b1e-000000000970",
+   "0192f600-7c3e-7d4a-9b1e-000000000971",
+   "0192f600-7c3e-7d4a-9b1e-000000000972",
+   "0192f600-7c3e-7d4a-9b1e-000000000973",
+   "0192f600-7c3e-7d4a-9b1e-000000000974",
+   "0192f600-7c3e-7d4a-9b1e-000000000975",
+   "0192f600-7c3e-7d4a-9b1e-000000000976",
+   "0192f600-7c3e-7d4a-9b1e-000000000977",
+   "0192f600-7c3e-7d4a-9b1e-000000000978",
+   "0192f600-7c3e-7d4a-9b1e-000000000979",
+   "0192f600-7c3e-7d4a-9b1e-000000000980"
   ],
   "styles": {
    "items": [],
@@ -13101,6 +13330,38 @@
        "estimatedShare": 0.0,
        "estimatedTriangles": 0,
        "longestEdge": 1.4142135623730951
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Delikli yüzey, ortadaki kare ölçülmüş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "surface": "t-12",
+      "longest": 3.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-12",
+       "surfaceArea": 81.0,
+       "covered": 81.0,
+       "estimated": 80.0,
+       "estimatedShare": 0.9876543209876543,
+       "estimatedTriangles": 16,
+       "longestEdge": 5.656854249492381
       },
       "warnings": []
      },
@@ -13684,6 +13945,34 @@
      {
       "id": "sinir",
       "name": "Sınır",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "delikli",
+      "name": "Delikli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapsam",
+      "name": "Kapsam",
       "type": "layer",
       "visible": true,
       "locked": false,
@@ -24473,6 +24762,182 @@
       "id": 964,
       "layerId": "sinir",
       "attrs": {}
+     },
+     {
+      "kind": "point",
+      "id": 965,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12000.0,
+       "y": 0.0
+      },
+      "z": 50.0
+     },
+     {
+      "kind": "point",
+      "id": 966,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12004.0,
+       "y": 0.0
+      },
+      "z": 50.04
+     },
+     {
+      "kind": "point",
+      "id": 967,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12005.0,
+       "y": 0.0
+      },
+      "z": 50.05
+     },
+     {
+      "kind": "point",
+      "id": 968,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12009.0,
+       "y": 0.0
+      },
+      "z": 50.09
+     },
+     {
+      "kind": "point",
+      "id": 969,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12000.0,
+       "y": 4.0
+      },
+      "z": 50.08
+     },
+     {
+      "kind": "point",
+      "id": 970,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12004.0,
+       "y": 4.0
+      },
+      "z": 50.12
+     },
+     {
+      "kind": "point",
+      "id": 971,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12005.0,
+       "y": 4.0
+      },
+      "z": 50.129999999999995
+     },
+     {
+      "kind": "point",
+      "id": 972,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12009.0,
+       "y": 4.0
+      },
+      "z": 50.17
+     },
+     {
+      "kind": "point",
+      "id": 973,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12000.0,
+       "y": 5.0
+      },
+      "z": 50.1
+     },
+     {
+      "kind": "point",
+      "id": 974,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12004.0,
+       "y": 5.0
+      },
+      "z": 50.14
+     },
+     {
+      "kind": "point",
+      "id": 975,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12005.0,
+       "y": 5.0
+      },
+      "z": 50.15
+     },
+     {
+      "kind": "point",
+      "id": 976,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12009.0,
+       "y": 5.0
+      },
+      "z": 50.190000000000005
+     },
+     {
+      "kind": "point",
+      "id": 977,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12000.0,
+       "y": 9.0
+      },
+      "z": 50.18
+     },
+     {
+      "kind": "point",
+      "id": 978,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12004.0,
+       "y": 9.0
+      },
+      "z": 50.22
+     },
+     {
+      "kind": "point",
+      "id": 979,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12005.0,
+       "y": 9.0
+      },
+      "z": 50.23
+     },
+     {
+      "kind": "point",
+      "id": 980,
+      "layerId": "delikli",
+      "attrs": {},
+      "p": {
+       "x": 12009.0,
+       "y": 9.0
+      },
+      "z": 50.27
      }
     ],
     "uids": [
@@ -25439,7 +25904,23 @@
      "0192f600-7c3e-7d4a-9b1e-000000000961",
      "0192f600-7c3e-7d4a-9b1e-000000000962",
      "0192f600-7c3e-7d4a-9b1e-000000000963",
-     "0192f600-7c3e-7d4a-9b1e-000000000964"
+     "0192f600-7c3e-7d4a-9b1e-000000000964",
+     "0192f600-7c3e-7d4a-9b1e-000000000965",
+     "0192f600-7c3e-7d4a-9b1e-000000000966",
+     "0192f600-7c3e-7d4a-9b1e-000000000967",
+     "0192f600-7c3e-7d4a-9b1e-000000000968",
+     "0192f600-7c3e-7d4a-9b1e-000000000969",
+     "0192f600-7c3e-7d4a-9b1e-000000000970",
+     "0192f600-7c3e-7d4a-9b1e-000000000971",
+     "0192f600-7c3e-7d4a-9b1e-000000000972",
+     "0192f600-7c3e-7d4a-9b1e-000000000973",
+     "0192f600-7c3e-7d4a-9b1e-000000000974",
+     "0192f600-7c3e-7d4a-9b1e-000000000975",
+     "0192f600-7c3e-7d4a-9b1e-000000000976",
+     "0192f600-7c3e-7d4a-9b1e-000000000977",
+     "0192f600-7c3e-7d4a-9b1e-000000000978",
+     "0192f600-7c3e-7d4a-9b1e-000000000979",
+     "0192f600-7c3e-7d4a-9b1e-000000000980"
     ],
     "styles": {
      "items": [],

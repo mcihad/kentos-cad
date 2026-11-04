@@ -222,6 +222,15 @@ fn the_window_reads_a_surface_s_coverage_of_a_boundary() {
     assert!((c.no_data.expect("a boundary") - (c.boundary_area.expect("a boundary") - c.covered)).abs() < 1e-9);
     assert_eq!((pic.rings.len(), pic.triangles.iter().filter(|t| t.1).count()), (1, 6));
     assert!(app.surface_analysis_window.as_ref().expect("open").warnings.iter().any(|w| w.contains("örtmüyor")));
+    // The estimated area drawn: its outline, its area's text and the surface's outline, one undo step.
+    let count = |app: &App| app.document.as_ref().expect("a drawing").model.entities().count();
+    let n = count(&app);
+    send(&mut app, W::Layer("kapsam".into()));
+    send(&mut app, W::DrawLow);
+    assert_eq!(count(&app), n + 3);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(count(&app), n);
+    let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
     send(&mut app, W::Close);
     assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);
 }
@@ -272,5 +281,11 @@ fn coverage_screens() {
         send(&mut app, W::Field(8, String::new()));
         send(&mut app, W::Preview);
         shot(&mut app, "teras");
+        send(&mut app, W::Surface("t-12".into()));
+        send(&mut app, W::Boundary(None));
+        send(&mut app, W::Field(8, "3".into()));
+        send(&mut app, W::Layer("kapsam".into()));
+        send(&mut app, W::Preview);
+        shot(&mut app, "delikli");
     }
 }

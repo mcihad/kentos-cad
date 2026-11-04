@@ -42510,6 +42510,181 @@
       ]
     },
     {
+      "id": "road.terrains.lowconfidence",
+      "version": 1,
+      "title": "Düşük güvenli alanları çiz",
+      "summary": "Bir arazi yüzeyinin tahmin edilen alanlarını, planda kenarı longest'tan uzun üçgenlerini, layerId katmanına kapalı çoklu çizgi olarak çizer: üçgenlerin dış çizgileri (yalnız bir seçili üçgenin kenarları), düz giden köşeleri atılmış; dış çizgi saat yönü tersine, delik saat yönünde. ASPRS'in düşük güvenli alan çokgenleridir; longest kullanıcınındır. outline ile yüzeyin kendi dış çizgisi de (verinin olduğu yer), labels ile her alanın alanı ortasında. Tek geri alma adımı “Düşük güvenli alanları çiz”. Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, invalid_coverage, not_a_road_project, unknown_terrain, terrain_unbuildable, layer_not_found, not_a_layer, layer_locked.",
+      "aliases": [
+        "dusukguven",
+        "tahminalan"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.lowconfidence` v1 (docs/adr/0920 §5): a terrain surface's estimated areas, its triangles\nwith a plan edge longer than `longest` (the user's), drawn on `layerId` as closed polylines, their outlines (the\nlow confidence areas' 2D polygons); with `outline` the surface's own outline too (where data is), with `labels` each\nestimated area's area at its outline's centre. One undo step “Düşük güvenli alanları çiz”.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_coverage` (longest not positive),\n`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `layer_not_found`, `not_a_layer`, `layer_locked`.\nWarnings: `layer_hidden`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "longest": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "outline": {
+            "type": "boolean"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface",
+          "longest",
+          "layerId"
+        ],
+        "title": "TerrainsCoverageDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.lowconfidence` v1, and its plan: the surface, how many estimated areas (outer outlines)\nand holes in them, their area, the objects written (in the plan, none) and the revision.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "areas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "holes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surface",
+          "areas",
+          "holes",
+          "area",
+          "uids",
+          "revision"
+        ],
+        "title": "TerrainsCoverageDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.lowconfidence` v1, and its plan: the surface, how many estimated areas (outer outlines)\nand holes in them, their area, the objects written (in the plan, none) and the revision.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "areas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "holes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surface",
+          "areas",
+          "holes",
+          "area",
+          "uids",
+          "revision"
+        ],
+        "title": "TerrainsCoverageDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_coverage",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "20 m'den uzun üçgenler, alanlarıyla",
+          "input": {
+            "labels": true,
+            "layerId": "kapsam",
+            "longest": 20.0,
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -100571,6 +100746,11 @@
         {
           "const": "drainage",
           "description": "`road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.",
+          "type": "string"
+        },
+        {
+          "const": "lowConfidence",
+          "description": "`road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları\nçiz”.",
           "type": "string"
         }
       ]

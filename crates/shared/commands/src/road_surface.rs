@@ -600,3 +600,55 @@ pub struct TerrainsCovered {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub longest_edge: f64,
 }
+
+pub const ROAD_TERRAINS_LOW_CONFIDENCE_DRAW: &str = "road.terrains.lowconfidence";
+pub const ROAD_TERRAINS_LOW_CONFIDENCE_DRAW_VERSION: u32 = 1;
+
+/// Input of `road.terrains.lowconfidence` v1 (docs/adr/0920 §5): a terrain surface's estimated areas, its triangles
+/// with a plan edge longer than `longest` (the user's), drawn on `layerId` as closed polylines, their outlines (the
+/// low confidence areas' 2D polygons); with `outline` the surface's own outline too (where data is), with `labels` each
+/// estimated area's area at its outline's centre. One undo step “Düşük güvenli alanları çiz”.
+///
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_coverage` (longest not positive),
+/// `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `layer_not_found`, `not_a_layer`, `layer_locked`.
+/// Warnings: `layer_hidden`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsCoverageDraw {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub longest: f64,
+    pub layer_id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub outline: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub labels: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `road.terrains.lowconfidence` v1, and its plan: the surface, how many estimated areas (outer outlines)
+/// and holes in them, their area, the objects written (in the plan, none) and the revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsCoverageDrawn {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub areas: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub holes: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    pub uids: Vec<String>,
+    pub revision: String,
+}

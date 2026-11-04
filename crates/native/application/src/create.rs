@@ -204,6 +204,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::CloudTerrain) => "Buluttan arazi",
         Some(CreateOperation::Drainage) => "Drenaj çiz",
         Some(CreateOperation::Swept) => "Araç izi çiz",
+        Some(CreateOperation::LowConfidence) => "Düşük güvenli alanları çiz",
     }
 }
 

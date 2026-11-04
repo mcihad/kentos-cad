@@ -6,7 +6,8 @@
 //! of the surface, the difference said first and written in one undo step, or everything left out taken back
 //! (`road.terrains.repair`, Y18.7). Kapsam: how much of a project boundary the surface covers, the no-data rest and the
 //! part estimated across too wide gaps (`road.terrains.coverage`, Y19.1), the triangles drawn measured or estimated.
-//! The breaks and limits are the user's; KentOS fills in none.
+//! Düşük güvenli alanları çiz writes the estimated areas' outlines on a layer (`road.terrains.lowconfidence`, Y19.2). The
+//! breaks and limits are the user's; KentOS fills in none.
 //!
 //! ```text
 //! ┌ Yüzey analizi ──────────────────────────────────────────────────────────────────────────────────┐
@@ -23,12 +24,13 @@ use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     TerrainBands, TerrainCheckpointsAsk, TerrainSpikesAsk, TerrainsAnalysed, TerrainsAnalysis, TerrainsCompare,
-    TerrainsCompared, TerrainsCoverage, TerrainsCovered, TerrainsQuality, TerrainsQualityRead, TerrainsRepair, TerrainsRepaired,
+    TerrainsCompared, TerrainsCoverage, TerrainsCoverageDraw, TerrainsCovered, TerrainsQuality, TerrainsQualityRead,
+    TerrainsRepair, TerrainsRepaired,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
-    ExecutionContext, road_terrains_analysis, road_terrains_compare, road_terrains_coverage, road_terrains_quality,
-    road_terrains_repair,
+    ExecutionContext, road_terrains_analysis, road_terrains_compare, road_terrains_coverage, road_terrains_coverage_draw,
+    road_terrains_quality, road_terrains_repair,
 };
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
@@ -46,6 +48,7 @@ const LEAVE: &str = "Sivrileri bırak";
 const RESTORE: &str = "Bırakılanları geri al";
 const APPLY: &str = "Onarımı uygula";
 const CLOSE: &str = "Kapat";
+const DRAW_LOW: &str = "Düşük güvenli alanları çiz";
 /// The typed fields, in order.
 pub(crate) const FIELDS: [&str; 9] = [
     "Sınırlar",
@@ -88,6 +91,8 @@ pub struct Window {
     pub(crate) checks: Option<String>,
     /// Kapsam's boundary: a closed object's uid; none, the surface itself.
     pub(crate) boundary: Option<String>,
+    /// Kapsam's layer for the low confidence areas.
+    pub(crate) layer: Option<String>,
     pub(crate) fields: [String; 9],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
@@ -104,6 +109,8 @@ pub enum Event {
     Roughness(bool),
     Checks(Option<String>),
     Boundary(Option<String>),
+    Layer(String),
+    DrawLow,
     Field(usize, String),
     Preview,
     LeaveSpikes,
@@ -221,6 +228,7 @@ impl App {
             roughness: false,
             checks: None,
             boundary: None,
+            layer: self.relation_layers().into_iter().next().map(|(id, _)| id),
             fields: Default::default(),
             preview: None,
             warnings: Vec::new(),
@@ -263,6 +271,24 @@ impl App {
             Event::Roughness(on) => w.roughness = on,
             Event::Checks(l) => w.checks = l,
             Event::Boundary(b) => w.boundary = b,
+            Event::Layer(l) => {
+                w.layer = Some(l);
+                return Task::none();
+            }
+            Event::DrawLow => {
+                let (Some(surface), Some(layer)) = (w.surface.clone(), w.layer.clone()) else { return Task::none() };
+                let Ok(Some(longest)) = number(&w.fields[8], FIELDS[8]) else {
+                    self.warn("Düşük güvenli alan için en uzun kenarı yazın.".to_owned());
+                    return Task::none();
+                };
+                let input = TerrainsCoverageDraw { surface, longest, layer_id: layer, outline: true, labels: true, expected_revision: None };
+                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let result = road_terrains_coverage_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                if let Some(out) = self.answered(result) {
+                    self.say(Level::Success, format!("{} düşük güvenli alan çizildi ({:.1} m²).", out.areas, out.area));
+                }
+                return Task::none();
+            }
             Event::Field(k, t) => w.fields[k.min(8)] = t,
             Event::Preview => {
                 w.repair = None;
@@ -526,6 +552,21 @@ impl App {
             .is_some_and(|s| !s.excluded.is_empty());
         let ready = matches!(&w.repair, Some((_, Ok(_))));
         let mut bottom = row![].spacing(8).align_y(iced::alignment::Vertical::Center);
+        if w.mode == Mode::Coverage {
+            let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+            let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
+            let on_layer = Select::new(
+                lnames.iter().map(|n| Choice::new(n.clone())),
+                w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+                move |i| msg(Event::Layer(lids[i].clone())),
+            )
+            .placeholder("Katman");
+            let can = w.layer.is_some() && !w.fields[8].trim().is_empty();
+            bottom = bottom
+                .push(label::caption("Katman").style(muted))
+                .push(container(on_layer).width(150))
+                .push(words::secondary(DRAW_LOW, can.then(|| msg(Event::DrawLow))));
+        }
         if w.mode == Mode::Quality {
             bottom = bottom
                 .push(words::secondary(LEAVE, spikes.then(|| msg(Event::LeaveSpikes))))
@@ -551,6 +592,7 @@ impl App {
             Control::Press(LEAVE) => Some(msg(Event::LeaveSpikes)),
             Control::Press(RESTORE) => Some(msg(Event::RestoreAll)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
+            Control::Press(DRAW_LOW) => Some(msg(Event::DrawLow)),
             Control::Fill(name, t) if !name.is_empty() && FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))

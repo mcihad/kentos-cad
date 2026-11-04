@@ -140,6 +140,9 @@ pub enum CreateOperation {
     /// `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
     Drainage,
     Swept,
+    /// `road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları
+    /// çiz”.
+    LowConfidence,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
