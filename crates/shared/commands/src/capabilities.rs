@@ -1791,6 +1791,17 @@ const ENTRIES: &[Entry] = &[
         warnings: &["superelevation_stale"],
         targets: none,
     },
+    Entry {
+        id: "road.superelevations.check",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_superelevation",
+            "unknown_road_template",
+            "invalid_superelevation_check",
+        ]],
+        warnings: &["superelevation_limit_broken"],
+        targets: none,
+    },
     // KentOS Yol's corridors (plan/road.md Y7, docs/adr/0905).
     Entry {
         id: "road.corridors.edit",

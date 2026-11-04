@@ -119,9 +119,14 @@ impl Sampler {
         let section = match (&self.surface, self.vertical.at(s)) {
             (Some(surf), Some((z, _, _))) => {
                 terrain = ground(surf, &line);
-                let tt = match &self.schedule {
-                    Some((sch, normal)) => superelevated(template, sch, *normal, s),
-                    None => template.clone(),
+                let (tt, z) = match &self.schedule {
+                    // About an edge the axis rises over the profile grade (docs/adr/0931 §1).
+                    Some((sch, normal)) => {
+                        let tt = superelevated(template, sch, *normal, s);
+                        let lift = sch.lift(s, *normal, crate::road_sections::lane_widths(&tt));
+                        (tt, z + lift)
+                    }
+                    None => (template.clone(), z),
                 };
                 tpl::build(&tt, z, &terrain).ok()
             }
@@ -442,7 +447,9 @@ impl CorridorSections {
             (Some(p), Some(sec)) => crate::road_sections::pavement_row(p, &sampler.template_at(&region.template, s), sec, &terrain),
             _ => None,
         };
-        Some(crate::road_sections::row_of(s, km, cross.line.ends, sampler.elevation(s), &terrain, cross.section.as_ref(), paved))
+        // The axis as the section has it: risen over the profile grade about an edge (docs/adr/0931 §1).
+        let axis = cross.section.as_ref().map(|x| x.axis).or(sampler.elevation(s));
+        Some(crate::road_sections::row_of(s, km, cross.line.ends, axis, &terrain, cross.section.as_ref(), paved))
     }
 }
 

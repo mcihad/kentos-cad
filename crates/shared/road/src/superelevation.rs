@@ -60,6 +60,8 @@ pub struct Schedule {
     pub right: Vec<[f64; 2]>,
     pub left_widening: Vec<[f64; 2]>,
     pub right_widening: Vec<[f64; 2]>,
+    /// The line the traveled way turns about (docs/adr/0931); the centreline unless set.
+    pub pivot: crate::superelevation_physics::Pivot,
 }
 
 /// Why a schedule does not build.
@@ -101,6 +103,13 @@ impl Schedule {
     /// The cross slopes at `s`; `normal` where a side has no break point.
     pub fn at(&self, s: f64, normal: Crossfall) -> Crossfall {
         Crossfall { left: along(&self.left, s, normal.left), right: along(&self.right, s, normal.right) }
+    }
+
+    /// How much the axis rises over the profile grade at `s` (m) for the traveled way's `widths` (left, right) there:
+    /// 0 about the centreline (docs/adr/0931 §1).
+    pub fn lift(&self, s: f64, normal: Crossfall, widths: (f64, f64)) -> f64 {
+        let c = self.at(s, normal);
+        crate::superelevation_physics::axis_lift(self.pivot, (c.left, c.right), (normal.left, normal.right), widths)
     }
 
     /// The extra widths (left, right) at `s`.

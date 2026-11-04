@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{RoadEditOperation, SuperelevationMethod};
+use crate::{RoadEditOperation, SuperelevationMethod, SuperelevationPivot};
 
 pub const ROAD_SUPERELEVATIONS_EDIT: &str = "road.superelevations.edit";
 pub const ROAD_SUPERELEVATIONS_EDIT_VERSION: u32 = 1;
@@ -56,6 +56,10 @@ pub struct SuperelevationsEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SuperelevationMethod>,
+    /// The axis of rotation (docs/adr/0931 §2); `centerline` takes an edge's off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pivot: Option<SuperelevationPivot>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -181,4 +185,120 @@ pub struct SuperAt {
 pub struct SuperelevationsQueried {
     pub superelevations: Vec<SuperelevationReport>,
     pub at: Vec<SuperAt>,
+}
+
+pub const ROAD_SUPERELEVATIONS_CHECK: &str = "road.superelevations.check";
+pub const ROAD_SUPERELEVATIONS_CHECK_VERSION: u32 = 1;
+
+/// Input of `road.superelevations.check` v1 (docs/adr/0931 §2): a schedule (its id or name) on a template's traveled
+/// way (its lanes' widths; the template by id or name), and the limits, all the design standard's and none given by
+/// KentOS: the design speed (km/h) with the most side friction (per one), and the most relative gradient (per one,
+/// 0.005 is 1:200). A schedule without a limit is still read: its relative gradients and, with a speed, each curve's
+/// friction.
+///
+/// Refusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`, `invalid_superelevation_check`
+/// (a speed, a friction or a gradient not above 0, the friction without a speed, a step not in (0, 100] m, a template
+/// without a lane on a side).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationsCheck {
+    pub superelevation: String,
+    pub template: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub speed: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub most_friction: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub most_relative: Option<f64>,
+    /// How often a clothoid's friction is read (m); absent: 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: Option<f64>,
+}
+
+/// A stretch's relative gradients (per one): each side's traveled way edge over the axis of rotation, the largest on it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RelativeGradient {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub right: f64,
+}
+
+/// A curve's side friction at the speed: where it asks for the most, the radius and the superelevation toward the
+/// centre there (per one).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CurveFrictionRow {
+    pub pi: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub friction: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub at: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub e: f64,
+}
+
+/// A limit broken: `relative` (a side's edge) or `friction` (a curve), where, the value, the limit and the words.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationFinding {
+    pub kind: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    /// The relative gradient or the friction, per one.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub value: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub limit: f64,
+    pub message: String,
+}
+
+/// Output of `road.superelevations.check` v1: the schedule, its axis of rotation, the relative gradients by stretch,
+/// each curve's friction (with a speed), the limits broken in station order and the clothoid reading's step.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationsChecked {
+    pub superelevation: String,
+    pub pivot: SuperelevationPivot,
+    pub gradients: Vec<RelativeGradient>,
+    pub curves: Vec<CurveFrictionRow>,
+    pub findings: Vec<SuperelevationFinding>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: f64,
 }

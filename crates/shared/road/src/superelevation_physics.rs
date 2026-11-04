@@ -156,3 +156,64 @@ pub fn toward_centre(left: f64, right: f64, left_turn: bool) -> f64 {
     let (l, r) = if left_turn { (-left, right) } else { (left, -right) };
     l.min(r) / 100.0
 }
+
+/// A curve's side friction at a speed: where it asks for the most, the radius and superelevation there.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CurveFriction {
+    pub pi: String,
+    /// The curve's TS and ST.
+    pub from: f64,
+    pub to: f64,
+    pub most: f64,
+    pub at: f64,
+    pub radius: f64,
+    pub e: f64,
+}
+
+/// The side friction along each curve of `al` at `speed` (km/h) with `schedule`'s slopes: read at the curve's TS, SC,
+/// CS, ST, the schedule's break points on it and every `step` metres. On the circular part R is constant and e linear
+/// between break points, so f (monotone in e) is largest at one of them: exact there; on a clothoid R changes and the
+/// reading is every `step` metres.
+pub fn curve_friction(
+    al: &crate::alignment::Alignment,
+    schedule: &crate::superelevation::Schedule,
+    normal: crate::superelevation::Crossfall,
+    speed: f64,
+    step: f64,
+) -> Vec<CurveFriction> {
+    let mut out = Vec::new();
+    for c in &al.curves {
+        let (from, to) = (c.stations[0], c.stations[3]);
+        if !(to > from) {
+            continue;
+        }
+        let mut at: Vec<f64> = c.stations.to_vec();
+        for pts in [&schedule.left, &schedule.right] {
+            at.extend(pts.iter().map(|p| p[0]).filter(|s| *s > from && *s < to));
+        }
+        let n = ((to - from) / step.max(1e-3)).ceil() as usize;
+        at.extend((0..=n).map(|i| (from + i as f64 * step).min(to)));
+        at.sort_by(f64::total_cmp);
+        at.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+        let mut best: Option<CurveFriction> = None;
+        for s in at {
+            let Some(p) = al.at(s) else { continue };
+            // At an element's end the curvature is the element's own: read just inside the curve.
+            let k = if p.curvature == 0.0 { al.at((s + 1e-6).min(to)).map_or(0.0, |q| q.curvature) } else { p.curvature };
+            if k == 0.0 {
+                continue;
+            }
+            let slopes = schedule.at(s, normal);
+            let e = toward_centre(slopes.left, slopes.right, k > 0.0);
+            let radius = 1.0 / k.abs();
+            let f = friction(speed, radius, e);
+            // Full superelevation on the circular part is a plateau of one friction: within 1e-12 the first
+            // station stays, so the place does not hang on the last bit of the curvature.
+            if best.as_ref().is_none_or(|b| f > b.most + 1e-12) {
+                best = Some(CurveFriction { pi: c.pi.clone(), from, to, most: f, at: s, radius, e });
+            }
+        }
+        out.extend(best);
+    }
+    out
+}

@@ -759,11 +759,13 @@ pub const SCHEMA_WITH_TEXT_ENGINE: u32 = 163;
 /// 162 or 163 says the file is newer (schema_version) instead of calling it broken: the road settings are one JSON
 /// part whose types refuse a field they do not know.
 pub const SCHEMA_WITH_ROAD_PAVEMENT: u32 = 164;
+/// Schema 165 (docs/adr/0931 §2): a superelevation schedule's `pivot`, its axis of rotation.
+pub const SCHEMA_WITH_ROAD_PIVOT: u32 = 165;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 162] = [
+pub const SCHEMAS: [u32; 163] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -926,6 +928,7 @@ pub const SCHEMAS: [u32; 162] = [
     SCHEMA_WITH_ROAD_WORK,
     SCHEMA_WITH_TEXT_ENGINE,
     SCHEMA_WITH_ROAD_PAVEMENT,
+    SCHEMA_WITH_ROAD_PIVOT,
 ];
 
 /// The file a drawing is saved as.

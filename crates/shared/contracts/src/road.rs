@@ -903,6 +903,37 @@ pub struct SuperelevationDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub normal_right: f64,
     pub method: SuperelevationMethod,
+    /// The line the traveled way turns about (docs/adr/0931 §1); absent: the centreline.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pivot: Option<SuperelevationPivot>,
+}
+
+/// The axis of rotation of a superelevation (docs/adr/0931 §1): the centreline, an edge of the traveled way by side,
+/// or the curve's inside or outside edge.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SuperelevationPivot {
+    Centerline,
+    LeftEdge,
+    RightEdge,
+    InsideEdge,
+    OutsideEdge,
+}
+
+impl SuperelevationPivot {
+    pub fn words(self) -> &'static str {
+        match self {
+            SuperelevationPivot::Centerline => "Eksen",
+            SuperelevationPivot::LeftEdge => "Sol kenar",
+            SuperelevationPivot::RightEdge => "Sağ kenar",
+            SuperelevationPivot::InsideEdge => "İç kenar",
+            SuperelevationPivot::OutsideEdge => "Dış kenar",
+        }
+    }
 }
 
 /// A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template.

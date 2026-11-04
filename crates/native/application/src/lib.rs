@@ -356,6 +356,7 @@ pub mod road_sections_draw;
 pub mod road_sections_edit;
 pub mod road_sections_query;
 pub mod road_superelevations;
+pub mod road_superelevations_check;
 pub mod road_superelevations_edit;
 pub mod road_superelevations_query;
 pub mod road_templates_edit;
@@ -1278,6 +1279,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_SUPERELEVATIONS_QUERY,
         kentos_commands::ROAD_SUPERELEVATIONS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SUPERELEVATIONS_CHECK,
+        kentos_commands::ROAD_SUPERELEVATIONS_CHECK_VERSION,
     ),
     (kentos_commands::ROAD_CORRIDORS_EDIT, kentos_commands::ROAD_CORRIDORS_EDIT_VERSION),
     (kentos_commands::ROAD_CORRIDORS_QUERY, kentos_commands::ROAD_CORRIDORS_QUERY_VERSION),

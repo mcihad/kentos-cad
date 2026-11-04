@@ -6539,6 +6539,21 @@ SubnetworkReachName = Literal["downstream", "connected"]
 """The names of :class:`SubnetworkReach`, for a plain string."""
 
 
+class SuperelevationPivot(_StrEnum):
+    """The axis of rotation of a superelevation (docs/adr/0931 §1): the centreline, an edge of the traveled way by side,
+    or the curve's inside or outside edge.
+    """
+    CENTERLINE = "centerline"
+    LEFT_EDGE = "leftEdge"
+    RIGHT_EDGE = "rightEdge"
+    INSIDE_EDGE = "insideEdge"
+    OUTSIDE_EDGE = "outsideEdge"
+
+
+SuperelevationPivotName = Literal["centerline", "leftEdge", "rightEdge", "insideEdge", "outsideEdge"]
+"""The names of :class:`SuperelevationPivot`, for a plain string."""
+
+
 class SyncDirection(_StrEnum):
     """Which way a sync goes.
 
@@ -22027,6 +22042,50 @@ class CulvertsWritten(_Model):
             culverts=[CulvertListed.from_json(e0) for e0 in data["culverts"]],
             revision=data["revision"],
             culvert=UNSET if "culvert" not in data else None if data["culvert"] is None else CulvertReport.from_json(data["culvert"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CurveFrictionRow(_Model):
+    """A curve's side friction at the speed: where it asks for the most, the radius and the superelevation toward the
+    centre there (per one).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        friction: Unit: 1.
+        at: Unit: m.
+        radius: Unit: m.
+        e: Unit: 1.
+    """
+    pi: str
+    from_: float
+    to: float
+    friction: float
+    at: float
+    radius: float
+    e: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pi"] = self.pi
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["friction"] = float(self.friction)
+        out["at"] = float(self.at)
+        out["radius"] = float(self.radius)
+        out["e"] = float(self.e)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CurveFrictionRow:
+        return cls(
+            pi=data["pi"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            friction=float(data["friction"]),
+            at=float(data["at"]),
+            radius=float(data["radius"]),
+            e=float(data["e"]),
         )
 
 
@@ -65484,6 +65543,38 @@ class RelationsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RelativeGradient(_Model):
+    """A stretch's relative gradients (per one): each side's traveled way edge over the axis of rotation, the largest on it.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        left: Unit: 1.
+        right: Unit: 1.
+    """
+    from_: float
+    to: float
+    left: float
+    right: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelativeGradient:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            left=float(data["left"]),
+            right=float(data["right"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RenamedBlock(_Model):
     """A block whose name the drawing had: as the file names it, as it went in."""
     from_: str
@@ -76951,6 +77042,7 @@ class SuperelevationDef(_Model):
         normal_left: Unit: percent.
         normal_right: Unit: percent.
         alignment_revision: Unit: version.
+        pivot: The line the traveled way turns about (docs/adr/0931 §1); absent: the centreline.
         revision: Unit: version.
     """
     id: str
@@ -76960,6 +77052,7 @@ class SuperelevationDef(_Model):
     normal_right: float
     method: SuperelevationMethod
     alignment_revision: int | Unset = UNSET
+    pivot: SuperelevationPivot | SuperelevationPivotName | None | Unset = UNSET
     revision: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -76972,6 +77065,8 @@ class SuperelevationDef(_Model):
         out["method"] = self.method.to_json()
         if self.alignment_revision is not UNSET:
             out["alignmentRevision"] = self.alignment_revision
+        if self.pivot is not UNSET:
+            out["pivot"] = None if self.pivot is None else _enum_out(self.pivot)
         if self.revision is not UNSET:
             out["revision"] = self.revision
         return out
@@ -76986,7 +77081,46 @@ class SuperelevationDef(_Model):
             normal_right=float(data["normalRight"]),
             method=SuperelevationMethod.from_json(data["method"]),
             alignment_revision=data.get("alignmentRevision", UNSET),
+            pivot=UNSET if "pivot" not in data else None if data["pivot"] is None else _enum_in(SuperelevationPivot, data["pivot"]),
             revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationFinding(_Model):
+    """A limit broken: `relative` (a side's edge) or `friction` (a curve), where, the value, the limit and the words.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        value: The relative gradient or the friction, per one. Unit: 1.
+        limit: Unit: 1.
+    """
+    kind: str
+    from_: float
+    to: float
+    value: float
+    limit: float
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["value"] = float(self.value)
+        out["limit"] = float(self.limit)
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationFinding:
+        return cls(
+            kind=data["kind"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            value=float(data["value"]),
+            limit=float(data["limit"]),
+            message=data["message"],
         )
 
 
@@ -77056,6 +77190,92 @@ class SuperelevationReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SuperelevationsCheck(_Model):
+    """Input of `road.superelevations.check` v1 (docs/adr/0931 §2): a schedule (its id or name) on a template's traveled
+    way (its lanes' widths; the template by id or name), and the limits, all the design standard's and none given by
+    KentOS: the design speed (km/h) with the most side friction (per one), and the most relative gradient (per one,
+    0.005 is 1:200). A schedule without a limit is still read: its relative gradients and, with a speed, each curve's
+    friction.
+
+    Refusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`, `invalid_superelevation_check`
+    (a speed, a friction or a gradient not above 0, the friction without a speed, a step not in (0, 100] m, a template
+    without a lane on a side).
+    Attributes:
+        most_friction: Unit: 1.
+        most_relative: Unit: 1.
+        speed: Unit: km/h.
+        step: How often a clothoid's friction is read (m); absent: 1. Unit: m.
+    """
+    superelevation: str
+    template: str
+    most_friction: float | None | Unset = UNSET
+    most_relative: float | None | Unset = UNSET
+    speed: float | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevation"] = self.superelevation
+        out["template"] = self.template
+        if self.most_friction is not UNSET:
+            out["mostFriction"] = None if self.most_friction is None else float(self.most_friction)
+        if self.most_relative is not UNSET:
+            out["mostRelative"] = None if self.most_relative is None else float(self.most_relative)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsCheck:
+        return cls(
+            superelevation=data["superelevation"],
+            template=data["template"],
+            most_friction=UNSET if "mostFriction" not in data else None if data["mostFriction"] is None else float(data["mostFriction"]),
+            most_relative=UNSET if "mostRelative" not in data else None if data["mostRelative"] is None else float(data["mostRelative"]),
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsChecked(_Model):
+    """Output of `road.superelevations.check` v1: the schedule, its axis of rotation, the relative gradients by stretch,
+    each curve's friction (with a speed), the limits broken in station order and the clothoid reading's step.
+    Attributes:
+        step: Unit: m.
+    """
+    superelevation: str
+    pivot: SuperelevationPivot | SuperelevationPivotName
+    gradients: list[RelativeGradient]
+    curves: list[CurveFrictionRow]
+    findings: list[SuperelevationFinding]
+    step: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevation"] = self.superelevation
+        out["pivot"] = _enum_out(self.pivot)
+        out["gradients"] = [e0.to_json() for e0 in self.gradients]
+        out["curves"] = [e0.to_json() for e0 in self.curves]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["step"] = float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsChecked:
+        return cls(
+            superelevation=data["superelevation"],
+            pivot=_enum_in(SuperelevationPivot, data["pivot"]),
+            gradients=[RelativeGradient.from_json(e0) for e0 in data["gradients"]],
+            curves=[CurveFrictionRow.from_json(e0) for e0 in data["curves"]],
+            findings=[SuperelevationFinding.from_json(e0) for e0 in data["findings"]],
+            step=float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SuperelevationsEdit(_Model):
     """Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,
     `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are percent,
@@ -77070,6 +77290,7 @@ class SuperelevationsEdit(_Model):
     Attributes:
         normal_left: Unit: percent.
         normal_right: Unit: percent.
+        pivot: The axis of rotation (docs/adr/0931 §2); `centerline` takes an edge's off.
     """
     operation: RoadEditOperation | RoadEditOperationName
     alignment: str | None | Unset = UNSET
@@ -77078,6 +77299,7 @@ class SuperelevationsEdit(_Model):
     name: str | None | Unset = UNSET
     normal_left: float | None | Unset = UNSET
     normal_right: float | None | Unset = UNSET
+    pivot: SuperelevationPivot | SuperelevationPivotName | None | Unset = UNSET
     superelevation: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -77095,6 +77317,8 @@ class SuperelevationsEdit(_Model):
             out["normalLeft"] = None if self.normal_left is None else float(self.normal_left)
         if self.normal_right is not UNSET:
             out["normalRight"] = None if self.normal_right is None else float(self.normal_right)
+        if self.pivot is not UNSET:
+            out["pivot"] = None if self.pivot is None else _enum_out(self.pivot)
         if self.superelevation is not UNSET:
             out["superelevation"] = self.superelevation
         return out
@@ -77109,6 +77333,7 @@ class SuperelevationsEdit(_Model):
             name=data.get("name", UNSET),
             normal_left=UNSET if "normalLeft" not in data else None if data["normalLeft"] is None else float(data["normalLeft"]),
             normal_right=UNSET if "normalRight" not in data else None if data["normalRight"] is None else float(data["normalRight"]),
+            pivot=UNSET if "pivot" not in data else None if data["pivot"] is None else _enum_in(SuperelevationPivot, data["pivot"]),
             superelevation=data.get("superelevation", UNSET),
         )
 
@@ -106359,6 +106584,7 @@ __all__ = [
     "CulvertsWritten",
     "CurveConstruction",
     "CurveEdit",
+    "CurveFrictionRow",
     "CurvePair",
     "CurvesConstruct",
     "CurvesConstructed",
@@ -108243,6 +108469,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "RelativeGradient",
     "ReleaseCaseworkChange",
     "ReleaseElevationsOperation",
     "RelinkImagesOperation",
@@ -108781,8 +109008,13 @@ __all__ = [
     "SuperCurveDef",
     "SuperRowDef",
     "SuperelevationDef",
+    "SuperelevationFinding",
     "SuperelevationMethod",
+    "SuperelevationPivot",
+    "SuperelevationPivotName",
     "SuperelevationReport",
+    "SuperelevationsCheck",
+    "SuperelevationsChecked",
     "SuperelevationsEdit",
     "SuperelevationsQueried",
     "SuperelevationsQuery",

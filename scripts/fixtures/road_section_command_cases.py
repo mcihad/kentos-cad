@@ -319,8 +319,19 @@ def sections(d, at, templates):
         if template and red is not None and surf_ok:
             gr = [{"offset": g["offset"], "z": g["z"], "gap": g["gap"]} for g in ground]
             here = superelevated(template, sup, s) if sup else template
-            lside = tref.build_side(here["left"], red[0], gr, False)
-            rside = tref.build_side(here["right"], red[0], gr, True)
+            # About an edge the axis rises over the profile grade (docs/adr/0931 §1).
+            z = red[0]
+            if sup and sup.get("pivot", "centerline") != "centerline":
+                sch = super_schedule(sup)
+                sl = supref.along(sch["left"], F(s)) if sch["left"] else F(sup["normalLeft"])
+                sr = supref.along(sch["right"], F(s)) if sch["right"] else F(sup["normalRight"])
+                lanes = lambda sd: sum(F(c["width"]) for c in sd["components"] if c["kind"] == "lane")  # noqa: E731
+                held = {"leftEdge": True, "rightEdge": False, "insideEdge": sl <= sr, "outsideEdge": sl > sr}[sup["pivot"]]
+                w, n, sl_now = (lanes(here["left"]), F(sup["normalLeft"]), sl) if held else (lanes(here["right"]), F(sup["normalRight"]), sr)
+                z = float(F(red[0]) + w * (n - sl_now) / 100)
+                row["axis"] = z
+            lside = tref.build_side(here["left"], z, gr, False)
+            rside = tref.build_side(here["right"], z, gr, True)
             cut, fill = tref.areas(list(reversed(lside["points"])) + rside["points"][1:], gr)
             row["left"], row["right"] = side_row(lside), side_row(rside)
             row["cut"], row["fill"] = float(cut), float(fill)
@@ -689,6 +700,13 @@ def query_cases():
     ask("Aksın başı ve sonu: boykesitin dışında platform yok", ends, {"set": "k-1"}, sets=[ends, S2])
     sup = {**S1, "superelevation": "d-1", "stations": {"method": "stations", "stations": [150.0, 194.0, 220.0, 260.0, 330.0]}}
     ask("Dever çizelgeli takım: şeritler o km'nin eğimini alır, iç yan genişler", sup, {"set": "k-1"}, sets=[sup, S2])
+    # About the inside edge the axis rises (docs/adr/0931 §1): the schedule's pivot for this one case.
+    SUPERS[0] = {**D1, "pivot": "insideEdge"}
+    try:
+        out, warns = one(sup)
+        q("Dever iç kenar etrafında: eksen kalkar", {"set": "k-1"}, out, warns, setup(sets=[sup, S2]), [sup, S2])
+    finally:
+        SUPERS[0] = D1
     gone = {**S1, "superelevation": "d-3", "stations": {"method": "stations", "stations": [200.0]}}
     out, warns = one(gone)
     q("Kurulamayan dever çizelgesi: şeritler tip kesitin eğimiyle, uyarı", {"set": "k-1"}, out, warns,

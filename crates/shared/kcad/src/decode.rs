@@ -645,6 +645,11 @@ pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
     road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
 }
 
+/// Whether road settings carry schema 165's field: a superelevation's axis of rotation (docs/adr/0931 §2).
+pub(crate) fn road_has_pivot(road: &kentos_contracts::RoadSettings) -> bool {
+    road.superelevations.iter().any(|s| s.pivot.is_some())
+}
+
 fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
     let (mut drawing_unit, mut second_srid) = (None, None);
@@ -1269,6 +1274,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_pavement && road_has_pavement(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "tip kesitin üstyapısı ve kübajın kuralı şema 164 ister"));
+                }
+                if !has.road_pivot && road_has_pivot(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 165 ister"));
                 }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));

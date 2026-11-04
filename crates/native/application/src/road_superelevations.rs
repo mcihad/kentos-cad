@@ -51,6 +51,26 @@ pub(crate) fn alignment_of(doc: &Document, def: &SuperelevationDef) -> Result<Bu
 
 /// The schedule built on its alignment, and its critical stations; why not, at the curve's or row's path.
 pub(crate) fn schedule(def: &SuperelevationDef, built: &Built) -> Result<(Schedule, Vec<sup::Critical>), Stop> {
+    schedule_slopes(def, built).map(|(mut s, critical)| {
+        s.pivot = pivot_of(def);
+        (s, critical)
+    })
+}
+
+/// The core's axis of rotation of a definition (docs/adr/0931 §1).
+pub fn pivot_of(def: &SuperelevationDef) -> kentos_road::superelevation_physics::Pivot {
+    use kentos_commands::SuperelevationPivot as P;
+    use kentos_road::superelevation_physics::Pivot;
+    match def.pivot {
+        None | Some(P::Centerline) => Pivot::Centerline,
+        Some(P::LeftEdge) => Pivot::LeftEdge,
+        Some(P::RightEdge) => Pivot::RightEdge,
+        Some(P::InsideEdge) => Pivot::InsideEdge,
+        Some(P::OutsideEdge) => Pivot::OutsideEdge,
+    }
+}
+
+fn schedule_slopes(def: &SuperelevationDef, built: &Built) -> Result<(Schedule, Vec<sup::Critical>), Stop> {
     let bad = |path: String, words: String| fail(codes::INVALID_SUPERELEVATION, words, &path);
     match &def.method {
         SuperelevationMethod::Stations { rows } => {

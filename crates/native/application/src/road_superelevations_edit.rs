@@ -79,10 +79,11 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
                 && input.normal_left.is_none()
                 && input.normal_right.is_none()
                 && input.method.is_none()
+                && input.pivot.is_none()
             {
                 return Err(fail(
                     codes::INVALID_SUPERELEVATION,
-                    "Değiştirilecek bir şey yok: name, alignment, normalLeft, normalRight ya da method verin.".into(),
+                    "Değiştirilecek bir şey yok: name, alignment, normalLeft, normalRight, method ya da pivot verin.".into(),
                     "",
                 ));
             }
@@ -102,6 +103,9 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
             }
             if let Some(m) = &input.method {
                 d.method = m.clone();
+            }
+            if let Some(p) = input.pivot {
+                d.pivot = pivot_kept(p);
             }
             if d != *old {
                 d.revision = old.revision.saturating_add(1);
@@ -140,6 +144,7 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
                 normal_left: nl,
                 normal_right: nr,
                 method: method.clone(),
+                pivot: input.pivot.and_then(pivot_kept),
             });
             Some(id)
         }
@@ -205,4 +210,9 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SuperelevationsEdit) -> Com
             Err(stop) => stop.into(),
         },
     )
+}
+
+/// The axis of rotation as kept: the centreline is no field (a file without an edge stays as it was, schema 162).
+fn pivot_kept(p: kentos_commands::SuperelevationPivot) -> Option<kentos_commands::SuperelevationPivot> {
+    (p != kentos_commands::SuperelevationPivot::Centerline).then_some(p)
 }

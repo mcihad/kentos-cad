@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 165 (docs/adr/0931 §2): a superelevation's axis of rotation.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pivot) {
+        return crate::SCHEMA_WITH_ROAD_PIVOT;
+    }
     // Schema 164 (docs/adr/0930 §2): a road template's pavement or a volume's rule.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pavement) {
         return crate::SCHEMA_WITH_ROAD_PAVEMENT;

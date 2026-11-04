@@ -88,6 +88,8 @@ pub struct Row {
     method: usize,
     curves: Vec<[String; 5]>,
     rows: Vec<[String; 3]>,
+    /// The axis of rotation (docs/adr/0931 §3); none: the centreline.
+    pub(crate) pivot: Option<kentos_commands::SuperelevationPivot>,
 }
 
 impl Row {
@@ -99,6 +101,7 @@ impl Row {
             alignment: d.alignment.clone(),
             alignment_revision: d.alignment_revision,
             normal: [trimmed(d.normal_left), trimmed(d.normal_right)],
+            pivot: d.pivot,
             ..Self::default()
         };
         match &d.method {
@@ -153,6 +156,7 @@ impl Row {
             normal_left: need(&self.normal[0], "Sol normal eğim")?,
             normal_right: need(&self.normal[1], "Sağ normal eğim")?,
             method,
+            pivot: self.pivot,
         })
     }
 }
@@ -408,6 +412,7 @@ impl App {
             normal_left: None,
             normal_right: None,
             method: None,
+            pivot: None,
             expected_revision: None,
         }
     }
@@ -462,6 +467,7 @@ impl App {
                 normal_left: Some(d.normal_left),
                 normal_right: Some(d.normal_right),
                 method: Some(d.method.clone()),
+                pivot: Some(d.pivot.unwrap_or(kentos_commands::SuperelevationPivot::Centerline)),
                 ..Self::blank_edit(RoadEditOperation::Set, &d.id)
             };
             if !self.superelevation_write(edit) {

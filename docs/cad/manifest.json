@@ -9548,12 +9548,13 @@
    "level": "semantic",
    "via": [
     "road.superelevations.edit",
-    "road.superelevations.query"
+    "road.superelevations.query",
+    "road.superelevations.check"
    ],
    "operation": null,
-   "python": "Connection: road.superelevations.edit, Connection: road.superelevations.query",
-   "mcp": "road.superelevations.edit, road.superelevations.query",
-   "note": "Dever penceresi çizelgeyi yazdıkça çekirdekle kurar ve diyagramı çizer; Kaydet ve Aksa yeniden bağla road.superelevations.edit ile yazar (plan/road.md Y6, ADR 0904).",
+   "python": "Connection: road.superelevations.edit, Connection: road.superelevations.query, Connection: road.superelevations.check",
+   "mcp": "road.superelevations.edit, road.superelevations.query, road.superelevations.check",
+   "note": "Dever penceresi çizelgeyi yazdıkça çekirdekle kurar ve diyagramı çizer; Kaydet ve Aksa yeniden bağla road.superelevations.edit ile yazar (plan/road.md Y6, ADR 0904); denetimi road.superelevations.check ile okur (Y27, ADR 0931).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

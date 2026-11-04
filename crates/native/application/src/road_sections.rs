@@ -322,6 +322,12 @@ fn side_row(s: &tpl::SideSection) -> SectionSide {
     }
 }
 
+/// The traveled way's widths (left, right): the lanes' (docs/adr/0931 §1), the edge an axis of rotation holds.
+pub fn lane_widths(t: &Template) -> (f64, f64) {
+    let lanes = |side: &Side| side.components.iter().map(|c| if let Component::Lane { width, .. } = c { *width } else { 0.0 }).sum();
+    (lanes(&t.left), lanes(&t.right))
+}
+
 /// The template at station `s` of a schedule: every lane takes its side's cross slope there, the side's outermost lane
 /// its widening; the shoulders keep theirs (docs/adr/0904 §3–§4).
 pub fn superelevated(
@@ -419,6 +425,11 @@ fn sections_with(
             Some((sch, normal)) => superelevated(t, sch, *normal, s),
             None => t.clone(),
         });
+        // About an edge the axis rises over the profile grade (docs/adr/0931 §1).
+        let axis = match (&schedule, &at, axis) {
+            (Some((sch, normal)), Some(t), Some(z)) => Some(z + sch.lift(s, *normal, lane_widths(t))),
+            _ => axis,
+        };
         let built_section = match (&at, axis, surface.is_some()) {
             (Some(t), Some(z), true) => tpl::build(t, z, &g).ok(),
             _ => None,

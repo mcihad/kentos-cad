@@ -7315,6 +7315,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_SUPERELEVATIONS_CHECK.into(),
+            version: crate::ROAD_SUPERELEVATIONS_CHECK_VERSION,
+            title: "Deveri denetle".into(),
+            summary: "Bir dever çizelgesini tip kesitin şerit genişlikleriyle okur ve kullanıcının sınırlarıyla denetler; hiçbir şey yazmaz. Göreli eğim: şerit kenarının dönme eksenine (çizelgenin pivot'u: eksen, sol, sağ, iç ya da dış kenar; kenar etrafında bütün genişlik döner) göre km başına yükselmesi, eğimin ve genişlemenin kırılma noktaları arasındaki her aralıkta iki yanın en büyüğü, kesin. speed (km/sa) verilirse her kurbun yanal sürtünme ihtiyacı: nokta kütle dengesi V²/(gR) = (e + f)/(1 − e·f), e merkeze doğru eğimi en az olan yanınki (ters eğimli dış yan eksi), g 9,80665; daire kısmında kırılma noktalarında kesin, klotoidde step metrede bir (öntanımlı 1). mostRelative (oran; 0,005 = 1:200) ve mostFriction aşılan yerleri bulgu yapar; sınırlar tasarım standardınındır, KentOS sayı vermez. Cevap: dönme ekseni, göreli eğim satırları, kurpların sürtünmesi (en çok istendiği km, yarıçap, dever), bulgular ve adım. \
+                      Uyarı: superelevation_limit_broken. Retler: not_a_road_project, unknown_superelevation, unknown_road_template, invalid_superelevation_check."
+                .into(),
+            aliases: vec!["deverdenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SuperelevationsCheck>(),
+            output: schema::<crate::SuperelevationsChecked>(),
+            plan: Some(schema::<crate::SuperelevationsChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "80 km/sa, sürtünme en çok 0,14, göreli eğim en dik 1:200".into(),
+                input: json!({ "superelevation": "Ana aks deveri", "template": "Tip 1", "speed": 80.0, "mostFriction": 0.14, "mostRelative": 0.005 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_EDIT.into(),
             version: crate::ROAD_CORRIDORS_EDIT_VERSION,
             title: "Koridoru düzenle".into(),
@@ -14436,6 +14461,9 @@ mod tests {
                     crate::ROAD_SUPERELEVATIONS_QUERY => {
                         serde_json::from_value::<crate::SuperelevationsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_SUPERELEVATIONS_CHECK => {
+                        serde_json::from_value::<crate::SuperelevationsCheck>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_CORRIDORS_EDIT => {
                         serde_json::from_value::<crate::CorridorsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15259,6 +15287,10 @@ mod tests {
                         }
                         crate::ROAD_SUPERELEVATIONS_QUERY => {
                             serde_json::from_value::<crate::SuperelevationsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SUPERELEVATIONS_CHECK => {
+                            serde_json::from_value::<crate::SuperelevationsChecked>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_EDIT => {

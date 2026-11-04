@@ -39028,6 +39028,17 @@
           "operation": {
             "$ref": "#/$defs/RoadEditOperation"
           },
+          "pivot": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SuperelevationPivot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The axis of rotation (docs/adr/0931 §2); `centerline` takes an edge's off."
+          },
           "superelevation": {
             "type": [
               "string",
@@ -39250,6 +39261,191 @@
               400.0
             ],
             "superelevation": "Ana aks deveri"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.superelevations.check",
+      "version": 1,
+      "title": "Deveri denetle",
+      "summary": "Bir dever çizelgesini tip kesitin şerit genişlikleriyle okur ve kullanıcının sınırlarıyla denetler; hiçbir şey yazmaz. Göreli eğim: şerit kenarının dönme eksenine (çizelgenin pivot'u: eksen, sol, sağ, iç ya da dış kenar; kenar etrafında bütün genişlik döner) göre km başına yükselmesi, eğimin ve genişlemenin kırılma noktaları arasındaki her aralıkta iki yanın en büyüğü, kesin. speed (km/sa) verilirse her kurbun yanal sürtünme ihtiyacı: nokta kütle dengesi V²/(gR) = (e + f)/(1 − e·f), e merkeze doğru eğimi en az olan yanınki (ters eğimli dış yan eksi), g 9,80665; daire kısmında kırılma noktalarında kesin, klotoidde step metrede bir (öntanımlı 1). mostRelative (oran; 0,005 = 1:200) ve mostFriction aşılan yerleri bulgu yapar; sınırlar tasarım standardınındır, KentOS sayı vermez. Cevap: dönme ekseni, göreli eğim satırları, kurpların sürtünmesi (en çok istendiği km, yarıçap, dever), bulgular ve adım. Uyarı: superelevation_limit_broken. Retler: not_a_road_project, unknown_superelevation, unknown_road_template, invalid_superelevation_check.",
+      "aliases": [
+        "deverdenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.superelevations.check` v1 (docs/adr/0931 §2): a schedule (its id or name) on a template's traveled\nway (its lanes' widths; the template by id or name), and the limits, all the design standard's and none given by\nKentOS: the design speed (km/h) with the most side friction (per one), and the most relative gradient (per one,\n0.005 is 1:200). A schedule without a limit is still read: its relative gradients and, with a speed, each curve's\nfriction.\n\nRefusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`, `invalid_superelevation_check`\n(a speed, a friction or a gradient not above 0, the friction without a speed, a step not in (0, 100] m, a template\nwithout a lane on a side).",
+        "properties": {
+          "mostFriction": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "mostRelative": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "speed": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "km/h"
+          },
+          "step": {
+            "description": "How often a clothoid's friction is read (m); absent: 1.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "superelevation": {
+            "type": "string"
+          },
+          "template": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "superelevation",
+          "template"
+        ],
+        "title": "SuperelevationsCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.check` v1: the schedule, its axis of rotation, the relative gradients by stretch,\neach curve's friction (with a speed), the limits broken in station order and the clothoid reading's step.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/CurveFrictionRow"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/SuperelevationFinding"
+            },
+            "type": "array"
+          },
+          "gradients": {
+            "items": {
+              "$ref": "#/$defs/RelativeGradient"
+            },
+            "type": "array"
+          },
+          "pivot": {
+            "$ref": "#/$defs/SuperelevationPivot"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "superelevation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "superelevation",
+          "pivot",
+          "gradients",
+          "curves",
+          "findings",
+          "step"
+        ],
+        "title": "SuperelevationsChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.check` v1: the schedule, its axis of rotation, the relative gradients by stretch,\neach curve's friction (with a speed), the limits broken in station order and the clothoid reading's step.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/CurveFrictionRow"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/SuperelevationFinding"
+            },
+            "type": "array"
+          },
+          "gradients": {
+            "items": {
+              "$ref": "#/$defs/RelativeGradient"
+            },
+            "type": "array"
+          },
+          "pivot": {
+            "$ref": "#/$defs/SuperelevationPivot"
+          },
+          "step": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "superelevation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "superelevation",
+          "pivot",
+          "gradients",
+          "curves",
+          "findings",
+          "step"
+        ],
+        "title": "SuperelevationsChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_superelevation",
+          "unknown_road_template",
+          "invalid_superelevation_check"
+        ],
+        "warnings": [
+          "superelevation_limit_broken"
+        ]
+      },
+      "examples": [
+        {
+          "title": "80 km/sa, sürtünme en çok 0,14, göreli eğim en dik 1:200",
+          "input": {
+            "mostFriction": 0.14,
+            "mostRelative": 0.005,
+            "speed": 80.0,
+            "superelevation": "Ana aks deveri",
+            "template": "Tip 1"
           }
         }
       ]
@@ -84725,6 +84921,18 @@
       "meaning": "Tasarım denetimi sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "invalid_superelevation_check",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dever denetimi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "superelevation_limit_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dever çizelgesi verilen göreli eğim ya da yanal sürtünme sınırını aşıyor."
+    },
+    {
       "code": "design_rule_broken",
       "kind": "warning",
       "retryable": false,
@@ -104442,6 +104650,54 @@
           "type": "object"
         }
       ]
+    },
+    "CurveFrictionRow": {
+      "description": "A curve's side friction at the speed: where it asks for the most, the radius and the superelevation toward the\ncentre there (per one).",
+      "properties": {
+        "at": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "e": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "friction": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "pi": {
+          "type": "string"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pi",
+        "from",
+        "to",
+        "friction",
+        "at",
+        "radius",
+        "e"
+      ],
+      "type": "object"
     },
     "CurvePair": {
       "description": "Two curves one after another: their PIs, whether they turn opposite ways, the tangent between them (ST to TS) and\nwhere, whether they are joined (no tangent).",
@@ -150656,6 +150912,38 @@
         }
       ]
     },
+    "RelativeGradient": {
+      "description": "A stretch's relative gradients (per one): each side's traveled way edge over the axis of rotation, the largest on it.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "left": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "right": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "left",
+        "right"
+      ],
+      "type": "object"
+    },
     "RenamedBlock": {
       "description": "A block whose name the drawing had: as the file names it, as it went in.",
       "properties": {
@@ -160795,6 +161083,17 @@
           "type": "number",
           "x-unit": "percent"
         },
+        "pivot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SuperelevationPivot"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The line the traveled way turns about (docs/adr/0931 §1); absent: the centreline."
+        },
         "revision": {
           "format": "uint32",
           "minimum": 0,
@@ -160809,6 +161108,47 @@
         "normalLeft",
         "normalRight",
         "method"
+      ],
+      "type": "object"
+    },
+    "SuperelevationFinding": {
+      "description": "A limit broken: `relative` (a side's edge) or `friction` (a curve), where, the value, the limit and the words.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "message": {
+          "type": "string"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "value": {
+          "description": "The relative gradient or the friction, per one.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "kind",
+        "from",
+        "to",
+        "value",
+        "limit",
+        "message"
       ],
       "type": "object"
     },
@@ -160858,6 +161198,17 @@
           "type": "object"
         }
       ]
+    },
+    "SuperelevationPivot": {
+      "description": "The axis of rotation of a superelevation (docs/adr/0931 §1): the centreline, an edge of the traveled way by side,\nor the curve's inside or outside edge.",
+      "enum": [
+        "centerline",
+        "leftEdge",
+        "rightEdge",
+        "insideEdge",
+        "outsideEdge"
+      ],
+      "type": "string"
     },
     "SuperelevationReport": {
       "description": "A superelevation schedule as it is now: each side's break points (station, slope percent) and widening (station,\nmetres), the critical stations; why it no longer builds when it does not.",

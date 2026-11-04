@@ -230,8 +230,13 @@ def edit_cases():
        failed("unknown_superelevation", "“yok” kimlikli ya da adlı dever çizelgesi projede yok.", "superelevation"))
     no("Olmayan aks", {**base, "alignment": "yok", "method": m1},
        failed("unknown_alignment", "“yok” kimlikli ya da adlı aks projede yok.", "alignment"))
+    # The axis of rotation (docs/adr/0931 §2): an edge is kept, the centreline is no field.
+    ok("Dönme ekseni iç kenar", {"operation": "set", "superelevation": "d-1", "pivot": "insideEdge"},
+       [{**D1, "pivot": "insideEdge", "revision": 2}, D2], "d-1")
+    ok("Eksen etrafında: alan yazılmaz, değişiklik yok", {"operation": "set", "superelevation": "d-1", "pivot": "centerline"},
+       [D1, D2], "d-1")
     no("Değiştirilecek bir şey yok", {"operation": "set", "superelevation": "d-1"},
-       failed("invalid_superelevation", "Değiştirilecek bir şey yok: name, alignment, normalLeft, normalRight ya da method verin."))
+       failed("invalid_superelevation", "Değiştirilecek bir şey yok: name, alignment, normalLeft, normalRight, method ya da pivot verin."))
     no("Yeni çizelgenin yöntemi yok", base,
        failed("invalid_superelevation", "Yeni dever çizelgesi için name, alignment, normalLeft, normalRight ve method verilmeli.",
               "method"))

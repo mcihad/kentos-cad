@@ -654,6 +654,10 @@ codes! {
     /// (docs/adr/0922 §3).
     INVALID_DESIGN_CHECK = "invalid_design_check", Failed, false, "Tasarım denetimi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: an alignment or a profile breaks the design rules given (docs/adr/0922 §3).
+    /// A refusal: a superelevation check's question is not valid (docs/adr/0931 §2).
+    INVALID_SUPERELEVATION_CHECK = "invalid_superelevation_check", Failed, false, "Dever denetimi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: a superelevation breaks the given relative gradient or side friction (docs/adr/0931 §2).
+    SUPERELEVATION_LIMIT_BROKEN = "superelevation_limit_broken", Warning, false, "Dever çizelgesi verilen göreli eğim ya da yanal sürtünme sınırını aşıyor.";
     DESIGN_RULE_BROKEN = "design_rule_broken", Warning, false, "Aks ya da boykesit verilen tasarım kurallarına uymuyor.";
     INVALID_SIGHT = "invalid_sight", Failed, false, "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler.";
     /// A grade line proposal asked that is not right or cannot be made: a circular curve, no surface, an unknown PVI,
