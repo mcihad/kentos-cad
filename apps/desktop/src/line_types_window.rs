@@ -1,20 +1,24 @@
 //! Çizgi tipleri (docs/adr/0313 §7; AutoCAD's LINETYPE manager): the project's line types with patterns, each with its
 //! name, unit, source and its pattern drawn as the drawing draws it (paper millimetres, a text or a shape as the room
 //! it leaves), what it cannot draw said; LIN'den yükle… and Dışa aktar… (a LIN file), Sil, and the project's line type
-//! scale. Every write goes through `cad.linetypes.edit`: the table is a project setting, no undo step.
+//! scale. Previews share the drawing renderer and cached frozen glyphs (ADR 0930). Every write goes through `cad.linetypes.edit`: the table is a project setting, no undo step.
 
-use iced::widget::canvas::{self, Frame, Geometry, Path, Stroke};
-use iced::widget::{Canvas, Column, button, container, row, text};
-use iced::{Center, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
+use crate::style::thumbs::Look;
+use iced::widget::{Column, button, container, row, text};
+use iced::{Center, Element, Fill, Task, Theme};
 use kentos_commands::{
     CommandResult, LineTypeDef, LineTypesEdit, LineTypesEdited, LineTypesOperation, PatternUnit,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, line_types_edit};
-use kentos_native_style::line_types::dashes_of;
+use kentos_native_style::line_types::{LineTypes, dashes_of};
+use kentos_native_style::preview::Geometry;
+use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Dialog as Frame2, Elided};
 use kentos_ui::{label, style};
+use serde_json::{Value, json};
+use std::collections::HashMap;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -37,6 +41,43 @@ pub struct Window {
     pub scale: String,
     /// What the last write said, shown under the list.
     said: Option<(Kind, String)>,
+    /// Shape once on opening/editing, never on pointer moves or redraws.
+    previews: HashMap<String, Preview>,
+}
+
+#[derive(Debug, Clone)]
+struct Preview {
+    symbol: Value,
+    period: f64,
+    loss: Option<String>,
+}
+impl Preview {
+    fn px_per_mm(&self, width: f32) -> f64 {
+        let length = 3. * self.period.max(1e-6);
+        let sample = if length / 0.76 < 50. {
+            length / 0.76
+        } else {
+            length + 12.
+        };
+        f64::from(width) / sample
+    }
+}
+fn previews(settings: &kentos_commands::ProjectSettings) -> HashMap<String, Preview> {
+    let compiled = LineTypes::of(settings);
+    let unit = settings
+        .drawing_unit
+        .unwrap_or(kentos_commands::DrawingUnit::M)
+        .metres();
+    settings.line_types.iter().map(|t| {
+        let period = dashes_of(t, settings.plot_scale, unit).map_or_else(|| match t.unit {
+            PatternUnit::Paper => t.period(),
+            PatternUnit::Drawing => t.period() * unit.0 / unit.1 * 1000. / settings.plot_scale.max(1e-6),
+        }, |d| d.dash.iter().sum()) * compiled.scale;
+        let symbols = compiled.apply(Some(&t.name), json!({"line":{
+            "type":"line","layers":[{"id":"linetype-preview","type":"simpleLine","color":"fg","width":0.,"unit":"mm","cap":"butt","join":"miter"}]
+        }}));
+        (t.name.clone(), Preview { symbol:symbols["line"].clone(), period, loss:compiled.loss(&t.name) })
+    }).collect()
 }
 
 #[derive(Debug, Clone)]
@@ -56,60 +97,6 @@ fn msg(event: Event) -> Message {
     Message::LineTypes(event)
 }
 
-/// A type's pattern drawn three periods long, millimetres on paper, fitted into the box.
-struct Pattern {
-    dash: Vec<f64>,
-}
-
-impl<M> canvas::Program<M> for Pattern {
-    type State = ();
-
-    fn draw(
-        &self,
-        _state: &(),
-        renderer: &Renderer,
-        theme: &Theme,
-        bounds: Rectangle,
-        _cursor: mouse::Cursor,
-    ) -> Vec<Geometry> {
-        let mut frame = Frame::new(renderer, bounds.size());
-        let ink = Tokens::of(theme).text;
-        let y = bounds.height / 2.0;
-        let stroke = Stroke::default().with_color(ink).with_width(1.5);
-        let period: f64 = self.dash.iter().sum();
-        if self.dash.is_empty() || period <= 0.0 {
-            frame.stroke(
-                &Path::line(Point::new(2.0, y), Point::new(bounds.width - 2.0, y)),
-                stroke,
-            );
-            return vec![frame.into_geometry()];
-        }
-        let width = f64::from(bounds.width) - 4.0;
-        let k = width / (3.0 * period);
-        let mut at = 0.0;
-        let mut i = 0usize;
-        while at < width {
-            let l = self.dash[i % self.dash.len()] * k;
-            if i.is_multiple_of(2) {
-                let end = (at + l.max(1.0)).min(width);
-                frame.stroke(
-                    &Path::line(
-                        Point::new((2.0 + at) as f32, y),
-                        Point::new((2.0 + end) as f32, y),
-                    ),
-                    stroke,
-                );
-            }
-            at += l;
-            i += 1;
-            if i > 4096 {
-                break;
-            }
-        }
-        vec![frame.into_geometry()]
-    }
-}
-
 impl App {
     /// Çizgi tipleri (`lineTypes.manage`).
     pub(crate) fn open_line_types(&mut self) {
@@ -122,6 +109,7 @@ impl App {
             chosen: None,
             scale: crate::properties::rows::plain_number(scale),
             said: None,
+            previews: previews(doc.model.settings()),
         });
         self.dialog = Some(Dialog::LineTypes);
     }
@@ -150,6 +138,9 @@ impl App {
             }
             _ => return None,
         };
+        if let Some(w) = self.line_types_window.as_mut() {
+            w.previews = previews(doc.model.settings());
+        }
         Some(done)
     }
 
@@ -334,15 +325,12 @@ impl App {
         let Some(w) = &self.line_types_window else {
             return text("").into();
         };
-        let settings = self.document.as_ref().map(|d| d.model.settings());
-        let (plot, unit) = settings.map_or((1000.0, (1.0, 1.0)), |s| {
-            (
-                s.plot_scale,
-                s.drawing_unit
-                    .unwrap_or(kentos_commands::DrawingUnit::M)
-                    .metres(),
-            )
-        });
+        let palette = self.style_palette();
+        let look = Look {
+            palette: &palette,
+            library: &self.styles.library,
+            images: &self.styles.images,
+        };
         let types = self.line_types();
         let mut list = Column::new().spacing(1).padding(2);
         if types.is_empty() {
@@ -354,17 +342,12 @@ impl App {
             );
         }
         for t in &types {
-            let dashes = dashes_of(t, plot, unit);
-            let dash = dashes.map_or_else(Vec::new, |d| d.dash);
+            let preview = w.previews.get(&t.name);
             let unit_words = match t.unit {
                 PatternUnit::Paper => "kâğıtta",
                 PatternUnit::Drawing => "çizimde",
             };
-            let note = if t.elements.iter().any(|e| e.is_complex()) {
-                "yazı/şekil desteklenmiyor; çıktı engellenir"
-            } else {
-                ""
-            };
+            let note = preview.and_then(|p| p.loss.as_deref()).unwrap_or("");
             let meta = [unit_words, t.source.as_deref().unwrap_or(""), note]
                 .iter()
                 .filter(|s| !s.is_empty())
@@ -376,12 +359,27 @@ impl App {
                 .font(typography::ui())
                 .width(typography::scaled(110.0));
             let description = column_of(t.description.clone(), meta);
-            let picture = container(
-                Canvas::new(Pattern { dash })
-                    .width(Fill)
-                    .height(typography::scaled(14.0)),
-            )
-            .width(typography::scaled(180.0));
+            let size = (typography::scaled(180.), typography::scaled(24.));
+            let picture: Element<'_, Message> = match preview {
+                Some(p) if p.loss.is_none() => self.styles.thumbs.picture(
+                    &p.symbol,
+                    Some(Geometry::Line),
+                    size,
+                    Some(p.px_per_mm(size.0)),
+                    &look,
+                ),
+                Some(_) => container(
+                    row![
+                        icon(Icon::Warning).size(14.).tone(Tone::Warning),
+                        label::caption("Kaynak sorunu")
+                    ]
+                    .spacing(6)
+                    .align_y(Center),
+                )
+                .width(size.0)
+                .into(),
+                None => container(text("Önizleme yok")).width(size.0).into(),
+            };
             let chosen = w.chosen.as_deref() == Some(t.name.as_str());
             let face = row![name, description, picture]
                 .spacing(10)
@@ -395,7 +393,9 @@ impl App {
                     .style(style::button::row(chosen)),
             );
         }
-        let table = container(iced::widget::scrollable(list).height(typography::scaled(220.0)))
+        let table_height = ((typography::scaled(ROW) + 5.) * types.len().min(6) as f32 + 4.)
+            .clamp(typography::scaled(84.), typography::scaled(220.));
+        let table = container(iced::widget::scrollable(list).height(table_height))
             .style(style::container::field_box)
             .width(Fill);
         let actions = row![
@@ -438,6 +438,24 @@ impl App {
                 scale,
                 Some("Bütün desenler bu sayıyla çarpılır; nesnenin kendi ölçeği ayrıca çarpılır.".to_owned()),
             ));
+        if let Some(preview) = w.chosen.as_ref().and_then(|name| w.previews.get(name)) {
+            let size = (typography::scaled(536.), typography::scaled(64.));
+            if preview.loss.is_none() {
+                body = body.push(self.styles.thumbs.picture(
+                    &preview.symbol,
+                    Some(Geometry::Line),
+                    size,
+                    Some(preview.px_per_mm(size.0)),
+                    &look,
+                ));
+            }
+            if let Some(loss) = &preview.loss {
+                body = body.push(words::summary(vec![words::text_line(
+                    Kind::Warn,
+                    format!("{loss} Çıktı ön denetiminde bildirilir."),
+                )]));
+            }
+        }
         if let Some((kind, said)) = &w.said {
             body = body.push(words::summary(vec![words::text_line(*kind, said.clone())]));
         }
@@ -517,4 +535,49 @@ fn loaded_words(file: &str, done: &LineTypesEdited) -> String {
         parts.push("alınacak tip yok".to_owned());
     }
     format!("{file}: {}.", parts.join("; "))
+}
+
+#[cfg(test)]
+mod preview_tests {
+    use super::*;
+    #[test]
+    fn preview_uses_resolved_text_and_resource_specific_loss() {
+        let settings:kentos_commands::ProjectSettings=serde_json::from_value(json!({
+            "srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":50.,
+            "lineTypes":[
+                {"name":"HW","unit":"paper","elements":[{"length":5.},{"length":-4.},{"length":0.,"text":{"text":"HW","style":"STANDARD","scale":1.5}},{"length":-4.}]},
+                {"name":"SHX","unit":"paper","elements":[{"length":5.},{"length":-4.},{"length":0.,"shape":{"name":"FENCE","file":"missing.shx"}},{"length":-4.}]}
+            ]
+        })).unwrap();
+        let got = previews(&settings);
+        let text = &got["HW"];
+        assert!(text.loss.is_none());
+        assert_eq!(text.period, 13.);
+        assert_eq!(text.symbol["layers"][0]["width"], 0.);
+        assert_eq!(
+            text.symbol["layers"][0]["cadMarks"]["marks"]
+                .as_array()
+                .unwrap()
+                .len(),
+            1
+        );
+        assert!(got["SHX"].loss.as_ref().unwrap().contains("missing.shx"));
+        assert!(got["SHX"].symbol["layers"][0]["lineTypeLoss"].is_string());
+        let rendered = kentos_native_style::preview::preview(
+            &text.symbol,
+            Some(Geometry::Line),
+            (180., 24.),
+            Some(text.px_per_mm(180.)),
+            &kentos_native_style::StylePalette::graphite(),
+            &kentos_native_style::library::StyleLibrary::default(),
+        )
+        .unwrap();
+        assert!(
+            rendered
+                .layer
+                .batches
+                .iter()
+                .any(|b| matches!(b.kind, kentos_native_style::batches::BatchKind::Fill { .. }))
+        );
+    }
 }

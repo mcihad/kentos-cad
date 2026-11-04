@@ -1687,6 +1687,13 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
 - SHX, tam affine, noktalı bant, analitik metin-yay fazı ve performans
   kabulü açık; madde `[~]` olarak kalır. Ekranlar repo dışında.
 
+**Yönetici önizlemesi (4 Kasım 2026):** Çizgi tipleri listesi ve seçili
+büyük örnek, mevcut KentOS GPU önizleme bileşeniyle gerçek yazılı deseni
+çizer. Genel yanlış desteklenmiyor uyarısı kaldırıldı; çizilemeyen kaynağın
+adı seçimde açıkça gösterilir. Konturlar açılışta/düzenlemede hazırlanır.
+Gerçek LIN yükleme, farklı kaydetme ve yeniden açma testiyle doğrulandı;
+kanıtlar ADR 0930'da. Bu dilim SHX çizimini tamamlamaz.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

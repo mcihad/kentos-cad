@@ -588,3 +588,44 @@ Doğrulama:
 SHX kaynağını gerçekten çizme, tam affine blok, noktalı geniş bant,
 PLINEGEN sözleşmesi, metin işaretinin analitik yay fazı ve geniş veri
 performansı açık. CAD-ADV-11 tamamlanmadı.
+
+
+## Çizgi tipi yöneticisinin gerçek önizlemesi (4 Kasım 2026)
+
+[AutoCAD Linetype Manager](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-LT/files/GUID-19A63E71-A551-4767-88FA-A6F54034C9DE.htm)
+listede görünüş örneği, seçili tanım ve ayrıntıları birlikte gösterir.
+KentOS yöneticisinin eski özel Canvas'ı yalnız dash/gap çiziyor, her
+kompleks tanım için desteklenmiyor diyordu; artık desteklenen yazılı
+desenle çelişiyordu.
+
+`apps/desktop/src/line_types_window.rs` mevcut KentOS `Styles.thumbs`
+shader bileşenini kullanır: kaynak `LineTypes.apply` → ortak stil
+derleyicisi → sahnenin GPU çizim hattı. Ayrı bir harf veya faz hesabı yok.
+Seçili desteklenen desenin büyük örneği gösterilir. Kaynak konturları
+pencere açılırken veya `cad.linetypes.edit` sonrasında hazırlanır;
+farenin her hareketinde yeniden font çözümleme yapılmaz. Çizgi tipi
+örneği saç teliyle çizilir; çok küçük drawing-unit desende gösterim
+kalınlığı örneği doldurmaz. Projedeki lineweight değiştirilmez. Liste yüksekliği öğe sayısına göre
+küçülür; uzun listeler mevcut kaydırma bileşenini kullanır.
+
+Kaynak gerçekten çizilemiyorsa listede standart uyarı ikonu ve “Kaynak
+sorunu”, seçimde tam kaynak dosyası/şekil açıklaması vardır. Eksik şeklin
+yalnız çizgi parçaları başarılı bir tam örnek gibi gösterilmez. Genel
+yazı/şekil desteklenmiyor iddiası kaldırılır. Veri ve komut davranışı
+korunur; yeni Python/MCP komutu eklenmez.
+
+- Desktop birim testi gerçek `preview::preview` sonucunda yazının fill
+  batch'ini, 13 mm periyodu, saç teli ve missing.shx kayıp bilgisini
+  doğrular. Son Clippy ve derleme geçti.
+- Gerçek GUI'de eski yanlış uyarı kaydedildi, yeni listede HW harfleri ve
+  seçili büyük örnek görüldü. LIN'den `QA_MISSING_SHX` yüklenince liste
+  güncellendi; seçimde `missing.shx` ve FENCE açıklaması doğrulandı.
+  GUI'den farklı kaydedilen `line-types-preview.kcad` yeni binary ile
+  yeniden açıldı; hem yazılı örnek hem kaynak uyarısı yeniden kontrol edildi.
+- Son binary SHA-256:
+  `c4ff9d7db8aa0e9638e2173fa0f4cd909eb4ec2120bc91fac62cc127ffd13065`.
+  `linetype-preview-before-gui.png`, `linetype-preview-{text,source}-compact-gui.png` ve
+  `linetype-preview-{tests-final,clippy-final,desktop-compact}.log` aynı
+  repo dışı kanıt klasöründe. Dar pencere için gerçek köşe sürükleme
+  denemesi araçta `windowNotFoundAtPosition` verdi; dar pencere kabulü
+  yapılmış sayılmaz.
