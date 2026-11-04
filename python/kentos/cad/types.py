@@ -80,6 +80,7 @@ UNITS: dict[str, str] = {
     "version": "Sürüm numarası.",
     "value": "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
     "km/h": "Kilometre bölü saat.",
+    "m2/s": "Metre başına debi: m³/s bölü metre, birim genişlikten geçen su (yolu aşan suyun metresi).",
     "m/s2": "Metre bölü saniye kare: ivme ve yavaşlama.",
     "m/s3": "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor).",
     "s": "Saniye.",
@@ -1460,6 +1461,24 @@ class CulvertFlow(_StrEnum):
 
 CulvertFlowName = Literal["right", "left"]
 """The names of :class:`CulvertFlow`, for a plain string."""
+
+
+class CulvertInlet(_StrEnum):
+    """A culvert's inlet among FHWA HDS-5's table A.1 rows (docs/adr/0947): concrete pipes with a square edge in a
+    headwall, a groove end in a headwall or projecting; concrete boxes with 30°–75°, 90° and 15°, or 0° wingwall flares,
+    or a 90° headwall with chamfers.
+    """
+    PIPE_SQUARE_HEADWALL = "pipeSquareHeadwall"
+    PIPE_GROOVE_HEADWALL = "pipeGrooveHeadwall"
+    PIPE_GROOVE_PROJECTING = "pipeGrooveProjecting"
+    BOX_WINGWALL30_TO75 = "boxWingwall30To75"
+    BOX_WINGWALL90_AND15 = "boxWingwall90And15"
+    BOX_WINGWALL0 = "boxWingwall0"
+    BOX_HEADWALL_CHAMFER = "boxHeadwallChamfer"
+
+
+CulvertInletName = Literal["pipeSquareHeadwall", "pipeGrooveHeadwall", "pipeGrooveProjecting", "boxWingwall30To75", "boxWingwall90And15", "boxWingwall0", "boxHeadwallChamfer"]
+"""The names of :class:`CulvertInlet`, for a plain string."""
 
 
 class DerivationStatus(_StrEnum):
@@ -22189,6 +22208,117 @@ class CulvertEnd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CulvertFlowRead(_Model):
+    """A culvert at one flow (docs/adr/0947): the flow, the headwater (m above the inlet's invert) and its elevation, the
+    control, the inlet's and the outlet's headwater at the culvert's flow, what the culvert and the road carry (m³/s),
+    and over the crest the head, the depth and speed at critical flow, the flow per metre and the hazard class (1–6;
+    none where not overtopped).
+    Attributes:
+        flow: Unit: discharge.
+        headwater: Unit: m.
+        level: Unit: elevation.
+        inlet_headwater: Unit: m.
+        outlet_headwater: Unit: m.
+        through: Unit: discharge.
+        overtopping: Unit: discharge.
+    """
+    flow: float
+    headwater: float
+    level: float
+    inlet_control: bool
+    inlet_headwater: float
+    outlet_headwater: float
+    through: float
+    overtopping: float
+    over: CulvertOvertop | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["flow"] = float(self.flow)
+        out["headwater"] = float(self.headwater)
+        out["level"] = float(self.level)
+        out["inletControl"] = self.inlet_control
+        out["inletHeadwater"] = float(self.inlet_headwater)
+        out["outletHeadwater"] = float(self.outlet_headwater)
+        out["through"] = float(self.through)
+        out["overtopping"] = float(self.overtopping)
+        if self.over is not UNSET:
+            out["over"] = None if self.over is None else self.over.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertFlowRead:
+        return cls(
+            flow=float(data["flow"]),
+            headwater=float(data["headwater"]),
+            level=float(data["level"]),
+            inlet_control=data["inletControl"],
+            inlet_headwater=float(data["inletHeadwater"]),
+            outlet_headwater=float(data["outletHeadwater"]),
+            through=float(data["through"]),
+            overtopping=float(data["overtopping"]),
+            over=UNSET if "over" not in data else None if data["over"] is None else CulvertOvertop.from_json(data["over"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertHydraulicsRead(_Model):
+    """Output of `road.culverts.hydraulics` v1 (docs/adr/0947): the culvert, its inlet's and outlet's inverts, barrel
+    length, slope (m/m), cells and Manning's n as used; the road's crest (none where no weir); the flow asked, read; the
+    performance curve.
+    Attributes:
+        inlet_invert: Unit: elevation.
+        outlet_invert: Unit: elevation.
+        length: Unit: m.
+        slope: Unit: 1.
+        cells: Unit: count.
+        roughness: Unit: 1.
+        crest: Unit: elevation.
+    """
+    culvert: str
+    inlet_invert: float
+    outlet_invert: float
+    length: float
+    slope: float
+    cells: int
+    roughness: float
+    at: CulvertFlowRead
+    crest: float | None | Unset = UNSET
+    curve: list[CulvertFlowRead] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culvert"] = self.culvert
+        out["inletInvert"] = float(self.inlet_invert)
+        out["outletInvert"] = float(self.outlet_invert)
+        out["length"] = float(self.length)
+        out["slope"] = float(self.slope)
+        out["cells"] = self.cells
+        out["roughness"] = float(self.roughness)
+        out["at"] = self.at.to_json()
+        if self.crest is not UNSET:
+            out["crest"] = None if self.crest is None else float(self.crest)
+        if self.curve is not UNSET:
+            out["curve"] = [e0.to_json() for e0 in self.curve]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertHydraulicsRead:
+        return cls(
+            culvert=data["culvert"],
+            inlet_invert=float(data["inletInvert"]),
+            outlet_invert=float(data["outletInvert"]),
+            length=float(data["length"]),
+            slope=float(data["slope"]),
+            cells=data["cells"],
+            roughness=float(data["roughness"]),
+            at=CulvertFlowRead.from_json(data["at"]),
+            crest=UNSET if "crest" not in data else None if data["crest"] is None else float(data["crest"]),
+            curve=[CulvertFlowRead.from_json(e0) for e0 in data["curve"]] if "curve" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CulvertListed(_Model):
     """A culvert in the project's list.
     Attributes:
@@ -22218,6 +22348,46 @@ class CulvertListed(_Model):
             corridor=data["corridor"],
             station=float(data["station"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertOvertop(_Model):
+    """The road overtopped (docs/adr/0947): the head over the crest, the depth and speed there, the flow per metre and the
+    hazard class with its words.
+    Attributes:
+        head: Unit: m.
+        depth: Unit: m.
+        speed: Unit: velocity.
+        unit: Unit: m2/s.
+        hazard: Unit: count.
+    """
+    head: float
+    depth: float
+    speed: float
+    unit: float
+    hazard: int
+    words: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["head"] = float(self.head)
+        out["depth"] = float(self.depth)
+        out["speed"] = float(self.speed)
+        out["unit"] = float(self.unit)
+        out["hazard"] = self.hazard
+        out["words"] = self.words
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertOvertop:
+        return cls(
+            head=float(data["head"]),
+            depth=float(data["depth"]),
+            speed=float(data["speed"]),
+            unit=float(data["unit"]),
+            hazard=data["hazard"],
+            words=data["words"],
         )
 
 
@@ -22289,6 +22459,36 @@ class CulvertReport(_Model):
             cover_offset=float(data["coverOffset"]),
             pipes=float(data["pipes"]),
             concrete=float(data["concrete"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertWeir(_Model):
+    """The road over a culvert as a weir (docs/adr/0947): its discharge coefficient (SI, Q = Cd·L·h^1.5), the length along
+    the road that overtops (m) and the crest's elevation (absent: the corridor's profile at the culvert). The project's.
+    Attributes:
+        cd: Unit: 1.
+        length: Unit: m.
+        crest: Unit: elevation.
+    """
+    cd: float
+    length: float
+    crest: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cd"] = float(self.cd)
+        out["length"] = float(self.length)
+        if self.crest is not UNSET:
+            out["crest"] = None if self.crest is None else float(self.crest)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertWeir:
+        return cls(
+            cd=float(data["cd"]),
+            length=float(data["length"]),
+            crest=UNSET if "crest" not in data else None if data["crest"] is None else float(data["crest"]),
         )
 
 
@@ -22443,6 +22643,62 @@ class CulvertsEdit(_Model):
             skew=UNSET if "skew" not in data else None if data["skew"] is None else float(data["skew"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsHydraulics(_Model):
+    """Input of `road.culverts.hydraulics` v1 (plan/road.md Y41, docs/adr/0947): a culvert's headwater at a flow (m³/s)
+    against a tailwater (m over the outlet's invert; absent: 0), by its HDS-5 inlet and entrance loss ke; Manning's n
+    (absent: the culvert's roughness); the road as a weir (absent: not overtopped); and a performance curve of `curve`
+    flows from 0 to 1.5 × the flow (2 to 200; absent: none). KentOS gives no coefficient.
+
+    Refusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert_hydraulics` (a flow not above 0, a tailwater
+    below 0, ke out of 0–2, no roughness or one not in (0, 0.1], a weir's Cd or length not above 0, a curve out of
+    2–200), and the culvert's own (`invalid_culvert`).
+    Attributes:
+        flow: Unit: discharge.
+        entrance_loss: Unit: 1.
+        curve: Unit: count.
+        roughness: Unit: 1.
+        tailwater: Unit: m.
+    """
+    culvert: str
+    flow: float
+    inlet: CulvertInlet | CulvertInletName
+    entrance_loss: float
+    curve: int | None | Unset = UNSET
+    roughness: float | None | Unset = UNSET
+    tailwater: float | None | Unset = UNSET
+    weir: CulvertWeir | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culvert"] = self.culvert
+        out["flow"] = float(self.flow)
+        out["inlet"] = _enum_out(self.inlet)
+        out["entranceLoss"] = float(self.entrance_loss)
+        if self.curve is not UNSET:
+            out["curve"] = self.curve
+        if self.roughness is not UNSET:
+            out["roughness"] = None if self.roughness is None else float(self.roughness)
+        if self.tailwater is not UNSET:
+            out["tailwater"] = None if self.tailwater is None else float(self.tailwater)
+        if self.weir is not UNSET:
+            out["weir"] = None if self.weir is None else self.weir.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsHydraulics:
+        return cls(
+            culvert=data["culvert"],
+            flow=float(data["flow"]),
+            inlet=_enum_in(CulvertInlet, data["inlet"]),
+            entrance_loss=float(data["entranceLoss"]),
+            curve=data.get("curve", UNSET),
+            roughness=UNSET if "roughness" not in data else None if data["roughness"] is None else float(data["roughness"]),
+            tailwater=UNSET if "tailwater" not in data else None if data["tailwater"] is None else float(data["tailwater"]),
+            weir=UNSET if "weir" not in data else None if data["weir"] is None else CulvertWeir.from_json(data["weir"]),
         )
 
 
@@ -108917,12 +109173,19 @@ __all__ = [
     "CulvertEnd",
     "CulvertFlow",
     "CulvertFlowName",
+    "CulvertFlowRead",
+    "CulvertHydraulicsRead",
+    "CulvertInlet",
+    "CulvertInletName",
     "CulvertListed",
+    "CulvertOvertop",
     "CulvertReport",
     "CulvertShapeDef",
+    "CulvertWeir",
     "CulvertsDraw",
     "CulvertsDrawn",
     "CulvertsEdit",
+    "CulvertsHydraulics",
     "CulvertsQueried",
     "CulvertsQuery",
     "CulvertsWritten",

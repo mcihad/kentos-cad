@@ -1,7 +1,7 @@
 //! A culvert's headwater and the road's overtopping against the shared cases (fixtures/road/v1/culvert_hydraulics.json,
 //! docs/adr/0947): written by scripts/fixtures/road_culvert_hydraulics_cases.py in mpmath at 40 digits, no KentOS code.
 
-use kentos_road::culvert_hydraulics::{Control, Culvert, Inlet, Section, Weir, perform};
+use kentos_road::culvert_hydraulics::{Control, Culvert, INLETS, Inlet, Section, Weir, inlet, perform};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/road/v1/culvert_hydraulics.json");
@@ -57,4 +57,17 @@ fn the_headwaters_and_overtopping_are_the_references() {
         assert_eq!(got.control, control, "{name}: control");
         assert_eq!(u64::from(got.hazard), e["hazard"].as_u64().unwrap(), "{name}: hazard");
     }
+}
+
+#[test]
+fn the_named_inlets_are_the_references_rows() {
+    let doc: Value = serde_json::from_str(CASES).expect("cases");
+    let rows = doc["inlets"].as_object().expect("inlets");
+    assert_eq!(rows.len(), INLETS.len());
+    for (name, i) in rows {
+        let got = inlet(name).unwrap_or_else(|| panic!("{name} named"));
+        let want = Inlet { form: i["form"].as_u64().unwrap() as u8, k: n(&i["k"]), m: n(&i["m"]), c: n(&i["c"]), y: n(&i["y"]), ks: n(&i["ks"]) };
+        assert_eq!(got, want, "{name}");
+    }
+    assert!(inlet("pipe-mitered").is_none());
 }

@@ -7946,6 +7946,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CULVERTS_HYDRAULICS.into(),
+            version: crate::ROAD_CULVERTS_HYDRAULICS_VERSION,
+            title: "Menfez hidroliği".into(),
+            summary: "Menfezin flow debisinde (m³/s) giriş önündeki su yüksekliğini FHWA HDS-5'in giriş ve çıkış kontrolüyle hesaplar: inlet HDS-5 Tablo A.1 satırı, entranceLoss giriş kaybı ke, roughness Manning n (yoksa menfezinki), tailwater çıkıştaki su derinliği (yoksa 0). weir ile yol savak olur (Cd, boy, kret; kret yoksa gövde üstündeki yolun en yüksek kotu): su kreti aşınca yoldan geçen debi, kret üstünde derinlik, hız ve AIDR tehlike sınıfı (H1–H6). curve ile 0'dan 1,5 × debiye nokta nokta performans eğrisi. Katsayıları KentOS vermez. Yalnız okur. \
+                      Uyarılar: culvert_overtopped ve okumanın uyarıları. Retler: not_a_road_project, unknown_culvert, invalid_culvert_hydraulics, invalid_culvert."
+                .into(),
+            aliases: vec!["menfezhidrolik".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsHydraulics>(),
+            output: schema::<crate::CulvertHydraulicsRead>(),
+            plan: Some(schema::<crate::CulvertHydraulicsRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kutu menfez, yolu savak sayarak".into(),
+                input: json!({ "culvert": "m-1", "flow": 12.0, "inlet": "boxWingwall30To75", "entranceLoss": 0.4, "weir": { "cd": 1.66, "length": 60.0 }, "curve": 25 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_DRAINAGE_QUERY.into(),
             version: crate::ROAD_DRAINAGE_QUERY_VERSION,
             title: "Drenajı sorgula".into(),
@@ -14721,6 +14746,9 @@ mod tests {
                     crate::ROAD_CULVERTS_DRAW => {
                         serde_json::from_value::<crate::CulvertsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CULVERTS_HYDRAULICS => {
+                        serde_json::from_value::<crate::CulvertsHydraulics>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloud>(e.input.clone()).map(|_| ()),
                     crate::ROAD_DRAINAGE_QUERY => serde_json::from_value::<crate::DrainageQuery>(e.input.clone()).map(|_| ()),
@@ -15579,6 +15607,9 @@ mod tests {
                         }
                         crate::ROAD_CULVERTS_DRAW => {
                             serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_HYDRAULICS => {
+                            serde_json::from_value::<crate::CulvertHydraulicsRead>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloudWritten>(output.clone()).map(|_| ()),

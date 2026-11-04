@@ -1,6 +1,6 @@
 # 0947 — Menfezin su yüksekliği, yolun taşması ve taşan suyun tehlikesi
 
-Tarih: 2026-11-05. Durum: kabul (Y41.1 çekirdek). Kapsam ROAD-DRAIN-08.
+Tarih: 2026-11-05. Durum: kabul (Y41.1 çekirdek, Y41.2 komut, Y41.3 pencere). Kapsam ROAD-DRAIN-08.
 
 ## Sorun
 
@@ -56,6 +56,8 @@ uncertainty'yi açık alsın."
 - giriş ve çıkış kontrolünün büyüğüdür;
 - debi sıfırsa kuyruk suyunun seviyesidir. HDS-5'in (dc + D)/2 kuralı akan bir boru içindir; sıfır debide anlamsız
   bir 0,3 m veriyordu (başvuruda görüldü).
+- Sıfır debide iki kontrolün su yüksekliği de öyledir: giriş 0, çıkış kuyruk suyunun seviyesi. Giriş denklemi
+  sıfır debide Ks·S kadar eksi bir değer (−0,01 m) veriyordu; performans eğrisinin ilk satırında görüldü (Y41.3).
 
 **Taşma:**
 
@@ -101,6 +103,58 @@ içinde aynı bulur (`crates/shared/road/tests/all/culvert_hydraulics.rs`).
 
 Yarı debi (15 m³/s), 8 m'lik bir çukurda toplanınca, 40 m'ye yayılan 30 m³/s'den daha tehlikelidir: H4 yerine H5.
 Taşma boyu, yani yol boykesitinin çukurunun genişliği, menfez kadar önemlidir.
+
+## Komut: `road.culverts.hydraulics` (Y41.2)
+
+Kayıtlı bir menfezi bir debide okur. Yalnız okur.
+
+- **Girdi:** menfez, debi (m³/s), kuyruk suyu (yoksa 0), giriş (HDS-5'in yedi satırından biri), giriş kaybı ke,
+  Manning n (yoksa menfezinki), savak (Cd, boy, kret; kret yoksa yol), eğri (2–200 nokta, 0'dan 1,5 × debiye).
+- **Menfezden okunan:** giriş ve çıkış ucunun akış kotu, gövde boyu (açıyla), eğim = (giriş − çıkış) / boy, göz sayısı.
+  Hepsi `road.culverts.query`'nin okuduğudur.
+- **Kret yoksa** gövdenin menteşeleri arasındaki yol üstünün en yüksek kotudur: su yolu sırtından aşar.
+- **Retler:** `not_a_road_project`, `unknown_culvert`, `invalid_culvert_hydraulics` (debi 0–10000, kuyruk suyu 0–100,
+  ke 0–2, n yoksa ya da 0–0,1 dışındaysa, Cd 0–3, savak boyu 0–10000, kret giriş kotunun altındaysa, eğri 2–200),
+  `invalid_culvert`.
+- **Uyarı:** `culvert_overtopped` yolu aşan debiyi, kret üstündeki suyu ve tehlike sınıfını söyler; okumanın uyarıları
+  (`culvert_stale`, `culvert_cover`, `corridor_stale`, `corridor_unsolved`) geçer.
+- KentOS ke, n, Cd ve taşma boyu için sayı vermez.
+
+`scripts/fixtures/road_culvert_hydraulics_command_cases.py` 30 durum yazar. Menfezin okunuşu `road_culvert_cases.py`'nin,
+hidrolik yukarıdaki 40 basamaklı başvurunun; KentOS kodu yok. Rust ve Python 1e-6 içinde aynı bulur.
+
+Ortak çizimin kutu menfezi (2 × 1,5 m, iki göz, 21,94 m, %1; giriş 106,589, yol kreti 109,846; 30°–75° kanat, ke 0,4,
+n 0,013; savak Cd 1,66):
+
+| Debi, savak boyu | Su kotu | Kontrol | Yoldan | Sırtta derinlik, hız | Sınıf |
+|---|---|---|---|---|---|
+| 4 m³/s, savaksız | 107,390 | çıkış ((dc + D)/2) | — | — | — |
+| 12 m³/s, 60 m | 108,155 | giriş | 0 (krete 1,69 m) | — | — |
+| 60 m³/s, 60 m | 110,313 | giriş | 31,79 m³/s | 0,306 m, 1,73 m/s | H2 |
+| 60 m³/s, 10 m | 111,230 | giriş | 27,04 m³/s | 0,907 m, 2,98 m/s | H5 |
+
+Aynı debi 10 m'lik bir çukurda toplanınca hız 2 m/s'yi aşar ve sınıf H2'den H5'e çıkar.
+
+## Pencere: Menfez → Hidrolik (Y41.3)
+
+Araştırma (5 Kasım 2026): FHWA'nın HY-8'i bir geçidi iki tabloyla gösterir. Geçit özetinde toplam debi, menfezden ve
+yoldan geçen debi ve su kotu vardır. Menfez özetinde ayrıca giriş ve çıkış kontrolünün su derinliği bulunur. Yanında su
+kotu–debi performans eğrisi durur.
+
+Menfez penceresi iki sayfa oldu: **Gövde** (eski resim ve uçlar) ve **Hidrolik**.
+
+- **Alanlar:** debi, kuyruk suyu, giriş (kesite göre üç boru ya da dört kutu satırı), ke, n, savak Cd, savak boyu,
+  kret kotu. Savak Cd ile savak boyu birlikte yazılır.
+- **Okuma satırı:** su yüksekliği ve kotu, kontrol ve iki kontrolün su yüksekliği, menfezden geçen debi. Yol
+  aşılmıyorsa krete kalan pay; aşılıyorsa yoldan geçen debi ve sırttaki derinlik, hız, sınıf.
+- **Taşmada** D·V ile sınıf ayrıca uyarı renginde yazılır, H3'ten yukarısı tehlike renginde. Kapatma kararı
+  tasarımcınındır.
+- **Performans eğrisi:** 13 nokta. Su kotu düz çizgi, giriş ve çıkış kontrolü kesikli, yol kreti kırmızı. Taşan noktalar
+  sınıf rengiyle işaretlenir, sorulan debi daireyle gösterilir. Yanında HY-8'in özet tablosu durur: toplam, menfez, yol,
+  su kotu, giriş HW, çıkış HW, kontrol, tehlike.
+- **Dar pencere:** eğri genişliğin 5/9'unu alır, tablo kendi içinde kayar. Önce tablonun sabit sütunları eğriyi
+  1100 px'lik pencerede yaklaşık 210 px'e sıkıştırıyordu.
+- Hidrolik kayıtlı menfezi okur; yazılıp kaydedilmemiş ölçüler okunmaz. Bunu pencere de söyler.
 
 ## Açık
 

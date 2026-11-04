@@ -43913,6 +43913,261 @@
       ]
     },
     {
+      "id": "road.culverts.hydraulics",
+      "version": 1,
+      "title": "Menfez hidroliği",
+      "summary": "Menfezin flow debisinde (m³/s) giriş önündeki su yüksekliğini FHWA HDS-5'in giriş ve çıkış kontrolüyle hesaplar: inlet HDS-5 Tablo A.1 satırı, entranceLoss giriş kaybı ke, roughness Manning n (yoksa menfezinki), tailwater çıkıştaki su derinliği (yoksa 0). weir ile yol savak olur (Cd, boy, kret; kret yoksa gövde üstündeki yolun en yüksek kotu): su kreti aşınca yoldan geçen debi, kret üstünde derinlik, hız ve AIDR tehlike sınıfı (H1–H6). curve ile 0'dan 1,5 × debiye nokta nokta performans eğrisi. Katsayıları KentOS vermez. Yalnız okur. Uyarılar: culvert_overtopped ve okumanın uyarıları. Retler: not_a_road_project, unknown_culvert, invalid_culvert_hydraulics, invalid_culvert.",
+      "aliases": [
+        "menfezhidrolik"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.culverts.hydraulics` v1 (plan/road.md Y41, docs/adr/0947): a culvert's headwater at a flow (m³/s)\nagainst a tailwater (m over the outlet's invert; absent: 0), by its HDS-5 inlet and entrance loss ke; Manning's n\n(absent: the culvert's roughness); the road as a weir (absent: not overtopped); and a performance curve of `curve`\nflows from 0 to 1.5 × the flow (2 to 200; absent: none). KentOS gives no coefficient.\n\nRefusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert_hydraulics` (a flow not above 0, a tailwater\nbelow 0, ke out of 0–2, no roughness or one not in (0, 0.1], a weir's Cd or length not above 0, a curve out of\n2–200), and the culvert's own (`invalid_culvert`).",
+        "properties": {
+          "culvert": {
+            "type": "string"
+          },
+          "curve": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "entranceLoss": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "flow": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "discharge"
+          },
+          "inlet": {
+            "$ref": "#/$defs/CulvertInlet"
+          },
+          "roughness": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "tailwater": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "weir": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CulvertWeir"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "culvert",
+          "flow",
+          "inlet",
+          "entranceLoss"
+        ],
+        "title": "CulvertsHydraulics",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.hydraulics` v1 (docs/adr/0947): the culvert, its inlet's and outlet's inverts, barrel\nlength, slope (m/m), cells and Manning's n as used; the road's crest (none where no weir); the flow asked, read; the\nperformance curve.",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/CulvertFlowRead"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "crest": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "culvert": {
+            "type": "string"
+          },
+          "curve": {
+            "items": {
+              "$ref": "#/$defs/CulvertFlowRead"
+            },
+            "type": "array"
+          },
+          "inletInvert": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "outletInvert": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "roughness": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "slope": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          }
+        },
+        "required": [
+          "culvert",
+          "inletInvert",
+          "outletInvert",
+          "length",
+          "slope",
+          "cells",
+          "roughness",
+          "at"
+        ],
+        "title": "CulvertHydraulicsRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.hydraulics` v1 (docs/adr/0947): the culvert, its inlet's and outlet's inverts, barrel\nlength, slope (m/m), cells and Manning's n as used; the road's crest (none where no weir); the flow asked, read; the\nperformance curve.",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/CulvertFlowRead"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "crest": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "culvert": {
+            "type": "string"
+          },
+          "curve": {
+            "items": {
+              "$ref": "#/$defs/CulvertFlowRead"
+            },
+            "type": "array"
+          },
+          "inletInvert": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "outletInvert": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "roughness": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "slope": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          }
+        },
+        "required": [
+          "culvert",
+          "inletInvert",
+          "outletInvert",
+          "length",
+          "slope",
+          "cells",
+          "roughness",
+          "at"
+        ],
+        "title": "CulvertHydraulicsRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_culvert",
+          "invalid_culvert_hydraulics",
+          "invalid_culvert"
+        ],
+        "warnings": [
+          "culvert_overtopped",
+          "culvert_stale",
+          "culvert_cover",
+          "corridor_stale",
+          "corridor_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kutu menfez, yolu savak sayarak",
+          "input": {
+            "culvert": "m-1",
+            "curve": 25,
+            "entranceLoss": 0.4,
+            "flow": 12.0,
+            "inlet": "boxWingwall30To75",
+            "weir": {
+              "cd": 1.66,
+              "length": 60.0
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "road.drainage.query",
       "version": 1,
       "title": "Drenajı sorgula",
@@ -87041,6 +87296,18 @@
       "meaning": "Bazı kontrol noktaları sınıflarının medyanından 3 NMAD'den uzak: ölçü ya da sınıf hatası olabilir."
     },
     {
+      "code": "invalid_culvert_hydraulics",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Menfez hidroliği sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "culvert_overtopped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bu debide su menfezin üstünden yolu aşıyor; tehlike sınıfı iletide."
+    },
+    {
       "code": "corridor_in_use",
       "kind": "failed",
       "retryable": false,
@@ -92896,6 +93163,10 @@
     {
       "unit": "km/h",
       "meaning": "Kilometre bölü saat."
+    },
+    {
+      "unit": "m2/s",
+      "meaning": "Metre başına debi: m³/s bölü metre, birim genişlikten geçen su (yolu aşan suyun metresi)."
     },
     {
       "unit": "m/s2",
@@ -106204,6 +106475,83 @@
       ],
       "type": "string"
     },
+    "CulvertFlowRead": {
+      "description": "A culvert at one flow (docs/adr/0947): the flow, the headwater (m above the inlet's invert) and its elevation, the\ncontrol, the inlet's and the outlet's headwater at the culvert's flow, what the culvert and the road carry (m³/s),\nand over the crest the head, the depth and speed at critical flow, the flow per metre and the hazard class (1–6;\nnone where not overtopped).",
+      "properties": {
+        "flow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "discharge"
+        },
+        "headwater": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "inletControl": {
+          "type": "boolean"
+        },
+        "inletHeadwater": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "level": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "outletHeadwater": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "over": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CulvertOvertop"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overtopping": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "discharge"
+        },
+        "through": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "discharge"
+        }
+      },
+      "required": [
+        "flow",
+        "headwater",
+        "level",
+        "inletControl",
+        "inletHeadwater",
+        "outletHeadwater",
+        "through",
+        "overtopping"
+      ],
+      "type": "object"
+    },
+    "CulvertInlet": {
+      "description": "A culvert's inlet among FHWA HDS-5's table A.1 rows (docs/adr/0947): concrete pipes with a square edge in a\nheadwall, a groove end in a headwall or projecting; concrete boxes with 30°–75°, 90° and 15°, or 0° wingwall flares,\nor a 90° headwall with chamfers.",
+      "enum": [
+        "pipeSquareHeadwall",
+        "pipeGrooveHeadwall",
+        "pipeGrooveProjecting",
+        "boxWingwall30To75",
+        "boxWingwall90And15",
+        "boxWingwall0",
+        "boxHeadwallChamfer"
+      ],
+      "type": "string"
+    },
     "CulvertListed": {
       "description": "A culvert in the project's list.",
       "properties": {
@@ -106234,6 +106582,50 @@
         "corridor",
         "station",
         "revision"
+      ],
+      "type": "object"
+    },
+    "CulvertOvertop": {
+      "description": "The road overtopped (docs/adr/0947): the head over the crest, the depth and speed there, the flow per metre and the\nhazard class with its words.",
+      "properties": {
+        "depth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "hazard": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "head": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "speed": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "velocity"
+        },
+        "unit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m2/s"
+        },
+        "words": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "head",
+        "depth",
+        "speed",
+        "unit",
+        "hazard",
+        "words"
       ],
       "type": "object"
     },
@@ -106410,6 +106802,35 @@
           "type": "object"
         }
       ]
+    },
+    "CulvertWeir": {
+      "additionalProperties": false,
+      "description": "The road over a culvert as a weir (docs/adr/0947): its discharge coefficient (SI, Q = Cd·L·h^1.5), the length along\nthe road that overtops (m) and the crest's elevation (absent: the corridor's profile at the culvert). The project's.",
+      "properties": {
+        "cd": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "crest": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "cd",
+        "length"
+      ],
+      "type": "object"
     },
     "CurveConstruction": {
       "description": "One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by\nits centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).",

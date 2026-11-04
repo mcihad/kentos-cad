@@ -2765,9 +2765,10 @@
       "level": "semantic",
       "via": [
         "road.culverts.edit",
-        "road.culverts.draw"
+        "road.culverts.draw",
+        "road.culverts.hydraulics"
       ],
-      "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2)."
+      "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2); Hidrolik bölümü road.culverts.hydraulics ile giriş önündeki suyu, yolun aşılmasını ve performans eğrisini okur (plan/road.md Y41, ADR 0947)."
     },
     "retainingWall.editor": {
       "level": "semantic",

@@ -78,6 +78,8 @@ def critical_head(sec, q):
 
 
 def inlet_hw(c, q):
+    if q <= 0:
+        return mp.mpf(0)
     sec, cells = c["section"], c["cells"]
     qc = mp.mpf(q) / cells
     a, _, d = full(sec)
@@ -98,6 +100,8 @@ def inlet_hw(c, q):
 
 
 def outlet_hw(c, q, tw):
+    if q <= 0:
+        return max(mp.mpf(tw) - mp.mpf(c["slope"]) * mp.mpf(c["length"]), mp.mpf(0))
     sec, cells = c["section"], c["cells"]
     qc = mp.mpf(q) / cells
     a, p, d = full(sec)

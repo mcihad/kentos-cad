@@ -72,6 +72,42 @@ fn a_new_pipe_culvert_needs_its_sizes() {
     assert_eq!(app.document.as_ref().expect("a drawing").model.road_culverts().len(), 3);
 }
 
+/// Hidrolik reads the saved culvert as `road.culverts.hydraulics` does: the shared case “Yol aşılıyor” typed in.
+#[test]
+fn the_hydraulics_read_the_shared_case() {
+    let mut app = app();
+    let _ = app.update(Message::Run("culvert.editor"));
+    assert!(app.culvert_window.as_ref().expect("open").hydraulics.is_none(), "nothing before a flow");
+    send(&mut app, W::Hydraulic(0, "60".into()));
+    let why = match app.culvert_window.as_ref().and_then(|w| w.hydraulics.clone()) {
+        Some(Err(why)) => why,
+        other => panic!("refused without ke: {other:?}"),
+    };
+    assert!(why.contains("ke"), "{why}");
+    send(&mut app, W::Hydraulic(2, "0,4".into()));
+    send(&mut app, W::Hydraulic(4, "1.66".into()));
+    let why = match app.culvert_window.as_ref().and_then(|w| w.hydraulics.clone()) {
+        Some(Err(why)) => why,
+        other => panic!("a weir needs both: {other:?}"),
+    };
+    assert!(why.contains("birlikte"), "{why}");
+    send(&mut app, W::Hydraulic(5, "60".into()));
+    let w = app.culvert_window.as_ref().expect("open");
+    assert_eq!(w.inlet, kentos_commands::CulvertInlet::BoxWingwall30To75, "a box's first inlet");
+    let (read, _) = w.hydraulics.clone().expect("asked").expect("reads");
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.culverts.hydraulics.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Yol aşılıyor").expect("the case");
+    let want = &case["steps"][0]["result"]["output"]["at"];
+    assert!((read.at.level - want["level"].as_f64().expect("level")).abs() < 1e-6);
+    assert!((read.at.overtopping - want["overtopping"].as_f64().expect("over")).abs() < 1e-6);
+    assert_eq!(read.at.over.as_ref().map(|o| o.hazard), want["over"]["hazard"].as_u64().map(|h| h as u8));
+    assert_eq!(read.curve.len(), 13);
+    // A pipe offers only the pipes' inlets.
+    send(&mut app, W::Choose(Some("m-2".into())));
+    assert_eq!(app.culvert_window.as_ref().expect("open").inlet, kentos_commands::CulvertInlet::PipeSquareHeadwall);
+}
+
 /// The window, wide and narrow, light and dark, and the barrel drawn in plan; `.run/gui-evidence/yol-y11-menfez-*`:
 ///
 /// ```text
@@ -105,6 +141,14 @@ fn screens() {
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("culvert.editor"));
         shot(&mut app, "kutu");
+        send(&mut app, W::Page(1));
+        for (k, v) in [(0, "60"), (2, "0.4"), (4, "1.66"), (5, "60")] {
+            send(&mut app, W::Hydraulic(k, v.into()));
+        }
+        shot(&mut app, "hidrolik-tasma");
+        send(&mut app, W::Hydraulic(0, "12".into()));
+        shot(&mut app, "hidrolik");
+        send(&mut app, W::Page(0));
         send(&mut app, W::Choose(Some("m-2".into())));
         shot(&mut app, "boru");
         send(&mut app, W::Layer("korkuluk".into()));

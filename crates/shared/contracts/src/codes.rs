@@ -756,6 +756,11 @@ codes! {
     VOLUME_COMPARE_BROKEN = "volume_compare_broken", Warning, false, "Karşılaştırılan bir kübaj hesaplanamıyor; hacmi yok.";
     /// A warning: check points over three NMADs from their class's median (docs/adr/0945).
     TERRAIN_CHECKPOINTS_FAR = "terrain_checkpoints_far", Warning, false, "Bazı kontrol noktaları sınıflarının medyanından 3 NMAD'den uzak: ölçü ya da sınıf hatası olabilir.";
+    /// A culvert's hydraulics asked that is not right: the flow, tailwater, entrance loss, roughness, weir or curve
+    /// (docs/adr/0947).
+    INVALID_CULVERT_HYDRAULICS = "invalid_culvert_hydraulics", Failed, false, "Menfez hidroliği sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the road over a culvert is overtopped at the flow asked, with its hazard class (docs/adr/0947).
+    CULVERT_OVERTOPPED = "culvert_overtopped", Warning, false, "Bu debide su menfezin üstünden yolu aşıyor; tehlike sınıfı iletide.";
     /// A corridor an earthwork volume uses.
     CORRIDOR_IN_USE = "corridor_in_use", Failed, false, "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin.";
     /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).

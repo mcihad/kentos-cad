@@ -1983,6 +1983,12 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
+    Entry {
+        id: "road.culverts.hydraulics",
+        refusals: &[&["not_a_road_project", "unknown_culvert", "invalid_culvert_hydraulics", "invalid_culvert"]],
+        warnings: &["culvert_overtopped", "culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
     // KentOS Yol's retaining walls (plan/road.md Y11.3, docs/adr/0909 §3).
     Entry {
         id: "road.walls.edit",

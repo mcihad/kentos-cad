@@ -57,9 +57,11 @@ fn num(v: f64) -> String {
     format!("{v}")
 }
 
-/// A culvert as read: its report and warnings, its barrel's direction (radians) and its axis point.
+/// A culvert as read: its report and warnings, its barrel's direction (radians) and its axis point, and the road's crest
+/// over it (the highest of the road's top between the hinges: water crosses the road over it).
 pub(crate) struct Read {
     pub(crate) report: CulvertReport,
+    pub(crate) crest: f64,
     pub(crate) warnings: Vec<CommandWarning>,
     pub(crate) angle: f64,
     pub(crate) at: [f64; 2],
@@ -119,6 +121,7 @@ pub(crate) fn read(doc: &Document, def: &CulvertDef) -> Result<Read, Stop> {
         .filter(|r| r.offset >= hinges[0] - 1e-9 && r.offset <= hinges[1] + 1e-9)
         .map(|r| [r.offset, r.z])
         .collect();
+    let crest = top.iter().map(|p| p[1]).fold(f64::NEG_INFINITY, f64::max);
     let (least, at) = cover(&top, def.skew, def.invert, def.slope, right, &shape).unwrap_or((0.0, 0.0));
     let place = alignment.core.at(s).ok_or_else(|| bad(format!("“{}” menfezinin km'si aksın üstünde değil.", def.name)))?;
     let angle = place.direction - std::f64::consts::FRAC_PI_2 + def.skew.to_radians();
@@ -174,7 +177,7 @@ pub(crate) fn read(doc: &Document, def: &CulvertDef) -> Result<Read, Stop> {
         pipes: f64::from(shape.pipes()) * b.length,
         concrete: shape.concrete() * b.length,
     };
-    Ok(Read { report, warnings, angle, at: [place.x, place.y] })
+    Ok(Read { report, crest, warnings, angle, at: [place.x, place.y] })
 }
 
 /// A culvert that does not read: its names and nothing else.

@@ -242,3 +242,162 @@ pub struct CulvertsDrawn {
     pub uids: Vec<String>,
     pub revision: String,
 }
+
+pub const ROAD_CULVERTS_HYDRAULICS: &str = "road.culverts.hydraulics";
+pub const ROAD_CULVERTS_HYDRAULICS_VERSION: u32 = 1;
+
+/// A culvert's inlet among FHWA HDS-5's table A.1 rows (docs/adr/0947): concrete pipes with a square edge in a
+/// headwall, a groove end in a headwall or projecting; concrete boxes with 30°–75°, 90° and 15°, or 0° wingwall flares,
+/// or a 90° headwall with chamfers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CulvertInlet {
+    PipeSquareHeadwall,
+    PipeGrooveHeadwall,
+    PipeGrooveProjecting,
+    BoxWingwall30To75,
+    BoxWingwall90And15,
+    BoxWingwall0,
+    BoxHeadwallChamfer,
+}
+
+/// The road over a culvert as a weir (docs/adr/0947): its discharge coefficient (SI, Q = Cd·L·h^1.5), the length along
+/// the road that overtops (m) and the crest's elevation (absent: the corridor's profile at the culvert). The project's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertWeir {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cd: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub crest: Option<f64>,
+}
+
+/// Input of `road.culverts.hydraulics` v1 (plan/road.md Y41, docs/adr/0947): a culvert's headwater at a flow (m³/s)
+/// against a tailwater (m over the outlet's invert; absent: 0), by its HDS-5 inlet and entrance loss ke; Manning's n
+/// (absent: the culvert's roughness); the road as a weir (absent: not overtopped); and a performance curve of `curve`
+/// flows from 0 to 1.5 × the flow (2 to 200; absent: none). KentOS gives no coefficient.
+///
+/// Refusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert_hydraulics` (a flow not above 0, a tailwater
+/// below 0, ke out of 0–2, no roughness or one not in (0, 0.1], a weir's Cd or length not above 0, a curve out of
+/// 2–200), and the culvert's own (`invalid_culvert`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertsHydraulics {
+    pub culvert: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
+    pub flow: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tailwater: Option<f64>,
+    pub inlet: CulvertInlet,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub entrance_loss: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub roughness: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub weir: Option<CulvertWeir>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub curve: Option<u32>,
+}
+
+/// A culvert at one flow (docs/adr/0947): the flow, the headwater (m above the inlet's invert) and its elevation, the
+/// control, the inlet's and the outlet's headwater at the culvert's flow, what the culvert and the road carry (m³/s),
+/// and over the crest the head, the depth and speed at critical flow, the flow per metre and the hazard class (1–6;
+/// none where not overtopped).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertFlowRead {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
+    pub flow: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub headwater: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub level: f64,
+    pub inlet_control: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub inlet_headwater: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub outlet_headwater: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
+    pub through: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
+    pub overtopping: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub over: Option<CulvertOvertop>,
+}
+
+/// The road overtopped (docs/adr/0947): the head over the crest, the depth and speed there, the flow per metre and the
+/// hazard class with its words.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertOvertop {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub head: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub depth: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "velocity")))]
+    pub speed: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m2/s")))]
+    pub unit: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub hazard: u8,
+    pub words: String,
+}
+
+/// Output of `road.culverts.hydraulics` v1 (docs/adr/0947): the culvert, its inlet's and outlet's inverts, barrel
+/// length, slope (m/m), cells and Manning's n as used; the road's crest (none where no weir); the flow asked, read; the
+/// performance curve.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertHydraulicsRead {
+    pub culvert: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub inlet_invert: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub outlet_invert: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub slope: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub cells: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub roughness: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub crest: Option<f64>,
+    pub at: CulvertFlowRead,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CulvertFlowRead>>", optional))]
+    pub curve: Vec<CulvertFlowRead>,
+}

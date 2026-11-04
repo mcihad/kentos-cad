@@ -4,6 +4,11 @@
 //! ends' elevations, the least cover and the quantities. Kaydet writes it (one undo step “Menfez”), Planda çiz draws its
 //! barrel with its km on a layer (one step “Menfez çiz”).
 //!
+//! Hidrolik (plan/road.md Y41, docs/adr/0947) reads the saved culvert at a flow (`road.culverts.hydraulics`): the water
+//! before its inlet by HDS-5's inlet and outlet control, the road as a weir, the water over the road and its hazard
+//! class; as HY-8 shows a crossing, a performance curve (the water's level against the flow, from 0 to 1.5 × the flow)
+//! beside its table. The inlet's row, ke, n and the weir's Cd and length are the user's; KentOS gives none.
+//!
 //! ```text
 //! ┌ Menfez ───────────────────────────────────────────────────────────────────────────────────────┐
 //! │ Menfez [▾] Ad [ ] Koridor [▾] Km (m) [ ] Açı (°) [ ] Akış kotu (m) [ ] Eğim (%) [ ] Akış [▾]     │
@@ -11,6 +16,9 @@
 //! │ L … m · genişlik … m · örtü en az … m · beton … m³ · boru … m · warnings                        │
 //! │ ┌ the barrel along its line ┐  Uç  Öteleme  Y  X  Akış kotu                                      │
 //! │ └───────────────────────────┘                                                                    │
+//! │ Hidrolik: Debi [ ] Kuyruk suyu [ ] Giriş [▾] ke [ ] n [ ] Savak Cd [ ] Savak boyu [ ] Kret kotu [ ]   │
+//! │ HW … m (kot …) · giriş/çıkış kontrolü · yoldan … m³/s, H…                                          │
+//! │ ┌ level against flow: inlet, outlet, crest ┐  Toplam  Menfez  Yol  Su kotu  Giriş  Çıkış  Kontrol  T │
 //! │ [Sil]                         Katman [▾] [Planda çiz]                     [Kapat] [Kaydet]        │
 //! └───────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
@@ -19,13 +27,15 @@ use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, CulvertFlow, CulvertReport, CulvertShapeDef, CulvertsDraw, CulvertsEdit, RoadEditOperation,
+    CommandWarning, CulvertFlow, CulvertHydraulicsRead, CulvertInlet, CulvertReport, CulvertShapeDef, CulvertWeir,
+    CulvertsDraw, CulvertsEdit, CulvertsHydraulics, RoadEditOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_culverts_draw, road_culverts_edit};
+use kentos_native_application::{ExecutionContext, road_culverts_draw, road_culverts_edit, road_culverts_hydraulics};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
+use kentos_ui::widget::tabs::{Tab, Tabs};
 use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
@@ -58,6 +68,28 @@ pub(crate) const FIELDS: [&str; 16] = [
     "Döşeme (m)",
 ];
 const CELLS: &str = "Göz sayısı";
+/// The pages under the culvert's sizes: its barrel, its hydraulics.
+const PAGES: [&str; 2] = ["Gövde", "Hidrolik"];
+/// The hydraulics' typed fields, in order.
+pub(crate) const HYDRAULICS: [&str; 7] =
+    ["Debi (m³/s)", "Kuyruk suyu (m)", "Giriş kaybı ke", "Manning n", "Savak Cd", "Savak boyu (m)", "Kret kotu (m)"];
+/// The performance curve's points.
+const CURVE: u32 = 13;
+/// HDS-5's inlets KentOS names, the pipes' then the boxes', in words.
+const INLETS: [(CulvertInlet, &str); 7] = [
+    (CulvertInlet::PipeSquareHeadwall, "Düz ağız, başlık duvarı"),
+    (CulvertInlet::PipeGrooveHeadwall, "Oluklu ağız, başlık duvarı"),
+    (CulvertInlet::PipeGrooveProjecting, "Oluklu ağız, çıkıntılı"),
+    (CulvertInlet::BoxWingwall30To75, "30°–75° kanat duvarı"),
+    (CulvertInlet::BoxWingwall90And15, "90° ve 15° kanat duvarı"),
+    (CulvertInlet::BoxWingwall0, "Kanatsız (0°)"),
+    (CulvertInlet::BoxHeadwallChamfer, "90° başlık, pahlı kenar"),
+];
+
+/// The inlets of a pipe's or a box's.
+fn inlets(pipe: bool) -> &'static [(CulvertInlet, &'static str)] {
+    if pipe { &INLETS[..3] } else { &INLETS[3..] }
+}
 
 /// The culvert as last read.
 #[derive(Debug, Clone, Default)]
@@ -79,6 +111,12 @@ pub struct Window {
     pub(crate) cells: String,
     pub(crate) layer: Option<String>,
     pub(crate) preview: Preview,
+    /// The page shown: 0 the barrel, 1 the hydraulics.
+    pub(crate) page: usize,
+    pub(crate) inlet: CulvertInlet,
+    pub(crate) hydraulic: [String; 7],
+    /// The saved culvert's hydraulics as last read: none until a flow is typed.
+    pub(crate) hydraulics: Option<Result<(CulvertHydraulicsRead, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -90,6 +128,9 @@ pub enum Event {
     Field(usize, String),
     Cells(String),
     Layer(String),
+    Page(usize),
+    Inlet(CulvertInlet),
+    Hydraulic(usize, String),
     Save,
     Draw,
     Remove,
@@ -114,6 +155,36 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
 }
 
 impl Window {
+    /// The hydraulics' question as typed: none without a flow, else it or why it is not one.
+    pub(crate) fn hydraulics_input(&self) -> Option<Result<CulvertsHydraulics, String>> {
+        let id = self.chosen.clone()?;
+        let f = &self.hydraulic;
+        let flow = match number(&f[0], HYDRAULICS[0]) {
+            Ok(None) => return None,
+            Ok(Some(q)) => q,
+            Err(e) => return Some(Err(e)),
+        };
+        Some((|| {
+            let ke = number(&f[2], HYDRAULICS[2])?.ok_or_else(|| format!("{} yazılmalı; KentOS vermez.", HYDRAULICS[2]))?;
+            let (cd, length) = (number(&f[4], HYDRAULICS[4])?, number(&f[5], HYDRAULICS[5])?);
+            let weir = match (cd, length) {
+                (None, None) => None,
+                (Some(cd), Some(length)) => Some(CulvertWeir { cd, length, crest: number(&f[6], HYDRAULICS[6])? }),
+                _ => return Err("Yolu savak saymak için savak Cd ve savak boyu birlikte yazılmalı.".into()),
+            };
+            Ok(CulvertsHydraulics {
+                culvert: id,
+                flow,
+                tailwater: number(&f[1], HYDRAULICS[1])?,
+                inlet: self.inlet,
+                entrance_loss: ke,
+                roughness: number(&f[3], HYDRAULICS[3])?,
+                weir,
+                curve: Some(CURVE),
+            })
+        })())
+    }
+
     /// The edit as typed, or why it is not one.
     pub(crate) fn input(&self) -> Result<CulvertsEdit, String> {
         let need = |k: usize| number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]));
@@ -184,6 +255,10 @@ impl App {
             cells: "1".into(),
             layer,
             preview: Preview::default(),
+            page: 0,
+            inlet: CulvertInlet::PipeSquareHeadwall,
+            hydraulic: Default::default(),
+            hydraulics: None,
         }));
         self.dialog = Some(Dialog::Culverts);
         let _ = self.culvert_event(Event::Choose(chosen));
@@ -203,6 +278,12 @@ impl App {
             Err(why) => Preview { why: Some(why), ..Preview::default() },
             Ok(((report, warnings), top)) => Preview { report: Some(report), warnings, why: None, top },
         };
+        if !inlets(w.pipe).iter().any(|(i, _)| *i == w.inlet) {
+            w.inlet = inlets(w.pipe)[0].0;
+        }
+        w.hydraulics = w
+            .hydraulics_input()
+            .map(|asked| asked.and_then(|q| road_culverts_hydraulics::preview(&doc.model, &q)));
     }
 
     pub(crate) fn culvert_event(&mut self, event: Event) -> Task<Message> {
@@ -258,6 +339,9 @@ impl App {
             Event::Field(k, t) => w.fields[k.min(15)] = t,
             Event::Cells(t) => w.cells = t,
             Event::Layer(l) => w.layer = Some(l),
+            Event::Page(p) => w.page = p.min(1),
+            Event::Inlet(i) => w.inlet = i,
+            Event::Hydraulic(k, t) => w.hydraulic[k.min(6)] = t,
             Event::Save => return self.save_culvert(),
             Event::Draw => return self.draw_culvert(),
             Event::Remove => return self.remove_culvert(),
@@ -340,7 +424,6 @@ impl App {
         let Some(w) = &self.culvert_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
         let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
         let model = self.document.as_ref().map(|d| &d.model);
@@ -419,6 +502,11 @@ impl App {
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
+                body = body.push(Tabs::new(PAGES.map(|t| Tab::new(t).closable(false)), w.page, |i| msg(Event::Page(i))));
+                if w.page == 1 {
+                    body = self.hydraulics_view(w, body);
+                    return self.culvert_frame(w, body);
+                }
                 let picture = crate::picture::picture(iced::widget::canvas(Barrel { report: r, top: w.preview.top }).width(Fill).height(Fill), TITLE);
                 use crate::road_dialog::{col, grouped, num};
                 let list = crate::road_dialog::sheet_fill(
@@ -442,6 +530,12 @@ impl App {
             }
             _ => {}
         }
+        self.culvert_frame(w, body)
+    }
+
+    /// The window around its body, the buttons its footer.
+    fn culvert_frame<'a>(&'a self, w: &'a Window, body: kentos_ui::widget::grow::Grows<'a, Message>) -> Element<'a, Message> {
+        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
@@ -465,7 +559,137 @@ impl App {
             ]
             .spacing(8)
             .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
+        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
+    }
+
+    /// Hidrolik: the saved culvert's water at a flow, its performance curve and HY-8's summary table.
+    fn hydraulics_view<'a>(
+        &'a self,
+        w: &'a Window,
+        mut body: kentos_ui::widget::grow::Grows<'a, Message>,
+    ) -> kentos_ui::widget::grow::Grows<'a, Message> {
+        use crate::road_dialog::{col, grouped, num};
+        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
+        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let field = |hint: &'static str, k: usize, width: f32| {
+            words::field(
+                HYDRAULICS[k],
+                kentos_ui::widget::text_field(hint, &w.hydraulic[k]).on_input(move |t| msg(Event::Hydraulic(k, t))).width(width),
+                None,
+            )
+        };
+        let choices = inlets(w.pipe);
+        let on_inlet = Select::new(
+            choices.iter().map(|(_, words)| Choice::new(*words)),
+            choices.iter().position(|(i, _)| *i == w.inlet),
+            move |k| msg(Event::Inlet(choices[k].0)),
+        );
+        if w.chosen.is_none() {
+            return body.push(label::caption("Hidrolik kayıtlı menfezi okur: önce menfezi kaydedin.").style(muted));
+        }
+        body = body.push(
+            row![
+                field("m³/s", 0, 90.0),
+                field("0", 1, 90.0),
+                words::field("Giriş", container(on_inlet).width(200), None),
+                field("ke", 2, 90.0),
+                field("menfezin", 3, 80.0),
+                field("yok", 4, 70.0),
+                field("yok", 5, 90.0),
+                field("yol", 6, 100.0),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom),
+        );
+        let read = match &w.hydraulics {
+            None => {
+                return body.push(
+                    label::caption(
+                        "Debiyi, giriş kaybını (ke) ve gerekirse Manning n'yi yazın: kayıtlı menfezin önünde su HDS-5'in \
+                         giriş ve çıkış kontrolüyle okunur. Savak Cd ve boyu yazılınca yol savak sayılır; kret boşsa \
+                         gövdenin üstündeki yolun en yüksek kotudur. Hidrolik kayıtlı menfezi okur.",
+                    )
+                    .style(muted),
+                );
+            }
+            Some(Err(why)) => return body.push(label::caption(why.clone()).style(danger)),
+            // The culvert's own warnings are the edit's, shown above; the overtopping is said below in words.
+            Some(Ok((read, _))) => read,
+        };
+        let at = &read.at;
+        let control = if at.inlet_control { "giriş kontrolü" } else { "çıkış kontrolü" };
+        let road = match (&read.crest, &at.over) {
+            (_, Some(o)) => format!(
+                " · yoldan {:.2} m³/s, kret üstünde {:.2} m, derinlik {:.2} m, hız {:.2} m/s → {}",
+                at.overtopping, o.head, o.depth, o.speed, o.words
+            ),
+            (Some(c), None) => format!(" · yol aşılmıyor: krete {:.2} m var (kret {:.2})", c - at.level, c),
+            (None, None) => String::new(),
+        };
+        body = body.push(label::caption(format!(
+            "Q {} m³/s · giriş önünde su {:.2} m, kot {:.2} · {control} (giriş {:.2} m, çıkış {:.2} m) · menfezden {:.2} m³/s{road}",
+            trimmed(at.flow),
+            at.headwater,
+            at.level,
+            at.inlet_headwater,
+            at.outlet_headwater,
+            at.through
+        )));
+        if let Some(o) = &at.over {
+            let style = if o.hazard >= 3 { danger } else { warn };
+            body = body.push(
+                label::caption(format!(
+                    "Yol bu debide su altında: D·V = {:.2} m²/s, {}. Kapatma kararı tasarımcınındır.",
+                    o.unit, o.words
+                ))
+                .style(style),
+            );
+        }
+        let rows = read
+            .curve
+            .iter()
+            .map(|p| {
+                vec![
+                    grouped(p.flow, 2),
+                    grouped(p.through, 2),
+                    grouped(p.overtopping, 2),
+                    grouped(p.level, 3),
+                    grouped(p.inlet_headwater, 2),
+                    grouped(p.outlet_headwater, 2),
+                    if p.inlet_control { "Giriş" } else { "Çıkış" }.into(),
+                    p.over.as_ref().map_or_else(String::new, |o| format!("H{}", o.hazard)),
+                ]
+            })
+            .collect();
+        let table = crate::road_dialog::sheet_fill(
+            vec![
+                num("Toplam (m³/s)", 88.0),
+                num("Menfez (m³/s)", 88.0),
+                num("Yol (m³/s)", 72.0),
+                num("Su kotu (m)", 80.0),
+                num("Giriş HW (m)", 78.0),
+                num("Çıkış HW (m)", 78.0),
+                col("Kontrol", 58.0),
+                col("Tehlike", 54.0),
+            ],
+            rows,
+            "Eğri yok",
+        );
+        let picture = crate::picture::picture(
+            iced::widget::canvas(Performance { read }).width(Fill).height(Fill),
+            "Menfez performans eğrisi",
+        );
+        // The curve keeps the larger share; a narrow window scrolls the table inside itself.
+        body.push_grow(
+            row![
+                container(picture).width(iced::FillPortion(5)).height(Fill),
+                container(table).width(iced::FillPortion(4)).height(Fill)
+            ]
+            .spacing(12)
+            .height(Fill),
+            typography::scaled(220.0),
+        )
     }
 
     pub(crate) fn culvert_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -478,6 +702,17 @@ impl App {
             Control::Press(DRAW) => Some(msg(Event::Draw)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Fill(CELLS, t) => Some(msg(Event::Cells(t.to_owned()))),
+            Control::Fill(name, t) if HYDRAULICS.contains(&name) => {
+                let k = HYDRAULICS.iter().position(|f| *f == name).unwrap_or(0);
+                Some(msg(Event::Hydraulic(k, t.to_owned())))
+            }
+            Control::Press(page) if PAGES.contains(&page) => {
+                Some(msg(Event::Page(PAGES.iter().position(|p| *p == page).unwrap_or(0))))
+            }
+            Control::Pick("Giriş", words) => {
+                let found = INLETS.iter().find(|(_, w)| *w == words).ok_or_else(|| format!("“{words}” diye bir giriş yok"))?;
+                Some(msg(Event::Inlet(found.0)))
+            }
             Control::Fill(name, t) if FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))
@@ -537,6 +772,160 @@ impl canvas::Program<Message> for Barrel<'_> {
             align_x: iced::alignment::Horizontal::Center.into(),
             ..Text::default()
         });
+        vec![frame.into_geometry()]
+    }
+}
+
+/// A round step for about `n` ticks over `span`.
+fn tick(span: f64, n: f64) -> f64 {
+    let raw = (span / n).max(1e-9);
+    let p = 10f64.powf(raw.log10().floor());
+    [1.0, 2.0, 2.5, 5.0, 10.0].into_iter().map(|k| k * p).find(|s| *s >= raw).unwrap_or(10.0 * p)
+}
+
+/// The performance curve as HY-8 draws one: the water's level before the inlet against the total flow, the inlet's and
+/// the outlet's control apart (dashed), the road's crest, the asked flow marked; overtopped points coloured by hazard.
+struct Performance<'a> {
+    read: &'a CulvertHydraulicsRead,
+}
+
+impl canvas::Program<Message> for Performance<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let tk = Tokens::of(theme);
+        let r = self.read;
+        let pts = &r.curve;
+        if pts.len() < 2 {
+            return vec![frame.into_geometry()];
+        }
+        let invert = r.inlet_invert;
+        let q1 = pts.iter().map(|p| p.flow).fold(0.0, f64::max).max(1e-9);
+        let mut z1 = pts.iter().map(|p| invert + p.inlet_headwater.max(p.outlet_headwater).max(p.headwater)).fold(invert, f64::max);
+        if let Some(c) = r.crest {
+            z1 = z1.max(c);
+        }
+        let (z0, z1) = (invert, z1 + 0.05 * (z1 - invert).max(0.1));
+        let (left, right, top, bottom) = (52.0_f32, 14.0_f32, 26.0_f32, 30.0_f32);
+        let (w, h) = (f64::from(bounds.width - left - right), f64::from(bounds.height - top - bottom));
+        let at = |q: f64, z: f64| {
+            Point::new(left + (q / q1 * w) as f32, top + ((z1 - z.clamp(z0, z1)) / (z1 - z0) * h) as f32)
+        };
+        let small = Pixels(11.0);
+        // The grid and its numbers.
+        let dz = tick(z1 - z0, 5.0);
+        let mut z = (z0 / dz).ceil() * dz;
+        while z <= z1 + 1e-9 {
+            let p = at(0.0, z);
+            frame.stroke(&Path::line(p, Point::new(left + w as f32, p.y)), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.fill_text(Text {
+                content: format!("{z:.1}"),
+                position: Point::new(left - 6.0, p.y - 6.0),
+                color: tk.muted,
+                size: small,
+                align_x: iced::alignment::Horizontal::Right.into(),
+                ..Text::default()
+            });
+            z += dz;
+        }
+        let dq = tick(q1, 6.0);
+        let mut q = 0.0;
+        while q <= q1 + 1e-9 {
+            let p = at(q, z0);
+            frame.stroke(&Path::line(at(q, z1), p), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.fill_text(Text {
+                content: trimmed((q * 100.0).round() / 100.0),
+                position: Point::new(p.x, p.y + 4.0),
+                color: tk.muted,
+                size: small,
+                align_x: iced::alignment::Horizontal::Center.into(),
+                ..Text::default()
+            });
+            q += dq;
+        }
+        frame.fill_text(Text {
+            content: "Toplam debi (m³/s) →".into(),
+            position: Point::new(left + w as f32, bounds.height - 13.0),
+            color: tk.muted,
+            size: small,
+            align_x: iced::alignment::Horizontal::Right.into(),
+            ..Text::default()
+        });
+        frame.fill_text(Text {
+            content: "Giriş önünde su kotu (m)".into(),
+            position: Point::new(left, 6.0),
+            color: tk.muted,
+            size: small,
+            ..Text::default()
+        });
+        let line = |f: &dyn Fn(&kentos_commands::CulvertFlowRead) -> f64| {
+            Path::new(|b| {
+                for (i, p) in pts.iter().enumerate() {
+                    let at = at(p.flow, invert + f(p));
+                    if i == 0 { b.move_to(at) } else { b.line_to(at) }
+                }
+            })
+        };
+        let dashed = |c: iced::Color| Stroke {
+            line_dash: canvas::LineDash { segments: &[5.0, 4.0], offset: 0 },
+            ..Stroke::default().with_width(1.3).with_color(c)
+        };
+        frame.stroke(&line(&|p| p.inlet_headwater), dashed(tk.success));
+        frame.stroke(&line(&|p| p.outlet_headwater), dashed(tk.warning));
+        if let Some(c) = r.crest {
+            let (a, b) = (at(0.0, c), at(q1, c));
+            frame.stroke(&Path::line(a, b), Stroke::default().with_width(1.6).with_color(tk.danger));
+            frame.fill_text(Text {
+                content: format!("yol kreti {c:.2}"),
+                // Under the line at its left: the curve meets the crest far to the right, the axis' words sit above.
+                position: Point::new(a.x + 4.0, a.y + 3.0),
+                color: tk.danger,
+                size: small,
+                ..Text::default()
+            });
+        }
+        frame.stroke(&line(&|p| p.headwater), Stroke::default().with_width(2.4).with_color(tk.accent));
+        for p in pts.iter().filter(|p| p.over.is_some()) {
+            let hazard = p.over.as_ref().map_or(0, |o| o.hazard);
+            let c = if hazard >= 3 { tk.danger } else { tk.warning };
+            frame.fill(&Path::circle(at(p.flow, p.level), 3.5), c);
+        }
+        let asked = at(r.at.flow, r.at.level);
+        frame.stroke(&Path::line(Point::new(asked.x, top), at(r.at.flow, z0)), Stroke::default().with_width(1.0).with_color(tk.text));
+        frame.fill(&Path::circle(asked, 5.0), tk.accent);
+        frame.stroke(&Path::circle(asked, 5.0), Stroke::default().with_width(1.4).with_color(tk.text));
+        // Under the curve, which rises to the right: the asked flow's words there stay clear of it.
+        frame.fill_text(Text {
+            content: format!("Q {} m³/s → {:.2}", trimmed(r.at.flow), r.at.level),
+            position: Point::new(asked.x + 8.0, asked.y + 6.0),
+            color: tk.text,
+            size: Pixels(12.0),
+            ..Text::default()
+        });
+        // The legend.
+        let legend = [("su kotu", tk.accent, false), ("giriş kontrolü", tk.success, true), ("çıkış kontrolü", tk.warning, true)];
+        let widths: Vec<f32> = legend.iter().map(|(word, _, _)| 18.0 + 6.2 * word.chars().count() as f32).collect();
+        let whole: f32 = widths.iter().map(|w| w + 10.0).sum();
+        let y = top + h as f32 - 10.0;
+        frame.fill_rectangle(
+            Point::new(left + w as f32 - whole - 6.0, y - 9.0),
+            iced::Size::new(whole + 4.0, 18.0),
+            iced::Color { a: 0.92, ..tk.surface },
+        );
+        let mut x = left + w as f32;
+        for ((word, color, dash), width) in legend.iter().zip(&widths).rev() {
+            x -= width + 10.0;
+            let stroke = if *dash { dashed(*color) } else { Stroke::default().with_width(2.4).with_color(*color) };
+            frame.stroke(&Path::line(Point::new(x, y), Point::new(x + 14.0, y)), stroke);
+            frame.fill_text(Text {
+                content: (*word).into(),
+                position: Point::new(x + 18.0, y - 6.0),
+                color: tk.muted,
+                size: small,
+                ..Text::default()
+            });
+        }
         vec![frame.into_geometry()]
     }
 }

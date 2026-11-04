@@ -99,6 +99,36 @@ pub struct Inlet {
     pub ks: f64,
 }
 
+/// HDS-5 table A.1's rows that KentOS names (docs/adr/0947): concrete pipes with a square edge in a headwall, a groove
+/// end in a headwall or projecting; concrete boxes with 30°–75°, 90° and 15°, or 0° wingwall flares, or a 90° headwall
+/// with chamfers.
+pub const INLETS: [(&str, Inlet); 7] = [
+    ("pipe-square-headwall", Inlet { form: 1, k: 0.0098, m: 2.0, c: 0.0398, y: 0.67, ks: -0.5 }),
+    ("pipe-groove-headwall", Inlet { form: 1, k: 0.0018, m: 2.0, c: 0.0292, y: 0.74, ks: -0.5 }),
+    ("pipe-groove-projecting", Inlet { form: 1, k: 0.0045, m: 2.0, c: 0.0317, y: 0.69, ks: -0.5 }),
+    ("box-wingwall-30-75", Inlet { form: 1, k: 0.026, m: 1.0, c: 0.0347, y: 0.81, ks: -0.5 }),
+    ("box-wingwall-90-15", Inlet { form: 1, k: 0.061, m: 0.75, c: 0.0400, y: 0.80, ks: -0.5 }),
+    ("box-wingwall-0", Inlet { form: 1, k: 0.061, m: 0.75, c: 0.0423, y: 0.82, ks: -0.5 }),
+    ("box-headwall-chamfer", Inlet { form: 2, k: 0.515, m: 0.667, c: 0.0375, y: 0.79, ks: -0.5 }),
+];
+
+/// The inlet of `name` among [`INLETS`].
+pub fn inlet(name: &str) -> Option<Inlet> {
+    INLETS.iter().find(|(n, _)| *n == name).map(|(_, i)| *i)
+}
+
+/// A hazard class's words (AIDR guideline 7-3): who and what the flow is unsafe for.
+pub fn hazard_words(class: u8) -> &'static str {
+    match class {
+        1 => "H1: araç, insan ve yapı için genelde güvenli",
+        2 => "H2: küçük araçlar için güvensiz",
+        3 => "H3: araçlar, çocuklar ve yaşlılar için güvensiz",
+        4 => "H4: araçlar ve insanlar için güvensiz",
+        5 => "H5: araçlar ve insanlar için güvensiz, yapılar hasar görebilir",
+        _ => "H6: araçlar ve insanlar için güvensiz, yapılar yıkılabilir",
+    }
+}
+
 /// A culvert: its section, cells, length and slope (m/m, falling positive), Manning's n, inlet and entrance loss.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Culvert {
@@ -123,8 +153,12 @@ impl Culvert {
         q / f64::from(self.cells.max(1))
     }
 
-    /// The headwater (m above the inlet's invert) by inlet control.
+    /// The headwater (m above the inlet's invert) by inlet control; none without a flow (the equations' Ks·S would
+    /// leave the still water below the invert).
     pub fn inlet_headwater(&self, q: f64) -> f64 {
+        if q <= 0.0 {
+            return 0.0;
+        }
         let qc = self.per_cell(q);
         let d = self.section.rise();
         let (a, _) = self.section.full();
@@ -146,8 +180,12 @@ impl Culvert {
         d * ratio
     }
 
-    /// The headwater (m above the inlet's invert) by outlet control, the tailwater `tw` above the outlet's invert.
+    /// The headwater (m above the inlet's invert) by outlet control, the tailwater `tw` above the outlet's invert; without a
+    /// flow the tailwater's level (HDS-5's (dc + D)/2 is for a flowing barrel, not a still one).
     pub fn outlet_headwater(&self, q: f64, tw: f64) -> f64 {
+        if q <= 0.0 {
+            return (tw - self.slope * self.length).max(0.0);
+        }
         let qc = self.per_cell(q);
         let d = self.section.rise();
         let (a, p) = self.section.full();
