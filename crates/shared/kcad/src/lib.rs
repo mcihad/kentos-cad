@@ -769,11 +769,13 @@ pub const SCHEMA_WITH_VOLUME_CURVE: u32 = 167;
 pub const SCHEMA_WITH_CORRIDOR_SAMPLING: u32 = 168;
 /// Schema 169 (docs/adr/0944): a mass haul diagram's `unsuitable` cut and `barriers`.
 pub const SCHEMA_WITH_HAUL_SORTING: u32 = 169;
+/// Schema 170 (docs/adr/0946): a profile's `crossings`, what the road crosses with its clearance or cover.
+pub const SCHEMA_WITH_PROFILE_CROSSINGS: u32 = 170;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 167] = [
+pub const SCHEMAS: [u32; 168] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -941,6 +943,7 @@ pub const SCHEMAS: [u32; 167] = [
     SCHEMA_WITH_VOLUME_CURVE,
     SCHEMA_WITH_CORRIDOR_SAMPLING,
     SCHEMA_WITH_HAUL_SORTING,
+    SCHEMA_WITH_PROFILE_CROSSINGS,
 ];
 
 /// The file a drawing is saved as.

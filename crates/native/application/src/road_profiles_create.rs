@@ -41,6 +41,7 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesCreate) -> Result<Checke
         revision: 1,
         pvis: input.pvis.clone(),
         surface,
+        crossings: Vec::new(),
     };
     let mut list = own.to_vec();
     list.push(def);

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    ProfileCrossingDef,
     ProfileFitted,
     ProfileProposed,
     ProfilePvi,
@@ -47,8 +48,10 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
     ve leastSagK (tepe ve çukur kurbun en küçük K'si, m/%), leastCurve (düşey kurbun
     yatay boyu), leastGradeLength (iki kurp arasındaki düz eğim). Cevap: kırılan
     kurallar km sırasıyla: kural, PVI'ler, km aralığı, bulunan değer, sınır ve sözü.
-    Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project,
-    unknown_road_profile, invalid_design_check.
+    Boykesitin kesişmeleri de denetlenir (docs/adr/0946): açıklığı ya da örtüsü yetmeyen
+    her kesişme clearance kuralıyla bulgu olur; kesişmesi olan boykesit başka kural
+    verilmeden de denetlenir.Uyarılar: design_rule_broken, profile_stale. Retler:
+    not_a_road_project, unknown_road_profile, invalid_design_check.
     """
     __slots__ = ()
     id = "road.profiles.check"
@@ -80,9 +83,11 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         dik ve en yatık eğim, oran, iki yöne), leastCrestK ve leastSagK (tepe ve çukur
         kurbun en küçük K'si, m/%), leastCurve (düşey kurbun yatay boyu), leastGradeLength
         (iki kurp arasındaki düz eğim). Cevap: kırılan kurallar km sırasıyla: kural,
-        PVI'ler, km aralığı, bulunan değer, sınır ve sözü. Uyarılar: design_rule_broken,
-        profile_stale. Retler: not_a_road_project, unknown_road_profile,
-        invalid_design_check.
+        PVI'ler, km aralığı, bulunan değer, sınır ve sözü.  Boykesitin kesişmeleri de
+        denetlenir (docs/adr/0946): açıklığı ya da örtüsü yetmeyen her kesişme clearance
+        kuralıyla bulgu olur; kesişmesi olan boykesit başka kural verilmeden de
+        denetlenir.Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project,
+        unknown_road_profile, invalid_design_check.
 
         Args:
             doc: The drawing it works on.
@@ -579,10 +584,12 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
     (profile: kimliği ya da adı) düzenler. set: verilen alanlar (name, pvis, surface;
     boş surface yüzeyi kaldırır) boykesitinkinin yerini alır. rebind: boykesit aksının
     bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove:
-    boykesit kalkar. Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma
-    adımı “Boykesiti düzenle”. Retler: not_a_road_project, unknown_road_profile,
-    unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision,
-    revision_conflict.
+    boykesit kalkar.  Kesişmeler (crossings: ad, km, side above/below, elevation alt ya
+    da üst yüzü, clearance açıklık ya da örtü) da yazılır, boş liste kaldırır
+    (docs/adr/0946, KCAD şema 170).Boykesitin revizyonu her değişiklikte bir artar. Tek
+    geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project,
+    unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.profiles.edit"
@@ -600,6 +607,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         *,
         profile: str,
         operation: ProfilesEditOperation | ProfilesEditOperationName,
+        crossings: Sequence[ProfileCrossingDef] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         pvis: Sequence[ProfilePvi] | None | Unset = UNSET,
@@ -610,15 +618,18 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         """Boykesiti düzenle: Yol projesinin bir boykesitini (profile: kimliği ya da adı)
         düzenler. set: verilen alanlar (name, pvis, surface; boş surface yüzeyi kaldırır)
         boykesitinkinin yerini alır. rebind: boykesit aksının bugünkü revizyonunu alır,
-        eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar. Boykesitin
-        revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti düzenle”.
-        Retler: not_a_road_project, unknown_road_profile, unknown_terrain,
+        eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar.  Kesişmeler
+        (crossings: ad, km, side above/below, elevation alt ya da üst yüzü, clearance
+        açıklık ya da örtü) da yazılır, boş liste kaldırır (docs/adr/0946, KCAD şema
+        170).Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti
+        düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain,
         invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
             profile:
             operation:
+            crossings: What the road crosses (docs/adr/0946); an empty list takes them off.
             expected_revision:
             name:
             pvis:
@@ -638,6 +649,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         return self.execute_input(doc, ProfilesEdit(
             profile=profile,
             operation=operation,
+            crossings=_opt(crossings, lambda x: list(x)),
             expected_revision=expected_revision,
             name=name,
             pvis=_opt(pvis, lambda x: list(x)),
@@ -651,6 +663,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         *,
         profile: str,
         operation: ProfilesEditOperation | ProfilesEditOperationName,
+        crossings: Sequence[ProfileCrossingDef] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         pvis: Sequence[ProfilePvi] | None | Unset = UNSET,
@@ -662,6 +675,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         return self.plan_input(doc, ProfilesEdit(
             profile=profile,
             operation=operation,
+            crossings=_opt(crossings, lambda x: list(x)),
             expected_revision=expected_revision,
             name=name,
             pvis=_opt(pvis, lambda x: list(x)),
@@ -675,6 +689,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         *,
         profile: str,
         operation: ProfilesEditOperation | ProfilesEditOperationName,
+        crossings: Sequence[ProfileCrossingDef] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         pvis: Sequence[ProfilePvi] | None | Unset = UNSET,
@@ -686,6 +701,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         return self.validate_input(doc, ProfilesEdit(
             profile=profile,
             operation=operation,
+            crossings=_opt(crossings, lambda x: list(x)),
             expected_revision=expected_revision,
             name=name,
             pvis=_opt(pvis, lambda x: list(x)),
@@ -699,6 +715,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         *,
         profile: str,
         operation: ProfilesEditOperation | ProfilesEditOperationName,
+        crossings: Sequence[ProfileCrossingDef] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         pvis: Sequence[ProfilePvi] | None | Unset = UNSET,
@@ -715,6 +732,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         return self.answer_input(doc, ProfilesEdit(
             profile=profile,
             operation=operation,
+            crossings=_opt(crossings, lambda x: list(x)),
             expected_revision=expected_revision,
             name=name,
             pvis=_opt(pvis, lambda x: list(x)),
@@ -1176,9 +1194,12 @@ class _RoadProfilesPropose(LocalCommand[ProfilesPropose, ProfileProposed, Profil
     (KKT koşulları tutar). Sınırlar ve kilitler kullanıcınındır; KentOS değer vermez.
     Öneri yazılacaksa road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların
     önerilen ve önceki kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki
-    boy, karesel ortalama fark, kazı ve dolgu alanları. Uyarılar: profile_stale. Retler:
-    not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya
-    da kurulamıyorsa da).
+    boy, karesel ortalama fark, kazı ve dolgu alanları.  Boykesitin kesişmeleri kısıttır
+    (docs/adr/0946): üstteki yapının altında kırmızı kot alt yüzünden açıklık kadar
+    aşağıda, alttakinin üstünde üst yüzünden örtü kadar yukarıda kalır; rapor her
+    kesişmenin sınırını, önerilen kotu, payını ve çizgiyi tutup tutmadığını
+    verir.Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile,
+    invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da).
     """
     __slots__ = ()
     id = "road.profiles.propose"
@@ -1211,9 +1232,12 @@ class _RoadProfilesPropose(LocalCommand[ProfilesPropose, ProfileProposed, Profil
         ve kilitler kullanıcınındır; KentOS değer vermez. Öneri yazılacaksa
         road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların önerilen ve önceki
         kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki boy, karesel
-        ortalama fark, kazı ve dolgu alanları. Uyarılar: profile_stale. Retler:
-        not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya
-        da kurulamıyorsa da).
+        ortalama fark, kazı ve dolgu alanları.  Boykesitin kesişmeleri kısıttır
+        (docs/adr/0946): üstteki yapının altında kırmızı kot alt yüzünden açıklık kadar
+        aşağıda, alttakinin üstünde üst yüzünden örtü kadar yukarıda kalır; rapor her
+        kesişmenin sınırını, önerilen kotu, payını ve çizgiyi tutup tutmadığını
+        verir.Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile,
+        invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da).
 
         Args:
             doc: The drawing it works on.

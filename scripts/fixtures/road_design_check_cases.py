@@ -57,6 +57,13 @@ PROFILES = [
      "pvis": [pv("a", 0, 100), pv("v1", 300, 112, radius=2000), pv("b", 600, 103)]},
     {"id": "b-3", "name": "Eski", "alignment": "g-2", "revision": 1,
      "pvis": [pv("a", 0, 100), pv("v1", 200, 104, length=60), pv("b", 400, 100)]},
+    # Docs/adr/0946: b-1 with what it crosses. The line is 105.2 at the crest's PVI (150 m), 98.857 at the sag's
+    # (350 m), 102.286 at 600 m: the overpass and the culvert are short, the pipe clear.
+    {"id": "b-9", "name": "Kesişmeli", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+     "pvis": [pv("a", 0, 100), pv("v1", 150, 106, length=80), pv("v2", 350, 98, length=120), pv("b", 700, 104)],
+     "crossings": [{"name": "Üst geçit", "station": 150.0, "side": "above", "elevation": 110.0, "clearance": 5.2},
+                   {"name": "Kutu menfez", "station": 350.0, "side": "below", "elevation": 98.5, "clearance": 1.0},
+                   {"name": "Su borusu", "station": 600.0, "side": "below", "elevation": 100.0, "clearance": 1.0}]},
     # Docs/adr/0935: a kink without a curve and an asymmetric crest, for the least lengths.
     {"id": "b-4", "name": "Kırıklı", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
      "pvis": [pv("a", 0, 100), pv("v1", 200, 108), pv("v2", 420, 99, lengthIn=40, lengthOut=60), pv("b", 650, 105)]},
@@ -206,7 +213,7 @@ def p_answer(inp):
         (p for p in PROFILES if p["name"].lower() == name.lower()), None)
     if d is None:
         raise Refused("unknown_road_profile", f"“{name}” kimlikli ya da adlı boykesit projede yok.", "profile")
-    if not any(k in inp for k in P_RULES):
+    if not any(k in inp for k in P_RULES) and not d.get("crossings"):
         raise Refused("invalid_design_check", "Denetlenecek bir kural verin: tasarım standardının değerleri "
                                               "kullanıcınındır.", "profile")
     for k in P_RULES:
@@ -241,6 +248,24 @@ def p_answer(inp):
             if length < inp["leastGradeLength"]:
                 add("gradeLength", [a["pvi"], b["pvi"]], a["end"][0], b["start"][0], length, inp["leastGradeLength"])
     found.sort(key=lambda f: (f["from"], P_ORDER.index(f["rule"])))
+    # Docs/adr/0946: a crossing the line does not keep, after the rules, in the profile's order.
+    _, line, _, _ = pcmd.vref.solve(vp)
+    for c in d.get("crossings", []):
+        r = line(c["station"])
+        if r is None:
+            continue
+        z = float(r[0])
+        above = c["side"] == "above"
+        limit = c["elevation"] - c["clearance"] if above else c["elevation"] + c["clearance"]
+        margin = limit - z if above else z - limit
+        if margin >= -1e-9:
+            continue
+        what = (f"{c['name']} altında kırmızı kot {z:.3f}, en çok {limit:.3f} ({fmt(c['clearance'])} m açıklık için "
+                f"{-margin:.3f} m eksik).") if above else (
+                f"{c['name']} üstünde kırmızı kot {z:.3f}, en az {limit:.3f} ({fmt(c['clearance'])} m örtü için "
+                f"{-margin:.3f} m eksik).")
+        found.append({"rule": "clearance", "of": [c["name"]], "from": float(c["station"]), "to": float(c["station"]),
+                      "value": z, "limit": limit, "message": what})
     warns = []
     rev = next(a["revision"] for a in ALIGNMENTS if a["id"] == d["alignment"])
     if rev != d.get("alignmentRevision", 0):
@@ -321,6 +346,8 @@ def profile_cases():
     q("Eski boykesit", {"profile": "b-3", "leastCrestK": 20.0})
     q("Eski boykesit, kural tutar", {"profile": "b-3", "mostGrade": 0.5})
     q("Tek kurpta kurplar arası yok", {"profile": "b-2", "leastGradeLength": 500.0})
+    q("Kesişmeler: kural verilmeden denetlenir", {"profile": "b-9"})
+    q("Kesişmeler ve eğim birlikte", {"profile": "Kesişmeli", "mostGrade": 0.035})
     # Refusals.
     q("Kural yok", {"profile": "b-1"})
     q("Sıfır eğim sınırı", {"profile": "b-1", "mostGrade": 0.0})

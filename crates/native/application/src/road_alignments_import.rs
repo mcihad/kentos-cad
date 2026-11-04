@@ -225,6 +225,7 @@ fn check(doc: &Document, input: &AlignmentsImport) -> Result<Checked, Stop> {
                     revision: 1,
                     pvis,
                     surface: None,
+                    crossings: Vec::new(),
                 };
                 if kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(&def)).is_err() {
                     warnings.push(left(format!("“{name}” boykesiti alınmadı: PVI'larından düşey güzergâh kurulamıyor.")));

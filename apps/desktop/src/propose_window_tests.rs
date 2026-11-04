@@ -84,3 +84,69 @@ fn screens() {
         }
     }
 }
+
+/// Y40.3 (docs/adr/0946): a profile's crossings hold the proposal as `road.profiles.propose`'s shared case does: the
+/// overpass and the culvert at their limits, the pipe clear.
+#[test]
+fn the_crossings_hold_the_proposal() {
+    let mut app = propose_app();
+    let _ = app.update(Message::Run("profile.propose"));
+    send(&mut app, W::Profile("b-6".into()));
+    send(&mut app, W::Preview);
+    let w = app.propose_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    let want = &case("Üst geçit altında ve menfez üstünde: ikisi de tutuyor")["result"]["output"];
+    for (c, q) in r.answer.crossings.iter().zip(want["crossings"].as_array().expect("crossings")) {
+        assert!((c.margin.expect("on the line") - q["margin"].as_f64().unwrap()).abs() < 1e-6, "{}", c.name);
+        assert_eq!(c.holds, q.get("holds").and_then(serde_json::Value::as_bool).unwrap_or(false), "{}", c.name);
+    }
+    assert_eq!(r.answer.crossings.iter().filter(|c| c.holds).count(), 2);
+}
+
+/// The proposal held by its crossings, light and dark; `.run/gui-evidence/yol-y40/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib propose_window_tests::screens_crossings -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_crossings() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y40");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = propose_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("profile"));
+        let _ = app.update(Message::Run("profile.propose"));
+        send(&mut app, W::Profile("b-6".into()));
+        send(&mut app, W::Preview);
+        send(&mut app, W::Detail(crate::propose_window::Detail::Crossings));
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y40-oneri-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        // The same profile in Boykesit: its line as it is, the culvert short.
+        let _ = app.update(Message::Propose(W::Close));
+        let _ = app.update(Message::Run("profile.editor"));
+        let rows = app.profile_window.as_ref().and_then(|w| w.rows.iter().position(|r| r_id(r) == "b-6"));
+        if let Some(i) = rows {
+            let _ = app.update(Message::Profiles(crate::profile_window::Event::Choose(i)));
+        }
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y40-boykesit-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+fn r_id(r: &crate::profile_window::Row) -> String {
+    r.id_text()
+}

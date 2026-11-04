@@ -674,6 +674,11 @@ pub(crate) fn road_has_corridor_sampling(road: &kentos_contracts::RoadSettings) 
     road.corridors.iter().any(|c| c.vertical_sag.is_some() || c.refine.is_some())
 }
 
+/// Whether road settings carry schema 170's field: a profile's crossings (docs/adr/0946).
+pub(crate) fn road_has_profile_crossings(road: &kentos_contracts::RoadSettings) -> bool {
+    road.profiles.iter().any(|p| !p.crossings.is_empty())
+}
+
 /// Whether road settings carry schema 169's fields: a mass haul diagram's unsuitable cut or barriers (docs/adr/0944).
 pub(crate) fn road_has_haul_sorting(road: &kentos_contracts::RoadSettings) -> bool {
     road.hauls.iter().any(|h| !h.unsuitable.is_empty() || !h.barriers.is_empty())
@@ -1319,6 +1324,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.haul_sorting && road_has_haul_sorting(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "Brüknerin uygunsuz malzemesi ve engelleri şema 169 ister"));
+                }
+                if !has.profile_crossings && road_has_profile_crossings(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "boykesitin kesişmeleri şema 170 ister"));
                 }
                 if !has.section_breaks && road_has_section_breaks(&v) {
                     return Err(r.fail_at(

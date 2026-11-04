@@ -249,6 +249,153 @@
         "elevation": 112.0
        }
       ]
+     },
+     {
+      "id": "b-6",
+      "name": "Kesişmeli kot",
+      "alignment": "g-2",
+      "alignmentRevision": 3,
+      "revision": 1,
+      "surface": "t-1",
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 110.0
+       },
+       {
+        "id": "v1",
+        "station": 200.0,
+        "elevation": 105.0
+       },
+       {
+        "id": "v2",
+        "station": 420.0,
+        "elevation": 107.0
+       },
+       {
+        "id": "b",
+        "station": 650.0,
+        "elevation": 112.0
+       }
+      ],
+      "crossings": [
+       {
+        "name": "Üst geçit",
+        "station": 300.0,
+        "side": "above",
+        "elevation": 112.0,
+        "clearance": 5.0
+       },
+       {
+        "name": "Kutu menfez",
+        "station": 520.0,
+        "side": "below",
+        "elevation": 111.5,
+        "clearance": 1.0
+       },
+       {
+        "name": "Su borusu",
+        "station": 100.0,
+        "side": "below",
+        "elevation": 104.0,
+        "clearance": 1.0
+       }
+      ]
+     },
+     {
+      "id": "b-7",
+      "name": "Kurplu kesişmeli kot",
+      "alignment": "g-2",
+      "alignmentRevision": 3,
+      "revision": 1,
+      "surface": "t-1",
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 111.0
+       },
+       {
+        "id": "v1",
+        "station": 150.0,
+        "elevation": 106.0,
+        "length": 80.0
+       },
+       {
+        "id": "v2",
+        "station": 330.0,
+        "elevation": 103.0,
+        "lengthIn": 60.0,
+        "lengthOut": 40.0
+       },
+       {
+        "id": "v3",
+        "station": 500.0,
+        "elevation": 108.0,
+        "length": 100.0
+       },
+       {
+        "id": "b",
+        "station": 650.0,
+        "elevation": 113.0
+       }
+      ],
+      "crossings": [
+       {
+        "name": "Üst geçit",
+        "station": 300.0,
+        "side": "above",
+        "elevation": 114.0,
+        "clearance": 5.0
+       }
+      ]
+     },
+     {
+      "id": "b-8",
+      "name": "Çelişen kesişmeler",
+      "alignment": "g-2",
+      "alignmentRevision": 3,
+      "revision": 1,
+      "surface": "t-1",
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 110.0
+       },
+       {
+        "id": "v1",
+        "station": 200.0,
+        "elevation": 105.0
+       },
+       {
+        "id": "v2",
+        "station": 420.0,
+        "elevation": 107.0
+       },
+       {
+        "id": "b",
+        "station": 650.0,
+        "elevation": 112.0
+       }
+      ],
+      "crossings": [
+       {
+        "name": "Üst geçit",
+        "station": 300.0,
+        "side": "above",
+        "elevation": 112.0,
+        "clearance": 5.0
+       },
+       {
+        "name": "Boru",
+        "station": 300.0,
+        "side": "below",
+        "elevation": 107.5,
+        "clearance": 0.5
+       }
+      ]
      }
     ]
    }
@@ -2060,6 +2207,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -2380,6 +2674,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -2698,6 +3139,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -3022,6 +3610,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -3337,6 +4072,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -3658,6 +4540,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -3988,6 +5017,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -4324,6 +5500,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -4655,6 +5978,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -4991,6 +6461,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -5323,6 +6940,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -5662,6 +7426,3016 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Üst geçit altında ve menfez üstünde: ikisi de tutuyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-6"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-6",
+       "pvis": [
+        {
+         "id": "a",
+         "station": 0.0,
+         "elevation": 107.4742707389256,
+         "was": 110.0,
+         "held": false
+        },
+        {
+         "id": "v1",
+         "station": 200.0,
+         "elevation": 105.36592005583147,
+         "was": 105.0,
+         "held": false
+        },
+        {
+         "id": "v2",
+         "station": 420.0,
+         "elevation": 108.96089593300223,
+         "was": 107.0,
+         "held": false
+        },
+        {
+         "id": "b",
+         "station": 650.0,
+         "elevation": 117.1008352870971,
+         "was": 112.0,
+         "held": false
+        }
+       ],
+       "grades": [
+        {
+         "between": [
+          "a",
+          "v1"
+         ],
+         "grade": -0.010541753415470635
+        },
+        {
+         "between": [
+          "v1",
+          "v2"
+         ],
+         "grade": 0.016340799441685285
+        },
+        {
+         "between": [
+          "v2",
+          "b"
+         ],
+         "grade": 0.03539104066997766
+        }
+       ],
+       "squares": 3637.127785314194,
+       "covered": 597.2512293758499,
+       "rms": 2.4677476876613538,
+       "cut": 584.927782055671,
+       "fill": 554.4340728260387,
+       "crossings": [
+        {
+         "name": "Üst geçit",
+         "station": 300.0,
+         "side": "above",
+         "limit": 107.0,
+         "elevation": 107.0,
+         "margin": 0.0,
+         "holds": true
+        },
+        {
+         "name": "Kutu menfez",
+         "station": 520.0,
+         "side": "below",
+         "limit": 112.5,
+         "elevation": 112.5,
+         "margin": 0.0,
+         "holds": true
+        },
+        {
+         "name": "Su borusu",
+         "station": 100.0,
+         "side": "below",
+         "limit": 105.0,
+         "elevation": 106.42009539737853,
+         "margin": 1.420095397378535
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Uzun kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Düz kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kesişmeler ve en büyük eğim %3 birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "Kesişmeli kot",
+      "mostGrade": 0.03
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-6",
+       "pvis": [
+        {
+         "id": "a",
+         "station": 0.0,
+         "elevation": 107.94029674892583,
+         "was": 110.0,
+         "held": false
+        },
+        {
+         "id": "v1",
+         "station": 200.0,
+         "elevation": 104.91666666666667,
+         "was": 105.0,
+         "held": false
+        },
+        {
+         "id": "v2",
+         "station": 420.0,
+         "elevation": 109.5,
+         "was": 107.0,
+         "held": false
+        },
+        {
+         "id": "b",
+         "station": 650.0,
+         "elevation": 116.4,
+         "was": 112.0,
+         "held": false
+        }
+       ],
+       "grades": [
+        {
+         "between": [
+          "a",
+          "v1"
+         ],
+         "grade": -0.01511815041129584
+        },
+        {
+         "between": [
+          "v1",
+          "v2"
+         ],
+         "grade": 0.020833333333333336
+        },
+        {
+         "between": [
+          "v2",
+          "b"
+         ],
+         "grade": 0.03,
+         "limit": "rise"
+        }
+       ],
+       "squares": 3693.8824218426216,
+       "covered": 597.2512293758499,
+       "rms": 2.4869268292046214,
+       "cut": 593.5324773166413,
+       "fill": 537.7849738732657,
+       "crossings": [
+        {
+         "name": "Üst geçit",
+         "station": 300.0,
+         "side": "above",
+         "limit": 107.0,
+         "elevation": 107.0,
+         "margin": 0.0,
+         "holds": true
+        },
+        {
+         "name": "Kutu menfez",
+         "station": 520.0,
+         "side": "below",
+         "limit": 112.5,
+         "elevation": 112.5,
+         "margin": 0.0,
+         "holds": true
+        },
+        {
+         "name": "Su borusu",
+         "station": 100.0,
+         "side": "below",
+         "limit": 105.0,
+         "elevation": 106.42848170779625,
+         "margin": 1.4284817077962506
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Uzun kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Düz kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "En büyük eğim %2: üst geçitten menfeze çıkılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-6",
+      "mostGrade": 0.02
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_profile_proposal",
+       "message": "“Kesişmeli kot” boykesitinin kuralları birlikte tutmuyor: kilitli PVI'lar arasındaki eğim en büyük eğimi aşıyor, denge kurulamıyor ya da kesişmelerin açıklık ve örtüsü birlikte sağlanamıyor.",
+       "path": "profile"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Uzun kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Düz kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kesişmeler ve uçlar kilitli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-6",
+      "hold": [
+       "a",
+       "b"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-6",
+       "pvis": [
+        {
+         "id": "a",
+         "station": 0.0,
+         "elevation": 110.0,
+         "was": 110.0,
+         "held": true
+        },
+        {
+         "id": "v1",
+         "station": 200.0,
+         "elevation": 102.09615384615384,
+         "was": 105.0,
+         "held": false
+        },
+        {
+         "id": "v2",
+         "station": 420.0,
+         "elevation": 112.88461538461539,
+         "was": 107.0,
+         "held": false
+        },
+        {
+         "id": "b",
+         "station": 650.0,
+         "elevation": 112.0,
+         "was": 112.0,
+         "held": true
+        }
+       ],
+       "grades": [
+        {
+         "between": [
+          "a",
+          "v1"
+         ],
+         "grade": -0.03951923076923077
+        },
+        {
+         "between": [
+          "v1",
+          "v2"
+         ],
+         "grade": 0.04903846153846154
+        },
+        {
+         "between": [
+          "v2",
+          "b"
+         ],
+         "grade": -0.0038461538461538464
+        }
+       ],
+       "squares": 6663.523431511079,
+       "covered": 597.2512293758499,
+       "rms": 3.340207435196498,
+       "cut": 946.6970477582308,
+       "fill": 685.4510075087741,
+       "crossings": [
+        {
+         "name": "Üst geçit",
+         "station": 300.0,
+         "side": "above",
+         "limit": 107.0,
+         "elevation": 107.0,
+         "margin": 0.0,
+         "holds": true
+        },
+        {
+         "name": "Kutu menfez",
+         "station": 520.0,
+         "side": "below",
+         "limit": 112.5,
+         "elevation": 112.5,
+         "margin": 0.0,
+         "holds": true
+        },
+        {
+         "name": "Su borusu",
+         "station": 100.0,
+         "side": "below",
+         "limit": 105.0,
+         "elevation": 106.04807692307692,
+         "margin": 1.0480769230769231
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Uzun kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Düz kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kurplu boykesitte üst geçit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-7"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-7",
+       "pvis": [
+        {
+         "id": "a",
+         "station": 0.0,
+         "elevation": 110.95128477026745,
+         "was": 111.0,
+         "held": false
+        },
+        {
+         "id": "v1",
+         "station": 150.0,
+         "elevation": 103.73804710396976,
+         "was": 106.0,
+         "held": false
+        },
+        {
+         "id": "v2",
+         "station": 330.0,
+         "elevation": 110.23296543158659,
+         "was": 103.0,
+         "held": false
+        },
+        {
+         "id": "v3",
+         "station": 500.0,
+         "elevation": 107.83990915636572,
+         "was": 108.0,
+         "held": false
+        },
+        {
+         "id": "b",
+         "station": 650.0,
+         "elevation": 117.71279173329984,
+         "was": 113.0,
+         "held": false
+        }
+       ],
+       "grades": [
+        {
+         "between": [
+          "a",
+          "v1"
+         ],
+         "grade": -0.048088251108651274
+        },
+        {
+         "between": [
+          "v1",
+          "v2"
+         ],
+         "grade": 0.03608287959787128
+        },
+        {
+         "between": [
+          "v2",
+          "v3"
+         ],
+         "grade": -0.014076801618946295
+        },
+        {
+         "between": [
+          "v3",
+          "b"
+         ],
+         "grade": 0.06581921717956082
+        }
+       ],
+       "squares": 1661.3595024668648,
+       "covered": 597.2512293758499,
+       "rms": 1.667835769374889,
+       "cut": 493.69214869724203,
+       "fill": 322.36729437995774,
+       "crossings": [
+        {
+         "name": "Üst geçit",
+         "station": 300.0,
+         "side": "above",
+         "limit": 109.0,
+         "elevation": 109.0,
+         "margin": 0.0,
+         "holds": true
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Uzun kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Düz kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kurplu, üst geçit ve denge",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-7",
+      "balanced": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "b-7",
+       "pvis": [
+        {
+         "id": "a",
+         "station": 0.0,
+         "elevation": 111.23626691832624,
+         "was": 111.0,
+         "held": false
+        },
+        {
+         "id": "v1",
+         "station": 150.0,
+         "elevation": 104.19765112794919,
+         "was": 106.0,
+         "held": false
+        },
+        {
+         "id": "v2",
+         "station": 330.0,
+         "elevation": 110.11504680682893,
+         "was": 103.0,
+         "held": false
+        },
+        {
+         "id": "v3",
+         "station": 500.0,
+         "elevation": 108.40422730599563,
+         "was": 108.0,
+         "held": false
+        },
+        {
+         "id": "b",
+         "station": 650.0,
+         "elevation": 118.00375533176775,
+         "was": 113.0,
+         "held": false
+        }
+       ],
+       "grades": [
+        {
+         "between": [
+          "a",
+          "v1"
+         ],
+         "grade": -0.04692410526918026
+        },
+        {
+         "between": [
+          "v1",
+          "v2"
+         ],
+         "grade": 0.03287442043822078
+        },
+        {
+         "between": [
+          "v2",
+          "v3"
+         ],
+         "grade": -0.01006364412254886
+        },
+        {
+         "between": [
+          "v3",
+          "b"
+         ],
+         "grade": 0.06399685350514753
+        }
+       ],
+       "squares": 1727.2205446666862,
+       "covered": 597.2512293758499,
+       "rms": 1.7005733597777462,
+       "cut": 414.5619297570958,
+       "fill": 414.5619297570958,
+       "crossings": [
+        {
+         "name": "Üst geçit",
+         "station": 300.0,
+         "side": "above",
+         "limit": 109.0,
+         "elevation": 109.0,
+         "margin": 0.0,
+         "holds": true
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Uzun kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Düz kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -5968,6 +10742,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -6281,6 +11202,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -6603,6 +11671,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -6863,6 +12078,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -8663,6 +14025,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -8926,6 +14435,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -9184,6 +14840,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -9446,6 +15249,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -9703,6 +15653,153 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }
@@ -9964,6 +16061,153 @@
            "elevation": 112.0
           }
          ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
         }
        ]
       }
@@ -9989,7 +16233,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_profile_proposal",
-       "message": "“Düz kot” boykesitinin kuralları birlikte tutmuyor: kilitli PVI'lar arasındaki eğim en büyük eğimi aşıyor ya da denge kurulamıyor.",
+       "message": "“Düz kot” boykesitinin kuralları birlikte tutmuyor: kilitli PVI'lar arasındaki eğim en büyük eğimi aşıyor, denge kurulamıyor ya da kesişmelerin açıklık ve örtüsü birlikte sağlanamıyor.",
        "path": "profile"
       }
      },
@@ -10226,6 +16470,559 @@
            "id": "b",
            "station": 650.0,
            "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynı yerde çelişen üst geçit ve boru",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "profile": "b-8"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_profile_proposal",
+       "message": "“Çelişen kesişmeler” boykesitinin kuralları birlikte tutmuyor: kilitli PVI'lar arasındaki eğim en büyük eğimi aşıyor, denge kurulamıyor ya da kesişmelerin açıklık ve örtüsü birlikte sağlanamıyor.",
+       "path": "profile"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Uzun kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Düz kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Kutu menfez",
+           "station": 520.0,
+           "side": "below",
+           "elevation": 111.5,
+           "clearance": 1.0
+          },
+          {
+           "name": "Su borusu",
+           "station": 100.0,
+           "side": "below",
+           "elevation": 104.0,
+           "clearance": 1.0
+          }
+         ]
+        },
+        {
+         "id": "b-7",
+         "name": "Kurplu kesişmeli kot",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 111.0
+          },
+          {
+           "id": "v1",
+           "station": 150.0,
+           "elevation": 106.0,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 330.0,
+           "elevation": 103.0,
+           "lengthIn": 60.0,
+           "lengthOut": 40.0
+          },
+          {
+           "id": "v3",
+           "station": 500.0,
+           "elevation": 108.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 113.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 114.0,
+           "clearance": 5.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çelişen kesişmeler",
+         "alignment": "g-2",
+         "alignmentRevision": 3,
+         "revision": 1,
+         "surface": "t-1",
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 200.0,
+           "elevation": 105.0
+          },
+          {
+           "id": "v2",
+           "station": 420.0,
+           "elevation": 107.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "crossings": [
+          {
+           "name": "Üst geçit",
+           "station": 300.0,
+           "side": "above",
+           "elevation": 112.0,
+           "clearance": 5.0
+          },
+          {
+           "name": "Boru",
+           "station": 300.0,
+           "side": "below",
+           "elevation": 107.5,
+           "clearance": 0.5
           }
          ]
         }

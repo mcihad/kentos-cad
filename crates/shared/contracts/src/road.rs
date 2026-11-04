@@ -628,6 +628,41 @@ pub struct ProfileDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
+    /// What the road crosses (docs/adr/0946; KCAD schema 170).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileCrossingDef>>", optional))]
+    pub crossings: Vec<ProfileCrossingDef>,
+}
+
+/// Where a crossed structure is against the road (docs/adr/0946).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CrossingSide {
+    /// Over the road (a bridge, an overpass, a line): its elevation is its underside, the road passes under it.
+    Above,
+    /// Under the road (a culvert, a pipe): its elevation is its top, the road passes over it.
+    Below,
+}
+
+/// Something a road crosses (docs/adr/0946): its name, station on the profile's alignment, side, elevation (underside
+/// or top) and the clearance under it or the cover over it (m). The values are the project's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileCrossingDef {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub side: CrossingSide,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub elevation: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub clearance: f64,
 }
 
 /// A template component's kind.
@@ -3078,6 +3113,22 @@ fn profiles_problem(list: &[ProfileDef], alignments: &[AlignmentDef]) -> Option<
                 return fail(vat("lengthIn"), "asimetrik kurbun iki kolu birlikte verilir");
             }
         }
+        if p.crossings.len() > MAX_PROFILE_PVIS {
+            return fail(at("crossings"), &format!("en çok {MAX_PROFILE_PVIS} kesişme olur"));
+        }
+        for (j, c) in p.crossings.iter().enumerate() {
+            let cat = format!("profiles[{i}].crossings[{j}]");
+            let nm = c.name.trim();
+            if nm.is_empty() || nm != c.name || c.name.chars().count() > 120 {
+                return fail(cat, "kesişmenin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            }
+            if !(c.station.is_finite() && c.elevation.is_finite()) {
+                return fail(cat, "kesişmenin km'si ve kotu sonlu olmalı");
+            }
+            if !(c.clearance.is_finite() && (0.0..=100.0).contains(&c.clearance)) {
+                return fail(cat, "açıklık ya da örtü 0 ile 100 m arası olur");
+            }
+        }
     }
     None
 }
@@ -3305,6 +3356,7 @@ mod tests {
             revision: 1,
             pvis: vec![pvi("a", 0.0), pvi("b", 100.0)],
             surface: None,
+            crossings: Vec::new(),
         };
         let judge = |f: fn(&mut ProfileDef)| {
             let mut p = profile.clone();

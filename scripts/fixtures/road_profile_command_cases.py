@@ -443,6 +443,16 @@ def edit_cases():
        put(2, {**PART, "surface": "t-1", "revision": 2}), "b-3")
     ok("Boykesit adıyla, büyük küçük harf ayrımsız", {"profile": "PROJE kotu", "operation": "set", "name": "Kot"},
        put(0, {**MAIN, "name": "Kot", "revision": 2}), "b-1")
+    # Docs/adr/0946: what the road crosses (schema 170).
+    crossings = [{"name": "Üst geçit", "station": 150.0, "side": "above", "elevation": 109.0, "clearance": 5.2},
+                 {"name": "Kutu menfez", "station": 430.0, "side": "below", "elevation": 104.0, "clearance": 0.8}]
+    ok("Kesişmeler yazılır", {"profile": "b-1", "operation": "set", "crossings": crossings},
+       put(0, {**MAIN, "crossings": crossings, "revision": 2}), "b-1")
+    crossed = [{**MAIN, "crossings": crossings}, SIDE, PART]
+    cases.append(case("Boş liste kesişmeleri kaldırır", [step(
+        "execute", {"profile": "b-1", "operation": "set", "crossings": []},
+        completed(written([{**MAIN, "revision": 2}, SIDE, PART], "b-1")),
+        {**STEPPED, "road": road_of([{**MAIN, "revision": 2}, SIDE, PART])})], setup(crossed)))
     ok("Aynı değerler: değişiklik yok, adım yok", {"profile": "b-1", "operation": "set", "name": "Proje kotu"},
        start, "b-1")
     ok("Eskiyen boykesit aksa yeniden bağlanır", {"profile": "b-2", "operation": "rebind"},
@@ -471,7 +481,7 @@ def edit_cases():
     no("Olmayan boykesit", {"profile": "yok", "operation": "remove"},
        failed("unknown_road_profile", "“yok” kimlikli ya da adlı boykesit projede yok.", "profile"))
     no("Değiştirilecek bir şey yok", {"profile": "b-1", "operation": "set"},
-       failed("invalid_road_profile", "Değiştirilecek bir şey yok: name, pvis ya da surface verin."))
+       failed("invalid_road_profile", "Değiştirilecek bir şey yok: name, pvis, surface ya da crossings verin."))
     no("Olmayan yüzey", {"profile": "b-1", "operation": "set", "surface": "yok"},
        failed("unknown_terrain", "“yok” kimlikli ya da adlı yüzey projede yok.", "surface"))
     no("Başka boykesitin adı", {"profile": "b-1", "operation": "set", "name": "yan KOT"},
@@ -484,6 +494,13 @@ def edit_cases():
         ("Bitişte kurp", [pv("a", 0, 100), pv("b", 300, 104, radius=500)]),
     ]:
         no(title, {"profile": "b-1", "operation": "set", "pvis": pvis}, vertical_refusal({"alignment": "g-1", "pvis": pvis}))
+    no("Adsız kesişme", {"profile": "b-1", "operation": "set",
+                         "crossings": [{"name": " ", "station": 10.0, "side": "above", "elevation": 108.0, "clearance": 5.0}]},
+       rule("kesişmenin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter", "crossings[0]"))
+    no("Çok büyük açıklık", {"profile": "b-1", "operation": "set",
+                             "crossings": [{"name": "Köprü", "station": 10.0, "side": "above", "elevation": 108.0,
+                                            "clearance": 150.0}]},
+       rule("açıklık ya da örtü 0 ile 100 m arası olur", "crossings[0]"))
     no("Geçersiz beklenen sürüm", {"profile": "b-1", "operation": "remove", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"profile": "b-1", "operation": "remove", "expectedRevision": "41"}, CONFLICT)
     return file("road.profiles.edit", "Boykesiti düzenle", setup(start), cases)

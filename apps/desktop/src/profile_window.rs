@@ -57,6 +57,23 @@ const FROM_GROUND: &str = "Araziden uçlar";
 const DRAW: &str = "Çizime yaz";
 const LENGTHS: &str = "Kurp boyu öner…";
 const CURVES: [&str; 4] = ["Yok", "Parabol", "Asimetrik", "Çember"];
+/// The crossings' table and its buttons (docs/adr/0946).
+pub(crate) const CROSSINGS: &str = "Kesişmeler";
+const ADD_CROSSING: &str = "Kesişme ekle";
+const REMOVE_CROSSING: &str = "Kesişmeyi sil";
+/// A crossing's side: the structure over the road, or under it.
+const SIDES: [&str; 2] = ["Üstte (köprü, üst geçit)", "Altta (menfez, boru)"];
+
+/// A crossing as typed (docs/adr/0946): its name, station, side (an index of [`SIDES`]), elevation (underside or top)
+/// and clearance or cover.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CrossingRow {
+    name: String,
+    station: String,
+    side: usize,
+    elevation: String,
+    clearance: String,
+}
 
 /// A PVI as typed: its id, station and elevation texts, its curve's kind (an index of [`CURVES`]) and sizes' texts
 /// (a parabola's length; an asymmetric one's lengths before and after; a circle's radius).
@@ -79,6 +96,7 @@ pub struct Row {
     alignment_revision: u32,
     surface: Option<String>,
     pvis: Vec<PviRow>,
+    crossings: Vec<CrossingRow>,
 }
 
 fn comma(v: f64, digits: usize) -> String {
@@ -100,6 +118,12 @@ fn number(text: &str) -> Result<Option<f64>, ()> {
 }
 
 impl Row {
+    /// Its id, for the tests' pictures.
+    #[cfg(test)]
+    pub(crate) fn id_text(&self) -> String {
+        self.id.clone()
+    }
+
     fn of(d: &ProfileDef) -> Self {
         Self {
             id: d.id.clone(),
@@ -128,6 +152,17 @@ impl Row {
                         curve,
                         sizes,
                     }
+                })
+                .collect(),
+            crossings: d
+                .crossings
+                .iter()
+                .map(|c| CrossingRow {
+                    name: c.name.clone(),
+                    station: trimmed(c.station),
+                    side: usize::from(c.side == kentos_commands::CrossingSide::Below),
+                    elevation: trimmed(c.elevation),
+                    clearance: trimmed(c.clearance),
                 })
                 .collect(),
         }
@@ -163,6 +198,20 @@ impl Row {
             }
             pvis.push(pvi);
         }
+        let mut crossings = Vec::new();
+        for (i, c) in self.crossings.iter().enumerate() {
+            let need = |t: &str, what: &str| match number(t) {
+                Ok(Some(v)) => Ok(v),
+                _ => Err(format!("{}. kesişmenin {what} değeri sayı olmalı.", i + 1)),
+            };
+            crossings.push(kentos_commands::ProfileCrossingDef {
+                name: c.name.trim().to_owned(),
+                station: need(&c.station, "km")?,
+                side: if c.side == 1 { kentos_commands::CrossingSide::Below } else { kentos_commands::CrossingSide::Above },
+                elevation: need(&c.elevation, "kot")?,
+                clearance: need(&c.clearance, "açıklık ya da örtü")?,
+            });
+        }
         Ok(ProfileDef {
             id: self.id.clone(),
             name: self.name.clone(),
@@ -171,6 +220,7 @@ impl Row {
             revision: self.revision,
             pvis,
             surface: self.surface.clone(),
+            crossings,
         })
     }
 
@@ -290,6 +340,8 @@ pub struct Window {
     chosen: Option<usize>,
     /// The PVI row chosen in the table.
     pvi: Option<usize>,
+    /// The crossing row chosen (docs/adr/0946).
+    crossing: Option<usize>,
     /// The vertical exaggeration's text.
     exaggeration: String,
     pub(crate) ground: Ground,
@@ -421,6 +473,12 @@ pub enum Event {
     /// Kurp boyu öner…: the curve length window on the chosen profile.
     OpenLengths,
     Lengths(crate::profile_lengths_window::Event),
+    /// A crossing's name (0), station (1), elevation (3) or clearance (4) (docs/adr/0946).
+    Crossing(usize, usize, String),
+    CrossingSide(usize, usize),
+    CrossingChoose(usize),
+    AddCrossing,
+    RemoveCrossing,
 }
 
 fn msg(event: Event) -> Message {
@@ -575,6 +633,7 @@ impl App {
                         alignment_revision: revisions.iter().find(|(a, _)| a == alignment).map_or(0, |(_, r)| *r),
                         surface: surfaces.first().map(|(id, _)| id.clone()),
                         pvis: vec![blank("a"), blank("b")],
+                        crossings: Vec::new(),
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.pvi = None;
@@ -613,6 +672,45 @@ impl App {
                 }
             }
             Event::Exaggeration(t) => w.exaggeration = t,
+            Event::Crossing(j, k, t) => {
+                if let Some(c) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.crossings.get_mut(j)) {
+                    match k {
+                        0 => c.name = t,
+                        1 => c.station = t,
+                        3 => c.elevation = t,
+                        _ => c.clearance = t,
+                    }
+                }
+                w.crossing = Some(j);
+            }
+            Event::CrossingSide(j, side) => {
+                if let Some(c) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.crossings.get_mut(j)) {
+                    c.side = side;
+                }
+                w.crossing = Some(j);
+            }
+            Event::CrossingChoose(j) => w.crossing = Some(j),
+            Event::AddCrossing => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    // A new crossing's name follows the count; its station, elevation and clearance are the user's.
+                    let n = r.crossings.len() + 1;
+                    r.crossings.push(CrossingRow {
+                        name: format!("Kesişme {n}"),
+                        station: String::new(),
+                        side: 0,
+                        elevation: String::new(),
+                        clearance: String::new(),
+                    });
+                    w.crossing = Some(n - 1);
+                }
+            }
+            Event::RemoveCrossing => {
+                if let Some(j) = w.crossing.take()
+                    && let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)).filter(|r| j < r.crossings.len())
+                {
+                    r.crossings.remove(j);
+                }
+            }
             Event::PviChoose(j) => w.pvi = Some(j),
             Event::Pvi(j, k, t) => {
                 if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pvis.get_mut(j)) {
@@ -724,6 +822,7 @@ impl App {
             name: None,
             pvis: None,
             surface: None,
+            crossings: None,
             expected_revision: None,
         };
         if self.profile_write(|cx| road_profiles_edit::execute(cx, edit)) {
@@ -806,6 +905,7 @@ impl App {
                 name: None,
                 pvis: None,
                 surface: None,
+                crossings: None,
                 expected_revision: None,
             };
             if !self.profile_write(|cx| road_profiles_edit::execute(cx, edit)) {
@@ -822,6 +922,7 @@ impl App {
                         name: (k.name != d.name).then(|| d.name.clone()),
                         pvis: (k.pvis != d.pvis).then(|| d.pvis.clone()),
                         surface: (k.surface != d.surface).then(|| d.surface.clone().unwrap_or_default()),
+                        crossings: (k.crossings != d.crossings).then(|| d.crossings.clone()),
                         expected_revision: None,
                     };
                     if !self.profile_write(|cx| road_profiles_edit::execute(cx, edit)) {
@@ -991,6 +1092,7 @@ impl App {
             cursor: None,
             on_station: None,
             compact: false,
+            crossings: r.def().ok().map_or_else(Vec::new, |d| chart_crossings(&d)),
         };
         col = col.push_grow(
             crate::picture::picture(canvas(chart).width(Fill).height(Fill), format!("Boykesit — {}", r.name)),
@@ -1052,7 +1154,66 @@ impl App {
                 words::ghost(REMOVE_PVI, w.pvi.filter(|j| *j < r.pvis.len() && r.pvis.len() > 2).map(|_| msg(Event::RemovePvi))),
                 words::secondary(FROM_GROUND, Some(msg(Event::FromGround))),
             ]
+            .push(if r.crossings.is_empty() {
+                Element::from(words::secondary(ADD_CROSSING, Some(msg(Event::AddCrossing))))
+            } else {
+                Element::from(space::horizontal().width(0))
+            })
             .spacing(8),
+        );
+        // What the road crosses (docs/adr/0946): each with its margin on the line as typed. With none, only the button
+        // above: an empty table would take the picture's room for nothing.
+        if r.crossings.is_empty() {
+            return container(col).padding(iced::Padding::default().right(14)).into();
+        }
+        let line = r.vertical().ok();
+        let crossings = &r.crossings;
+        let margins: Vec<Option<f64>> = r.def().ok().map_or_else(Vec::new, |d| {
+            chart_crossings(&d)
+                .iter()
+                .map(|(_, s, above, _, limit)| {
+                    let z = line.as_ref().and_then(|v| v.at(*s)).map(|q| q.0)?;
+                    Some(if *above { limit - z } else { z - limit })
+                })
+                .collect()
+        });
+        let table = road_dialog::edit_table(
+            vec![
+                road_dialog::Col { title: "Ad", width: None, number: false },
+                road_dialog::col("Km (m)", 90.0),
+                road_dialog::col("Yer", 190.0),
+                road_dialog::col("Kot (m)", 90.0),
+                road_dialog::col("Açıklık/örtü (m)", 120.0),
+                road_dialog::col("Pay (m)", 80.0),
+            ],
+            crossings.len(),
+            move |j, k| {
+                let c = &crossings[j];
+                match k {
+                    0 => road_dialog::edit(&c.name, false, move |t| msg(Event::Crossing(j, 0, t))),
+                    1 => road_dialog::edit(&c.station, true, move |t| msg(Event::Crossing(j, 1, t))),
+                    2 => road_dialog::pick(SIDES, Some(c.side), move |i| msg(Event::CrossingSide(j, i))),
+                    3 => road_dialog::edit(&c.elevation, true, move |t| msg(Event::Crossing(j, 3, t))),
+                    4 => road_dialog::edit(&c.clearance, true, move |t| msg(Event::Crossing(j, 4, t))),
+                    _ => kentos_ui::widget::table::text(margins.get(j).copied().flatten().map_or_else(
+                        || "—".to_owned(),
+                        |m| format!("{:+.3}", if m.abs() < 5e-4 { 0.0 } else { m }).replace('.', ","),
+                    ))
+                    .into(),
+                }
+            },
+            w.crossing,
+            |j| msg(Event::CrossingChoose(j)),
+            "Kesişme yok",
+        );
+        col = col.push(words::field(CROSSINGS, table, None)).push(
+            row![
+                words::secondary(ADD_CROSSING, Some(msg(Event::AddCrossing))),
+                words::ghost(REMOVE_CROSSING, w.crossing.filter(|j| *j < r.crossings.len()).map(|_| msg(Event::RemoveCrossing))),
+                label::caption("Üstteki yapının kotu alt yüzüdür, kırmızı kot ondan açıklık kadar aşağıda kalır; alttakinin kotu üstüdür, kırmızı kot ondan örtü kadar yukarıda. Değerler projenin. Eksi pay yetmeyen açıklıktır.").style(muted),
+            ]
+            .spacing(8)
+            .align_y(iced::Alignment::Center),
         );
         container(col).padding(iced::Padding::default().right(14)).into()
     }
@@ -1077,6 +1238,8 @@ impl App {
         Ok(match control {
             Control::Press(LENGTHS) => Some(msg(Event::OpenLengths)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(ADD_CROSSING) => Some(msg(Event::AddCrossing)),
+            Control::Press(REMOVE_CROSSING) => Some(msg(Event::RemoveCrossing)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
@@ -1120,6 +1283,8 @@ pub(crate) struct Chart<'a> {
     on_station: Option<fn(f64) -> Message>,
     /// The split views' short chart: no bands, the length across the width, the exaggeration as far as it fits.
     compact: bool,
+    /// The crossings (docs/adr/0946): name, station, over the road, elevation, the grade line's limit.
+    crossings: Vec<(String, f64, bool, f64, f64)>,
 }
 
 /// Where the chart draws: the plot, its horizontal scale (px per m) and the length shown.
@@ -1151,6 +1316,7 @@ impl<'a> Chart<'a> {
             cursor,
             on_station: Some(on_station),
             compact: false,
+            crossings: def.map_or_else(Vec::new, chart_crossings),
         }
     }
 
@@ -1207,7 +1373,8 @@ impl<'a> Chart<'a> {
             .iter()
             .filter_map(|p| p.z)
             .chain(self.pvis.iter().map(|p| p.1))
-            .chain(self.vertical.iter().flat_map(|v| v.curves.iter().flat_map(|c| [c.start[1], c.end[1]])));
+            .chain(self.vertical.iter().flat_map(|v| v.curves.iter().flat_map(|c| [c.start[1], c.end[1]])))
+            .chain(self.crossings.iter().flat_map(|c| [c.3, c.4]));
         let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(z), hi.max(z)));
         (lo.is_finite() && hi.is_finite()).then(|| {
             let pad = ((hi - lo) * 0.08).max(0.5);
@@ -1341,6 +1508,31 @@ impl canvas::Program<Message> for Chart<'_> {
             );
         }
         let red = t.danger;
+        // What the road crosses (docs/adr/0946): a bridge's deck over the line, a culvert's box under it, the limit
+        // dashed between; green where the line keeps it, red where it does not.
+        for (name, s, above, z, limit) in &self.crossings {
+            let line_z = self.vertical.as_ref().and_then(|v| v.at(*s)).map(|q| q.0);
+            let kept = line_z.is_none_or(|lz| if *above { lz <= *limit + 1e-9 } else { lz >= *limit - 1e-9 });
+            let colour = if kept { t.success } else { t.danger };
+            let (cx, half) = (x(*s), 14.0f32);
+            if !shown.has_x(cx) {
+                continue;
+            }
+            if *above {
+                // The deck: its underside at z, a slab above.
+                frame.fill_rectangle(Point::new(cx - half, y(*z) - 6.0), Size::new(2.0 * half, 6.0), Color { a: 0.85, ..t.muted });
+            } else {
+                // The culvert: a box whose top is z.
+                frame.stroke(&Path::rectangle(Point::new(cx - 8.0, y(*z)), Size::new(16.0, 12.0)), Stroke::default().with_color(t.muted).with_width(1.5));
+            }
+            let dash = Stroke { line_dash: LineDash { segments: &[3.0, 2.0], offset: 0 }, ..Stroke::default().with_color(colour).with_width(1.5) };
+            frame.stroke(&Path::line(Point::new(cx - half - 6.0, y(*limit)), Point::new(cx + half + 6.0, y(*limit))), dash);
+            frame.stroke(&Path::line(Point::new(cx, y(*z)), Point::new(cx, y(*limit))), thin(colour));
+            let top = if *above { y(*z) - 22.0 } else { y(*z) + 16.0 };
+            if above_bands(top) {
+                word(&mut frame, name.clone(), Point::new(cx, top), colour, true);
+            }
+        }
         if let Some(v) = &self.vertical {
             let n = (plot.width as usize).max(50);
             let design = Path::new(|b| {
@@ -1468,4 +1660,16 @@ fn curve_marks(frame: &mut canvas::Frame, c: &CurveReport, x: &dyn Fn(f64) -> f3
             Stroke::default().with_color(color).with_width(1.2),
         );
     }
+}
+
+/// A profile's crossings for its chart (docs/adr/0946).
+fn chart_crossings(d: &ProfileDef) -> Vec<(String, f64, bool, f64, f64)> {
+    d.crossings
+        .iter()
+        .map(|c| {
+            let above = c.side == kentos_commands::CrossingSide::Above;
+            let limit = if above { c.elevation - c.clearance } else { c.elevation + c.clearance };
+            (c.name.clone(), c.station, above, c.elevation, limit)
+        })
+        .collect()
 }

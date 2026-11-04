@@ -68,6 +68,8 @@ pub enum Detail {
     #[default]
     Pvis,
     Grades,
+    /// What the road crosses against the proposal (docs/adr/0946).
+    Crossings,
 }
 
 impl std::fmt::Display for Detail {
@@ -75,6 +77,7 @@ impl std::fmt::Display for Detail {
         f.write_str(match self {
             Detail::Pvis => "PVI'lar",
             Detail::Grades => "Eğimler",
+            Detail::Crossings => "Kesişmeler",
         })
     }
 }
@@ -296,6 +299,33 @@ impl App {
                             .collect(),
                         "PVI yok",
                     ),
+                    Detail::Crossings => road_dialog::table(
+                        vec![
+                            road_dialog::col("Kesişme", 130.0),
+                            num("Km", 80.0),
+                            road_dialog::col("Yer", 70.0),
+                            num("Sınır", 90.0),
+                            num("Önerilen kot", 110.0),
+                            num("Pay", 80.0),
+                            road_dialog::col("", 80.0),
+                        ],
+                        a.crossings
+                            .iter()
+                            .map(|c| {
+                                vec![
+                                    c.name.clone(),
+                                    format!("{:.1}", c.station),
+                                    if c.side == kentos_commands::CrossingSide::Above { "üstte" } else { "altta" }.into(),
+                                    format!("{} {:.3}", if c.side == kentos_commands::CrossingSide::Above { "≤" } else { "≥" }, c.limit),
+                                    c.elevation.map_or_else(|| "—".into(), |z| format!("{z:.3}")),
+                                    // A margin within half a millimetre is 0, not “−0.000”.
+                                    c.margin.map_or_else(|| "—".into(), |m| format!("{:+.3}", if m.abs() < 5e-4 { 0.0 } else { m })),
+                                    if c.holds { "tutuyor".into() } else { String::new() },
+                                ]
+                            })
+                            .collect(),
+                        "Kesişme yok",
+                    ),
                     Detail::Grades => road_dialog::table(
                         vec![road_dialog::col("Aralık", 120.0), num("Eğim (%)", 100.0), road_dialog::col("Sınır", 140.0)],
                         a.grades
@@ -315,7 +345,18 @@ impl App {
                         "Eğim yok",
                     ),
                 };
-                d = d.detail(road_dialog::detail_choice([Detail::Pvis, Detail::Grades], w.detail, |x| msg(Event::Detail(x)), table));
+                let mut options = vec![Detail::Pvis, Detail::Grades];
+                if !a.crossings.is_empty() {
+                    options.push(Detail::Crossings);
+                    let held: Vec<&str> = a.crossings.iter().filter(|c| c.holds).map(|c| c.name.as_str()).collect();
+                    if !held.is_empty() {
+                        d = d.note(Banner::info(format!(
+                            "Kesişmeler öneriyi tutuyor: {}. Araziye daha yakın bir kırmızı kot onların açıklığını ya da örtüsünü bozardı.",
+                            held.join(", ")
+                        )));
+                    }
+                }
+                d = d.detail(road_dialog::detail_choice(options, w.detail, |x| msg(Event::Detail(x)), table));
             }
         }
         let can_write = matches!(w.preview, Some(Ok(_)));
@@ -349,7 +390,13 @@ impl canvas::Program<Message> for Draw<'_> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let r = self.read;
-        let all = r.was.iter().chain(&r.proposed).copied().chain(r.ground.iter().filter_map(|(s, z)| z.map(|z| [*s, z])));
+        let all = r
+            .was
+            .iter()
+            .chain(&r.proposed)
+            .copied()
+            .chain(r.ground.iter().filter_map(|(s, z)| z.map(|z| [*s, z])))
+            .chain(r.answer.crossings.iter().map(|c| [c.station, c.limit]));
         let (mut x0, mut x1, mut y0, mut y1) = (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
         for p in all {
             x0 = x0.min(p[0]);
@@ -392,6 +439,23 @@ impl canvas::Program<Message> for Draw<'_> {
         let dashed = Stroke { line_dash: LineDash { segments: &[6.0, 4.0], offset: 0 }, ..Stroke::default() };
         frame.stroke(&polyline(&r.was), Stroke { width: 1.2, ..dashed.with_color(Color { a: 0.8, ..tk.muted }) });
         frame.stroke(&polyline(&r.proposed), Stroke::default().with_width(2.2).with_color(tk.danger));
+        // What the road crosses (docs/adr/0946): the structure, its limit dashed; the ones holding the line in accent.
+        for c in &r.answer.crossings {
+            let above = c.side == kentos_commands::CrossingSide::Above;
+            let cx = x(c.station);
+            let colour = if c.holds { tk.accent } else { tk.success };
+            let dash = Stroke { line_dash: LineDash { segments: &[3.0, 2.0], offset: 0 }, ..Stroke::default().with_width(1.6).with_color(colour) };
+            frame.stroke(&Path::line(Point::new(cx - 18.0, y(c.limit)), Point::new(cx + 18.0, y(c.limit))), dash);
+            let tip = if above { y(c.limit) - 12.0 } else { y(c.limit) + 12.0 };
+            frame.stroke(&Path::line(Point::new(cx, y(c.limit)), Point::new(cx, tip)), Stroke::default().with_width(1.6).with_color(colour));
+            frame.fill_text(Text {
+                content: c.name.clone(),
+                position: Point::new(cx + 4.0, if above { tip - 14.0 } else { tip + 2.0 }),
+                color: colour,
+                size: Pixels(11.0),
+                ..Text::default()
+            });
+        }
         for p in &r.answer.pvis {
             let at = Point::new(x(p.station), y(p.elevation));
             if p.held {

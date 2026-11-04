@@ -37,7 +37,16 @@ S2 = {"id": "b-4", "name": "Uzun kot", "alignment": "g-2", "alignmentRevision": 
                pv("v3", 500, 108, length=100), pv("b", 650, 113)]}
 S3 = {"id": "b-5", "name": "Düz kot", "alignment": "g-2", "alignmentRevision": 3, "revision": 1, "surface": "t-1",
       "pvis": [pv("a", 0, 110), pv("v1", 200, 105), pv("v2", 420, 107), pv("b", 650, 112)]}
-PROFILES = [cmd.MAIN, cmd.SIDE, cmd.PART, S2, S3]
+# Docs/adr/0946: the flat profile and the curved one with what they cross. Unbounded, the flat proposal is 107.910 at
+# 300 m and 111.666 at 520 m, the curved one 110.130 at 300 m: the bounds below hold them.
+OVER = {"name": "Üst geçit", "station": 300.0, "side": "above", "elevation": 112.0, "clearance": 5.0}
+BOX = {"name": "Kutu menfez", "station": 520.0, "side": "below", "elevation": 111.5, "clearance": 1.0}
+PIPE = {"name": "Su borusu", "station": 100.0, "side": "below", "elevation": 104.0, "clearance": 1.0}
+S6 = {**S3, "id": "b-6", "name": "Kesişmeli kot", "crossings": [OVER, BOX, PIPE]}
+S7 = {**S2, "id": "b-7", "name": "Kurplu kesişmeli kot", "crossings": [{**OVER, "elevation": 114.0}]}
+S8 = {**S3, "id": "b-8", "name": "Çelişen kesişmeler",
+      "crossings": [OVER, {"name": "Boru", "station": 300.0, "side": "below", "elevation": 107.5, "clearance": 0.5}]}
+PROFILES = [cmd.MAIN, cmd.SIDE, cmd.PART, S2, S3, S6, S7, S8]
 
 
 class Refused(Exception):
@@ -185,6 +194,15 @@ def propose(d, hold, most, balanced):
                 row = [F(0)] * n
                 row[k + 1], row[k] = F(sign), F(-sign)
                 ineq.append((row, F(most) * (S[k + 1] - S[k])))
+    # Docs/adr/0946: each crossing a bound on the line at its station, in order (under a structure z ≤ its underside −
+    # the clearance, over one z ≥ its top + the cover).
+    first_bound = len(ineq)
+    for c in d.get("crossings", []):
+        cv = coeffs(F(c["station"]))
+        if c["side"] == "above":
+            ineq.append((cv, F(c["elevation"]) - F(c["clearance"])))
+        else:
+            ineq.append(([-v for v in cv], -(F(c["elevation"]) + F(c["clearance"]))))
     # A start from SLSQP; its active limits solved again exactly and certified.
     Hf = np.array([[float(v) for v in r] for r in H])
     bf = np.array([float(v) for v in b])
@@ -212,7 +230,9 @@ def propose(d, hold, most, balanced):
     for k, l in enumerate(lam):
         assert l > F(1, 10**9), f"a weakly active limit: {float(l)}"
     grades = [(z[k + 1] - z[k]) / (S[k + 1] - S[k]) for k in range(n - 1)]
-    limited = [("rise" if 2 * k in active else "fall" if 2 * k + 1 in active else None) for k in range(n - 1)]
+    # The grade rows are the first 2(n − 1) only when there is a grade limit; the crossings' come after.
+    limited = [("rise" if 2 * k in active else "fall" if 2 * k + 1 in active else None) if most is not None else None
+               for k in range(n - 1)]
     # The squares exactly; the areas at the difference's roots in mpmath.
     squares = F(0)
     cut = mp.mpf(0)
@@ -243,8 +263,18 @@ def propose(d, hold, most, balanced):
             else:
                 cut -= v
             frm = t
+    crossings = []
+    for k, c in enumerate(d.get("crossings", [])):
+        zc = sum(cc * zz for cc, zz in zip(coeffs(F(c["station"])), z))
+        limit = F(c["elevation"]) - F(c["clearance"]) if c["side"] == "above" else F(c["elevation"]) + F(c["clearance"])
+        margin = limit - zc if c["side"] == "above" else zc - limit
+        row = {"name": c["name"], "station": c["station"], "side": c["side"], "limit": float(limit),
+               "elevation": float(zc), "margin": float(margin)}
+        if first_bound + k in active:
+            row["holds"] = True
+        crossings.append(row)
     return {"z": z, "grades": grades, "limited": limited, "squares": squares, "covered": covered, "cut": cut,
-            "fill": fill}
+            "fill": fill, "crossings": crossings}
 
 
 def answer(inp, profiles):
@@ -282,6 +312,8 @@ def answer(inp, profiles):
            "rms": float(mp.sqrt(mp.mpf(r["squares"].numerator) / r["squares"].denominator
                                 / (mp.mpf(r["covered"].numerator) / r["covered"].denominator))),
            "cut": float(r["cut"]), "fill": float(r["fill"])}
+    if r["crossings"]:
+        out["crossings"] = r["crossings"]
     return out, warnings
 
 
@@ -320,6 +352,17 @@ def cases():
     q("Kurplu, en büyük eğim %1,2", {"profile": "b-4", "mostGrade": 0.012})
     q("Kurplu, dengeli ve en büyük eğim %2", {"profile": "b-4", "balanced": True, "mostGrade": 0.02})
     q("Kurplu, hepsi kilitli: kotlar değişmez", {"profile": "b-4", "hold": ["a", "v1", "v2", "v3", "b"]})
+    # Docs/adr/0946: the crossings as bounds.
+    q("Üst geçit altında ve menfez üstünde: ikisi de tutuyor", {"profile": "b-6"})
+    # From z(300) ≤ 107 to z(520) ≥ 112.5 the line climbs 5.5 m in 220 m: at least 2.5 %. At 3 % the last grade holds.
+    q("Kesişmeler ve en büyük eğim %3 birlikte", {"profile": "Kesişmeli kot", "mostGrade": 0.03})
+    q("En büyük eğim %2: üst geçitten menfeze çıkılamaz", {"profile": "b-6", "mostGrade": 0.02},
+      result=cmd.failed("invalid_profile_proposal", "“Kesişmeli kot” boykesitinin kuralları birlikte tutmuyor: kilitli "
+                        "PVI'lar arasındaki eğim en büyük eğimi aşıyor, denge kurulamıyor ya da kesişmelerin açıklık ve "
+                        "örtüsü birlikte sağlanamıyor.", "profile"))
+    q("Kesişmeler ve uçlar kilitli", {"profile": "b-6", "hold": ["a", "b"]})
+    q("Kurplu boykesitte üst geçit", {"profile": "b-7"})
+    q("Kurplu, üst geçit ve denge", {"profile": "b-7", "balanced": True})
     q("Eskiyen boykesit uyarılır", {"profile": "b-2"})
     q("Eskiyen, en büyük eğim %1", {"profile": "Yan kot", "mostGrade": 0.01, "hold": ["a"]})
     q("Plan cevabı verir", {"profile": "b-5", "mostGrade": 0.01}, op="plan")
@@ -334,7 +377,12 @@ def cases():
     q("Yüzeyi olmayan boykesit", {"profile": "b-3"})
     q("Kilitli PVI'lar en büyük eğimi aşıyor", {"profile": "b-5", "hold": ["a", "v1"], "mostGrade": 0.01},
       result=cmd.failed("invalid_profile_proposal", "“Düz kot” boykesitinin kuralları birlikte tutmuyor: kilitli PVI'lar "
-                        "arasındaki eğim en büyük eğimi aşıyor ya da denge kurulamıyor.", "profile"))
+                        "arasındaki eğim en büyük eğimi aşıyor, denge kurulamıyor ya da kesişmelerin açıklık ve örtüsü "
+                        "birlikte sağlanamıyor.", "profile"))
+    q("Aynı yerde çelişen üst geçit ve boru", {"profile": "b-8"},
+      result=cmd.failed("invalid_profile_proposal", "“Çelişen kesişmeler” boykesitinin kuralları birlikte tutmuyor: kilitli "
+                        "PVI'lar arasındaki eğim en büyük eğimi aşıyor, denge kurulamıyor ya da kesişmelerin açıklık ve "
+                        "örtüsü birlikte sağlanamıyor.", "profile"))
     return out
 
 

@@ -91,6 +91,10 @@ pub struct ProfilesEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
+    /// What the road crosses (docs/adr/0946); an empty list takes them off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub crossings: Option<Vec<crate::ProfileCrossingDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -672,4 +676,36 @@ pub struct ProfileProposed {
     pub cut: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill: f64,
+    /// Each crossing against the proposed grade line (docs/adr/0946); none where the profile has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CrossingMargin>>", optional))]
+    pub crossings: Vec<CrossingMargin>,
+}
+
+/// A crossing against a grade line (docs/adr/0946): its name, station and side, the line's limit there (under a
+/// structure its underside less the clearance, over one its top plus the cover), the line's elevation there (none off
+/// the profile), the margin (positive clear, negative short) and, in a proposal, whether it holds the line.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CrossingMargin {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub side: crate::CrossingSide,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub limit: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub elevation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub margin: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub holds: bool,
 }

@@ -24,10 +24,10 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesEdit) -> Result<Checked,
     let mut list = own.to_vec();
     let target = match input.operation {
         ProfilesEditOperation::Set => {
-            if input.name.is_none() && input.pvis.is_none() && input.surface.is_none() {
+            if input.name.is_none() && input.pvis.is_none() && input.surface.is_none() && input.crossings.is_none() {
                 return Err(fail(
                     codes::INVALID_ROAD_PROFILE,
-                    "Değiştirilecek bir şey yok: name, pvis ya da surface verin.".into(),
+                    "Değiştirilecek bir şey yok: name, pvis, surface ya da crossings verin.".into(),
                     "",
                 ));
             }
@@ -40,6 +40,9 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesEdit) -> Result<Checked,
             }
             if let Some(p) = &input.pvis {
                 def.pvis = p.clone();
+            }
+            if let Some(c) = &input.crossings {
+                def.crossings = c.clone();
             }
             if def != *old {
                 def.revision = old.revision.saturating_add(1);

@@ -36824,7 +36824,7 @@
       "id": "road.profiles.edit",
       "version": 1,
       "title": "Boykesiti düzenle",
-      "summary": "Yol projesinin bir boykesitini (profile: kimliği ya da adı) düzenler. set: verilen alanlar (name, pvis, surface; boş surface yüzeyi kaldırır) boykesitinkinin yerini alır. rebind: boykesit aksının bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar. Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin bir boykesitini (profile: kimliği ya da adı) düzenler. set: verilen alanlar (name, pvis, surface; boş surface yüzeyi kaldırır) boykesitinkinin yerini alır. rebind: boykesit aksının bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar.  Kesişmeler (crossings: ad, km, side above/below, elevation alt ya da üst yüzü, clearance açıklık ya da örtü) da yazılır, boş liste kaldırır (docs/adr/0946, KCAD şema 170).Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -36841,6 +36841,16 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `road.profiles.edit` v1: the profile by its id or name.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `unknown_terrain`, `invalid_road_profile`\n(set with nothing to set, or the definition and the PVIs as `road.profiles.create`), `profile_curves_overlap`,\n`invalid_revision`, `revision_conflict`.",
         "properties": {
+          "crossings": {
+            "description": "What the road crosses (docs/adr/0946); an empty list takes them off.",
+            "items": {
+              "$ref": "#/$defs/ProfileCrossingDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -37170,7 +37180,7 @@
       "id": "road.profiles.check",
       "version": 1,
       "title": "Boykesiti denetle",
-      "summary": "Bir boykesiti kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): mostGrade ve leastGrade (iki PVI arasındaki en dik ve en yatık eğim, oran, iki yöne), leastCrestK ve leastSagK (tepe ve çukur kurbun en küçük K'si, m/%), leastCurve (düşey kurbun yatay boyu), leastGradeLength (iki kurp arasındaki düz eğim). Cevap: kırılan kurallar km sırasıyla: kural, PVI'ler, km aralığı, bulunan değer, sınır ve sözü. Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_design_check.",
+      "summary": "Bir boykesiti kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): mostGrade ve leastGrade (iki PVI arasındaki en dik ve en yatık eğim, oran, iki yöne), leastCrestK ve leastSagK (tepe ve çukur kurbun en küçük K'si, m/%), leastCurve (düşey kurbun yatay boyu), leastGradeLength (iki kurp arasındaki düz eğim). Cevap: kırılan kurallar km sırasıyla: kural, PVI'ler, km aralığı, bulunan değer, sınır ve sözü.  Boykesitin kesişmeleri de denetlenir (docs/adr/0946): açıklığı ya da örtüsü yetmeyen her kesişme clearance kuralıyla bulgu olur; kesişmesi olan boykesit başka kural verilmeden de denetlenir.Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_design_check.",
       "aliases": [
         "boykesitdenetle"
       ],
@@ -37791,7 +37801,7 @@
       "id": "road.profiles.propose",
       "version": 1,
       "title": "Kırmızı kot önerisi",
-      "summary": "Bir boykesitin PVI'larına araziye en yakın kırmızı kotu önerir; hiçbir şey yazmaz. PVI'ların km'si ve parabolik kurpları kalır, kotları değişir: tasarım kotları PVI kotlarında doğrusaldır, arazi boykesiti noktaları arasında doğrusal; ∫(kırmızı − siyah)² yüzeyin üstündeki aralıklarda kesin (üç noktalı Gauss–Legendre) en küçüktür. hold'daki PVI'lar kotunu korur, mostGrade (oran) hiçbir eğimin aşamayacağı sınırdır, balanced kazı alanını dolgu alanına eşitler. Dışbükey ikinci dereceden program etkin kümeyle tam çözülür (KKT koşulları tutar). Sınırlar ve kilitler kullanıcınındır; KentOS değer vermez. Öneri yazılacaksa road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların önerilen ve önceki kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki boy, karesel ortalama fark, kazı ve dolgu alanları. Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da).",
+      "summary": "Bir boykesitin PVI'larına araziye en yakın kırmızı kotu önerir; hiçbir şey yazmaz. PVI'ların km'si ve parabolik kurpları kalır, kotları değişir: tasarım kotları PVI kotlarında doğrusaldır, arazi boykesiti noktaları arasında doğrusal; ∫(kırmızı − siyah)² yüzeyin üstündeki aralıklarda kesin (üç noktalı Gauss–Legendre) en küçüktür. hold'daki PVI'lar kotunu korur, mostGrade (oran) hiçbir eğimin aşamayacağı sınırdır, balanced kazı alanını dolgu alanına eşitler. Dışbükey ikinci dereceden program etkin kümeyle tam çözülür (KKT koşulları tutar). Sınırlar ve kilitler kullanıcınındır; KentOS değer vermez. Öneri yazılacaksa road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların önerilen ve önceki kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki boy, karesel ortalama fark, kazı ve dolgu alanları.  Boykesitin kesişmeleri kısıttır (docs/adr/0946): üstteki yapının altında kırmızı kot alt yüzünden açıklık kadar aşağıda, alttakinin üstünde üst yüzünden örtü kadar yukarıda kalır; rapor her kesişmenin sınırını, önerilen kotu, payını ve çizgiyi tutup tutmadığını verir.Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da).",
       "aliases": [
         "kirmizikotoneri",
         "bestfit"
@@ -37847,6 +37857,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "m"
+          },
+          "crossings": {
+            "description": "Each crossing against the proposed grade line (docs/adr/0946); none where the profile has none.",
+            "items": {
+              "$ref": "#/$defs/CrossingMargin"
+            },
+            "type": "array"
           },
           "cut": {
             "format": "double",
@@ -37905,6 +37922,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "m"
+          },
+          "crossings": {
+            "description": "Each crossing against the proposed grade line (docs/adr/0946); none where the profile has none.",
+            "items": {
+              "$ref": "#/$defs/CrossingMargin"
+            },
+            "type": "array"
           },
           "cut": {
             "format": "double",
@@ -105429,6 +105453,68 @@
       ],
       "type": "object"
     },
+    "CrossingMargin": {
+      "description": "A crossing against a grade line (docs/adr/0946): its name, station and side, the line's limit there (under a\nstructure its underside less the clearance, over one its top plus the cover), the line's elevation there (none off\nthe profile), the margin (positive clear, negative short) and, in a proposal, whether it holds the line.",
+      "properties": {
+        "elevation": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "holds": {
+          "type": "boolean"
+        },
+        "limit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "margin": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "side": {
+          "$ref": "#/$defs/CrossingSide"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "station",
+        "side",
+        "limit"
+      ],
+      "type": "object"
+    },
+    "CrossingSide": {
+      "description": "Where a crossed structure is against the road (docs/adr/0946).",
+      "oneOf": [
+        {
+          "const": "above",
+          "description": "Over the road (a bridge, an overpass, a line): its elevation is its underside, the road passes under it.",
+          "type": "string"
+        },
+        {
+          "const": "below",
+          "description": "Under the road (a culvert, a pipe): its elevation is its top, the road passes over it.",
+          "type": "string"
+        }
+      ]
+    },
     "CrsBase": {
       "description": "A local system's base: a projected system of the registry by its EPSG\ncode (`srid`), or a transverse Mercator the project defines\n(`definition`); exactly one.",
       "properties": {
@@ -108224,23 +108310,32 @@
     },
     "DesignRule": {
       "description": "Which design rule a finding breaks.",
-      "enum": [
-        "radius",
-        "arc",
-        "spiral",
-        "tangent",
-        "reverse",
-        "brokenBack",
-        "radiusRatio",
-        "kink",
-        "grade",
-        "leastGrade",
-        "crestK",
-        "sagK",
-        "curve",
-        "gradeLength"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "radius",
+            "arc",
+            "spiral",
+            "tangent",
+            "reverse",
+            "brokenBack",
+            "radiusRatio",
+            "kink",
+            "grade",
+            "leastGrade",
+            "crestK",
+            "sagK",
+            "curve",
+            "gradeLength"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "clearance",
+          "description": "A crossing's clearance or cover short (docs/adr/0946).",
+          "type": "string"
+        }
+      ]
     },
     "DetachedTable": {
       "description": "A table whose link was broken.",
@@ -147877,6 +147972,41 @@
       ],
       "type": "object"
     },
+    "ProfileCrossingDef": {
+      "additionalProperties": false,
+      "description": "Something a road crosses (docs/adr/0946): its name, station on the profile's alignment, side, elevation (underside\nor top) and the clearance under it or the cover over it (m). The values are the project's.",
+      "properties": {
+        "clearance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "elevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "name": {
+          "type": "string"
+        },
+        "side": {
+          "$ref": "#/$defs/CrossingSide"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "station",
+        "side",
+        "elevation",
+        "clearance"
+      ],
+      "type": "object"
+    },
     "ProfileCurveRow": {
       "description": "A vertical curve on a PVI.",
       "properties": {
@@ -147992,6 +148122,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "version"
+        },
+        "crossings": {
+          "description": "What the road crosses (docs/adr/0946; KCAD schema 170).",
+          "items": {
+            "$ref": "#/$defs/ProfileCrossingDef"
+          },
+          "type": "array"
         },
         "id": {
           "description": "Unique in the project.",

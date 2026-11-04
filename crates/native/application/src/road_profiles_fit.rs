@@ -145,6 +145,7 @@ fn check(doc: &Document, input: &ProfilesFit) -> Result<Checked, Stop> {
             })
             .collect(),
         surface,
+        crossings: Vec::new(),
     };
     let mut list = own.to_vec();
     list.push(def.clone());

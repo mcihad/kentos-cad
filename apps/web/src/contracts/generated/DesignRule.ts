@@ -3,4 +3,4 @@
 /**
  * Which design rule a finding breaks.
  */
-export type DesignRule = "radius" | "arc" | "spiral" | "tangent" | "reverse" | "brokenBack" | "radiusRatio" | "kink" | "grade" | "leastGrade" | "crestK" | "sagK" | "curve" | "gradeLength";
+export type DesignRule = "radius" | "arc" | "spiral" | "tangent" | "reverse" | "brokenBack" | "radiusRatio" | "kink" | "grade" | "leastGrade" | "crestK" | "sagK" | "curve" | "gradeLength" | "clearance";

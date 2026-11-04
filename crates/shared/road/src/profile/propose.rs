@@ -21,6 +21,16 @@ pub struct Rules {
     pub most_grade: Option<f64>,
     /// The area cut equal to the area filled.
     pub balanced: bool,
+    /// Bounds on the grade line's elevation at stations (docs/adr/0946: what the road crosses).
+    pub bounds: Vec<Bound>,
+}
+
+/// A bound on the grade line's elevation at a station (docs/adr/0946): at least `low`, at most `high`.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Bound {
+    pub station: f64,
+    pub low: Option<f64>,
+    pub high: Option<f64>,
 }
 
 /// A proposal.
@@ -32,6 +42,8 @@ pub struct Proposal {
     pub grades: Vec<f64>,
     /// Per grade: +1 at the most rise, −1 at the most fall, 0 free.
     pub limited: Vec<i8>,
+    /// Per bound: +1 at its high, −1 at its low, 0 free (docs/adr/0946).
+    pub bound: Vec<i8>,
     /// ∫(design − ground)² over the stretches on the surface (m²·m), and their length (m).
     pub squares: f64,
     pub covered: f64,
@@ -226,6 +238,18 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
             }
         }
     }
+    // The bounds (docs/adr/0946): c·z ≤ high and −c·z ≤ −low, c the design's coefficients at the station.
+    let coefficients = |s: f64| -> Vec<f64> { (0..n).map(|j| unit(j, s)).collect() };
+    let first_bound = ineq.len();
+    for bd in &rules.bounds {
+        let c = coefficients(bd.station);
+        if let Some(hi) = bd.high {
+            ineq.push((c.clone(), hi));
+        }
+        if let Some(lo) = bd.low {
+            ineq.push((c.iter().map(|v| -v).collect(), -lo));
+        }
+    }
     let mut active: Vec<usize> = Vec::new();
     let tol = |c: f64| 1e-9 * c.abs().max(1.0);
     let mut z = Vec::new();
@@ -294,6 +318,25 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
             }
         })
         .collect();
+    // Which bounds hold the line: their rows in the active set, in the order they were added.
+    let mut bound = Vec::with_capacity(rules.bounds.len());
+    let mut i = first_bound;
+    for bd in &rules.bounds {
+        let mut flag = 0i8;
+        if bd.high.is_some() {
+            if active.contains(&i) {
+                flag = 1;
+            }
+            i += 1;
+        }
+        if bd.low.is_some() {
+            if active.contains(&i) {
+                flag = -1;
+            }
+            i += 1;
+        }
+        bound.push(flag);
+    }
     // The squares and the areas, exactly: on each stretch the difference is a polynomial of degree two at most.
     let (mut squares, mut cut, mut fill) = (0.0, 0.0, 0.0);
     for &(s0, s1, g0, g1) in &pieces {
@@ -341,5 +384,5 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
             from = t;
         }
     }
-    Ok(Proposal { elevations: z, grades, limited, squares, covered, cut, fill })
+    Ok(Proposal { elevations: z, grades, limited, bound, squares, covered, cut, fill })
 }

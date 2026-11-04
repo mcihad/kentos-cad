@@ -1391,6 +1391,20 @@ CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendic
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
+class CrossingSide(_StrEnum):
+    """Where a crossed structure is against the road (docs/adr/0946).
+
+    - ``above``: Over the road (a bridge, an overpass, a line): its elevation is its underside, the road passes under it.
+    - ``below``: Under the road (a culvert, a pipe): its elevation is its top, the road passes over it.
+    """
+    ABOVE = "above"
+    BELOW = "below"
+
+
+CrossingSideName = Literal["above", "below"]
+"""The names of :class:`CrossingSide`, for a plain string."""
+
+
 class CrsSource(_StrEnum):
     """Where a file's statement of its coordinate system comes from.
 
@@ -1469,7 +1483,24 @@ DerivationStatusName = Literal["current", "stale", "edited", "source_gone", "not
 
 
 class DesignRule(_StrEnum):
-    """Which design rule a finding breaks."""
+    """Which design rule a finding breaks.
+
+    - ``radius``
+    - ``arc``
+    - ``spiral``
+    - ``tangent``
+    - ``reverse``
+    - ``brokenBack``
+    - ``radiusRatio``
+    - ``kink``
+    - ``grade``
+    - ``leastGrade``
+    - ``crestK``
+    - ``sagK``
+    - ``curve``
+    - ``gradeLength``
+    - ``clearance``: A crossing's clearance or cover short (docs/adr/0946).
+    """
     RADIUS = "radius"
     ARC = "arc"
     SPIRAL = "spiral"
@@ -1484,9 +1515,10 @@ class DesignRule(_StrEnum):
     SAG_K = "sagK"
     CURVE = "curve"
     GRADE_LENGTH = "gradeLength"
+    CLEARANCE = "clearance"
 
 
-DesignRuleName = Literal["radius", "arc", "spiral", "tangent", "reverse", "brokenBack", "radiusRatio", "kink", "grade", "leastGrade", "crestK", "sagK", "curve", "gradeLength"]
+DesignRuleName = Literal["radius", "arc", "spiral", "tangent", "reverse", "brokenBack", "radiusRatio", "kink", "grade", "leastGrade", "crestK", "sagK", "curve", "gradeLength", "clearance"]
 """The names of :class:`DesignRule`, for a plain string."""
 
 
@@ -21602,6 +21634,52 @@ class CrossfallZero(_Model):
             region=data["region"],
             right=data["right"],
             station=float(data["station"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrossingMargin(_Model):
+    """A crossing against a grade line (docs/adr/0946): its name, station and side, the line's limit there (under a
+    structure its underside less the clearance, over one its top plus the cover), the line's elevation there (none off
+    the profile), the margin (positive clear, negative short) and, in a proposal, whether it holds the line.
+    Attributes:
+        station: Unit: m.
+        limit: Unit: elevation.
+        elevation: Unit: elevation.
+        margin: Unit: m.
+    """
+    name: str
+    station: float
+    side: CrossingSide | CrossingSideName
+    limit: float
+    elevation: float | None | Unset = UNSET
+    holds: bool | Unset = UNSET
+    margin: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["station"] = float(self.station)
+        out["side"] = _enum_out(self.side)
+        out["limit"] = float(self.limit)
+        if self.elevation is not UNSET:
+            out["elevation"] = None if self.elevation is None else float(self.elevation)
+        if self.holds is not UNSET:
+            out["holds"] = self.holds
+        if self.margin is not UNSET:
+            out["margin"] = None if self.margin is None else float(self.margin)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrossingMargin:
+        return cls(
+            name=data["name"],
+            station=float(data["station"]),
+            side=_enum_in(CrossingSide, data["side"]),
+            limit=float(data["limit"]),
+            elevation=UNSET if "elevation" not in data else None if data["elevation"] is None else float(data["elevation"]),
+            holds=data.get("holds", UNSET),
+            margin=UNSET if "margin" not in data else None if data["margin"] is None else float(data["margin"]),
         )
 
 
@@ -59115,6 +59193,41 @@ class ProfileClassSummary(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileCrossingDef(_Model):
+    """Something a road crosses (docs/adr/0946): its name, station on the profile's alignment, side, elevation (underside
+    or top) and the clearance under it or the cover over it (m). The values are the project's.
+    Attributes:
+        station: Unit: m.
+        elevation: Unit: elevation.
+        clearance: Unit: m.
+    """
+    name: str
+    station: float
+    side: CrossingSide | CrossingSideName
+    elevation: float
+    clearance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["station"] = float(self.station)
+        out["side"] = _enum_out(self.side)
+        out["elevation"] = float(self.elevation)
+        out["clearance"] = float(self.clearance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileCrossingDef:
+        return cls(
+            name=data["name"],
+            station=float(data["station"]),
+            side=_enum_in(CrossingSide, data["side"]),
+            elevation=float(data["elevation"]),
+            clearance=float(data["clearance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileCurveRow(_Model):
     """A vertical curve on a PVI.
     Attributes:
@@ -59189,6 +59302,7 @@ class ProfileDef(_Model):
         name: Its name (“Proje kotu”), unique in the project.
         alignment: The alignment's id.
         alignment_revision: The alignment's revision it was made or rebound against; absent: 0. Unit: version.
+        crossings: What the road crosses (docs/adr/0946; KCAD schema 170).
         revision: Grows by one with every change; absent: 0. Unit: version.
         surface: The terrain surface's id; absent: none.
     """
@@ -59197,6 +59311,7 @@ class ProfileDef(_Model):
     alignment: str
     pvis: list[ProfilePvi]
     alignment_revision: int | Unset = UNSET
+    crossings: list[ProfileCrossingDef] | Unset = UNSET
     revision: int | Unset = UNSET
     surface: str | None | Unset = UNSET
 
@@ -59208,6 +59323,8 @@ class ProfileDef(_Model):
         out["pvis"] = [e0.to_json() for e0 in self.pvis]
         if self.alignment_revision is not UNSET:
             out["alignmentRevision"] = self.alignment_revision
+        if self.crossings is not UNSET:
+            out["crossings"] = [e0.to_json() for e0 in self.crossings]
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.surface is not UNSET:
@@ -59222,6 +59339,7 @@ class ProfileDef(_Model):
             alignment=data["alignment"],
             pvis=[ProfilePvi.from_json(e0) for e0 in data["pvis"]],
             alignment_revision=data.get("alignmentRevision", UNSET),
+            crossings=[ProfileCrossingDef.from_json(e0) for e0 in data["crossings"]] if "crossings" in data else UNSET,
             revision=data.get("revision", UNSET),
             surface=data.get("surface", UNSET),
         )
@@ -59707,6 +59825,7 @@ class ProfileProposed(_Model):
         rms: Unit: m.
         cut: Unit: area.
         fill: Unit: area.
+        crossings: Each crossing against the proposed grade line (docs/adr/0946); none where the profile has none.
     """
     profile: str
     pvis: list[ProposedPvi]
@@ -59716,6 +59835,7 @@ class ProfileProposed(_Model):
     rms: float
     cut: float
     fill: float
+    crossings: list[CrossingMargin] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -59727,6 +59847,8 @@ class ProfileProposed(_Model):
         out["rms"] = float(self.rms)
         out["cut"] = float(self.cut)
         out["fill"] = float(self.fill)
+        if self.crossings is not UNSET:
+            out["crossings"] = [e0.to_json() for e0 in self.crossings]
         return out
 
     @classmethod
@@ -59740,6 +59862,7 @@ class ProfileProposed(_Model):
             rms=float(data["rms"]),
             cut=float(data["cut"]),
             fill=float(data["fill"]),
+            crossings=[CrossingMargin.from_json(e0) for e0 in data["crossings"]] if "crossings" in data else UNSET,
         )
 
 
@@ -60237,10 +60360,12 @@ class ProfilesEdit(_Model):
     (set with nothing to set, or the definition and the PVIs as `road.profiles.create`), `profile_curves_overlap`,
     `invalid_revision`, `revision_conflict`.
     Attributes:
+        crossings: What the road crosses (docs/adr/0946); an empty list takes them off.
         surface: The surface's id or name; empty: none.
     """
     profile: str
     operation: ProfilesEditOperation | ProfilesEditOperationName
+    crossings: list[ProfileCrossingDef] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     pvis: list[ProfilePvi] | None | Unset = UNSET
@@ -60250,6 +60375,8 @@ class ProfilesEdit(_Model):
         out: dict[str, Any] = {}
         out["profile"] = self.profile
         out["operation"] = _enum_out(self.operation)
+        if self.crossings is not UNSET:
+            out["crossings"] = None if self.crossings is None else [e0.to_json() for e0 in self.crossings]
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.name is not UNSET:
@@ -60265,6 +60392,7 @@ class ProfilesEdit(_Model):
         return cls(
             profile=data["profile"],
             operation=_enum_in(ProfilesEditOperation, data["operation"]),
+            crossings=UNSET if "crossings" not in data else None if data["crossings"] is None else [ProfileCrossingDef.from_json(e0) for e0 in data["crossings"]],
             expected_revision=data.get("expectedRevision", UNSET),
             name=data.get("name", UNSET),
             pvis=UNSET if "pvis" not in data else None if data["pvis"] is None else [ProfilePvi.from_json(e0) for e0 in data["pvis"]],
@@ -108762,7 +108890,10 @@ __all__ = [
     "CreateRelationsOp",
     "CreateSpaceSeparatorOperation",
     "CrossfallZero",
+    "CrossingMargin",
     "CrossingSelectRegion",
+    "CrossingSide",
+    "CrossingSideName",
     "CrsBase",
     "CrsDefinition",
     "CrsMove",
@@ -110445,6 +110576,7 @@ __all__ = [
     "ProfileBin",
     "ProfileClass",
     "ProfileClassSummary",
+    "ProfileCrossingDef",
     "ProfileCurveRow",
     "ProfileDef",
     "ProfileFileKind",

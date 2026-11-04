@@ -319,3 +319,43 @@ pub(crate) fn write(
         warnings: vec![],
     }
 }
+
+/// A profile's crossings for the core (docs/adr/0946).
+pub(crate) fn crossings_of(def: &kentos_commands::ProfileDef) -> Vec<kentos_road::profile::crossings::Crossing> {
+    use kentos_road::profile::crossings::{Crossing, CrossingKind};
+    def.crossings
+        .iter()
+        .map(|c| Crossing {
+            station: c.station,
+            kind: match c.side {
+                kentos_commands::CrossingSide::Above => CrossingKind::Above,
+                kentos_commands::CrossingSide::Below => CrossingKind::Below,
+            },
+            elevation: c.elevation,
+            clearance: c.clearance,
+        })
+        .collect()
+}
+
+/// A profile's crossings against a grade line (docs/adr/0946), with whether each holds it (a proposal's flags).
+pub(crate) fn crossing_margins(
+    def: &kentos_commands::ProfileDef,
+    line: &kentos_road::profile::vertical::Vertical,
+    holds: &[i8],
+) -> Vec<kentos_commands::CrossingMargin> {
+    let cores = crossings_of(def);
+    kentos_road::profile::crossings::margins(line, &cores)
+        .into_iter()
+        .zip(&def.crossings)
+        .enumerate()
+        .map(|(k, (m, c))| kentos_commands::CrossingMargin {
+            name: c.name.clone(),
+            station: c.station,
+            side: c.side,
+            limit: m.limit,
+            elevation: m.z,
+            margin: m.margin,
+            holds: holds.get(k).is_some_and(|h| *h != 0),
+        })
+        .collect()
+}

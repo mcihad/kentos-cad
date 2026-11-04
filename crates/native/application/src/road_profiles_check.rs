@@ -55,7 +55,8 @@ pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadP
         (rules.least_curve, "leastCurve"),
         (rules.least_grade_length, "leastGradeLength"),
     ];
-    if given.iter().all(|g| g.0.is_none()) {
+    // The crossings are the profile's own (docs/adr/0946): with them nothing more need be asked.
+    if given.iter().all(|g| g.0.is_none()) && def.crossings.is_empty() {
         return Err(fail(
             codes::INVALID_DESIGN_CHECK,
             "Denetlenecek bir kural verin: tasarım standardının değerleri kullanıcınındır.".into(),
@@ -64,7 +65,7 @@ pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadP
     }
     leasts(&given)?;
     let built = common::build(doc, def)?;
-    let findings: Vec<DesignFinding> = checks::check(&built.vertical, &common::pvis_of(def), &rules)
+    let mut findings: Vec<DesignFinding> = checks::check(&built.vertical, &common::pvis_of(def), &rules)
         .into_iter()
         .map(|f| DesignFinding {
             rule: rule_of(f.rule),
@@ -76,6 +77,32 @@ pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadP
             limit: Some(f.limit),
         })
         .collect();
+    // A crossing whose clearance or cover the grade line does not keep (docs/adr/0946).
+    for (m, c) in common::crossing_margins(def, &built.vertical, &[]).into_iter().zip(&def.crossings) {
+        let (Some(z), Some(margin)) = (m.elevation, m.margin) else { continue };
+        if margin >= -1e-9 {
+            continue;
+        }
+        let message = match c.side {
+            kentos_commands::CrossingSide::Above => format!(
+                "{} altında kırmızı kot {z:.3}, en çok {:.3} ({} m açıklık için {:.3} m eksik).",
+                c.name, m.limit, c.clearance, -margin
+            ),
+            kentos_commands::CrossingSide::Below => format!(
+                "{} üstünde kırmızı kot {z:.3}, en az {:.3} ({} m örtü için {:.3} m eksik).",
+                c.name, m.limit, c.clearance, -margin
+            ),
+        };
+        findings.push(DesignFinding {
+            rule: DesignRule::Clearance,
+            message,
+            of: vec![c.name.clone()],
+            from: c.station,
+            to: c.station,
+            value: z,
+            limit: Some(m.limit),
+        });
+    }
     let mut warnings = Vec::new();
     let report = common::report(doc, def, &built);
     if report.stale {

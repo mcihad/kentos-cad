@@ -123,6 +123,8 @@ pub enum DesignRule {
     SagK,
     Curve,
     GradeLength,
+    /// A crossing's clearance or cover short (docs/adr/0946).
+    Clearance,
 }
 
 /// A design rule broken: the rule, the PIs or PVIs, the stations it spans (internal, m), the value found and the limit

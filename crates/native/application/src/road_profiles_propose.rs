@@ -68,6 +68,7 @@ pub(crate) fn answer(
         held: def.pvis.iter().map(|p| input.hold.contains(&p.id)).collect(),
         most_grade: input.most_grade,
         balanced: input.balanced,
+        bounds: common::crossings_of(def).iter().map(|c| c.bound()).collect(),
     };
     let p = propose(&pvis, &ground, &rules).map_err(|e| {
         invalid(
@@ -82,13 +83,20 @@ pub(crate) fn answer(
                     def.name
                 ),
                 ProposeError::Infeasible => format!(
-                    "“{}” boykesitinin kuralları birlikte tutmuyor: kilitli PVI'lar arasındaki eğim en büyük eğimi aşıyor ya da denge kurulamıyor.",
+                    "“{}” boykesitinin kuralları birlikte tutmuyor: kilitli PVI'lar arasındaki eğim en büyük eğimi aşıyor, denge kurulamıyor ya da kesişmelerin açıklık ve örtüsü birlikte sağlanamıyor.",
                     def.name
                 ),
             },
             "profile",
         )
     })?;
+    // The crossings against the proposed line (docs/adr/0946).
+    let proposed: Vec<kentos_road::profile::vertical::Pvi> =
+        pvis.iter().zip(&p.elevations).map(|(q, z)| kentos_road::profile::vertical::Pvi { elevation: *z, ..q.clone() }).collect();
+    let crossings = match kentos_road::profile::vertical::build(&proposed) {
+        Ok(line) => common::crossing_margins(def, &line, &p.bound),
+        Err(_) => Vec::new(),
+    };
     let out = ProfileProposed {
         profile: def.id.clone(),
         pvis: def
@@ -117,6 +125,7 @@ pub(crate) fn answer(
         rms: (p.squares / p.covered).sqrt(),
         cut: p.cut,
         fill: p.fill,
+        crossings,
     };
     Ok((out, warnings, ground.iter().map(|q| (q.station, q.z)).collect()))
 }
