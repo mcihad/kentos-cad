@@ -54,6 +54,7 @@ const ADD: &str = "Satır ekle";
 const REMOVE_PVI: &str = "Satırı sil";
 const FROM_GROUND: &str = "Araziden uçlar";
 const DRAW: &str = "Çizime yaz";
+const LENGTHS: &str = "Kurp boyu öner…";
 const CURVES: [&str; 4] = ["Yok", "Parabol", "Asimetrik", "Çember"];
 
 /// A PVI as typed: its id, station and elevation texts, its curve's kind (an index of [`CURVES`]) and sizes' texts
@@ -288,6 +289,104 @@ pub struct Window {
     /// Çizime yaz: the layer, and the frame's lower left as typed (“Y; X”).
     layer: Option<String>,
     place: String,
+    /// Düşey kurp boyu over the window (profile_lengths_window.rs, docs/adr/0935 §3).
+    pub(crate) lengths: Option<Box<crate::profile_lengths_window::Lengths>>,
+    /// The values typed there, kept while the program runs when it is closed.
+    pub(crate) lengths_kept: Option<([String; 11], bool)>,
+}
+
+impl Window {
+    /// The chosen profile as typed; none when none is chosen.
+    pub(crate) fn chosen_def(&self) -> Option<Result<ProfileDef, String>> {
+        self.chosen.and_then(|i| self.rows.get(i)).map(Row::def)
+    }
+
+    /// Kısaları uzat: each named PVI of the chosen profile set to its suggested length `(pvi, length, A %)`; a kink
+    /// and a parabola take a parabola that long, a circle the radius giving it, an asymmetric curve both arms in
+    /// their ratio. Where the suggestions do not fit between two PVIs (one curve's arm out and the next one's in
+    /// longer than the gap) the lengthened arms on that gap share what is left in their ratio, never under the
+    /// length the curve had: the profile still builds and stays as near the suggestion as its PVIs allow. Lengths
+    /// are rounded up at the millimetre, or down where cut to fit. The PVIs set, and those cut short of the
+    /// suggestion.
+    pub(crate) fn lengthen(&mut self, short: &[(String, f64, f64)]) -> (usize, Vec<String>) {
+        let Some(r) = self.chosen.and_then(|i| self.rows.get_mut(i)) else { return (0, Vec::new()) };
+        let Ok(def) = r.def() else { return (0, Vec::new()) };
+        let n = def.pvis.len();
+        // Each PVI's arms now (in, out), and those wanted.
+        let grade = |a: usize, b: usize| (def.pvis[b].elevation - def.pvis[a].elevation) / (def.pvis[b].station - def.pvis[a].station);
+        let arms_now: Vec<[f64; 2]> = (0..n)
+            .map(|j| {
+                let p = &def.pvis[j];
+                if j == 0 || j + 1 == n {
+                    [0.0, 0.0]
+                } else if p.radius > 0.0 {
+                    let t = p.radius * (100.0 * (grade(j, j + 1) - grade(j - 1, j))).abs() / 200.0;
+                    [t, t]
+                } else if p.length > 0.0 {
+                    [p.length / 2.0, p.length / 2.0]
+                } else {
+                    [p.length_in, p.length_out]
+                }
+            })
+            .collect();
+        let mut wanted = arms_now.clone();
+        let mut changed = vec![false; n];
+        for (pvi, length, _) in short {
+            let Some(j) = r.pvis.iter().position(|p| p.id.trim() == pvi).filter(|j| (1..n - 1).contains(j)) else { continue };
+            let [a, b] = arms_now[j];
+            let share = if r.pvis[j].curve == 2 && a + b > 0.0 { a / (a + b) } else { 0.5 };
+            wanted[j] = [length * share, length * (1.0 - share)];
+            changed[j] = true;
+        }
+        // Each lengthened PVI's factor: the least over its two gaps of what that gap leaves to its lengthened arms.
+        let mut factor = vec![1.0f64; n];
+        for j in 0..n.saturating_sub(1) {
+            let gap = def.pvis[j + 1].station - def.pvis[j].station;
+            let (mut fixed, mut grown) = (0.0, 0.0);
+            for (k, arm) in [(j, wanted[j][1]), (j + 1, wanted[j + 1][0])] {
+                if changed[k] { grown += arm } else { fixed += arm }
+            }
+            if grown > 0.0 && fixed + grown > gap {
+                let f = ((gap - fixed) / grown).max(0.0);
+                for k in [j, j + 1] {
+                    if changed[k] {
+                        factor[k] = factor[k].min(f);
+                    }
+                }
+            }
+        }
+        let up = |v: f64| (v * 1000.0 - 1e-6).ceil() / 1000.0;
+        let down = |v: f64| (v * 1000.0 + 1e-6).floor() / 1000.0;
+        let (mut set, mut cut) = (0, Vec::new());
+        for (pvi, length, a) in short {
+            let Some(j) = r.pvis.iter().position(|p| p.id.trim() == pvi).filter(|j| (1..n - 1).contains(j)) else { continue };
+            let f = factor[j];
+            let now = arms_now[j][0] + arms_now[j][1];
+            let fits = f >= 1.0;
+            let total = if fits { up(*length) } else { down((length * f).max(now)) };
+            if !fits {
+                cut.push(pvi.clone());
+            }
+            let p = &mut r.pvis[j];
+            match p.curve {
+                3 if a.abs() > 0.0 => {
+                    let radius = 100.0 * total / a.abs();
+                    p.sizes = [trimmed(if fits { up(radius) } else { down(radius) }), String::new()];
+                }
+                2 => {
+                    let share = wanted[j][0] / (wanted[j][0] + wanted[j][1]);
+                    let first = down(total * share);
+                    p.sizes = [trimmed(first), trimmed(if fits { up(total - first) } else { down(total - first) })];
+                }
+                _ => {
+                    p.curve = 1;
+                    p.sizes = [trimmed(total), String::new()];
+                }
+            }
+            set += 1;
+        }
+        (set, cut)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -312,6 +411,9 @@ pub enum Event {
     Draw,
     Save,
     Cancel,
+    /// Kurp boyu öner…: the curve length window on the chosen profile.
+    OpenLengths,
+    Lengths(crate::profile_lengths_window::Event),
 }
 
 fn msg(event: Event) -> Message {
@@ -418,6 +520,17 @@ impl App {
     }
 
     pub(crate) fn profile_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::OpenLengths => {
+                self.open_profile_lengths();
+                return Task::none();
+            }
+            Event::Lengths(e) => {
+                self.profile_lengths_event(e);
+                return Task::none();
+            }
+            _ => {}
+        }
         let alignments = self.profile_alignments();
         let surfaces = self.profile_surfaces();
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
@@ -573,6 +686,8 @@ impl App {
                 self.dialog = None;
             }
             Event::Save => return self.save_profiles(),
+            // Answered before the window is borrowed.
+            Event::OpenLengths | Event::Lengths(_) => return Task::none(),
         }
         if let Some(words) = warning {
             self.warn(words.to_owned());
@@ -743,6 +858,9 @@ impl App {
         let Some(w) = &self.profile_window else {
             return iced::widget::text("").into();
         };
+        if let Some(x) = &w.lengths {
+            return self.profile_lengths_view(x);
+        }
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let alignments = self.profile_alignments();
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
@@ -793,6 +911,7 @@ impl App {
         let footer = row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind))),
+                words::ghost(LENGTHS, chosen.is_some_and(|r| r.def().is_ok()).then(|| msg(Event::OpenLengths))),
                 space::horizontal().width(Fill),
                 words::secondary(CANCEL, Some(msg(Event::Cancel))),
                 words::primary(SAVE, Some(msg(Event::Save))),
@@ -938,7 +1057,21 @@ impl App {
         let Some(w) = &self.profile_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
+        if w.lengths.is_some() {
+            use crate::profile_lengths_window::{APPLY, BACK, Event as X, FIELDS as LF, TITLE as LT};
+            let x = |e: X| msg(Event::Lengths(e));
+            return Ok(match control {
+                Control::Press(APPLY) => Some(x(X::Apply)),
+                Control::Press(BACK) => Some(x(X::Back)),
+                Control::Fill(name, text) => match LF.iter().position(|f| *f == name) {
+                    Some(k) => Some(x(X::Field(k, text.to_owned()))),
+                    None => return Err(format!("“{LT}” penceresinde “{name}” alanı yok")),
+                },
+                other => return Err(format!("“{LT}” penceresinde {other} yok")),
+            });
+        }
         Ok(match control {
+            Control::Press(LENGTHS) => Some(msg(Event::OpenLengths)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),

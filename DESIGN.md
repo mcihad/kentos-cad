@@ -589,7 +589,8 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 - **Ölü denetim gösterilmez:** seçili şeye uymayan satır gizlenir. Örnek: Enkesit'te Çizime satırı ve Aksa yeniden bağla
   yalnız kesit takımında görünür.
 - Taşınan pencereler: Kırmızı kot önerisi (Y26.0), Kübaj ve Enkesit'in tip kesit düzenleyicisi (Y26.3), Görüş mesafesi,
-  Platform suyu, Taşıma planı ve Tasarım denetimi (Y26.4), Dever (Y27.3), Genişletme önerisi (Y28.3). Öbürleri sırayla
+  Platform suyu, Taşıma planı ve Tasarım denetimi (Y26.4), Dever (Y27.3), Genişletme önerisi (Y28.3), Düşey kurp
+  boyu (Y31.3). Öbürleri sırayla
   taşınır.
 - **Uyarı kendi denetiminin yanında:** bir onay kutusunun nedeni (Kesişen kolları kırp → kaç çift kesişiyor) onun
   satırında yazar, pencerenin altında değil (Enkesit, Y29.3).
@@ -597,6 +598,8 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
   büyütülünce ya da tam ekran yapılınca gövde (`scroll`) büyür, düğmeler alt kenarda kalır (ADR 0746 eki).
 - **Alt pencere:** bir pencerenin işine yardım eden pencere (Dever → Genişletme önerisi) onun yerine açılır, kapatma
   düğmesi “Geri”dir. Birincil eylem sonucu üst pencerenin formuna yazar; kaydetmek üst pencerenin işidir.
+  Yazdığı sonuç üst pencereyi kurulamaz bırakmaz: öneri sığmıyorsa sığdığı kadarı yazılır, sığmayan basmadan önce
+  ve bastıktan sonra adıyla söylenir (Boykesit → Düşey kurp boyu, Y31.3; ilk denemede kurp kolları 99 m taştı).
 - **Açıklama çizimin altındadır:** renklerin ne demek olduğunu çizimin içine yazmak, çizimi sola ve üste sıkıştırıyordu.
 - **Girilmemiş zorunlu sayı hata değildir:** formun eksiği sonuç alanında soluk cümleyle söylenir. Kırmızı not yalnız
   komutun reddidir.

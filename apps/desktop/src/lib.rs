@@ -257,6 +257,7 @@ mod joins_window;
 mod event_links_window;
 mod alignment_layer;
 mod alignment_window;
+mod profile_lengths_window;
 mod profile_window;
 mod section_window;
 mod superelevation_window;
@@ -330,6 +331,8 @@ mod road_views_window;
 mod road_exchange;
 #[cfg(test)]
 mod alignment_window_tests;
+#[cfg(test)]
+mod profile_lengths_window_tests;
 #[cfg(test)]
 mod profile_window_tests;
 #[cfg(test)]

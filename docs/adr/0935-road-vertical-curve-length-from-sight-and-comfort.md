@@ -1,6 +1,6 @@
 # 0935 — KentOS Yol: düşey kurp boyunun görüşten, konfordan ve bisektristen önerilmesi
 
-Tarih: 2026-11-04. plan/road.md Y31 (ROAD-PROFILE-13). Durum: Y31.1–Y31.2 kabul; Y31.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y31 (ROAD-PROFILE-13). Durum: Y31.1–Y31.3 kabul.
 
 ## Dayanak
 
@@ -76,6 +76,29 @@ eklendi.
 
 AASHTO'nun tablosunda 80 km/sa için tepe K 26, çukur K 30'dur. Fark tablonun DGM'yi 130 m'ye ve K'yi yukarı
 yuvarlamasından gelir; formül aynıdır. 100 km/sa'te tepe 406,8 m ister, 5 m'ye yuvarlanınca 410 m önerilir.
+
+### §3 Boykesit penceresi: Düşey kurp boyu (Y31.3)
+
+- Boykesit'in alt çubuğunda **Kurp boyu öner…** düğmesi vardır. Seçili boykesitin yazıldığı hâliyle (kaydedilmeden)
+  yardımcı pencereyi açar; Dever'in Genişletme önerisiyle aynı kalıptır.
+- **Solda değerler:** hız, durma görüşü (süre, yavaşlama, eğim anahtarı), tepe (göz, engel, geçme), çukur (far, ışın,
+  ivme), öneri (bisektris, yuvarlama). Hepsi boş açılır; KentOS sayı vermez. Geri ile kapanınca değerler program
+  açık kaldıkça tutulur; ikinci açılışta yeniden yazılmaz.
+- **Sağda:** her PVI için şimdiki boy çubuk, gereken boy çizgi. Şimdiki boy çubuğun solunda, gereken boy çizginin
+  sağında yazılır; ilk görüntüde ikisi yan yana düşünce üst üste biniyordu (v1: 40,0 ve 44,2 m). Altında özetler
+  (kurp, kısa, DGM, en uzun gereken) ve tablo vardır: PVI, tür, A, şimdi, belirleyen, gereken, öneri.
+- **Kısaları uzat:** yalnız kısa kurplara dokunur ve türünü korur. Kırığa parabol konur, parabolün boyu yazılır.
+  Dairede aynı boyu veren yarıçap yazılır (`100·L/|A|`). Asimetrikte iki kol oranıyla büyütülür. Boylar milimetrede
+  yukarı yuvarlanır; böylece öneri kıl payı kısa kalmaz. Sonra Boykesit'e dönülür, Kaydet yazar.
+- **Sığmayan öneri.** İlk denemede iki komşu PVI 140 m aralıktaydı ve önerilen boylar (260 ve 220 m) 240 m kol
+  istedi. Kısaları uzat boykesiti kurulamaz bıraktı ("kolları 99,023 m uzun"). Artık her aralıkta uzatılan kollar
+  kalan yeri oranlarıyla paylaşır, hiçbiri eski boyunun altına inmez. Boykesit kurulur ve PVI'ların izin verdiği kadar
+  öneriye yaklaşır; ölçümde 151,666 m parabol ve R 1695,247 m çıktı, toplam kol tam 140 m. Pencere bunu basmadan önce
+  söyler: tabloda "260,0 sığmaz" yazar, ayrıca bir uyarı vardır. Basınca da sığmayanların adı uyarı olarak verilir.
+  Civil 3D bu durumda yalnızca çakışmayı uyarır; çözümü kullanıcıya bırakır.
+- Dar pencerede (1100 px) öneri sütunu kesiliyordu. Form 360 px'e, sütunlar 508 px'e indirildi.
+
+Bekçi: `profile_lengths_window_tests` (3).
 
 ## Doğrulama
 
