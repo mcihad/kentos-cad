@@ -393,3 +393,71 @@ fn density_screens() {
         shot(&mut app, "cizildi");
     }
 }
+
+/// Y39.3 (docs/adr/0945): Kalite reads each class's robust measures as `road.terrains.quality`'s shared case does,
+/// with the check points' own accuracy combined; the far point is flagged.
+#[test]
+fn the_check_points_are_read_beyond_one_rmse() {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.quality.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Kontrol noktalarının kendi doğruluğu 1 cm");
+    let want = &case.expect("the case")["steps"][0]["result"]["output"]["checkpoints"];
+    let mut app = app();
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Quality));
+    send(&mut app, W::Surface("Teras".into()));
+    send(&mut app, W::Checks(Some("kontrol".into())));
+    send(&mut app, W::Field(7, "Sınıf".into()));
+    send(&mut app, W::Field(12, "0,01".into()));
+    send(&mut app, W::Preview);
+    let Read::Quality(q) = read(&app) else { panic!("quality") };
+    let c = q.checkpoints.as_ref().expect("check points");
+    let close = |a: f64, v: &serde_json::Value| (a - v.as_f64().unwrap()).abs() <= 1e-9 * v.as_f64().unwrap().abs().max(1.0);
+    for (k, w) in c.classes.iter().zip(want["classes"].as_array().unwrap()) {
+        // A class of one point has no robust measures, here as in the case.
+        let Some(r) = k.robust.as_ref() else {
+            assert!(w.get("robust").is_none(), "{}", k.class);
+            continue;
+        };
+        let wr = &w["robust"];
+        assert!(close(r.nmad, &wr["nmad"]) && close(r.q95, &wr["q95"]) && close(r.rmse_high, &wr["rmseHigh"]), "{}", k.class);
+        assert!(close(r.combined.expect("combined"), &wr["combined"]));
+    }
+    assert!(c.points.iter().any(|p| p.far), "the far point is flagged");
+}
+
+/// Kalite with the robust measures, light and dark; `.run/gui-evidence/yol-y39/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib surface_analysis_window_tests::screens_robust -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_robust() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y39");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Quality));
+        send(&mut app, W::Surface("t-6".into()));
+        send(&mut app, W::Checks(Some("kontrol".into())));
+        send(&mut app, W::Field(7, "Sınıf".into()));
+        send(&mut app, W::Field(12, "0,01".into()));
+        send(&mut app, W::Preview);
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y39-kontrol-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

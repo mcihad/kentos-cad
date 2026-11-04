@@ -754,6 +754,8 @@ codes! {
     INVALID_VOLUME_COMPARE = "invalid_volume_compare", Failed, false, "Kübaj karşılaştırması sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a volume compared does not compute; it is listed without figures (docs/adr/0943).
     VOLUME_COMPARE_BROKEN = "volume_compare_broken", Warning, false, "Karşılaştırılan bir kübaj hesaplanamıyor; hacmi yok.";
+    /// A warning: check points over three NMADs from their class's median (docs/adr/0945).
+    TERRAIN_CHECKPOINTS_FAR = "terrain_checkpoints_far", Warning, false, "Bazı kontrol noktaları sınıflarının medyanından 3 NMAD'den uzak: ölçü ya da sınıf hatası olabilir.";
     /// A corridor an earthwork volume uses.
     CORRIDOR_IN_USE = "corridor_in_use", Failed, false, "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin.";
     /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).

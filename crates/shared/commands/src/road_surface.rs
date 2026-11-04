@@ -287,6 +287,11 @@ pub struct TerrainCheckpointsAsk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub class_field: Option<String>,
+    /// The check points' own RMSE (m; their survey's), combined with each class's (docs/adr/0945).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub sigma: Option<f64>,
 }
 
 /// Input of `road.terrains.quality` v1: a surface's survey quality (ROAD-SURVEY-04, 05): `near` (m: corners closer in
@@ -390,6 +395,10 @@ pub struct TerrainCheckpoint {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub difference: Option<f64>,
+    /// Over three NMADs from its class's median (docs/adr/0945): flagged, not left out.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub far: bool,
 }
 
 /// A class's statistics over its points on the surface: how many on and off it, the mean, the standard deviation
@@ -415,6 +424,44 @@ pub struct TerrainCheckClass {
     pub min: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub max: f64,
+    /// Beyond one RMSE, for two points or more (docs/adr/0945).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub robust: Option<TerrainCheckRobust>,
+}
+
+/// A class's accuracy beyond its RMSE (docs/adr/0945): the RMSE's 95 % interval (the differences normal and unbiased),
+/// the median, the NMAD (1.4826 × the median absolute deviation from the median), the 68.3 % and 95 % quantiles of the
+/// absolute differences, the skewness and excess kurtosis (0 when normal), the points over three NMADs from the median,
+/// and with the check points' own RMSE the two combined, √(RMSE² + σ²).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainCheckRobust {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rmse_low: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rmse_high: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub median: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub nmad: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub q68: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub q95: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub skewness: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub kurtosis: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub far: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub combined: Option<f64>,
 }
 
 /// The check points: each one, each class's statistics (by name) and all of them together.

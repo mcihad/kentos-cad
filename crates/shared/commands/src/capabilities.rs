@@ -2069,7 +2069,7 @@ const ENTRIES: &[Entry] = &[
             "layer_not_found",
             "entity_not_found",
         ]],
-        warnings: &[],
+        warnings: &["terrain_checkpoints_far"],
         targets: none,
     },
     Entry {

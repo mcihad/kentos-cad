@@ -3254,6 +3254,7 @@ __all__ = [
     "TerrainBand",
     "TerrainBands",
     "TerrainCheckClass",
+    "TerrainCheckRobust",
     "TerrainCheckpoint",
     "TerrainCheckpoints",
     "TerrainCheckpointsAsk",

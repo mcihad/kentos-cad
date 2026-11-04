@@ -4,4 +4,8 @@
  * Check points: the points of `layer` and those of `uids`, their class the attribute `classField`'s value (none: one
  * class).
  */
-export type TerrainCheckpointsAsk = { layer?: string, uids?: Array<string>, classField?: string, };
+export type TerrainCheckpointsAsk = { layer?: string, uids?: Array<string>, classField?: string, 
+/**
+ * The check points' own RMSE (m; their survey's), combined with each class's (docs/adr/0945).
+ */
+sigma?: number, };

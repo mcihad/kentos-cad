@@ -1,6 +1,6 @@
 # 0945 — Kontrol noktalarıyla yüzeyin doğruluğu: tek bir RMSE yetmez
 
-Tarih: 2026-11-05. Durum: kabul (Y39.1 çekirdek). Kapsam ROAD-SURVEY-05.
+Tarih: 2026-11-05. Durum: kabul (Y39.1 çekirdek, Y39.2 komut, Y39.3 pencere). Kapsam ROAD-SURVEY-05.
 
 ## Sorun
 
@@ -53,7 +53,36 @@ Tek bir RMSE üç şeyi saklar:
 - **Yayılımı olmayan farklar:** hepsi eşit farkların ortalaması yuvarlanınca m₂ 0 değil ~1e-36 çıkar. m₂ ≤ 1e-12 · RMSE²
   ise yayılım yok sayılır; çarpıklık ve basıklık 0'dır.
 
-## Ortak durumlar ve ölçüm
+### Komut ve pencere (Y39.2–3)
+
+**`road.terrains.quality`:**
+
+- Her sınıfa ve hepsine, iki ve daha çok noktası olanlarda `robust` eklenir: RMSE aralığı, medyan, NMAD, %68,3 ve
+  %95 yüzdelikler, çarpıklık, basıklık, uzak nokta sayısı ve birleşik hata.
+- `checkpoints.sigma` kontrol noktalarının kendi RMSE'sidir (0'dan büyük, en çok 10 m).
+- Bir nokta **kendi sınıfının** medyanı ve NMAD'ine göre uzaktır. Bitkili zeminin yayılımı büyüktür; sert zeminin
+  ölçüsüyle bitkili noktayı uzak saymak yanlış olurdu. Uzak nokta `far` ile işaretlenir; `terrain_checkpoints_far`
+  uyarısı sayısını söyler.
+- Y18'in başvurusu (`road_terrain_quality_cases.py`) sağlam ölçüleri bu ADR'nin başvurusundan alır. Örnek kontrol
+  katmanına sert sınıfta 0,40 m'lik uzak bir nokta eklendi. 31 durum Rust'ta ve Python tipli katmanında aynıdır.
+
+**Yüzey analizi → Kalite:**
+
+- "Kontrol doğruluğu (m)" alanı var.
+- Sınıf tablosunun altında "Sağlam ölçüler" (medyan, NMAD, %68, %95, uzak) ve "RMSE'nin kendi belirsizliği" (%95
+  aralığı, kontrolle birleşik) tabloları yer alır.
+- Uzak noktalar planda turuncu halkayla ve "uzak" sözüyle çizilir.
+- Tek sayı alanları ondalık virgülü kabul eder; öbür yol pencereleri gibi.
+
+**Örnek** (teras yüzeyi, 10 kontrol noktası):
+
+- sert sınıfta RMSE 18,1 cm, ama medyan 3,0 cm ve NMAD 3,0 cm: 0,40 m'lik tek nokta RMSE'yi taşıyor;
+- bitkili sınıfta medyan 13,5 cm: lazer bitkinin üstüne düşüyor;
+- −0,06 m'lik nokta kendi sınıfında uzak.
+
+Resimler `.run/gui-evidence/yol-y39/` altındadır.
+
+## Ortak durumlar ve ölçüm (çekirdek)
 
 `scripts/fixtures/road_accuracy_cases.py` KentOS kodu olmadan çalışır: numpy'nin medyanı ve yüzdeliği, scipy'nin χ²
 yüzdeliği, çarpıklığı ve basıklığı.

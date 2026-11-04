@@ -4,4 +4,8 @@
  * A check point: its object, place, height, class, the surface's height there and the difference (point − surface);
  * none off the surface.
  */
-export type TerrainCheckpoint = { uid: string, at: [number, number], z: number, class: string, surfaceZ?: number, difference?: number, };
+export type TerrainCheckpoint = { uid: string, at: [number, number], z: number, class: string, surfaceZ?: number, difference?: number, 
+/**
+ * Over three NMADs from its class's median (docs/adr/0945): flagged, not left out.
+ */
+far?: boolean, };

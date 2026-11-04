@@ -6,7 +6,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, MOST_QUALITY_ITEMS, TerrainCheckClass, TerrainCheckpoint, TerrainCheckpoints,
+    CommandResult, CommandWarning, Entity, MOST_QUALITY_ITEMS, TerrainCheckClass, TerrainCheckRobust, TerrainCheckpoint,
+    TerrainCheckpoints,
     TerrainGaps, TerrainNearPair, TerrainSpike, TerrainsQuality, TerrainsQualityRead,
 };
 use kentos_domain::Document;
@@ -50,6 +51,9 @@ fn judged(input: &TerrainsQuality) -> Result<(), Stop> {
     {
         return Err(invalid("Kontrol noktalarını verin: bir katman (layer) ya da nesneler (uids).".into(), "checkpoints"));
     }
+    if input.checkpoints.as_ref().and_then(|c| c.sigma).is_some_and(|s| !(s.is_finite() && s > 0.0 && s <= 10.0)) {
+        return Err(invalid("Kontrol noktalarının kendi doğruluğu 0'dan büyük, en çok 10 m olmalı.".into(), "checkpoints.sigma"));
+    }
     Ok(())
 }
 
@@ -90,7 +94,7 @@ fn checkpoints(doc: &Document, ask: &kentos_commands::TerrainCheckpointsAsk) -> 
     Ok(out)
 }
 
-fn statistics(class: &str, differences: &[f64], outside: usize) -> TerrainCheckClass {
+fn statistics(class: &str, differences: &[f64], outside: usize, sigma: Option<f64>) -> TerrainCheckClass {
     let n = differences.len();
     let mean = if n > 0 { differences.iter().sum::<f64>() / n as f64 } else { 0.0 };
     let std = if n > 1 { (differences.iter().map(|d| (d - mean).powi(2)).sum::<f64>() / (n - 1) as f64).sqrt() } else { 0.0 };
@@ -104,6 +108,18 @@ fn statistics(class: &str, differences: &[f64], outside: usize) -> TerrainCheckC
         rmse,
         min: if n > 0 { differences.iter().copied().fold(f64::INFINITY, f64::min) } else { 0.0 },
         max: if n > 0 { differences.iter().copied().fold(f64::NEG_INFINITY, f64::max) } else { 0.0 },
+        robust: kentos_road::accuracy::accuracy(differences, sigma).map(|a| TerrainCheckRobust {
+            rmse_low: a.rmse_low,
+            rmse_high: a.rmse_high,
+            median: a.median,
+            nmad: a.nmad,
+            q68: a.q68,
+            q95: a.q95,
+            skewness: a.skewness,
+            kurtosis: a.kurtosis,
+            far: count(a.far.len()),
+            combined: a.combined,
+        }),
     }
 }
 
@@ -119,6 +135,7 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsQuality) -> Result<(Terrain
         Some(ask) => Some(checkpoints(doc, ask)?),
         None => None,
     };
+    let mut warnings = Vec::new();
     let mut out = TerrainsQualityRead {
         surface: id,
         corners: count(surface.vertices.len()),
@@ -171,15 +188,37 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsQuality) -> Result<(Terrain
                     off += 1;
                 }
             }
-            list.push(TerrainCheckpoint { uid, at: [p[0], p[1]], z: p[2], class, surface_z: h.z, difference });
+            list.push(TerrainCheckpoint { uid, at: [p[0], p[1]], z: p[2], class, surface_z: h.z, difference, far: false });
+        }
+        let sigma = input.checkpoints.as_ref().and_then(|a| a.sigma);
+        // A point is far by its own class's median and NMAD (docs/adr/0945): vegetated ground spreads more.
+        let far_by: BTreeMap<&String, (f64, f64)> = by
+            .iter()
+            .filter_map(|(c, (d, _))| kentos_road::accuracy::accuracy(d, None).map(|a| (c, (a.median, a.nmad))))
+            .collect();
+        let mut far = 0usize;
+        for p in &mut list {
+            if let (Some(d), Some((median, nmad))) = (p.difference, far_by.get(&p.class)) {
+                p.far = *nmad > 0.0 && (d - median).abs() > kentos_road::accuracy::FAR * nmad;
+                far += usize::from(p.far);
+            }
         }
         out.checkpoints = Some(TerrainCheckpoints {
             points: list,
-            classes: by.iter().map(|(c, (d, o))| statistics(c, d, *o)).collect(),
-            all: statistics("", &every, off),
+            classes: by.iter().map(|(c, (d, o))| statistics(c, d, *o, sigma)).collect(),
+            all: statistics("", &every, off, sigma),
         });
+        if far > 0 {
+            warnings.push(CommandWarning {
+                code: codes::TERRAIN_CHECKPOINTS_FAR.into(),
+                message: format!(
+                    "{far} kontrol noktası sınıfının medyanından 3 NMAD'den uzak: ölçü ya da sınıf hatası olabilir; RMSE onlardan etkilenir, NMAD etkilenmez."
+                ),
+                path: Some("checkpoints".into()),
+            });
+        }
     }
-    Ok((out, Vec::new()))
+    Ok((out, warnings))
 }
 
 /// Checks `input` against the document.

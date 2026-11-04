@@ -45202,7 +45202,7 @@
       "id": "road.terrains.quality",
       "version": 1,
       "title": "Ölçme kalitesini denetle",
-      "summary": "Bir arazi yüzeyinin ölçme kalitesini okur; hiçbir şey değiştirmez, ham kayıtlar kalır. near (m): planda bundan yakın köşe çiftleri (aynı yerin iki ölçüsü), yerleri, uzaklıkları ve kot farkları. spikes (radius, limit m): kotu radius içindeki öbür köşelerin ortalamasından limit'ten çok ayrılan köşeler (sivri nokta), en çok ayrılan önce. gaps (m): bir kenarı bundan uzun üçgenler (seyrek ölçü), sayısı, alanı ve yüzeyin en uzun kenarı. checkpoints (layer ve uids: kotlu noktalar; classField ile sınıfları, ör. sert zemin ve bitkili): her noktanın yüzeye farkı (nokta − yüzey) ve her sınıfın ve hepsinin sayısı, yüzey dışı, ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en büyük farkı; tek RMSE değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün. Sınırlar kullanıcının; KentOS değer vermez. Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found, entity_not_found.",
+      "summary": "Bir arazi yüzeyinin ölçme kalitesini okur; hiçbir şey değiştirmez, ham kayıtlar kalır. near (m): planda bundan yakın köşe çiftleri (aynı yerin iki ölçüsü), yerleri, uzaklıkları ve kot farkları. spikes (radius, limit m): kotu radius içindeki öbür köşelerin ortalamasından limit'ten çok ayrılan köşeler (sivri nokta), en çok ayrılan önce. gaps (m): bir kenarı bundan uzun üçgenler (seyrek ölçü), sayısı, alanı ve yüzeyin en uzun kenarı. checkpoints (layer ve uids: kotlu noktalar; classField ile sınıfları, ör. sert zemin ve bitkili): her noktanın yüzeye farkı (nokta − yüzey) ve her sınıfın ve hepsinin sayısı, yüzey dışı, ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en büyük farkı; tek RMSE değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün. Sınırlar kullanıcının; KentOS değer vermez.  Her sınıfta RMSE'nin yanında sağlam ölçüler de verilir (docs/adr/0945, Höhle ve Höhle 2009): RMSE'nin %95 aralığı (χ²), medyan, NMAD (1,4826 × medyandan mutlak sapmaların medyanı), |fark|'ın %68,3 ve %95 yüzdelikleri, çarpıklık ve basıklık, sınıfının medyanından 3 NMAD'den uzak noktalar (işaretlenir, çıkarılmaz; uyarı terrain_checkpoints_far); checkpoints.sigma (kontrol noktalarının kendi RMSE'si) verilirse birleşik hata √(RMSE² + σ²).Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found, entity_not_found.",
       "aliases": [
         "olcmekalitesi",
         "kontrolnoktasi",
@@ -45433,6 +45433,9 @@
           "terrain_unbuildable",
           "layer_not_found",
           "entity_not_found"
+        ],
+        "warnings": [
+          "terrain_checkpoints_far"
         ]
       },
       "examples": [
@@ -87006,6 +87009,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Karşılaştırılan bir kübaj hesaplanamıyor; hacmi yok."
+    },
+    {
+      "code": "terrain_checkpoints_far",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı kontrol noktaları sınıflarının medyanından 3 NMAD'den uzak: ölçü ya da sınıf hatası olabilir."
     },
     {
       "code": "corridor_in_use",
@@ -167846,6 +167855,17 @@
           "type": "number",
           "x-unit": "m"
         },
+        "robust": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TerrainCheckRobust"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Beyond one RMSE, for two points or more (docs/adr/0945)."
+        },
         "std": {
           "format": "double",
           "type": "number",
@@ -167861,6 +167881,77 @@
         "rmse",
         "min",
         "max"
+      ],
+      "type": "object"
+    },
+    "TerrainCheckRobust": {
+      "description": "A class's accuracy beyond its RMSE (docs/adr/0945): the RMSE's 95 % interval (the differences normal and unbiased),\nthe median, the NMAD (1.4826 × the median absolute deviation from the median), the 68.3 % and 95 % quantiles of the\nabsolute differences, the skewness and excess kurtosis (0 when normal), the points over three NMADs from the median,\nand with the check points' own RMSE the two combined, √(RMSE² + σ²).",
+      "properties": {
+        "combined": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "far": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "kurtosis": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "median": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "nmad": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "q68": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "q95": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "rmseHigh": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "rmseLow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "skewness": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "rmseLow",
+        "rmseHigh",
+        "median",
+        "nmad",
+        "q68",
+        "q95",
+        "skewness",
+        "kurtosis",
+        "far"
       ],
       "type": "object"
     },
@@ -167887,6 +167978,10 @@
             "null"
           ],
           "x-unit": "m"
+        },
+        "far": {
+          "description": "Over three NMADs from its class's median (docs/adr/0945): flagged, not left out.",
+          "type": "boolean"
         },
         "surfaceZ": {
           "format": "double",
@@ -167953,6 +168048,15 @@
             "string",
             "null"
           ]
+        },
+        "sigma": {
+          "description": "The check points' own RMSE (m; their survey's), combined with each class's (docs/adr/0945).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
         },
         "uids": {
           "items": {

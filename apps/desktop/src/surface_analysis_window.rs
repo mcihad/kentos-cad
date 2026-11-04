@@ -51,7 +51,7 @@ const CLOSE: &str = "Kapat";
 const DRAW_LOW: &str = "Düşük güvenli alanları çiz";
 const DRAW_SPARSE: &str = "Seyrek alanları çiz";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 12] = [
+pub(crate) const FIELDS: [&str; 13] = [
     "Sınırlar",
     "Raster hücresi (m)",
     "Fark aralıkları (m)",
@@ -64,6 +64,7 @@ pub(crate) const FIELDS: [&str; 12] = [
     "Hücre (m)",
     "En az nokta",
     "İstenen pay",
+    "Kontrol doğruluğu (m)",
 ];
 const MODES: [&str; 5] = ["Analiz", "Fark", "Kalite", "Kapsam", "Yoğunluk"];
 const MEASURES: [&str; 3] = ["Kot (m)", "Eğim (%)", "Bakı (°)"];
@@ -99,7 +100,7 @@ pub struct Window {
     pub(crate) boundary: Option<String>,
     /// Kapsam's layer for the low confidence areas.
     pub(crate) layer: Option<String>,
-    pub(crate) fields: [String; 12],
+    pub(crate) fields: [String; 13],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     /// A repair asked (Kalite: the spikes left out, or everything taken back) and its difference, before it is written.
@@ -130,12 +131,14 @@ fn msg(event: Event) -> Message {
     Message::SurfaceAnalysis(event)
 }
 
+/// A single number: a decimal comma read as a point, as the other road windows read it (lists keep the comma as their
+/// separator).
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     let t = text.trim();
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 fn list(text: &str, what: &str) -> Result<Option<Vec<f64>>, String> {
@@ -212,6 +215,8 @@ impl Window {
             _ => return Err("Sivri nokta için erim ile sınır birlikte yazılır.".to_owned()),
         };
         let field = self.fields[7].trim();
+        // The check points' own RMSE (docs/adr/0945): read only when there are check points.
+        let sigma = self.checks.as_ref().map(|_| number(&self.fields[12], FIELDS[12])).transpose()?;
         Ok(TerrainsQuality {
             surface: self.surface()?,
             near: number(&self.fields[3], FIELDS[3])?,
@@ -221,6 +226,7 @@ impl Window {
                 layer: Some(layer),
                 uids: Vec::new(),
                 class_field: (!field.is_empty()).then(|| field.to_owned()),
+                sigma: sigma.flatten(),
             }),
         })
     }
@@ -462,7 +468,8 @@ impl App {
                     .push(field("yok", 5, 100.0))
                     .push(field("yok", 6, 110.0))
                     .push(words::field("Kontrol katmanı", checks, None))
-                    .push(field("ör. Sınıf", 7, 100.0));
+                    .push(field("ör. Sınıf", 7, 100.0))
+                    .push(field("yok", 12, 130.0));
             }
             Mode::Coverage | Mode::Density => {
                 // The drawing's closed straight-edged objects, by their layer and number.
@@ -559,6 +566,45 @@ impl App {
                                 "Kontrol noktası yok",
                             );
                             side = side.push(label::caption("Kontrol noktaları (nokta − yüzey, m)").style(muted)).push(t);
+                            // Beyond one RMSE (docs/adr/0945): the robust measures and the RMSE's 95 % interval.
+                            let robust: Vec<Vec<String>> = c
+                                .classes
+                                .iter()
+                                .chain(std::iter::once(&c.all))
+                                .filter_map(|k| {
+                                    let r = k.robust.as_ref()?;
+                                    let name = if k.class.is_empty() { if std::ptr::eq(k, &c.all) { "Hepsi" } else { "Sınıfsız" } } else { k.class.as_str() };
+                                    let d = |v: f64| format!("{v:.3}").replace('.', ",");
+                                    Some(vec![
+                                        name.to_owned(),
+                                        d(r.median),
+                                        d(r.nmad),
+                                        d(r.q68),
+                                        d(r.q95),
+                                        format!("{}–{}", d(r.rmse_low), d(r.rmse_high)),
+                                        r.combined.map_or_else(|| "—".to_owned(), d),
+                                        r.far.to_string(),
+                                    ])
+                                })
+                                .collect();
+                            if !robust.is_empty() {
+                                let pick = |ks: &[usize]| robust.iter().map(|r| ks.iter().map(|k| r[*k].clone()).collect()).collect::<Vec<Vec<String>>>();
+                                let spread = crate::road_dialog::table(
+                                    vec![col("Sınıf", 64.0), num("Medyan", 54.0), num("NMAD", 50.0), num("%68", 48.0), num("%95", 48.0), num("Uzak", 38.0)],
+                                    pick(&[0, 1, 2, 3, 4, 7]),
+                                    "",
+                                );
+                                let rmse = crate::road_dialog::table(
+                                    vec![col("Sınıf", 80.0), num("RMSE %95 aralığı", 132.0), num("Kontrolle birleşik", 128.0)],
+                                    pick(&[0, 5, 6]),
+                                    "",
+                                );
+                                side = side
+                                    .push(label::caption("Sağlam ölçüler (Höhle ve Höhle): medyan, NMAD ve |fark|'ın yüzdelikleri aykırı noktalardan etkilenmez.").style(muted))
+                                    .push(spread)
+                                    .push(label::caption("RMSE'nin kendi belirsizliği (χ², %95) ve kontrol noktalarının doğruluğuyla birleşik hata.").style(muted))
+                                    .push(rmse);
+                            }
                         }
                     }
                     Read::Coverage(c, _) => {
@@ -908,7 +954,11 @@ impl canvas::Program<Message> for Plan<'_> {
                                 let color = if d >= 0.0 { tk.success } else { tk.danger };
                                 let r = (3.0 + 7.0 * (d.abs() / most)) as f32;
                                 frame.fill(&Path::circle(at, r), Color { a: 0.55, ..color });
-                                text(&mut frame, format!("{d:+.3}"), at + iced::Vector::new(r + 2.0, -6.0));
+                                // Far from its class (docs/adr/0945): a ring, so it is seen before it is counted.
+                                if p.far {
+                                    frame.stroke(&Path::circle(at, r + 4.0), Stroke::default().with_width(2.0).with_color(tk.warning));
+                                }
+                                text(&mut frame, if p.far { format!("{d:+.3} uzak") } else { format!("{d:+.3}") }, at + iced::Vector::new(r + 6.0, -6.0));
                             }
                             None => frame.stroke(&Path::circle(at, 4.0), Stroke::default().with_width(1.2).with_color(tk.muted)),
                         }

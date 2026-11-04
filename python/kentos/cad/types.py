@@ -81441,6 +81441,7 @@ class TerrainCheckClass(_Model):
         rmse: Unit: m.
         min: Unit: m.
         max: Unit: m.
+        robust: Beyond one RMSE, for two points or more (docs/adr/0945).
     """
     class_: str
     count: int
@@ -81450,6 +81451,7 @@ class TerrainCheckClass(_Model):
     rmse: float
     min: float
     max: float
+    robust: TerrainCheckRobust | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -81461,6 +81463,8 @@ class TerrainCheckClass(_Model):
         out["rmse"] = float(self.rmse)
         out["min"] = float(self.min)
         out["max"] = float(self.max)
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
         return out
 
     @classmethod
@@ -81474,6 +81478,67 @@ class TerrainCheckClass(_Model):
             rmse=float(data["rmse"]),
             min=float(data["min"]),
             max=float(data["max"]),
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else TerrainCheckRobust.from_json(data["robust"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainCheckRobust(_Model):
+    """A class's accuracy beyond its RMSE (docs/adr/0945): the RMSE's 95 % interval (the differences normal and unbiased),
+    the median, the NMAD (1.4826 × the median absolute deviation from the median), the 68.3 % and 95 % quantiles of the
+    absolute differences, the skewness and excess kurtosis (0 when normal), the points over three NMADs from the median,
+    and with the check points' own RMSE the two combined, √(RMSE² + σ²).
+    Attributes:
+        rmse_low: Unit: m.
+        rmse_high: Unit: m.
+        median: Unit: m.
+        nmad: Unit: m.
+        q68: Unit: m.
+        q95: Unit: m.
+        skewness: Unit: 1.
+        kurtosis: Unit: 1.
+        far: Unit: count.
+        combined: Unit: m.
+    """
+    rmse_low: float
+    rmse_high: float
+    median: float
+    nmad: float
+    q68: float
+    q95: float
+    skewness: float
+    kurtosis: float
+    far: int
+    combined: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rmseLow"] = float(self.rmse_low)
+        out["rmseHigh"] = float(self.rmse_high)
+        out["median"] = float(self.median)
+        out["nmad"] = float(self.nmad)
+        out["q68"] = float(self.q68)
+        out["q95"] = float(self.q95)
+        out["skewness"] = float(self.skewness)
+        out["kurtosis"] = float(self.kurtosis)
+        out["far"] = self.far
+        if self.combined is not UNSET:
+            out["combined"] = None if self.combined is None else float(self.combined)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainCheckRobust:
+        return cls(
+            rmse_low=float(data["rmseLow"]),
+            rmse_high=float(data["rmseHigh"]),
+            median=float(data["median"]),
+            nmad=float(data["nmad"]),
+            q68=float(data["q68"]),
+            q95=float(data["q95"]),
+            skewness=float(data["skewness"]),
+            kurtosis=float(data["kurtosis"]),
+            far=data["far"],
+            combined=UNSET if "combined" not in data else None if data["combined"] is None else float(data["combined"]),
         )
 
 
@@ -81485,6 +81550,7 @@ class TerrainCheckpoint(_Model):
         at: Unit: length.
         z: Unit: elevation.
         difference: Unit: m.
+        far: Over three NMADs from its class's median (docs/adr/0945): flagged, not left out.
         surface_z: Unit: elevation.
     """
     uid: str
@@ -81492,6 +81558,7 @@ class TerrainCheckpoint(_Model):
     z: float
     class_: str
     difference: float | None | Unset = UNSET
+    far: bool | Unset = UNSET
     surface_z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -81502,6 +81569,8 @@ class TerrainCheckpoint(_Model):
         out["class"] = self.class_
         if self.difference is not UNSET:
             out["difference"] = None if self.difference is None else float(self.difference)
+        if self.far is not UNSET:
+            out["far"] = self.far
         if self.surface_z is not UNSET:
             out["surfaceZ"] = None if self.surface_z is None else float(self.surface_z)
         return out
@@ -81514,6 +81583,7 @@ class TerrainCheckpoint(_Model):
             z=float(data["z"]),
             class_=data["class"],
             difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            far=data.get("far", UNSET),
             surface_z=UNSET if "surfaceZ" not in data else None if data["surfaceZ"] is None else float(data["surfaceZ"]),
         )
 
@@ -81545,9 +81615,12 @@ class TerrainCheckpoints(_Model):
 class TerrainCheckpointsAsk(_Model):
     """Check points: the points of `layer` and those of `uids`, their class the attribute `classField`'s value (none: one
     class).
+    Attributes:
+        sigma: The check points' own RMSE (m; their survey's), combined with each class's (docs/adr/0945). Unit: m.
     """
     class_field: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
+    sigma: float | None | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -81556,6 +81629,8 @@ class TerrainCheckpointsAsk(_Model):
             out["classField"] = self.class_field
         if self.layer is not UNSET:
             out["layer"] = self.layer
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else float(self.sigma)
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
         return out
@@ -81565,6 +81640,7 @@ class TerrainCheckpointsAsk(_Model):
         return cls(
             class_field=data.get("classField", UNSET),
             layer=data.get("layer", UNSET),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
@@ -111281,6 +111357,7 @@ __all__ = [
     "TerrainBand",
     "TerrainBands",
     "TerrainCheckClass",
+    "TerrainCheckRobust",
     "TerrainCheckpoint",
     "TerrainCheckpoints",
     "TerrainCheckpointsAsk",

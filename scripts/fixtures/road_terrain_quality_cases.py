@@ -15,7 +15,10 @@ radius (their heights summed from the lowest), the largest off first, then by pl
 limit; a check point's difference is its height less the surface's, a class's statistics the mean, the standard
 deviation (n − 1), the RMSE, the least and the largest over its points on the surface. No KentOS code.
 
-    python3 scripts/fixtures/road_terrain_quality_cases.py [--check]
+    uv run --no-project --python 3.11 --with numpy --with scipy python3 scripts/fixtures/road_terrain_quality_cases.py [--check]
+
+A class's accuracy beyond its RMSE (docs/adr/0945) is scripts/fixtures/road_accuracy_cases.py's: numpy's median and
+quantiles, scipy's χ² quantile, skewness and kurtosis; a point is far by its own class's median and NMAD.
 """
 
 import copy
@@ -28,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_drainage_cases as drainage  # noqa: E402
 import road_terrain_analysis_cases as analysis  # noqa: E402
 import road_terrain_compare_cases as compare  # noqa: E402
+import road_accuracy_cases as acc  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1"
 W = 1e-6
@@ -54,7 +58,7 @@ CHECKS = [  # (x, y, z offset from the terrace, class)
     (TX + 0.5, 0.5, 0.03, "sert"), (TX + 2.3, 1.7, -0.02, "sert"), (TX + 5.5, 2.2, 0.01, "sert"),
     (TX + 8.4, 6.6, 0.05, "sert"), (TX + 1.1, 8.8, 0.12, "bitkili"), (TX + 3.7, 4.4, 0.20, "bitkili"),
     (TX + 6.2, 9.1, -0.06, "bitkili"), (TX + 9.6, 3.3, 0.15, "bitkili"), (TX + 4.9, 7.25, 0.0, None),
-    (TX + 20.0, 5.0, 0.0, "sert")]
+    (TX + 7.3, 1.2, 0.40, "sert"), (TX + 20.0, 5.0, 0.0, "sert")]
 UIDS = {}
 
 
@@ -144,13 +148,20 @@ def gaps(sid, limit):
     return {"triangles": tri, "area": area, "longest": longest}
 
 
-def stats(cls, ds, off):
+def stats(cls, ds, off, sigma=None):
     n = len(ds)
     mean = sum(ds) / n if n else 0.0
     std = math.sqrt(sum((d - mean) ** 2 for d in ds) / (n - 1)) if n > 1 else 0.0
     rmse = math.sqrt(sum(d * d for d in ds) / n) if n else 0.0
-    return {"class": cls, "count": n, "outside": off, "mean": mean, "std": std, "rmse": rmse,
-            "min": min(ds) if n else 0.0, "max": max(ds) if n else 0.0}
+    out = {"class": cls, "count": n, "outside": off, "mean": mean, "std": std, "rmse": rmse,
+           "min": min(ds) if n else 0.0, "max": max(ds) if n else 0.0}
+    if n >= 2:
+        # Docs/adr/0945: beyond one RMSE, by road_accuracy_cases.py (numpy and scipy).
+        a = acc.accuracy(ds, sigma)
+        out["robust"] = {"rmseLow": a["rmseLow"], "rmseHigh": a["rmseHigh"], "median": a["median"], "nmad": a["nmad"],
+                         "q68": a["q68"], "q95": a["q95"], "skewness": a["skewness"], "kurtosis": a["kurtosis"],
+                         "far": len(a["far"]), **({"combined": a["combined"]} if "combined" in a else {})}
+    return out
 
 
 def checkpoints(ask):
@@ -182,8 +193,16 @@ def checkpoints(ask):
             e[1][0] += 1
             off += 1
         points.append(p)
-    return {"points": points, "classes": [stats(c, by[c][0], by[c][1][0]) for c in sorted(by)],
-            "all": stats("", every, off)}
+    # A point is far by its own class's median and NMAD.
+    for p in points:
+        ds = by[p["class"]][0]
+        if "difference" in p and len(ds) >= 2:
+            a = acc.accuracy(ds)
+            if a["nmad"] > 0 and abs(p["difference"] - a["median"]) > acc.FAR * a["nmad"]:
+                p["far"] = True
+    sigma = ask.get("sigma")
+    return {"points": points, "classes": [stats(c, by[c][0], by[c][1][0], sigma) for c in sorted(by)],
+            "all": stats("", every, off, sigma)}
 
 
 def answer(inp):
@@ -215,7 +234,12 @@ def cases():
 
     def q(name, inp, result=None, setup_=None):
         if result is None:
-            result = {"status": "completed", "output": answer(inp), "warnings": []}
+            read = answer(inp)
+            far = sum(1 for p in read.get("checkpoints", {}).get("points", []) if p.get("far"))
+            warns = [{"code": "terrain_checkpoints_far", "path": "checkpoints",
+                      "message": f"{far} kontrol noktası sınıfının medyanından 3 NMAD'den uzak: ölçü ya da sınıf hatası olabilir; "
+                                 "RMSE onlardan etkilenir, NMAD etkilenmez."}] if far else []
+            result = {"status": "completed", "output": read, "warnings": warns}
         c = {"name": name, "steps": [{"op": "execute", "input": inp, "result": result, "expect": UNCHANGED,
                                       "within": W}]}
         if setup_:
@@ -239,6 +263,8 @@ def cases():
     q("Katman ve seçim birlikte, yinelenen bir kez", {"surface": "t-6", "checkpoints": {
         "layer": "kontrol", "uids": [UIDS["k2"]], "classField": "Sınıf"}})
     q("Olmayan alan sınıf vermez", {"surface": "Teras", "checkpoints": {"layer": "kontrol", "classField": "Yok"}})
+    q("Kontrol noktalarının kendi doğruluğu 1 cm", {"surface": "Teras", "checkpoints": {"layer": "kontrol", "classField": "Sınıf",
+                                                                                   "sigma": 0.01}})
     q("Hepsi birden", {"surface": "Seyrek", "near": 1.5, "spikes": {"radius": 1.0, "limit": 0.02}, "gaps": 1.2})
     # Refusals.
     q("Bir şey sorulmadı", {"surface": "Düz"}, fail("invalid_analysis", "Bir şey sorun: near, spikes, gaps ya da checkpoints."))
@@ -250,6 +276,8 @@ def cases():
       fail("invalid_analysis", "Sivri noktanın sınırı eksi olmayan bir sayı olmalı.", "spikes.limit"))
     q("Boşluk sınırı eksi", {"surface": "Düz", "gaps": -2.0},
       fail("invalid_analysis", "Boşluk sayılan kenar boyu sıfırdan büyük olmalı.", "gaps"))
+    q("Sıfır kontrol doğruluğu", {"surface": "Teras", "checkpoints": {"layer": "kontrol", "sigma": 0.0}},
+      fail("invalid_analysis", "Kontrol noktalarının kendi doğruluğu 0'dan büyük, en çok 10 m olmalı.", "checkpoints.sigma"))
     q("Kontrol noktası verilmedi", {"surface": "Düz", "checkpoints": {}},
       fail("invalid_analysis", "Kontrol noktalarını verin: bir katman (layer) ya da nesneler (uids).", "checkpoints"))
     q("Olmayan katman", {"surface": "Teras", "checkpoints": {"layer": "yok"}},

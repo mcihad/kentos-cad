@@ -1540,9 +1540,14 @@ class _RoadTerrainsQuality(LocalCommand[TerrainsQuality, TerrainsQualityRead, Te
     ve bitkili): her noktanın yüzeye farkı (nokta − yüzey) ve her sınıfın ve hepsinin
     sayısı, yüzey dışı, ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en
     büyük farkı; tek RMSE değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün.
-    Sınırlar kullanıcının; KentOS değer vermez. Retler: not_a_road_project,
-    invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found,
-    entity_not_found.
+    Sınırlar kullanıcının; KentOS değer vermez.  Her sınıfta RMSE'nin yanında sağlam
+    ölçüler de verilir (docs/adr/0945, Höhle ve Höhle 2009): RMSE'nin %95 aralığı (χ²),
+    medyan, NMAD (1,4826 × medyandan mutlak sapmaların medyanı), |fark|'ın %68,3 ve %95
+    yüzdelikleri, çarpıklık ve basıklık, sınıfının medyanından 3 NMAD'den uzak noktalar
+    (işaretlenir, çıkarılmaz; uyarı terrain_checkpoints_far); checkpoints.sigma (kontrol
+    noktalarının kendi RMSE'si) verilirse birleşik hata √(RMSE² + σ²).Retler:
+    not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable,
+    layer_not_found, entity_not_found.
     """
     __slots__ = ()
     id = "road.terrains.quality"
@@ -1576,8 +1581,14 @@ class _RoadTerrainsQuality(LocalCommand[TerrainsQuality, TerrainsQualityRead, Te
         yüzeye farkı (nokta − yüzey) ve her sınıfın ve hepsinin sayısı, yüzey dışı,
         ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en büyük farkı; tek RMSE
         değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün. Sınırlar kullanıcının;
-        KentOS değer vermez. Retler: not_a_road_project, invalid_analysis, unknown_terrain,
-        terrain_unbuildable, layer_not_found, entity_not_found.
+        KentOS değer vermez.  Her sınıfta RMSE'nin yanında sağlam ölçüler de verilir
+        (docs/adr/0945, Höhle ve Höhle 2009): RMSE'nin %95 aralığı (χ²), medyan, NMAD
+        (1,4826 × medyandan mutlak sapmaların medyanı), |fark|'ın %68,3 ve %95 yüzdelikleri,
+        çarpıklık ve basıklık, sınıfının medyanından 3 NMAD'den uzak noktalar (işaretlenir,
+        çıkarılmaz; uyarı terrain_checkpoints_far); checkpoints.sigma (kontrol noktalarının
+        kendi RMSE'si) verilirse birleşik hata √(RMSE² + σ²).Retler: not_a_road_project,
+        invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found,
+        entity_not_found.
 
         Args:
             doc: The drawing it works on.
