@@ -41592,6 +41592,278 @@
       ]
     },
     {
+      "id": "road.volumes.progress",
+      "version": 1,
+      "title": "Dönem metrajı",
+      "summary": "Bir kübaj hesabının (volume) işinin bir ara ölçüye (survey: arazi yüzeyinin kimliği ya da adı) göre ne kadarının yapıldığını okur; hiçbir şey yazmaz (docs/adr/0942). Tasarım koridorun üst yüzeyi, ilk arazi koridorun yüzeyidir; üçü kesin bindirilir. Yarmada (z_o > z_d) yapılan max(0, z_o − max(z_n, z_d)), kalan max(0, min(z_n, z_o) − z_d), fazla kazı max(0, z_d − z_n); dolguda yapılan max(0, min(z_n, z_d) − z_o), kalan max(0, z_d − max(z_n, z_o)), fazla dolgu max(0, z_n − z_d). Ölçünün örttüğü her yerde yapılan + kalan tasarımın kendi kazısı ve dolgusudur; yarmanın üstüne yığılan ya da dolgu yerinden kazılan malzeme tasarımın işi değildir. previous (önceki ölçü) verilirse onun işi ve dönemin işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı uygulanmaz). Uyarılar: volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume.",
+      "aliases": [
+        "donemmetraji",
+        "arametraj",
+        "hakedismetraji"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.volumes.progress` v1 (plan/road.md Y36, docs/adr/0942): an earthwork volume (its id or name), a\nsurvey of the site now (`survey`: a terrain surface's id or name) and, for a period's work, the survey before it\n(`previous`). The original ground is the volume's corridor's surface; the design its top surface.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),\n`invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a\nsurvey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).",
+        "properties": {
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "survey": {
+            "type": "string"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "survey"
+        ],
+        "title": "VolumesProgress",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.progress` v1 (docs/adr/0942): the volume; the original ground (the corridor's surface), the\nsurvey and the previous survey with their sources' digests (what each was made of when read); the work by the survey\nnow and by the previous one, and the period's (now less before); the share of the design's cut and fill done\n(percent; none where the design has none); the plan area all three cover and the design's area not covered by the\noriginal or the survey; each stretch's own work by the survey now.",
+        "properties": {
+          "before": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProgressAmounts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cutShare": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "fillShare": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "now": {
+            "$ref": "#/$defs/ProgressAmounts"
+          },
+          "original": {
+            "type": "string"
+          },
+          "originalDigest": {
+            "type": "string"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProgressAmounts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousDigest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stretches": {
+            "items": {
+              "$ref": "#/$defs/StretchProgress"
+            },
+            "type": "array"
+          },
+          "survey": {
+            "type": "string"
+          },
+          "surveyDigest": {
+            "type": "string"
+          },
+          "uncovered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "original",
+          "originalDigest",
+          "survey",
+          "surveyDigest",
+          "now",
+          "covered",
+          "uncovered",
+          "stretches"
+        ],
+        "title": "VolumeProgressReport",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.progress` v1 (docs/adr/0942): the volume; the original ground (the corridor's surface), the\nsurvey and the previous survey with their sources' digests (what each was made of when read); the work by the survey\nnow and by the previous one, and the period's (now less before); the share of the design's cut and fill done\n(percent; none where the design has none); the plan area all three cover and the design's area not covered by the\noriginal or the survey; each stretch's own work by the survey now.",
+        "properties": {
+          "before": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProgressAmounts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cutShare": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "fillShare": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "now": {
+            "$ref": "#/$defs/ProgressAmounts"
+          },
+          "original": {
+            "type": "string"
+          },
+          "originalDigest": {
+            "type": "string"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProgressAmounts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousDigest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stretches": {
+            "items": {
+              "$ref": "#/$defs/StretchProgress"
+            },
+            "type": "array"
+          },
+          "survey": {
+            "type": "string"
+          },
+          "surveyDigest": {
+            "type": "string"
+          },
+          "uncovered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "original",
+          "originalDigest",
+          "survey",
+          "surveyDigest",
+          "now",
+          "covered",
+          "uncovered",
+          "stretches"
+        ],
+        "title": "VolumeProgressReport",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_volume_progress",
+          "not_a_road_project",
+          "unknown_volume",
+          "unknown_terrain",
+          "invalid_volume"
+        ],
+        "warnings": [
+          "volume_progress_uncovered",
+          "volume_progress_backward"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ekim ölçüsüne göre, eylül ölçüsünden bu yana",
+          "input": {
+            "previous": "Eylül ölçüsü",
+            "survey": "Ekim ölçüsü",
+            "volume": "Ana kübaj"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.hauls.edit",
       "version": 1,
       "title": "Brükneri düzenle",
@@ -86485,6 +86757,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kübajın %95 sınırı kabul payını aşıyor."
+    },
+    {
+      "code": "invalid_volume_progress",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dönem metrajı sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "volume_progress_uncovered",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ara ölçü tasarımın bir kısmını örtmüyor; orada yapılan iş sayılmadı."
+    },
+    {
+      "code": "volume_progress_backward",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dönemde yapılan iş eksi: ölçü hatası ya da geri doldurma."
     },
     {
       "code": "corridor_in_use",
@@ -148477,6 +148767,50 @@
       ],
       "type": "object"
     },
+    "ProgressAmounts": {
+      "description": "The cut's and the fill's work against the design (bank, m³): done, left, and over (dug below the design in cut,\nplaced above it in fill). In a period, the later survey's less the earlier's: negative where the work went back.",
+      "properties": {
+        "cutDone": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutLeft": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutOver": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillDone": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillLeft": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillOver": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "cutDone",
+        "cutLeft",
+        "cutOver",
+        "fillDone",
+        "fillLeft",
+        "fillOver"
+      ],
+      "type": "object"
+    },
     "ProjectAccessView": {
       "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
       "properties": {
@@ -162282,6 +162616,44 @@
       "required": [
         "layer",
         "name"
+      ],
+      "type": "object"
+    },
+    "StretchProgress": {
+      "description": "A stretch's own progress by the survey now (stretches between consecutive sections of the corridor), and its plan\narea the original ground or the survey does not cover (m²; its work there is not counted).",
+      "properties": {
+        "amounts": {
+          "$ref": "#/$defs/ProgressAmounts"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "uncovered": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "amounts",
+        "uncovered"
       ],
       "type": "object"
     },

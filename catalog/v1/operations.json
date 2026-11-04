@@ -2712,9 +2712,10 @@
         "road.volumes.edit",
         "road.volumes.query",
         "road.volumes.approve",
-        "road.volumes.uncertainty"
+        "road.volumes.uncertainty",
+        "road.volumes.progress"
       ],
-      "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile, Onayla ve Onayı kaldır road.volumes.approve ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906); belirsizliği road.volumes.uncertainty ile okur (Y35, ADR 0941)."
+      "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile, Onayla ve Onayı kaldır road.volumes.approve ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906); belirsizliği road.volumes.uncertainty ile okur (Y35, ADR 0941); dönem metrajını road.volumes.progress ile okur (Y36, ADR 0942)."
     },
     "volume.new": {
       "level": "semantic",

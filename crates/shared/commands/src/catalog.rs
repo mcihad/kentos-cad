@@ -7638,6 +7638,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_VOLUMES_PROGRESS.into(),
+            version: crate::ROAD_VOLUMES_PROGRESS_VERSION,
+            title: "Dönem metrajı".into(),
+            summary: "Bir kübaj hesabının (volume) işinin bir ara ölçüye (survey: arazi yüzeyinin kimliği ya da adı) göre ne kadarının yapıldığını okur; hiçbir şey yazmaz (docs/adr/0942). Tasarım koridorun üst yüzeyi, ilk arazi koridorun yüzeyidir; üçü kesin bindirilir. Yarmada (z_o > z_d) yapılan max(0, z_o − max(z_n, z_d)), kalan max(0, min(z_n, z_o) − z_d), fazla kazı max(0, z_d − z_n); dolguda yapılan max(0, min(z_n, z_d) − z_o), kalan max(0, z_d − max(z_n, z_o)), fazla dolgu max(0, z_n − z_d). Ölçünün örttüğü her yerde yapılan + kalan tasarımın kendi kazısı ve dolgusudur; yarmanın üstüne yığılan ya da dolgu yerinden kazılan malzeme tasarımın işi değildir. previous (önceki ölçü) verilirse onun işi ve dönemin işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı uygulanmaz). \
+                      Uyarılar: volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume."
+                .into(),
+            aliases: vec!["donemmetraji".into(), "arametraj".into(), "hakedismetraji".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesProgress>(),
+            output: schema::<crate::VolumeProgressReport>(),
+            plan: Some(schema::<crate::VolumeProgressReport>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ekim ölçüsüne göre, eylül ölçüsünden bu yana".into(),
+                input: json!({ "volume": "Ana kübaj", "survey": "Ekim ölçüsü", "previous": "Eylül ölçüsü" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_EDIT.into(),
             version: crate::ROAD_HAULS_EDIT_VERSION,
             title: "Brükneri düzenle".into(),
@@ -14643,6 +14668,9 @@ mod tests {
                     crate::ROAD_VOLUMES_UNCERTAINTY => {
                         serde_json::from_value::<crate::VolumesUncertainty>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_PROGRESS => {
+                        serde_json::from_value::<crate::VolumesProgress>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
@@ -15487,6 +15515,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_UNCERTAINTY => {
                             serde_json::from_value::<crate::VolumeUncertaintyReport>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_PROGRESS => {
+                            serde_json::from_value::<crate::VolumeProgressReport>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_EDIT => {
                             serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())

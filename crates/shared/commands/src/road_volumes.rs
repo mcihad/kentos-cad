@@ -484,3 +484,111 @@ pub struct VolumeUncertaintyReport {
     pub numeric: f64,
     pub stretches: Vec<StretchSpread>,
 }
+
+pub const ROAD_VOLUMES_PROGRESS: &str = "road.volumes.progress";
+pub const ROAD_VOLUMES_PROGRESS_VERSION: u32 = 1;
+
+/// Input of `road.volumes.progress` v1 (plan/road.md Y36, docs/adr/0942): an earthwork volume (its id or name), a
+/// survey of the site now (`survey`: a terrain surface's id or name) and, for a period's work, the survey before it
+/// (`previous`). The original ground is the volume's corridor's surface; the design its top surface.
+///
+/// Refusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),
+/// `invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a
+/// survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesProgress {
+    pub volume: String,
+    pub survey: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub previous: Option<String>,
+}
+
+/// The cut's and the fill's work against the design (bank, m³): done, left, and over (dug below the design in cut,
+/// placed above it in fill). In a period, the later survey's less the earlier's: negative where the work went back.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProgressAmounts {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_done: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_over: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_done: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_over: f64,
+}
+
+/// A stretch's own progress by the survey now (stretches between consecutive sections of the corridor), and its plan
+/// area the original ground or the survey does not cover (m²; its work there is not counted).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StretchProgress {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    pub amounts: ProgressAmounts,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub uncovered: f64,
+}
+
+/// Output of `road.volumes.progress` v1 (docs/adr/0942): the volume; the original ground (the corridor's surface), the
+/// survey and the previous survey with their sources' digests (what each was made of when read); the work by the survey
+/// now and by the previous one, and the period's (now less before); the share of the design's cut and fill done
+/// (percent; none where the design has none); the plan area all three cover and the design's area not covered by the
+/// original or the survey; each stretch's own work by the survey now.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeProgressReport {
+    pub volume: String,
+    pub original: String,
+    pub original_digest: String,
+    pub survey: String,
+    pub survey_digest: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub previous: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub previous_digest: Option<String>,
+    pub now: ProgressAmounts,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub before: Option<ProgressAmounts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub period: Option<ProgressAmounts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub cut_share: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub fill_share: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub covered: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub uncovered: f64,
+    pub stretches: Vec<StretchProgress>,
+}

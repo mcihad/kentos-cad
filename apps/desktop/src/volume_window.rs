@@ -61,6 +61,12 @@ pub(crate) const RULE: &str = "Kural";
 pub(crate) const BUDGET: &str = "Belirsizlik";
 /// The uncertainty's fields: the heights' σ, their shift, the share accepted.
 pub(crate) const UNCERTAINTY: [&str; 3] = ["Kot σ (m)", "Sistematik kayma (m)", "Kabul payı (%)"];
+/// The progress's list and its fields (docs/adr/0942): the survey now and the one before it.
+pub(crate) const PROGRESS: &str = "Dönem metrajı";
+pub(crate) const SURVEY: &str = "Ara ölçü";
+pub(crate) const PREVIOUS: &str = "Önceki ölçü";
+/// The previous survey's “none”.
+const NO_PREVIOUS: &str = "Yok (ilk araziden bu yana)";
 
 /// The curve correction's switch (docs/adr/0934 §3).
 pub(crate) const CURVE: &str = "Kesitlerin ağırlık merkeziyle düzelt";
@@ -83,6 +89,8 @@ pub enum Shown {
     Layers,
     /// The uncertainty budget (docs/adr/0941).
     Budget,
+    /// The work done and left by a survey (docs/adr/0942).
+    Progress,
 }
 
 impl std::fmt::Display for Shown {
@@ -92,6 +100,7 @@ impl std::fmt::Display for Shown {
             Shown::Sheet => SHEET,
             Shown::Layers => LAYERS,
             Shown::Budget => BUDGET,
+            Shown::Progress => PROGRESS,
         })
     }
 }
@@ -250,6 +259,11 @@ pub struct Window {
     pub(crate) uncertainty: [String; 3],
     /// The budget read on the volume as typed, when σ is written.
     pub(crate) budget: Option<Result<(kentos_commands::VolumeUncertaintyReport, Vec<CommandWarning>), String>>,
+    /// The survey now and the one before it (docs/adr/0942): terrain surfaces' ids; the window's, not the volume's.
+    pub(crate) survey: Option<String>,
+    pub(crate) previous: Option<String>,
+    /// The progress read on the volume as typed, when a survey is chosen.
+    pub(crate) progress: Option<Result<(kentos_commands::VolumeProgressReport, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -268,6 +282,10 @@ pub enum Event {
     View(Shown),
     /// The uncertainty's σ (0), shift (1) or share accepted (2) (docs/adr/0941).
     Uncertainty(usize, String),
+    /// The survey now (docs/adr/0942); none: no progress read.
+    Survey(Option<String>),
+    /// The survey before it; none: since the original ground.
+    Previous(Option<String>),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
     Factor(usize, usize, String),
     /// A strip row's from (0), to (1) or depth (2).
@@ -322,6 +340,9 @@ impl App {
             shown: Shown::Sheet,
             uncertainty: Default::default(),
             budget: None,
+            survey: None,
+            previous: None,
+            progress: None,
         }));
         self.dialog = Some(Dialog::Volumes);
         self.refresh_volume();
@@ -367,6 +388,37 @@ impl App {
                 kentos_native_application::road_volumes_uncertainty::preview(&doc.model, &def, &input)
             })()),
         };
+        // The progress, when a survey is chosen and the volume computes.
+        w.progress = match (&w.survey, &w.preview.report, r.def()) {
+            (Some(survey), Some(_), Ok(def)) => {
+                let input = kentos_commands::VolumesProgress {
+                    volume: def.id.clone(),
+                    survey: survey.clone(),
+                    previous: w.previous.clone(),
+                };
+                Some(kentos_native_application::road_volumes_progress::preview(&doc.model, &def, &input))
+            }
+            _ => None,
+        };
+    }
+
+    /// A survey picked by its name in the window's agent controls: its id, none for “Yok” and the previous one's none.
+    fn volume_surface_named(&self, name: &str) -> Result<Option<String>, String> {
+        if name == "Yok" || name == NO_PREVIOUS {
+            return Ok(None);
+        }
+        self.volume_surfaces()
+            .into_iter()
+            .find(|s| s.1 == name)
+            .map(|s| Some(s.0))
+            .ok_or_else(|| format!("“{TITLE}” penceresinde “{name}” yüzeyi yok"))
+    }
+
+    /// The project's terrain surfaces: id and name.
+    fn volume_surfaces(&self) -> Vec<(String, String)> {
+        self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model.settings().road.as_ref().map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
+        })
     }
 
     /// The project's corridors: id and name.
@@ -505,6 +557,11 @@ impl App {
                     *f = t;
                 }
             }
+            Event::Survey(id) => {
+                w.shown = if id.is_some() { Shown::Progress } else { w.shown };
+                w.survey = id;
+            }
+            Event::Previous(id) => w.previous = id,
             Event::Rule(r) => {
                 if let Some(row) = chosen_row(w) {
                     row.rule = r;
@@ -688,8 +745,12 @@ impl App {
             .ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove)))
             .ghost(APPROVE, (saved && !approved).then(|| msg(Event::Approve(true))))
             .ghost(REVOKE, approved.then(|| msg(Event::Approve(false))));
+        let works = w.progress.as_ref().and_then(|p| p.as_ref().ok()).filter(|_| w.shown == Shown::Progress);
         if chosen.is_some() {
-            d = d.picture(iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(Fill), 190.0);
+            d = match works {
+                Some((p, _)) => d.picture(iced::widget::canvas(Works { report: p }).width(Fill).height(Fill), 190.0),
+                None => d.picture(iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(Fill), 190.0),
+            };
             match (&w.preview.why, &w.preview.report) {
                 (Some(e), _) => d = d.note(Banner::error(e.clone())),
                 (None, Some(rep)) => {
@@ -742,6 +803,17 @@ impl App {
                         }
                         None => {}
                     }
+                    let progress = w.progress.as_ref().and_then(|p| p.as_ref().ok());
+                    match &w.progress {
+                        Some(Err(e)) => d = d.note(Banner::error(e.clone())),
+                        Some(Ok((p, warnings))) => {
+                            d = d.note(Banner::info(progress_words(p, &self.volume_surfaces())));
+                            for wn in warnings {
+                                d = d.note(Banner::warning(wn.message.clone()));
+                            }
+                        }
+                        None => {}
+                    }
                     let mut options = vec![Shown::Sheet];
                     if !rep.layers.is_empty() {
                         options.push(Shown::Layers);
@@ -749,10 +821,14 @@ impl App {
                     if budget.is_some() {
                         options.push(Shown::Budget);
                     }
+                    if progress.is_some() {
+                        options.push(Shown::Progress);
+                    }
                     let now = if options.contains(&w.shown) { w.shown } else { Shown::Sheet };
-                    let list: Element<'_, Message> = match (now, budget) {
-                        (Shown::Layers, _) => layers_table(rep),
-                        (Shown::Budget, Some((b, _))) => budget_table(b),
+                    let list: Element<'_, Message> = match (now, budget, progress) {
+                        (Shown::Layers, _, _) => layers_table(rep),
+                        (Shown::Budget, Some((b, _)), _) => budget_table(b),
+                        (Shown::Progress, _, Some((p, _))) => progress_table(p),
                         _ => sheet_table(rep),
                     };
                     d = d.detail(road_dialog::detail_choice(options, now, |v| msg(Event::View(v)), list));
@@ -872,6 +948,35 @@ impl App {
             .help("Bütün kotların ortak kayması (datum, anten yüksekliği); eksi aşağı.")
             .field(UNCERTAINTY[2], field(2, "yok"))
             .help("Her hacmin %95 sınırının hacme oranı bunun altında kalmalı (sözleşmeden). KentOS sayı vermez.");
+        // The surveys: any terrain surface but the corridor's own (its original ground).
+        let original = r
+            .corridor
+            .as_ref()
+            .and_then(|c| self.document.as_ref()?.model.road_corridors().iter().find(|x| &x.id == c).map(|x| x.surface.clone()));
+        let surveys: Vec<(String, String)> =
+            self.volume_surfaces().into_iter().filter(|s| Some(&s.0) != original.as_ref()).collect();
+        let now_ids: Vec<Option<String>> = std::iter::once(None).chain(surveys.iter().map(|s| Some(s.0.clone()))).collect();
+        let on_survey = Select::new(
+            std::iter::once(Choice::new("Yok".to_owned())).chain(surveys.iter().map(|s| Choice::new(s.1.clone()))),
+            now_ids.iter().position(|i| i == &w.survey),
+            move |i| msg(Event::Survey(now_ids[i].clone())),
+        );
+        let before: Vec<&(String, String)> = surveys.iter().filter(|s| Some(&s.0) != w.survey.as_ref()).collect();
+        let before_ids: Vec<Option<String>> = std::iter::once(None).chain(before.iter().map(|s| Some(s.0.clone()))).collect();
+        let on_previous = Select::new(
+            std::iter::once(Choice::new(NO_PREVIOUS.to_owned())).chain(before.iter().map(|s| Choice::new(s.1.clone()))),
+            before_ids.iter().position(|i| i == &w.previous),
+            move |i| msg(Event::Previous(before_ids[i].clone())),
+        );
+        form = form.section(PROGRESS);
+        form = if surveys.is_empty() {
+            form.row(label::caption("Ara ölçü için Arazi'de bir yüzey daha oluşturun (drone, GNSS ya da total station ölçüsü).").style(muted))
+        } else {
+            form.field(SURVEY, on_survey)
+                .help("Şantiyenin bugünkü yüzeyi. İlk arazi koridorun yüzeyidir; ölçü onunla ve tasarımla karşılaştırılır.")
+                .field(PREVIOUS, on_previous)
+                .help("Bir önceki hakedişin ölçüsü: dönemin işi iki ölçünün birikmiş işlerinin farkıdır.")
+        };
         form
     }
 
@@ -896,6 +1001,9 @@ impl App {
             Control::Press(SHEET) => Some(msg(Event::Show(true))),
             Control::Press(LAYERS) => Some(msg(Event::View(Shown::Layers))),
             Control::Press(BUDGET) => Some(msg(Event::View(Shown::Budget))),
+            Control::Press(PROGRESS) => Some(msg(Event::View(Shown::Progress))),
+            Control::Pick(SURVEY, name) => Some(msg(Event::Survey(self.volume_surface_named(name)?))),
+            Control::Pick(PREVIOUS, name) => Some(msg(Event::Previous(self.volume_surface_named(name)?))),
             Control::Fill(name, text) if UNCERTAINTY.contains(&name) => {
                 Some(msg(Event::Uncertainty(UNCERTAINTY.iter().position(|f| *f == name).unwrap_or(0), text.to_owned())))
             }
@@ -1130,4 +1238,191 @@ fn budget_table(b: &kentos_commands::VolumeUncertaintyReport) -> Element<'_, Mes
         vec![row("Kazı", &b.cut), row("Dolgu", &b.fill), row("Net", &b.net)],
         "",
     )
+}
+
+/// The progress in a sentence (docs/adr/0942): the share of the cut and the fill done, what is left, what went past the
+/// design, and the period's work.
+fn progress_words(p: &kentos_commands::VolumeProgressReport, surfaces: &[(String, String)]) -> String {
+    let name = |id: &str| surfaces.iter().find(|s| s.0 == id).map_or_else(|| id.to_owned(), |s| s.1.clone());
+    let n = &p.now;
+    let part = |what: &str, share: Option<f64>, done: f64, left: f64| match share {
+        Some(s) => format!("{what} %{} yapıldı ({} m³), {} m³ kaldı", grouped(s, 1), grouped(done, 0), grouped(left, 0)),
+        None => format!("{what} yok"),
+    };
+    let mut out = format!(
+        "{}: {}; {}.",
+        name(&p.survey),
+        part("kazının", p.cut_share, n.cut_done, n.cut_left),
+        part("dolgunun", p.fill_share, n.fill_done, n.fill_left)
+    );
+    if n.cut_over >= 0.5 || n.fill_over >= 0.5 {
+        out += &format!(" Tasarımın ötesinde: kazı {} m³, dolgu {} m³.", grouped(n.cut_over, 0), grouped(n.fill_over, 0));
+    }
+    if let (Some(prev), Some(d)) = (&p.previous, &p.period) {
+        out += &format!(" Dönemde (önceki ölçü “{}”) kazı {} m³, dolgu {} m³.", name(prev), signed(d.cut_done), signed(d.fill_done));
+    }
+    out
+}
+
+/// The progress by stretch: done, left and past the design, for the cut and the fill (m³); the plan area the survey
+/// leaves uncovered (m²).
+fn progress_table(p: &kentos_commands::VolumeProgressReport) -> Element<'_, Message> {
+    use road_dialog::{col, num};
+    let rows = p
+        .stretches
+        .iter()
+        .map(|s| {
+            let a = &s.amounts;
+            let share = |done: f64, left: f64| {
+                if done + left > 0.05 { format!("%{}", grouped(100.0 * done / (done + left), 0)) } else { "—".into() }
+            };
+            vec![
+                s.from_text.clone(),
+                s.to_text.clone(),
+                grouped(a.cut_done, 1),
+                grouped(a.cut_left, 1),
+                grouped(a.cut_over, 1),
+                share(a.cut_done, a.cut_left),
+                grouped(a.fill_done, 1),
+                grouped(a.fill_left, 1),
+                grouped(a.fill_over, 1),
+                share(a.fill_done, a.fill_left),
+                if s.uncovered >= 0.05 { grouped(s.uncovered, 1) } else { "—".into() },
+            ]
+        })
+        .collect();
+    road_dialog::sheet(
+        vec![
+            col("Baş km", 88.0),
+            col("Son km", 88.0),
+            num("Kazı yapılan", 96.0),
+            num("Kazı kalan", 88.0),
+            num("Fazla kazı", 84.0),
+            num("Kazı %", 64.0),
+            num("Dolgu yapılan", 100.0),
+            num("Dolgu kalan", 92.0),
+            num("Fazla dolgu", 88.0),
+            num("Dolgu %", 68.0),
+            num("Örtülmeyen (m²)", 116.0),
+        ],
+        rows,
+        "Kesit aralığı yok",
+        220.0,
+    )
+}
+
+/// The work along the stations (docs/adr/0942): each stretch a bar as wide as the stretch and as high as its volume per
+/// metre, the cut above the axis and the fill below; done solid, left pale, past the design orange; under the axis a
+/// grey band where the survey leaves part of the stretch uncovered (its work there is not counted).
+struct Works<'a> {
+    report: &'a kentos_commands::VolumeProgressReport,
+}
+
+impl canvas::Program<Message> for Works<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let t = Tokens::of(theme);
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let caption = |frame: &mut canvas::Frame, words: String, at: Point, color: Color| {
+            frame.fill_text(Text {
+                content: words,
+                position: at,
+                color,
+                size: Pixels(typography::caption()),
+                font: typography::ui(),
+                ..Text::default()
+            });
+        };
+        let bars: Vec<_> = self.report.stretches.iter().filter(|s| s.to - s.from > 1e-6).collect();
+        let (Some(first), Some(last)) = (bars.first(), bars.last()) else {
+            caption(&mut frame, "Koridorun kesit aralığı yok.".into(), Point::new(16.0, 20.0), t.muted);
+            return vec![frame.into_geometry()];
+        };
+        let (s0, s1) = (first.from, last.to);
+        let per = |v: f64, s: &kentos_commands::StretchProgress| v / (s.to - s.from);
+        let (mut lo, mut hi): (f64, f64) = (0.0, 0.0);
+        for s in &bars {
+            let a = &s.amounts;
+            hi = hi.max(per(a.cut_done + a.cut_left + a.cut_over, s));
+            lo = lo.min(-per(a.fill_done + a.fill_left + a.fill_over, s));
+        }
+        if hi - lo < 1e-9 {
+            hi = lo + 1.0;
+        }
+        let (left, pad) = (64.0, 12.0);
+        let (wd, ht) = (bounds.width as f64 - left - pad, bounds.height as f64 - 2.0 * pad - 14.0);
+        let at = |s: f64, v: f64| {
+            Point::new((left + (s - s0) / (s1 - s0).max(1e-9) * wd) as f32, (pad + (hi - v) / (hi - lo) * ht) as f32)
+        };
+        let part = crate::picture::Shown::of(bounds.size());
+        let step = crate::picture::step(40.0 * (hi - lo) / ht.max(1.0));
+        let mut marks = Vec::new();
+        let mut v = (lo / step).ceil() * step;
+        while v <= hi + 1e-9 {
+            let a = at(s0, v);
+            if part.has_y(a.y) {
+                frame.stroke(&Path::line(a, at(s1, v)), Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0));
+                marks.push(v);
+            }
+            v += step;
+        }
+        let orange = Color::from_rgb8(0xea, 0x58, 0x0c);
+        // Left: the colour washed towards white, seen on the light and the dark ground alike.
+        let pale = |c: Color| Color { r: c.r + (1.0 - c.r) * 0.62, g: c.g + (1.0 - c.g) * 0.62, b: c.b + (1.0 - c.b) * 0.62, a: 1.0 };
+        let grey = Color { a: 0.55, ..t.muted };
+        // A bar's piece from `a` to `b` m³/m.
+        let piece = |frame: &mut canvas::Frame, s: &kentos_commands::StretchProgress, a: f64, b: f64, color: Color| {
+            if (b - a).abs() < 1e-12 {
+                return;
+            }
+            let (p, q) = (at(s.from, a.max(b)), at(s.to, a.min(b)));
+            frame.fill_rectangle(p, iced::Size::new((q.x - p.x - 1.0).max(1.0), (q.y - p.y).max(0.5)), color);
+        };
+        for s in &bars {
+            let a = &s.amounts;
+            let (done, left, over) = (per(a.cut_done, s), per(a.cut_left, s), per(a.cut_over, s));
+            piece(&mut frame, s, 0.0, done, t.danger);
+            piece(&mut frame, s, done, done + left, pale(t.danger));
+            piece(&mut frame, s, done + left, done + left + over, orange);
+            let (done, left, over) = (per(a.fill_done, s), per(a.fill_left, s), per(a.fill_over, s));
+            piece(&mut frame, s, 0.0, -done, t.accent);
+            piece(&mut frame, s, -done, -done - left, pale(t.accent));
+            piece(&mut frame, s, -done - left, -done - left - over, orange);
+            if s.uncovered >= 0.05 {
+                let (p, q) = (at(s.from, lo), at(s.to, lo));
+                frame.fill_rectangle(Point::new(p.x, p.y + 2.0), iced::Size::new((q.x - p.x - 1.0).max(1.0), 4.0), grey);
+            }
+        }
+        frame.stroke(&Path::line(at(s0, 0.0), at(s1, 0.0)), Stroke::default().with_color(t.muted).with_width(1.0));
+        let label_x = part.left(4.0);
+        for v in marks {
+            let a = at(s0, v);
+            crate::picture::label(&mut frame, grouped(v.abs(), 0), Point::new(label_x, a.y - 7.0), t.muted, false, (label_x > 4.5).then_some(t.field.scale_alpha(0.9)));
+        }
+        let base = part.bottom(bounds.height - 18.0, 12.0);
+        let mut x = part.left(16.0);
+        // The legend under the part shown, after the axis's unit.
+        let legend = [
+            ("Kazı yapılan", t.danger),
+            ("Kazı kalan", pale(t.danger)),
+            ("Dolgu yapılan", t.accent),
+            ("Dolgu kalan", pale(t.accent)),
+            ("Tasarımın ötesi", orange),
+            ("Örtülmeyen", grey),
+        ];
+        let wide = |words: &str| 16.0 + 6.4 * words.chars().count() as f32 + 18.0;
+        if base < bounds.height - 18.5 || x > 16.5 {
+            let all: f32 = legend.iter().map(|(w, _)| wide(w)).sum();
+            frame.fill(&Path::rectangle(Point::new(x - 6.0, base - 4.0), iced::Size::new(all + 50.0, 22.0)), t.field.scale_alpha(0.9));
+        }
+        caption(&mut frame, "m³/m:".into(), Point::new(x, base), t.muted);
+        x += 44.0;
+        for (words, color) in legend {
+            frame.fill_rectangle(Point::new(x, base + 3.0), iced::Size::new(12.0, 9.0), color);
+            caption(&mut frame, words.into(), Point::new(x + 16.0, base), t.text);
+            x += wide(words);
+        }
+        vec![frame.into_geometry()]
+    }
 }

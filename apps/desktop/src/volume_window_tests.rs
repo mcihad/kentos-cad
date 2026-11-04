@@ -507,3 +507,86 @@ fn screens_uncertainty() {
         }
     }
 }
+
+/// `road.volumes.progress`'s drawing: the volumes' and three surveys of the site (docs/adr/0942).
+fn surveyed() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.progress.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Y36.3 (docs/adr/0942): a survey and the one before it picked in Kübaj read the progress as `road.volumes.progress`'s
+/// shared case does; Dönem metrajı lists it by stretch; without a survey there is none.
+#[test]
+fn the_window_reads_the_progress_as_the_shared_case_does() {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.progress.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Adlarıyla: Ekim ölçüsü, Eylül'den bu yana");
+    let want = &case.expect("the case")["steps"][0]["result"]["output"];
+    let mut app = surveyed();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    assert!(app.volume_window.as_ref().unwrap().progress.is_none(), "no survey, no progress");
+    let pick = |app: &App, field, name| app.volume_control(crate::traces::Control::Pick(field, name)).expect("a control").expect("a message");
+    let m = pick(&app, crate::volume_window::SURVEY, "Ekim ölçüsü");
+    let _ = app.update(m);
+    let m = pick(&app, crate::volume_window::PREVIOUS, "Eylül ölçüsü");
+    let _ = app.update(m);
+    let w = app.volume_window.as_ref().unwrap();
+    assert_eq!(w.shown, crate::volume_window::Shown::Progress, "choosing a survey shows its list");
+    let (p, _) = w.progress.clone().expect("asked").expect("reads");
+    let close = |a: f64, v: &serde_json::Value| (a - v.as_f64().unwrap()).abs() <= 1e-6 * v.as_f64().unwrap().abs().max(1.0);
+    assert!(close(p.now.cut_done, &want["now"]["cutDone"]) && close(p.now.fill_left, &want["now"]["fillLeft"]), "{p:?}");
+    let period = p.period.expect("a period");
+    assert!(close(period.cut_done, &want["period"]["cutDone"]) && close(period.fill_done, &want["period"]["fillDone"]));
+    assert_eq!(p.stretches.len(), want["stretches"].as_array().unwrap().len());
+    // The corridor's own surface is the original ground, not a survey: the window says why.
+    let m = pick(&app, crate::volume_window::SURVEY, "Mevcut zemin");
+    let _ = app.update(m);
+    let why = app.volume_window.as_ref().unwrap().progress.clone().unwrap().expect_err("the original ground");
+    assert!(why.contains("ilk arazisi"), "{why}");
+    let m = pick(&app, crate::volume_window::SURVEY, "Yok");
+    let _ = app.update(m);
+    assert!(app.volume_window.as_ref().unwrap().progress.is_none(), "no survey, no progress");
+}
+
+/// The progress in Kübaj, light and dark: October's survey against September's, and a survey of the western half;
+/// `.run/gui-evidence/yol-y36/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_progress -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_progress() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y36");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1440.0, 900.0), "koyu")] {
+        for (survey, previous, step) in [("t-4", Some("t-3"), "ekim"), ("t-5", None, "bati")] {
+            let mut app = surveyed();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("volume.editor"));
+            send(&mut app, W::Choose(0));
+            send(&mut app, W::Survey(Some(survey.into())));
+            send(&mut app, W::Previous(previous.map(Into::into)));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("y36-{step}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

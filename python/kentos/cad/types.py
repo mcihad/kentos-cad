@@ -61223,6 +61223,47 @@ class ProgramWing(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProgressAmounts(_Model):
+    """The cut's and the fill's work against the design (bank, m³): done, left, and over (dug below the design in cut,
+    placed above it in fill). In a period, the later survey's less the earlier's: negative where the work went back.
+    Attributes:
+        cut_done: Unit: volume.
+        cut_left: Unit: volume.
+        cut_over: Unit: volume.
+        fill_done: Unit: volume.
+        fill_left: Unit: volume.
+        fill_over: Unit: volume.
+    """
+    cut_done: float
+    cut_left: float
+    cut_over: float
+    fill_done: float
+    fill_left: float
+    fill_over: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cutDone"] = float(self.cut_done)
+        out["cutLeft"] = float(self.cut_left)
+        out["cutOver"] = float(self.cut_over)
+        out["fillDone"] = float(self.fill_done)
+        out["fillLeft"] = float(self.fill_left)
+        out["fillOver"] = float(self.fill_over)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProgressAmounts:
+        return cls(
+            cut_done=float(data["cutDone"]),
+            cut_left=float(data["cutLeft"]),
+            cut_over=float(data["cutOver"]),
+            fill_done=float(data["fillDone"]),
+            fill_left=float(data["fillLeft"]),
+            fill_over=float(data["fillOver"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectAccessChange(_Model):
     """The result of `project.share` and `project.access.revoke`; a retry with the
     same idempotency key gets the same one (`replayed`).
@@ -76896,6 +76937,44 @@ class StreetSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StretchProgress(_Model):
+    """A stretch's own progress by the survey now (stretches between consecutive sections of the corridor), and its plan
+    area the original ground or the survey does not cover (m²; its work there is not counted).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        uncovered: Unit: area.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    amounts: ProgressAmounts
+    uncovered: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["amounts"] = self.amounts.to_json()
+        out["uncovered"] = float(self.uncovered)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StretchProgress:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            amounts=ProgressAmounts.from_json(data["amounts"]),
+            uncovered=float(data["uncovered"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StretchSpread(_Model):
     """A stretch's own spread (its heights' errors alone; stretches share ground points, so they do not add up).
     Attributes:
@@ -86175,6 +86254,81 @@ class VolumeListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeProgressReport(_Model):
+    """Output of `road.volumes.progress` v1 (docs/adr/0942): the volume; the original ground (the corridor's surface), the
+    survey and the previous survey with their sources' digests (what each was made of when read); the work by the survey
+    now and by the previous one, and the period's (now less before); the share of the design's cut and fill done
+    (percent; none where the design has none); the plan area all three cover and the design's area not covered by the
+    original or the survey; each stretch's own work by the survey now.
+    Attributes:
+        covered: Unit: area.
+        uncovered: Unit: area.
+        cut_share: Unit: percent.
+        fill_share: Unit: percent.
+    """
+    volume: str
+    original: str
+    original_digest: str
+    survey: str
+    survey_digest: str
+    now: ProgressAmounts
+    covered: float
+    uncovered: float
+    stretches: list[StretchProgress]
+    before: ProgressAmounts | None | Unset = UNSET
+    cut_share: float | None | Unset = UNSET
+    fill_share: float | None | Unset = UNSET
+    period: ProgressAmounts | None | Unset = UNSET
+    previous: str | None | Unset = UNSET
+    previous_digest: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["original"] = self.original
+        out["originalDigest"] = self.original_digest
+        out["survey"] = self.survey
+        out["surveyDigest"] = self.survey_digest
+        out["now"] = self.now.to_json()
+        out["covered"] = float(self.covered)
+        out["uncovered"] = float(self.uncovered)
+        out["stretches"] = [e0.to_json() for e0 in self.stretches]
+        if self.before is not UNSET:
+            out["before"] = None if self.before is None else self.before.to_json()
+        if self.cut_share is not UNSET:
+            out["cutShare"] = None if self.cut_share is None else float(self.cut_share)
+        if self.fill_share is not UNSET:
+            out["fillShare"] = None if self.fill_share is None else float(self.fill_share)
+        if self.period is not UNSET:
+            out["period"] = None if self.period is None else self.period.to_json()
+        if self.previous is not UNSET:
+            out["previous"] = self.previous
+        if self.previous_digest is not UNSET:
+            out["previousDigest"] = self.previous_digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeProgressReport:
+        return cls(
+            volume=data["volume"],
+            original=data["original"],
+            original_digest=data["originalDigest"],
+            survey=data["survey"],
+            survey_digest=data["surveyDigest"],
+            now=ProgressAmounts.from_json(data["now"]),
+            covered=float(data["covered"]),
+            uncovered=float(data["uncovered"]),
+            stretches=[StretchProgress.from_json(e0) for e0 in data["stretches"]],
+            before=UNSET if "before" not in data else None if data["before"] is None else ProgressAmounts.from_json(data["before"]),
+            cut_share=UNSET if "cutShare" not in data else None if data["cutShare"] is None else float(data["cutShare"]),
+            fill_share=UNSET if "fillShare" not in data else None if data["fillShare"] is None else float(data["fillShare"]),
+            period=UNSET if "period" not in data else None if data["period"] is None else ProgressAmounts.from_json(data["period"]),
+            previous=data.get("previous", UNSET),
+            previous_digest=data.get("previousDigest", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeReport(_Model):
     """An earthwork volume as it is now: its sources, whether its corridor's alignment changed since, its rows (by
     sections), the totals of the cut and fill and their factored volumes, the surfaces' plan areas (between surfaces),
@@ -86663,6 +86817,37 @@ class VolumesEdit(_Model):
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else [VolumeStripDef.from_json(e0) for e0 in data["strip"]],
             volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesProgress(_Model):
+    """Input of `road.volumes.progress` v1 (plan/road.md Y36, docs/adr/0942): an earthwork volume (its id or name), a
+    survey of the site now (`survey`: a terrain surface's id or name) and, for a period's work, the survey before it
+    (`previous`). The original ground is the volume's corridor's surface; the design its top surface.
+
+    Refusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),
+    `invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a
+    survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+    """
+    volume: str
+    survey: str
+    previous: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["survey"] = self.survey
+        if self.previous is not UNSET:
+            out["previous"] = self.previous
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesProgress:
+        return cls(
+            volume=data["volume"],
+            survey=data["survey"],
+            previous=data.get("previous", UNSET),
         )
 
 
@@ -109833,6 +110018,7 @@ __all__ = [
     "ProgramUnitRow",
     "ProgramUnitShare",
     "ProgramWing",
+    "ProgressAmounts",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
     "ProjectAccessView",
@@ -110525,6 +110711,7 @@ __all__ = [
     "StraightenTextEdit",
     "StreetSource",
     "StretchBlockAction",
+    "StretchProgress",
     "StretchSpread",
     "StretchTopology",
     "StretchWindow",
@@ -110908,6 +111095,7 @@ __all__ = [
     "VolumeListed",
     "VolumeMethod",
     "VolumeMethodName",
+    "VolumeProgressReport",
     "VolumeReport",
     "VolumeRow",
     "VolumeRowChange",
@@ -110918,6 +111106,7 @@ __all__ = [
     "VolumeUncertaintyReport",
     "VolumesApprove",
     "VolumesEdit",
+    "VolumesProgress",
     "VolumesQueried",
     "VolumesQuery",
     "VolumesUncertainty",

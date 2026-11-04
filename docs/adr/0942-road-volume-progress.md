@@ -1,6 +1,6 @@
 # 0942 — Dönem metrajı: ilk arazi, ara ölçü ve tasarım arasındaki iş
 
-Tarih: 2026-11-04. Durum: kabul (Y36.1 çekirdek). Kapsam ROAD-VOL-15.
+Tarih: 2026-11-04. Durum: kabul (Y36.1 çekirdek, Y36.2 komut, Y36.3 pencere). Kapsam ROAD-VOL-15.
 
 ## Sorun
 
@@ -61,7 +61,73 @@ arasında yer değiştirir; hacim yaratılmaz, kaybolmaz.
   - örtülen: üç yüzeyin de bulunduğu alan;
   - örtülmeyen: tasarımın ilk arazi ya da ölçü dışında kalan alanı.
 
-## Ortak durumlar ve ölçüm
+### §3 Dönemin işi: kümülatiflerin farkı
+
+İki ölçü arasındaki işi bulmanın akla gelen yolu, önceki ölçüyü "ilk arazi" saymaktır. Bu yanlıştır:
+
+- Önceki ölçüde tasarımın altına inilmiş bir yarma noktası (z_önceki < z_d) yeni karşılaştırmada dolgu sayılır.
+- O noktaya sonradan serilen malzeme "yapılan dolgu" diye ödenir.
+
+Hakedişteki gibi her ölçünün birikmiş işi ilk araziye göre ayrı hesaplanır ve dönemin işi ikisinin farkıdır. Fark eksi
+çıkabilir (geri doldurma ya da ölçü hatası); işareti korunur ve uyarılır.
+
+### §4 Komut: `road.volumes.progress` (Y36.2)
+
+Komut yalnız okur ve şemayı değiştirmez. Ölçü, projedeki bir arazi yüzeyidir (Arazi'de noktalardan, kırık hatlardan
+kurulur). Ayrı bir "ölçü" türü yoktur.
+
+- **Girdi:** kübaj, `survey` (yüzeyin kimliği ya da adı), isteğe bağlı `previous`.
+- **Yüzeyler:**
+  - tasarım koridorun üst yüzeyidir;
+  - ilk arazi koridorun yüzeyidir.
+- **Çıktı:**
+  - üç yüzeyin kimliği ve **kaynak özeti** (digest): rapor hangi ölçünün hangi hâliyle okunduğunu söyler (ROAD-VOL-15);
+  - şimdiki, önceki ve dönemin işi;
+  - yapılan pay (yüzde);
+  - örtülen ve örtülmeyen alan;
+  - her aralığın işi ve örtülmeyen alanı.
+- **Hacimler** yerindedir; kabarma ve sıkışma katsayısı uygulanmaz.
+- **Uyarılar:**
+  - `volume_progress_uncovered`: ölçü, ilk arazinin örttüğü bir yeri örtmüyor; orada iş sayılmaz;
+  - `volume_progress_backward`: dönemde yapılan kazı ya da dolgu eksi.
+- **Retler:**
+  - `invalid_volume_progress`: ölçü ilk arazinin kendisi, önceki ölçü ara ölçünün kendisi, ya da yüzey kurulamıyor;
+  - `unknown_terrain`.
+
+Python başvurusu (`road_volume_progress_command_cases.py`) ölçüleri kendi kurar. Her ölçü ilk arazinin 120 noktasına
+koridor boyunca 87 nokta ekler; o noktalarda kot, araziden tasarıma doğru işin %40'ı (Eylül) ya da %80'i (Ekim) kadar
+ilerletilir. Ekim ölçüsünde bir aralık %115'e götürülür. Batı yarısı ölçüsü yalnız x < 300 m'yi kapsar. Kaynak özetleri
+arazi komutlarının başvurusuyla hesaplanır. 20 durumun hepsinde Rust ve Python tipli katmanı aynı sonucu verir.
+
+### §5 Pencere: Kübaj → Dönem metrajı (Y36.3)
+
+- **Form:** "Dönem metrajı" bölümünde Ara ölçü ve Önceki ölçü seçimleri var. Koridorun kendi yüzeyi listede yoktur.
+  Seçimler pencereye aittir; kübajla kaydedilmez.
+- **Gösterim:**
+  - Bir cümle yapılan payı, kalanı, tasarımın ötesini ve dönemin işini söyler.
+  - Uyarılar ayrı bantlardır.
+  - "Dönem metrajı" tablosu her aralığın işini ve örtülmeyen alanını listeler.
+  - Resim her aralığı, aralık kadar geniş ve metre başına hacmi kadar yüksek bir çubukla çizer: kazı eksenin üstünde,
+    dolgu altında; yapılan dolu, kalan açık renk, tasarımın ötesi turuncu. Ölçünün örtmediği aralıkların altında gri
+    bir bant vardır; o aralıklarda iş yok görünmesi ölçünün eksikliğidir.
+
+**Örnek proje (Ana kübaj; ilk arazi Mevcut zemin, ara ölçü Ekim, önceki Eylül):**
+
+| | Yapılan | Kalan | Tasarımın ötesi | Pay |
+|---|---|---|---|---|
+| Kazı | 20.606 m³ | 4.937 m³ | 3.470 m³ | %80,7 |
+| Dolgu | 2.000 m³ | 1.560 m³ | 195 m³ | %56,2 |
+
+- **Dönemin işi:** Eylül'den bu yana kazı +10.035 m³, dolgu +892 m³.
+- **Değişmezin sınaması:** yapılan + kalan, iki ölçüde de kazı için 25.542,5 m³, dolgu için 3.560,0 m³'tür. Bunlar aynı
+  kübajın yüzeyler arası yöntemle verdiği değerlerdir (`road.volumes.uncertainty` durumu "Yüzeyler arası ana
+  koridorda"). Ortalama alan yöntemi aynı kesitlerden 25.878 m³ ve 3.507 m³ verir.
+- **Tasarımın ötesi:** Eylül ölçüsünde bile 534 m³ çıkar. Bunun sebebi, ölçünün seyrek noktaları arasındaki doğrusal
+  yüzeyin tasarımın kırıklarını kesmesidir. Fazla kazı ödemesine karar vermeden önce ölçü sıklığına bakılmalıdır.
+
+Resimler `.run/gui-evidence/yol-y36/` altındadır.
+
+## Ortak durumlar ve ölçüm (çekirdek)
 
 `scripts/fixtures/road_volume_progress_cases.py` KentOS kodu olmadan çalışır. Kesir aritmetiğiyle aynı bindirmeyi
 yapar; kırpmayı Y8'in başvurusundan (`road_volume_cases.py`) alır.

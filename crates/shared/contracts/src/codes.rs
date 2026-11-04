@@ -743,6 +743,13 @@ codes! {
     VOLUME_UNCERTAINTY_NEAR_ZERO = "volume_uncertainty_near_zero", Warning, false, "Alanın yarıdan çoğu sıfır çizgisine yakın: kazı ve dolgunun σ'sı ayrı ayrı yalnız yaklaşık, netinki kesin.";
     /// A warning: a volume's 95 % bound is over the share accepted (docs/adr/0941).
     VOLUME_UNCERTAINTY_OVER = "volume_uncertainty_over", Warning, false, "Kübajın %95 sınırı kabul payını aşıyor.";
+    /// A progress asked that is not right: a survey that is the original ground or the same as the previous, or that does
+    /// not build (docs/adr/0942).
+    INVALID_VOLUME_PROGRESS = "invalid_volume_progress", Failed, false, "Dönem metrajı sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: a survey leaves part of the design uncovered that the original ground covers (docs/adr/0942).
+    VOLUME_PROGRESS_UNCOVERED = "volume_progress_uncovered", Warning, false, "Ara ölçü tasarımın bir kısmını örtmüyor; orada yapılan iş sayılmadı.";
+    /// A warning: less work is done by the survey than by the previous one (docs/adr/0942).
+    VOLUME_PROGRESS_BACKWARD = "volume_progress_backward", Warning, false, "Dönemde yapılan iş eksi: ölçü hatası ya da geri doldurma.";
     /// A corridor an earthwork volume uses.
     CORRIDOR_IN_USE = "corridor_in_use", Failed, false, "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin.";
     /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).

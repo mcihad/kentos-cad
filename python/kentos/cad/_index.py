@@ -415,6 +415,7 @@ COMMANDS: dict[str, Any] = {
     "road.terrains.sparse": road.terrains.sparse,
     "road.volumes.approve": road.volumes.approve,
     "road.volumes.edit": road.volumes.edit,
+    "road.volumes.progress": road.volumes.progress,
     "road.volumes.query": road.volumes.query,
     "road.volumes.uncertainty": road.volumes.uncertainty,
     "road.walls.draw": road.walls.draw,

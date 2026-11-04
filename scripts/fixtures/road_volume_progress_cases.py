@@ -40,6 +40,14 @@ def clip_by(poly, g):
     return poly
 
 
+def box(pts):
+    return (min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts), max(p[1] for p in pts))
+
+
+def meets(a, b):
+    return not (a[2] < b[0] or b[2] < a[0] or a[3] < b[1] or b[3] < a[1])
+
+
 def split3(poly, f, above):
     val = lambda z: f[0] * z[0] + f[1] * z[1] + f[2] * z[2]  # noqa: E731
     keep = (lambda v: v >= 0) if above else (lambda v: v <= 0)
@@ -70,17 +78,25 @@ def progress(design, original, now):
     out = {k: F(0) for k in KEYS + ("covered", "uncovered")}
     os_ = [t for t in (tri(t) for t in original) if t]
     ns = [t for t in (tri(t) for t in now) if t]
+    o_box, n_box = [box(t) for t in os_], [box(t) for t in ns]
     for t in design:
         d = tri(t)
         if not d:
             continue
         whole = vref.area2(d[0], d[1], d[2]) / 2
         covered = F(0)
-        for o in os_:
+        d_box = box(d)
+        for o, ob in zip(os_, o_box):
+            # A triangle whose box misses another's meets none of it.
+            if not meets(d_box, ob):
+                continue
             base = clip_by([(p[0], p[1]) for p in d], o)
             if not base:
                 continue
-            for n in ns:
+            b_box = box(base)
+            for n, nb in zip(ns, n_box):
+                if not meets(b_box, nb):
+                    continue
                 poly = clip_by(base, n)
                 if not poly:
                     continue
