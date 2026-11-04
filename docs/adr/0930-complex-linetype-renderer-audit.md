@@ -760,3 +760,63 @@ Doğrulama:
 CAD-ADV-11 hâlâ `[~]`: genel SHX metin fontları/Unicode BigFont, analitik
 metin/şekil yay fazı, tam affine/blok, noktalı geniş bant ve kapsamlı viewport/
 performans kabulü bu teslim düzeltmesinden bağımsız olarak açık kalır.
+
+
+## 18. Analitik daire/yay işaretleri — 4 Kasım 2026
+
+Kaynak incelemesi: `cad_marks::placements` küçük kirişlerin uzunluğunu
+topluyor, `cad_band` ise işaretler için ayrıca 720 parçalı merkez çizgisi
+üretiyordu. Bu nedenle aynı fiziksel şeklin konumu taşıyıcı tessellation'a
+bağlıydı. Autodesk'in kesintisiz polyline deseni seçeneği köşelerde toplam
+yol fazını korumayı gerektirir:
+[PLINEGEN](https://help.autodesk.com/cloudhelp/2020/ENU/AutoCAD-Core/files/GUID-352844E4-FBEA-44E0-B8F3-41C4187AD9C7.htm).
+Burada yeni PLINEGEN kullanıcı ayarı uygulanmadı; mevcut kesintisiz tarif
+korunarak işaret konumu doğrultuldu.
+
+Ortak `Route`, düz kenarı ve bulge yayın gerçek uzunluğu/teğetini taşır.
+Daire ve Arc nesneleri kendi merkez/radius/açılarıyla örneklenir. Faz ve
+tekrar mesafesi f64 kalır; bir köşeye tam denk gelen öğe çıkış teğetini
+kullanır, kapalı dikiş çift işaret üretmez. `emit_line_layer_on`, önceki
+R/A/U, X/Y, görünürlük ve bütün-path iş yükü korumasını aynen paylaşır.
+Yerleşik tek simpleLine CAD çizgileri için shared layer build ve tek sembol
+önizlemesi bu rotayı alır; geniş bant artık işaret uğruna 720-kirişli yol
+üretmez. Taşıyıcının mevcut tessellation/geometrisi değiştirilmez.
+
+Doğrulama:
+
+- 48 ortak çekirdek testi geçti. Yeni testler iki yay yönünde dört fazı,
+  büyük fazı, düz+yayı birleştiren yolu, tam köşeyi, daire dikişini ve
+  geçersiz bulge değerini kapsar. Açılar, atan2 aralığına zorlanmadan aynı
+  yön olarak karşılaştırılır; ilk testte eşdeğer -π/2 ve 3π/2 değerlerini
+  doğrudan karşılaştırma hatası düzeltildi. Açık primitive compiler testinde
+  arc/circle/bulge için tam trigonometrik anchor'lar ve değişmeyen taşıyıcı
+  karşılaştırıldı; kaynak şekil/ayarlarına yazılmaz.
+- Gerçek native vector/PDF testinde 1:1/1:20/1:100 × arc/circle/CCW/CW/
+  değişken genişlikli yay = 15 senaryo geçti. SHX konturlarının orta noktası
+  beklenen gerçek yay anchor'ıyla 1e-11 m toleransta karşılaştırılır;
+  belge snapshot'ı değişmez. Tam plot kontrolü 18 birim + 70 entegrasyon,
+  3 mevcut ignored testle geçti. Strict desktop Clippy ve build geçti.
+  İlk Clippy'nin js_sign kuralı ve sekiz parametre bulgusu giderildi;
+  yol/kapalılık tek parametrede eşlendi, mevcut lintler susturulmadı.
+- Gerçek GUI'de 82 nesneli bağımsız mavi çapraz başvurularla dosya açıldı,
+  düzeltme öncesi/sonrası aynı zoom denendi. İlk normal uzaklık ekranında
+  fark küçüktür; ekran görüntüsünden sayısal kesinlik çıkarılmadı. 1:20 ve
+  1:100 paftalar açılıp iki sayfalı PDF gerçek Yazdır → Hepsi → Kaydet ile
+  üretildi. Mavi geometriler yalnız modeldeki 1:50 deseniyle aynı fazdadır;
+  başka paftalarda bunlarla çakışma beklenmez.
+- Bağımsız pypdf incelemesi 1:20'de 91/182, 1:100'de 18/36 şekil/stroke
+  buldu. Anchor azami kâğıt hatası 0,00001520 / 0,00000965 mm; beklenen
+  2 mm şekil kol boyu hatası 0,00002551 / 0,00001985 mm. İki sayfada da
+  bitmap kaynağı yok. Poppler ilk sayfası ayrıca görsel incelendi.
+  Binary SHA-256: `bc1e84181bf4932a5a4060305c037db19b3f104397f0be4702f2537aee56192d`.
+- Kanıtlar repo dışında önceki `/tmp` dizininde `analytic-before-gui.png`,
+  `analytic-before-detail-gui.png`, `analytic-after-gui.png`,
+  `analytic-after-detail-gui.png`, `analytic-sheet20-gui.png`,
+  `analytic-sheet100-gui.png`, `analytic-both-gui.pdf`,
+  `analytic-pdf-dimensions.json` ve `analytic-marks-*.log` altındadır.
+
+Bu sınırlı düzeltme elips, nonuniform/affine blok, özel offset/effect,
+çok parçalı/alan sınırları için analitik faz iddiası taşımaz. Düz taşıyıcı
+vektör dash'ının eğrilerdeki bütün faz hesabı bu işaret yerleştiricisiyle
+karıştırılmaz. Noktalı geniş bant ve genel performans/viewport matrisi
+ayrıca açıktır; CAD-ADV-11 `[~]` kalır.

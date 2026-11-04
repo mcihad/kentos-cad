@@ -412,6 +412,18 @@ pub(super) fn emit_line_layer(
     env: &Env,
     sink: &mut dyn Sink,
 ) {
+    emit_line_layer_on(layer, (pts, closed), level, t, env, sink, None);
+}
+
+pub(super) fn emit_line_layer_on(
+    layer: &Layer,
+    (pts, closed): (&[Vec2], bool),
+    level: f64,
+    t: &dyn Values,
+    env: &Env,
+    sink: &mut dyn Sink,
+    route: Option<&super::cad_marks::Route>,
+) {
     let (base, offset) = match layer {
         Layer::SimpleLine(l) => (&l.base, &l.offset),
         Layer::MarkerLine(l) => (&l.base, &l.offset),
@@ -456,9 +468,11 @@ pub(super) fn emit_line_layer(
                     if l.wave.is_some() || l.blur.is_some_and(|b| b != 0.) {
                         return Err(format!("“{}”: dalga/bulanıklıkla karmaşık çizgi işareti desteklenmiyor.", marks.source()));
                     }
-                    let placed = marks.placements(&path, closed,
-                        to_world(l.dash_offset.unwrap_or(0.), l.base.unit, env), l.base.unit, env)
-                        .map_err(|error| format!("“{}”: {error}", marks.source()))?;
+                    let phase=to_world(l.dash_offset.unwrap_or(0.),l.base.unit,env);
+                    let placed = match route {
+                        Some(route)=>marks.placements_on(route,phase,l.base.unit,env),
+                        None=>marks.placements(&path,closed,phase,l.base.unit,env),
+                    }.map_err(|error|format!("“{}”: {error}",marks.source()))?;
                     let points = placed.iter().fold(0usize, |sum, p| sum.saturating_add(p.cost()));
                     if !sink.reserve_cad_points(points) {
                         return Err(format!("“{}”: katmanın toplam çizgi tipi yazısı sınırı aşıldı; eksik çıktı üretilmedi.", marks.source()));

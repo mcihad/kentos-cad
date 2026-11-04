@@ -5,8 +5,195 @@ use super::{
     model::Unit,
     prim::{FillPaint, Sink, StrokeStyle},
 };
-use kentos_geometry_core::jsmath::{atan2, cos, js_hypot, js_max, sin};
-use kentos_geometry_core::{Vec2, api::json::Json};
+use kentos_geometry_core::jsmath::{atan2, cos, js_hypot, js_max, js_sign, sin};
+use kentos_geometry_core::{
+    Vec2,
+    api::json::Json,
+    entity::Shape,
+    geom::{
+        arc,
+        bulge::{BulgeArc, bulge_arc, bulge_at},
+    },
+};
+
+/// Exact carrier distances and tangents; rendering tessellation never changes
+/// the repetition phase. Straight callers retain their original path order.
+pub(super) struct Route {
+    edges: Vec<Edge>,
+    total: f64,
+}
+struct Edge {
+    a: Vec2,
+    b: Vec2,
+    arc: Option<BulgeArc>,
+    start: f64,
+    length: f64,
+}
+impl Edge {
+    fn sample(&self, distance: f64) -> (Vec2, f64) {
+        let f = ((distance - self.start) / self.length).clamp(0., 1.);
+        if let Some(a) = self.arc {
+            let angle = a.a0 + a.sweep * f;
+            (
+                Vec2::new(a.c.x + a.r * cos(angle), a.c.y + a.r * sin(angle)),
+                angle + js_sign(a.sweep) * std::f64::consts::FRAC_PI_2,
+            )
+        } else {
+            (
+                Vec2::new(
+                    self.a.x + (self.b.x - self.a.x) * f,
+                    self.a.y + (self.b.y - self.a.y) * f,
+                ),
+                atan2(self.b.y - self.a.y, self.b.x - self.a.x),
+            )
+        }
+    }
+}
+impl Route {
+    fn push(&mut self, a: Vec2, b: Vec2, arc: Option<BulgeArc>) -> Result<(), String> {
+        let length = arc.map_or_else(|| js_hypot(b.x - a.x, b.y - a.y), |a| a.r * a.sweep.abs());
+        if arc.is_some_and(|v| {
+            !v.c.x.is_finite()
+                || !v.c.y.is_finite()
+                || !v.r.is_finite()
+                || v.r <= 0.
+                || !v.a0.is_finite()
+                || !v.sweep.is_finite()
+        }) || !length.is_finite()
+            || !a.x.is_finite()
+            || !a.y.is_finite()
+            || !b.x.is_finite()
+            || !b.y.is_finite()
+        {
+            return Err("Çizgi tipi yolu geçersiz.".into());
+        }
+        if length > 0. {
+            self.edges.push(Edge {
+                a,
+                b,
+                arc,
+                start: self.total,
+                length,
+            });
+            self.total += length;
+        }
+        if !self.total.is_finite() {
+            return Err("Çizgi tipi yol uzunluğu geçersiz.".into());
+        }
+        Ok(())
+    }
+    pub(super) fn polyline(
+        pts: &[Vec2],
+        bulges: Option<&[f64]>,
+        closed: bool,
+    ) -> Result<Self, String> {
+        let mut route = Self {
+            edges: Vec::new(),
+            total: 0.,
+        };
+        for i in 0..if closed {
+            pts.len()
+        } else {
+            pts.len().saturating_sub(1)
+        } {
+            let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
+            let bulge = bulge_at(bulges, i);
+            if !bulge.is_finite() {
+                return Err("Çizgi tipi yay değeri geçersiz.".into());
+            }
+            route.push(a, b, bulge_arc(a, b, bulge))?;
+        }
+        Ok(route)
+    }
+    fn of(shape: &Shape) -> Option<Result<Self, String>> {
+        let (c, r, a0, sweep) = match shape {
+            Shape::Polyline {
+                pts,
+                bulges,
+                closed,
+                holes,
+                parts,
+                ..
+            } if holes.as_ref().is_none_or(Vec::is_empty)
+                && parts.as_ref().is_none_or(Vec::is_empty)
+                && kentos_geometry_core::geom::bulge::has_bulges(bulges.as_deref()) =>
+            {
+                return Some(Self::polyline(pts, bulges.as_deref(), *closed));
+            }
+            Shape::Arc { c, r, a0, a1 } => (*c, *r, *a0, arc::sweep(*a0, *a1)),
+            Shape::Circle { c, r } => (*c, *r, 0., std::f64::consts::TAU),
+            _ => return None,
+        };
+        let mut route = Self {
+            edges: Vec::new(),
+            total: 0.,
+        };
+        let point = |a: f64| Vec2::new(c.x + r * cos(a), c.y + r * sin(a));
+        Some(
+            route
+                .push(
+                    point(a0),
+                    point(a0 + sweep),
+                    Some(BulgeArc { c, r, a0, sweep }),
+                )
+                .map(|_| route),
+        )
+    }
+}
+
+/// Intrinsic CAD strokes only: custom offsets/effects keep the existing symbol
+/// path. Carrier tessellation stays unchanged; marks use the original curve.
+pub(super) fn compile_curved(
+    shape: &Shape,
+    parts: &[super::compile::Geom],
+    symbol: &super::model::Symbol,
+    values: &dyn super::compile::Values,
+    env: &Env,
+    sink: &mut dyn Sink,
+    level: f64,
+) -> bool {
+    use super::{
+        compile::{Geom, emit_line_layer_on, stroke_style},
+        model::{Layer, SymbolType},
+    };
+    let [Layer::SimpleLine(l)] = symbol.layers.as_slice() else {
+        return false;
+    };
+    if symbol.kind != SymbolType::Line
+        || l.cad_marks.is_none()
+        || l.offset.is_some()
+        || l.shift.is_some()
+        || l.base.effects.is_some()
+    {
+        return false;
+    }
+    let Some(route) = Route::of(shape) else {
+        return false;
+    };
+    let (path, closed) = match parts {
+        [Geom::Line(paths)] if paths.len() == 1 => (&paths[0].0, paths[0].1),
+        [Geom::Fill(rings)] if rings.len() == 1 => (&rings[0], true),
+        _ => return false,
+    };
+    match route {
+        Ok(route) => emit_line_layer_on(
+            &symbol.layers[0],
+            (path, closed),
+            level,
+            values,
+            env,
+            sink,
+            Some(&route),
+        ),
+        Err(error) => {
+            if let Some(mut style) = stroke_style(l, level, values, env) {
+                style.line_type_loss = Some(error);
+                sink.stroke(&style, path, closed);
+            }
+        }
+    }
+    true
+}
 
 #[derive(Clone, Debug)]
 pub struct Mark {
@@ -159,6 +346,16 @@ impl Marks {
         if path.len() < 2 {
             return Ok(Vec::new());
         }
+        let route = Route::polyline(path, None, closed)?;
+        self.placements_on(&route, phase, unit, env)
+    }
+    pub(super) fn placements_on<'a>(
+        &'a self,
+        route: &Route,
+        phase: f64,
+        unit: Unit,
+        env: &Env,
+    ) -> Result<Vec<Placement<'a>>, String> {
         if !phase.is_finite() {
             return Err("Çizgi tipi başlangıç fazı geçersiz.".into());
         }
@@ -166,24 +363,7 @@ impl Marks {
         if !period.is_finite() || period <= 0. {
             return Err("Çizgi tipi tekrar uzunluğu çizim ölçeğinde geçersiz.".into());
         }
-        let mut segments = Vec::new();
-        let mut total = 0.;
-        for (&a, &b) in path
-            .iter()
-            .zip(path.iter().skip(1).chain(closed.then(|| &path[0])))
-        {
-            let length = js_hypot(b.x - a.x, b.y - a.y);
-            if !length.is_finite() {
-                return Err("Çizgi tipi yolu geçersiz.".into());
-            }
-            if length > 0. {
-                segments.push((a, b, total, length));
-                total += length;
-            }
-        }
-        if !total.is_finite() {
-            return Err("Çizgi tipi yol uzunluğu geçersiz.".into());
-        }
+        let total = route.total;
         let mut placed = Vec::new();
         let mut cost = 0usize;
         for m in &self.marks {
@@ -204,19 +384,18 @@ impl Marks {
                 if total - distance <= period * 1e-10 {
                     break;
                 }
-                while segment + 1 < segments.len()
-                    && segments[segment].2 + segments[segment].3 <= distance
+                while segment + 1 < route.edges.len()
+                    && route.edges[segment].start + route.edges[segment].length <= distance
                 {
                     segment += 1;
                 }
-                let Some(&(a, b, start, len)) = segments.get(segment) else {
+                let Some(edge) = route.edges.get(segment) else {
                     break;
                 };
-                let t = ((distance - start) / len).clamp(0., 1.);
-                let tangent = atan2(b.y - a.y, b.x - a.x);
+                let (at, tangent) = edge.sample(distance);
                 placed.push(Placement {
                     mark: m,
-                    at: Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t),
+                    at,
                     tangent,
                 });
                 cost = cost.saturating_add(m.cost);
@@ -303,6 +482,119 @@ mod tests {
         Marks::read(&Json::parse(&s.to_string()).unwrap())
             .unwrap()
             .unwrap()
+    }
+    #[test]
+    fn analytic_arc_anchors_and_tangents_ignore_tessellation_for_both_directions() {
+        let aspects = HashMap::new();
+        let env = env(&aspects);
+        let mut marks = marks(0., false, false);
+        marks.period = 0.37;
+        marks.marks[0].at = 0.13;
+        for sign in [-1., 1.] {
+            let route = Route::polyline(
+                &[Vec2::new(2., 0.), Vec2::new(-2., 0.)],
+                Some(&[sign]),
+                false,
+            )
+            .unwrap();
+            for phase in [0., 0.17, -0.19, 0.37 * 100_000. + 0.11] {
+                let placed = marks.placements_on(&route, phase, Unit::M, &env).unwrap();
+                let first = (0.13 + phase.rem_euclid(0.37)) % 0.37;
+                assert_eq!(
+                    placed.len(),
+                    ((2. * std::f64::consts::PI - first) / 0.37).ceil() as usize
+                );
+                for (i, p) in placed.iter().enumerate() {
+                    let angle = sign * (first + i as f64 * 0.37) / 2.;
+                    assert!((p.at.x - 2. * angle.cos()).abs() < 1e-12);
+                    assert!((p.at.y - 2. * angle.sin()).abs() < 1e-12);
+                    assert!(
+                        (p.tangent - (angle + sign * std::f64::consts::FRAC_PI_2)).abs() < 1e-12
+                    );
+                }
+            }
+        }
+    }
+    #[test]
+    fn mixed_line_arc_closed_seam_and_exact_vertex_keep_original_travel_distance() {
+        let aspects = HashMap::new();
+        let env = env(&aspects);
+        let mut m = marks(0., false, false);
+        m.period = 1.;
+        m.marks[0].at = 0.;
+        let route = Route::polyline(
+            &[Vec2::new(0., 0.), Vec2::new(1., 0.), Vec2::new(3., 0.)],
+            Some(&[0., 1.]),
+            false,
+        )
+        .unwrap();
+        let placed = m.placements_on(&route, 0., Unit::M, &env).unwrap();
+        assert_eq!(placed.len(), 5);
+        // At the vertex use the outgoing arc tangent, not the preceding line.
+        assert!((placed[1].tangent.sin() + 1.).abs() < 1e-12);
+        assert!((placed[2].at.x - (2. - 1f64.cos())).abs() < 1e-12);
+        assert!((placed[2].at.y + 1f64.sin()).abs() < 1e-12);
+        let circle = Route::of(&Shape::Circle {
+            c: Vec2::new(0., 0.),
+            r: 1.,
+        })
+        .unwrap()
+        .unwrap();
+        m.period = std::f64::consts::FRAC_PI_2;
+        let placed = m.placements_on(&circle, 0., Unit::M, &env).unwrap();
+        assert_eq!(placed.len(), 4);
+        assert!((placed[3].at.y + 1.).abs() < 1e-12);
+        assert!(
+            Route::polyline(
+                &[Vec2::new(0., 0.), Vec2::new(1., 0.)],
+                Some(&[f64::INFINITY]),
+                false
+            )
+            .is_err()
+        );
+    }
+    #[test]
+    fn intrinsic_curve_marks_reach_the_public_primitive_compiler_and_preserve_carrier() {
+        use super::super::build::compile_one;
+        let entities = [
+            serde_json::json!({"kind":"arc","c":{"x":0.,"y":0.},"r":1.,"a0":0.,"a1":std::f64::consts::PI}),
+            serde_json::json!({"kind":"circle","c":{"x":0.,"y":0.},"r":1.}),
+            serde_json::json!({"kind":"polyline","pts":[{"x":1.,"y":0.},{"x":-1.,"y":0.}],"bulges":[1.]}),
+        ];
+        for (i, mut entity) in entities.into_iter().enumerate() {
+            entity["id"] = 1.into();
+            entity["layerId"] = "a".into();
+            entity["attrs"] = serde_json::json!({});
+            let mut input = serde_json::json!({"plotScale":1.,"entity":entity,"symbol":{"type":"line","layers":[{
+                "id":"l","type":"simpleLine","unit":"m","color":"ink","width":0.01,
+                "cadMarks":{"period":0.5,"marks":[{"at":0.,"cap":0.,"height":0.1,"x":0.,"y":0.,"rotation":0.,
+                "polygons":[],"paths":[[[0.,0.],[0.,1.]]]}]}}]}});
+            let out = compile_one(&Json::parse(&input.to_string()).unwrap()).unwrap();
+            let out: serde_json::Value = serde_json::from_str(&out).unwrap();
+            let strokes = out["strokes"].as_array().unwrap();
+            assert_eq!(strokes.len(), if i == 1 { 14 } else { 8 });
+            for (n, stroke) in strokes[1..].iter().enumerate() {
+                let angle = n as f64 * 0.5;
+                let p = &stroke["path"][0];
+                assert!(
+                    (p["x"].as_f64().unwrap() - angle.cos()).abs() < 1e-12,
+                    "{i}: {p}"
+                );
+                assert!(
+                    (p["y"].as_f64().unwrap() - angle.sin()).abs() < 1e-12,
+                    "{i}: {p}"
+                );
+            }
+            input["symbol"]["layers"][0]
+                .as_object_mut()
+                .unwrap()
+                .remove("cadMarks");
+            let plain: serde_json::Value = serde_json::from_str(
+                &compile_one(&Json::parse(&input.to_string()).unwrap()).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(strokes[0], plain["strokes"][0], "carrier changed");
+        }
     }
     #[test]
     fn shape_contours_remain_open_unfilled_and_rotate_about_the_source_origin() {

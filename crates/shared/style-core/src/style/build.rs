@@ -807,8 +807,18 @@ fn draw_object(
         && let Some(set) = usize::try_from(a).ok().and_then(|k| program.sets.get(k))
         && let Some(symbol) = program.symbol(set.line.as_ref())
         && super::cad_band::compile(shape, symbol, values, env, sink, LEVEL_LINE)
-    { return; }
-    let parts = output_parts(shape,clip,buf,env,cx);
+    {
+        return;
+    }
+    let parts = output_parts(shape, clip, buf, env, cx);
+    if mode == MODE_SET
+        && let Some(set) = usize::try_from(a).ok().and_then(|k| program.sets.get(k))
+        && let Some(symbol) = program.symbol(set.line.as_ref())
+        && super::cad_marks::compile_curved(shape, &parts, symbol, values, env, sink, LEVEL_LINE)
+    {
+        return;
+    }
+
     if mode == MODE_IMAGE {
         draw_image(shape, &parts, color, program, sink);
         return;
@@ -2343,7 +2353,19 @@ pub fn compile_one(v: &Json) -> Result<String, String> {
         moment: None,
     };
     let sink: &mut dyn Sink = &mut out;
-    compile_symbol(&symbol, &geom, &values, &env, sink, 0.0);
+    if !super::cad_band::compile(&entity.shape, &symbol, &values, &env, sink, 0.)
+        && !super::cad_marks::compile_curved(
+            &entity.shape,
+            std::slice::from_ref(&geom),
+            &symbol,
+            &values,
+            &env,
+            sink,
+            0.,
+        )
+    {
+        compile_symbol(&symbol, &geom, &values, &env, sink, 0.0);
+    }
     Ok(out.json())
 }
 

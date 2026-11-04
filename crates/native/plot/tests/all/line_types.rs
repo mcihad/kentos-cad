@@ -408,3 +408,102 @@ fn geometric_width_patterns_are_inspected_before_pdf_delivery() {
         assert_eq!(doc.to_snapshot_v2(),before);
     }
 }
+
+#[test]
+fn curved_shx_anchors_use_exact_arc_distance_in_actual_vector_and_pdf_output() {
+    let resource: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/shape-resources.json"
+    ))
+    .unwrap();
+    for scale in [1u32, 20, 100] {
+        for kind in ["arc", "circle", "ccw", "cw", "wide"] {
+            let (mut raw, mut page) = source();
+            let r = scale as f64 * 0.01;
+            raw["settings"]["lineTypes"] = json!([{"name":"P","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"fence.shx"}},{"length":-2.}]}]);
+            raw["styles"]["items"] = resource["styles"]["items"].clone();
+            let mut entity = match kind {
+                "arc" => {
+                    json!({"kind":"arc","c":{"x":0.,"y":0.},"r":r,"a0":0.,"a1":std::f64::consts::PI})
+                }
+                "circle" => json!({"kind":"circle","c":{"x":0.,"y":0.},"r":r}),
+                _ => {
+                    json!({"kind":"polyline","pts":[{"x":r,"y":0.},{"x":-r,"y":0.}],"bulges":[if kind=="cw"{-1.}else{1.}]})
+                }
+            };
+            if kind == "wide" {
+                entity["widths"] = json!([[r * 0.02, r * 0.04], [0., 0.]]);
+            }
+            entity["id"] = 1.into();
+            entity["layerId"] = raw["entities"][0]["layerId"].clone();
+            entity["attrs"] = json!({});
+            entity["linePattern"] = "P".into();
+            raw["entities"][0] = entity;
+            page["sheets"][0]["items"][0]["kind"]["view"]["scale"] = json!(scale);
+            page["sheets"][0]["items"][0]["kind"]["view"]["center"] = json!({"x":0.,"y":0.});
+            let (doc, book) = document(raw, page);
+            let before = doc.to_snapshot_v2();
+            assert!(losses(&doc, &book).is_empty(), "{scale}/{kind}");
+            let render = book::base_inputs(&doc, "Test", "2026-11-04");
+            let list = display::display_list(&book, "ground", &render).unwrap();
+            let map = list
+                .prims
+                .iter()
+                .find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None })
+                .unwrap();
+            let mut spatial = Spatial::new();
+            spatial.reload(&doc);
+            let library = book::library_of(&doc);
+            let src = MapSource {
+                doc: &doc,
+                store: spatial.store(),
+                library: &library,
+                origin: kentos_geometry_core::Vec2::new(0., 0.),
+                map: None,
+                level: None,
+                phase: None,
+                hidden: &[],
+                pens: &[],
+                mono: false,
+                options: &[],
+            };
+            let kentos_sheet::pdf::MapContent::Vector(v) = kentos_plot::maps::vector_content(
+                &src,
+                &map.layers,
+                &map.layer_overrides,
+                scale as f64,
+                map.extent.unwrap(),
+                &[],
+            )
+            .unwrap() else {
+                panic!("expected vectors")
+            };
+            let marks: Vec<_> = v
+                .layers
+                .iter()
+                .flat_map(|l| &l.paths)
+                .filter(|p| {
+                    p.points.len() == 2 && p.stroke.as_ref().is_some_and(|s| s.dash.is_empty())
+                })
+                .collect();
+            assert_eq!(
+                marks.len(),
+                if kind == "circle" { 16 } else { 8 },
+                "{scale}/{kind}"
+            );
+            for (n, mark) in marks.iter().enumerate() {
+                let angle = (if kind == "cw" { -1. } else { 1. }) * (0.6 + (n / 2) as f64 * 0.8);
+                let center = [r * angle.cos(), r * angle.sin()];
+                for axis in 0..2 {
+                    let actual = (mark.points[0][axis] + mark.points[1][axis]) * 0.5;
+                    assert!(
+                        (actual - center[axis]).abs() < 1e-11,
+                        "{scale}/{kind}/{n}: {actual} != {}",
+                        center[axis]
+                    );
+                }
+            }
+            book::book_pdf(&doc, &[], "Test", "2026-11-04").unwrap();
+            assert_eq!(doc.to_snapshot_v2(), before);
+        }
+    }
+}

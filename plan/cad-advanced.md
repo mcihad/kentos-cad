@@ -1714,6 +1714,17 @@ DXF ve AC1032 DWG üretildi; bağımsız DXF denetimi 128 nesne, şekil 1/2,
 reddedildi, mevcut dosya korundu. Ayrıntılar ADR 0930'da; otomatik kaynak
 ithali, diğer DWG sürümleri ve ana maddenin kalan çizim kabulü açık.
 
+**Analitik yay üzerindeki işaretler (4 Kasım 2026):** Yerleşik CAD çizgi
+tiplerinde daire, yay ve tek parçalı bulge path'in yazı/SHX konumu artık
+çizim için üretilen küçük kirişlerden hesaplanmaz. Gerçek yay uzunluğu ve
+teğet kullanılır; geniş bant da aynı yerleştiriciyi çağırır. Kapalı dikiş,
+CW/CCW, köşe ve pozitif/negatif faz testleri eklendi. 48 çekirdek, 18 plot
+birim ve 70 plot entegrasyon testi geçti (3 mevcut test atlandı). Gerçek
+GUI zoom/iki pafta/PDF denendi; bağımsız okuyucuyla 1:20'de 91, 1:100'de 18
+şeklin konumu ve 2 mm kol boyu doğrulandı. Elips/nonuniform dönüşüm,
+çok parçalı path, özel offset/effect ve genel performans kabulü bu dilimin
+dışında; taşıyıcı dash fazının bütün eğrilerde analitik olduğu iddia edilmez.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

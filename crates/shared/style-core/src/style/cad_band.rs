@@ -2,7 +2,7 @@
 //! analytic arc length; widths interpolate on the original edge, not on the
 //! tessellated outline. The source shape is never rewritten.
 use super::{
-    compile::{Env, Values, dd_bool, emit_line_layer, stroke_style, to_world},
+    compile::{Env, Values, dd_bool, emit_line_layer_on, stroke_style, to_world},
     model::{Layer, Symbol},
     prim::{FillPaint, MarkerStyle, Sink, StrokeStyle},
 };
@@ -323,23 +323,21 @@ pub(super) fn compile(
         }
     }
     if l.cad_marks.is_some() || l.line_type_loss.is_some() {
-        // This is the existing shared text path; its arc phase precision is
-        // audited separately. Band cut positions above remain analytic.
-        let center = kentos_geometry_core::geom::bulge::bulge_path_outline(
-            pts,
-            bulges.as_deref(),
-            *closed,
-            std::f64::consts::TAU / 720.,
-        );
-        emit_line_layer(
-            &Layer::SimpleLine(l.clone()),
-            &center,
-            *closed,
-            level,
-            values,
-            env,
-            &mut MarksOnly(sink),
-        );
+        match super::cad_marks::Route::polyline(pts, bulges.as_deref(), *closed) {
+            Ok(route) => emit_line_layer_on(
+                &Layer::SimpleLine(l.clone()),
+                (pts, *closed),
+                level,
+                values,
+                env,
+                &mut MarksOnly(sink),
+                Some(&route),
+            ),
+            Err(error) => {
+                style.line_type_loss = Some(error);
+                sink.stroke(&style, pts, *closed);
+            }
+        }
     }
     true
 }
