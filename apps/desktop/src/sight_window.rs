@@ -1,31 +1,32 @@
 //! Görüş mesafesi (plan/road.md Y20, docs/adr/0921 §3, `profile.sight`): a profile's sight distance, an eye and an
 //! object over the profile, ahead and behind. The heights, how far to look, the step and the required distance are the
-//! user's (the design standard's); KentOS fills in none. Önizle runs `road.profiles.sight` (nothing written): above,
-//! the profile; under it the distance seen each way at every station, the required distance dashed, the stations
-//! seen shorter red; beside, the shortest each way and the short stretches.
+//! user's (the design standard's); KentOS fills in none. The window reads `road.profiles.sight` (nothing written)
+//! whenever a value changes, once the four numbers it needs are written (docs/adr/0930 §4: no Önizle): above, the
+//! profile; under it the distance seen each way at every station, the required distance dashed, the stations seen
+//! shorter red; the shortest each way as figures and the short stretches as a table. The layout is the road windows'
+//! one (road_dialog.rs).
 //!
 //! ```text
-//! ┌ Görüş mesafesi ─────────────────────────────────────────────────────────────────────────────────┐
-//! │ Boykesit [Proje kotu ▾] Yön [İki yön ▾] Göz [ ] Nesne [ ] Bakılan [ ] Adım [ ] Gereken [ ]        │
-//! │ ┌ profile ───────────────────────────┐  En kısa ileri … · En kısa geri …                         │
-//! │ ├ distance seen ─────────────────────┤  Kısa aralıklar …                                         │
-//! │ └────────────────────────────────────┘                                                          │
-//! │                                                                         [Önizle] [Kapat]         │
-//! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
+//! ┌ Görüş mesafesi ────────────────────────────────────────────────────────────────────── × ┐
+//! │ Girdi ───────────────   ┌ profile, distance seen ──────────────────────────────────────┐ │
+//! │  Boykesit [Proje ▾]     └──────────────────────────────────────────────────────────────┘ │
+//! │  Yön [İki yön ▾]        [okunan] [en kısa ileri] [en kısa geri] [kısa aralık]          │
+//! │ Standart ─────────────  Kısa aralıklar: yön · baş · son · en kısa                       │
+//! │  Göz, Nesne, Bakılan, Adım, Gereken                                                    │
+//! │                                                                               [Kapat] │
+//! └───────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{ProfilesSight, ProfilesSightRead, SightReach, SightSide};
 use kentos_native_application::road_profiles_sight;
-use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::Dialog as Frame;
+use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::widget::{Banner, Form};
 
 use crate::app::{App, Dialog, Message};
-use crate::exchange::words;
+use crate::road_dialog::{self, RoadDialog, col, num};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -104,6 +105,7 @@ impl App {
         };
         self.sight_window = Some(Box::new(Window { profile: Some(first), ..Window::default() }));
         self.dialog = Some(Dialog::Sight);
+        let _ = self.sight_event(Event::Preview);
     }
 
     pub(crate) fn sight_event(&mut self, event: Event) -> Task<Message> {
@@ -132,89 +134,81 @@ impl App {
                 return Task::none();
             }
         }
-        w.preview = None;
-        w.warnings.clear();
-        Task::none()
+        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        self.sight_event(Event::Preview)
     }
 
     pub(crate) fn sight_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.sight_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
         let profiles: Vec<(String, String)> = self
             .document
             .as_ref()
             .map_or_else(Vec::new, |d| d.model.road_profiles().iter().map(|p| (p.id.clone(), p.name.clone())).collect());
         let ids: Vec<String> = profiles.iter().map(|p| p.0.clone()).collect();
         let chosen = w.profile.as_ref().and_then(|p| ids.iter().position(|i| i == p));
-        let pick = container(Select::new(profiles.iter().map(|p| Choice::new(p.1.clone())), chosen, move |i| msg(Event::Profile(ids[i].clone()))))
-            .width(170);
-        let side = container(Select::new(SIDES.iter().map(|s| Choice::new(*s)), Some(w.side), |i| msg(Event::Side(i)))).width(110);
-        let field = |k: usize| {
-            words::field(
-                FIELDS[k],
-                kentos_ui::widget::text_field(if k == 4 { "yok" } else { "" }, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(95),
-                None,
-            )
-        };
-        let mut top = row![words::field("Boykesit", pick, None), words::field("Yön", side, None)].spacing(10).align_y(iced::alignment::Vertical::Bottom);
-        for k in 0..FIELDS.len() {
-            top = top.push(field(k));
-        }
-        let mut body = Column::new().spacing(12).push(top);
+        let pick = Select::new(profiles.iter().map(|p| Choice::new(p.1.clone())), chosen, move |i| msg(Event::Profile(ids[i].clone())));
+        let side = Select::new(SIDES.iter().map(|s| Choice::new(*s)), Some(w.side), |i| msg(Event::Side(i)));
+        let field = |k: usize| kentos_ui::widget::text_field(if k == 4 { "yok" } else { "" }, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
+        let form = Form::new()
+            .label_width(110.0)
+            .section("Girdi")
+            .field("Boykesit", pick)
+            .field("Yön", side)
+            .section("Standart")
+            .field(FIELDS[0], field(0))
+            .field(FIELDS[1], field(1))
+            .field(FIELDS[2], field(2))
+            .help("Km noktasından bu uzaklığa kadar bakılır.")
+            .field(FIELDS[3], field(3))
+            .field(FIELDS[4], field(4))
+            .help("Boş: karşılaştırılmaz. Değerler tasarım standardınındır; KentOS sayı vermez.");
+        let mut d = RoadDialog::new(TITLE, form, msg(Event::Close));
         match &w.preview {
-            None => {
-                body = body.push(
-                    label::caption("Göz ve nesne yüksekliği, bakılan uzaklık, adım ve gereken mesafe tasarım standardınındır; KentOS değer vermez. Yalnız boykesit okunur: arazi, plan ve engeller değil.")
-                        .style(muted),
-                )
-            }
-            Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
+            None => d = d.empty("Yalnız boykesit okunur: arazi, plan ve engeller değil."),
+            // A number not written yet is the form's to say, quietly; the command's refusal is an error.
+            Some(Err(why)) if w.input().is_err() => d = d.empty(why.clone()),
+            Some(Err(why)) => d = d.note(Banner::error(why.clone())),
             Some(Ok(r)) => {
-                let picture = container(iced::widget::canvas(Chart { read: r, required: w.input().ok().and_then(|q| q.required) }).width(Fill).height(typography::scaled(380.0)))
-                    .style(style::container::field_box);
-                let line = |k: String, v: String| row![label::caption(k).style(muted).width(130), label::body(v)].spacing(8);
-                let mut side = Column::new().spacing(5).width(380);
-                side = side.push(line("Okunan".into(), format!("{} km noktası · adım {} m", r.rows.len(), r.step)));
-                if let Some(l) = &r.least_forward {
-                    side = side.push(line("En kısa ileri".into(), format!("{:.1} m · km {:.1}", l.distance, l.station)));
-                }
-                if let Some(l) = &r.least_backward {
-                    side = side.push(line("En kısa geri".into(), format!("{:.1} m · km {:.1}", l.distance, l.station)));
-                }
-                if !r.short.is_empty() {
-                    side = side.push(label::caption("Kısa aralıklar").style(muted));
-                    for s in &r.short {
-                        let way = if s.side == SightSide::Forward { "İleri" } else { "Geri" };
-                        side = side.push(line(way.into(), format!("{:.1} – {:.1} m · en kısa {:.1} m", s.from, s.to, s.least)));
-                    }
-                }
-                side = side.push(
-                    label::caption(format!(
-                        "Uzaklık {} m adımlarla ilerler, ilk kapanan çizgiden sonra {} mm'ye ikiye bölünür; adımdan kısa bir kapanma görülmez.",
+                let least = |l: &Option<kentos_commands::SightLeast>| {
+                    l.as_ref().map_or_else(|| "—".to_owned(), |l| format!("{:.1} m", l.distance))
+                };
+                d = d
+                    .picture(
+                        iced::widget::canvas(Chart { read: r, required: w.input().ok().and_then(|q| q.required) }).width(Fill).height(Fill),
+                        340.0,
+                    )
+                    .legend(format!(
+                        "Uzaklık {} m adımlarla ilerler, ilk kapanan çizgiden sonra {} mm'ye bölünür; adımdan kısa bir kapanma görülmez.",
                         r.step,
                         r.resolution * 1000.0
                     ))
-                    .style(muted),
-                );
+                    .figure("Okunan km noktası", r.rows.len().to_string())
+                    .figure("En kısa ileri", least(&r.least_forward))
+                    .figure("En kısa geri", least(&r.least_backward))
+                    .figure("Kısa aralık", r.short.len().to_string());
                 for wn in &w.warnings {
-                    side = side.push(label::caption(wn.clone()).style(warn));
+                    d = d.note(Banner::warning(wn.clone()));
                 }
-                body = body.push(row![picture, scrollable(side).height(typography::scaled(380.0))].spacing(12));
+                d = d.detail(road_dialog::table(
+                    vec![col("Yön", 90.0), num("Baş (m)", 110.0), num("Son (m)", 110.0), num("En kısa (m)", 110.0)],
+                    r.short
+                        .iter()
+                        .map(|s| {
+                            vec![
+                                if s.side == SightSide::Forward { "İleri" } else { "Geri" }.to_owned(),
+                                format!("{:.1}", s.from),
+                                format!("{:.1}", s.to),
+                                format!("{:.1}", s.least),
+                            ]
+                        })
+                        .collect(),
+                    "Gerekenden kısa aralık yok",
+                ));
             }
         }
-        body = body.push(
-            row![
-                space::horizontal().width(Fill),
-                words::secondary(PREVIEW, Some(msg(Event::Preview))),
-                words::secondary(CLOSE, Some(msg(Event::Close)))
-            ]
-            .spacing(8),
-        );
-        Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
+        d.view()
     }
 
     pub(crate) fn sight_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

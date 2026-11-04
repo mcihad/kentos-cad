@@ -1,31 +1,30 @@
 //! Taşıma planı (plan/road.md Y23 and Y24, docs/adr/0924 §3 and 0925, `haul.plan`): a mass haul diagram's earthwork moved
 //! at the least haul moment or the least cost (the diagram's free haul and prices), its borrow and waste sites taking up
-//! to their volume. Önizle runs `road.hauls.plan` (nothing written):
-//! the flow along the road (above the line forward, below it back), the sites marked where they stand; beside, the
-//! totals, the moment and its average, each site's use against its capacity, and why a plan does not close.
+//! to their volume. The window reads `road.hauls.plan` (nothing written) whenever a value changes (docs/adr/0930 §4: no
+//! Önizle): the flow along the road (above the line forward, below it back), the sites marked where they stand; under
+//! it four figures and one list at a time: the sites against their capacity, or the costs. The layout is the road
+//! windows' one (road_dialog.rs).
 //!
 //! ```text
-//! ┌ Taşıma planı ───────────────────────────────────────────────────────────────────────────────────┐
-//! │ Brükner [Yan Brükner ▾]  Amaç [En küçük moment | En düşük maliyet]                               │
-//! │ ┌ the flow along the road, sites ┐  Yarma fazlası · Dolgu fazlası · Moment · Alanlar             │
-//! │ └────────────────────────────────┘                                                               │
-//! │                                                                         [Önizle] [Kapat]         │
-//! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
+//! ┌ Taşıma planı ─────────────────────────────────────────────────────────────────────── × ┐
+//! │ Girdi ───────────────   ┌ the flow along the road, sites ────────────────────────────┐ │
+//! │  Brükner [Yan ▾]        └────────────────────────────────────────────────────────────┘ │
+//! │  Amaç [Moment|Maliyet]  [durum] [taşınan] [moment] [ortalama / toplam maliyet]        │
+//! │                         (Alanlar | Maliyet)  table                                    │
+//! │                                                                              [Kapat] │
+//! └──────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{HaulObjective, HaulPlanned, HaulSiteKind, HaulsPlan};
 use kentos_native_application::road_hauls_plan;
-use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::widget::Segmented;
+use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::widget::{Banner, Form, Segmented};
 
 use crate::app::{App, Dialog, Message};
-use crate::exchange::words;
+use crate::road_dialog::{self, RoadDialog, col, num};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -34,6 +33,20 @@ const PREVIEW: &str = "Önizle";
 const CLOSE: &str = "Kapat";
 pub(crate) const MOMENT: &str = "En küçük moment";
 pub(crate) const COST: &str = "En düşük maliyet";
+
+/// Which list the window shows.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Listed {
+    #[default]
+    Sites,
+    Costs,
+}
+
+impl std::fmt::Display for Listed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if *self == Listed::Sites { "Alanlar" } else { "Maliyet" })
+    }
+}
 
 /// What the plan makes least, as the window shows it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -58,10 +71,12 @@ pub struct Window {
     pub(crate) aim: Aim,
     pub(crate) preview: Option<Result<HaulPlanned, String>>,
     pub(crate) warnings: Vec<String>,
+    pub(crate) list: Listed,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    List(Listed),
     Haul(String),
     Aim(Aim),
     Preview,
@@ -110,6 +125,7 @@ impl App {
         };
         self.haul_plan_window = Some(Box::new(Window { haul: Some(first), ..Window::default() }));
         self.dialog = Some(Dialog::HaulPlan);
+        let _ = self.haul_plan_event(Event::Preview);
     }
 
     pub(crate) fn haul_plan_event(&mut self, event: Event) -> Task<Message> {
@@ -117,6 +133,10 @@ impl App {
         match event {
             Event::Haul(h) => w.haul = Some(h),
             Event::Aim(a) => w.aim = a,
+            Event::List(l) => {
+                w.list = l;
+                return Task::none();
+            }
             Event::Preview => {
                 let Some(doc) = &self.document else { return Task::none() };
                 let read = match w.haul.clone() {
@@ -144,93 +164,96 @@ impl App {
                 return Task::none();
             }
         }
-        w.preview = None;
-        w.warnings.clear();
-        Task::none()
+        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        self.haul_plan_event(Event::Preview)
     }
 
     pub(crate) fn haul_plan_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.haul_plan_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
         let list: Vec<(String, String)> = self
             .document
             .as_ref()
             .map_or_else(Vec::new, |d| d.model.road_hauls().iter().map(|h| (h.id.clone(), h.name.clone())).collect());
         let ids: Vec<String> = list.iter().map(|c| c.0.clone()).collect();
         let at = w.haul.as_ref().and_then(|c| ids.iter().position(|i| i == c));
-        let pick = container(Select::new(list.iter().map(|c| Choice::new(c.1.clone())), at, move |i| msg(Event::Haul(ids[i].clone())))).width(220);
+        let pick = Select::new(list.iter().map(|c| Choice::new(c.1.clone())), at, move |i| msg(Event::Haul(ids[i].clone())));
         let aim = Segmented::new([Aim::Moment, Aim::Cost], w.aim, |a| msg(Event::Aim(a)));
-        let mut body = Column::new()
-            .spacing(12)
-            .push(row![words::field("Brükner", pick, None), words::field("Amaç", aim, None)].spacing(10).align_y(iced::alignment::Vertical::Bottom));
+        let form = Form::new()
+            .label_width(90.0)
+            .section("Girdi")
+            .field("Brükner", pick)
+            .field("Amaç", aim)
+            .help("En küçük moment taşıma uzaklığını, en düşük maliyet Brüknerin serbest taşımasını ve fiyatlarını okur.");
+        let mut d = RoadDialog::new(TITLE, form, msg(Event::Close))
+            .form_width(380.0)
+            .empty("Her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır.");
         match &w.preview {
-            None => {
-                body = body.push(
-                    label::caption(
-                        "Her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır. En küçük moment taşıma uzaklığını, en düşük maliyet Brüknerin serbest taşımasını ve fiyatlarını okur.",
-                    )
-                    .style(muted),
-                );
-            }
-            Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
+            None => {}
+            Some(Err(why)) => d = d.note(Banner::error(why.clone())),
             Some(Ok(r)) => {
-                let picture = container(iced::widget::canvas(Flow { read: r }).width(Fill).height(typography::scaled(360.0))).style(style::container::field_box);
-                let line = |k: String, v: String| row![label::caption(k).style(muted).width(150), label::body(v)].spacing(8);
-                let mut side = Column::new().spacing(5).width(400).padding(iced::Padding { right: 14.0, ..iced::Padding::ZERO });
-                side = side.push(line("Durum".into(), if r.feasible { "Plan kurulur".into() } else { "Plan kurulamaz".into() }));
-                side = side.push(line("Yarma fazlası".into(), format!("{} m³", grouped(r.cut, 1))));
-                side = side.push(line("Dolgu fazlası".into(), format!("{} m³", grouped(r.fill, 1))));
+                d = d
+                    .picture(iced::widget::canvas(Flow { read: r }).width(Fill).height(Fill), 320.0)
+                    .legend("Mavi ileri, turuncu geri taşınan hacim; yeşil ödünç, kırmızı döküm alanı")
+                    .figure("Durum", if r.feasible { "Kurulur".to_owned() } else { "Kurulamaz".to_owned() })
+                    .figure("Yarma / dolgu fazlası", format!("{} / {} m³", grouped(r.cut, 0), grouped(r.fill, 0)));
                 if r.feasible {
-                    side = side.push(line("Taşınan".into(), format!("{} m³", grouped(r.moved, 1))));
-                    side = side.push(line("Taşıma momenti".into(), format!("{} m³·m", grouped(r.moment, 0))));
-                    if let Some(a) = r.average {
-                        side = side.push(line("Ortalama uzaklık".into(), format!("{} m", grouped(a, 1))));
-                    }
-                    if let Some(c) = &r.cost {
-                        let money = |v: f64| format!("{} {}", grouped(v, 2), c.currency);
-                        side = side.push(line("Serbest taşıma".into(), format!("{} m", grouped(r.free.unwrap_or(0.0), 1))));
-                        if let Some(e) = c.economic {
-                            side = side.push(line("Ekonomik taşıma sınırı".into(), format!("{} m", grouped(e, 1))));
-                        }
-                        side = side.push(line("Fazla taşıma momenti".into(), format!("{} m³·m", grouped(c.over_moment, 0))));
-                        side = side.push(line("Fazla taşıma".into(), money(c.overhaul)));
-                        side = side.push(line("Döküm".into(), money(c.waste)));
-                        side = side.push(line("Ödünç".into(), money(c.borrow)));
-                        side = side.push(line("Toplam maliyet".into(), money(c.total)));
-                    }
+                    d = d.figure("Taşıma momenti", format!("{} m³·m", grouped(r.moment, 0)));
+                    d = match &r.cost {
+                        Some(c) => d.figure("Toplam maliyet", format!("{} {}", grouped(c.total, 2), c.currency)),
+                        None => d.figure("Ortalama uzaklık", r.average.map_or_else(|| "—".into(), |a| format!("{} m", grouped(a, 1)))),
+                    };
                 } else {
-                    if r.shortage > 0.0 {
-                        side = side.push(line("Karşılanmayan dolgu".into(), format!("{} m³", grouped(r.shortage, 1))));
-                    }
-                    if r.surplus > 0.0 {
-                        side = side.push(line("Yerleşmeyen yarma".into(), format!("{} m³", grouped(r.surplus, 1))));
-                    }
-                }
-                if !r.sites.is_empty() {
-                    side = side.push(label::caption("Alanlar").style(muted));
-                    for s in &r.sites {
-                        let kind = if s.kind == HaulSiteKind::Borrow { "ödünç" } else { "döküm" };
-                        side = side.push(line(
-                            s.name.clone(),
-                            format!("{kind} · {} m · {} / {} m³", grouped(s.station, 1), grouped(s.used, 1), grouped(s.capacity, 1)),
-                        ));
-                    }
+                    d = d
+                        .figure("Karşılanmayan dolgu", format!("{} m³", grouped(r.shortage, 1)))
+                        .figure("Yerleşmeyen yarma", format!("{} m³", grouped(r.surplus, 1)));
                 }
                 for wn in &w.warnings {
-                    side = side.push(label::caption(wn.clone()).style(warn));
+                    d = d.note(Banner::warning(wn.clone()));
                 }
-                body = body.push(row![picture, scrollable(side).height(typography::scaled(360.0))].spacing(12));
+                let sites = road_dialog::table(
+                    vec![col("Alan", 180.0), col("Tür", 80.0), num("Km (m)", 100.0), num("Kullanılan (m³)", 130.0), num("Kapasite (m³)", 130.0)],
+                    r.sites
+                        .iter()
+                        .map(|s| {
+                            vec![
+                                s.name.clone(),
+                                if s.kind == HaulSiteKind::Borrow { "ödünç" } else { "döküm" }.to_owned(),
+                                grouped(s.station, 1),
+                                grouped(s.used, 1),
+                                grouped(s.capacity, 1),
+                            ]
+                        })
+                        .collect(),
+                    "Ödünç ya da döküm alanı yok",
+                );
+                d = match &r.cost {
+                    Some(c) => {
+                        let money = |v: f64| format!("{} {}", grouped(v, 2), c.currency);
+                        let mut rows = vec![
+                            vec!["Serbest taşıma".to_owned(), format!("{} m", grouped(r.free.unwrap_or(0.0), 1))],
+                            vec!["Fazla taşıma momenti".to_owned(), format!("{} m³·m", grouped(c.over_moment, 0))],
+                            vec!["Fazla taşıma".to_owned(), money(c.overhaul)],
+                            vec!["Döküm".to_owned(), money(c.waste)],
+                            vec!["Ödünç".to_owned(), money(c.borrow)],
+                            vec!["Toplam".to_owned(), money(c.total)],
+                        ];
+                        if let Some(e) = c.economic {
+                            rows.insert(1, vec!["Ekonomik taşıma sınırı".to_owned(), format!("{} m", grouped(e, 1))]);
+                        }
+                        let costs = road_dialog::table(vec![col("Kalem", 220.0), num("Değer", 200.0)], rows, "");
+                        let shown = match w.list {
+                            Listed::Sites => sites,
+                            Listed::Costs => costs,
+                        };
+                        d.detail(road_dialog::detail_choice([Listed::Sites, Listed::Costs], w.list, |l| msg(Event::List(l)), shown))
+                    }
+                    None => d.detail(sites),
+                };
             }
         }
-        body = body.push(
-            row![space::horizontal().width(Fill), words::secondary(PREVIEW, Some(msg(Event::Preview))), words::secondary(CLOSE, Some(msg(Event::Close)))]
-                .spacing(8),
-        );
-        Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
+        d.view()
     }
 
     pub(crate) fn haul_plan_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -307,12 +330,6 @@ impl canvas::Program<Message> for Flow<'_> {
         }
         caption(&mut frame, format!("{} m", grouped(x0, 0)), Point::new(x(x0) - 8.0, (h - bottom + 8.0) as f32), tk.muted);
         caption(&mut frame, format!("{} m", grouped(x1, 0)), Point::new(x(x1) - 30.0, (h - bottom + 8.0) as f32), tk.muted);
-        caption(
-            &mut frame,
-            "Mavi ileri, turuncu geri taşınan hacim; yeşil ödünç, kırmızı döküm alanı".into(),
-            Point::new(10.0, 6.0),
-            tk.muted,
-        );
         vec![frame.into_geometry()]
     }
 }

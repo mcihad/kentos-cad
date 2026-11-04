@@ -586,8 +586,11 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
   dahil bütün genişliği alır; etiketin sağına sıkıştırılmaz.
 - **Ölü denetim gösterilmez:** seçili şeye uymayan satır gizlenir. Örnek: Enkesit'te Çizime satırı ve Aksa yeniden bağla
   yalnız kesit takımında görünür.
-- Taşınan pencereler: Kırmızı kot önerisi (Y26.0), Kübaj (Y26.3), Enkesit'in tip kesit düzenleyicisi (Y26.3). Öbürleri
-  sırayla taşınır.
+- Taşınan pencereler: Kırmızı kot önerisi (Y26.0), Kübaj ve Enkesit'in tip kesit düzenleyicisi (Y26.3), Görüş mesafesi,
+  Platform suyu, Taşıma planı ve Tasarım denetimi (Y26.4). Öbürleri sırayla taşınır.
+- **Açıklama çizimin altındadır:** renklerin ne demek olduğunu çizimin içine yazmak, çizimi sola ve üste sıkıştırıyordu.
+- **Girilmemiş zorunlu sayı hata değildir:** formun eksiği sonuç alanında soluk cümleyle söylenir. Kırmızı not yalnız
+  komutun reddidir.
 - Ölçüm (Kırmızı kot önerisi, 1440 × 900):
   - Önce: dört ayar tek satırdaydı. Sonuçlar 20 anahtar–değer satırlık tek sütundu. Üç eşit düğme vardı, birincil
     yoktu.
