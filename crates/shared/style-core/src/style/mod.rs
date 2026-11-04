@@ -6,6 +6,7 @@
 
 pub mod batch;
 pub mod cad_marks;
+mod cad_band;
 pub mod build;
 pub mod charts;
 pub mod compile;

@@ -803,6 +803,11 @@ fn draw_object(
     sink: &mut BatchSink,
     cx: &mut Cx,
 ) {
+    if mode == MODE_SET
+        && let Some(set) = usize::try_from(a).ok().and_then(|k| program.sets.get(k))
+        && let Some(symbol) = program.symbol(set.line.as_ref())
+        && super::cad_band::compile(shape, symbol, values, env, sink, LEVEL_LINE)
+    { return; }
     let parts = output_parts(shape,clip,buf,env,cx);
     if mode == MODE_IMAGE {
         draw_image(shape, &parts, color, program, sink);

@@ -113,7 +113,7 @@ fn dd_text(v: &Option<Dd<String>>, t: &dyn Values) -> String {
     }
 }
 
-fn dd_bool(v: &Option<Dd<bool>>, t: &dyn Values) -> bool {
+pub(super) fn dd_bool(v: &Option<Dd<bool>>, t: &dyn Values) -> bool {
     match v {
         None => true,
         Some(Dd::Fixed(b)) => *b,
@@ -368,7 +368,7 @@ fn turned_text(st: &MarkerStyle) -> MarkerStyle {
 
 // ── Lines ──────────────────────────────────────────────────────────────
 
-fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Option<StrokeStyle> {
+pub(super) fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Option<StrokeStyle> {
     let color = dd_color(&layer.color, t).filter(|c| !c.is_empty())?;
     let unit = layer.base.unit;
     let (width, width_unit) = to_drawn(dd_number(&layer.width, t, 0.0), unit, env);
@@ -403,7 +403,7 @@ fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Op
 }
 
 /// A line layer on one path (a line, or an area ring).
-fn emit_line_layer(
+pub(super) fn emit_line_layer(
     layer: &Layer,
     pts: &[Vec2],
     closed: bool,

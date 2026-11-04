@@ -521,3 +521,70 @@ Kanıtlar önceki repo dışı dizinde: `make-text-fixture.py`,
 blok/variable-width tam görünüşü, yay/dikiş/yoğun sahne performans matrisi,
 tam viewport clip denetimi ve önceki açık hassasiyet sınırları. Bu dilim
 CAD-ADV-11'in tamamlanması değildir; `[~]` korunur.
+
+
+## Geniş çoklu çizginin gerçek desenli bandı (4 Kasım 2026)
+
+`native/style/program.rs` kök ve blok içindeki geniş çoklu çizginin
+`leader_symbols_of` kolunda adlandırılmış tarifi uygulamıyordu. Şeklin
+`MIXED` kaydı yalnız genişliksiz kenarları çizgi, geniş kenarları tam dolu
+bant yaptığından, yalnız çizgi sembolüne dash eklemek de yeterli değildi.
+Aynı adlandırılmış tarif atlaması kılavuz ve tablo çizgilerinde düzeltildi.
+
+- Ortak `style-core/style/cad_band.rs` gerçek genişlikli yolu doldurmadan
+  önce mürekkep aralıklarına ayırır. Yaylar kiriş uzunluğuyla değil
+  `r × |sweep|` ile kesilir; alt yayın bulge değeri açıdan, uç genişlikleri
+  özgün kenarın parametresinden gelir. Kaynak çoklu çizgi değiştirilmez.
+- Mürekkep köşeyi geçerse aynı alt yolun parçası kalır; mevcut bant
+  yordamının gönyesi korunur. Kapalı dikişte bitiş ve başlangıç mürekkebi
+  birleştirilir. Sıfır boşluk sahte kapak üretmez. Genişliksiz kenarlar
+  bölünmüş mürekkep aralıklarında mevcut çizgi kalınlığını kullanır.
+- Renk, saydamlık, çizim bandı ve çizgi görünürlüğü mevcut sink üzerinden
+  gider. Alan dolgusu kapatıldığında geometrik çizgi mürekkebi kaybolmaz.
+  Sürekli çizginin eski bant yolu korunur; isteğe bağlı katman alan dolgusu
+  geniş çizginin içine sızmaz. Metin işaretleri mevcut ortak derleyiciden
+  tam merkez yolu boyunca yerleştirilir.
+- Bir yol 20.000 desen geçişi/kenar ve 500.000 kontur noktasıyla sınırlı;
+  katman bütçesiyle birlikte aşım açık `linetype_unsupported` bulgusudur.
+  Nokta öğeli geniş bant henüz desteklenmiyor ve sessiz sürekli bant
+  olarak teslim edilmiyor. Ön denetimin hızlı kapısı geniş yolların bu
+  çalışma anı hatasını atlamaz. Özel katman efektli semboller bu dar
+  geometrik bant kolunun kapsamı değildir.
+- [AutoCAD polyline belgesi](https://help.autodesk.com/cloudhelp/2025/ENU/AutoCAD-Core/files/GUID-392BF13C-D9E7-47A8-8E07-435296332279.htm)
+  geometrik genişlik ve lineweight ayrımını, köşe üzerinden desen
+  üretimini açıklıyor. Bu dilim KentOS'un mevcut kesintisiz faz politikasını
+  uygular; yeni bir `PLINEGEN` özelliğinin tamamlandığı iddia edilmiyor.
+
+Doğrulama:
+
+- Ortak çekirdekte 44 birim testi; native stil/plot paketlerinde 172 test
+  geçti, 6 mevcut test atlandı. Yeni bağımsız alan integrali testi
+  `w(x)=1+x` genişliğini 1:1/1:20/1:100, model/plot ve dolgu açık/kapalı
+  karşılaştırır. Analitik yarım daire kesimi, genişlik interpolasyonu,
+  köşe/dikiş ve aşırı iş yükü ayrıca sınanır. İç içe döndürülmüş,
+  ölçeklenmiş ve aynalı blok kökteki aynı geometriyle eşleşir; bu tam
+  nonuniform/affine kabulü değildir.
+- Geçerli kısa/uzun/yazılı/built-in geniş desen PDF üretir; eksik kaynak,
+  SHX, noktalı bant ve yoğun tarif reddedilir; belge değişmez. Yeniden
+  derlenen Python SDK'sında aynı ön denetimin plan/execute sonuçları altı
+  senaryoda eşit, kaynak baytları ve çıktı klasörü değişmez. Masaüstü
+  strict Clippy ve derleme geçti.
+- Gerçek GUI'de aynı bağımsız 70 nesneli dosya eski ve yeni binary ile
+  açıldı: eski kesintisiz beyaz bant, yeni kesik ve daralan/genişleyen
+  parçalar. Yakınlaştırma, 1:20 ve 1:50 pafta, iki sayfalı GUI PDF'si
+  incelendi. PDF'de bitmap yok; içerik yollarının doğrudan ölçümünde iki
+  paftada da 5 mm mürekkep / 8 mm periyot, en büyük fark 0,000015 mm.
+  Mavi geometrik referans 1:50'de eşleşir; sabit model geometrisi olduğu
+  için 1:20'de kâğıt desenine göre 2,5 kat büyümesi beklenir.
+- Son GUI binary SHA-256:
+  `334cd67e60cf46fd5541ec92bfc07ab4ed7a671317d1c860d9a3a8e9b25af848`.
+  `wide-pattern-{before,after,detail,final,sheet20,sheet50}-gui.png`,
+  `wide-pattern-both-gui.pdf`, `wide-pattern-pdf-dimensions.json` ve test
+  günlükleri `/tmp/kentos-cad-adv08-09-2026-11-03` içinde; repoya alınmaz.
+  Son pencere tekrarından önce benim yapmadığım bir viewport düzenlemesi
+  görüldü; ayrı `wide-pattern-preserved-window-change.kcad` olarak korundu,
+  son binary temiz kaynakla yeniden açılarak kontrol edildi.
+
+SHX kaynağını gerçekten çizme, tam affine blok, noktalı geniş bant,
+PLINEGEN sözleşmesi, metin işaretinin analitik yay fazı ve geniş veri
+performansı açık. CAD-ADV-11 tamamlanmadı.

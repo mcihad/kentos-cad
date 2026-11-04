@@ -340,6 +340,12 @@ pub(crate) fn line_type_check_needed(
 ) -> bool {
     let types = kentos_native_style::line_types::LineTypes::of(doc.settings());
     if types.needs_preflight() { return true; }
+    // Geometric-width dashes are split before filling and can reject an
+    // excessive/dotted recipe. Inspect their actual emitted diagnostics too.
+    let wide = |e: &kentos_contracts::Entity| matches!(e,
+        kentos_contracts::Entity::Polyline(p) if p.widths.as_ref().is_some_and(|w|w.iter().any(|[a,b]|*a>0. || *b>0.)));
+    if doc.entities().any(wide) || doc.blocks().iter().flat_map(|b|&b.entities).any(wide) { return true; }
+
     let bad = |name: Option<&str>| name.is_some_and(|n| types.loss(n).is_some());
     fn long_dash(v: &serde_json::Value) -> bool {
         match v {

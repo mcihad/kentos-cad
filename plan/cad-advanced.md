@@ -1674,6 +1674,19 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
   değişikliksiz HEAD'de de olan iki eski golden-test hatası ve açık sınırlar
   ADR 0930'da. SHX/affine/genişlik/performance kabulü bitmedi; ana durum `[~]`.
 
+**Geniş çoklu çizgi deseni (4 Kasım 2026):**
+
+- Geometrik genişlikli yol artık kesintisiz dolu bant yerine adlandırılmış
+  desenin mürekkep parçalarıyla çizilir. Yay kesimleri analitik uzunlukla,
+  uç genişlikleri özgün kenardan hesaplanır; köşe ve kapalı dikiş korunur.
+  Aynı tarif atlaması kılavuz/tablo ve blok içi geniş çizgilerde giderildi.
+- 1:1/1:20/1:100 alan integrali, aynalı/iç içe blok, ortak model/plot,
+  dolgu görünürlüğü, PDF reddi ve Python plan/execute kontrolleri geçti.
+  Gerçek GUI ve iki sayfalı PDF'de 1:20/1:50 desenler ölçüldü: 5 mm parça,
+  8 mm periyot; bitmap yok. Sonuç ve kalan sınırlar ADR 0930'da.
+- SHX, tam affine, noktalı bant, analitik metin-yay fazı ve performans
+  kabulü açık; madde `[~]` olarak kalır. Ekranlar repo dışında.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
