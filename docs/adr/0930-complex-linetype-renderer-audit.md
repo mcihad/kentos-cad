@@ -434,3 +434,90 @@ Doğrulama:
   `complex-resource-{fixed,variable}-style-gui.png` ve `complex-*.log`
   repo dışı önceki kanıt dizininde. Bu kontrol desen yazısını render etme
   kabulü değildir; CAD-ADV-11 hâlâ kısmen tamamdır.
+
+
+## Paketli fontla yazılı çizgi deseni (4 Kasım 2026)
+
+`native/style/line_types/text.rs`, kaynak yazı stilini ve çizim birimini
+çözerek CAD-ADV-10'un ortak `shaping::placed` glyph planını bir kez hazırlar.
+OS fontu veya Iced metin ölçümü kullanılmaz. Normalleştirilmiş konturlar,
+0.0001 em eğri toleransıyla, nonzero dolgu kuralı üzerinden delikleri ve
+ayrık parçaları korur. Stil genişliği, eğiklik ve font yüzü bu plandadır.
+Kaynakta bulunmayan stil/SHX/font sessiz ikame edilmez; mevcut teslim
+engeli sürer. Kaynak dosyanın font adı ve metni değişmez.
+
+`style-core/style/cad_marks.rs` aynı planı gerçek path boyunca Float64
+yerleştirir. Çizgi/boşluk toplamı tekrar mesafesidir; yazının kendi boyu
+periyoda eklenmez. Köşede işaret atlanmaz, kapalı dikişte faz sıfırlanmaz.
+R/A/U ayrı politikadır; X/Y çizginin eksenindedir, S ile çarpılmaz.
+Dönme ekseni fontun gerçek nominal cap yüksekliğinin yarısıdır; font
+yüksekliği ise mevcut KentOS model/em sözleşmesinde kalır. Bütün ithal
+CAD yüksekliklerinin cap-height dönüşümü bu çalışmayla yapılmış sayılmaz.
+Genel/nesne ölçeği fiziksel yerleşime birer kez uygulanır; kontur planı
+tekrar ölçeklenmez. Sabit STYLE yüksekliği S'yi boyutsuz çarpan alır.
+
+Yerleştirilmiş harfler GPU, CPU ve PDF'nin mevcut dolu geometri hattını
+kullanır; ayrı backend yazı yerleşimleri oluşmaz. PDF'de bu çizgi tipi
+harfleri vektör konturdur, bağımsız/seçilebilir TEXT nesnesi değildir.
+Kaynak tarif KCAD içinde korunur; geçici konturlar belgeye yazılmaz.
+Dolgu görünüşü kapatılınca çizginin harfi kaybolmaz; stroke görünürlüğü
+uygulanır. Kaynak rengi, saydamlık ve çizim bandı mevcut yolu izler.
+
+İş yükü kısmi başarılı bir önekle sınırlanmaz: 512 UTF-8 bayt/tek satır
+kaynak metni, derlenmiş tarifte 32.768 kontur noktası, path'te 2.000
+tekrar/500.000 nokta ve katmanda toplam 2.000.000 kontur noktası sınırı
+vardır. Katman bütçesi tam path için atomik ayrılır; sığmayan path bütçe
+harcamaz ve gerçek stroke'a kayıp bulgusu taşır. PDF/önizleme eksik teslimi
+reddeder. Bu sınırlar bir performans kabulü veya görünür alana göre işaret
+üretiminin tamamlanması değildir. Dalga/bulanıklıkla birlikte özel karmaşık
+metin kaynağı da desteklenmiş sayılmaz; açık bulgu bırakır.
+
+Doğrulama:
+
+- Ortak yerleştirme testleri köşe, kapalı dikiş, ters yönlü R/A/U,
+  nominal cap ekseni, X/Y, geçersiz faz, aşırı tekrar, görünüş filtresi
+  ve toplam katman bütçesinin atomikliğini kapsar. Style-core 40 birim
+  testi geçti.
+- Native stil: 39 birim + 41 entegrasyon geçti, 3 mevcut ignored.
+  O harfinin deliği, sabit STYLE/S, mm ve 1:20/1:50/1:100 ile genel ×
+  nesne ölçeği fiziksel bağımsız beklentilerle sınandı. Eksik stil/font
+  kaynakları bulgu üretir.
+- Native plot genel regresyonu: 18 birim + 66 entegrasyon geçti, 3 ignored.
+  Son bütçe değişikliğinden sonra çizgi tipi alt kümesinin 8 testi yeniden
+  geçti. Buna görünür/katman/override/blok/boş tanım ayrımı ve çok yoğun
+  yazıda salt okunur çıktı reddi dahildir. Strict masaüstü Clippy ve
+  yeni uygulama derlemesi geçti.
+- Style-core'un dondurulmuş JSON entegrasyonlarında 7 geçti, 2 başarısız:
+  `one_symbol_on_one_object_as_frozen`, `whole_layers_as_frozen`.
+  Değişikliksiz HEAD koduyla ayrı çalıştırmada aynı iki test, bayt olarak
+  aynı beklenen/gerçek Float64 koordinat farklarını verdi. Altın dosyalar
+  yenilenmedi; bunlar bu dilimin yeni hata veya başarılı testi sayılmadı.
+- MCP eksik kaynak denetimi geçti. SDK son kodla tekrar derlendi;
+  `test_sheet_line_types.py` içindeki 4 alt durum, plan/execute eşitliği,
+  desteklenen metinde hazır çıktı, eksik stilde ret ve değişmeyen belgeyi
+  doğruladı.
+- Gerçek GUI'de önce HW çizgisi zoom ile, 1:20/1:50 paftada ve GUI'den
+  kaydedilmiş iki sayfalı PDF'de incelendi. 1:50'deki ayrı Unicode-v1
+  Barlow referanslarının dört kelimesiyle Poppler 600 dpi piksel sınır
+  karşılaştırmasında x ve genişlik/yükseklik farkı 0 piksel. PDF'de iki
+  sayfada da bitmap XObject yok. 1:20'de kâğıt desen aynı kâğıt boyunda,
+  sabit model referansı farklı ölçekte görünür; bunlar karıştırılmaz.
+- 73 nesneli ayrı dosyada elle hesaplanmış R0, R45, ters A0/U0 ve köşe
+  referansları açıldı; zoom ve Kaydır/Esc gerçek fareyle kullanıldı.
+  GUI KCAD Farklı kaydet sonucu, bağımsız yazılmış 14.534 baytlık kaynakla
+  bayt bayt aynı; kaydedilen dosya GUI'den yeniden açıldı.
+
+Son GUI binary SHA-256:
+`740acd6faf7b8577cb6c40a49556e8344748ac76d56ce6da55ff13ace63ee772`.
+Son başlatmada önceki QA DXF'sinin kurtarma kopyası için **Sonra** seçildi;
+kopya silinmedi, yön testi dosyası tekrar zoom ile kontrol edildi.
+Kanıtlar önceki repo dışı dizinde: `make-text-fixture.py`,
+`make-text-directions-fixture.py`, `line-types-text*.kcad`,
+`complex-text-*-gui.png`, `complex-text-both-gui.pdf`,
+`complex-text-pdf-{page2,detail}.png`, `complex-text-pdf-pixel-check.json`,
+`complex-text-*.log`. Ekranlar repoya eklenmedi.
+
+**Açık:** gerçek SHX kaynağının yüklenmesi/çizimi ve dışa yazımı, affine
+blok/variable-width tam görünüşü, yay/dikiş/yoğun sahne performans matrisi,
+tam viewport clip denetimi ve önceki açık hassasiyet sınırları. Bu dilim
+CAD-ADV-11'in tamamlanması değildir; `[~]` korunur.

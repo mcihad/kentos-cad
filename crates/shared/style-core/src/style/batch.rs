@@ -103,6 +103,8 @@ pub struct BatchSink {
     scale: Scale,
     /// Fills waiting for the triangulation: the entry, the rings and whether a fan (`fan`).
     fills: Vec<(usize, Vec<Vec<Vec2>>, bool)>,
+    /// Aggregate CAD glyph workload across the layer, before triangulation.
+    cad_points: usize,
     /// The latest styles of each kind and their batches: the objects of a
     /// layer mostly share a few styles (markers along a line always share
     /// one, categories take turns), and building a key for each primitive
@@ -200,6 +202,7 @@ impl BatchSink {
             index: HashMap::new(),
             scale: Scale::default(),
             fills: Vec::new(),
+            cad_points: 0,
             recent_strokes: Recent::new(),
             recent_fills: Recent::new(),
             recent_markers: Recent::new(),
@@ -587,6 +590,21 @@ impl Sink for BatchSink {
         if let Some(e) = rings.first().and_then(|outer| self.queue(paint, outer)) {
             self.fills.push((e, rings.to_vec(), false));
         }
+    }
+
+    fn reserve_cad_points(&mut self, points: usize) -> bool {
+        let count = self.cad_points.saturating_add(points);
+        if count > 2_000_000 { return false; }
+        self.cad_points = count;
+        true
+    }
+
+    fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
+        if self.hide_strokes { return; }
+        let hidden = self.hide_fills;
+        self.hide_fills = false;
+        self.fill(paint, rings);
+        self.hide_fills = hidden;
     }
 
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {

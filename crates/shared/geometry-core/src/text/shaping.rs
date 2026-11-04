@@ -170,6 +170,17 @@ pub fn font_bytes(id: FontId) -> Option<&'static [u8]> {
         FALLBACK_FACES.get(i - DRAWING_FACES.len()).copied()
     }
 }
+
+/// Nominal capital height in ems for a rotation/anchor pivot. This does
+/// not reinterpret the model's text height or rescale existing glyph plans.
+pub fn cap_em(id: FontId) -> Result<f64, Error> {
+    let face = parsed(id)?;
+    let cap = face.capital_height().filter(|h| *h > 0)
+        .or_else(|| face.glyph_index('H')
+            .and_then(|g| face.glyph_bounding_box(g)).map(|b| b.y_max))
+        .filter(|h| *h > 0).ok_or(Error::BadFont(id))?;
+    Ok(f64::from(cap) / f64::from(face.units_per_em()))
+}
 pub fn font_key(id: FontId) -> Option<(&'static str, u16, bool)> {
     let i = usize::from(id.0);
     if i < DRAWING_KEYS.len() {

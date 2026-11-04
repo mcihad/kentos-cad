@@ -26,6 +26,7 @@ fn pattern(kind: &str) -> Value {
             json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":0.,"shape":{"name":"FENCE","file":"missing.shx"}}]})
         }
         "short" => json!({"name":"P","unit":"paper","elements":[{"length":3.},{"length":-1.}]}),
+        "unavailable" => json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"MISSING_FONT_STYLE","scale":0.1}},{"length":-1.}]}),
         _ => {
             json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"STANDARD","scale":0.1}},{"length":-1.}]})
         }
@@ -48,7 +49,7 @@ fn losses(doc: &Document, b: &SheetBook) -> Vec<kentos_sheet::preflight::Finding
 }
 #[test]
 fn named_pattern_loss_follows_actual_visibility_and_overrides() {
-    for kind in ["text", "shape", "long", "missing", "short"] {
+    for kind in ["text", "unavailable", "shape", "long", "missing", "short"] {
         for mode in [
             "own", "layer", "unused", "outside", "hidden", "frozen", "builtin",
         ] {
@@ -79,7 +80,7 @@ fn named_pattern_loss_follows_actual_visibility_and_overrides() {
             let (doc, book) = document(raw, page);
             let before = doc.to_snapshot_v2();
             let found = losses(&doc, &book);
-            let blocked = !matches!(kind, "short" | "long") && matches!(mode, "own" | "layer");
+            let blocked = !matches!(kind, "short" | "long" | "text") && matches!(mode, "own" | "layer");
             assert_eq!(!found.is_empty(), blocked, "{kind}/{mode}: {found:?}");
             let pdf = book::book_pdf(&doc, &[], "Test", "2026-11-04");
             if blocked {
@@ -174,7 +175,7 @@ fn explicit_supported_symbol_does_not_inherit_unused_layer_pattern_loss() {
 fn block_own_and_inherited_patterns_are_checked_only_for_visible_leaves() {
     for mode in ["own", "byblock", "hidden", "clipped", "outside"] {
         let (mut raw, page) = source();
-        raw["settings"]["lineTypes"] = json!([pattern("text")]);
+        raw["settings"]["lineTypes"] = json!([pattern("unavailable")]);
         let block = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4051";
         let mut leaf = json!({"kind":"line","id":17,"layerId":"cizim","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.,"y":0.},"linePattern":"P"});
         let mut insert = json!({"kind":"insert","id":1,"layerId":"cizim","attrs":{},"block":block,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.});
@@ -330,4 +331,20 @@ fn long_custom_stroke_phase_reaches_the_actual_pdf_content_stream() {
             "phase {phase}: {written} vs {want}"
         );
     }
+}
+
+#[test]
+fn text_mark_workload_limit_is_a_visible_read_only_preflight_error() {
+    let (mut raw,page)=source();
+    let mut p=pattern("text");
+    // Ten million repeats on the visible line must not allocate a prefix
+    // and then pretend that the omitted suffix was rendered.
+    for e in p["elements"].as_array_mut().unwrap() {
+        if e["length"].as_f64().is_some_and(|n|n!=0.) {e["length"]=json!(e["length"].as_f64().unwrap()*1e-7);}
+    }
+    raw["settings"]["lineTypes"]=json!([p]);raw["entities"][0]["linePattern"]=json!("P");
+    let (doc,book)=document(raw,page);let before=doc.to_snapshot_v2();
+    assert!(!losses(&doc,&book).is_empty());
+    assert_eq!(book::book_pdf(&doc,&[],"Test","2026-11-04").unwrap_err().code,"linetype_unsupported");
+    assert_eq!(doc.to_snapshot_v2(),before);
 }

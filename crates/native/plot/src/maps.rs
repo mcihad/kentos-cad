@@ -339,11 +339,11 @@ pub(crate) fn line_type_check_needed(
     doc: &kentos_domain::Document, map: &kentos_sheet::display::MapPrim, library: &StyleLibrary,
 ) -> bool {
     let types = kentos_native_style::line_types::LineTypes::of(doc.settings());
-    if types.has_losses() { return true; }
+    if types.needs_preflight() { return true; }
     let bad = |name: Option<&str>| name.is_some_and(|n| types.loss(n).is_some());
     fn long_dash(v: &serde_json::Value) -> bool {
         match v {
-            serde_json::Value::Object(m) => m.get("lineTypeLoss").is_some()
+            serde_json::Value::Object(m) => m.get("lineTypeLoss").is_some() || m.get("cadMarks").is_some()
                 || m.get("dash").and_then(serde_json::Value::as_array)
                     .is_some_and(|d| d.len() > 4096)
                 || m.values().any(long_dash),

@@ -1212,7 +1212,7 @@ fn sheet_preflight_agent_reports_visible_linetype_loss_without_writing_or_mutati
     std::fs::create_dir_all(&root).unwrap();
     let mut model = fx["model"].clone();
     model["settings"]["lineTypes"] = json!([{"name":"HW", "unit":"paper", "elements":[
-        {"length":2.}, {"length":-1.}, {"length":0.,"text":{"text":"HW","style":"STANDARD","scale":0.1}}, {"length":-1.}
+        {"length":2.}, {"length":-1.}, {"length":0.,"text":{"text":"HW","style":"MISSING_FONT_STYLE","scale":0.1}}, {"length":-1.}
     ]}]);
     model["entities"][0]["linePattern"] = json!("HW");
     let source = root.join("source.kcad");

@@ -1663,6 +1663,17 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
   karşılaştırıldı. Gerçek GUI'de iki kaynak yazı stili ve parametreleri
   doğrulandı. Test ayrıntıları ADR 0930'da. Yazı/SHX çizimi hâlâ açık.
 
+**Yazılı desen çiziminin ilk dilimi (4 Kasım 2026):**
+
+- Paketli fontların ortak glyph planı artık çizgi tipi içinde GPU/CPU/PDF
+  geometri hattından çizilir. R/A/U, köşe fazı, kaynak stil ve iki ölçek
+  çarpanı korunur. Eksik kaynak ve iş yükü sınırında tam çıktı engeli sürer.
+- Gerçek GUI'de HW, açılı/ters yazı ve köşe örnekleri; 1:20/1:50 pafta,
+  iki sayfalı PDF ve KCAD kaydet–yeniden aç denendi. PDF'deki dört kaynak
+  kelimenin sınırları ayrı referansla 0 piksel fark verdi. Test sayıları,
+  değişikliksiz HEAD'de de olan iki eski golden-test hatası ve açık sınırlar
+  ADR 0930'da. SHX/affine/genişlik/performance kabulü bitmedi; ana durum `[~]`.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

@@ -2,8 +2,10 @@
 //! millimetres, as the simple look's built-in types are, so a line's width keeps its unit. A paper pattern's lengths
 //! are millimetres already; a drawing pattern's (the project's unit) go to paper by the drawing's scale. Every dash,
 //! a built-in type's too, is times the project's line type scale (LTSCALE); the object's own scale is its
-//! [`crate::simple::Stroke`]'s. All dash/gap values are retained. Text/shape marks are still unsupported
-//! and carry an explicit loss finding through compiled primitives (ADR 0930).
+//! [`crate::simple::Stroke`]'s. All dash/gap values are retained. Bundled-font text marks share frozen
+//! contours; unsupported resources carry explicit loss findings (ADR 0930).
+
+mod text;
 
 use std::collections::HashMap;
 
@@ -65,6 +67,7 @@ pub struct LineTypes {
     by_name: HashMap<String, Option<Dashes>>,
     /// Kept separately: a continuous pattern can still lose its complex marks.
     losses: HashMap<String, String>,
+    marks: HashMap<String, Value>,
     /// The project's line type scale (LTSCALE), 1 without one.
     pub scale: f64,
 }
@@ -75,6 +78,7 @@ impl Default for LineTypes {
         Self {
             by_name: HashMap::new(),
             losses: HashMap::new(),
+            marks: HashMap::new(),
             scale: 1.0,
         }
     }
@@ -95,15 +99,18 @@ impl LineTypes {
             .drawing_unit
             .unwrap_or(kentos_contracts::DrawingUnit::M)
             .metres();
+        let mut losses = HashMap::new();
+        let mut marks = HashMap::new();
+        for def in &settings.line_types {
+            match text::prepare(def, settings, plot_scale) {
+                Ok(Some(prepared)) => { marks.insert(def.name.to_lowercase(), prepared); }
+                Ok(None) => {},
+                Err(error) => { losses.insert(def.name.to_lowercase(), format!("“{}”: {error}", def.name)); }
+            }
+        }
         Self {
-            losses: settings.line_types.iter().filter_map(|t| {
-                let complex = t.elements.iter().any(|e| e.is_complex());
-                let long = dashes_of(t, plot_scale, unit).is_some_and(|d| d.lossy);
-                (complex || long).then(|| (t.name.to_lowercase(), format!(
-                    "“{}” çizgi tipinin {} mevcut çizim hattında eksiksiz üretilemiyor.",
-                    t.name, if complex { "yazı/şekil işaretleri" } else { "uzun çizgi/boşluk deseni" }
-                )))
-            }).collect(),
+            losses,
+            marks,
             by_name: settings
                 .line_types
                 .iter()
@@ -123,8 +130,8 @@ impl LineTypes {
         self.by_name.is_empty() && self.scale == 1.0
     }
 
-    pub fn has_losses(&self) -> bool {
-        !self.losses.is_empty()
+    pub fn needs_preflight(&self) -> bool {
+        !self.losses.is_empty() || !self.marks.is_empty()
     }
 
     /// A named type's dashes, `Some(None)` for a continuous one; none for a name the project does not have.
@@ -147,15 +154,21 @@ impl LineTypes {
     pub fn apply(&self, pattern: Option<&str>, mut symbols: Value) -> Value {
         let dash = pattern.and_then(|p| self.dashes(p));
         let loss = pattern.and_then(|p| self.loss(p));
-        if dash.is_none() && self.scale == 1.0 && loss.is_none() {
+        let marks = pattern.and_then(|p| self.marks.get(&p.to_lowercase()));
+        if dash.is_none() && self.scale == 1.0 && loss.is_none() && marks.is_none() {
             return symbols;
         }
-        fn walk(v: &mut Value, dash: Option<Option<&Dashes>>, scale: f64, loss: Option<&str>) {
+        fn walk(v: &mut Value, dash: Option<Option<&Dashes>>, scale: f64, loss: Option<&str>, marks: Option<&Value>) {
             match v {
                 Value::Object(map) => {
                     if map.get("type").and_then(Value::as_str) == Some("simpleLine") {
                         if let Some(loss) = loss {
                             map.insert("lineTypeLoss".into(), json!(loss));
+                        }
+                        if let Some(marks) = marks {
+                            let mut marks = marks.clone();
+                            scale_marks(&mut marks, scale);
+                            map.insert("cadMarks".into(), marks);
                         }
                         match dash {
                             Some(Some(d)) => {
@@ -179,15 +192,27 @@ impl LineTypes {
                         }
                     }
                     for (_, x) in map.iter_mut() {
-                        walk(x, dash, scale, loss);
+                        walk(x, dash, scale, loss, marks);
                     }
                 }
-                Value::Array(list) => list.iter_mut().for_each(|x| walk(x, dash, scale, loss)),
+                Value::Array(list) => list.iter_mut().for_each(|x| walk(x, dash, scale, loss, marks)),
                 _ => {}
             }
         }
-        walk(&mut symbols, dash, self.scale, loss.as_deref());
+        walk(&mut symbols, dash, self.scale, loss.as_deref(), marks);
         symbols
+    }
+}
+
+/// Scale physical placement once; normalized glyph contours remain unchanged.
+pub(crate) fn scale_marks(v: &mut Value, scale: f64) {
+    if scale == 1. { return; }
+    fn times(v: &mut Value, name: &str, scale: f64) {
+        if let Some(n) = v.get(name).and_then(Value::as_f64) { v[name] = json!(n * scale); }
+    }
+    times(v, "period", scale);
+    if let Some(marks) = v.get_mut("marks").and_then(Value::as_array_mut) {
+        for mark in marks { for key in ["at", "height", "x", "y"] { times(mark, key, scale); } }
     }
 }
 

@@ -321,6 +321,10 @@ pub trait Sink {
     fn stroke(&mut self, style: &StrokeStyle, path: &[Vec2], closed: bool);
     /// One area: outer ring first, holes after.
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]);
+    /// Reserve the complete path's CAD contour work before painting any of it.
+    fn reserve_cad_points(&mut self, _points: usize) -> bool { true }
+    /// A filled CAD line mark follows stroke visibility, not area-fill visibility.
+    fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) { self.fill(paint, rings); }
     /// `angle`: radians, the direction the marker faces (0 = east).
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64);
     /// The primitives that follow belong to the effect group of a symbol

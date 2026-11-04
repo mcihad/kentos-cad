@@ -174,6 +174,9 @@ impl Stroke {
                                 }
                             }
                         }
+                        if let Some(marks) = map.get_mut("cadMarks") {
+                            crate::line_types::scale_marks(marks, s.scale);
+                        }
                         if s.opacity != 1.0 {
                             let own = map.get("opacity").and_then(Value::as_f64).unwrap_or(1.0);
                             map.insert("opacity".into(), json!(own * s.opacity));

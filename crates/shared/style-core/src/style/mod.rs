@@ -5,6 +5,7 @@
 //! atlas, the upload to the GPU.
 
 pub mod batch;
+pub mod cad_marks;
 pub mod build;
 pub mod charts;
 pub mod compile;

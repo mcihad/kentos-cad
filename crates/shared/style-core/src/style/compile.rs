@@ -448,9 +448,28 @@ fn emit_line_layer(
     }
     match layer {
         Layer::SimpleLine(l) => {
-            let Some(style) = stroke_style(l, level, t, env) else {
+            let Some(mut style) = stroke_style(l, level, t, env) else {
                 return;
             };
+            let marks = l.cad_marks.as_ref().map(|marks| match marks {
+                Ok(marks) => {
+                    if l.wave.is_some() || l.blur.is_some_and(|b| b != 0.) {
+                        return Err(format!("“{}”: dalga/bulanıklıkla karmaşık çizgi işareti desteklenmiyor.", marks.source()));
+                    }
+                    let placed = marks.placements(&path, closed,
+                        to_world(l.dash_offset.unwrap_or(0.), l.base.unit, env), l.base.unit, env)
+                        .map_err(|error| format!("“{}”: {error}", marks.source()))?;
+                    let points = placed.iter().fold(0usize, |sum, p| sum.saturating_add(p.cost()));
+                    if !sink.reserve_cad_points(points) {
+                        return Err(format!("“{}”: katmanın toplam çizgi tipi yazısı sınırı aşıldı; eksik çıktı üretilmedi.", marks.source()));
+                    }
+                    Ok(placed)
+                }
+                Err(error) => Err(error.clone()),
+            });
+            if let Some(Err(error)) = &marks {
+                style.line_type_loss = Some(error.clone());
+            }
             match &l.wave {
                 Some(w) if w.length > 0.0 => {
                     let len = |v: f64| to_world(v, base.unit, env);
@@ -467,6 +486,9 @@ fn emit_line_layer(
                     }
                 }
                 _ => sink.stroke(&style, &path, closed),
+            }
+            if let Some(Ok(marks)) = marks {
+                for mark in marks { mark.paint(&style, l.base.unit, env, sink); }
             }
         }
         Layer::MarkerLine(l) => emit_markers_along(l, &path, closed, level, t, env, sink),
