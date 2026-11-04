@@ -63,6 +63,37 @@ dört kalıpla kullanır.
 - **Yana kaydırmada tablo en az bulunduğu yer kadar geniştir** (`responsive` + `min_width`): dar tablo boşluk
   bırakmaz, geniş tablo kayar.
 
+### §3 Tablo kendi içinde kayar, pencere yerinde kalır (sahibin isteği, 4 Kasım 2026)
+
+Sahibin gözlemi: "data grid verisi artınca tüm pencere scroll ediliyor, sadece data tablosunda scroll olsa daha iyi
+olmaz mı". Örnek: Dever'in Kritik km'si 24 satırdı ve formu, çizimi, özet kutularını birlikte kaydırıyordu.
+
+- **Tablo en çok kendi boyu kadar yer ister.** `road_dialog::table` ve `sheet` tabloyu `grow::Held::natural` ile
+  sarar. Yer varsa tablo satırları kadardır (en çok 15 satır), yer azsa daha kısadır. Satırları başlığın altında,
+  tablonun kendi içinde kayar.
+- **Çizim ve tablo kalan yeri paylaşır.** `RoadDialog`, alttaki tabloyu `Grows::push_fit` ile koyar. Çizimin ve
+  tablonun en az boyları vardır (tablo için başlık + üç satır). Kalan yer en az boylarıyla orantılı paylaştırılır;
+  tablo kendi boyundan fazlasını almaz, artanı çizime gider (`grow::shares_capped`).
+- **Form kendi içinde kayar.** Pencereden uzun form `grow::Held::within_room` ile pencerenin yüksekliğinde tutulur ve
+  kendi kaydırma çubuğuyla kayar. Çizim, özet ve tablo görünür kalır.
+- **Kendi boyundaki pencere:** içerik sığıyorsa pencere içeriği kadardır. Sığmayınca `Reach` gövdeyi pencerenin
+  yüksekliğiyle yeniden yerleştirir; tablo ve form o zaman kısalır.
+- **Bir piksel pay:** `Grows` kalan yerin bir pikselini dağıtmaz. Yazıların kesirli yükseklikleri yüzünden gövde
+  yuvarlamayla taşıyor ve boşuna kaydırma çubuğu çıkıyordu (Kübaj).
+
+Ölçümler 1440 × 900'de alındı:
+
+| Pencere | Önce | Sonra |
+|---|---|---|
+| Dever (24 kritik km) | gövde kayıyordu, son satırlar pencerenin dışındaydı | form kendi içinde kayıyor; çizim, özet ve tablo sabit; tablo 6 satır gösteriyor, 24'ü kendi içinde kayıyor |
+| Kübaj | gövdede gereksiz çubuk vardı | çubuk yok |
+
+1100 × 650'de beş bulgu bandı Geçiş önerisi'nin gövdesini kaydırıyordu. Artık en çok üç bant gösteriliyor, kalanı tek
+satırda.
+
+Bekçiler: `grow::tests::a_long_table_scrolls_inside_and_the_body_keeps_the_window`,
+`a_table_takes_its_rows_and_the_picture_the_rest`.
+
 ## Ölçüm
 
 Ölçümler 1440 × 900 ve 1920 × 1080'de alındı (`.run/gui-evidence/tablolar/`, ilgili pencerelerin `screens` testleri).

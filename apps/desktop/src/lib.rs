@@ -348,6 +348,7 @@ mod section_window_tests;
 mod superelevation_window_tests;
 #[cfg(test)]
 mod transition_window_tests;
+#[cfg(test)]
 mod widening_window_tests;
 #[cfg(test)]
 mod corridor_window_tests;

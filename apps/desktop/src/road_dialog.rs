@@ -217,7 +217,8 @@ impl<'a> RoadDialog<'a> {
             result = result.push(n);
         }
         if let Some(detail) = self.detail {
-            result = result.push(detail);
+            // The table takes what the picture leaves, up to its rows; its rows scroll inside it (docs/adr/0938 §3).
+            result = result.push_fit(detail, typography::scaled(DETAIL_LEAST));
         }
         if let Some(tail) = self.tail {
             result = result.push(tail);
@@ -227,6 +228,12 @@ impl<'a> RoadDialog<'a> {
             left = left.push(head);
         }
         left = left.push(self.form);
+        // A form taller than the window scrolls by itself, the picture and the table staying in view.
+        let left = kentos_ui::widget::grow::Held::within_room(
+            iced::widget::scrollable(container(left).padding(iced::Padding::ZERO.right(12)))
+                .direction(kentos_ui::style::field::body_scrollbar())
+                .height(Length::Shrink),
+        );
         let body = row![left, result].spacing(typography::scaled(20.0));
 
         let mut frame = Frame::new(self.title).scroll(body).width(self.width).on_close(self.close.clone());
@@ -246,6 +253,9 @@ impl<'a> RoadDialog<'a> {
         frame.modal(self.close)
     }
 }
+
+/// The least height a window's table is given before the window scrolls: a head and three rows.
+const DETAIL_LEAST: f32 = 120.0;
 
 /// The detail's choice over its table: `Segmented` with the window's lists; a fixed width so the row does not jump.
 pub fn detail_choice<'a, T>(
@@ -281,34 +291,35 @@ pub fn num(title: &str, width: f32) -> Col<'_> {
     Col { title, width: Some(width), number: true }
 }
 
-/// A result table: the columns and the rows' words (DESIGN.md §7.13: numbers right, the head on its band).
+/// A result table: the columns and the rows' words (DESIGN.md §7.13: numbers right, the head on its band). Its rows
+/// scroll inside it under its head, so the window keeps its place (a schedule's 24 critical stations made the whole
+/// Dever window scroll, its form and picture with them; docs/adr/0938 §3).
 pub fn table<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> Element<'a, Message> {
-    use kentos_ui::widget::table::{self, Table};
-    let numbers: Vec<bool> = cols.iter().map(|c| c.number).collect();
-    let columns = cols.into_iter().map(|c| {
-        let mut column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
-        if c.number {
-            column = column.align_right();
-        }
-        column
-    });
-    let body = Table::new(columns)
-        .extend(rows.into_iter().map(|cells| {
-            table::Row::new(cells.into_iter().zip(numbers.iter().copied()).map(|(t, n)| -> Element<'a, Message> {
-                if n { table::number(t).into() } else { table::text(t).into() }
-            }))
-        }))
-        .empty(empty);
-    body.into()
+    use kentos_ui::widget::table;
+    if rows.is_empty() {
+        return sheet_in(cols, rows, empty, Length::Shrink);
+    }
+    // As high as its rows (at most MOST_SHOWN) where there is room, less where the window has less: a RoadDialog gives
+    // its detail what the picture leaves (`Grows::push_fit`), the rows scroll inside.
+    let shown = rows.len().min(MOST_SHOWN);
+    let natural = table::row_height() * (shown + 1) as f32 + 1.0 + 6.0;
+    kentos_ui::widget::grow::Held::natural(sheet_in(cols, rows, empty, Length::Fill), natural).into()
 }
+
+/// The most rows a result table asks room for; more scroll inside it.
+pub const MOST_SHOWN: usize = 15;
 
 /// A long result table (a sheet: Kübaj cetveli, an alignment's stakeout): the kit's data table whose head stays while
 /// its rows scroll within `height` (12 px body text), the rows built only as they show.
 pub fn sheet<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, height: f32) -> Element<'a, Message> {
     use kentos_ui::widget::table;
-    // At most `height`; a few rows take only their own (the head's band and line, the sideways bar's 6 px).
+    if rows.is_empty() {
+        return sheet_in(cols, rows, empty, Length::Shrink);
+    }
+    // At most `height`; a few rows take only their own (the head's band and line, the sideways bar's 6 px); less where
+    // the window has less, its rows scrolling inside (docs/adr/0938 §3).
     let height = typography::scaled(height).min(table::row_height() * (rows.len() + 1) as f32 + 1.0 + 6.0);
-    sheet_in(cols, rows, empty, Length::Fixed(height))
+    kentos_ui::widget::grow::Held::natural(sheet_in(cols, rows, empty, Length::Fill), height).into()
 }
 
 /// A sheet beside a picture that grows (İstinat duvarı's rows by km): it fills the height and is as wide as its
@@ -471,5 +482,7 @@ pub fn table_of<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<Element<'a, Message>>>, em
         let column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
         if c.number { column.align_right() } else { column }
     });
-    Table::new(columns).extend(rows.into_iter().map(table::Row::new)).empty(empty).into()
+    let many = rows.len() > MOST_SHOWN;
+    let t = Table::new(columns).extend(rows.into_iter().map(table::Row::new)).empty(empty);
+    if many { t.height(table::row_height() * MOST_SHOWN as f32).into() } else { t.into() }
 }

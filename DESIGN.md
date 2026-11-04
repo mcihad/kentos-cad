@@ -605,7 +605,7 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 - **Penceredeki tablo kitin veri tablosudur** (ADR 0938): elle başlık ve `label` satırı kurulmaz. Sonuç `road_dialog::table`,
   uzun sonuç `sheet` (başlık sabit, sanal satırlar, sığmayan sütun yana kayar), çizimin yanındaki `sheet_fill`;
   düzenlenen satırlar `edit_table`/`grid_table` ızgarasıdır (`EditCell`, açılır `pick`, satırı silen `drop_cell`), satıra
-  basmak satırı seçer. Sayılar Türkçe (`grouped`), birim sütun başlığında. Ölçüm: Kübaj cetveli 146 px'lik kesilen
+  basmak satırı seçer. Sayılar Türkçe (`grouped`), birim sütun başlığında. Tablo kendi içinde kayar, pencere yerinde kalır: tablo en çok satırları kadar yer ister ve çizimle kalan yeri paylaşır (`Grows::push_fit`); pencereden uzun form kendi içinde kayar (`Held::within_room`; ADR 0938 §3). Ölçüm: Kübaj cetveli 146 px'lik kesilen
   kutudan 220 px'lik, on bir sütununa yana kayarak ulaşılan tabloya.
 - **Büyüyen pencerede çizim büyür** (ADR 0937 §2): çizim gövdenin `Grows` sütununda `push_grow` ile durur; kutu
   büyütülünce ya da tam ekran yapılınca kalan yerin hepsini alır, en az boyunun altına inmez.

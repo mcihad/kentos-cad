@@ -203,12 +203,19 @@ impl App {
                 for warning in &x.warnings {
                     d = d.note(Banner::warning(warning.clone()));
                 }
-                for f in out.findings.iter().take(6) {
+                // The conflicts first; three at most, the rest counted (a small window keeps its table in view).
+                let mut findings: Vec<_> = out.findings.iter().collect();
+                findings.sort_by_key(|f| !(f.kind == "full" || f.kind == "tangent"));
+                for f in findings.iter().take(3) {
                     d = d.note(if f.kind == "full" || f.kind == "tangent" {
                         Banner::warning(f.message.clone())
                     } else {
                         Banner::info(f.message.clone())
                     });
+                }
+                if findings.len() > 3 {
+                    let rest: Vec<&str> = findings[3..].iter().map(|f| f.message.as_str()).collect();
+                    d = d.note(Banner::info(format!("{} bulgu daha: {}", rest.len(), rest.join(" "))));
                 }
                 let o = |v: Option<f64>, d: usize| v.map_or_else(|| "—".to_owned(), |v| comma_text(v, d));
                 let rows = out
