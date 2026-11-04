@@ -450,6 +450,40 @@
        {
         "command": "terrain.new",
         "size": "large"
+       },
+       {
+        "command": "terrain.cloud",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Analiz",
+      "icon": "terrainAnalysis",
+      "items": [
+       {
+        "command": "terrain.analysis",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Tesviye",
+      "icon": "platformEditor",
+      "items": [
+       {
+        "command": "platform.editor",
+        "size": "large"
+       }
+      ]
+     },
+     {
+      "label": "Drenaj",
+      "icon": "drainageEditor",
+      "items": [
+       {
+        "command": "drainage.editor",
+        "size": "large"
        }
       ]
      },
@@ -520,6 +554,10 @@
        {
         "command": "landxml.importAlignments",
         "size": "large"
+       },
+       {
+        "command": "alignment.check",
+        "size": "large"
        }
       ]
      },
@@ -540,6 +578,10 @@
        {
         "command": "junction.editor",
         "size": "large"
+       },
+       {
+        "command": "swept.editor",
+        "size": "large"
        }
       ]
      },
@@ -557,6 +599,14 @@
        },
        {
         "command": "profile.fromLine",
+        "size": "large"
+       },
+       {
+        "command": "profile.sight",
+        "size": "large"
+       },
+       {
+        "command": "profile.propose",
         "size": "large"
        }
       ]
@@ -617,6 +667,10 @@
        {
         "command": "corridor.slopePlan",
         "size": "large"
+       },
+       {
+        "command": "corridor.water",
+        "size": "large"
        }
       ]
      },
@@ -648,6 +702,10 @@
        },
        {
         "command": "haul.new",
+        "size": "large"
+       },
+       {
+        "command": "haul.plan",
         "size": "large"
        }
       ]
@@ -1051,6 +1109,8 @@
        }
       ],
       "overflow": [
+       "block.find",
+       "array.find",
        "block.insertFile",
        "block.attributes",
        "block.sync",

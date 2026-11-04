@@ -623,6 +623,26 @@ pub const PORTED: &[&str] = &[
     "culvert.editor",
     // plan/road.md Y11.3: İstinat duvarı (retaining_wall_window.rs).
     "retainingWall.editor",
+    // plan/road.md Y14.3: Platform (platform_window.rs).
+    "platform.editor",
+    // plan/road.md Y15.3: Buluttan arazi (terrain_cloud_window.rs).
+    "terrain.cloud",
+    // plan/road.md Y16.3: Drenaj (drainage_window.rs).
+    "drainage.editor",
+    // plan/road.md Y17.3: Araç izi (swept_window.rs).
+    "swept.editor",
+    // plan/road.md Y18.5: Yüzey analizi (surface_analysis_window.rs).
+    "terrain.analysis",
+    // plan/road.md Y20: Görüş mesafesi (sight_window.rs).
+    "profile.sight",
+    // plan/road.md Y25: Kırmızı kot önerisi (propose_window.rs).
+    "profile.propose",
+    // plan/road.md Y21: Tasarım denetimi (design_check_window.rs).
+    "alignment.check",
+    // plan/road.md Y22: Platform suyu (platform_water_window.rs).
+    "corridor.water",
+    // plan/road.md Y23: Taşıma planı (haul_plan_window.rs).
+    "haul.plan",
     // plan/road.md Y11.4: Poz metrajı (pay_window.rs).
     "payItems.editor",
     // plan/road.md Y12.1: Ön güzergâh (route_window.rs).

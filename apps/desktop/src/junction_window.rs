@@ -2,7 +2,14 @@
 //! legs' edges and the curb returns' radii are the project's; KentOS fills in none. The junction is read as it is typed
 //! (`road.junctions.edit`'s plan on a reading copy): the crossing, the legs' km and the angle, and at grade the four
 //! curb returns drawn around the crossing. Kaydet writes it (one undo step “Kavşak”), Planda çiz draws the returns on a
-//! layer (one step “Kavşak çiz”).
+//! layer (one step “Kavşak çiz”). A saved separated junction's vertical clearance is read as it is typed
+//! (`road.junctions.clearance`, docs/adr/0917): the legs' profiles, the deck's depth and the minimum are the user's;
+//! the least and the largest clearance and the one at the crossing, marked in plan. At grade, the secondary road's
+//! profile is tied to the primary road's crown as it is typed (`road.junctions.tie`, docs/adr/0918): which leg keeps
+//! its crown, the cross slopes (or the primary road's superelevation) and the largest grade change are the user's;
+//! Bağla writes it (one undo step “Kavşağa bağla”). Denetim switches to the corridors' overlap
+//! (`road.junctions.overlap`, docs/adr/0919): the two corridors, the leg owning the junction and the grid's cell are
+//! the user's; the overlap's area, the secondary corridor's volume counted twice there and the stations to clip.
 //!
 //! ```text
 //! ┌ Kavşak ─────────────────────────────────────────────────────────────────────────────────────┐
@@ -11,6 +18,7 @@
 //! │ km … × km … · açı …° · bağlı · warnings                                                       │
 //! │ ┌ the crossing in plan ┐  Çeyrek  R  Uzunluk  1. kol km  2. kol km                              │
 //! │ └──────────────────────┘                                                                       │
+//! │ Düşey açıklık: 1. kol [boykesit ▾] 2. kol [▾] Tabliye [ ] Aralık [ ] Gerekli [ ] → en az … │
 //! │ [Sil]                         Katman [▾] [Planda çiz]                     [Kapat] [Kaydet]     │
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
@@ -19,10 +27,14 @@ use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsDraw, JunctionsEdit, RoadEditOperation,
+    CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsClearance, JunctionsCleared, JunctionsDraw,
+    JunctionsEdit, JunctionsOverlap, JunctionsOverlapped, JunctionsTie, JunctionsTied, RoadEditOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_junctions_draw, road_junctions_edit};
+use kentos_native_application::{
+    ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit, road_junctions_overlap,
+    road_junctions_tie,
+};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
@@ -38,6 +50,7 @@ const SAVE: &str = "Kaydet";
 const CLOSE: &str = "Kapat";
 const DRAW: &str = "Planda çiz";
 const REMOVE: &str = "Sil";
+const TIE: &str = "Bağla";
 /// The typed fields, in order: the junction's, each leg's edges, the quadrants' radii.
 pub(crate) const FIELDS: [&str; 11] = [
     "Ad",
@@ -52,6 +65,24 @@ pub(crate) const FIELDS: [&str; 11] = [
     "Sol–sol (m)",
     "Sol–sağ (m)",
 ];
+
+/// The clearance's typed fields: the deck's depth, the sampling step, the minimum asked.
+pub(crate) const CLEAR_FIELDS: [&str; 3] = ["Tabliye derinliği (m)", "Aralık (m)", "Gerekli açıklık (m)"];
+
+/// The tie's typed fields: the primary road's left and right cross slopes, the largest grade change.
+pub(crate) const TIE_FIELDS: [&str; 3] = ["Sol enine eğim (%)", "Sağ enine eğim (%)", "En büyük eğim değişimi (%)"];
+
+/// The tie as last read.
+pub(crate) type Tied = Result<(JunctionsTied, Vec<CommandWarning>), String>;
+
+/// The overlap's grid cell field.
+pub(crate) const OVERLAP_CELL: &str = "Izgara aralığı (m)";
+
+/// The overlap as last read.
+pub(crate) type Overlapped = Result<(JunctionsOverlapped, Vec<CommandWarning>), String>;
+
+/// The clearance as last read.
+pub(crate) type Cleared = Result<(JunctionsCleared, Vec<CommandWarning>), String>;
 
 /// The junction as last read.
 #[derive(Debug, Clone, Default)]
@@ -69,6 +100,22 @@ pub struct Window {
     pub(crate) fields: [String; 11],
     pub(crate) layer: Option<String>,
     pub(crate) preview: Preview,
+    /// The clearance's profiles (none: the leg's alignment's only one) and fields.
+    pub(crate) clear_profiles: [Option<String>; 2],
+    pub(crate) clear_fields: [String; 3],
+    pub(crate) clearance: Option<Cleared>,
+    /// The tie: the leg whose crown is kept, the primary road's superelevation (none: the typed slopes) and fields.
+    pub(crate) tie_primary: u32,
+    pub(crate) tie_super: Option<String>,
+    pub(crate) tie_fields: [String; 3],
+    pub(crate) tie: Option<Tied>,
+    /// Denetim on the corridors' overlap: its corridors (none: the leg's alignment's only one), the leg owning the
+    /// junction, the grid's cell.
+    pub(crate) overlap_mode: bool,
+    pub(crate) overlap_corridors: [Option<String>; 2],
+    pub(crate) overlap_primary: u32,
+    pub(crate) overlap_cell: String,
+    pub(crate) overlap: Option<Overlapped>,
 }
 
 #[derive(Debug, Clone)]
@@ -78,6 +125,16 @@ pub enum Event {
     Leg(usize, String),
     Field(usize, String),
     Layer(String),
+    ClearProfile(usize, Option<String>),
+    ClearField(usize, String),
+    TiePrimary(u32),
+    TieSuper(Option<String>),
+    TieField(usize, String),
+    Tie,
+    OverlapMode(bool),
+    OverlapCorridor(usize, Option<String>),
+    OverlapPrimary(u32),
+    OverlapCell(String),
     Save,
     Draw,
     Remove,
@@ -139,6 +196,69 @@ impl Window {
     }
 }
 
+impl Window {
+    /// The clearance asked of the saved junction, or why not.
+    pub(crate) fn clearance_input(&self) -> Result<JunctionsClearance, String> {
+        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince düşey açıklık okunur.".to_owned())?;
+        let need = |k: usize| number(&self.clear_fields[k], CLEAR_FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", CLEAR_FIELDS[k]));
+        let profiles = match &self.clear_profiles {
+            [None, None] => None,
+            [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
+            _ => return Err("İki kolun boykesitini birlikte seçin.".into()),
+        };
+        Ok(JunctionsClearance {
+            junction,
+            profiles,
+            depth: need(0)?,
+            step: need(1)?,
+            minimum: number(&self.clear_fields[2], CLEAR_FIELDS[2])?,
+        })
+    }
+}
+
+impl Window {
+    /// The tie asked of the saved junction, or why not.
+    pub(crate) fn tie_input(&self) -> Result<JunctionsTie, String> {
+        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince boykesit bağı okunur.".to_owned())?;
+        let profiles = match &self.clear_profiles {
+            [None, None] => None,
+            [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
+            _ => return Err("İki kolun boykesitini birlikte seçin.".into()),
+        };
+        let crossfall = match self.tie_super {
+            Some(_) => None,
+            None => {
+                let need =
+                    |k: usize| number(&self.tie_fields[k], TIE_FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", TIE_FIELDS[k]));
+                Some([need(0)?, need(1)?])
+            }
+        };
+        Ok(JunctionsTie {
+            junction,
+            primary: self.tie_primary,
+            profiles,
+            crossfall,
+            superelevation: self.tie_super.clone(),
+            max_grade_change: number(&self.tie_fields[2], TIE_FIELDS[2])?,
+            expected_revision: None,
+        })
+    }
+}
+
+impl Window {
+    /// The overlap asked of the saved junction, or why not.
+    pub(crate) fn overlap_input(&self) -> Result<JunctionsOverlap, String> {
+        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince koridor örtüşmesi okunur.".to_owned())?;
+        let corridors = match &self.overlap_corridors {
+            [None, None] => None,
+            [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
+            _ => return Err("İki kolun koridorunu birlikte seçin.".into()),
+        };
+        let cell = number(&self.overlap_cell, OVERLAP_CELL)?.ok_or_else(|| format!("{OVERLAP_CELL} yazılmalı."))?;
+        Ok(JunctionsOverlap { junction, corridors, primary: self.overlap_primary, cell })
+    }
+}
+
 impl App {
     /// Kavşak: the window on the road project's first junction, or a new one on its first two alignments.
     pub(crate) fn open_junctions(&mut self) {
@@ -164,6 +284,18 @@ impl App {
             fields: Default::default(),
             layer,
             preview: Preview::default(),
+            clear_profiles: [None, None],
+            clear_fields: Default::default(),
+            clearance: None,
+            tie_primary: 0,
+            tie_super: None,
+            tie_fields: Default::default(),
+            tie: None,
+            overlap_mode: false,
+            overlap_corridors: [None, None],
+            overlap_primary: 0,
+            overlap_cell: String::new(),
+            overlap: None,
         }));
         self.dialog = Some(Dialog::Junctions);
         let _ = self.junction_event(Event::Choose(chosen));
@@ -176,6 +308,16 @@ impl App {
             Err(why) => Preview { why: Some(why), ..Preview::default() },
             Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
         };
+        let saved_separated = w.kind == JunctionKind::Separated
+            && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::Separated));
+        w.clearance = saved_separated
+            .then(|| w.clearance_input().and_then(|q| road_junctions_clearance::preview(&doc.model, &q)));
+        let saved_at_grade = w.kind == JunctionKind::AtGrade
+            && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::AtGrade));
+        w.tie = saved_at_grade.then(|| w.tie_input().and_then(|q| road_junctions_tie::preview(&doc.model, &q)));
+        let saved = w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id));
+        w.overlap = (w.overlap_mode && saved)
+            .then(|| w.overlap_input().and_then(|q| road_junctions_overlap::preview(&doc.model, &q)));
     }
 
     pub(crate) fn junction_event(&mut self, event: Event) -> Task<Message> {
@@ -208,11 +350,27 @@ impl App {
                     }
                 }
                 w.fields = f;
+                w.clear_profiles = [None, None];
+                w.tie_super = None;
+                w.overlap_corridors = [None, None];
             }
             Event::Kind(k) => w.kind = k,
             Event::Leg(i, a) => w.legs[i.min(1)] = Some(a),
             Event::Field(k, t) => w.fields[k.min(10)] = t,
             Event::Layer(l) => w.layer = Some(l),
+            Event::ClearProfile(i, p) => w.clear_profiles[i.min(1)] = p,
+            Event::ClearField(k, t) => w.clear_fields[k.min(2)] = t,
+            Event::TiePrimary(k) => {
+                w.tie_primary = k.min(1);
+                w.tie_super = None;
+            }
+            Event::TieSuper(d) => w.tie_super = d,
+            Event::TieField(k, t) => w.tie_fields[k.min(2)] = t,
+            Event::Tie => return self.tie_junction(),
+            Event::OverlapMode(on) => w.overlap_mode = on,
+            Event::OverlapCorridor(i, c) => w.overlap_corridors[i.min(1)] = c,
+            Event::OverlapPrimary(k) => w.overlap_primary = k.min(1),
+            Event::OverlapCell(t) => w.overlap_cell = t,
             Event::Save => return self.save_junction(),
             Event::Draw => return self.draw_junction(),
             Event::Remove => return self.remove_junction(),
@@ -243,6 +401,25 @@ impl App {
             let id = r.id.clone();
             return self.junction_event(Event::Choose(Some(id)));
         }
+        Task::none()
+    }
+
+    fn tie_junction(&mut self) -> Task<Message> {
+        let Some(w) = self.junction_window.as_ref() else { return Task::none() };
+        let input = match w.tie_input() {
+            Ok(i) => i,
+            Err(why) => {
+                self.warn(format!("Boykesit bağlanamaz: {why}"));
+                return Task::none();
+            }
+        };
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let result = road_junctions_tie::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let most = out.changes.iter().fold(0.0_f64, |a, b| a.max(*b));
+            self.say(Level::Success, format!("“{}” boykesiti kavşağa bağlandı; en büyük eğim değişimi %{most:.2}.", out.profile));
+        }
+        self.refresh_junction();
         Task::none()
     }
 
@@ -348,7 +525,111 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
+        let mut legs = legs;
+        if w.chosen.is_some() {
+            let first = if at_grade { "Boykesit bağı" } else { "Düşey açıklık" };
+            let on_check = Select::new([first, "Koridor örtüşmesi"].map(Choice::new), Some(usize::from(w.overlap_mode)), |k| {
+                msg(Event::OverlapMode(k == 1))
+            });
+            legs = legs.push(space::horizontal().width(14)).push(words::field("Denetim", container(on_check).width(160), None));
+        }
         let mut body = Column::new().spacing(10).push(top).push(legs);
+        let profile = |i: usize| {
+                let on = w.legs[i].clone();
+                let mut ids: Vec<Option<String>> = vec![None];
+                let mut names = vec!["Aksın tek boykesiti".to_owned()];
+                for p in model.map_or(&[][..], |m| m.road_profiles()).iter().filter(|p| Some(&p.alignment) == on.as_ref()) {
+                    ids.push(Some(p.id.clone()));
+                    names.push(p.name.clone());
+                }
+                let at = ids.iter().position(|x| *x == w.clear_profiles[i]);
+                Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::ClearProfile(i, ids[k].clone())))
+        };
+        if w.overlap_mode && w.chosen.is_some() {
+            let corridor = |i: usize| {
+                let on = w.legs[i].clone();
+                let mut ids: Vec<Option<String>> = vec![None];
+                let mut names = vec!["Aksın tek koridoru".to_owned()];
+                for c in model.map_or(&[][..], |m| m.road_corridors()).iter().filter(|c| Some(&c.alignment) == on.as_ref()) {
+                    ids.push(Some(c.id.clone()));
+                    names.push(c.name.clone());
+                }
+                let at = ids.iter().position(|x| *x == w.overlap_corridors[i]);
+                Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::OverlapCorridor(i, ids[k].clone())))
+            };
+            let owners = ["1. kolun koridoru", "2. kolun koridoru"];
+            let on_owner =
+                Select::new(owners.map(Choice::new), Some(w.overlap_primary as usize), |k| msg(Event::OverlapPrimary(k as u32)));
+            body = body.push(
+                row![
+                    words::field("1. kolun koridoru", container(corridor(0)).width(170), None),
+                    words::field("2. kolun koridoru", container(corridor(1)).width(170), None),
+                    words::field("Kavşağın sahibi", container(on_owner).width(170), None),
+                    words::field(
+                        OVERLAP_CELL,
+                        kentos_ui::widget::text_field("m", &w.overlap_cell).on_input(|t| msg(Event::OverlapCell(t))).width(120),
+                        None
+                    ),
+                ]
+                .spacing(10)
+                .align_y(iced::alignment::Vertical::Bottom),
+            );
+        } else if !at_grade {
+            let clear = |k: usize, hint: &'static str| {
+                words::field(
+                    CLEAR_FIELDS[k],
+                    kentos_ui::widget::text_field(hint, &w.clear_fields[k]).on_input(move |t| msg(Event::ClearField(k, t))).width(130),
+                    None,
+                )
+            };
+            body = body.push(
+                row![
+                    words::field("1. kolun boykesiti", container(profile(0)).width(170), None),
+                    words::field("2. kolun boykesiti", container(profile(1)).width(170), None),
+                    clear(0, "m"),
+                    clear(1, "m"),
+                    clear(2, "isteğe bağlı"),
+                ]
+                .spacing(10)
+                .align_y(iced::alignment::Vertical::Bottom),
+            );
+        } else if w.chosen.is_some() {
+            let primaries = ["1. kolun sırtı", "2. kolun sırtı"];
+            let on_primary =
+                Select::new(primaries.map(Choice::new), Some(w.tie_primary as usize), |k| msg(Event::TiePrimary(k as u32)));
+            let main_axis = w.legs[w.tie_primary as usize].clone();
+            let mut sids: Vec<Option<String>> = vec![None];
+            let mut snames = vec!["Yazılan eğimler".to_owned()];
+            for d in model.map_or(&[][..], |m| m.road_superelevations()).iter().filter(|d| Some(&d.alignment) == main_axis.as_ref()) {
+                sids.push(Some(d.id.clone()));
+                snames.push(d.name.clone());
+            }
+            let at = sids.iter().position(|x| *x == w.tie_super);
+            let on_super = Select::new(snames.into_iter().map(Choice::new), at, move |k| msg(Event::TieSuper(sids[k].clone())));
+            let tie = |k: usize, hint: &'static str| {
+                words::field(
+                    TIE_FIELDS[k],
+                    kentos_ui::widget::text_field(hint, &w.tie_fields[k]).on_input(move |t| msg(Event::TieField(k, t))).width(110),
+                    None,
+                )
+            };
+            let mut inputs = row![
+                words::field("Korunan sırt", container(on_primary).width(130), None),
+                words::field("1. kolun boykesiti", container(profile(0)).width(150), None),
+                words::field("2. kolun boykesiti", container(profile(1)).width(150), None),
+                words::field("Enine eğim", container(on_super).width(150), None),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom);
+            if w.tie_super.is_none() {
+                inputs = inputs.push(tie(0, "%")).push(tie(1, "%"));
+            }
+            inputs = inputs.push(tie(2, "isteğe bağlı")).push(words::secondary(
+                TIE,
+                w.tie.as_ref().is_some_and(Result::is_ok).then(|| msg(Event::Tie)),
+            ));
+            body = body.push(inputs);
+        }
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
@@ -367,16 +648,24 @@ impl App {
                     [w.legs_edge(3), w.legs_edge(4)],
                     [w.legs_edge(5), w.legs_edge(6)],
                 ];
+                let cleared = w.clearance.as_ref().filter(|_| !w.overlap_mode).and_then(|c| c.as_ref().ok()).map(|c| &c.0);
+                let overlapped = w.overlap.as_ref().and_then(|c| c.as_ref().ok()).map(|c| &c.0);
                 let picture = container(
-                    iced::widget::canvas(Crossing { report: r, edges }).width(420).height(typography::scaled(220.0)),
+                    iced::widget::canvas(Crossing { report: r, edges, cleared, overlapped }).width(420).height(typography::scaled(220.0)),
                 )
                 .style(style::container::field_box);
                 let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
                 let side = |s: &str| if s == "right" { "sağ" } else { "sol" };
-                let mut list = Column::new()
-                    .spacing(2)
-                    .push(row![head("Çeyrek", 80.0), head("R (m)", 60.0), head("Uzunluk", 70.0), head("1. kol km", 90.0), head("2. kol km", 90.0)].spacing(6));
-                for q in &r.returns {
+                let mut list = Column::new().spacing(2).width(Fill);
+                // The curb returns' table makes room for the overlap's reading.
+                let returns = if w.overlap_mode { &[][..] } else { &r.returns[..] };
+                if !w.overlap_mode {
+                    list = list.push(
+                        row![head("Çeyrek", 80.0), head("R (m)", 60.0), head("Uzunluk", 70.0), head("1. kol km", 90.0), head("2. kol km", 90.0)]
+                            .spacing(6),
+                    );
+                }
+                for q in returns {
                     list = list.push(
                         row![
                             label::caption(format!("{}–{}", side(&q.a), side(&q.b))).width(80),
@@ -388,11 +677,95 @@ impl App {
                         .spacing(6),
                     );
                 }
-                if r.returns.is_empty() {
+                if r.returns.is_empty() && !w.overlap_mode {
                     list = list.push(label::caption("Katlı kavşağın dönüş yayı yok.").style(muted));
                 }
+                if let Some(o) = &w.overlap {
+                    list = list.push(space::vertical().height(8)).push(label::caption("Koridor örtüşmesi").style(muted));
+                    match o {
+                        Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
+                        Ok((o, warnings)) => {
+                            let line = |a: &str, b: String| row![label::caption(a.to_owned()).width(170), label::caption(b)].spacing(6);
+                            list = list
+                                .push(line("Örtüşen alan", format!("{:.1} m² ({} hücre)", o.area, o.cells)))
+                                .push(line("İki kez sayılan yarma", format!("{:.1} m³", o.cut)))
+                                .push(line("İki kez sayılan dolgu", format!("{:.1} m³", o.fill)));
+                            if let (Some(mean), Some(l)) = (o.mean_difference, &o.largest) {
+                                list = list.push(line("Yüzeylerin farkı", format!("ortalama {mean:.3} m, en çok {:+.3} m", l.difference)));
+                            }
+                            if let (Some(p), Some(q)) = (o.primary_range, o.secondary_range) {
+                                list = list
+                                    .push(line("Sahibin km aralığı", format!("{:.2} – {:.2}", p[0], p[1])))
+                                    .push(line("Talinin kırpılacak km'si", format!("{:.2} – {:.2}", q[0], q[1])));
+                            }
+                            if !warnings.is_empty() {
+                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                list = list.push(label::caption(all).style(warn).width(Fill));
+                            }
+                        }
+                    }
+                }
+                if let Some(t) = w.tie.as_ref().filter(|_| !w.overlap_mode) {
+                    list = list.push(space::vertical().height(8)).push(label::caption("Boykesit bağı").style(muted));
+                    match t {
+                        Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
+                        Ok((t, warnings)) => {
+                            list = list.push(
+                                row![head("PVI", 80.0), head("Tali km", 70.0), head("Kot", 80.0), head("Fark", 70.0), head("Eğim farkı", 90.0)]
+                                    .spacing(6),
+                            );
+                            for (tie, change) in t.ties.iter().zip(&t.changes) {
+                                list = list.push(
+                                    row![
+                                        label::caption(tie.pvi.clone()).width(80),
+                                        label::caption(format!("{:.2}", tie.station)).width(70),
+                                        label::caption(format!("{:.3}", tie.elevation)).width(80),
+                                        label::caption(format!("{:+.3}", tie.difference)).width(70),
+                                        label::caption(format!("%{change:.2}")).width(90),
+                                    ]
+                                    .spacing(6),
+                                );
+                            }
+                            let grades = t.grades.iter().map(|g| format!("%{g:+.2}")).collect::<Vec<_>>().join(" → ");
+                            let gone = if t.removed.is_empty() { "kalkan PVI yok".to_owned() } else { format!("kalkan: {}", t.removed.join(", ")) };
+                            list = list.push(label::caption(format!("Eğimler {grades} · {gone}")).style(muted));
+                            if !warnings.is_empty() {
+                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                list = list.push(label::caption(all).style(warn).width(Fill));
+                            }
+                        }
+                    }
+                }
+                if let Some(c) = w.clearance.as_ref().filter(|_| !w.overlap_mode) {
+                    list = list.push(space::vertical().height(8)).push(label::caption("Düşey açıklık").style(muted));
+                    match c {
+                        Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
+                        Ok((c, warnings)) => {
+                            let at = |t: &str, a: &kentos_commands::JunctionClearanceAt, short: bool| {
+                                let value = label::caption(format!("{:.3} m", a.clearance)).width(80);
+                                row![
+                                    label::caption(t.to_owned()).width(80),
+                                    if short { value.style(danger) } else { value },
+                                    label::caption(format!("üst km {:.2} ({:+.2})", a.upper_station, a.upper_offset)).width(140),
+                                    label::caption(format!("alt km {:.2} ({:+.2})", a.lower_station, a.lower_offset)),
+                                ]
+                                .spacing(6)
+                            };
+                            let upper = r.legs.get(c.upper as usize).map_or(String::new(), |l| l.alignment.clone());
+                            list = list
+                                .push(label::caption(format!("Üst yol {}. kol ({upper}) · {} örnek", c.upper + 1, c.samples)).style(muted))
+                                .push(at("En az", &c.least, c.short))
+                                .push(at("En çok", &c.largest, false))
+                                .push(at("Kesişimde", &c.crossing, false));
+                            if !warnings.is_empty() {
+                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                list = list.push(label::caption(all).style(warn).width(Fill));
+                            }
+                        }
+                    }
+                }
                 body = body.push(
-                    row![picture, container(scrollable(list).height(typography::scaled(220.0))).width(Fill).padding([6, 8])]
+                    row![picture, container(scrollable(list).width(Fill).height(typography::scaled(220.0))).width(Fill).padding([6, 8])]
                         .spacing(12),
                 );
             }
@@ -433,9 +806,19 @@ impl App {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
+            Control::Press(TIE) => Some(msg(Event::Tie)),
+            Control::Fill(OVERLAP_CELL, t) => Some(msg(Event::OverlapCell(t.to_owned()))),
+            Control::Fill(name, t) if TIE_FIELDS.contains(&name) => {
+                let k = TIE_FIELDS.iter().position(|f| *f == name).unwrap_or(0);
+                Some(msg(Event::TieField(k, t.to_owned())))
+            }
             Control::Fill(name, t) if FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))
+            }
+            Control::Fill(name, t) if CLEAR_FIELDS.contains(&name) => {
+                let k = CLEAR_FIELDS.iter().position(|f| *f == name).unwrap_or(0);
+                Some(msg(Event::ClearField(k, t.to_owned())))
             }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
@@ -452,6 +835,10 @@ impl Window {
 struct Crossing<'a> {
     report: &'a JunctionReport,
     edges: [[f64; 2]; 2],
+    /// The clearance read: its least (accent, danger when short) and largest (success) places marked.
+    cleared: Option<&'a JunctionsCleared>,
+    /// The overlap read: its largest surface difference marked.
+    overlapped: Option<&'a JunctionsOverlapped>,
 }
 
 impl canvas::Program<Message> for Crossing<'_> {
@@ -502,6 +889,31 @@ impl canvas::Program<Message> for Crossing<'_> {
             frame.stroke(&arc, Stroke::default().with_width(2.2).with_color(tk.accent));
         }
         frame.fill(&Path::circle(at(r.x, r.y), 3.0), tk.success);
+        if let Some(c) = self.cleared {
+            let least = if c.short { tk.danger } else { tk.accent };
+            for (a, color) in [(&c.largest, tk.success), (&c.least, least)] {
+                let p = at(a.x, a.y);
+                frame.stroke(&Path::circle(p, 6.0), Stroke::default().with_width(2.0).with_color(color));
+                frame.fill_text(canvas::Text {
+                    content: format!("{:.2}", a.clearance),
+                    position: Point::new(p.x + 8.0, p.y - 14.0),
+                    color,
+                    size: 12.0.into(),
+                    ..canvas::Text::default()
+                });
+            }
+        }
+        if let Some(l) = self.overlapped.and_then(|o| o.largest.as_ref()) {
+            let p = at(l.x, l.y);
+            frame.stroke(&Path::circle(p, 6.0), Stroke::default().with_width(2.0).with_color(tk.warning));
+            frame.fill_text(canvas::Text {
+                content: format!("{:+.2}", l.difference),
+                position: Point::new(p.x + 8.0, p.y - 14.0),
+                color: tk.warning,
+                size: 12.0.into(),
+                ..canvas::Text::default()
+            });
+        }
         vec![frame.into_geometry()]
     }
 }

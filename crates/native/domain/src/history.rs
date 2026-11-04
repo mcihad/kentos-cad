@@ -397,6 +397,16 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::RetainingWallDef>,
         after: Vec<kentos_contracts::RetainingWallDef>,
     },
+    /// A road project's terrain surfaces when a repair writes them (docs/adr/0916 §6), before and after.
+    RoadSurfaces {
+        before: Vec<kentos_contracts::TerrainSurfaceDef>,
+        after: Vec<kentos_contracts::TerrainSurfaceDef>,
+    },
+    /// A road project's graded pads (docs/adr/0927), before and after.
+    RoadPlatforms {
+        before: Vec<kentos_contracts::PlatformDef>,
+        after: Vec<kentos_contracts::PlatformDef>,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -778,6 +788,14 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadWalls { before, after } => Op::RoadWalls {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadPlatforms { before, after } => Op::RoadPlatforms {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::RoadSurfaces { before, after } => Op::RoadSurfaces {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1439,6 +1457,8 @@ impl Document {
                 | Op::RoadGuardrails { .. }
                 | Op::RoadCulverts { .. }
                 | Op::RoadWalls { .. }
+                | Op::RoadPlatforms { .. }
+                | Op::RoadSurfaces { .. }
                 | Op::RoadPay { .. }
                 | Op::RoadJunctions { .. }
                 | Op::RoadDrawings { .. }
@@ -1844,6 +1864,18 @@ impl Document {
             Op::RoadWalls { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.walls = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadPlatforms { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.platforms = after.clone();
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadSurfaces { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.surfaces = after.clone();
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

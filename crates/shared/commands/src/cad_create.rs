@@ -133,6 +133,18 @@ pub enum CreateOperation {
     Routes,
     /// `road.junctions.draw` (plan/road.md Y12.2): a junction's curb returns in plan, “Kavşak çiz”.
     Junctions,
+    /// `road.platforms.draw` (plan/road.md Y14): a graded pad's boundary, daylight and slope lines, “Platform çiz”.
+    Platforms,
+    /// A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0928).
+    CloudTerrain,
+    /// `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
+    Drainage,
+    Swept,
+    /// `road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları
+    /// çiz”.
+    LowConfidence,
+    /// `road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.
+    Sparse,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

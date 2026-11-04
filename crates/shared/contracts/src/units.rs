@@ -37,6 +37,9 @@ pub const UNITS: &[(&str, &str)] = &[
     ("elevation", "Düşey metre: kot, z, yükseklik."),
     ("volume", "Hacim: m³ (alan × düşey metre)."),
     ("volume-m", "Taşıma momenti: m³·m (hacim × taşıma uzaklığı)."),
+    ("discharge", "Debi: m³/s."),
+    ("velocity", "Hız: m/s."),
+    ("rainfall", "Yağış şiddeti: mm/sa."),
     ("money", "Para: tanımın para biriminde."),
     ("money/volume", "Birim fiyat: para / m³, tanımın para biriminde."),
     ("money/volume-km", "Taşıma birim fiyatı: para / (m³·km), tanımın para biriminde."),
@@ -139,6 +142,7 @@ pub const UNITS: &[(&str, &str)] = &[
         "m/%",
         "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı.",
     ),
+    ("1/m2", "Yoğunluk: metrekare başına sayı (nokta bölü m²)."),
 ];
 
 /// Whether `unit` is one of [`UNITS`].

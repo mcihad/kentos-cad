@@ -306,6 +306,26 @@ pub enum Dialog {
     Culverts,
     /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3); the window is `App::retaining_wall_window`.
     RetainingWalls,
+    /// Platform (platform_window.rs, plan/road.md Y14.3); the window is `App::platform_window`.
+    Platforms,
+    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3); the window is `App::terrain_cloud_window`.
+    TerrainCloud,
+    /// Drenaj (drainage_window.rs, plan/road.md Y16.3); the window is `App::drainage_window`.
+    Drainage,
+    /// Araç izi (swept_window.rs, plan/road.md Y17.3); the window is `App::swept_window`.
+    Swept,
+    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5); the window is `App::surface_analysis_window`.
+    SurfaceAnalysis,
+    /// Görüş mesafesi (sight_window.rs, plan/road.md Y20); the window is `App::sight_window`.
+    Sight,
+    /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25); the window is `App::propose_window`.
+    Propose,
+    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21); the window is `App::design_check_window`.
+    DesignCheck,
+    /// Platform suyu (platform_water_window.rs, plan/road.md Y22); the window is `App::platform_water_window`.
+    PlatformWater,
+    /// Taşıma planı (haul_plan_window.rs, plan/road.md Y23); the window is `App::haul_plan_window`.
+    HaulPlan,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
     Pay,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
@@ -692,6 +712,26 @@ pub enum Message {
     Culverts(crate::culvert_window::Event),
     /// An event of İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
     RetainingWalls(crate::retaining_wall_window::Event),
+    /// An event of Platform (platform_window.rs, plan/road.md Y14.3).
+    Platforms(crate::platform_window::Event),
+    /// An event of Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
+    TerrainCloud(crate::terrain_cloud_window::Event),
+    /// An event of Drenaj (drainage_window.rs, plan/road.md Y16.3).
+    Drainage(crate::drainage_window::Event),
+    /// An event of Araç izi (swept_window.rs, plan/road.md Y17.3).
+    Swept(crate::swept_window::Event),
+    /// An event of Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
+    SurfaceAnalysis(crate::surface_analysis_window::Event),
+    /// An event of Görüş mesafesi (sight_window.rs, plan/road.md Y20).
+    Sight(crate::sight_window::Event),
+    /// An event of Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
+    Propose(crate::propose_window::Event),
+    /// An event of Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
+    DesignCheck(crate::design_check_window::Event),
+    /// An event of Platform suyu (platform_water_window.rs, plan/road.md Y22).
+    PlatformWater(crate::platform_water_window::Event),
+    /// An event of Taşıma planı (haul_plan_window.rs, plan/road.md Y23).
+    HaulPlan(crate::haul_plan_window::Event),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1295,6 +1335,26 @@ pub struct App {
     pub(crate) culvert_window: Option<Box<crate::culvert_window::Window>>,
     /// İstinat duvarı (retaining_wall_window.rs, plan/road.md Y11.3).
     pub(crate) retaining_wall_window: Option<Box<crate::retaining_wall_window::Window>>,
+    /// Platform (platform_window.rs, plan/road.md Y14.3).
+    pub(crate) platform_window: Option<Box<crate::platform_window::Window>>,
+    /// Buluttan arazi (terrain_cloud_window.rs, plan/road.md Y15.3).
+    pub(crate) terrain_cloud_window: Option<Box<crate::terrain_cloud_window::Window>>,
+    /// Drenaj (drainage_window.rs, plan/road.md Y16.3).
+    pub(crate) drainage_window: Option<Box<crate::drainage_window::Window>>,
+    /// Araç izi (swept_window.rs, plan/road.md Y17.3).
+    pub(crate) swept_window: Option<Box<crate::swept_window::Window>>,
+    /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
+    pub(crate) surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
+    /// Görüş mesafesi (sight_window.rs, plan/road.md Y20).
+    pub(crate) sight_window: Option<Box<crate::sight_window::Window>>,
+    /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
+    pub(crate) propose_window: Option<Box<crate::propose_window::Window>>,
+    /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
+    pub(crate) design_check_window: Option<Box<crate::design_check_window::Window>>,
+    /// Platform suyu (platform_water_window.rs, plan/road.md Y22).
+    pub(crate) platform_water_window: Option<Box<crate::platform_water_window::Window>>,
+    /// Taşıma planı (haul_plan_window.rs, plan/road.md Y23).
+    pub(crate) haul_plan_window: Option<Box<crate::haul_plan_window::Window>>,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1741,6 +1801,16 @@ impl App {
             guardrail_window: None,
             culvert_window: None,
             retaining_wall_window: None,
+            platform_window: None,
+            terrain_cloud_window: None,
+            drainage_window: None,
+            swept_window: None,
+            surface_analysis_window: None,
+            sight_window: None,
+            propose_window: None,
+            design_check_window: None,
+            platform_water_window: None,
+            haul_plan_window: None,
             pay_window: None,
             route_window: None,
             junction_window: None,
@@ -2480,6 +2550,16 @@ impl App {
             Message::Guardrails(event) => return self.guardrail_event(event),
             Message::Culverts(event) => return self.culvert_event(event),
             Message::RetainingWalls(event) => return self.retaining_wall_event(event),
+            Message::Platforms(event) => return self.platform_event(event),
+            Message::TerrainCloud(event) => return self.terrain_cloud_event(event),
+            Message::Drainage(event) => return self.drainage_event(event),
+            Message::Swept(event) => return self.swept_event(event),
+            Message::SurfaceAnalysis(event) => return self.surface_analysis_event(event),
+            Message::Sight(event) => return self.sight_event(event),
+            Message::Propose(event) => return self.propose_event(event),
+            Message::DesignCheck(event) => return self.design_check_event(event),
+            Message::PlatformWater(event) => return self.platform_water_event(event),
+            Message::HaulPlan(event) => return self.haul_plan_event(event),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
@@ -3528,6 +3608,7 @@ impl App {
             // Brükner and Brükner oluştur (haul_window.rs, plan/road.md Y9).
             "haul.editor" => self.open_hauls(),
             "haul.new" => self.new_haul(),
+            "haul.plan" => self.open_haul_plan(),
             // Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
             "stakeout.table" => self.open_stakeout(),
             "road.sheets" => self.open_road_sheets(),
@@ -3537,6 +3618,15 @@ impl App {
             "guardrail.editor" => self.open_guardrails(),
             "culvert.editor" => self.open_culverts(),
             "retainingWall.editor" => self.open_retaining_walls(),
+            "platform.editor" => self.open_platforms(),
+            "terrain.cloud" => self.open_terrain_cloud(),
+            "drainage.editor" => self.open_drainage(),
+            "swept.editor" => self.open_swept(),
+            "terrain.analysis" => self.open_surface_analysis(),
+            "profile.sight" => self.open_sight(),
+            "profile.propose" => self.open_propose(),
+            "alignment.check" => self.open_design_check(),
+            "corridor.water" => self.open_platform_water(),
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),

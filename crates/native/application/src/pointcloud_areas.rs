@@ -148,13 +148,13 @@ impl Stats {
 }
 
 /// One point as the scan hands it over.
-struct Seen<'r> {
-    cloud: usize,
-    source: u32,
-    index: u64,
-    xyz: [f64; 3],
-    layout: &'r Layout,
-    record: &'r [u8],
+pub(crate) struct Seen<'r> {
+    pub(crate) cloud: usize,
+    pub(crate) source: u32,
+    pub(crate) index: u64,
+    pub(crate) xyz: [f64; 3],
+    pub(crate) layout: &'r Layout,
+    pub(crate) record: &'r [u8],
 }
 
 /// Whether a COPC node's cube meets any of `boxes` (each `[x₁, y₁, x₂, y₂]`).
@@ -181,19 +181,19 @@ fn too_many(what: &str, path: &str) -> Stop {
 
 /// What a scan looks in: the clouds, the boxes a source (a COPC's node) must meet to be read, and what the call is for
 /// (the words of a refusal and its path).
-struct Scan<'a> {
-    doc: &'a Document,
-    drawing: Option<&'a str>,
-    chosen: &'a [(String, &'a PointCloudEntity)],
-    boxes: &'a [[f64; 4]],
-    what: &'a str,
-    path: &'a str,
+pub(crate) struct Scan<'a> {
+    pub(crate) doc: &'a Document,
+    pub(crate) drawing: Option<&'a str>,
+    pub(crate) chosen: &'a [(String, &'a PointCloudEntity)],
+    pub(crate) boxes: &'a [[f64; 4]],
+    pub(crate) what: &'a str,
+    pub(crate) path: &'a str,
 }
 
 impl Scan<'_> {
     /// Every point of the sources whose box (a COPC's nodes whose cube) meets one of the boxes, in the clouds' order,
     /// each source's points in its order; `see` takes each. The points read per cloud are added to `read`.
-    fn run(
+    pub(crate) fn run(
         &self,
         warnings: &mut Vec<CommandWarning>,
         read: &mut [u64],

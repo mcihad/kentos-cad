@@ -3359,6 +3359,21 @@
       "status": "implemented"
     },
     {
+      "id": "haul.plan",
+      "title": "Taşıma planı…",
+      "short": "Taşıma planı",
+      "icon": "haulPlan",
+      "description": "Bir Brüknerin hacmini en küçük taşıma momentiyle ya da Brüknerin serbest taşıması ve fiyatlarıyla en düşük maliyetle dağıtır, hiçbir şey yazmaz: her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır. Yol boyunca ileri ve geri taşınan hacim, alanların kullanımı, taşıma momenti ve ortalama uzaklık, maliyette ekonomik taşıma sınırı ve kalemler; alanlar yetmezse karşılanmayan dolgu ve yerleşmeyen yarma.",
+      "aliases": [
+        "TASIMAPLANI",
+        "TAŞIMAPLANI",
+        "HAULPLAN"
+      ],
+      "shortcuts": [],
+      "category": "Brükner",
+      "status": "implemented"
+    },
+    {
       "id": "stakeout.table",
       "title": "Aplikasyon cetveli…",
       "short": "Aplikasyon",
@@ -3412,6 +3427,65 @@
         "CIZGIDENAKS",
         "ÇİZGİDENAKS",
         "AKSUYDUR"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "corridor.water",
+      "title": "Platform suyu…",
+      "short": "Platform suyu",
+      "icon": "platformWater",
+      "description": "Bir koridorun platformunda suyu okur, hiçbir şey yazmaz: şerit ve banketin en küçük eğimden yatık yerleri (boy eğimi ile enine eğimin suyu bıraktığı, dever geçişinin yatık yeri), enine eğimin sıfırdan geçtiği km'ler ve platform kenarlarındaki alçak noktalar. En küçük eğim tasarım standardınındır; KentOS değer vermez.",
+      "aliases": [
+        "PLATFORMSUYU",
+        "YATIKYER"
+      ],
+      "shortcuts": [],
+      "category": "Koridor",
+      "status": "implemented"
+    },
+    {
+      "id": "alignment.check",
+      "title": "Tasarım denetimi…",
+      "short": "Tasarım denetimi",
+      "icon": "designCheck",
+      "description": "Bir aksı ya da boykesiti kullanıcının tasarım kurallarıyla denetler, hiçbir şey yazmaz. Aks: en küçük yarıçap, kurp ve klotoid boyu, kurplar arasındaki aliyman, ters dönen ve aynı yöne dönen kurplar arası, bitişik kurpların yarıçap oranı, kurpsuz kırık. Boykesit: en dik ve en yatık eğim, tepe ve çukur kurbun K'si, düşey kurp boyu, kurplar arası düz eğim. Sınırlar tasarım standardınındır; KentOS değer vermez, boş bırakılan kural denetlenmez.",
+      "aliases": [
+        "TASARIMDENETIMI",
+        "TASARIMDENETİMİ",
+        "DESIGNCHECK"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "profile.sight",
+      "title": "Görüş mesafesi…",
+      "short": "Görüş mesafesi",
+      "icon": "profileSight",
+      "description": "Bir boykesitte görüş mesafesini okur, hiçbir şey yazmaz: profilin üstündeki gözden, profilin üstündeki nesnenin ileride ve geride ne kadar uzaktan göründüğü, her adımda. Profil görüş çizgisinin üstüne çıktığı yerde nesne kapanır. Göz ve nesne yüksekliği, bakılan uzaklık, adım ve gereken mesafe tasarım standardınındır; KentOS değer vermez. Gerekenden kısa görülen km'ler kırmızı, aralıklarıyla.",
+      "aliases": [
+        "GORUSMESAFESI",
+        "GÖRÜŞMESAFESİ",
+        "SIGHTDISTANCE"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "profile.propose",
+      "title": "Kırmızı kot önerisi…",
+      "short": "Kırmızı kot önerisi",
+      "icon": "profilePropose",
+      "description": "Bir boykesitin PVI'larına araziye en yakın kırmızı kotu önerir, hiçbir şey yazmaz: PVI'ların km'si ve parabolik kurpları kalır, kotları arazi boykesitiyle aradaki farkın kareler toplamı en küçük olacak biçimde değişir. Uçlar kilitlenebilir, en büyük eğim verilebilir, kazı alanı dolgu alanına eşitlenebilir; sınırlar tasarım standardınındır. Öneri yeni boykesit olarak yazılabilir.",
+      "aliases": [
+        "KIRMIZIKOTONERISI",
+        "KIRMIZIKOTÖNERİSİ",
+        "BESTFITPROFILE"
       ],
       "shortcuts": [],
       "category": "Güzergâh",
@@ -3477,6 +3551,54 @@
       "status": "implemented"
     },
     {
+      "id": "drainage.editor",
+      "title": "Drenaj…",
+      "short": "Drenaj",
+      "icon": "drainageEditor",
+      "description": "Arazi yüzeyinde suyun aktığı ve durduğu yerler: boşaltım noktasının (yazılan Y,X, seçili nokta ya da menfezin girişi) havzası, üçgenlerde en dik inişle su damlalarından; en uzak hücreden akış yolu; akış katsayısı ve yağış şiddetiyle Rasyonel en yüksek debi; menfezin dolu akış kapasitesi (Manning) ve oranı; göletler (dip, seviye, derinlik, alan, hacim). Izgara, erim, C ve i kullanıcının; KentOS değer vermez. Önizle yazmaz; Planda çiz havzanın sınırını, akış yolunu ve göletleri bir katmana çizer.",
+      "aliases": [
+        "DRENAJ",
+        "HAVZA",
+        "SUDAMLASI",
+        "CATCHMENT"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
+      "id": "terrain.cloud",
+      "title": "Buluttan arazi…",
+      "short": "Buluttan",
+      "icon": "terrainCloud",
+      "description": "Nokta bulutundan arazi yüzeyinin noktalarını çıkarır: LAS sınıfları (ASPRS'de 2 zemin), dönüş, isteğe bağlı alan (seçili kapalı çoklu çizgi ya da alan); noktalar plan ızgarasında seyreltilir (hücre, dik hücrenin kot toleransı, yüzeyin kırık hatlarına erim). Değerler kullanıcının; KentOS sınıf ya da hücre vermez. Önizle bulutu okur, yazmadan okunan, kalan, kapsama, yoğunluk ve seyreltme hatasını gösterir; Uygula noktaları katmana çok noktalı nesneler olarak yazar (tek geri alma adımı) ve katmanı yeni ya da projedeki yüzeyin nokta kaynağı yapar. Köprü tabliyesi ve üst yapı zemine katılmaz.",
+      "aliases": [
+        "BULUTTANARAZI",
+        "BULUTTANARAZİ",
+        "LIDARZEMIN",
+        "CLOUDTERRAIN"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
+      "id": "platform.editor",
+      "title": "Platform…",
+      "short": "Platform",
+      "icon": "platformEditor",
+      "description": "Kapalı bir sınırın içinde düz ya da eğimli platform ve onun arazi yüzeyine inen yarma ve dolgu şevleri: taban noktası ve kotu, eğim ve doğrultusu, yarma ve dolgu şevi, kenar boyunca şev çizgisi aralığı, köşenin yelpazesi ve en uzun şev çizgisi projenin; KentOS sayı vermez. Köşeler yazılır ya da seçili kapalı çoklu çizgiden ya da alandan alınır. Planda sınır, yarma, dolgu ve açık şev çizgileri ve günışığı çizgisi, alanlar, kazı ve dolgu yazıldıkça görünür; Dengele verilen aralıkta kazı ile dolguyu eşitleyen taban kotunu bulur, Uygula yalnız alana yazar. Kaydet tek geri alma adımı, Planda çiz platformu, şev çizgilerini ve günışığını bir katmana çizer.",
+      "aliases": [
+        "PLATFORM",
+        "TESVIYE",
+        "TESVİYE",
+        "GRADING"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
       "id": "payItems.editor",
       "title": "Poz metrajı…",
       "short": "Poz metrajı",
@@ -3515,6 +3637,34 @@
       "aliases": [
         "YOLKAVSAGI",
         "JUNCTION"
+      ],
+      "shortcuts": [],
+      "category": "Güzergâh",
+      "status": "implemented"
+    },
+    {
+      "id": "terrain.analysis",
+      "title": "Yüzey analizi…",
+      "short": "Yüzey analizi",
+      "icon": "terrainAnalysis",
+      "description": "Bir arazi yüzeyini üç yoldan okur, hiçbir şey yazmaz. Analiz: kot, eğim ya da bakı aralıkları planda renkli, plan ve 3B alanlarıyla; pürüzlülük ve rasterin eğiminin üçgenlerinkinden farkı. Fark: ikinci yüzeyin birinciye göre kazısı, dolgusu, neti ve fark aralıkları. Kalite: yakın çiftler, sivri noktalar, seyrek ölçünün boşlukları ve kontrol noktaları sınıf sınıf. Sınırlar kullanıcının; KentOS değer vermez.",
+      "aliases": [
+        "YUZEYANALIZI",
+        "SURFACEANALYSIS"
+      ],
+      "shortcuts": [],
+      "category": "Arazi",
+      "status": "implemented"
+    },
+    {
+      "id": "swept.editor",
+      "title": "Araç izi…",
+      "short": "Araç izi",
+      "icon": "sweptEditor",
+      "description": "Bir tasarım aracının dönüş izi: dingil aralığı, ön ve arka çıkıntı, genişlik ve isteğe bağlı römork; yol kavşağın bir çeyreği (bordür dönüşüne uzaklıkla, kollarda düz) ya da seçili çizgi, çoklu çizgi ya da yay. Ölçüler kurumun tasarım aracının; KentOS değer vermez. Önizle izi, iç kaymayı ve seçili engellere ya da bordüre en az açıklığı yazmadan gösterir; Planda çiz izleri ve gövdeleri bir katmana çizer.",
+      "aliases": [
+        "ARACIZI",
+        "SWEPTPATH"
       ],
       "shortcuts": [],
       "category": "Güzergâh",
@@ -4258,6 +4408,11 @@
     }
   ],
   "icons": {
+    "haulPlan": "<path d=\"M2 10h16\" stroke-width=\"1\"/><path d=\"M3 10V6.5h5V10M11 10v3.5h5V10\" stroke-width=\"1.3\"/><path d=\"M5 4.5h4l-1.2-1.2M15 15.5h-4l1.2 1.2\" stroke-width=\"1.1\"/>",
+    "platformWater": "<path d=\"M2 13.5h16\" stroke-width=\"1.5\"/><path d=\"M2 13.5 10 11l8 2.5\" stroke-width=\"1\"/><path d=\"M10 3.5c-1.6 2.2-2.4 3.6-2.4 4.6a2.4 2.4 0 0 0 4.8 0c0-1-.8-2.4-2.4-4.6z\" stroke-width=\"1.3\"/><path d=\"M4 17h3M13 17h3\" stroke-width=\"1.1\"/>",
+    "designCheck": "<path d=\"M2 15c3 0 4-6 8-6s4 4 8 4\" stroke-width=\"1.5\"/><path d=\"m11.5 4.5 1.8 1.8 3.4-3.6\" stroke-width=\"1.6\"/><path d=\"M2 18h16\" stroke-width=\"1\"/>",
+    "profilePropose": "<path d=\"M2 15l3-3 3 1.5 4-5 3 2 3-3\" stroke-width=\"1.2\"/><path d=\"M2 12.5 18 7\" stroke-width=\"1.6\"/><circle cx=\"6.5\" cy=\"11\" r=\"1.1\"/><circle cx=\"13.5\" cy=\"8.6\" r=\"1.1\"/>",
+    "profileSight": "<path d=\"M2 16.5c4-7.5 12-7.5 16 0\" stroke-width=\"1.5\"/><circle cx=\"4.2\" cy=\"10.3\" r=\"1.3\"/><path d=\"M5.6 10.1 15.4 8.6\" stroke-dasharray=\"1.4 1.2\"/><path d=\"M16.4 11V7\" stroke-width=\"1.5\"/>",
     "addressSearch": "<path d=\"M7 15.5S2.8 11.3 2.8 7.2a4.2 4.2 0 0 1 8.4 0c0 4.1-4.2 8.3-4.2 8.3z\"/><circle cx=\"7\" cy=\"7.2\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.8\" cy=\"12.8\" r=\"3.1\"/><path d=\"m16.1 15.1 2.2 2.2\"/>",
     "addressReverse": "<circle cx=\"6.2\" cy=\"13.8\" r=\"2.6\"/><path d=\"M6.2 9.2v1.6M6.2 16.8v1.6M1.6 13.8h1.6M9.2 13.8h1.6\"/><rect x=\"10\" y=\"2.5\" width=\"8\" height=\"6\" rx=\"1.2\"/><path d=\"M12 4.8h4M12 6.6h2.6\" stroke-width=\"1.1\"/><path d=\"M8.6 11.4 11.2 9.2\" stroke-dasharray=\"1.2 1\" stroke-width=\"1.1\"/>",
     "addressGeocode": "<path d=\"M2.5 4h7M2.5 7.5h7M2.5 11h5\" stroke-width=\"1.2\"/><path d=\"M3 15.5h5m-1.8-1.8 1.8 1.8-1.8 1.8\" stroke-width=\"1.2\"/><path d=\"M14.5 17.5s-3.6-3.5-3.6-6.8a3.6 3.6 0 0 1 7.2 0c0 3.3-3.6 6.8-3.6 6.8z\"/><circle cx=\"14.5\" cy=\"10.7\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/>",
@@ -4608,9 +4763,14 @@
     "landxmlExport": "<path d=\"M4 2.5h7.5L15 6v5\" stroke-width=\"1.2\"/><path d=\"M11.5 2.5V6H15\" stroke-width=\"1\"/><path d=\"M4 2.5v15h6\" stroke-width=\"1.2\"/><path d=\"M6 8.5h5M6 11h3\" stroke-width=\"1\"/><path d=\"M12 15.5h6M15.5 13l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
     "alignmentFromLine": "<circle cx=\"3\" cy=\"15.5\" r=\"1\"/><circle cx=\"7\" cy=\"9\" r=\"1\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"17\" cy=\"4.5\" r=\"1\"/><path d=\"M3 15.5C5.5 10.5 7.5 9 10 10.5s4.5 0 7-6\" stroke-width=\"1.6\"/>",
     "profileFromLine": "<path d=\"M2 17.5h16\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"13.5\" r=\"1\"/><circle cx=\"8\" cy=\"6.5\" r=\"1\"/><circle cx=\"17\" cy=\"12.5\" r=\"1\"/><path d=\"M3 13.5C5.5 9 7.5 7.5 10 8s4.5 2.5 7 4.5\" stroke-width=\"1.6\"/>",
+    "terrainAnalysis": "<path d=\"M2 15.5 6.5 9l3.5 3.5L14 6l4 5\" stroke-width=\"1.3\"/><path d=\"M2 18h16\" stroke-width=\"1.1\"/><path d=\"M6.5 9v9M10 12.5V18M14 6v12\" stroke-width=\".9\" stroke-dasharray=\"1.3 1.2\"/>",
+    "sweptEditor": "<path d=\"M3 18c0-6.5 4-10.5 10.5-10.5H18\" stroke-width=\"1.3\"/><path d=\"M7.5 18c0-3.8 2.7-6.5 6.5-6.5h4\" stroke-width=\"1.2\" stroke-dasharray=\"1.6 1.4\"/><rect x=\"11\" y=\"2.2\" width=\"6.8\" height=\"3.4\" rx=\".6\" stroke-width=\"1.2\"/>",
     "junctionEditor": "<path d=\"M2 7.5h4.5a1.5 1.5 0 0 0 1.5-1.5V2M12 2v4a1.5 1.5 0 0 0 1.5 1.5H18M18 12.5h-4.5a1.5 1.5 0 0 0-1.5 1.5v4M8 18v-4a1.5 1.5 0 0 0-1.5-1.5H2\" stroke-width=\"1.3\"/><path d=\"M2 10h16M10 2v16\" stroke-width=\".8\" stroke-dasharray=\"1.4 1.4\"/>",
     "routeFinder": "<circle cx=\"4\" cy=\"15\" r=\"1.6\" stroke-width=\"1.2\"/><circle cx=\"16\" cy=\"5\" r=\"1.6\" stroke-width=\"1.2\"/><path d=\"M5.3 13.8 8 11l-.5-3 3-1 1.5 2 3-2.4\" stroke-width=\"1.3\"/><path d=\"M10 13.5h4.5v3H10z\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.2\"/>",
     "payItemsEditor": "<path d=\"M4 3h9l3 3v11H4z\" stroke-width=\"1.3\"/><path d=\"M13 3v3h3\" stroke-width=\"1.1\"/><path d=\"M6.5 9h7M6.5 11.5h7M6.5 14h4\" stroke-width=\"1.1\"/><path d=\"M13.5 14h0\" stroke-width=\"1.6\"/>",
+    "drainageEditor": "<path d=\"M10 2.5C7.5 6 6 8.2 6 10a4 4 0 0 0 8 0c0-1.8-1.5-4-4-7.5z\" stroke-width=\"1.3\"/><path d=\"M2.5 17c2-1.2 3.5-1.2 5 0s3 1.2 5 0 3.5-1.2 5 0\" stroke-width=\"1.2\"/>",
+    "terrainCloud": "<path d=\"M2.5 17.5L7 11l3.5 3.5L13 10l4.5 7.5z\" stroke-width=\"1.3\"/><circle cx=\"4\" cy=\"5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8\" cy=\"3.5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12\" cy=\"5.5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16\" cy=\"4\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"6\" cy=\"7.5\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14\" cy=\"7.5\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "platformEditor": "<path d=\"M6.5 7.5h7v5h-7z\" stroke-width=\"1.4\"/><path d=\"M6.5 7.5L3 4M13.5 7.5L17 4M13.5 12.5L17 16M6.5 12.5L3 16M10 7.5V3.5M10 12.5v4\" stroke-width=\"1\"/><path d=\"M3 4h14v12H3z\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "retainingWallEditor": "<path d=\"M2 6.5h7l2 2\" stroke-width=\"1.4\"/><path d=\"M9 6.5v9.5h3.2L11 6.5\" stroke-width=\"1.3\"/><path d=\"M7 16h7.5v1.5H7z\" stroke-width=\"1.1\"/><path d=\"M12.5 11h5.5\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "culvertEditor": "<path d=\"M2 7.5h16\" stroke-width=\"1.4\"/><path d=\"M2 7.5 1 9.5M18 7.5l1 2\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"13\" r=\"3.2\" stroke-width=\"1.4\"/><path d=\"M2 17.5h16\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.5\"/>",
     "guardrailEditor": "<path d=\"M2 9.5h16M2 12.5h16\" stroke-width=\"1.4\"/><path d=\"M4 7v10M10 7v10M16 7v10\" stroke-width=\"1.2\"/>",

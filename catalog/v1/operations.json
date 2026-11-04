@@ -2770,6 +2770,30 @@
       ],
       "note": "Ölçüler yazıldıkça road.walls.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.walls.edit, Planda çiz road.walls.draw ile yazar (plan/road.md Y11.3, ADR 0909 §3)."
     },
+    "drainage.editor": {
+      "level": "semantic",
+      "via": [
+        "road.drainage.query",
+        "road.drainage.draw"
+      ],
+      "note": "Önizle road.drainage.query ile okur (hiçbir şey yazılmaz); Planda çiz road.drainage.draw ile yazar (plan/road.md Y16.3, ADR 0929 §3)."
+    },
+    "terrain.cloud": {
+      "level": "semantic",
+      "via": [
+        "road.terrains.cloud"
+      ],
+      "note": "Önizle road.terrains.cloud'un planını okuma kopyasında çalıştırır (bulut okunur, hiçbir şey yazılmaz); Uygula aynı komutla yazar (plan/road.md Y15.3, ADR 0928 §3)."
+    },
+    "platform.editor": {
+      "level": "semantic",
+      "via": [
+        "road.platforms.edit",
+        "road.platforms.query",
+        "road.platforms.draw"
+      ],
+      "note": "Değerler yazıldıkça road.platforms.edit'in planıyla okuma kopyasında tesviye eder; Dengele road.platforms.query'nin balance'ını yazılan platformla okuma kopyasında sorar; Kaydet ve Sil road.platforms.edit, Planda çiz road.platforms.draw ile yazar (plan/road.md Y14.3, ADR 0927 §3)."
+    },
     "payItems.editor": {
       "level": "semantic",
       "via": [
@@ -2785,6 +2809,53 @@
         "road.routes.draw"
       ],
       "note": "Girdi yazıldıkça road.routes.find ile önizler; Planda çiz road.routes.draw ile yazar (plan/road.md Y12.1, ADR 0910 §1)."
+    },
+    "corridor.water": {
+      "level": "semantic",
+      "via": [
+        "road.corridors.water"
+      ],
+      "note": "Önizle road.corridors.water ile okur; hiçbir şey yazmaz (plan/road.md Y22, ADR 0923 §3)."
+    },
+    "alignment.check": {
+      "level": "semantic",
+      "via": [
+        "road.alignments.check",
+        "road.profiles.check"
+      ],
+      "note": "Önizle kipine göre road.alignments.check ya da road.profiles.check ile okur; hiçbir şey yazmaz (plan/road.md Y21, ADR 0922 §3)."
+    },
+    "profile.sight": {
+      "level": "semantic",
+      "via": [
+        "road.profiles.sight"
+      ],
+      "note": "Önizle road.profiles.sight ile okur; hiçbir şey yazmaz (plan/road.md Y20, ADR 0921 §3)."
+    },
+    "profile.propose": {
+      "level": "semantic",
+      "via": [
+        "road.profiles.propose",
+        "road.profiles.create"
+      ],
+      "note": "Önizle road.profiles.propose ile okur; Yeni boykesit olarak yaz road.profiles.create ile yazar (plan/road.md Y25, ADR 0926 §3)."
+    },
+    "terrain.analysis": {
+      "level": "semantic",
+      "via": [
+        "road.terrains.analysis",
+        "road.terrains.compare",
+        "road.terrains.quality"
+      ],
+      "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; hiçbir şey yazmaz (plan/road.md Y18.5, ADR 0916 §5)."
+    },
+    "swept.editor": {
+      "level": "semantic",
+      "via": [
+        "road.swept.query",
+        "road.swept.draw"
+      ],
+      "note": "Önizle road.swept.query ile okur (hiçbir şey yazılmaz); Planda çiz road.swept.draw ile yazar (plan/road.md Y17.3, ADR 0915 §3)."
     },
     "junction.editor": {
       "level": "semantic",
@@ -2856,6 +2927,13 @@
       "via": [
         "road.hauls.edit"
       ]
+    },
+    "haul.plan": {
+      "level": "semantic",
+      "via": [
+        "road.hauls.plan"
+      ],
+      "note": "Önizle road.hauls.plan ile okur; hiçbir şey yazmaz (plan/road.md Y23, ADR 0924 §3)."
     },
     "profile.new": {
       "level": "semantic",

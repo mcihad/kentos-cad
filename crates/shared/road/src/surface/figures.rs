@@ -36,6 +36,8 @@ pub struct SectionPoint {
 
 /// Two places closer along a segment than this (m) are one.
 const SAME: f64 = 1e-9;
+/// A segment and an edge whose directions' sine is below this are parallel: their crossing is rounding's.
+const PARALLEL: f64 = 1e-12;
 
 impl Surface {
     /// Its figures.
@@ -87,9 +89,11 @@ impl Surface {
                 let r = [b[0] - a[0], b[1] - a[1]];
                 let denom = d[0] * r[1] - d[1] * r[0];
                 let ap = [a[0] - p[0], a[1] - p[1]];
-                if denom == 0.0 {
-                    // Parallel: on the same line, the edge's ends within the segment are places.
-                    if ap[0] * d[1] - ap[1] * d[0] != 0.0 {
+                let rl = r[0].hypot(r[1]);
+                if denom.abs() <= PARALLEL * length * rl {
+                    // Parallel, or so nearly that the crossing is lost in rounding (a line along an edge whose
+                    // direction is rounded): on the same line, the edge's ends within the segment are places.
+                    if (ap[0] * d[1] - ap[1] * d[0]).abs() > SAME * length.max(1.0) {
                         continue;
                     }
                     for c in [a, b] {

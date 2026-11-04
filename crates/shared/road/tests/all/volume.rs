@@ -78,3 +78,31 @@ fn volumes_by_sections_are_the_references() {
         near(prismoidal(n(&p["a0"]), n(&p["am"]), n(&p["a1"]), n(&p["l"])), n(&p["v"]), "prismoidal");
     }
 }
+
+/// A square of two triangles from (x0, y0) to (x1, y1) on the plane z = c + gx·x + gy·y.
+fn square(x0: f64, y0: f64, x1: f64, y1: f64, z: impl Fn(f64, f64) -> f64) -> Vec<kentos_road::volume::Triangle> {
+    let p = |x: f64, y: f64| [x, y, z(x, y)];
+    vec![[p(x0, y0), p(x1, y0), p(x1, y1)], [p(x0, y0), p(x1, y1), p(x0, y1)]]
+}
+
+#[test]
+fn the_difference_of_two_planes_in_closed_form() {
+    // Base z = 10 over [0, 10]²; comparison z = 9 + 0.2 x over [0, 10] × [0, 10], from −1 to +1: cut where x < 5.
+    let base = square(0.0, 0.0, 10.0, 10.0, |_, _| 10.0);
+    let comparison = square(0.0, 0.0, 10.0, 10.0, |x, _| 9.0 + 0.2 * x);
+    let d = kentos_road::volume::difference(&comparison, &base, &[-1.0, -0.5, 0.0, 0.5, 1.0]);
+    // Each half: a wedge of length 5 rising to 1 over 10 wide: 25.
+    assert!((d.volumes.cut - 25.0).abs() < 1e-9 && (d.volumes.fill - 25.0).abs() < 1e-9, "{d:?}");
+    assert!((d.volumes.cut_area - 50.0).abs() < 1e-9 && d.volumes.uncovered == 0.0, "{d:?}");
+    for b in &d.bands {
+        assert!((b.2 - 25.0).abs() < 1e-9, "{b:?}");
+    }
+    assert!(d.outside.abs() < 1e-9);
+    assert_eq!(d.least.map(|l| l.1), Some([0.0, 0.0]));
+    assert!((d.largest.expect("a largest").0 - 1.0).abs() < 1e-12);
+    // Half the comparison off the base: uncovered.
+    let shifted = square(5.0, 0.0, 15.0, 10.0, |_, _| 11.0);
+    let d = kentos_road::volume::difference(&shifted, &base, &[0.0, 2.0]);
+    assert!((d.volumes.fill - 50.0).abs() < 1e-9 && (d.volumes.uncovered - 50.0).abs() < 1e-9, "{d:?}");
+    assert!((d.bands[0].2 - 50.0).abs() < 1e-9);
+}

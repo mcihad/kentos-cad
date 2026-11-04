@@ -258,6 +258,123 @@ impl Ground {
     }
 }
 
+impl Ground {
+    /// Each piece where a design triangle and a ground triangle overlap in plan, with `d = z_design − z_ground` at its
+    /// corners (counterclockwise, convex); and the area both cover and the design's area the ground does not.
+    pub fn overlay(&mut self, design: &[Triangle], mut visit: impl FnMut(&[([f64; 2], f64)])) -> (f64, f64) {
+        let (mut covered_all, mut uncovered) = (0.0, 0.0);
+        for d in design {
+            let Some(d) = ccw(d) else { continue };
+            let plan = [[d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]];
+            let whole = area2(plan[0], plan[1], plan[2]) / 2.0;
+            let mut covered = 0.0;
+            if let Some(grid) = &self.grid {
+                if self.stamp == u32::MAX {
+                    self.seen.iter_mut().for_each(|v| *v = 0);
+                    self.stamp = 0;
+                }
+                self.stamp += 1;
+                let (lo, hi) = grid.span(&d);
+                for cy in lo[1]..=hi[1] {
+                    for cx in lo[0]..=hi[0] {
+                        for &gi in &grid.cells[cy * grid.nx + cx] {
+                            if self.seen[gi as usize] == self.stamp {
+                                continue;
+                            }
+                            self.seen[gi as usize] = self.stamp;
+                            let g = &self.tris[gi as usize];
+                            let mut poly = plan.to_vec();
+                            for k in 0..3 {
+                                poly = clip(&poly, [g[k][0], g[k][1]], [g[(k + 1) % 3][0], g[(k + 1) % 3][1]]);
+                                if poly.len() < 3 {
+                                    break;
+                                }
+                            }
+                            if poly.len() < 3 {
+                                continue;
+                            }
+                            let with: Vec<([f64; 2], f64)> = poly.iter().map(|p| (*p, plane_z(&d, *p) - plane_z(g, *p))).collect();
+                            let (a, _) = integral(&with);
+                            if a <= 0.0 {
+                                continue;
+                            }
+                            covered += a;
+                            visit(&with);
+                        }
+                    }
+                }
+            }
+            covered_all += covered;
+            uncovered += (whole - covered).max(0.0);
+        }
+        (covered_all, uncovered)
+    }
+}
+
+/// The difference of two surfaces (docs/adr/0916 §3; Civil 3D's TIN volume surface): the volumes, the least and the
+/// largest `d = z_comparison − z_base` and where, and the plan area of `d` in ranges `[bᵢ, bᵢ₊₁)` (the last closed).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Difference {
+    pub volumes: Volumes,
+    pub least: Option<(f64, [f64; 2])>,
+    pub largest: Option<(f64, [f64; 2])>,
+    pub bands: Vec<(f64, f64, f64)>,
+    pub outside: f64,
+}
+
+/// The part of a convex polygon with the linear `d` on the `above` side of `level`.
+fn cut_at(poly: &[([f64; 2], f64)], level: f64, above: bool) -> Vec<([f64; 2], f64)> {
+    let shifted: Vec<([f64; 2], f64)> = poly.iter().map(|(p, d)| (*p, d - level)).collect();
+    split(&shifted, above).into_iter().map(|(p, d)| (p, d + level)).collect()
+}
+
+/// The difference of `comparison` over `base`, over the comparison's plan; `breaks` (increasing, at least two) bands
+/// the difference.
+pub fn difference(comparison: &[Triangle], base: &[Triangle], breaks: &[f64]) -> Difference {
+    let mut out = Difference {
+        bands: breaks.windows(2).map(|w| (w[0], w[1], 0.0)).collect(),
+        ..Difference::default()
+    };
+    let mut ground = Ground::new(base);
+    let (covered, uncovered) = ground.overlay(comparison, |with| {
+        let (fa, fv) = integral(&split(with, true));
+        let (ca, cv) = integral(&split(with, false));
+        out.volumes.fill += fv;
+        out.volumes.fill_area += fa;
+        out.volumes.cut -= cv;
+        out.volumes.cut_area += ca;
+        for (p, d) in with {
+            if out.least.is_none_or(|(v, at)| *d < v || (*d == v && (p[0], p[1]) < (at[0], at[1]))) {
+                out.least = Some((*d, *p));
+            }
+            if out.largest.is_none_or(|(v, at)| *d > v || (*d == v && (p[0], p[1]) < (at[0], at[1]))) {
+                out.largest = Some((*d, *p));
+            }
+        }
+        let mut inside = 0.0;
+        for band in out.bands.iter_mut() {
+            let low = cut_at(with, band.0, true);
+            if low.len() < 3 {
+                continue;
+            }
+            let part = cut_at(&low, band.1, false);
+            if part.len() < 3 {
+                continue;
+            }
+            let (a, _) = integral(&part);
+            if a > 0.0 {
+                band.2 += a;
+                inside += a;
+            }
+        }
+        let (whole, _) = integral(with);
+        out.outside += (whole - inside).max(0.0);
+    });
+    out.volumes.covered = covered;
+    out.volumes.uncovered = uncovered;
+    out
+}
+
 /// The volumes between the design surface and the ground surface, each a set of triangles that do not overlap in plan
 /// (x, y, z each corner), over the design's plan.
 pub fn between_surfaces(design: &[Triangle], ground: &[Triangle]) -> Volumes {

@@ -1687,6 +1687,30 @@ const ENTRIES: &[Entry] = &[
         warnings: &["profile_stale", "profile_surface_gone"],
         targets: none,
     },
+    Entry {
+        id: "road.alignments.check",
+        refusals: &[&["not_a_road_project", "unknown_alignment", "invalid_design_check"]],
+        warnings: &["design_rule_broken"],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.check",
+        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_design_check"]],
+        warnings: &["design_rule_broken", "profile_stale"],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.sight",
+        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_sight"]],
+        warnings: &["sight_short", "profile_stale"],
+        targets: none,
+    },
+    Entry {
+        id: "road.profiles.propose",
+        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_profile_proposal"]],
+        warnings: &["profile_stale"],
+        targets: none,
+    },
     // KentOS Yol's cross sections and templates (plan/road.md Y5, docs/adr/0903).
     Entry {
         id: "road.templates.edit",
@@ -1819,6 +1843,12 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    Entry {
+        id: "road.corridors.water",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_platform_water"]],
+        warnings: &["corridor_flat", "corridor_stale", "corridor_unsolved", "corridor_folded"],
+        targets: none,
+    },
     // KentOS Yol's earthwork volumes (plan/road.md Y8, docs/adr/0906).
     Entry {
         id: "road.volumes.edit",
@@ -1846,6 +1876,12 @@ const ENTRIES: &[Entry] = &[
         id: "road.hauls.query",
         refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
         warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
+        targets: none,
+    },
+    Entry {
+        id: "road.hauls.plan",
+        refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
+        warnings: &["haul_plan_infeasible", "corridor_stale", "volume_gap"],
         targets: none,
     },
     // KentOS Yol's guardrails (plan/road.md Y11.1, docs/adr/0909 §1).
@@ -1905,6 +1941,145 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "retaining_wall_stale", "retaining_wall_high", "corridor_stale", "corridor_unsolved"],
         targets: none,
     },
+    // KentOS Yol's graded pads (plan/road.md Y14, docs/adr/0927).
+    Entry {
+        id: "road.platforms.edit",
+        refusals: &[&["not_a_road_project", "unknown_platform", "unknown_terrain", "invalid_platform"], REVISION],
+        warnings: &["platform_open"],
+        targets: none,
+    },
+    Entry {
+        id: "road.platforms.query",
+        refusals: &[&["not_a_road_project", "unknown_platform", "invalid_platform"]],
+        warnings: &["platform_open", "platform_no_balance"],
+        targets: none,
+    },
+    Entry {
+        id: "road.platforms.draw",
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_platform", "invalid_platform"], LAYER, REVISION],
+        warnings: &["layer_hidden", "platform_open"],
+        targets: none,
+    },
+    // KentOS Yol's surface drainage (plan/road.md Y16, docs/adr/0929).
+    Entry {
+        id: "road.drainage.query",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_drainage",
+            "unknown_terrain",
+            "unknown_culvert",
+            "terrain_unbuildable",
+            "invalid_culvert",
+        ]],
+        warnings: &["drainage_catchment_empty", "culvert_no_roughness", "culvert_over_capacity"],
+        targets: none,
+    },
+    Entry {
+        id: "road.drainage.draw",
+        refusals: &[
+            &["not_a_road_project", "invalid_drainage", "unknown_terrain", "unknown_culvert", "terrain_unbuildable"],
+            &["drainage_nothing"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "drainage_catchment_empty", "culvert_no_roughness", "culvert_over_capacity"],
+        targets: none,
+    },
+    // KentOS Yol's surface analysis (plan/road.md Y18, docs/adr/0916).
+    Entry {
+        id: "road.terrains.analysis",
+        refusals: &[&["not_a_road_project", "invalid_analysis", "unknown_terrain", "terrain_unbuildable"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.compare",
+        refusals: &[&["not_a_road_project", "invalid_analysis", "unknown_terrain", "terrain_unbuildable"]],
+        warnings: &["compare_uncovered"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.quality",
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_analysis",
+            "unknown_terrain",
+            "terrain_unbuildable",
+            "layer_not_found",
+            "entity_not_found",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.repair",
+        refusals: &[
+            &["not_a_road_project", "invalid_repair", "unknown_terrain", "repair_breakline", "repair_not_a_point", "terrain_unbuildable"],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.coverage",
+        refusals: &[&["invalid_coverage", "not_a_road_project", "unknown_terrain", "terrain_unbuildable", "entity_not_found"]],
+        warnings: &["terrain_no_data"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.lowconfidence",
+        refusals: &[&["invalid_coverage", "not_a_road_project", "unknown_terrain", "terrain_unbuildable"], LAYER, REVISION],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.density",
+        refusals: &[&["invalid_point_density", "not_a_road_project", "unknown_terrain", "terrain_unbuildable", "entity_not_found", "invalid_coverage"]],
+        warnings: &["terrain_density_short"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.sparse",
+        refusals: &[
+            &["invalid_point_density", "not_a_road_project", "unknown_terrain", "terrain_unbuildable", "entity_not_found", "invalid_coverage"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    // KentOS Yol's design vehicle swept path (plan/road.md Y17, docs/adr/0915).
+    Entry {
+        id: "road.swept.query",
+        refusals: &[&["invalid_swept", "not_a_road_project", "unknown_junction", "invalid_junction", "entity_not_found"]],
+        warnings: &["swept_touches"],
+        targets: none,
+    },
+    Entry {
+        id: "road.swept.draw",
+        refusals: &[&["invalid_swept", "not_a_road_project", "unknown_junction"], LAYER, REVISION],
+        warnings: &["layer_hidden", "swept_touches"],
+        targets: none,
+    },
+    // KentOS Yol's terrain from point clouds (plan/road.md Y15, docs/adr/0928).
+    Entry {
+        id: "road.terrains.cloud",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "entity_not_found",
+                "not_a_pointcloud",
+                "invalid_cloud_terrain",
+                "cloud_class_not_ground",
+                "unknown_terrain",
+            ],
+            LAYER,
+            &["too_many_cloud_points", "cloud_ground_empty", "invalid_terrain", "terrain_unbuildable"],
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "cloud_class_above_ground", "cloud_source_unreadable"],
+        targets: none,
+    },
     // KentOS Yol's pay item quantities (plan/road.md Y11.4, docs/adr/0909 §4).
     Entry {
         id: "road.pay.edit",
@@ -1948,6 +2123,52 @@ const ENTRIES: &[Entry] = &[
         id: "road.junctions.draw",
         refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_junction", "invalid_junction"], LAYER, REVISION],
         warnings: &["layer_hidden", "junction_stale", "junction_on_curve"],
+        targets: none,
+    },
+    Entry {
+        id: "road.junctions.clearance",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_junction",
+            "invalid_junction",
+            "unknown_road_profile",
+            "invalid_road_profile",
+            "profile_curves_overlap",
+            "invalid_clearance",
+        ]],
+        warnings: &["junction_stale", "profile_stale", "junction_clearance_short"],
+        targets: none,
+    },
+    Entry {
+        id: "road.junctions.tie",
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_junction",
+                "invalid_junction",
+                "unknown_road_profile",
+                "invalid_road_profile",
+            "profile_curves_overlap",
+                "unknown_superelevation",
+                "invalid_superelevation",
+                "invalid_tie",
+            ],
+            REVISION,
+        ],
+        warnings: &["junction_stale", "profile_stale", "superelevation_stale", "junction_grade_change"],
+        targets: none,
+    },
+    Entry {
+        id: "road.junctions.overlap",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_junction",
+            "invalid_junction",
+            "unknown_corridor",
+            "invalid_road_corridor",
+            "invalid_overlap",
+        ]],
+        warnings: &["junction_stale", "corridor_stale", "junction_corridors_overlap"],
         targets: none,
     },
     // KentOS Yol's project tree (plan/road.md Y13, docs/adr/0911 §2).

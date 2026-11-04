@@ -9408,11 +9408,52 @@ class _Schema:
                 self.fail("bad_value", "boş kaynak yazılmaz")
             return got
 
+        def share(x):
+            f = self.float(x)
+            if not 0.0 <= f <= 1.0:
+                self.fail("bad_value", "0 ile 1 arası olmalı")
+            return f
+
+        def non_negative(x):
+            f = self.float(x)
+            if not f >= 0.0:
+                self.fail("bad_value", "eksi olamaz")
+            return f
+
+        def cloud(x):
+            # The ground points taken from point clouds (plan/road.md Y15, docs/adr/0928 §2).
+            t = self.fields({"layer": (word, True), "clouds": (words, True), "classes": (self.array(self.uint(8)), True),
+                             "returns": (self.enum(("all", "first", "last", "single")), False), "area": (word, False),
+                             "cell": (positive(None), True), "zTolerance": (positive(None), False),
+                             "near": (positive(None), False), "read": (self.uint(64), True),
+                             "kept": (self.uint(64), True), "coverage": (share, True), "density": (non_negative, True),
+                             "errorMax": (non_negative, False), "errorRms": (non_negative, False),
+                             "outside": (self.uint(64), False)})(x)
+            if not t["clouds"] or len(t["clouds"]) > 64 or not t["classes"] or t["kept"] > t["read"]:
+                self.fail("bad_value", "bulut kaydı: en az bir bulut ve sınıf, kalan okunandan çok değil")
+            return t
+
+        def clouds(x):
+            got = self.array(cloud)(x)
+            layers = [c["layer"] for c in got]
+            if not got or len(got) > 64 or len(set(layers)) != len(layers):
+                self.fail("bad_value", "yüzeyin bulut kayıtları 1 ile 64 arası, her katman bir kez")
+            return got
+
+        def exclusions(x):
+            # The point records a repair left out (plan/road.md Y18.6, docs/adr/0916 §6): places, each once.
+            got = self.array(self.fields({"x": (finite, True), "y": (finite, True)}))(x)
+            places = [(e["x"] + 0.0, e["y"] + 0.0) for e in got]
+            if not got or len(got) > 100_000 or len(set(places)) != len(places):
+                self.fail("bad_value", "dışarıda bırakılanlar 1 ile 100 000 arası, her yer bir kez")
+            return got
+
         def surface(x):
             t = self.fields({"id": (word, True), "name": (self.text, True), "points": (nonempty_sources, False),
                              "breaklines": (nonempty_sources, False), "boundary": (word, False),
                              "voids": (words, False), "tolerance": (positive(1.0), False),
-                             "maxEdge": (positive(None), False), "built": (digest, False)})(x)
+                             "maxEdge": (positive(None), False), "built": (digest, False),
+                             "clouds": (clouds, False), "excluded": (exclusions, False)})(x)
             name = t["name"]
             if not name or name.strip() != name or len(name) > 120:
                 self.fail("bad_value", "yüzeyin adı boş, boşluklu ya da çok uzun")
@@ -9797,6 +9838,25 @@ class _Schema:
                 self.fail("bad_value", "istinat duvarının km'leri, okuma aralığı ya da en yükseği kuralın dışında")
             return t
 
+        def platform(x):
+            # Docs/adr/0927: a graded pad, a plane inside a closed boundary, its slopes run out to a terrain surface.
+            corner = self.array(finite)
+            t = self.fields({"id": (word, True), "name": (self.text, True), "revision": (self.uint(32), False),
+                             "corners": (self.array(corner), True), "base": (self.array(finite), True),
+                             "grade": (finite, False), "direction": (finite, False), "cut": (finite, True),
+                             "fill": (finite, True), "step": (finite, True), "fan": (finite, True),
+                             "reach": (finite, True), "surface": (word, True)})(x)
+            name = t["name"]
+            if not name or name.strip() != name or len(name) > 120:
+                self.fail("bad_value", "platformun adı boş, boşluklu ya da çok uzun")
+            if not 3 <= len(t["corners"]) <= 1000 or any(len(c) != 2 for c in t["corners"]) or len(t["base"]) != 3:
+                self.fail("bad_value", "platformun sınırı 3 ile 1000 arası köşe, tabanı üç sayı olur")
+            if abs(t.get("grade", 0)) > 100 or not -360 <= t.get("direction", 0) <= 360 or \
+                    not 0 < t["cut"] <= 100 or not 0 < t["fill"] <= 100 or not 0 < t["step"] <= 1000 or \
+                    not 0 < t["reach"] <= 10000 or not 0 < t["fan"] <= 90:
+                self.fail("bad_value", "platformun eğimi, yönü, şevleri, aralığı, yelpazesi ya da erimi kuralın dışında")
+            return t
+
         def junction(x):
             # Docs/adr/0910 §2: a junction of two alignments, at grade with its curb returns' radii or separated.
             leg = self.fields({"alignment": (word, True), "alignmentRevision": (self.uint(32), False),
@@ -9855,9 +9915,9 @@ class _Schema:
             # Docs/adr/0911 §1: what a road command drew, its sources' stamps and its objects.
             commands = ("road.alignments.label", "road.profiles.draw", "road.sections.draw", "road.corridors.draw",
                         "road.guardrails.draw", "road.culverts.draw", "road.walls.draw", "road.junctions.draw",
-                        "road.terrains.contours")
+                        "road.terrains.contours", "road.platforms.draw")
             kinds = ("surface", "alignment", "profile", "template", "sections", "superelevation", "corridor",
-                     "guardrail", "culvert", "wall", "junction")
+                     "guardrail", "culvert", "wall", "junction", "platform")
             source = self.fields({"kind": (self.enum(kinds), True), "id": (self.text, True), "digest": (self.text, True)})
             t = self.fields({"id": (self.text, True), "command": (self.enum(commands), True), "input": (self.any, True),
                              "sources": (self.array(source), True), "uids": (self.array(self.text), False),
@@ -9882,7 +9942,8 @@ class _Schema:
                          "sheetSets": (self.array(sheet_set), False),
                          "guardrails": (self.array(guardrail), False),
                          "culverts": (self.array(culvert), False),
-                         "walls": (self.array(wall), False), "pay": (pay, False),
+                         "walls": (self.array(wall), False), "platforms": (self.array(platform), False),
+                         "pay": (pay, False),
                          "junctions": (self.array(junction), False),
                          "drawings": (self.array(drawing), False), "autoRebuild": (self.bool, False)})(v)
         got = r.get("surfaces", [])
@@ -9898,8 +9959,9 @@ class _Schema:
         guardrails = r.get("guardrails", [])
         culverts = r.get("culverts", [])
         walls = r.get("walls", [])
+        platforms = r.get("platforms", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
-                or guardrails or culverts or walls or "pay" in r or r.get("junctions") or r.get("drawings")
+                or guardrails or culverts or walls or platforms or "pay" in r or r.get("junctions") or r.get("drawings")
                 or r.get("autoRebuild")):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
@@ -10013,6 +10075,13 @@ class _Schema:
             self.fail("bad_value", "iki istinat duvarının kimliği ya da adı aynı")
         if any(all(y["id"] != x["corridor"] for y in corridors) for x in walls):
             self.fail("bad_value", "istinat duvarının koridoru projede yok")
+        if "platforms" in r and not platforms or len(platforms) > 1000:
+            self.fail("bad_value", "yol ayarında 1 ile 1000 arası platform olur")
+        if len({x["id"] for x in platforms}) != len(platforms) or \
+                len({x["name"].lower() for x in platforms}) != len(platforms):
+            self.fail("bad_value", "iki platformun kimliği ya da adı aynı")
+        if any(all(y["id"] != x["surface"] for y in got) for x in platforms):
+            self.fail("bad_value", "platformun arazi yüzeyi projede yok")
         drawings = r.get("drawings", [])
         if "drawings" in r and not drawings or len(drawings) > 1000 or \
                 len({d["id"] for d in drawings}) != len(drawings):

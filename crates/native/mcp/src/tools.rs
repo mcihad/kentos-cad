@@ -751,6 +751,8 @@ fn command_tool(c: &Value) -> Value {
             | "road.guardrails.edit"
             | "road.culverts.edit"
             | "road.walls.edit"
+            | "road.platforms.edit"
+            | "road.terrains.cloud"
             | "road.pay.edit"
             | "road.junctions.edit"
             | "road.project.rebuild"

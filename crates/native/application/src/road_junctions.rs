@@ -168,3 +168,68 @@ pub(crate) fn broken(def: &JunctionDef) -> JunctionReport {
         returns: Vec::new(),
     }
 }
+
+/// The legs' profiles, built: `given` in the legs' order (by id or name), else each leg's alignment's only one. Not
+/// two, a profile off its leg's alignment, a leg with none or more than one refuse with `code` (docs/adr/0917 §3,
+/// 0918 §3).
+pub(crate) fn leg_profiles<'a>(
+    doc: &'a Document,
+    report: &JunctionReport,
+    given: Option<&[String]>,
+    code: &str,
+) -> Result<(Vec<&'a kentos_commands::ProfileDef>, Vec<crate::road_profiles::Built>), Stop> {
+    use crate::road_profiles as profiles;
+    let own = profiles::profiles(doc);
+    let mut chosen = Vec::new();
+    match given {
+        Some(names) => {
+            for (k, name) in names.iter().enumerate() {
+                chosen.push(profiles::find(own, name, &format!("profiles[{k}]"))?.1);
+            }
+        }
+        None => {
+            for leg in &report.legs {
+                let on: Vec<_> = own.iter().filter(|p| p.alignment == leg.alignment).collect();
+                let name = alignments::alignments(doc).iter().find(|a| a.id == leg.alignment).map_or("", |a| a.name.as_str());
+                match on.as_slice() {
+                    [one] => chosen.push(*one),
+                    [] => return Err(fail(code, format!("“{name}” aksının boykesiti yok; profiles ile verin."), "profiles")),
+                    _ => {
+                        return Err(fail(code, format!("“{name}” aksının {} boykesiti var; hangisi, profiles ile verin.", on.len()), "profiles"));
+                    }
+                }
+            }
+        }
+    }
+    let mut built = Vec::new();
+    for p in &chosen {
+        built.push(profiles::build(doc, p)?);
+    }
+    if chosen.len() != 2 {
+        return Err(fail(code, format!("Kolların sırasıyla iki boykesit verin; {} verildi.", chosen.len()), "profiles"));
+    }
+    for (k, (p, leg)) in chosen.iter().zip(&report.legs).enumerate() {
+        if p.alignment != leg.alignment {
+            return Err(fail(code, format!("“{}” boykesiti kavşağın {}. kolunun aksında değil.", p.name, k + 1), &format!("profiles[{k}]")));
+        }
+    }
+    Ok((chosen, built))
+}
+
+/// The profiles' stale warnings.
+pub(crate) fn profiles_stale(doc: &Document, chosen: &[&kentos_commands::ProfileDef]) -> Vec<CommandWarning> {
+    chosen
+        .iter()
+        .filter_map(|p| {
+            let (stale, now) = crate::road_profiles::stale(doc, p);
+            stale.then(|| CommandWarning {
+                code: codes::PROFILE_STALE.into(),
+                message: format!(
+                    "“{}” boykesitinin aksı değişti (boykesit {}. revizyona göre kurulu, aks şimdi {}.); PVI'ları denetleyip aksa yeniden bağlayın.",
+                    p.name, p.alignment_revision, now
+                ),
+                path: Some("profiles".into()),
+            })
+        })
+        .collect()
+}

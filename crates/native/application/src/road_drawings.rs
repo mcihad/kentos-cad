@@ -60,6 +60,7 @@ pub(crate) fn stamp_now(doc: &Document, kind: RoadSourceKind, id: &str) -> Optio
         RoadSourceKind::Culvert => stamp(find(&road.culverts, id, |s| &s.id)?),
         RoadSourceKind::Wall => stamp(find(&road.walls, id, |s| &s.id)?),
         RoadSourceKind::Junction => stamp(find(&road.junctions, id, |s| &s.id)?),
+        RoadSourceKind::Platform => stamp(find(&road.platforms, id, |s| &s.id)?),
     })
 }
 
@@ -125,6 +126,7 @@ fn add(doc: &Document, kind: RoadSourceKind, id: &str, out: &mut Vec<RoadDrawing
                 named.extend(j.legs.iter().map(|l| (K::Alignment, l.alignment.clone())));
             }
         }
+        K::Platform => named.extend(find(&road.platforms, id, |s| &s.id).map(|p| (K::Surface, p.surface.clone()))),
     }
     for (k, i) in named {
         add(doc, k, &i, out);
@@ -157,6 +159,7 @@ pub(crate) fn main_of(command: &str) -> Option<(RoadSourceKind, &'static str)> {
         "road.culverts.draw" => (K::Culvert, "culvert"),
         "road.walls.draw" => (K::Wall, "wall"),
         "road.junctions.draw" => (K::Junction, "junction"),
+        "road.platforms.draw" => (K::Platform, "platform"),
         "road.terrains.contours" => (K::Surface, "surface"),
         _ => return None,
     })
@@ -181,6 +184,7 @@ fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
         K::Culvert => pairs(&r.culverts, |x| (&x.id, &x.name)),
         K::Wall => pairs(&r.walls, |x| (&x.id, &x.name)),
         K::Junction => pairs(&r.junctions, |x| (&x.id, &x.name)),
+        K::Platform => pairs(&r.platforms, |x| (&x.id, &x.name)),
     }
 }
 

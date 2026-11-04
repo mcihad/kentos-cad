@@ -251,7 +251,13 @@ CAD = [
     # (Y2), its TIN, contours and slopes, comes with its own commands. İşlemler's tools stay in the contextual tabs.
     T("terrain", "Arazi", [
         # The terrain surfaces (plan/road.md Y2.4): their window and a new one.
-        P("Yüzey", "terrainSurface", [L("terrain.surfaces"), L("terrain.new")]),
+        P("Yüzey", "terrainSurface", [L("terrain.surfaces"), L("terrain.new"), L("terrain.cloud")]),
+        # The surface's analysis, difference and survey quality (plan/road.md Y18, docs/adr/0916).
+        P("Analiz", "terrainAnalysis", [L("terrain.analysis")]),
+        # The graded pads (plan/road.md Y14, docs/adr/0927): the Platform window.
+        P("Tesviye", "platformEditor", [L("platform.editor")]),
+        # The surface's drainage (plan/road.md Y16, docs/adr/0929): the Drenaj window.
+        P("Drenaj", "drainageEditor", [L("drainage.editor")]),
         P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
         P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
           overflow=["mesh.query"]),
@@ -259,13 +265,14 @@ CAD = [
     # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
     T("alignment", "Güzergâh", [
         P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("alignment.fromLine"),
-                                                   L("landxml.importAlignments")]),
+                                                   L("landxml.importAlignments"), L("alignment.check")]),
         # The preliminary route (plan/road.md Y12.1, docs/adr/0910 §1).
         P("Ön güzergâh", "routeFinder", [L("route.finder")]),
         # The junctions (plan/road.md Y12.2, docs/adr/0910 §2).
-        P("Kavşak", "junctionEditor", [L("junction.editor")]),
+        # The junctions (plan/road.md Y12.2, docs/adr/0910 §2) and a design vehicle's swept path (Y17, docs/adr/0915).
+        P("Kavşak", "junctionEditor", [L("junction.editor"), L("swept.editor")]),
         # The vertical alignments (plan/road.md Y4, docs/adr/0902): the Boykesit window and a new profile.
-        P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new"), L("profile.fromLine")]),
+        P("Boykesit", "profileEditor", [L("profile.editor"), L("profile.new"), L("profile.fromLine"), L("profile.sight"), L("profile.propose")]),
         # The cross sections (plan/road.md Y5, docs/adr/0903): the Enkesit window, a new set and a new template.
         P("Enkesit", "sectionEditor", [L("section.editor"), L("section.new"), L("section.template")]),
         # The superelevation (plan/road.md Y6, docs/adr/0904): the Dever window and a new schedule.
@@ -274,11 +281,11 @@ CAD = [
     # KentOS Yol's corridors (plan/road.md Y7, docs/adr/0905): the Koridor window, a new corridor and the slope plan;
     # the earthwork volumes on it.
     T("corridor", "Koridor", [
-        P("Koridor", "corridorEditor", [L("corridor.editor"), L("corridor.new"), L("corridor.slopePlan")]),
+        P("Koridor", "corridorEditor", [L("corridor.editor"), L("corridor.new"), L("corridor.slopePlan"), L("corridor.water")]),
         # The earthwork volumes (plan/road.md Y8, docs/adr/0906): the Kübaj window, a new volume and its sheet.
         P("Kübaj", "volumeEditor", [L("volume.editor"), L("volume.new"), L("volume.export")]),
         # The mass haul diagrams (plan/road.md Y9, docs/adr/0907): the Brükner window and a new diagram.
-        P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new")]),
+        P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new"), L("haul.plan")]),
         # The stakeout table (plan/road.md Y10, docs/adr/0908).
         P("Aplikasyon", "stakeoutTable", [L("stakeout.table"), L("landxml.export"), L("ifc.export")]),
         # The plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10).

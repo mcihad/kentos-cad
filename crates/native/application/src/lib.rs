@@ -277,7 +277,12 @@ pub mod road_profiles_create;
 pub mod road_profiles_draw;
 pub mod road_profiles_edit;
 pub mod road_profiles_query;
+pub mod road_profiles_sight;
+pub mod road_profiles_propose;
+pub mod road_alignments_check;
+pub mod road_profiles_check;
 pub mod road_corridors;
+pub mod road_corridors_water;
 pub(crate) mod road_drawings;
 pub(crate) mod road_project;
 pub mod road_project_query;
@@ -289,6 +294,7 @@ pub mod road_corridors_query;
 pub mod road_hauls;
 pub mod road_hauls_edit;
 pub mod road_hauls_query;
+pub mod road_hauls_plan;
 pub mod road_guardrails;
 pub mod road_guardrails_draw;
 pub mod road_guardrails_edit;
@@ -298,6 +304,9 @@ pub mod road_culverts_draw;
 pub mod road_culverts_edit;
 pub mod road_culverts_query;
 pub mod road_junctions;
+pub mod road_junctions_clearance;
+pub mod road_junctions_tie;
+pub mod road_junctions_overlap;
 pub mod road_junctions_draw;
 pub mod road_junctions_edit;
 pub mod road_junctions_query;
@@ -311,6 +320,23 @@ pub mod road_walls;
 pub mod road_walls_draw;
 pub mod road_walls_edit;
 pub mod road_walls_query;
+pub mod road_platforms;
+pub mod road_platforms_draw;
+pub mod road_platforms_edit;
+pub mod road_terrain_cloud;
+pub mod road_drainage;
+pub mod road_drainage_draw;
+pub mod road_swept;
+pub mod road_swept_draw;
+pub mod road_terrains_analysis;
+pub mod road_terrains_coverage;
+pub mod road_terrains_coverage_draw;
+pub mod road_terrains_density;
+pub mod road_terrains_sparse;
+pub mod road_terrains_compare;
+pub mod road_terrains_quality;
+pub mod road_terrains_repair;
+pub mod road_platforms_query;
 pub mod road_alignments_import;
 pub mod road_alignments_fit;
 pub mod road_profiles_fit;
@@ -1210,6 +1236,22 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::ROAD_PROFILES_DRAW_VERSION,
     ),
     (
+        kentos_commands::ROAD_PROFILES_SIGHT,
+        kentos_commands::ROAD_PROFILES_SIGHT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_PROPOSE,
+        kentos_commands::ROAD_PROFILES_PROPOSE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_CHECK,
+        kentos_commands::ROAD_ALIGNMENTS_CHECK_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_CHECK,
+        kentos_commands::ROAD_PROFILES_CHECK_VERSION,
+    ),
+    (
         kentos_commands::ROAD_PROFILES_QUERY,
         kentos_commands::ROAD_PROFILES_QUERY_VERSION,
     ),
@@ -1239,12 +1281,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     ),
     (kentos_commands::ROAD_CORRIDORS_EDIT, kentos_commands::ROAD_CORRIDORS_EDIT_VERSION),
     (kentos_commands::ROAD_CORRIDORS_QUERY, kentos_commands::ROAD_CORRIDORS_QUERY_VERSION),
+    (kentos_commands::ROAD_CORRIDORS_WATER, kentos_commands::ROAD_CORRIDORS_WATER_VERSION),
     (kentos_commands::ROAD_CORRIDORS_DRAW, kentos_commands::ROAD_CORRIDORS_DRAW_VERSION),
     (kentos_commands::ROAD_VOLUMES_EDIT, kentos_commands::ROAD_VOLUMES_EDIT_VERSION),
     (kentos_commands::ROAD_VOLUMES_QUERY, kentos_commands::ROAD_VOLUMES_QUERY_VERSION),
     (kentos_commands::ROAD_VOLUMES_APPROVE, kentos_commands::ROAD_VOLUMES_APPROVE_VERSION),
     (kentos_commands::ROAD_HAULS_EDIT, kentos_commands::ROAD_HAULS_EDIT_VERSION),
     (kentos_commands::ROAD_HAULS_QUERY, kentos_commands::ROAD_HAULS_QUERY_VERSION),
+    (kentos_commands::ROAD_HAULS_PLAN, kentos_commands::ROAD_HAULS_PLAN_VERSION),
     (kentos_commands::ROAD_GUARDRAILS_EDIT, kentos_commands::ROAD_GUARDRAILS_EDIT_VERSION),
     (kentos_commands::ROAD_GUARDRAILS_QUERY, kentos_commands::ROAD_GUARDRAILS_QUERY_VERSION),
     (kentos_commands::ROAD_GUARDRAILS_DRAW, kentos_commands::ROAD_GUARDRAILS_DRAW_VERSION),
@@ -1254,6 +1298,22 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_WALLS_EDIT, kentos_commands::ROAD_WALLS_EDIT_VERSION),
     (kentos_commands::ROAD_WALLS_QUERY, kentos_commands::ROAD_WALLS_QUERY_VERSION),
     (kentos_commands::ROAD_WALLS_DRAW, kentos_commands::ROAD_WALLS_DRAW_VERSION),
+    (kentos_commands::ROAD_PLATFORMS_EDIT, kentos_commands::ROAD_PLATFORMS_EDIT_VERSION),
+    (kentos_commands::ROAD_TERRAINS_FROM_CLOUD, kentos_commands::ROAD_TERRAINS_FROM_CLOUD_VERSION),
+    (kentos_commands::ROAD_DRAINAGE_QUERY, kentos_commands::ROAD_DRAINAGE_QUERY_VERSION),
+    (kentos_commands::ROAD_DRAINAGE_DRAW, kentos_commands::ROAD_DRAINAGE_DRAW_VERSION),
+    (kentos_commands::ROAD_SWEPT_QUERY, kentos_commands::ROAD_SWEPT_QUERY_VERSION),
+    (kentos_commands::ROAD_SWEPT_DRAW, kentos_commands::ROAD_SWEPT_DRAW_VERSION),
+    (kentos_commands::ROAD_TERRAINS_ANALYSIS, kentos_commands::ROAD_TERRAINS_ANALYSIS_VERSION),
+    (kentos_commands::ROAD_TERRAINS_COMPARE, kentos_commands::ROAD_TERRAINS_COMPARE_VERSION),
+    (kentos_commands::ROAD_TERRAINS_QUALITY, kentos_commands::ROAD_TERRAINS_QUALITY_VERSION),
+    (kentos_commands::ROAD_TERRAINS_REPAIR, kentos_commands::ROAD_TERRAINS_REPAIR_VERSION),
+    (kentos_commands::ROAD_TERRAINS_COVERAGE, kentos_commands::ROAD_TERRAINS_COVERAGE_VERSION),
+    (kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW, kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW_VERSION),
+    (kentos_commands::ROAD_TERRAINS_DENSITY, kentos_commands::ROAD_TERRAINS_DENSITY_VERSION),
+    (kentos_commands::ROAD_TERRAINS_SPARSE_DRAW, kentos_commands::ROAD_TERRAINS_SPARSE_DRAW_VERSION),
+    (kentos_commands::ROAD_PLATFORMS_QUERY, kentos_commands::ROAD_PLATFORMS_QUERY_VERSION),
+    (kentos_commands::ROAD_PLATFORMS_DRAW, kentos_commands::ROAD_PLATFORMS_DRAW_VERSION),
     (kentos_commands::ROAD_PAY_EDIT, kentos_commands::ROAD_PAY_EDIT_VERSION),
     (kentos_commands::ROAD_PAY_QUERY, kentos_commands::ROAD_PAY_QUERY_VERSION),
     (kentos_commands::ROAD_ROUTES_FIND, kentos_commands::ROAD_ROUTES_FIND_VERSION),
@@ -1261,6 +1321,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_JUNCTIONS_EDIT, kentos_commands::ROAD_JUNCTIONS_EDIT_VERSION),
     (kentos_commands::ROAD_JUNCTIONS_QUERY, kentos_commands::ROAD_JUNCTIONS_QUERY_VERSION),
     (kentos_commands::ROAD_JUNCTIONS_DRAW, kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION),
+    (kentos_commands::ROAD_JUNCTIONS_CLEARANCE, kentos_commands::ROAD_JUNCTIONS_CLEARANCE_VERSION),
+    (kentos_commands::ROAD_JUNCTIONS_TIE, kentos_commands::ROAD_JUNCTIONS_TIE_VERSION),
+    (kentos_commands::ROAD_JUNCTIONS_OVERLAP, kentos_commands::ROAD_JUNCTIONS_OVERLAP_VERSION),
     (kentos_commands::ROAD_PROJECT_QUERY, kentos_commands::ROAD_PROJECT_QUERY_VERSION),
     (kentos_commands::ROAD_PROJECT_REBUILD, kentos_commands::ROAD_PROJECT_REBUILD_VERSION),
     (kentos_commands::ROAD_PROJECT_EDIT, kentos_commands::ROAD_PROJECT_EDIT_VERSION),

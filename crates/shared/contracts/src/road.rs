@@ -105,6 +105,10 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RetainingWallDef>>", optional))]
     pub walls: Vec<RetainingWallDef>,
+    /// The graded pads (docs/adr/0927), each on a terrain surface.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PlatformDef>>", optional))]
+    pub platforms: Vec<PlatformDef>,
     /// The junctions (docs/adr/0910 §2), each of two alignments.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<JunctionDef>>", optional))]
@@ -124,7 +128,7 @@ pub struct RoadSettings {
 }
 
 /// The road commands that draw (docs/adr/0911 §1): what a drawing's `command` is.
-pub const ROAD_DRAWING_COMMANDS: [&str; 9] = [
+pub const ROAD_DRAWING_COMMANDS: [&str; 10] = [
     "road.alignments.label",
     "road.profiles.draw",
     "road.sections.draw",
@@ -133,6 +137,7 @@ pub const ROAD_DRAWING_COMMANDS: [&str; 9] = [
     "road.culverts.draw",
     "road.walls.draw",
     "road.junctions.draw",
+    "road.platforms.draw",
     "road.terrains.contours",
 ];
 /// The most drawings a project keeps, sources a drawing names and objects it holds.
@@ -158,6 +163,7 @@ pub enum RoadSourceKind {
     Culvert,
     Wall,
     Junction,
+    Platform,
 }
 
 /// A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
@@ -210,6 +216,7 @@ impl RoadSettings {
             && self.guardrails.is_empty()
             && self.culverts.is_empty()
             && self.walls.is_empty()
+            && self.platforms.is_empty()
             && self.pay.is_none()
             && self.junctions.is_empty()
             && self.drawings.is_empty()
@@ -285,6 +292,142 @@ pub struct TerrainSurfaceDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub built: Option<String>,
+    /// The ground points taken from point clouds into its point layers (docs/adr/0928 §2), each layer's record.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceCloudDef>>", optional))]
+    pub clouds: Vec<SurfaceCloudDef>,
+    /// The point records left out of it (docs/adr/0916 §6; a repair: a spike, a shot twice): each place, exactly as the
+    /// record's; the drawing's points stay as they are.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceExclusion>>", optional))]
+    pub excluded: Vec<SurfaceExclusion>,
+}
+
+/// A point record left out of a surface: its place (docs/adr/0916 §6).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurfaceExclusion {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+}
+
+/// The most point records one surface leaves out.
+pub const MOST_SURFACE_EXCLUSIONS: usize = 100_000;
+
+/// Which of a pulse's returns a cloud's points are taken from (docs/adr/0928): all, the first, the last (nearest the
+/// ground), or a pulse's only return.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CloudReturns {
+    #[default]
+    All,
+    First,
+    Last,
+    Single,
+}
+
+/// What a surface's points taken from point clouds are (docs/adr/0928 §2): the layer they were written to, the clouds,
+/// classes, returns and area they were chosen by, the thinning, and what it cost: the ground points read and kept,
+/// their coverage (0–1) and density (per m²) of the area, and the vertical error of the points left out against the
+/// surface made then (absent when none was measured), and how many were outside it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurfaceCloudDef {
+    pub layer: String,
+    pub clouds: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub classes: Vec<u8>,
+    #[serde(default)]
+    pub returns: CloudReturns,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub area: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub z_tolerance: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub near: Option<f64>,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub read: u64,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub kept: u64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub coverage: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub density: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub error_max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub error_rms: Option<f64>,
+    #[serde(default, skip_serializing_if = "is_zero_u64")]
+    #[cfg_attr(feature = "ts", ts(type = "number", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub outside: u64,
+}
+
+fn is_zero_u64(v: &u64) -> bool {
+    *v == 0
+}
+
+/// The most cloud records a surface keeps, and the most clouds and classes one names.
+pub const MAX_SURFACE_CLOUDS: usize = 64;
+
+/// What is wrong with a surface's cloud records (docs/adr/0928 §2): a record names its layer once and at least one
+/// cloud and class; the thinning's values are positive; the counts agree and the shares are shares.
+fn clouds_problem(list: &[SurfaceCloudDef]) -> Option<String> {
+    if list.len() > MAX_SURFACE_CLOUDS {
+        return Some(format!("en çok {MAX_SURFACE_CLOUDS} bulut kaydı olur"));
+    }
+    let mut layers = std::collections::BTreeSet::new();
+    for (k, c) in list.iter().enumerate() {
+        let at = |what: &str| format!("{}. bulut kaydının {what}", k + 1);
+        if !word_ok(&c.layer) || !layers.insert(c.layer.as_str()) {
+            return Some(at("katmanı bir katmanın kimliği olmalı ve bir kez geçmeli"));
+        }
+        if c.clouds.is_empty() || c.clouds.len() > MAX_SURFACE_CLOUDS || c.clouds.iter().any(|u| !word_ok(u)) {
+            return Some(at("bulutları 1 ile 64 arası nesne kimliği olmalı"));
+        }
+        if c.classes.is_empty() || c.classes.len() > 256 {
+            return Some(at("sınıfları en az bir sınıf olmalı"));
+        }
+        if c.area.as_deref().is_some_and(|a| !word_ok(a)) {
+            return Some(at("alanı bir nesnenin kimliği olmalı"));
+        }
+        let positive = |v: f64| v.is_finite() && v > 0.0;
+        if !positive(c.cell) || c.z_tolerance.is_some_and(|v| !positive(v)) || c.near.is_some_and(|v| !positive(v)) {
+            return Some(at("hücresi, kot toleransı ve kırık hat erimi sıfırdan büyük olmalı"));
+        }
+        if c.kept > c.read
+            || !(0.0..=1.0).contains(&c.coverage)
+            || !(c.density.is_finite() && c.density >= 0.0)
+            || [c.error_max, c.error_rms].iter().flatten().any(|v| !(v.is_finite() && *v >= 0.0))
+        {
+            return Some(at("sayıları tutarlı olmalı (kalan okunandan çok değil, kapsama 0–1)"));
+        }
+    }
+    None
 }
 
 fn is_zero(v: &f64) -> bool {
@@ -1060,6 +1203,20 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         {
             return fail(at("built"), "özet 64 küçük onaltılık rakam olmalı");
         }
+        if let Some(words) = clouds_problem(&s.clouds) {
+            return fail(at("clouds"), &words);
+        }
+        if s.excluded.len() > MOST_SURFACE_EXCLUSIONS {
+            return fail(at("excluded"), "bir yüzey en çok 100 000 noktayı dışarıda bırakır");
+        }
+        if s.excluded.iter().any(|e| !(e.x.is_finite() && e.y.is_finite())) {
+            return fail(at("excluded"), "dışarıda bırakılan yer sonlu iki sayı olmalı");
+        }
+        let mut places: Vec<(u64, u64)> = s.excluded.iter().map(|e| ((e.x + 0.0).to_bits(), (e.y + 0.0).to_bits())).collect();
+        places.sort_unstable();
+        if places.windows(2).any(|w| w[0] == w[1]) {
+            return fail(at("excluded"), "bir yer dışarıda bırakılanlarda iki kez");
+        }
     }
     alignments_problem(&road.alignments)
         .or_else(|| profiles_problem(&road.profiles, &road.alignments))
@@ -1073,6 +1230,7 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         .or_else(|| guardrails_problem(road))
         .or_else(|| culverts_problem(road))
         .or_else(|| walls_problem(road))
+        .or_else(|| platforms_problem(road))
         .or_else(|| pay_problem(road))
         .or_else(|| junctions_problem(road))
         .or_else(|| drawings_problem(road))
@@ -1854,6 +2012,101 @@ fn walls_problem(road: &RoadSettings) -> Option<(String, String)> {
     None
 }
 
+/// The most graded pads a project holds, and corners a pad's boundary has.
+pub const MAX_PLATFORMS: usize = 1000;
+pub const MAX_PLATFORM_CORNERS: usize = 1000;
+
+/// A graded pad (docs/adr/0927): its boundary's corners, the plane through `base` rising `grade` percent towards
+/// `direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of
+/// its slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is
+/// graded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PlatformDef {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub corners: Vec<[f64; 2]>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub base: [f64; 3],
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub grade: f64,
+    #[serde(default, skip_serializing_if = "is_zero_f64")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub direction: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub fan: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub reach: f64,
+    pub surface: String,
+}
+
+fn platforms_problem(road: &RoadSettings) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    let list = &road.platforms;
+    if list.len() > MAX_PLATFORMS {
+        return fail("platforms".into(), &format!("en çok {MAX_PLATFORMS} platform olur"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    let mut names = std::collections::BTreeSet::new();
+    for (i, p) in list.iter().enumerate() {
+        let at = |field: &str| format!("platforms[{i}].{field}");
+        if !word_ok(&p.id) {
+            return fail(at("id"), "platformun kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+        }
+        if !ids.insert(p.id.as_str()) {
+            return fail(at("id"), "bu kimlikte başka bir platform var");
+        }
+        let name = p.name.trim();
+        if name.is_empty() || name != p.name || p.name.chars().count() > 120 {
+            return fail(at("name"), "platformun adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+        }
+        if !names.insert(name.to_lowercase()) {
+            return fail(at("name"), "bu adda başka bir platform var");
+        }
+        if p.corners.len() < 3 || p.corners.len() > MAX_PLATFORM_CORNERS {
+            return fail(at("corners"), &format!("platformun sınırı 3 ile {MAX_PLATFORM_CORNERS} arası köşedir"));
+        }
+        if !p.corners.iter().flatten().chain(p.base.iter()).all(|v| v.is_finite()) {
+            return fail(at("corners"), "köşeler ve taban sonlu sayılar olmalı");
+        }
+        if !(p.grade.is_finite() && p.grade.abs() <= 100.0) {
+            return fail(at("grade"), "platformun eğimi en çok %100 olur");
+        }
+        if !(p.direction.is_finite() && (-360.0..=360.0).contains(&p.direction)) {
+            return fail(at("direction"), "eğimin yönü −360 ile 360 derece arası olur");
+        }
+        for (field, v, top) in [("cut", p.cut, 100.0), ("fill", p.fill, 100.0), ("step", p.step, 1000.0), ("reach", p.reach, 10_000.0)] {
+            if !(v.is_finite() && v > 0.0 && v <= top) {
+                return fail(at(field), &format!("0'dan büyük, en çok {top} olur"));
+            }
+        }
+        if !(p.fan.is_finite() && p.fan > 0.0 && p.fan <= 90.0) {
+            return fail(at("fan"), "köşe yelpazesinin açısı 0'dan büyük, en çok 90 derece olur");
+        }
+        if road.surfaces.iter().all(|s| s.id != p.surface) {
+            return fail(at("surface"), "platformun arazi yüzeyi projede yok");
+        }
+    }
+    None
+}
+
 /// The most junctions a project holds.
 pub const MAX_JUNCTIONS: usize = 1000;
 
@@ -2605,6 +2858,8 @@ mod tests {
             tolerance: None,
             max_edge: Some(50.0),
             built: None,
+            clouds: Vec::new(),
+            excluded: Vec::new(),
         }
     }
 

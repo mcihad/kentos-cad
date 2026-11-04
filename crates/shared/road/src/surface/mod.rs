@@ -3,9 +3,14 @@
 //! and the height of a place read off its triangle. Every decision is the geometry core's exact predicates; no
 //! number is constructed (a draped ring's corner takes the height the surface has there).
 
+mod analysis;
 mod contours;
+mod coverage;
+mod density;
 mod figures;
 mod mesh;
+mod quality;
+mod tiled;
 mod query;
 
 use std::collections::HashMap;
@@ -15,8 +20,13 @@ use kentos_geometry_core::geom::delaunay::{self, NONE};
 use kentos_geometry_core::predicates::orient2d;
 use serde::{Deserialize, Serialize};
 
+pub use analysis::{AnalysisError, Band, BandParts, Bands, GridSlope, MAX_CELLS as MAX_GRID_CELLS, Measure, Roughness};
+pub use coverage::{Coverage, Region, clipped_area, ring_area};
+pub use density::{Density, ring_holds};
 pub use contours::{ContourError, ContourLine, MAX_LEVELS, Slope};
 pub use figures::{Figures, SectionPoint};
+pub use quality::{Gaps, NearPair, Spike};
+pub use tiled::{Tiled, TiledError, build_tiled};
 pub use query::{Height, Place};
 
 use mesh::{Mesh, Walk};

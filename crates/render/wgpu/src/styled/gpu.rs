@@ -1297,6 +1297,10 @@ impl StyledGpu {
                 pass.set_bind_group(0, bind, &[]);
                 pass.set_bind_group(1, &layer.bind, &[b.offset]);
                 pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
+                // The cloud's plan is drawn with the area shader's precise variant: its low parts too.
+                if let Some(low) = &layer.low {
+                    pass.set_vertex_buffer(1, low.slice(b.bytes.clone()));
+                }
                 pass.draw(0..b.count, 0..1);
                 pass.set_bind_group(0, frame_bind, &[]);
                 return;

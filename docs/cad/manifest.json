@@ -95,6 +95,23 @@
    "tests": 0
   },
   {
+   "id": "alignment.check",
+   "kind": "command",
+   "title": "Tasarım denetimi…",
+   "level": "semantic",
+   "via": [
+    "road.alignments.check",
+    "road.profiles.check"
+   ],
+   "operation": null,
+   "python": "Connection: road.alignments.check, Connection: road.profiles.check",
+   "mcp": "road.alignments.check, road.profiles.check",
+   "note": "Önizle kipine göre road.alignments.check ya da road.profiles.check ile okur; hiçbir şey yazmaz (plan/road.md Y21, ADR 0922 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "alignment.editor",
    "kind": "command",
    "title": "Güzergâh…",
@@ -705,7 +722,7 @@
    "python": "kentos.cad.arrays.find, kentos.cad.arrays.adopt",
    "mcp": "cad.arrays.find, cad.arrays.adopt",
    "note": "Yazısız doğrusal/dünya X-Y grid aday araması, sahnede gösterme, açık korunan yer eşlemesi ve ayrı inceleme. Mevcut kökleri değiştirmeden tek Undo adımıyla dizi kaydı eklenir; sorgu ve bağlama durdurulabilir (ADR0874/0875/0876).",
-   "scope": "none",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1090,7 +1107,7 @@
    "python": "kentos.cad.blocks.find, kentos.cad.blocks.convert",
    "mcp": "cad.blocks.find, cad.blocks.convert",
    "note": "Arama yazısız ve durdurulabilir; seçilmiş adaylar ayrı ilişki/görünüş incelemesi ve tek onayla bir blok tanımına dönüştürülür. Kök→parça ve ölçü eşlemesi ortak komutta, tek Undo adımındadır (ADR 0871).",
-   "scope": "none",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -1775,6 +1792,22 @@
    "python": "Connection: road.corridors.draw",
    "mcp": "road.corridors.draw",
    "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "corridor.water",
+   "kind": "command",
+   "title": "Platform suyu…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.water"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.water",
+   "mcp": "road.corridors.water",
+   "note": "Önizle road.corridors.water ile okur; hiçbir şey yazmaz (plan/road.md Y22, ADR 0923 §3).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -2739,6 +2772,23 @@
    "mcp": null,
    "note": "Çizim yardımcıları oturumun durumu.",
    "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "drainage.editor",
+   "kind": "command",
+   "title": "Drenaj…",
+   "level": "semantic",
+   "via": [
+    "road.drainage.query",
+    "road.drainage.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.drainage.query, Connection: road.drainage.draw",
+   "mcp": "road.drainage.query, road.drainage.draw",
+   "note": "Önizle road.drainage.query ile okur (hiçbir şey yazılmaz); Planda çiz road.drainage.draw ile yazar (plan/road.md Y16.3, ADR 0929 §3).",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4273,6 +4323,22 @@
    "tests": 0
   },
   {
+   "id": "haul.plan",
+   "kind": "command",
+   "title": "Taşıma planı…",
+   "level": "semantic",
+   "via": [
+    "road.hauls.plan"
+   ],
+   "operation": null,
+   "python": "Connection: road.hauls.plan",
+   "mcp": "road.hauls.plan",
+   "note": "Önizle road.hauls.plan ile okur; hiçbir şey yazmaz (plan/road.md Y23, ADR 0924 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "help.about",
    "kind": "command",
    "title": "KentOS CAD hakkında",
@@ -5071,6 +5137,24 @@
    "python": "Connection: road.pay.edit, Connection: road.pay.query",
    "mcp": "road.pay.edit, road.pay.query",
    "note": "Defter yazıldıkça road.pay.edit'in denetimi ve road.pay.query'nin cevabıyla okuma kopyasında önizler; Kaydet ve Sil road.pay.edit ile yazar (plan/road.md Y11.4, ADR 0909 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "platform.editor",
+   "kind": "command",
+   "title": "Platform…",
+   "level": "semantic",
+   "via": [
+    "road.platforms.edit",
+    "road.platforms.query",
+    "road.platforms.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.platforms.edit, Connection: road.platforms.query, Connection: road.platforms.draw",
+   "mcp": "road.platforms.edit, road.platforms.query, road.platforms.draw",
+   "note": "Değerler yazıldıkça road.platforms.edit'in planıyla okuma kopyasında tesviye eder; Dengele road.platforms.query'nin balance'ını yazılan platformla okuma kopyasında sorar; Kaydet ve Sil road.platforms.edit, Planda çiz road.platforms.draw ile yazar (plan/road.md Y14.3, ADR 0927 §3).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -7731,6 +7815,39 @@
    "tests": 0
   },
   {
+   "id": "profile.propose",
+   "kind": "command",
+   "title": "Kırmızı kot önerisi…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.propose",
+    "road.profiles.create"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.propose, Connection: road.profiles.create",
+   "mcp": "road.profiles.propose, road.profiles.create",
+   "note": "Önizle road.profiles.propose ile okur; Yeni boykesit olarak yaz road.profiles.create ile yazar (plan/road.md Y25, ADR 0926 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "profile.sight",
+   "kind": "command",
+   "title": "Görüş mesafesi…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.sight"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.sight",
+   "mcp": "road.profiles.sight",
+   "note": "Önizle road.profiles.sight ile okur; hiçbir şey yazmaz (plan/road.md Y20, ADR 0921 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "profile.window",
    "kind": "command",
    "title": "Veri profili",
@@ -9458,6 +9575,23 @@
    "tests": 0
   },
   {
+   "id": "swept.editor",
+   "kind": "command",
+   "title": "Araç izi…",
+   "level": "semantic",
+   "via": [
+    "road.swept.query",
+    "road.swept.draw"
+   ],
+   "operation": null,
+   "python": "Connection: road.swept.query, Connection: road.swept.draw",
+   "mcp": "road.swept.query, road.swept.draw",
+   "note": "Önizle road.swept.query ile okur (hiçbir şey yazılmaz); Planda çiz road.swept.draw ile yazar (plan/road.md Y17.3, ADR 0915 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.blockSchedule",
    "kind": "command",
    "title": "Blok çizelgesi tablosu",
@@ -9608,6 +9742,40 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "terrain.analysis",
+   "kind": "command",
+   "title": "Yüzey analizi…",
+   "level": "semantic",
+   "via": [
+    "road.terrains.analysis",
+    "road.terrains.compare",
+    "road.terrains.quality"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.analysis, Connection: road.terrains.compare, Connection: road.terrains.quality",
+   "mcp": "road.terrains.analysis, road.terrains.compare, road.terrains.quality",
+   "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; hiçbir şey yazmaz (plan/road.md Y18.5, ADR 0916 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "terrain.cloud",
+   "kind": "command",
+   "title": "Buluttan arazi…",
+   "level": "semantic",
+   "via": [
+    "road.terrains.cloud"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.cloud",
+   "mcp": "road.terrains.cloud",
+   "note": "Önizle road.terrains.cloud'un planını okuma kopyasında çalıştırır (bulut okunur, hiçbir şey yazılmaz); Uygula aynı komutla yazar (plan/road.md Y15.3, ADR 0928 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "terrain.new",

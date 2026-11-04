@@ -42,6 +42,7 @@ fn kind_words(kind: K) -> &'static str {
         K::Culvert => "menfez",
         K::Wall => "istinat duvarı",
         K::Junction => "kavşak",
+        K::Platform => "platform",
     }
 }
 
@@ -59,6 +60,7 @@ fn kind_named(kind: K) -> &'static str {
         K::Culvert => "menfezi",
         K::Wall => "istinat duvarı",
         K::Junction => "kavşağı",
+        K::Platform => "platformu",
     }
 }
 
@@ -180,6 +182,25 @@ impl Tree<'_> {
             }
             let at = self.push(N::Surface, &def.id, &def.name, None, state, why);
             self.drawings(K::Surface, &def.id, at);
+            // Its pads (docs/adr/0927): graded on it; read deep, one with open slope lines is unsolved.
+            for p in doc.road_platforms().iter().filter(|p| p.surface == def.id) {
+                let (mut st, mut w) = (S::Current, Vec::new());
+                if self.deep {
+                    match crate::road_platforms::read(doc, p) {
+                        Ok(r) if r.report.open > 0 => {
+                            st = S::Unsolved;
+                            w.push(format!("{} şev çizgisi araziyle buluşmuyor.", r.report.open));
+                        }
+                        Ok(_) => {}
+                        Err(stop) => {
+                            st = S::Unbuildable;
+                            w.push(crate::road_corridors::words(stop));
+                        }
+                    }
+                }
+                let n = self.push(N::Platform, &p.id, &p.name, Some(at), st, w);
+                self.drawings(K::Platform, &p.id, n);
+            }
         }
     }
 

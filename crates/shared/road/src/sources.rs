@@ -51,6 +51,9 @@ pub struct Gathered {
     pub left: Vec<Left>,
     /// The SHA-256 (64 lower-case hex digits) of the input and the method: what `built` keeps.
     pub digest: String,
+    /// The point records left out by the definition's `excluded` (docs/adr/0916 §6), and the exclusions no record is at.
+    pub excluded: usize,
+    pub unmatched: Vec<[f64; 2]>,
 }
 
 /// A surface's state against its sources.
@@ -119,6 +122,10 @@ pub fn gather<'a>(
 
     let mut points = Vec::new();
     let mut breaklines = Vec::new();
+    let place = |x: f64, y: f64| ((x + 0.0).to_bits(), (y + 0.0).to_bits());
+    let out: BTreeSet<(u64, u64)> = def.excluded.iter().map(|e| place(e.x, e.y)).collect();
+    let mut hit: BTreeSet<(u64, u64)> = BTreeSet::new();
+    let mut excluded = 0usize;
     for (role, sources) in [("points", &def.points), ("breaklines", &def.breaklines)] {
         let (layers, missing) = layer_set(tree, &sources.layers);
         for id in missing {
@@ -142,6 +149,10 @@ pub fn gather<'a>(
                         let mut lost = false;
                         for (p, z) in places {
                             match z {
+                                Some(_) if out.contains(&place(p[0], p[1])) => {
+                                    excluded += 1;
+                                    hit.insert(place(p[0], p[1]));
+                                }
                                 Some(z) => points.push(SpotPoint {
                                     x: p[0],
                                     y: p[1],
@@ -204,10 +215,13 @@ pub fn gather<'a>(
         },
     };
     let digest = digest_of(&input);
+    let unmatched = def.excluded.iter().filter(|e| !hit.contains(&place(e.x, e.y))).map(|e| [e.x, e.y]).collect();
     Gathered {
         input,
         left,
         digest,
+        excluded,
+        unmatched,
     }
 }
 

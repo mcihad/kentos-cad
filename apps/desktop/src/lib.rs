@@ -268,6 +268,16 @@ mod road_alignment_fit_window;
 mod guardrail_window;
 mod culvert_window;
 mod retaining_wall_window;
+mod platform_window;
+mod terrain_cloud_window;
+mod drainage_window;
+mod design_check_window;
+mod platform_water_window;
+mod haul_plan_window;
+mod sight_window;
+mod propose_window;
+mod swept_window;
+mod surface_analysis_window;
 mod pay_window;
 mod route_window;
 mod junction_window;
@@ -284,6 +294,26 @@ mod route_window_tests;
 mod pay_window_tests;
 #[cfg(test)]
 mod retaining_wall_window_tests;
+#[cfg(test)]
+mod platform_window_tests;
+#[cfg(test)]
+mod terrain_cloud_window_tests;
+#[cfg(test)]
+mod drainage_window_tests;
+#[cfg(test)]
+mod design_check_window_tests;
+#[cfg(test)]
+mod platform_water_window_tests;
+#[cfg(test)]
+mod haul_plan_window_tests;
+#[cfg(test)]
+mod sight_window_tests;
+#[cfg(test)]
+mod propose_window_tests;
+#[cfg(test)]
+mod swept_window_tests;
+#[cfg(test)]
+mod surface_analysis_window_tests;
 #[cfg(test)]
 mod culvert_window_tests;
 #[cfg(test)]

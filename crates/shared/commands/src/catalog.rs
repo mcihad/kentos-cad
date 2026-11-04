@@ -6990,6 +6990,106 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_CHECK.into(),
+            version: crate::ROAD_ALIGNMENTS_CHECK_VERSION,
+            title: "Aksı denetle".into(),
+            summary: "Bir aksı kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): leastRadius (en küçük yarıçap), leastArc (kurbun daire boyu), leastSpiral (klotoid boyu), leastTangent (iki kurp arasındaki aliyman), leastReverse (ters dönen iki kurp arasındaki aliyman; bitişik olan 0), leastBrokenBack (aynı yöne dönen iki kurp arasındaki aliyman; bitişik olan birleşik kurptur, bu değil), mostRadiusRatio (bitişik iki kurbun büyük yarıçapının küçüğüne oranı), kinks (kurpsuz dönen PI). Cevap: ardışık kurp çiftleri (ters mi, bitişik mi, aradaki aliyman ve yeri) ve kırılan kurallar km sırasıyla: kural, PI'ler, km aralığı, bulunan değer, sınır ve sözü. \
+                      Uyarılar: design_rule_broken. Retler: not_a_road_project, unknown_alignment, invalid_design_check."
+                .into(),
+            aliases: vec!["aksdenetle".into(), "tasarimdenetimi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsCheck>(),
+            output: schema::<crate::AlignmentsChecked>(),
+            plan: Some(schema::<crate::AlignmentsChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ters kurplar arasında en az 60 m aliyman".into(),
+                input: json!({ "alignment": "g-1", "leastRadius": 180.0, "leastReverse": 60.0, "kinks": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_CHECK.into(),
+            version: crate::ROAD_PROFILES_CHECK_VERSION,
+            title: "Boykesiti denetle".into(),
+            summary: "Bir boykesiti kullanıcının tasarım kurallarıyla denetler; hiçbir şey yazmaz. Kurallar (hepsi isteğe bağlı, verilmeyen denetlenmez; değerler tasarım standardınındır, KentOS sayı vermez): mostGrade ve leastGrade (iki PVI arasındaki en dik ve en yatık eğim, oran, iki yöne), leastCrestK ve leastSagK (tepe ve çukur kurbun en küçük K'si, m/%), leastCurve (düşey kurbun yatay boyu), leastGradeLength (iki kurp arasındaki düz eğim). Cevap: kırılan kurallar km sırasıyla: kural, PVI'ler, km aralığı, bulunan değer, sınır ve sözü. \
+                      Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_design_check."
+                .into(),
+            aliases: vec!["boykesitdenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProfilesCheck>(),
+            output: schema::<crate::RoadProfilesChecked>(),
+            plan: Some(schema::<crate::RoadProfilesChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Eğim en çok %6, tepe K en az 30".into(),
+                input: json!({ "profile": "b-1", "mostGrade": 0.06, "leastCrestK": 30.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_SIGHT.into(),
+            version: crate::ROAD_PROFILES_SIGHT_VERSION,
+            title: "Görüş mesafesi".into(),
+            summary: "Bir boykesitte görüş mesafesini okur; hiçbir şey yazmaz. from'dan to'ya (iç km, m; yoksa boykesitin uçları) her step metrede ve to'da: profilin eye metre üstündeki gözden, profilin object metre üstündeki nesnenin ileride (forward), geride (backward) ya da ikisinde (side, öntanımlı both) reach metreye kadar ne kadar uzaktan göründüğü. Görüş çizgisi km–kot düzlemindedir; profil çizginin üstüne çıktığı yerde kapanır: her parçada kesin (eğimin uçları, parabolün ve dairenin çizgiyle aynı eğimdeki noktası). Uzaklık step adımlarıyla ilerler, ilk kapanan çizgiden sonra milimetreye ikiye bölünür; iki görünen adım arasında step'ten kısa bir kapanma görülmez (yöntemin örneklemesi, cevapta söylenir). required ile profilin nesneyi istenenden yakında kapattığı ardışık km'ler aralık olarak verilir; boykesitin ya da bakılan uzaklığın bittiği yer kısa sayılmaz (ötesi okunmaz). Yükseklikler, reach, step ve required kullanıcının (tasarım standardının); KentOS değer vermez. Yalnız boykesit: arazi, plan ve engeller değil. Cevap: her km'nin kotu ve iki yönün uzaklığı, neden durduğu (hidden, reach, end) ve kapandığı km; iki yönün profilin kapattığı en kısası; kısa aralıklar. \
+                      Uyarılar: sight_short, profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_sight."
+                .into(),
+            aliases: vec!["gorusmesafesi".into(), "durmagorus".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesSight>(),
+            output: schema::<crate::ProfilesSightRead>(),
+            plan: Some(schema::<crate::ProfilesSightRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Göz 1,08 m, nesne 0,60 m, 20 m'de bir, 150 m gereken".into(),
+                input: json!({ "profile": "b-1", "eye": 1.08, "object": 0.6, "reach": 300.0, "step": 20.0, "required": 150.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PROFILES_PROPOSE.into(),
+            version: crate::ROAD_PROFILES_PROPOSE_VERSION,
+            title: "Kırmızı kot önerisi".into(),
+            summary: "Bir boykesitin PVI'larına araziye en yakın kırmızı kotu önerir; hiçbir şey yazmaz. PVI'ların km'si ve parabolik kurpları kalır, kotları değişir: tasarım kotları PVI kotlarında doğrusaldır, arazi boykesiti noktaları arasında doğrusal; ∫(kırmızı − siyah)² yüzeyin üstündeki aralıklarda kesin (üç noktalı Gauss–Legendre) en küçüktür. hold'daki PVI'lar kotunu korur, mostGrade (oran) hiçbir eğimin aşamayacağı sınırdır, balanced kazı alanını dolgu alanına eşitler. Dışbükey ikinci dereceden program etkin kümeyle tam çözülür (KKT koşulları tutar). Sınırlar ve kilitler kullanıcınındır; KentOS değer vermez. Öneri yazılacaksa road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların önerilen ve önceki kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki boy, karesel ortalama fark, kazı ve dolgu alanları. \
+                      Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da)."
+                .into(),
+            aliases: vec!["kirmizikotoneri".into(), "bestfit".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesPropose>(),
+            output: schema::<crate::ProfileProposed>(),
+            plan: Some(schema::<crate::ProfileProposed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Göz 1,08 m, nesne 0,60 m, 20 m'de bir, 150 m gereken".into(),
+                input: json!({ "profile": "b-1", "eye": 1.08, "object": 0.6, "reach": 300.0, "step": 20.0, "required": 150.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PROFILES_DRAW.into(),
             version: crate::ROAD_PROFILES_DRAW_VERSION,
             title: "Boykesit çiz".into(),
@@ -7243,6 +7343,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_WATER.into(),
+            version: crate::ROAD_CORRIDORS_WATER_VERSION,
+            title: "Platform suyu".into(),
+            summary: "Bir koridorun platformunda suyu okur; hiçbir şey yazmaz. Üst yüzeyin şerit ve banket üçgenlerinden eğimi least'ten (oran, kullanıcının; KentOS değer vermez) yatık olanlar: boy eğimi ve enine eğimin suyu bıraktığı yerler, dever geçişinin yatık yeri; km aralıkları, plan alanları ve en küçük eğimleriyle. Her yanın ilk şeridinin enine eğiminin sıfırdan geçtiği km'ler (eksen ile c1 noktası arasında, km'ler arasında doğrusal). Platform kenarlarında (eksen ve bileşenlerin kenarları) iki komşusundan alçak noktalar: suyun toplandığı, ızgara isteyen yerler. Üçgenin eğimi düzleminin en dik eğimidir. \
+                      Uyarılar: corridor_flat ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_corridor, invalid_platform_water."
+                .into(),
+            aliases: vec!["platformsuyu".into(), "yatikyer".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsWater>(),
+            output: schema::<crate::CorridorsWatered>(),
+            plan: Some(schema::<crate::CorridorsWatered>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Platformda %0,5'ten yatık yerler".into(),
+                input: json!({ "corridor": "c-2", "least": 0.005 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_DRAW.into(),
             version: crate::ROAD_CORRIDORS_DRAW_VERSION,
             title: "Şevli plan çiz".into(),
@@ -7392,6 +7517,31 @@ pub fn catalog() -> CommandCatalog {
                 title: "Ana kübajın Brüknerini serbest taşıma 300 m ve bir döküm alanıyla".into(),
                 input: json!({ "operation": "set", "name": "Ana Brükner", "volume": "Ana kübaj", "free": 300.0,
                     "sites": [ { "name": "Döküm 1", "kind": "waste", "station": 450.0, "volume": 2000.0 } ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_HAULS_PLAN.into(),
+            version: crate::ROAD_HAULS_PLAN_VERSION,
+            title: "Taşıma planı".into(),
+            summary: "Bir Brüknerin kübajındaki toprağı en küçük taşıma momentiyle (m³·m) taşır; hiçbir şey yazmaz. Her aralığın net hacmi (yarmanın dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik taşıma sınırı. \
+                      Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da)."
+                .into(),
+            aliases: vec!["tasimaplani".into(), "enkisatasima".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsPlan>(),
+            output: schema::<crate::HaulPlanned>(),
+            plan: Some(schema::<crate::HaulPlanned>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Yan Brüknerin taşıma planı".into(),
+                input: json!({ "haul": "h-2" }),
                 output: None,
             }],
         },
@@ -7571,6 +7721,415 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Menfez yazısıyla".into(),
                 input: json!({ "culvert": "m-1", "layerId": "menfez", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_DRAINAGE_QUERY.into(),
+            version: crate::ROAD_DRAINAGE_QUERY_VERSION,
+            title: "Drenajı sorgula".into(),
+            summary: "Bir arazi yüzeyinde (surface: kimliği ya da adı) suyun nereden aktığını ve nerede durduğunu okur; hiçbir şey yazmaz. ponds (minDepth m): göletler, kenardan öncelikli taşkınla; dip, taşma seviyesi ve taştığı köşe, derinlik, su alanı ve hacmi. drops: verilen noktalardan su damlası (üçgenlerde en dik iniş, vadide kenar boyunca), yolu, son yeri, boyu, bitişi (lowPoint, flat, edge, outside). catchment: boşaltım noktasının (at ya da culvert: menfezin girişi) havzası, cell aralıklı ızgaranın hücrelerinden su damlası radius eriminden geçenler; hücre sayısı, alan (ızgaranın çözünürlüğünde), dış hatları, en uzak hücreden akış yolu, boyu, düşüsü, ortalama eğimi; runoff (C) ve intensity (mm/sa) ile Rasyonel en yüksek debi Q = C·i·A/3,6; culvert ile menfezin dolu akış kapasitesi (Manning: menfezin eğimi ve pürüzlülüğü, her boru ya da göz) ve debinin kapasiteye oranı. Değerler kullanıcının: KentOS C, i, aralık ya da erim vermez. \
+                      Uyarılar: drainage_catchment_empty, culvert_no_roughness, culvert_over_capacity. Retler: not_a_road_project, invalid_drainage, unknown_terrain, unknown_culvert, terrain_unbuildable, invalid_culvert."
+                .into(),
+            aliases: vec!["drenaj".into(), "havza".into(), "sudamlasi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DrainageQuery>(),
+            output: schema::<crate::DrainageQueried>(),
+            plan: Some(schema::<crate::DrainageQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Menfezin havzası ve kapasitesi".into(),
+                input: json!({ "surface": "Mevcut zemin", "ponds": { "minDepth": 0.1 },
+                    "catchment": { "culvert": "m-1", "cell": 5.0, "radius": 3.0, "runoff": 0.6, "intensity": 90.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_DRAINAGE_DRAW.into(),
+            version: crate::ROAD_DRAINAGE_DRAW_VERSION,
+            title: "Drenajı çiz".into(),
+            summary: "Bir drenaj sorusunun (query: road.drainage.query'nin girdisi) havzasını ve göletlerini katmana çizer: havzanın dış hatları kapalı çoklu çizgi, akış yolu 3B çoklu çizgi, her göletin dibi kotlu nokta; labels ile boşaltım noktasında havzanın alanı (ha) ve debisi, göletin derinliği. Tek geri alma adımı “Drenaj çiz”. \
+                      Uyarılar: sorgunun, layer_hidden. Retler: sorgunun, drainage_nothing, katmanın retleri, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["drenajciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DrainageDraw>(),
+            output: schema::<crate::DrainageDrawn>(),
+            plan: Some(schema::<crate::DrainageDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Havza yazısıyla".into(),
+                input: json!({ "query": { "surface": "t-1", "catchment": { "at": [120.0, 80.0], "cell": 5.0, "radius": 3.0 } },
+                    "layerId": "drenaj", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SWEPT_QUERY.into(),
+            version: crate::ROAD_SWEPT_QUERY_VERSION,
+            title: "Araç izini sorgula".into(),
+            summary: "Bir tasarım aracının (vehicle: dingil aralığı wheelbase, ön dingilin önündeki gövde front, arka dingilin arkasındaki gövde rear, genişlik width; isteğe bağlı trailer: mafsalın arka dingilden geriliği kingpin, mafsaldan römork dingiline wheelbase, römorkun front, rear, width) ön dingilini bir yol boyunca sürer ve izini okur; hiçbir şey yazmaz. Yol path (noktalar), uid (çizimdeki çizgi, açık tek parçalı çoklu çizgi ya da yay) ya da junction (kavşağın çeyreği: junction, quadrant 0–3, bordürden offset uzaklıkta, kollarda approach boyunca düz) olur; reverse sondan sürer. Ön dingil kirişler boyunca her step metrede, yaylar step'ten uzun olmayan kirişlerle; arka dingil ve römork her kirişte kesin traktrisle izler (düşük hız, kaymasız). Cevap: yolun boyu, örnek sayısı, ön, arka ve römork dingilinin izleri, gövdelerin dört köşesinin izleri, arka dingilin ve römorkun en büyük iç kayması, engellere (obstacles: çizimin çizgileri, çoklu çizgileri, yayları, daireleri; kavşakta çeyreğin bordürü de) en az açıklık. Aracın ölçüleri kurumun; KentOS araç vermez. \
+                      Uyarılar: swept_touches. Retler: invalid_swept, not_a_road_project, unknown_junction, invalid_junction, entity_not_found."
+                .into(),
+            aliases: vec!["aracizi".into(), "donusizi".into(), "sweptpath".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SweptQuery>(),
+            output: schema::<crate::SweptQueried>(),
+            plan: Some(schema::<crate::SweptQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kavşağın çeyreğinde kamyon".into(),
+                input: json!({ "vehicle": { "wheelbase": 6.1, "front": 1.2, "rear": 1.8, "width": 2.6 },
+                    "junction": { "junction": "j-1", "quadrant": 0, "offset": 1.5, "approach": 20.0 }, "step": 0.5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_SWEPT_DRAW.into(),
+            version: crate::ROAD_SWEPT_DRAW_VERSION,
+            title: "Araç izini çiz".into(),
+            summary: "Bir araç izi sorusunun (query: road.swept.query'nin girdisi) izlerini katmana çizer: ön dingilin yolu ve gövdelerin köşelerinin izleri çoklu çizgi, every ile her every'inci örnekte (ilk ve son her zaman) gövdeler kapalı çoklu çizgi; labels ile yolun sonunda iç kayma ve açıklık. Tek geri alma adımı “Araç izi çiz”. \
+                      Uyarılar: sorgunun, layer_hidden. Retler: sorgunun, invalid_swept (every sıfır), katmanın retleri, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["aracizician".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SweptDraw>(),
+            output: schema::<crate::SweptDrawn>(),
+            plan: Some(schema::<crate::SweptDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Her onuncu örnekte gövde".into(),
+                input: json!({ "query": { "vehicle": { "wheelbase": 6.1, "front": 1.2, "rear": 1.8, "width": 2.6 },
+                    "path": [[0.0, 0.0], [30.0, 0.0], [30.0, 30.0]], "step": 0.5 }, "layerId": "arac", "every": 10, "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_ANALYSIS.into(),
+            version: crate::ROAD_TERRAINS_ANALYSIS_VERSION,
+            title: "Yüzeyi analiz et".into(),
+            summary: "Bir arazi yüzeyinin (surface: kimliği ya da adı) analizini okur; hiçbir şey yazmaz. elevations (m), slopes (yüzde) ve aspects (derece, kuzeyden saat yönünde) aralık sınırlarıyla her aralığın plan ve 3B alanı (kotta üçgenler seviyelerle kırpılır, eğim ve bakıda üçgen bütünüyle aralığına girer; aralık [bᵢ, bᵢ₊₁), sonuncusu kapalı), aralık dışı ve (bakıda) düz alan; pieces ile aralığın parçaları plan çokgeni. roughness: vektör pürüzlülük ölçüsü (VRM, 0 düz, 1'e doğru pürüzlü) köşelerde, ortalaması ve en büyüğü. grid (m): yüzeyden örneklenen rasterde Horn yöntemiyle eğimin üçgenlerinkinden farkı (ortalama, mutlak ortalama, en büyük ve yeri). Aralıklar ve hücre kullanıcının; KentOS değer vermez. \
+                      Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable."
+                .into(),
+            aliases: vec!["yuzeyanalizi".into(), "egimanalizi".into(), "bakianalizi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsAnalysis>(),
+            output: schema::<crate::TerrainsAnalysed>(),
+            plan: Some(schema::<crate::TerrainsAnalysed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Eğim aralıkları ve pürüzlülük".into(),
+                input: json!({ "surface": "Mevcut zemin", "slopes": [0.0, 2.0, 5.0, 10.0, 30.0, 100.0], "roughness": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_COMPARE.into(),
+            version: crate::ROAD_TERRAINS_COMPARE_VERSION,
+            title: "Yüzeyleri karşılaştır".into(),
+            summary: "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. \
+                      Uyarılar: compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable."
+                .into(),
+            aliases: vec!["yuzeyfarki".into(), "yuzeykarsilastir".into(), "tinhacim".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsCompare>(),
+            output: schema::<crate::TerrainsCompared>(),
+            plan: Some(schema::<crate::TerrainsCompared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ölçüm öncesi ve sonrası".into(),
+                input: json!({ "base": "Mevcut zemin", "comparison": "Kazı sonrası", "ranges": [-2.0, -1.0, 0.0, 1.0, 2.0] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_QUALITY.into(),
+            version: crate::ROAD_TERRAINS_QUALITY_VERSION,
+            title: "Ölçme kalitesini denetle".into(),
+            summary: "Bir arazi yüzeyinin ölçme kalitesini okur; hiçbir şey değiştirmez, ham kayıtlar kalır. near (m): planda bundan yakın köşe çiftleri (aynı yerin iki ölçüsü), yerleri, uzaklıkları ve kot farkları. spikes (radius, limit m): kotu radius içindeki öbür köşelerin ortalamasından limit'ten çok ayrılan köşeler (sivri nokta), en çok ayrılan önce. gaps (m): bir kenarı bundan uzun üçgenler (seyrek ölçü), sayısı, alanı ve yüzeyin en uzun kenarı. checkpoints (layer ve uids: kotlu noktalar; classField ile sınıfları, ör. sert zemin ve bitkili): her noktanın yüzeye farkı (nokta − yüzey) ve her sınıfın ve hepsinin sayısı, yüzey dışı, ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en büyük farkı; tek RMSE değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün. Sınırlar kullanıcının; KentOS değer vermez. \
+                      Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found, entity_not_found."
+                .into(),
+            aliases: vec!["olcmekalitesi".into(), "kontrolnoktasi".into(), "sivrinokta".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsQuality>(),
+            output: schema::<crate::TerrainsQualityRead>(),
+            plan: Some(schema::<crate::TerrainsQualityRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kontrol noktaları sınıflarıyla".into(),
+                input: json!({ "surface": "Mevcut zemin", "near": 0.05, "spikes": { "radius": 5.0, "limit": 0.5 },
+                    "gaps": 30.0, "checkpoints": { "layer": "kontrol", "classField": "Sınıf" } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_REPAIR.into(),
+            version: crate::ROAD_TERRAINS_REPAIR_VERSION,
+            title: "Yüzeyi onar".into(),
+            summary: "Bir arazi yüzeyinden nokta kayıtlarını yerleriyle dışarıda bırakır (exclude: sivri nokta, iki kez ölçülen) ya da geri alır (restore); çizimin noktaları değişmez, kırık hattın köşesi dışarıda bırakılmaz, nokta kaydırılmaz. Plan önce farkı söyler (onarılmış eksi önceki, onarılmış planda): kazı ve dolgu hacmi, net, değişen alan, en büyük değişiklik ve yeri; köşe ve üçgen sayısı önce ve sonra. Tek geri alma adımı “Yüzeyi onar”; kabul edilmiş yüzey kabul edilmiş kalır. \
+                      Retler: not_a_road_project, invalid_repair, unknown_terrain, repair_breakline, repair_not_a_point, terrain_unbuildable, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["yuzeyonar".into(), "noktadislama".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsRepair>(),
+            output: schema::<crate::TerrainsRepaired>(),
+            plan: Some(schema::<crate::TerrainsRepaired>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Sivri noktayı dışarıda bırak".into(),
+                input: json!({ "surface": "Mevcut zemin", "exclude": [[401.838, 123.255]] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_COVERAGE.into(),
+            version: crate::ROAD_TERRAINS_COVERAGE_VERSION,
+            title: "Yüzeyin kapsamı".into(),
+            summary: "Bir arazi yüzeyinin proje sınırını ne kadar örttüğünü okur; hiçbir şey yazmaz. Sınır (boundary) çizimin kapalı nesnesidir: düz kenarlı, tek parçalı kapalı çoklu çizgi ya da alan; alanın delikleri sayılmaz; yoksa yüzeyin kendisi. Her üçgen sınırın halkalarıyla kesin kırpılır. Planda kenarı longest'tan uzun üçgen ölçülmemiş, tahmin edilmiş sayılır: noktalar arasında çok geniş boşluğu geçer (Civil 3D'nin en büyük üçgen boyu); longest kullanıcınındır. Cevap: yüzeyin alanı; sınırla sınırın alanı, örtülen, verisiz kalan, dışarıdaki, örtülen payı; örtülenin tahmin edilen kısmı, payı ve üçgen sayısı; içerideki en uzun kenar. \
+                      Uyarılar: terrain_no_data. Retler: invalid_coverage, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found."
+                .into(),
+            aliases: vec!["yuzeykapsam".into(), "verisizalan".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsCoverage>(),
+            output: schema::<crate::TerrainsCovered>(),
+            plan: Some(schema::<crate::TerrainsCovered>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Proje sınırında, 20 m'den uzun üçgen tahmin".into(),
+                input: json!({ "surface": "Mevcut zemin", "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124", "longest": 20.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW.into(),
+            version: crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW_VERSION,
+            title: "Düşük güvenli alanları çiz".into(),
+            summary: "Bir arazi yüzeyinin tahmin edilen alanlarını, planda kenarı longest'tan uzun üçgenlerini, layerId katmanına kapalı çoklu çizgi olarak çizer: üçgenlerin dış çizgileri (yalnız bir seçili üçgenin kenarları), düz giden köşeleri atılmış; dış çizgi saat yönü tersine, delik saat yönünde. ASPRS'in düşük güvenli alan çokgenleridir; longest kullanıcınındır. outline ile yüzeyin kendi dış çizgisi de (verinin olduğu yer), labels ile her alanın alanı ortasında. Tek geri alma adımı “Düşük güvenli alanları çiz”. \
+                      Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, invalid_coverage, not_a_road_project, unknown_terrain, terrain_unbuildable, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["dusukguven".into(), "tahminalan".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsCoverageDraw>(),
+            output: schema::<crate::TerrainsCoverageDrawn>(),
+            plan: Some(schema::<crate::TerrainsCoverageDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "20 m'den uzun üçgenler, alanlarıyla".into(),
+                input: json!({ "surface": "Mevcut zemin", "longest": 20.0, "layerId": "kapsam", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_DENSITY.into(),
+            version: crate::ROAD_TERRAINS_DENSITY_VERSION,
+            title: "Nokta yoğunluğu".into(),
+            summary: "Bir arazi yüzeyinin köşelerini cell metrelik kare hücrelerde sayar; hiçbir şey yazmaz. Hücreler dünyanın başlangıcından cell'in katlarıdır, kenardaki nokta sağ ve üstteki hücrenindir. Merkezi sınırın (boundary: road.terrains.coverage'daki gibi kapalı nesne, alanın delikleri dışarıda) içinde ya da sınır yoksa yüzeyin üstünde olan hücre sayılır. USGS'nin yoğunluk ızgarası budur (hücre nominal nokta aralığının iki katı); cell, least ve share kullanıcınındır. least ile bundan az noktalı hücreler seyrektir; share (0–1) ile noktası olan hücrelerin payı istenene ulaşıyor mu söylenir. Cevap: ızgara (hücre, başlangıç, sütun ve satır), sayılan, noktalı ve boş hücreler, pay, seyrek hücreler, noktalar, alan, ortalama yoğunluk (nokta/m²), en kalabalık hücre, istenen pay tuttu mu. \
+                      Uyarılar: terrain_density_short. Retler: invalid_point_density, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage."
+                .into(),
+            aliases: vec!["noktayogunlugu".into(), "yogunlukizgarasi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsDensity>(),
+            output: schema::<crate::TerrainsDensityRead>(),
+            plan: Some(schema::<crate::TerrainsDensityRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Proje sınırında 2 m hücre, 1'den az nokta seyrek".into(),
+                input: json!({ "surface": "Mevcut zemin", "cell": 2.0, "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124", "least": 1, "share": 0.9 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_SPARSE_DRAW.into(),
+            version: crate::ROAD_TERRAINS_SPARSE_DRAW_VERSION,
+            title: "Seyrek alanları çiz".into(),
+            summary: "Bir arazi yüzeyinin yoğunluk ızgarasında (road.terrains.density'deki gibi) least'ten az noktalı hücrelerini layerId katmanına kapalı çoklu çizgi olarak çizer: kenarla birleşen hücreler tek alan, dış çizgisi saat yönü tersine, delikleri saat yönünde. cell ve least kullanıcınındır. labels ile her alanın alanı ortasında. Tek geri alma adımı “Seyrek alanları çiz”. \
+                      Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, invalid_point_density, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["seyrekalan".into(), "yogunlukciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsSparseDraw>(),
+            output: schema::<crate::TerrainsCoverageDrawn>(),
+            plan: Some(schema::<crate::TerrainsCoverageDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "2 m hücrede noktasız yerler, alanlarıyla".into(),
+                input: json!({ "surface": "Mevcut zemin", "cell": 2.0, "least": 1, "layerId": "kapsam", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_FROM_CLOUD.into(),
+            version: crate::ROAD_TERRAINS_FROM_CLOUD_VERSION,
+            title: "Buluttan arazi".into(),
+            summary: "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. \
+                      Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["buluttanarazi".into(), "bulutyuzey".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsFromCloud>(),
+            output: schema::<crate::TerrainsFromCloudWritten>(),
+            plan: Some(schema::<crate::TerrainsFromCloudWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin sınıfından 1 m hücreyle yeni yüzey".into(),
+                input: json!({ "clouds": ["0192b9f0-0000-7000-8000-000000000001"], "classes": [2], "returns": "last",
+                    "cell": 1.0, "zTolerance": 0.25, "layerId": "zemin-noktalari", "name": "Lidar zemini" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PLATFORMS_EDIT.into(),
+            version: crate::ROAD_PLATFORMS_EDIT_VERSION,
+            title: "Platformu düzenle".into(),
+            summary: "Yol projesinin platformunu (platform: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (%), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. \
+                      Yeni platformun kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki köşesi olan sınır reddedilir. Tek geri alma adımı “Platform”. Retler: not_a_road_project, unknown_platform, unknown_terrain, invalid_platform, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["platform".into(), "tesviye".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PlatformsEdit>(),
+            output: schema::<crate::PlatformsWritten>(),
+            plan: Some(schema::<crate::PlatformsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mevcut zemin üstünde 40 × 30 m platform".into(),
+                input: json!({ "operation": "set", "name": "Depo platformu",
+                    "corners": [[100.0, 100.0], [140.0, 100.0], [140.0, 130.0], [100.0, 130.0]],
+                    "base": [100.0, 100.0, 112.5], "grade": 1.0, "direction": 90.0,
+                    "cut": 1.5, "fill": 2.0, "step": 5.0, "fan": 15.0, "reach": 100.0, "surface": "Mevcut zemin" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PLATFORMS_QUERY.into(),
+            version: crate::ROAD_PLATFORMS_QUERY_VERSION,
+            title: "Platformu sorgula".into(),
+            summary: "Yol projesinin platformlarını bugün tesviye eder; hiçbir şey yazmaz. Her biri için sınırı (saat yönü tersine, kotlarıyla), şev çizgileri (başı, araziyle buluştuğu yer, yanı: cut, fill ya da open; köşesi), günışığı halkası, açık çizgi sayısı, platformun ve ayak izinin plan alanı, araziye karşı kazı ve dolgu (m³) ve alanları. Açık çizgi varsa ayak izi ve hacim yok, why nedenini söyler. balance (tek platformla: low, high öteleme aralığı m, tolerance m³) kazı ile dolguyu ikiye bölmeyle eşitleyen ötelemeyi ve tabanın kotunu verir, yazmaz; adım sayısı ve yakınsayıp yakınsamadığıyla. \
+                      Uyarılar: platform_open, platform_no_balance. Retler: not_a_road_project, unknown_platform, invalid_platform."
+                .into(),
+            aliases: vec!["platformsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PlatformsQuery>(),
+            output: schema::<crate::PlatformsQueried>(),
+            plan: Some(schema::<crate::PlatformsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Platformu dengele".into(),
+                input: json!({ "platform": "p-1", "balance": { "low": -5.0, "high": 5.0, "tolerance": 1.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_PLATFORMS_DRAW.into(),
+            version: crate::ROAD_PLATFORMS_DRAW_VERSION,
+            title: "Platform çiz".into(),
+            summary: "Platformu planda layerId katmanına çizer: sınırı ve günışığı çizgisi kotlu kapalı çoklu çizgi, her şev çizgisi bir çizgi; labels ile ortasında tabanın kotu, kazı ve dolgu. Açık çizgiler ve (açık çizgi varken) günışığı çizgisi çizilmez. Tek geri alma adımı “Platform çiz”; yol çizimlerinin kaydına girer. \
+                      Uyarılar: layer_hidden, platform_open. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_platform, invalid_platform, layer_not_found, not_a_layer, layer_locked."
+                .into(),
+            aliases: vec!["platformciz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PlatformsDraw>(),
+            output: schema::<crate::PlatformsDrawn>(),
+            plan: Some(schema::<crate::PlatformsDrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Platform yazısıyla".into(),
+                input: json!({ "platform": "p-1", "layerId": "platform", "labels": true }),
                 output: None,
             }],
         },
@@ -7834,6 +8393,81 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Kavşak yazısıyla".into(),
                 input: json!({ "junction": "j-1", "layerId": "kavsak", "labels": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_CLEARANCE.into(),
+            version: crate::ROAD_JUNCTIONS_CLEARANCE_VERSION,
+            title: "Kavşağın düşey açıklığı".into(),
+            summary: "Ayrı seviyeli kavşakta üst yolun altındaki düşey açıklığı okur; hiçbir şey yazmaz. Kesişimde boykesit kotu yüksek kol üst yoldur. Alt yolun genişliği ve kesişimin iki yanındaki km'leri step'ten uzun olmayan eşit aralıklarla bölünür; her ızgara noktası üst yolun aksına izdüşürülür, üst yolun genişliğine düşenler örnektir; her ızgara çizgisinde üst yolun kenarı ikiye bölmeyle bulunur. Açıklık = üst boykesit kotu − depth − alt boykesit kotu. profiles kolların sırasıyla iki boykesit (yoksa her kolun aksının tek boykesiti); depth tabliye derinliği ve minimum gerekli açıklık kullanıcınındır, KentOS sayı vermez. Cevap: üst kol, boykesitler, örnek sayısı, en küçük ve en büyük açıklık yerleriyle (x, y, iki km, iki öteleme, iki kot), aksların kesişimindeki açıklık, short. Boykesit kotu aks kotudur; enine eğim alınmaz. \
+                      Uyarılar: junction_stale, profile_stale, junction_clearance_short. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile, invalid_clearance."
+                .into(),
+            aliases: vec!["dusayaciklik".into(), "kopruaciklik".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsClearance>(),
+            output: schema::<crate::JunctionsCleared>(),
+            plan: Some(schema::<crate::JunctionsCleared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Üst geçidin altı, 1,2 m tabliye".into(),
+                input: json!({ "junction": "Üst geçit", "depth": 1.2, "step": 0.5, "minimum": 4.5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_TIE.into(),
+            version: crate::ROAD_JUNCTIONS_TIE_VERSION,
+            title: "Kavşağa bağla".into(),
+            summary: "Hemzemin kavşakta tali yolun boykesitini ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil 3D'nin Primary Road Crown Maintained'i). Tali yol boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; yüzde, dışa, düşen eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (yüzde) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. \
+                      Uyarılar: junction_stale, profile_stale, superelevation_stale, junction_grade_change. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["kavsakbagla".into(), "talibagla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsTie>(),
+            output: schema::<crate::JunctionsTied>(),
+            plan: Some(schema::<crate::JunctionsTied>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana yolun sırtı korunur, %2,5 enine eğim".into(),
+                input: json!({ "junction": "j-1", "primary": 0, "crossfall": [-2.5, -2.5], "maxGradeChange": 4.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::ROAD_JUNCTIONS_OVERLAP.into(),
+            version: crate::ROAD_JUNCTIONS_OVERLAP_VERSION,
+            title: "Kavşakta koridor örtüşmesi".into(),
+            summary: "Kavşağın iki koridorunun planda örtüştüğü yeri ve orada iki kez sayılan hacmi okur; hiçbir şey yazmaz. İki koridorun üst yüzeyi (şevleri dahil) dünya koordinatında cell aralıklı ızgaranın hücre ortalarında örneklenir (Civil 3D'nin grid volume yöntemi); iki yüzeyin de üstünde kalan hücre örtüşmedir. primary kavşağın alanı kendisinin sayılan kol; öbürü tali koridordur. Tali koridorun yüzeyi kendi arazisiyle karşılaştırılır: örtüşmedeki yarma ve dolgu, iki koridorun kübajı toplanınca iki kez sayılan hacimdir. Cevap: hücre sayısı, alan, yarma, dolgu, arazisiz hücreler, iki tasarım yüzeyinin farkının ortalaması ve en büyüğü yeriyle, her aksta örtüşmenin km aralığı (tali koridorun kırpılacağı yer). corridors kolların sırasıyla iki koridor (yoksa aksların tek koridorları); cell kullanıcınındır. \
+                      Uyarılar: junction_stale, corridor_stale, junction_corridors_overlap. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_corridor, invalid_road_corridor, invalid_overlap."
+                .into(),
+            aliases: vec!["koridorortusme".into(), "kavsakhacim".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JunctionsOverlap>(),
+            output: schema::<crate::JunctionsOverlapped>(),
+            plan: Some(schema::<crate::JunctionsOverlapped>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana yol koridoru kavşağın sahibi, 1 m ızgara".into(),
+                input: json!({ "junction": "j-1", "primary": 0, "cell": 1.0 }),
                 output: None,
             }],
         },
@@ -13772,6 +14406,18 @@ mod tests {
                     crate::ROAD_PROFILES_DRAW => {
                         serde_json::from_value::<crate::ProfilesDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_SIGHT => {
+                        serde_json::from_value::<crate::ProfilesSight>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_PROPOSE => {
+                        serde_json::from_value::<crate::ProfilesPropose>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_ALIGNMENTS_CHECK => {
+                        serde_json::from_value::<crate::AlignmentsCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::ROAD_PROFILES_CHECK => {
+                        serde_json::from_value::<crate::RoadProfilesCheck>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_TEMPLATES_EDIT => {
                         serde_json::from_value::<crate::TemplatesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -13799,6 +14445,9 @@ mod tests {
                     crate::ROAD_CORRIDORS_DRAW => {
                         serde_json::from_value::<crate::CorridorsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CORRIDORS_WATER => {
+                        serde_json::from_value::<crate::CorridorsWater>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_EDIT => {
                         serde_json::from_value::<crate::VolumesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -13810,6 +14459,7 @@ mod tests {
                     }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
                     crate::ROAD_GUARDRAILS_EDIT => {
                         serde_json::from_value::<crate::GuardrailsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -13828,6 +14478,22 @@ mod tests {
                     crate::ROAD_CULVERTS_DRAW => {
                         serde_json::from_value::<crate::CulvertsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsEdit>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloud>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_DRAINAGE_QUERY => serde_json::from_value::<crate::DrainageQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_DRAINAGE_DRAW => serde_json::from_value::<crate::DrainageDraw>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_SWEPT_QUERY => serde_json::from_value::<crate::SweptQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_ANALYSIS => serde_json::from_value::<crate::TerrainsAnalysis>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_COMPARE => serde_json::from_value::<crate::TerrainsCompare>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_QUALITY => serde_json::from_value::<crate::TerrainsQuality>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_REPAIR => serde_json::from_value::<crate::TerrainsRepair>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_COVERAGE => serde_json::from_value::<crate::TerrainsCoverage>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDraw>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_DENSITY => serde_json::from_value::<crate::TerrainsDensity>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_SPARSE_DRAW => serde_json::from_value::<crate::TerrainsSparseDraw>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_SWEPT_DRAW => serde_json::from_value::<crate::SweptDraw>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_WALLS_EDIT => {
                         serde_json::from_value::<crate::RetainingWallsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -13843,6 +14509,9 @@ mod tests {
                     crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_CLEARANCE => serde_json::from_value::<crate::JunctionsClearance>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_TIE => serde_json::from_value::<crate::JunctionsTie>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_JUNCTIONS_OVERLAP => serde_json::from_value::<crate::JunctionsOverlap>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuild>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
@@ -14552,6 +15221,22 @@ mod tests {
                             serde_json::from_value::<crate::ProfilesDrawn>(output.clone())
                                 .map(|_| ())
                         }
+                        crate::ROAD_PROFILES_SIGHT => {
+                            serde_json::from_value::<crate::ProfilesSightRead>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_PROPOSE => {
+                            serde_json::from_value::<crate::ProfileProposed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_CHECK => {
+                            serde_json::from_value::<crate::AlignmentsChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_CHECK => {
+                            serde_json::from_value::<crate::RoadProfilesChecked>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::ROAD_TEMPLATES_EDIT => {
                             serde_json::from_value::<crate::TemplatesWritten>(output.clone())
                                 .map(|_| ())
@@ -14585,6 +15270,9 @@ mod tests {
                         crate::ROAD_CORRIDORS_DRAW => {
                             serde_json::from_value::<crate::CorridorsDrawn>(output.clone()).map(|_| ())
                         }
+                        crate::ROAD_CORRIDORS_WATER => {
+                            serde_json::from_value::<crate::CorridorsWatered>(output.clone()).map(|_| ())
+                        }
                         crate::ROAD_VOLUMES_EDIT => {
                             serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
                         }
@@ -14599,6 +15287,9 @@ mod tests {
                         }
                         crate::ROAD_HAULS_QUERY => {
                             serde_json::from_value::<crate::HaulsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_PLAN => {
+                            serde_json::from_value::<crate::HaulPlanned>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_GUARDRAILS_EDIT => {
                             serde_json::from_value::<crate::GuardrailsWritten>(output.clone()).map(|_| ())
@@ -14618,6 +15309,22 @@ mod tests {
                         crate::ROAD_CULVERTS_DRAW => {
                             serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
                         }
+                        crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloudWritten>(output.clone()).map(|_| ()),
+                        crate::ROAD_DRAINAGE_QUERY => serde_json::from_value::<crate::DrainageQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_DRAINAGE_DRAW => serde_json::from_value::<crate::DrainageDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_SWEPT_QUERY => serde_json::from_value::<crate::SweptQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_ANALYSIS => serde_json::from_value::<crate::TerrainsAnalysed>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_COMPARE => serde_json::from_value::<crate::TerrainsCompared>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_QUALITY => serde_json::from_value::<crate::TerrainsQualityRead>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_REPAIR => serde_json::from_value::<crate::TerrainsRepaired>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_COVERAGE => serde_json::from_value::<crate::TerrainsCovered>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_DENSITY => serde_json::from_value::<crate::TerrainsDensityRead>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_SPARSE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_SWEPT_DRAW => serde_json::from_value::<crate::SweptDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_WALLS_EDIT => {
                             serde_json::from_value::<crate::RetainingWallsWritten>(output.clone()).map(|_| ())
                         }
@@ -14633,6 +15340,9 @@ mod tests {
                         crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQueried>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_CLEARANCE => serde_json::from_value::<crate::JunctionsCleared>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_TIE => serde_json::from_value::<crate::JunctionsTied>(output.clone()).map(|_| ()),
+                        crate::ROAD_JUNCTIONS_OVERLAP => serde_json::from_value::<crate::JunctionsOverlapped>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),

@@ -6,6 +6,7 @@ import type { GuardrailDef } from "./GuardrailDef";
 import type { HaulDef } from "./HaulDef";
 import type { JunctionDef } from "./JunctionDef";
 import type { PayBookDef } from "./PayBookDef";
+import type { PlatformDef } from "./PlatformDef";
 import type { ProfileDef } from "./ProfileDef";
 import type { RetainingWallDef } from "./RetainingWallDef";
 import type { RoadDrawingDef } from "./RoadDrawingDef";
@@ -72,6 +73,10 @@ culverts?: Array<CulvertDef>,
  * The retaining walls (docs/adr/0909 §3), each along a corridor's side.
  */
 walls?: Array<RetainingWallDef>, 
+/**
+ * The graded pads (docs/adr/0927), each on a terrain surface.
+ */
+platforms?: Array<PlatformDef>, 
 /**
  * The junctions (docs/adr/0910 §2), each of two alignments.
  */

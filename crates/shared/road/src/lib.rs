@@ -17,21 +17,33 @@
 //! - [`haul`]: the mass haul (Brückner) diagram read as layers: balance points, loops, haul moments, free haul and
 //!   overhaul, borrow and waste (docs/adr/0907).
 //! - [`cutout`]: a terrain with corridors cut out of it in plan, the planes it keeps exact (docs/adr/0910 §6).
+//! - [`cloud_ground`]: a terrain's ground points from a point cloud, thinned on a grid (cells, steep cells, beside
+//!   breaklines), their density and coverage and the thinning's vertical error (docs/adr/0928).
+//! - [`drainage`]: where water runs and stands on a terrain TIN (water drop, ponds, a discharge point's catchment)
+//!   and what a pipe, a box or a ditch carries by Manning's equation; the Rational method's peak flow (docs/adr/0929).
+//! - [`swept`]: a design vehicle's swept path: its rear axle and trailer following the front axle by the tractrix,
+//!   its body's corners, its off-tracking and its clearance to curbs (docs/adr/0915).
 //! - [`sources`]: a surface's input gathered from the drawing by its definition, and the digest that says whether
 //!   it is out of date (plan/road.md Y2.2).
 
 pub mod alignment;
+pub mod cloud_ground;
 pub mod corridor;
 pub mod culvert;
+pub mod grading;
 pub mod cutout;
+pub mod drainage;
 pub mod guardrail;
 pub mod haul;
+pub mod haul_plan;
 pub mod junction;
+pub mod platform_water;
 pub mod profile;
 pub mod route;
 pub mod section;
 pub mod sources;
 pub mod superelevation;
+pub mod swept;
 pub mod surface;
 pub mod volume;
 pub mod wall;

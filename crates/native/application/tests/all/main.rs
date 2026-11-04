@@ -81,6 +81,7 @@ mod stretch_ties;
 mod layer_digest;
 mod layer_indexes;
 mod tables_cmd;
+mod terrain_repair;
 mod transform;
 mod units;
 mod wall_follow;

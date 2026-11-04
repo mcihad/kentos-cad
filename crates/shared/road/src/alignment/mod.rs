@@ -3,6 +3,7 @@
 //! to its stations. The algorithm's id is `kentos.alignment/1`.
 
 pub mod chain;
+pub mod checks;
 pub mod element;
 pub mod fit;
 pub mod locate;

@@ -1,0 +1,6590 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "road.junctions.tie",
+ "commandVersion": 1,
+ "title": "Kavşağa bağla: tali yolun boykesiti ana yolun sırtına",
+ "note": "scripts/fixtures/road_junction_tie_cases.py'den; düz aksların doğrularında kenarların kesişimi, boykesitler road_vertical_cases.py'nin kesin kesirleri ve dairesi, dever km satırlarından doğrusal, bağ ADR 0918 §2'nin kuralıyla; KentOS kodu olmadan.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yol koridoru",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "road",
+   "drawingFont": "barlow",
+   "road": {
+    "surfaces": [
+     {
+      "id": "t-1",
+      "name": "Mevcut zemin",
+      "points": {
+       "layers": [
+        "zemin"
+       ]
+      }
+     },
+     {
+      "id": "t-2",
+      "name": "Kurulamaz",
+      "points": {
+       "layers": [
+        "bos"
+       ]
+      }
+     }
+    ],
+    "alignments": [
+     {
+      "id": "g-1",
+      "name": "Ana yol",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "id": "b",
+        "x": 500.0,
+        "y": 0.0
+       }
+      ]
+     },
+     {
+      "id": "g-2",
+      "name": "Tali yol",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 250.0,
+        "y": -200.0
+       },
+       {
+        "id": "b",
+        "x": 250.0,
+        "y": 200.0
+       }
+      ]
+     },
+     {
+      "id": "g-3",
+      "name": "Eğik tali",
+      "revision": 2,
+      "pis": [
+       {
+        "id": "a",
+        "x": 150.0,
+        "y": -100.0
+       },
+       {
+        "id": "b",
+        "x": 350.0,
+        "y": 100.0
+       }
+      ]
+     },
+     {
+      "id": "g-5",
+      "name": "Kısa tali",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 100.0,
+        "y": -30.0
+       },
+       {
+        "id": "b",
+        "x": 100.0,
+        "y": 40.0
+       }
+      ]
+     },
+     {
+      "id": "g-6",
+      "name": "Kenarda başlayan",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 300.0,
+        "y": -3.0
+       },
+       {
+        "id": "b",
+        "x": 300.0,
+        "y": 60.0
+       }
+      ]
+     },
+     {
+      "id": "g-7",
+      "name": "Ters tali",
+      "revision": 1,
+      "pis": [
+       {
+        "id": "a",
+        "x": 400.0,
+        "y": 120.0
+       },
+       {
+        "id": "b",
+        "x": 400.0,
+        "y": -120.0
+       }
+      ]
+     }
+    ],
+    "profiles": [
+     {
+      "id": "b-1",
+      "name": "Ana kot",
+      "alignment": "g-1",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 100.0
+       },
+       {
+        "id": "v1",
+        "station": 250.0,
+        "elevation": 102.0,
+        "length": 100.0
+       },
+       {
+        "id": "b",
+        "station": 500.0,
+        "elevation": 101.0
+       }
+      ]
+     },
+     {
+      "id": "b-2",
+      "name": "Tali kot",
+      "alignment": "g-2",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 98.0
+       },
+       {
+        "id": "v1",
+        "station": 120.0,
+        "elevation": 99.0,
+        "radius": 3000.0
+       },
+       {
+        "id": "v2",
+        "station": 200.0,
+        "elevation": 100.5,
+        "length": 20.0
+       },
+       {
+        "id": "v3",
+        "station": 280.0,
+        "elevation": 99.5,
+        "length": 40.0
+       },
+       {
+        "id": "b",
+        "station": 400.0,
+        "elevation": 97.0
+       }
+      ]
+     },
+     {
+      "id": "b-8",
+      "name": "Çakışan kot",
+      "alignment": "g-2",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 98.0
+       },
+       {
+        "id": "j-1.a",
+        "station": 50.0,
+        "elevation": 98.5
+       },
+       {
+        "id": "b",
+        "station": 400.0,
+        "elevation": 97.0
+       }
+      ]
+     },
+     {
+      "id": "b-9",
+      "name": "Bozuk kot",
+      "alignment": "g-2",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 98.0
+       },
+       {
+        "id": "v1",
+        "station": 185.0,
+        "elevation": 99.0,
+        "length": 36.0
+       },
+       {
+        "id": "v3",
+        "station": 215.0,
+        "elevation": 99.5,
+        "length": 36.0
+       },
+       {
+        "id": "b",
+        "station": 400.0,
+        "elevation": 97.0
+       }
+      ]
+     },
+     {
+      "id": "b-3",
+      "name": "Eğik kot",
+      "alignment": "g-3",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 99.0
+       },
+       {
+        "id": "v1",
+        "station": 141.0,
+        "elevation": 101.0,
+        "length": 30.0
+       },
+       {
+        "id": "b",
+        "station": 282.0,
+        "elevation": 100.0
+       }
+      ]
+     },
+     {
+      "id": "b-5",
+      "name": "Kısa kot",
+      "alignment": "g-5",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 100.2
+       },
+       {
+        "id": "b",
+        "station": 70.0,
+        "elevation": 101.5
+       }
+      ]
+     },
+     {
+      "id": "b-6",
+      "name": "Geç başlayan",
+      "alignment": "g-5",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 27.0,
+        "elevation": 100.2
+       },
+       {
+        "id": "b",
+        "station": 70.0,
+        "elevation": 101.5
+       }
+      ]
+     },
+     {
+      "id": "b-10",
+      "name": "Kenar kot",
+      "alignment": "g-6",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 101.0
+       },
+       {
+        "id": "b",
+        "station": 63.0,
+        "elevation": 103.0
+       }
+      ]
+     },
+     {
+      "id": "b-11",
+      "name": "Ters kot",
+      "alignment": "g-7",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 103.0
+       },
+       {
+        "id": "v1",
+        "station": 120.0,
+        "elevation": 100.9,
+        "length": 10.0
+       },
+       {
+        "id": "b",
+        "station": 240.0,
+        "elevation": 102.0
+       }
+      ]
+     },
+     {
+      "id": "b-12",
+      "name": "Taşan kot",
+      "alignment": "g-7",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "pvis": [
+       {
+        "id": "a",
+        "station": 0.0,
+        "elevation": 103.0
+       },
+       {
+        "id": "b",
+        "station": 300.0,
+        "elevation": 102.0
+       }
+      ]
+     }
+    ],
+    "junctions": [
+     {
+      "id": "j-1",
+      "name": "Dörtyol",
+      "revision": 1,
+      "kind": "atGrade",
+      "radius": 10.0,
+      "legs": [
+       {
+        "alignment": "g-1",
+        "alignmentRevision": 1,
+        "left": 5.0,
+        "right": 5.0
+       },
+       {
+        "alignment": "g-2",
+        "alignmentRevision": 1,
+        "left": 3.5,
+        "right": 3.5
+       }
+      ]
+     },
+     {
+      "id": "j-2",
+      "name": "Eğik kavşak",
+      "revision": 1,
+      "kind": "atGrade",
+      "radius": 12.0,
+      "legs": [
+       {
+        "alignment": "g-3",
+        "alignmentRevision": 1,
+        "left": 3.0,
+        "right": 4.0
+       },
+       {
+        "alignment": "g-1",
+        "alignmentRevision": 1,
+        "left": 5.0,
+        "right": 6.0
+       }
+      ]
+     },
+     {
+      "id": "j-3",
+      "name": "Kısa kavşak",
+      "revision": 1,
+      "kind": "atGrade",
+      "radius": 8.0,
+      "legs": [
+       {
+        "alignment": "g-1",
+        "alignmentRevision": 1,
+        "left": 5.0,
+        "right": 5.0
+       },
+       {
+        "alignment": "g-5",
+        "alignmentRevision": 1,
+        "left": 3.0,
+        "right": 3.0
+       }
+      ]
+     },
+     {
+      "id": "j-4",
+      "name": "Kenar kavşağı",
+      "revision": 1,
+      "kind": "atGrade",
+      "radius": 8.0,
+      "legs": [
+       {
+        "alignment": "g-1",
+        "alignmentRevision": 1,
+        "left": 5.0,
+        "right": 5.0
+       },
+       {
+        "alignment": "g-6",
+        "alignmentRevision": 1,
+        "left": 3.0,
+        "right": 3.0
+       }
+      ]
+     },
+     {
+      "id": "j-5",
+      "name": "Üst geçit",
+      "revision": 1,
+      "kind": "separated",
+      "legs": [
+       {
+        "alignment": "g-1",
+        "alignmentRevision": 1,
+        "left": 5.0,
+        "right": 5.0
+       },
+       {
+        "alignment": "g-2",
+        "alignmentRevision": 1,
+        "left": 3.5,
+        "right": 3.5
+       }
+      ]
+     },
+     {
+      "id": "j-6",
+      "name": "Ters kavşak",
+      "revision": 1,
+      "kind": "atGrade",
+      "radius": 10.0,
+      "legs": [
+       {
+        "alignment": "g-7",
+        "alignmentRevision": 1,
+        "left": 3.0,
+        "right": 3.0
+       },
+       {
+        "alignment": "g-1",
+        "alignmentRevision": 1,
+        "left": 5.0,
+        "right": 5.0
+       }
+      ]
+     }
+    ],
+    "superelevations": [
+     {
+      "id": "d-1",
+      "name": "Ana dever",
+      "alignment": "g-1",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "normalLeft": -2.5,
+      "normalRight": -2.5,
+      "method": {
+       "method": "stations",
+       "rows": [
+        {
+         "station": 150.0,
+         "left": -2.5,
+         "right": -2.5
+        },
+        {
+         "station": 240.0,
+         "left": 3.0,
+         "right": -3.0
+        },
+        {
+         "station": 420.0,
+         "left": 3.0,
+         "right": -3.0
+        }
+       ]
+      }
+     },
+     {
+      "id": "d-2",
+      "name": "Tali dever",
+      "alignment": "g-2",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "normalLeft": -2.0,
+      "normalRight": -2.0,
+      "method": {
+       "method": "stations",
+       "rows": [
+        {
+         "station": 100.0,
+         "left": -2.0,
+         "right": -2.0
+        }
+       ]
+      }
+     },
+     {
+      "id": "d-3",
+      "name": "Eski dever",
+      "alignment": "g-1",
+      "revision": 1,
+      "normalLeft": -2.0,
+      "normalRight": -2.0,
+      "method": {
+       "method": "stations",
+       "rows": [
+        {
+         "station": 0.0,
+         "left": -2.0,
+         "right": -2.0
+        }
+       ]
+      }
+     },
+     {
+      "id": "d-4",
+      "name": "Bozuk dever",
+      "alignment": "g-1",
+      "alignmentRevision": 1,
+      "revision": 1,
+      "normalLeft": -2.0,
+      "normalRight": -2.0,
+      "method": {
+       "method": "stations",
+       "rows": [
+        {
+         "station": 100.0,
+         "left": -2.0,
+         "right": -2.0
+        },
+        {
+         "station": 900.0,
+         "left": -2.0,
+         "right": -2.0
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "zemin",
+    "name": "Zemin",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bos",
+    "name": "Boş",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "korkuluk",
+    "name": "Korkuluk",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Yol",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "yol-korkuluk",
+      "name": "Yol korkuluk",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 573.621,
+     "y": 379.131
+    },
+    "z": 116.133
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 50.923,
+     "y": 334.2
+    },
+    "z": 109.021
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 401.838,
+     "y": 123.255
+    },
+    "z": 105.912
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 364.081,
+     "y": 232.482
+    },
+    "z": 108.151
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 258.402,
+     "y": 157.413
+    },
+    "z": 110.044
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 596.892,
+     "y": 379.758
+    },
+    "z": 114.633
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 266.913,
+     "y": 107.296
+    },
+    "z": 109.655
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 16.467,
+     "y": 185.958
+    },
+    "z": 104.229
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 228.009,
+     "y": 356.716
+    },
+    "z": 108.171
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 336.306,
+     "y": 94.449
+    },
+    "z": 109.011
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 195.086,
+     "y": 54.679
+    },
+    "z": 101.57
+   },
+   {
+    "kind": "point",
+    "id": 12,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 599.21,
+     "y": 269.792
+    },
+    "z": 112.992
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 536.143,
+     "y": 318.704
+    },
+    "z": 118.397
+   },
+   {
+    "kind": "point",
+    "id": 14,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 543.956,
+     "y": 305.154
+    },
+    "z": 118.1
+   },
+   {
+    "kind": "point",
+    "id": 15,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 212.272,
+     "y": 392.391
+    },
+    "z": 107.054
+   },
+   {
+    "kind": "point",
+    "id": 16,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 96.711,
+     "y": 301.602
+    },
+    "z": 107.68
+   },
+   {
+    "kind": "point",
+    "id": 17,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 276.844,
+     "y": 212.142
+    },
+    "z": 111.875
+   },
+   {
+    "kind": "point",
+    "id": 18,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 554.899,
+     "y": 200.336
+    },
+    "z": 116.542
+   },
+   {
+    "kind": "point",
+    "id": 19,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 212.355,
+     "y": 353.14
+    },
+    "z": 106.608
+   },
+   {
+    "kind": "point",
+    "id": 20,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 276.607,
+     "y": 227.082
+    },
+    "z": 112.441
+   },
+   {
+    "kind": "point",
+    "id": 21,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 434.264,
+     "y": 194.643
+    },
+    "z": 107.903
+   },
+   {
+    "kind": "point",
+    "id": 22,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 194.8,
+     "y": 279.829
+    },
+    "z": 103.455
+   },
+   {
+    "kind": "point",
+    "id": 23,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 544.764,
+     "y": 107.255
+    },
+    "z": 116.211
+   },
+   {
+    "kind": "point",
+    "id": 24,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 185.738,
+     "y": 382.945
+    },
+    "z": 104.438
+   },
+   {
+    "kind": "point",
+    "id": 25,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 302.549,
+     "y": 207.099
+    },
+    "z": 112.567
+   },
+   {
+    "kind": "point",
+    "id": 26,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 352.767,
+     "y": 124.738
+    },
+    "z": 108.074
+   },
+   {
+    "kind": "point",
+    "id": 27,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 307.135,
+     "y": 373.662
+    },
+    "z": 114.11
+   },
+   {
+    "kind": "point",
+    "id": 28,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 45.225,
+     "y": 328.16
+    },
+    "z": 108.672
+   },
+   {
+    "kind": "point",
+    "id": 29,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 544.592,
+     "y": 76.561
+    },
+    "z": 115.745
+   },
+   {
+    "kind": "point",
+    "id": 30,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 35.255,
+     "y": 261.164
+    },
+    "z": 106.85
+   },
+   {
+    "kind": "point",
+    "id": 31,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 135.97,
+     "y": 350.196
+    },
+    "z": 104.294
+   },
+   {
+    "kind": "point",
+    "id": 32,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 313.418,
+     "y": 341.577
+    },
+    "z": 113.192
+   },
+   {
+    "kind": "point",
+    "id": 33,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 126.287,
+     "y": 352.233
+    },
+    "z": 105.398
+   },
+   {
+    "kind": "point",
+    "id": 34,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 430.177,
+     "y": 12.749
+    },
+    "z": 105.863
+   },
+   {
+    "kind": "point",
+    "id": 35,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 103.129,
+     "y": 269.106
+    },
+    "z": 106.224
+   },
+   {
+    "kind": "point",
+    "id": 36,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 572.737,
+     "y": 10.138
+    },
+    "z": 113.192
+   },
+   {
+    "kind": "point",
+    "id": 37,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 12.687,
+     "y": 102.276
+    },
+    "z": 103.435
+   },
+   {
+    "kind": "point",
+    "id": 38,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 94.271,
+     "y": 73.496
+    },
+    "z": 105.55
+   },
+   {
+    "kind": "point",
+    "id": 39,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 231.34,
+     "y": 17.264
+    },
+    "z": 105.666
+   },
+   {
+    "kind": "point",
+    "id": 40,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 90.852,
+     "y": 14.508
+    },
+    "z": 104.841
+   },
+   {
+    "kind": "point",
+    "id": 41,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 369.144,
+     "y": 296.984
+    },
+    "z": 108.368
+   },
+   {
+    "kind": "point",
+    "id": 42,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 202.328,
+     "y": 12.324
+    },
+    "z": 101.708
+   },
+   {
+    "kind": "point",
+    "id": 43,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 459.582,
+     "y": 295.979
+    },
+    "z": 112.475
+   },
+   {
+    "kind": "point",
+    "id": 44,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 453.397,
+     "y": 344.978
+    },
+    "z": 111.994
+   },
+   {
+    "kind": "point",
+    "id": 45,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 283.668,
+     "y": 90.211
+    },
+    "z": 111.166
+   },
+   {
+    "kind": "point",
+    "id": 46,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 189.784,
+     "y": 40.82
+    },
+    "z": 100.994
+   },
+   {
+    "kind": "point",
+    "id": 47,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 524.858,
+     "y": 51.015
+    },
+    "z": 115.588
+   },
+   {
+    "kind": "point",
+    "id": 48,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 235.772,
+     "y": 205.921
+    },
+    "z": 107.274
+   },
+   {
+    "kind": "point",
+    "id": 49,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 575.839,
+     "y": 103.639
+    },
+    "z": 113.736
+   },
+   {
+    "kind": "point",
+    "id": 50,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 251.853,
+     "y": 7.213
+    },
+    "z": 107.667
+   },
+   {
+    "kind": "point",
+    "id": 51,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 84.342,
+     "y": 22.712
+    },
+    "z": 104.984
+   },
+   {
+    "kind": "point",
+    "id": 52,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 96.699,
+     "y": 38.349
+    },
+    "z": 104.968
+   },
+   {
+    "kind": "point",
+    "id": 53,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 304.956,
+     "y": 393.386
+    },
+    "z": 114.67
+   },
+   {
+    "kind": "point",
+    "id": 54,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 596.715,
+     "y": 92.99
+    },
+    "z": 111.68
+   },
+   {
+    "kind": "point",
+    "id": 55,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 150.468,
+     "y": 236.495
+    },
+    "z": 102.804
+   },
+   {
+    "kind": "point",
+    "id": 56,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 480.124,
+     "y": 283.799
+    },
+    "z": 114.291
+   },
+   {
+    "kind": "point",
+    "id": 57,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 253.81,
+     "y": 210.476
+    },
+    "z": 109.366
+   },
+   {
+    "kind": "point",
+    "id": 58,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 21.3,
+     "y": 163.491
+    },
+    "z": 104.35
+   },
+   {
+    "kind": "point",
+    "id": 59,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 434.262,
+     "y": 96.346
+    },
+    "z": 106.798
+   },
+   {
+    "kind": "point",
+    "id": 60,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 109.056,
+     "y": 92.61
+    },
+    "z": 104.096
+   },
+   {
+    "kind": "point",
+    "id": 61,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 312.442,
+     "y": 185.761
+    },
+    "z": 111.739
+   },
+   {
+    "kind": "point",
+    "id": 62,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 385.055,
+     "y": 84.98
+    },
+    "z": 106.131
+   },
+   {
+    "kind": "point",
+    "id": 63,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 577.87,
+     "y": 291.572
+    },
+    "z": 115.266
+   },
+   {
+    "kind": "point",
+    "id": 64,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 306.901,
+     "y": 232.431
+    },
+    "z": 112.131
+   },
+   {
+    "kind": "point",
+    "id": 65,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 250.81,
+     "y": 210.026
+    },
+    "z": 109.199
+   },
+   {
+    "kind": "point",
+    "id": 66,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 56.272,
+     "y": 321.062
+    },
+    "z": 108.697
+   },
+   {
+    "kind": "point",
+    "id": 67,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 311.526,
+     "y": 368.58
+    },
+    "z": 113.904
+   },
+   {
+    "kind": "point",
+    "id": 68,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 173.748,
+     "y": 393.408
+    },
+    "z": 103.782
+   },
+   {
+    "kind": "point",
+    "id": 69,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 11.433,
+     "y": 274.124
+    },
+    "z": 104.287
+   },
+   {
+    "kind": "point",
+    "id": 70,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 183.553,
+     "y": 336.245
+    },
+    "z": 103.829
+   },
+   {
+    "kind": "point",
+    "id": 71,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 9.433,
+     "y": 180.569
+    },
+    "z": 103.414
+   },
+   {
+    "kind": "point",
+    "id": 72,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 291.518,
+     "y": 83.299
+    },
+    "z": 111.251
+   },
+   {
+    "kind": "point",
+    "id": 73,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 44.274,
+     "y": 113.744
+    },
+    "z": 106.119
+   },
+   {
+    "kind": "point",
+    "id": 74,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 561.162,
+     "y": 30.619
+    },
+    "z": 114.346
+   },
+   {
+    "kind": "point",
+    "id": 75,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 115.415,
+     "y": 228.621
+    },
+    "z": 105.075
+   },
+   {
+    "kind": "point",
+    "id": 76,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 277.935,
+     "y": 301.432
+    },
+    "z": 112.736
+   },
+   {
+    "kind": "point",
+    "id": 77,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 73.038,
+     "y": 48.708
+    },
+    "z": 105.708
+   },
+   {
+    "kind": "point",
+    "id": 78,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 510.043,
+     "y": 256.397
+    },
+    "z": 117.479
+   },
+   {
+    "kind": "point",
+    "id": 79,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 415.592,
+     "y": 9.868
+    },
+    "z": 105.181
+   },
+   {
+    "kind": "point",
+    "id": 80,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 466.327,
+     "y": 289.407
+    },
+    "z": 112.867
+   },
+   {
+    "kind": "point",
+    "id": 81,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 214.551,
+     "y": 182.814
+    },
+    "z": 105.055
+   },
+   {
+    "kind": "point",
+    "id": 82,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 161.365,
+     "y": 210.521
+    },
+    "z": 102.054
+   },
+   {
+    "kind": "point",
+    "id": 83,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 572.818,
+     "y": 321.74
+    },
+    "z": 116.504
+   },
+   {
+    "kind": "point",
+    "id": 84,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 501.603,
+     "y": 118.705
+    },
+    "z": 114.796
+   },
+   {
+    "kind": "point",
+    "id": 85,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 293.274,
+     "y": 103.762
+    },
+    "z": 111.32
+   },
+   {
+    "kind": "point",
+    "id": 86,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 407.484,
+     "y": 367.432
+    },
+    "z": 108.411
+   },
+   {
+    "kind": "point",
+    "id": 87,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 490.712,
+     "y": 38.379
+    },
+    "z": 113.119
+   },
+   {
+    "kind": "point",
+    "id": 88,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 598.649,
+     "y": 58.6
+    },
+    "z": 111.158
+   },
+   {
+    "kind": "point",
+    "id": 89,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 40.104,
+     "y": 34.46
+    },
+    "z": 105.577
+   },
+   {
+    "kind": "point",
+    "id": 90,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 593.182,
+     "y": 259.233
+    },
+    "z": 113.311
+   },
+   {
+    "kind": "point",
+    "id": 91,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 177.83,
+     "y": 92.68
+    },
+    "z": 101.172
+   },
+   {
+    "kind": "point",
+    "id": 92,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 408.659,
+     "y": 175.538
+    },
+    "z": 106.457
+   },
+   {
+    "kind": "point",
+    "id": 93,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 67.242,
+     "y": 216.357
+    },
+    "z": 108.337
+   },
+   {
+    "kind": "point",
+    "id": 94,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 453.466,
+     "y": 38.462
+    },
+    "z": 108.748
+   },
+   {
+    "kind": "point",
+    "id": 95,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 429.219,
+     "y": 102.904
+    },
+    "z": 107.218
+   },
+   {
+    "kind": "point",
+    "id": 96,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 276.565,
+     "y": 281.292
+    },
+    "z": 112.464
+   },
+   {
+    "kind": "point",
+    "id": 97,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 597.08,
+     "y": 313.126
+    },
+    "z": 113.981
+   },
+   {
+    "kind": "point",
+    "id": 98,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 86.859,
+     "y": 176.473
+    },
+    "z": 106.384
+   },
+   {
+    "kind": "point",
+    "id": 99,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 357.099,
+     "y": 352.727
+    },
+    "z": 109.951
+   },
+   {
+    "kind": "point",
+    "id": 100,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 306.103,
+     "y": 192.983
+    },
+    "z": 112.111
+   },
+   {
+    "kind": "point",
+    "id": 101,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 426.276,
+     "y": 374.668
+    },
+    "z": 109.517
+   },
+   {
+    "kind": "point",
+    "id": 102,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 283.5,
+     "y": 384.791
+    },
+    "z": 113.775
+   },
+   {
+    "kind": "point",
+    "id": 103,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 447.368,
+     "y": 263.394
+    },
+    "z": 110.512
+   },
+   {
+    "kind": "point",
+    "id": 104,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 511.244,
+     "y": 90.0
+    },
+    "z": 115.543
+   },
+   {
+    "kind": "point",
+    "id": 105,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 241.634,
+     "y": 266.789
+    },
+    "z": 109.458
+   },
+   {
+    "kind": "point",
+    "id": 106,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 380.899,
+     "y": 4.642
+    },
+    "z": 105.072
+   },
+   {
+    "kind": "point",
+    "id": 107,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 426.946,
+     "y": 353.288
+    },
+    "z": 109.298
+   },
+   {
+    "kind": "point",
+    "id": 108,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 489.642,
+     "y": 6.855
+    },
+    "z": 113.28
+   },
+   {
+    "kind": "point",
+    "id": 109,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 437.678,
+     "y": 242.578
+    },
+    "z": 109.396
+   },
+   {
+    "kind": "point",
+    "id": 110,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 530.808,
+     "y": 40.183
+    },
+    "z": 115.747
+   },
+   {
+    "kind": "point",
+    "id": 111,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 460.2,
+     "y": 79.815
+    },
+    "z": 110.234
+   },
+   {
+    "kind": "point",
+    "id": 112,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 351.736,
+     "y": 76.598
+    },
+    "z": 108.279
+   },
+   {
+    "kind": "point",
+    "id": 113,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 82.724,
+     "y": 244.929
+    },
+    "z": 107.686
+   },
+   {
+    "kind": "point",
+    "id": 114,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 152.215,
+     "y": 226.438
+    },
+    "z": 102.471
+   },
+   {
+    "kind": "point",
+    "id": 115,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 122.998,
+     "y": 386.712
+    },
+    "z": 105.673
+   },
+   {
+    "kind": "point",
+    "id": 116,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 1.822,
+     "y": 194.169
+    },
+    "z": 103.012
+   },
+   {
+    "kind": "point",
+    "id": 117,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 395.041,
+     "y": 301.868
+    },
+    "z": 107.606
+   },
+   {
+    "kind": "point",
+    "id": 118,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 404.881,
+     "y": 133.956
+    },
+    "z": 105.71
+   },
+   {
+    "kind": "point",
+    "id": 119,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 301.74,
+     "y": 11.011
+    },
+    "z": 110.045
+   },
+   {
+    "kind": "point",
+    "id": 120,
+    "layerId": "zemin",
+    "attrs": {},
+    "p": {
+     "x": 452.376,
+     "y": 69.48
+    },
+    "z": 109.159
+   },
+   {
+    "kind": "line",
+    "id": 121,
+    "layerId": "0",
+    "attrs": {},
+    "a": {
+     "x": 100,
+     "y": 30
+    },
+    "b": {
+     "x": 110,
+     "y": 90
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 122,
+    "layerId": "0",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 60,
+      "y": 10
+     },
+     {
+      "x": 70,
+      "y": 20
+     },
+     {
+      "x": 80,
+      "y": 90
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 123,
+    "layerId": "0",
+    "attrs": {},
+    "a": {
+     "x": 100,
+     "y": 10
+    },
+    "b": {
+     "x": 200,
+     "y": 20
+    }
+   }
+  ],
+  "uids": [
+   "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000014",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000015",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000016",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000017",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000018",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000019",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000001a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000001b",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000001c",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000001d",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000001e",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000001f",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000020",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000021",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000022",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000023",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000024",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000025",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000026",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000027",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000028",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000029",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000002a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000002b",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000002c",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000002d",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000002e",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000002f",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000030",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000031",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000032",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000033",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000034",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000035",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000036",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000037",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000038",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000039",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000003a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000003b",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000003c",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000003d",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000003e",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000003f",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000040",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000041",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000042",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000043",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000044",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000045",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000046",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000047",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000048",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000049",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000004a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000004b",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000004c",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000004d",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000004e",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000004f",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000050",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000051",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000052",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000053",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000054",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000055",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000056",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000057",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000058",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000059",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000005a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000005b",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000005c",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000005d",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000005e",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000005f",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000060",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000061",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000062",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000063",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000064",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000065",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000066",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000067",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000068",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000069",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000006a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000006b",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000006c",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000006d",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000006e",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000006f",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000070",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000071",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000072",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000073",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000074",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000075",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000076",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000077",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000078",
+   "0192f5a0-7c3e-7d4a-9b1e-000000000079",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000007a",
+   "0192f5a0-7c3e-7d4a-9b1e-00000000007b"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Dörtyol, ana yolun sırtı korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-1",
+       "primary": 0,
+       "profile": "b-2",
+       "ties": [
+        {
+         "pvi": "j-1.a",
+         "station": 195.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 5.0,
+         "crossfall": -2.5,
+         "elevation": 101.725,
+         "before": 100.38671875,
+         "difference": 1.3382812499999943
+        },
+        {
+         "pvi": "j-1.x",
+         "station": 200.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.85,
+         "before": 100.421875,
+         "difference": 1.4281249999999943
+        },
+        {
+         "pvi": "j-1.b",
+         "station": 205.0,
+         "primaryStation": 250.0,
+         "primaryOffset": -5.0,
+         "crossfall": -2.5,
+         "elevation": 101.725,
+         "before": 100.41796875,
+         "difference": 1.3070312499999943
+        }
+       ],
+       "removed": [
+        "v2"
+       ],
+       "grades": [
+        3.6333333333333258,
+        2.5,
+        -2.5,
+        -2.9666666666666592
+       ],
+       "changes": [
+        1.1333333333333258,
+        5.0,
+        0.46666666666665924
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana yol",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 500.0,
+           "y": 0.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Tali yol",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 250.0,
+           "y": -200.0
+          },
+          {
+           "id": "b",
+           "x": 250.0,
+           "y": 200.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Eğik tali",
+         "revision": 2,
+         "pis": [
+          {
+           "id": "a",
+           "x": 150.0,
+           "y": -100.0
+          },
+          {
+           "id": "b",
+           "x": 350.0,
+           "y": 100.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Kısa tali",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 100.0,
+           "y": -30.0
+          },
+          {
+           "id": "b",
+           "x": 100.0,
+           "y": 40.0
+          }
+         ]
+        },
+        {
+         "id": "g-6",
+         "name": "Kenarda başlayan",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 300.0,
+           "y": -3.0
+          },
+          {
+           "id": "b",
+           "x": 300.0,
+           "y": 60.0
+          }
+         ]
+        },
+        {
+         "id": "g-7",
+         "name": "Ters tali",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 400.0,
+           "y": 120.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": -120.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Ana kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 250.0,
+           "elevation": 102.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 500.0,
+           "elevation": 101.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Tali kot",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 2,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 98.0
+          },
+          {
+           "id": "v1",
+           "station": 120.0,
+           "elevation": 99.0,
+           "radius": 3000.0
+          },
+          {
+           "id": "j-1.a",
+           "station": 195.0,
+           "elevation": 101.725
+          },
+          {
+           "id": "j-1.x",
+           "station": 200.0,
+           "elevation": 101.85
+          },
+          {
+           "id": "j-1.b",
+           "station": 205.0,
+           "elevation": 101.725
+          },
+          {
+           "id": "v3",
+           "station": 280.0,
+           "elevation": 99.5,
+           "length": 40.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 97.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çakışan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 98.0
+          },
+          {
+           "id": "j-1.a",
+           "station": 50.0,
+           "elevation": 98.5
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 97.0
+          }
+         ]
+        },
+        {
+         "id": "b-9",
+         "name": "Bozuk kot",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 98.0
+          },
+          {
+           "id": "v1",
+           "station": 185.0,
+           "elevation": 99.0,
+           "length": 36.0
+          },
+          {
+           "id": "v3",
+           "station": 215.0,
+           "elevation": 99.5,
+           "length": 36.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 97.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eğik kot",
+         "alignment": "g-3",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 99.0
+          },
+          {
+           "id": "v1",
+           "station": 141.0,
+           "elevation": 101.0,
+           "length": 30.0
+          },
+          {
+           "id": "b",
+           "station": 282.0,
+           "elevation": 100.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Kısa kot",
+         "alignment": "g-5",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.2
+          },
+          {
+           "id": "b",
+           "station": 70.0,
+           "elevation": 101.5
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Geç başlayan",
+         "alignment": "g-5",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 27.0,
+           "elevation": 100.2
+          },
+          {
+           "id": "b",
+           "station": 70.0,
+           "elevation": 101.5
+          }
+         ]
+        },
+        {
+         "id": "b-10",
+         "name": "Kenar kot",
+         "alignment": "g-6",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 101.0
+          },
+          {
+           "id": "b",
+           "station": 63.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-11",
+         "name": "Ters kot",
+         "alignment": "g-7",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 103.0
+          },
+          {
+           "id": "v1",
+           "station": 120.0,
+           "elevation": 100.9,
+           "length": 10.0
+          },
+          {
+           "id": "b",
+           "station": 240.0,
+           "elevation": 102.0
+          }
+         ]
+        },
+        {
+         "id": "b-12",
+         "name": "Taşan kot",
+         "alignment": "g-7",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 103.0
+          },
+          {
+           "id": "b",
+           "station": 300.0,
+           "elevation": 102.0
+          }
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "id": "j-1",
+         "name": "Dörtyol",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 10.0,
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-2",
+           "alignmentRevision": 1,
+           "left": 3.5,
+           "right": 3.5
+          }
+         ]
+        },
+        {
+         "id": "j-2",
+         "name": "Eğik kavşak",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 12.0,
+         "legs": [
+          {
+           "alignment": "g-3",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 4.0
+          },
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 6.0
+          }
+         ]
+        },
+        {
+         "id": "j-3",
+         "name": "Kısa kavşak",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 8.0,
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-5",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 3.0
+          }
+         ]
+        },
+        {
+         "id": "j-4",
+         "name": "Kenar kavşağı",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 8.0,
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-6",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 3.0
+          }
+         ]
+        },
+        {
+         "id": "j-5",
+         "name": "Üst geçit",
+         "revision": 1,
+         "kind": "separated",
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-2",
+           "alignmentRevision": 1,
+           "left": 3.5,
+           "right": 3.5
+          }
+         ]
+        },
+        {
+         "id": "j-6",
+         "name": "Ters kavşak",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 10.0,
+         "legs": [
+          {
+           "alignment": "g-7",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 3.0
+          },
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          }
+         ]
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 150.0,
+            "left": -2.5,
+            "right": -2.5
+           },
+           {
+            "station": 240.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 420.0,
+            "left": 3.0,
+            "right": -3.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Tali dever",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Eski dever",
+         "alignment": "g-1",
+         "revision": 1,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 0.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-4",
+         "name": "Bozuk dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 900.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Kavşağa bağla",
+     "expect": {
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana yol",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "id": "b",
+           "x": 500.0,
+           "y": 0.0
+          }
+         ]
+        },
+        {
+         "id": "g-2",
+         "name": "Tali yol",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 250.0,
+           "y": -200.0
+          },
+          {
+           "id": "b",
+           "x": 250.0,
+           "y": 200.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Eğik tali",
+         "revision": 2,
+         "pis": [
+          {
+           "id": "a",
+           "x": 150.0,
+           "y": -100.0
+          },
+          {
+           "id": "b",
+           "x": 350.0,
+           "y": 100.0
+          }
+         ]
+        },
+        {
+         "id": "g-5",
+         "name": "Kısa tali",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 100.0,
+           "y": -30.0
+          },
+          {
+           "id": "b",
+           "x": 100.0,
+           "y": 40.0
+          }
+         ]
+        },
+        {
+         "id": "g-6",
+         "name": "Kenarda başlayan",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 300.0,
+           "y": -3.0
+          },
+          {
+           "id": "b",
+           "x": 300.0,
+           "y": 60.0
+          }
+         ]
+        },
+        {
+         "id": "g-7",
+         "name": "Ters tali",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 400.0,
+           "y": 120.0
+          },
+          {
+           "id": "b",
+           "x": 400.0,
+           "y": -120.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Ana kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.0
+          },
+          {
+           "id": "v1",
+           "station": 250.0,
+           "elevation": 102.0,
+           "length": 100.0
+          },
+          {
+           "id": "b",
+           "station": 500.0,
+           "elevation": 101.0
+          }
+         ]
+        },
+        {
+         "id": "b-2",
+         "name": "Tali kot",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 98.0
+          },
+          {
+           "id": "v1",
+           "station": 120.0,
+           "elevation": 99.0,
+           "radius": 3000.0
+          },
+          {
+           "id": "v2",
+           "station": 200.0,
+           "elevation": 100.5,
+           "length": 20.0
+          },
+          {
+           "id": "v3",
+           "station": 280.0,
+           "elevation": 99.5,
+           "length": 40.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 97.0
+          }
+         ]
+        },
+        {
+         "id": "b-8",
+         "name": "Çakışan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 98.0
+          },
+          {
+           "id": "j-1.a",
+           "station": 50.0,
+           "elevation": 98.5
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 97.0
+          }
+         ]
+        },
+        {
+         "id": "b-9",
+         "name": "Bozuk kot",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 98.0
+          },
+          {
+           "id": "v1",
+           "station": 185.0,
+           "elevation": 99.0,
+           "length": 36.0
+          },
+          {
+           "id": "v3",
+           "station": 215.0,
+           "elevation": 99.5,
+           "length": 36.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 97.0
+          }
+         ]
+        },
+        {
+         "id": "b-3",
+         "name": "Eğik kot",
+         "alignment": "g-3",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 99.0
+          },
+          {
+           "id": "v1",
+           "station": 141.0,
+           "elevation": 101.0,
+           "length": 30.0
+          },
+          {
+           "id": "b",
+           "station": 282.0,
+           "elevation": 100.0
+          }
+         ]
+        },
+        {
+         "id": "b-5",
+         "name": "Kısa kot",
+         "alignment": "g-5",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 100.2
+          },
+          {
+           "id": "b",
+           "station": 70.0,
+           "elevation": 101.5
+          }
+         ]
+        },
+        {
+         "id": "b-6",
+         "name": "Geç başlayan",
+         "alignment": "g-5",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 27.0,
+           "elevation": 100.2
+          },
+          {
+           "id": "b",
+           "station": 70.0,
+           "elevation": 101.5
+          }
+         ]
+        },
+        {
+         "id": "b-10",
+         "name": "Kenar kot",
+         "alignment": "g-6",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 101.0
+          },
+          {
+           "id": "b",
+           "station": 63.0,
+           "elevation": 103.0
+          }
+         ]
+        },
+        {
+         "id": "b-11",
+         "name": "Ters kot",
+         "alignment": "g-7",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 103.0
+          },
+          {
+           "id": "v1",
+           "station": 120.0,
+           "elevation": 100.9,
+           "length": 10.0
+          },
+          {
+           "id": "b",
+           "station": 240.0,
+           "elevation": 102.0
+          }
+         ]
+        },
+        {
+         "id": "b-12",
+         "name": "Taşan kot",
+         "alignment": "g-7",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 103.0
+          },
+          {
+           "id": "b",
+           "station": 300.0,
+           "elevation": 102.0
+          }
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "id": "j-1",
+         "name": "Dörtyol",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 10.0,
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-2",
+           "alignmentRevision": 1,
+           "left": 3.5,
+           "right": 3.5
+          }
+         ]
+        },
+        {
+         "id": "j-2",
+         "name": "Eğik kavşak",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 12.0,
+         "legs": [
+          {
+           "alignment": "g-3",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 4.0
+          },
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 6.0
+          }
+         ]
+        },
+        {
+         "id": "j-3",
+         "name": "Kısa kavşak",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 8.0,
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-5",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 3.0
+          }
+         ]
+        },
+        {
+         "id": "j-4",
+         "name": "Kenar kavşağı",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 8.0,
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-6",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 3.0
+          }
+         ]
+        },
+        {
+         "id": "j-5",
+         "name": "Üst geçit",
+         "revision": 1,
+         "kind": "separated",
+         "legs": [
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          },
+          {
+           "alignment": "g-2",
+           "alignmentRevision": 1,
+           "left": 3.5,
+           "right": 3.5
+          }
+         ]
+        },
+        {
+         "id": "j-6",
+         "name": "Ters kavşak",
+         "revision": 1,
+         "kind": "atGrade",
+         "radius": 10.0,
+         "legs": [
+          {
+           "alignment": "g-7",
+           "alignmentRevision": 1,
+           "left": 3.0,
+           "right": 3.0
+          },
+          {
+           "alignment": "g-1",
+           "alignmentRevision": 1,
+           "left": 5.0,
+           "right": 5.0
+          }
+         ]
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 150.0,
+            "left": -2.5,
+            "right": -2.5
+           },
+           {
+            "station": 240.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 420.0,
+            "left": 3.0,
+            "right": -3.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Tali dever",
+         "alignment": "g-2",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Eski dever",
+         "alignment": "g-1",
+         "revision": 1,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 0.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-4",
+         "name": "Bozuk dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 900.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "canRedo": true
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Adıyla, eğim değişimi sınırıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "dörtyol",
+      "primary": 0,
+      "profiles": [
+       "b-1",
+       "Tali kot"
+      ],
+      "crossfall": [
+       -2.0,
+       -3.0
+      ],
+      "maxGradeChange": 30.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-1",
+       "primary": 0,
+       "profile": "b-2",
+       "ties": [
+        {
+         "pvi": "j-1.a",
+         "station": 195.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 5.0,
+         "crossfall": -3.0,
+         "elevation": 101.69999999999999,
+         "before": 100.38671875,
+         "difference": 1.3132812499999886
+        },
+        {
+         "pvi": "j-1.x",
+         "station": 200.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.85,
+         "before": 100.421875,
+         "difference": 1.4281249999999943
+        },
+        {
+         "pvi": "j-1.b",
+         "station": 205.0,
+         "primaryStation": 250.0,
+         "primaryOffset": -5.0,
+         "crossfall": -2.0,
+         "elevation": 101.75,
+         "before": 100.41796875,
+         "difference": 1.33203125
+        }
+       ],
+       "removed": [
+        "v2"
+       ],
+       "grades": [
+        3.599999999999985,
+        3.0000000000001137,
+        -1.9999999999998863,
+        -3.0
+       ],
+       "changes": [
+        0.5999999999998713,
+        5.0,
+        1.0000000000001137
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eğim değişimi aşılıyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ],
+      "maxGradeChange": 1.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-1",
+       "primary": 0,
+       "profile": "b-2",
+       "ties": [
+        {
+         "pvi": "j-1.a",
+         "station": 195.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 5.0,
+         "crossfall": -2.5,
+         "elevation": 101.725,
+         "before": 100.38671875,
+         "difference": 1.3382812499999943
+        },
+        {
+         "pvi": "j-1.x",
+         "station": 200.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.85,
+         "before": 100.421875,
+         "difference": 1.4281249999999943
+        },
+        {
+         "pvi": "j-1.b",
+         "station": 205.0,
+         "primaryStation": 250.0,
+         "primaryOffset": -5.0,
+         "crossfall": -2.5,
+         "elevation": 101.725,
+         "before": 100.41796875,
+         "difference": 1.3070312499999943
+        }
+       ],
+       "removed": [
+        "v2"
+       ],
+       "grades": [
+        3.6333333333333258,
+        2.5,
+        -2.5,
+        -2.9666666666666592
+       ],
+       "changes": [
+        1.1333333333333258,
+        5.0,
+        0.46666666666665924
+       ],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "junction_grade_change",
+        "message": "“j-1.a” PVI'sinde eğim değişimi %1.133, en çok %1.000 istendi.",
+        "path": "maxGradeChange"
+       },
+       {
+        "code": "junction_grade_change",
+        "message": "“j-1.x” PVI'sinde eğim değişimi %5.000, en çok %1.000 istendi.",
+        "path": "maxGradeChange"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Planı yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-1",
+       "primary": 0,
+       "profile": "b-2",
+       "ties": [
+        {
+         "pvi": "j-1.a",
+         "station": 195.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 5.0,
+         "crossfall": -2.5,
+         "elevation": 101.725,
+         "before": 100.38671875,
+         "difference": 1.3382812499999943
+        },
+        {
+         "pvi": "j-1.x",
+         "station": 200.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.85,
+         "before": 100.421875,
+         "difference": 1.4281249999999943
+        },
+        {
+         "pvi": "j-1.b",
+         "station": 205.0,
+         "primaryStation": 250.0,
+         "primaryOffset": -5.0,
+         "crossfall": -2.5,
+         "elevation": 101.725,
+         "before": 100.41796875,
+         "difference": 1.3070312499999943
+        }
+       ],
+       "removed": [
+        "v2"
+       ],
+       "grades": [
+        3.6333333333333258,
+        2.5,
+        -2.5,
+        -2.9666666666666592
+       ],
+       "changes": [
+        1.1333333333333258,
+        5.0,
+        0.46666666666665924
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Deverle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "superelevation": "d-1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-1",
+       "primary": 0,
+       "profile": "b-2",
+       "ties": [
+        {
+         "pvi": "j-1.a",
+         "station": 195.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 5.0,
+         "crossfall": -3.0,
+         "elevation": 101.69999999999999,
+         "before": 100.38671875,
+         "difference": 1.3132812499999886
+        },
+        {
+         "pvi": "j-1.x",
+         "station": 200.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.85,
+         "before": 100.421875,
+         "difference": 1.4281249999999943
+        },
+        {
+         "pvi": "j-1.b",
+         "station": 205.0,
+         "primaryStation": 250.0,
+         "primaryOffset": -5.0,
+         "crossfall": 3.0,
+         "elevation": 102.0,
+         "before": 100.41796875,
+         "difference": 1.58203125
+        }
+       ],
+       "removed": [
+        "v2"
+       ],
+       "grades": [
+        3.599999999999985,
+        3.0000000000001137,
+        3.0000000000001137,
+        -3.3333333333333335
+       ],
+       "changes": [
+        0.5999999999998713,
+        0.0,
+        6.333333333333448
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eski deverle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "superelevation": "Eski dever"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-1",
+       "primary": 0,
+       "profile": "b-2",
+       "ties": [
+        {
+         "pvi": "j-1.a",
+         "station": 195.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 5.0,
+         "crossfall": -2.0,
+         "elevation": 101.75,
+         "before": 100.38671875,
+         "difference": 1.36328125
+        },
+        {
+         "pvi": "j-1.x",
+         "station": 200.0,
+         "primaryStation": 250.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.85,
+         "before": 100.421875,
+         "difference": 1.4281249999999943
+        },
+        {
+         "pvi": "j-1.b",
+         "station": 205.0,
+         "primaryStation": 250.0,
+         "primaryOffset": -5.0,
+         "crossfall": -2.0,
+         "elevation": 101.75,
+         "before": 100.41796875,
+         "difference": 1.33203125
+        }
+       ],
+       "removed": [
+        "v2"
+       ],
+       "grades": [
+        3.6666666666666665,
+        1.9999999999998863,
+        -1.9999999999998863,
+        -3.0
+       ],
+       "changes": [
+        1.6666666666667802,
+        3.9999999999997726,
+        1.0000000000001137
+       ],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "superelevation_stale",
+        "message": "“Eski dever” dever çizelgesinin aksı değişti (çizelge 0. revizyona göre kurulu, aks şimdi 1.); km'leri denetleyip aksa yeniden bağlayın.",
+        "path": "superelevation"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eğik kavşak, ana yol ikinci kol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-2",
+      "primary": 1,
+      "crossfall": [
+       -2.0,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-2",
+       "primary": 1,
+       "profile": "b-3",
+       "ties": [
+        {
+         "pvi": "j-2.a",
+         "station": 132.93607486306985,
+         "primaryStation": 243.99999999999923,
+         "primaryOffset": 6.000000000000782,
+         "crossfall": -2.5,
+         "elevation": 101.68584,
+         "before": 100.86855810638889,
+         "difference": 0.8172818936111099
+        },
+        {
+         "pvi": "j-2.x",
+         "station": 141.4213562373095,
+         "primaryStation": 250.00000000000003,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.85,
+         "before": 100.9216439791824,
+         "difference": 0.9283560208175885
+        },
+        {
+         "pvi": "j-2.b",
+         "station": 148.4924240491738,
+         "primaryStation": 254.99999999999915,
+         "primaryOffset": -4.999999999999147,
+         "crossfall": -2.0,
+         "elevation": 101.7585,
+         "before": 100.92687511431174,
+         "difference": 0.8316248856882567
+        }
+       ],
+       "removed": [
+        "v1"
+       ],
+       "grades": [
+        2.0203996565766933,
+        1.934644153326091,
+        -1.294005409571549,
+        -1.317153717664451
+       ],
+       "changes": [
+        0.08575550325060233,
+        3.22864956289764,
+        0.023148308092902026
+       ],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "junction_stale",
+        "message": "“Eğik kavşak” kavşağının “Eğik tali” aksı değişti; kavşağı denetleyip yeniden bağlayın.",
+        "path": "junction"
+       },
+       {
+        "code": "profile_stale",
+        "message": "“Eğik kot” boykesitinin aksı değişti (boykesit 1. revizyona göre kurulu, aks şimdi 2.); PVI'ları denetleyip aksa yeniden bağlayın.",
+        "path": "profiles"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kısa tali yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-3",
+      "primary": 0,
+      "profiles": [
+       "b-1",
+       "b-5"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-3",
+       "primary": 0,
+       "profile": "b-5",
+       "ties": [
+        {
+         "pvi": "j-3.a",
+         "station": 25.0,
+         "primaryStation": 100.0,
+         "primaryOffset": 5.0,
+         "crossfall": -2.5,
+         "elevation": 100.675,
+         "before": 100.66428571428571,
+         "difference": 0.01071428571428612
+        },
+        {
+         "pvi": "j-3.x",
+         "station": 30.0,
+         "primaryStation": 100.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 100.8,
+         "before": 100.75714285714285,
+         "difference": 0.04285714285714448
+        },
+        {
+         "pvi": "j-3.b",
+         "station": 35.0,
+         "primaryStation": 100.0,
+         "primaryOffset": -5.0,
+         "crossfall": -2.5,
+         "elevation": 100.675,
+         "before": 100.85,
+         "difference": -0.17499999999999716
+        }
+       ],
+       "removed": [],
+       "grades": [
+        1.8999999999999775,
+        2.5,
+        -2.5,
+        2.357142857142865
+       ],
+       "changes": [
+        0.6000000000000225,
+        5.0,
+        4.857142857142865
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ters yönlü tali yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-6",
+      "primary": 1,
+      "profiles": [
+       "b-11",
+       "b-1"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-6",
+       "primary": 1,
+       "profile": "b-11",
+       "ties": [
+        {
+         "pvi": "j-6.a",
+         "station": 115.0,
+         "primaryStation": 400.0,
+         "primaryOffset": -5.0,
+         "crossfall": -2.5,
+         "elevation": 101.275,
+         "before": 100.98750000000001,
+         "difference": 0.2874999999999943
+        },
+        {
+         "pvi": "j-6.x",
+         "station": 120.0,
+         "primaryStation": 400.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 101.4,
+         "before": 100.93333333333334,
+         "difference": 0.46666666666666856
+        },
+        {
+         "pvi": "j-6.b",
+         "station": 125.0,
+         "primaryStation": 400.0,
+         "primaryOffset": 5.0,
+         "crossfall": -2.5,
+         "elevation": 101.275,
+         "before": 100.94583333333334,
+         "difference": 0.3291666666666657
+        }
+       ],
+       "removed": [
+        "v1"
+       ],
+       "grades": [
+        -1.4999999999999951,
+        2.5,
+        -2.5,
+        0.6304347826086907
+       ],
+       "changes": [
+        3.999999999999995,
+        5.0,
+        3.130434782608691
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Tali yolun sırtı korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 1,
+      "crossfall": [
+       -2.0,
+       -2.0
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "junction": "j-1",
+       "primary": 1,
+       "profile": "b-1",
+       "ties": [
+        {
+         "pvi": "j-1.a",
+         "station": 246.5,
+         "primaryStation": 200.0,
+         "primaryOffset": -3.5000000000000124,
+         "crossfall": -2.0,
+         "elevation": 100.351875,
+         "before": 101.842265,
+         "difference": -1.4903899999999908
+        },
+        {
+         "pvi": "j-1.x",
+         "station": 250.0,
+         "primaryStation": 200.0,
+         "primaryOffset": 0.0,
+         "crossfall": 0.0,
+         "elevation": 100.421875,
+         "before": 101.85,
+         "difference": -1.4281249999999943
+        },
+        {
+         "pvi": "j-1.b",
+         "station": 253.5,
+         "primaryStation": 200.0,
+         "primaryOffset": 3.4999999999999876,
+         "crossfall": -2.0,
+         "elevation": 100.351875,
+         "before": 101.856265,
+         "difference": -1.5043899999999866
+        }
+       ],
+       "removed": [
+        "v1"
+       ],
+       "grades": [
+        0.14274847870182833,
+        1.999999999999805,
+        -1.999999999999805,
+        0.26293103448275584
+       ],
+       "changes": [
+        1.8572515212979768,
+        3.99999999999961,
+        2.262931034482561
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Olmayan kavşak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-9",
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_junction",
+       "message": "“j-9” kimlikli ya da adlı kavşak projede yok.",
+       "path": "junction"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ayrı seviyeli kavşak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-5",
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_junction",
+       "message": "“Üst geçit” ayrı seviyeli kavşak; boykesit bağı yalnız hemzemin kavşakta olur.",
+       "path": "junction"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Olmayan boykesit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "primary": 0,
+      "profiles": [
+       "yok",
+       "b-2"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_road_profile",
+       "message": "“yok” kimlikli ya da adlı boykesit projede yok.",
+       "path": "profiles[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aksın iki boykesiti",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-3",
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "“Kısa tali” aksının 2 boykesiti var; hangisi, profiles ile verin.",
+       "path": "profiles"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kurulamayan boykesit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-6",
+      "primary": 1,
+      "profiles": [
+       "b-12",
+       "b-1"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_road_profile",
+       "message": "b PVI'si aksın dışında: aksın km'si 0 ile 240.000 m arası.",
+       "path": "pvis[1].station"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kurpları çakışan boykesit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "primary": 0,
+      "profiles": [
+       "b-1",
+       "b-9"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "profile_curves_overlap",
+       "message": "v1–v3 arasına düşey kurplar sığmıyor: kolları 6.000 m uzun. Kurp boyunu ya da yarıçapı küçültün, PVI'ları uzaklaştırın.",
+       "path": "pvis[2]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Boykesit kolun aksında değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "primary": 0,
+      "profiles": [
+       "b-2",
+       "b-1"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "“Tali kot” boykesiti kavşağın 1. kolunun aksında değil.",
+       "path": "profiles[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Üçüncü kol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 2,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "Sırtı korunan kol (primary) 0 ya da 1 olmalı.",
+       "path": "primary"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eğim iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ],
+      "superelevation": "d-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "Ana yolun enine eğimini ya crossfall ya da superelevation ile verin; biri verilir.",
+       "path": "crossfall"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eğim yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "Ana yolun enine eğimini ya crossfall ya da superelevation ile verin; biri verilir.",
+       "path": "crossfall"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dever",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "superelevation": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_superelevation",
+       "message": "“yok” kimlikli ya da adlı dever çizelgesi projede yok.",
+       "path": "superelevation"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kurulamayan dever",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "superelevation": "d-4"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_superelevation",
+       "message": "2. satır aksın dışında: aksın km'si 0 ile 500.000 m arası.",
+       "path": "method.rows[1].station"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Dever tali yolun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "superelevation": "Tali dever"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "“Tali dever” dever çizelgesi ana yolun aksında değil.",
+       "path": "superelevation"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksi eğim değişimi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ],
+      "maxGradeChange": -1.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "En büyük eğim değişimi (maxGradeChange) 0 ya da daha büyük olmalı.",
+       "path": "maxGradeChange"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kenarı kesmiyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-4",
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "Tali yolun ekseni ana yolun sağ kenarını kesmiyor.",
+       "path": "junction"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Boykesit bağı örtmüyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-3",
+      "primary": 0,
+      "profiles": [
+       "b-1",
+       "b-6"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "“Geç başlayan” boykesiti bağı örtmüyor: ilk ve son PVI'sı ana yolun iki kenarının dışında olmalı.",
+       "path": "profiles"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "PVI kimliği alınmış",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "primary": 0,
+      "profiles": [
+       "b-1",
+       "b-8"
+      ],
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_tie",
+       "message": "“j-1.a” kimlikli PVI boykesitte zaten var.",
+       "path": "profiles"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ],
+      "expectedRevision": "on"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eski sürüme göre",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ],
+      "expectedRevision": "41"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yol projesi değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "junction": "j-1",
+      "profiles": [
+       "b-1",
+       "b-2"
+      ],
+      "primary": 0,
+      "crossfall": [
+       -2.5,
+       -2.5
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_road_project",
+       "message": "Kavşak yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yol koridoru",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bos",
+      "name": "Boş",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "korkuluk",
+      "name": "Korkuluk",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-korkuluk",
+        "name": "Yol korkuluk",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 573.621,
+       "y": 379.131
+      },
+      "z": 116.133
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 50.923,
+       "y": 334.2
+      },
+      "z": 109.021
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 401.838,
+       "y": 123.255
+      },
+      "z": 105.912
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 364.081,
+       "y": 232.482
+      },
+      "z": 108.151
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 258.402,
+       "y": 157.413
+      },
+      "z": 110.044
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 596.892,
+       "y": 379.758
+      },
+      "z": 114.633
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 266.913,
+       "y": 107.296
+      },
+      "z": 109.655
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 16.467,
+       "y": 185.958
+      },
+      "z": 104.229
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 228.009,
+       "y": 356.716
+      },
+      "z": 108.171
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 336.306,
+       "y": 94.449
+      },
+      "z": 109.011
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 195.086,
+       "y": 54.679
+      },
+      "z": 101.57
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 599.21,
+       "y": 269.792
+      },
+      "z": 112.992
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 536.143,
+       "y": 318.704
+      },
+      "z": 118.397
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 543.956,
+       "y": 305.154
+      },
+      "z": 118.1
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 212.272,
+       "y": 392.391
+      },
+      "z": 107.054
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 96.711,
+       "y": 301.602
+      },
+      "z": 107.68
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 276.844,
+       "y": 212.142
+      },
+      "z": 111.875
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 554.899,
+       "y": 200.336
+      },
+      "z": 116.542
+     },
+     {
+      "kind": "point",
+      "id": 19,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 212.355,
+       "y": 353.14
+      },
+      "z": 106.608
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 276.607,
+       "y": 227.082
+      },
+      "z": 112.441
+     },
+     {
+      "kind": "point",
+      "id": 21,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 434.264,
+       "y": 194.643
+      },
+      "z": 107.903
+     },
+     {
+      "kind": "point",
+      "id": 22,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 194.8,
+       "y": 279.829
+      },
+      "z": 103.455
+     },
+     {
+      "kind": "point",
+      "id": 23,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 544.764,
+       "y": 107.255
+      },
+      "z": 116.211
+     },
+     {
+      "kind": "point",
+      "id": 24,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 185.738,
+       "y": 382.945
+      },
+      "z": 104.438
+     },
+     {
+      "kind": "point",
+      "id": 25,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 302.549,
+       "y": 207.099
+      },
+      "z": 112.567
+     },
+     {
+      "kind": "point",
+      "id": 26,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 352.767,
+       "y": 124.738
+      },
+      "z": 108.074
+     },
+     {
+      "kind": "point",
+      "id": 27,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 307.135,
+       "y": 373.662
+      },
+      "z": 114.11
+     },
+     {
+      "kind": "point",
+      "id": 28,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 45.225,
+       "y": 328.16
+      },
+      "z": 108.672
+     },
+     {
+      "kind": "point",
+      "id": 29,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 544.592,
+       "y": 76.561
+      },
+      "z": 115.745
+     },
+     {
+      "kind": "point",
+      "id": 30,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 35.255,
+       "y": 261.164
+      },
+      "z": 106.85
+     },
+     {
+      "kind": "point",
+      "id": 31,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 135.97,
+       "y": 350.196
+      },
+      "z": 104.294
+     },
+     {
+      "kind": "point",
+      "id": 32,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 313.418,
+       "y": 341.577
+      },
+      "z": 113.192
+     },
+     {
+      "kind": "point",
+      "id": 33,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 126.287,
+       "y": 352.233
+      },
+      "z": 105.398
+     },
+     {
+      "kind": "point",
+      "id": 34,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 430.177,
+       "y": 12.749
+      },
+      "z": 105.863
+     },
+     {
+      "kind": "point",
+      "id": 35,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 103.129,
+       "y": 269.106
+      },
+      "z": 106.224
+     },
+     {
+      "kind": "point",
+      "id": 36,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 572.737,
+       "y": 10.138
+      },
+      "z": 113.192
+     },
+     {
+      "kind": "point",
+      "id": 37,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 12.687,
+       "y": 102.276
+      },
+      "z": 103.435
+     },
+     {
+      "kind": "point",
+      "id": 38,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 94.271,
+       "y": 73.496
+      },
+      "z": 105.55
+     },
+     {
+      "kind": "point",
+      "id": 39,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 231.34,
+       "y": 17.264
+      },
+      "z": 105.666
+     },
+     {
+      "kind": "point",
+      "id": 40,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 90.852,
+       "y": 14.508
+      },
+      "z": 104.841
+     },
+     {
+      "kind": "point",
+      "id": 41,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 369.144,
+       "y": 296.984
+      },
+      "z": 108.368
+     },
+     {
+      "kind": "point",
+      "id": 42,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 202.328,
+       "y": 12.324
+      },
+      "z": 101.708
+     },
+     {
+      "kind": "point",
+      "id": 43,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 459.582,
+       "y": 295.979
+      },
+      "z": 112.475
+     },
+     {
+      "kind": "point",
+      "id": 44,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 453.397,
+       "y": 344.978
+      },
+      "z": 111.994
+     },
+     {
+      "kind": "point",
+      "id": 45,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 283.668,
+       "y": 90.211
+      },
+      "z": 111.166
+     },
+     {
+      "kind": "point",
+      "id": 46,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 189.784,
+       "y": 40.82
+      },
+      "z": 100.994
+     },
+     {
+      "kind": "point",
+      "id": 47,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 524.858,
+       "y": 51.015
+      },
+      "z": 115.588
+     },
+     {
+      "kind": "point",
+      "id": 48,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 235.772,
+       "y": 205.921
+      },
+      "z": 107.274
+     },
+     {
+      "kind": "point",
+      "id": 49,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 575.839,
+       "y": 103.639
+      },
+      "z": 113.736
+     },
+     {
+      "kind": "point",
+      "id": 50,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 251.853,
+       "y": 7.213
+      },
+      "z": 107.667
+     },
+     {
+      "kind": "point",
+      "id": 51,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 84.342,
+       "y": 22.712
+      },
+      "z": 104.984
+     },
+     {
+      "kind": "point",
+      "id": 52,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 96.699,
+       "y": 38.349
+      },
+      "z": 104.968
+     },
+     {
+      "kind": "point",
+      "id": 53,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 304.956,
+       "y": 393.386
+      },
+      "z": 114.67
+     },
+     {
+      "kind": "point",
+      "id": 54,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 596.715,
+       "y": 92.99
+      },
+      "z": 111.68
+     },
+     {
+      "kind": "point",
+      "id": 55,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 150.468,
+       "y": 236.495
+      },
+      "z": 102.804
+     },
+     {
+      "kind": "point",
+      "id": 56,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 480.124,
+       "y": 283.799
+      },
+      "z": 114.291
+     },
+     {
+      "kind": "point",
+      "id": 57,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 253.81,
+       "y": 210.476
+      },
+      "z": 109.366
+     },
+     {
+      "kind": "point",
+      "id": 58,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 21.3,
+       "y": 163.491
+      },
+      "z": 104.35
+     },
+     {
+      "kind": "point",
+      "id": 59,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 434.262,
+       "y": 96.346
+      },
+      "z": 106.798
+     },
+     {
+      "kind": "point",
+      "id": 60,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 109.056,
+       "y": 92.61
+      },
+      "z": 104.096
+     },
+     {
+      "kind": "point",
+      "id": 61,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 312.442,
+       "y": 185.761
+      },
+      "z": 111.739
+     },
+     {
+      "kind": "point",
+      "id": 62,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 385.055,
+       "y": 84.98
+      },
+      "z": 106.131
+     },
+     {
+      "kind": "point",
+      "id": 63,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 577.87,
+       "y": 291.572
+      },
+      "z": 115.266
+     },
+     {
+      "kind": "point",
+      "id": 64,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 306.901,
+       "y": 232.431
+      },
+      "z": 112.131
+     },
+     {
+      "kind": "point",
+      "id": 65,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 250.81,
+       "y": 210.026
+      },
+      "z": 109.199
+     },
+     {
+      "kind": "point",
+      "id": 66,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 56.272,
+       "y": 321.062
+      },
+      "z": 108.697
+     },
+     {
+      "kind": "point",
+      "id": 67,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 311.526,
+       "y": 368.58
+      },
+      "z": 113.904
+     },
+     {
+      "kind": "point",
+      "id": 68,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 173.748,
+       "y": 393.408
+      },
+      "z": 103.782
+     },
+     {
+      "kind": "point",
+      "id": 69,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 11.433,
+       "y": 274.124
+      },
+      "z": 104.287
+     },
+     {
+      "kind": "point",
+      "id": 70,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 183.553,
+       "y": 336.245
+      },
+      "z": 103.829
+     },
+     {
+      "kind": "point",
+      "id": 71,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 9.433,
+       "y": 180.569
+      },
+      "z": 103.414
+     },
+     {
+      "kind": "point",
+      "id": 72,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 291.518,
+       "y": 83.299
+      },
+      "z": 111.251
+     },
+     {
+      "kind": "point",
+      "id": 73,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 44.274,
+       "y": 113.744
+      },
+      "z": 106.119
+     },
+     {
+      "kind": "point",
+      "id": 74,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 561.162,
+       "y": 30.619
+      },
+      "z": 114.346
+     },
+     {
+      "kind": "point",
+      "id": 75,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 115.415,
+       "y": 228.621
+      },
+      "z": 105.075
+     },
+     {
+      "kind": "point",
+      "id": 76,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 277.935,
+       "y": 301.432
+      },
+      "z": 112.736
+     },
+     {
+      "kind": "point",
+      "id": 77,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 73.038,
+       "y": 48.708
+      },
+      "z": 105.708
+     },
+     {
+      "kind": "point",
+      "id": 78,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 510.043,
+       "y": 256.397
+      },
+      "z": 117.479
+     },
+     {
+      "kind": "point",
+      "id": 79,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 415.592,
+       "y": 9.868
+      },
+      "z": 105.181
+     },
+     {
+      "kind": "point",
+      "id": 80,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 466.327,
+       "y": 289.407
+      },
+      "z": 112.867
+     },
+     {
+      "kind": "point",
+      "id": 81,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 214.551,
+       "y": 182.814
+      },
+      "z": 105.055
+     },
+     {
+      "kind": "point",
+      "id": 82,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 161.365,
+       "y": 210.521
+      },
+      "z": 102.054
+     },
+     {
+      "kind": "point",
+      "id": 83,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 572.818,
+       "y": 321.74
+      },
+      "z": 116.504
+     },
+     {
+      "kind": "point",
+      "id": 84,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 501.603,
+       "y": 118.705
+      },
+      "z": 114.796
+     },
+     {
+      "kind": "point",
+      "id": 85,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 293.274,
+       "y": 103.762
+      },
+      "z": 111.32
+     },
+     {
+      "kind": "point",
+      "id": 86,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 407.484,
+       "y": 367.432
+      },
+      "z": 108.411
+     },
+     {
+      "kind": "point",
+      "id": 87,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 490.712,
+       "y": 38.379
+      },
+      "z": 113.119
+     },
+     {
+      "kind": "point",
+      "id": 88,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 598.649,
+       "y": 58.6
+      },
+      "z": 111.158
+     },
+     {
+      "kind": "point",
+      "id": 89,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 40.104,
+       "y": 34.46
+      },
+      "z": 105.577
+     },
+     {
+      "kind": "point",
+      "id": 90,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 593.182,
+       "y": 259.233
+      },
+      "z": 113.311
+     },
+     {
+      "kind": "point",
+      "id": 91,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 177.83,
+       "y": 92.68
+      },
+      "z": 101.172
+     },
+     {
+      "kind": "point",
+      "id": 92,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 408.659,
+       "y": 175.538
+      },
+      "z": 106.457
+     },
+     {
+      "kind": "point",
+      "id": 93,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 67.242,
+       "y": 216.357
+      },
+      "z": 108.337
+     },
+     {
+      "kind": "point",
+      "id": 94,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 453.466,
+       "y": 38.462
+      },
+      "z": 108.748
+     },
+     {
+      "kind": "point",
+      "id": 95,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 429.219,
+       "y": 102.904
+      },
+      "z": 107.218
+     },
+     {
+      "kind": "point",
+      "id": 96,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 276.565,
+       "y": 281.292
+      },
+      "z": 112.464
+     },
+     {
+      "kind": "point",
+      "id": 97,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 597.08,
+       "y": 313.126
+      },
+      "z": 113.981
+     },
+     {
+      "kind": "point",
+      "id": 98,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 86.859,
+       "y": 176.473
+      },
+      "z": 106.384
+     },
+     {
+      "kind": "point",
+      "id": 99,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 357.099,
+       "y": 352.727
+      },
+      "z": 109.951
+     },
+     {
+      "kind": "point",
+      "id": 100,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 306.103,
+       "y": 192.983
+      },
+      "z": 112.111
+     },
+     {
+      "kind": "point",
+      "id": 101,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 426.276,
+       "y": 374.668
+      },
+      "z": 109.517
+     },
+     {
+      "kind": "point",
+      "id": 102,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 283.5,
+       "y": 384.791
+      },
+      "z": 113.775
+     },
+     {
+      "kind": "point",
+      "id": 103,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 447.368,
+       "y": 263.394
+      },
+      "z": 110.512
+     },
+     {
+      "kind": "point",
+      "id": 104,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 511.244,
+       "y": 90.0
+      },
+      "z": 115.543
+     },
+     {
+      "kind": "point",
+      "id": 105,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 241.634,
+       "y": 266.789
+      },
+      "z": 109.458
+     },
+     {
+      "kind": "point",
+      "id": 106,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 380.899,
+       "y": 4.642
+      },
+      "z": 105.072
+     },
+     {
+      "kind": "point",
+      "id": 107,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 426.946,
+       "y": 353.288
+      },
+      "z": 109.298
+     },
+     {
+      "kind": "point",
+      "id": 108,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 489.642,
+       "y": 6.855
+      },
+      "z": 113.28
+     },
+     {
+      "kind": "point",
+      "id": 109,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 437.678,
+       "y": 242.578
+      },
+      "z": 109.396
+     },
+     {
+      "kind": "point",
+      "id": 110,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 530.808,
+       "y": 40.183
+      },
+      "z": 115.747
+     },
+     {
+      "kind": "point",
+      "id": 111,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 460.2,
+       "y": 79.815
+      },
+      "z": 110.234
+     },
+     {
+      "kind": "point",
+      "id": 112,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 351.736,
+       "y": 76.598
+      },
+      "z": 108.279
+     },
+     {
+      "kind": "point",
+      "id": 113,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 82.724,
+       "y": 244.929
+      },
+      "z": 107.686
+     },
+     {
+      "kind": "point",
+      "id": 114,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 152.215,
+       "y": 226.438
+      },
+      "z": 102.471
+     },
+     {
+      "kind": "point",
+      "id": 115,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 122.998,
+       "y": 386.712
+      },
+      "z": 105.673
+     },
+     {
+      "kind": "point",
+      "id": 116,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 1.822,
+       "y": 194.169
+      },
+      "z": 103.012
+     },
+     {
+      "kind": "point",
+      "id": 117,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 395.041,
+       "y": 301.868
+      },
+      "z": 107.606
+     },
+     {
+      "kind": "point",
+      "id": 118,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 404.881,
+       "y": 133.956
+      },
+      "z": 105.71
+     },
+     {
+      "kind": "point",
+      "id": 119,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 301.74,
+       "y": 11.011
+      },
+      "z": 110.045
+     },
+     {
+      "kind": "point",
+      "id": 120,
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 452.376,
+       "y": 69.48
+      },
+      "z": 109.159
+     },
+     {
+      "kind": "line",
+      "id": 121,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 100,
+       "y": 30
+      },
+      "b": {
+       "x": 110,
+       "y": 90
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 122,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 60,
+        "y": 10
+       },
+       {
+        "x": 70,
+        "y": 20
+       },
+       {
+        "x": 80,
+        "y": 90
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 123,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+       "x": 100,
+       "y": 10
+      },
+      "b": {
+       "x": 200,
+       "y": 20
+      }
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000014",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000015",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000016",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000017",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000018",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000019",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000001a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000001b",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000001c",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000001d",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000001e",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000001f",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000020",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000021",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000022",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000023",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000024",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000025",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000026",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000027",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000028",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000029",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000002a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000002b",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000002c",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000002d",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000002e",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000002f",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000030",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000031",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000032",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000033",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000034",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000035",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000036",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000037",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000038",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000039",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000003a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000003b",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000003c",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000003d",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000003e",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000003f",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000040",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000041",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000042",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000043",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000044",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000045",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000046",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000047",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000048",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000049",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000004a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000004b",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000004c",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000004d",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000004e",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000004f",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000050",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000051",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000052",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000053",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000054",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000055",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000056",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000057",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000058",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000059",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000005a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000005b",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000005c",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000005d",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000005e",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000005f",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000060",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000061",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000062",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000063",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000064",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000065",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000066",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000067",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000068",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000069",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000006a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000006b",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000006c",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000006d",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000006e",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000006f",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000070",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000071",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000072",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000073",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000074",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000075",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000076",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000077",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000078",
+     "0192f5a0-7c3e-7d4a-9b1e-000000000079",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000007a",
+     "0192f5a0-7c3e-7d4a-9b1e-00000000007b"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  }
+ ]
+}

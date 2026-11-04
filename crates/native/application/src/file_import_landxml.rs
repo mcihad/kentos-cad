@@ -102,6 +102,8 @@ fn check(doc: &kentos_domain::Document, input: &ImportLandxml) -> Result<Read, S
         tolerance: None,
         max_edge: None,
         built: None,
+        clouds: Vec::new(),
+        excluded: Vec::new(),
     });
     common::judged(&list, list.len() - 1, "")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -209,6 +211,8 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ImportLandxml, read: Read) -> Co
         tolerance: None,
         max_edge: None,
         built: None,
+        clouds: Vec::new(),
+        excluded: Vec::new(),
     };
     let made = common::make(cx.doc, &def);
     let surface = match made.built() {

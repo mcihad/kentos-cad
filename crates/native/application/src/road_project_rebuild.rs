@@ -57,6 +57,7 @@ pub(crate) fn redraw(cx: &mut ExecutionContext<'_>, d: &RoadDrawingDef) -> Resul
         "road.culverts.draw" => again!(road_culverts_draw, k::CulvertsDraw),
         "road.walls.draw" => again!(road_walls_draw, k::RetainingWallsDraw),
         "road.junctions.draw" => again!(road_junctions_draw, k::JunctionsDraw),
+        "road.platforms.draw" => again!(road_platforms_draw, k::PlatformsDraw),
         _ => again!(road_terrains_contours, k::TerrainsContours),
     };
     road_drawings::keep(cx.doc, &d.command, &d.input, main, &uids, Some(&d.id)).map_err(|stop| Box::new(stop.into()))?;

@@ -648,6 +648,19 @@ codes! {
     INVALID_LABEL = "invalid_label", Failed, false, "İşaret aralığı ve yazı yüksekliği 0'dan büyük, km yazılan aralık işaret aralığının tam katı olmalı.";
     /// No profile (vertical alignment) of the id or name (docs/adr/0902).
     UNKNOWN_ROAD_PROFILE = "unknown_road_profile", Failed, false, "Bu kimlikte ya da adda boykesit yok.";
+    /// A sight distance asked that is not right: a height, the reach, the step or the required distance out of range, a
+    /// range off the profile, too many stations (docs/adr/0921 §2).
+    /// A design check asked that is not right: no rule, a limit not above 0, a ratio under 1, a parallel axis
+    /// (docs/adr/0922 §3).
+    INVALID_DESIGN_CHECK = "invalid_design_check", Failed, false, "Tasarım denetimi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: an alignment or a profile breaks the design rules given (docs/adr/0922 §3).
+    DESIGN_RULE_BROKEN = "design_rule_broken", Warning, false, "Aks ya da boykesit verilen tasarım kurallarına uymuyor.";
+    INVALID_SIGHT = "invalid_sight", Failed, false, "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A grade line proposal asked that is not right or cannot be made: a circular curve, no surface, an unknown PVI,
+    /// a most grade not above 0, the ground does not fix an elevation, rules that contradict (docs/adr/0926 §2).
+    INVALID_PROFILE_PROPOSAL = "invalid_profile_proposal", Failed, false, "Kırmızı kot önerisi geçerli değil ya da kurulamıyor; ileti nedenini söyler.";
+    /// A warning: somewhere the profile is seen shorter than the required sight distance (docs/adr/0921 §2).
+    SIGHT_SHORT = "sight_short", Warning, false, "Boykesitin bir yerinde görüş mesafesi istenenden kısa.";
     /// A profile's definition, or PVIs that make no vertical alignment (docs/adr/0902 §3).
     INVALID_ROAD_PROFILE = "invalid_road_profile", Failed, false, "Boykesitin tanımı ya da PVI'ları geçerli değil; ileti nedenini ve yerini söyler.";
     /// Two vertical curves, or a curve and an end of the profile, pass each other.
@@ -682,6 +695,10 @@ codes! {
     SUPERELEVATION_STALE = "superelevation_stale", Warning, false, "Dever çizelgesinin aksı değişti; km'leri denetleyip aksa yeniden bağlayın.";
     /// No corridor of the id or name.
     UNKNOWN_CORRIDOR = "unknown_corridor", Failed, false, "Bu kimlikte ya da adda koridor yok.";
+    /// A platform water check asked that is not right: a least slope not above 0 (docs/adr/0923 §2).
+    INVALID_PLATFORM_WATER = "invalid_platform_water", Failed, false, "Platform suyu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: somewhere the platform is flatter than the least slope asked; water stands there (docs/adr/0923 §2).
+    CORRIDOR_FLAT = "corridor_flat", Warning, false, "Platformun bir yeri istenen en küçük eğimden yatık; su orada durur.";
     /// A corridor's definition, its regions or its sampling (docs/adr/0905 §1–§2).
     INVALID_ROAD_CORRIDOR = "invalid_road_corridor", Failed, false, "Koridorun tanımı, bölgeleri ya da km örneklemesi geçerli değil; ileti nedenini ve yerini söyler.";
     /// A warning: the corridor's alignment changed since it was made or rebound.
@@ -719,6 +736,8 @@ codes! {
     /// An earthwork volume a mass haul diagram uses.
     VOLUME_IN_USE = "volume_in_use", Failed, false, "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin.";
     /// A warning: material left over at an end of the diagram, to be wasted or borrowed (docs/adr/0907 §3).
+    /// A warning: the haul plan cannot place everything; the borrow or waste sites are too small (docs/adr/0924 §2).
+    HAUL_PLAN_INFEASIBLE = "haul_plan_infeasible", Warning, false, "Taşıma planı her şeyi yerleştiremiyor; ödünç ya da döküm alanları yetmiyor.";
     HAUL_UNBALANCED = "haul_unbalanced", Warning, false, "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir.";
     /// A LandXML file that cannot be written: a stamp that does not read, nothing to write, a chosen surface or
     /// alignment that does not build (docs/adr/0908).
@@ -787,6 +806,8 @@ codes! {
     /// stations off the corridor or without ground under its face (docs/adr/0909 §3).
     INVALID_RETAINING_WALL = "invalid_retaining_wall", Failed, false, "İstinat duvarının tanımı geçerli değil ya da okunamıyor; ileti nedenini söyler.";
     UNKNOWN_RETAINING_WALL = "unknown_retaining_wall", Failed, false, "Bu kimlikte ya da adda istinat duvarı yok.";
+    INVALID_PLATFORM = "invalid_platform", Failed, false, "Platformun tanımı geçerli değil ya da tesviye edilemiyor; ileti nedenini söyler.";
+    UNKNOWN_PLATFORM = "unknown_platform", Failed, false, "Bu kimlikte ya da adda platform yok.";
     /// A warning: the wall's corridor changed since it was made or rebound (docs/adr/0909 §3).
     RETAINING_WALL_STALE = "retaining_wall_stale", Warning, false, "İstinat duvarının koridoru değişti; duvarı denetleyip koridora yeniden bağlayın.";
     /// A preliminary route asked out of bounds: its cell, margin, grade or climb, a grid too large, a layer to avoid not
@@ -804,6 +825,22 @@ codes! {
     JUNCTION_STALE = "junction_stale", Warning, false, "Kavşağın bir kolunun aksı değişti; kavşağı denetleyip yeniden bağlayın.";
     /// A warning: a leg curves within the curb returns' reach; the returns take it straight (docs/adr/0910 §2).
     JUNCTION_ON_CURVE = "junction_on_curve", Warning, false, "Bir kol dönüş yaylarının erimi içinde kurpta; yaylar kolu düz kabul eder.";
+    /// A vertical clearance asked that is not right: not two profiles, a profile off its leg, depth or minimum
+    /// negative, step not positive, too many samples, the roads not overlapping or not covered (docs/adr/0917 §3).
+    INVALID_CLEARANCE = "invalid_clearance", Failed, false, "Düşey açıklık sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the least vertical clearance falls short of the minimum asked (docs/adr/0917 §3).
+    JUNCTION_CLEARANCE_SHORT = "junction_clearance_short", Warning, false, "En küçük düşey açıklık istenen açıklıktan az.";
+    /// A profile tie asked that is not right: no primary leg, not two profiles, a profile off its leg, the cross
+    /// slope given twice or not at all, the secondary road not crossing the primary's edges, a profile not covering
+    /// the tie, a tie's PVI id taken (docs/adr/0918 §3).
+    INVALID_TIE = "invalid_tie", Failed, false, "Kavşak boykesit bağı geçerli değil; ileti nedenini söyler.";
+    /// A warning: a tied PVI's grade change is larger than the one asked (docs/adr/0918 §3).
+    JUNCTION_GRADE_CHANGE = "junction_grade_change", Warning, false, "Bağlanan bir PVI'de eğim değişimi istenenden büyük.";
+    /// A corridor overlap asked that is not right: not two corridors, a corridor off its leg, no primary leg, a cell not
+    /// positive, too many cells, the secondary corridor's surface not built (docs/adr/0919 §3).
+    INVALID_OVERLAP = "invalid_overlap", Failed, false, "Koridor örtüşmesi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the junction's corridors overlap; the secondary's volume there is counted twice (docs/adr/0919 §3).
+    JUNCTION_CORRIDORS_OVERLAP = "junction_corridors_overlap", Warning, false, "Kavşağın koridorları örtüşüyor; tali koridorun oradaki hacmi iki kez sayılır.";
     /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
     INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
     /// The project has no pay item book (docs/adr/0909 §4).
@@ -814,6 +851,55 @@ codes! {
     PAY_SOURCE_UNREAD = "pay_source_unread", Warning, false, "Bir yapı ya da kübaj okunamıyor; metrajı yok.";
     /// A warning: the wall's stem is somewhere higher than the highest asked (docs/adr/0909 §3).
     RETAINING_WALL_HIGH = "retaining_wall_high", Warning, false, "İstinat duvarının gövdesi istenen en yüksekten yüksek.";
+    PLATFORM_OPEN = "platform_open", Warning, false, "Platformun bir şev çizgisi araziyle buluşmuyor; hacim ve günışığı çizgisi yok.";
+    PLATFORM_NO_BALANCE = "platform_no_balance", Warning, false, "Verilen aralıkta kazı ile dolgu eşitlenmiyor; denge verilmedi.";
+    /// A drainage query that is not right: nothing asked, too many drops, a value not positive, C outside 0–1, a
+    /// catchment with no discharge point (docs/adr/0929 §2).
+    INVALID_DRAINAGE = "invalid_drainage", Failed, false, "Drenaj sorusu geçerli değil; ileti nedenini söyler.";
+    /// Nothing to draw: no catchment and no pond (docs/adr/0929 §2).
+    DRAINAGE_NOTHING = "drainage_nothing", Failed, false, "Çizilecek havza ya da gölet yok.";
+    /// A warning: no cell's water drop passes the discharge point (docs/adr/0929 §1).
+    DRAINAGE_CATCHMENT_EMPTY = "drainage_catchment_empty", Warning, false, "Hiçbir hücrenin suyu boşaltım noktasının eriminden geçmiyor; havza yok.";
+    /// A warning: the peak flow is more than the culvert's full-flow capacity (docs/adr/0929 §2).
+    CULVERT_OVER_CAPACITY = "culvert_over_capacity", Warning, false, "Havzanın en yüksek debisi menfezin dolu akış kapasitesinden çok.";
+    /// A swept path query that is not right: no path or more than one, a vehicle size, a step, a quadrant, too many
+    /// samples or obstacles, an object not of the kinds (docs/adr/0915 §2).
+    /// A surface analysis that is not right: nothing asked, breaks not increasing, a cell not positive, too many cells
+    /// (docs/adr/0916 §2).
+    INVALID_ANALYSIS = "invalid_analysis", Failed, false, "Yüzey analizi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: part of the comparison surface is off the base and is left out of the volumes (docs/adr/0916 §3).
+    COMPARE_UNCOVERED = "compare_uncovered", Warning, false, "Karşılaştırma yüzeyinin bir kısmı tabanın dışında; o kısım hacme girmedi.";
+    /// A surface repair that is not right: nothing asked, a place not finite or twice, a place to restore not left
+    /// out, to exclude already left out (docs/adr/0916 §6).
+    INVALID_REPAIR = "invalid_repair", Failed, false, "Yüzey onarımı geçerli değil; ileti nedenini söyler.";
+    /// A place to leave out is a breakline's vertex: a repair never takes a design line apart (docs/adr/0916 §6).
+    REPAIR_BREAKLINE = "repair_breakline", Failed, false, "Kırık hattın köşesi dışarıda bırakılmaz.";
+    /// No point record of the surface is at a place to leave out (docs/adr/0916 §6).
+    REPAIR_NOT_A_POINT = "repair_not_a_point", Failed, false, "Bu yerde yüzeyin bir nokta kaydı yok.";
+    /// A coverage asked that is not right: a limit not positive, a boundary that is not one closed straight-edged ring
+    /// (docs/adr/0920 §3).
+    INVALID_COVERAGE = "invalid_coverage", Failed, false, "Yüzey kapsamı sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the surface does not wholly cover the boundary; the rest has no data (docs/adr/0920 §3).
+    TERRAIN_NO_DATA = "terrain_no_data", Warning, false, "Yüzey sınırın tamamını örtmüyor; kalan yerde veri yok.";
+    /// A density grid asked that is not right: a cell not positive, a least of 0, a share outside (0, 1], too many
+    /// cells (docs/adr/0920 §6).
+    INVALID_POINT_DENSITY = "invalid_point_density", Failed, false, "Nokta yoğunluğu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: fewer of the density grid's cells hold a point than the share asked (docs/adr/0920 §6).
+    TERRAIN_DENSITY_SHORT = "terrain_density_short", Warning, false, "Noktası olan hücrelerin payı istenenin altında.";
+    INVALID_SWEPT = "invalid_swept", Failed, false, "Araç izi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: a vehicle's body meets an obstacle somewhere on its path (docs/adr/0915 §2).
+    SWEPT_TOUCHES = "swept_touches", Warning, false, "Aracın gövdesi yolunun bir yerinde bir engele değiyor.";
+    /// A warning: the culvert has no roughness; its capacity is not given (docs/adr/0929 §2).
+    CULVERT_NO_ROUGHNESS = "culvert_no_roughness", Warning, false, "Menfezin pürüzlülüğü yok; kapasitesi verilmedi.";
+    /// A terrain from point clouds that is not right: no cloud or class, both or neither of surface and name, a
+    /// thinning value not positive, an area not closed, too many kept points (docs/adr/0928 §2).
+    INVALID_CLOUD_TERRAIN = "invalid_cloud_terrain", Failed, false, "Buluttan arazi isteği geçerli değil; ileti nedenini söyler.";
+    /// A bridge deck (17) or an overhead structure (19) is not merged into the ground (docs/adr/0928 §2, ROAD-PC-10).
+    CLOUD_CLASS_NOT_GROUND = "cloud_class_not_ground", Failed, false, "Köprü tabliyesi ve üst yapı sınıfı zemin yüzeyine katılmaz.";
+    /// No point of the clouds is of the classes and returns asked in the area (docs/adr/0928 §2).
+    CLOUD_GROUND_EMPTY = "cloud_ground_empty", Failed, false, "Bulutlarda istenen sınıf ve dönüşten, alanın içinde nokta yok.";
+    /// A warning: a class asked is above the ground or noise (vegetation, building, noise; docs/adr/0928 §2).
+    CLOUD_CLASS_ABOVE_GROUND = "cloud_class_above_ground", Warning, false, "İstenen bir sınıf zemin değil (bitki, bina ya da gürültü); yüzey onu zemin sayar.";
     /// A warning: the profile lies farther from the drawn line than the tolerance (docs/adr/0908 §13).
     PROFILE_FIT_DEVIATION = "profile_fit_deviation", Warning, false, "Boykesit çizginin köşelerinden toleranstan uzak.";
     /// A warning: the corridor's superelevation schedule does not build; its lanes keep the templates' slopes.
