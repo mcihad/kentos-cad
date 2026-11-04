@@ -3,6 +3,7 @@
 
 pub mod pavement;
 pub mod sample;
+pub mod stations;
 pub mod template;
 
 pub use sample::{GroundPoint, SampleLine, ground, sample_line};
