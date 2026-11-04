@@ -1700,6 +1700,12 @@ const ENTRIES: &[Entry] = &[
         warnings: &["sight_short", "profile_stale"],
         targets: none,
     },
+    Entry {
+        id: "road.profiles.propose",
+        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_profile_proposal"]],
+        warnings: &["profile_stale"],
+        targets: none,
+    },
     // KentOS Yol's cross sections and templates (plan/road.md Y5, docs/adr/0903).
     Entry {
         id: "road.templates.edit",

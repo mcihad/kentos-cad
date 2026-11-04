@@ -2044,6 +2044,7 @@ impl App {
             Asking::Swept => self.swept_view(),
             Asking::SurfaceAnalysis => self.surface_analysis_view(),
             Asking::Sight => self.sight_view(),
+            Asking::Propose => self.propose_view(),
             Asking::DesignCheck => self.design_check_view(),
             Asking::PlatformWater => self.platform_water_view(),
             Asking::HaulPlan => self.haul_plan_view(),

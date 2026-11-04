@@ -7055,6 +7055,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROFILES_PROPOSE.into(),
+            version: crate::ROAD_PROFILES_PROPOSE_VERSION,
+            title: "Kırmızı kot önerisi".into(),
+            summary: "Bir boykesitin PVI'larına araziye en yakın kırmızı kotu önerir; hiçbir şey yazmaz. PVI'ların km'si ve parabolik kurpları kalır, kotları değişir: tasarım kotları PVI kotlarında doğrusaldır, arazi boykesiti noktaları arasında doğrusal; ∫(kırmızı − siyah)² yüzeyin üstündeki aralıklarda kesin (üç noktalı Gauss–Legendre) en küçüktür. hold'daki PVI'lar kotunu korur, mostGrade (oran) hiçbir eğimin aşamayacağı sınırdır, balanced kazı alanını dolgu alanına eşitler. Dışbükey ikinci dereceden program etkin kümeyle tam çözülür (KKT koşulları tutar). Sınırlar ve kilitler kullanıcınındır; KentOS değer vermez. Öneri yazılacaksa road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların önerilen ve önceki kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki boy, karesel ortalama fark, kazı ve dolgu alanları. \
+                      Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da)."
+                .into(),
+            aliases: vec!["kirmizikotoneri".into(), "bestfit".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesPropose>(),
+            output: schema::<crate::ProfileProposed>(),
+            plan: Some(schema::<crate::ProfileProposed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Göz 1,08 m, nesne 0,60 m, 20 m'de bir, 150 m gereken".into(),
+                input: json!({ "profile": "b-1", "eye": 1.08, "object": 0.6, "reach": 300.0, "step": 20.0, "required": 150.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PROFILES_DRAW.into(),
             version: crate::ROAD_PROFILES_DRAW_VERSION,
             title: "Boykesit çiz".into(),
@@ -14373,6 +14398,9 @@ mod tests {
                     crate::ROAD_PROFILES_SIGHT => {
                         serde_json::from_value::<crate::ProfilesSight>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_PROPOSE => {
+                        serde_json::from_value::<crate::ProfilesPropose>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_ALIGNMENTS_CHECK => {
                         serde_json::from_value::<crate::AlignmentsCheck>(e.input.clone()).map(|_| ())
                     }
@@ -15184,6 +15212,10 @@ mod tests {
                         }
                         crate::ROAD_PROFILES_SIGHT => {
                             serde_json::from_value::<crate::ProfilesSightRead>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_PROPOSE => {
+                            serde_json::from_value::<crate::ProfileProposed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_CHECK => {

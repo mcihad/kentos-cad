@@ -271,7 +271,7 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-PROFILE-11:** Profil edit/drag için responsive GPU preview ile authoritative solve farklı durum olsun; final save exact validator'dan geçsin.
 - [ ] **ROAD-PROFILE-12:** Analitik point/grade/curvature query, profile report ve sheet üretimi aynı komutlardan çalışsın.
 - [~] **ROAD-PROFILE-13:** Düşey kurp boyu bisektris, açık/kapalı kurp katsayısı, DGM ve GGM ölçütlerinden önerilsin; ölçütün kaynağı standart profilidir (ROAD-DEC-01), profil yoksa öneri yapılmaz, yalnız elle boy girilir. (Y21, ADR 0922: tepe ve çukur K, düşey kurp boyu, eğimler ve kurplar arası eğim kullanıcının sınırlarıyla denetlenir; standart profilinden öneri ROAD-DEC-01'i bekler.)
-- [ ] **ROAD-PROFILE-14:** Kırmızı kot önerisi (en az kazı/dolgu ya da dengeli kütle veren düşey güzergâh) ayrı taslak alternatif olsun; amaç işlevi, kısıtlar (en büyük/en küçük eğim, kontrol kotları, köprü/menfez açıklığı) ve çözücünün durumu raporlansın (ROAD-GRADE-08/09 ile aynı kural).
+- [~] **ROAD-PROFILE-14:** Kırmızı kot önerisi (en az kazı/dolgu ya da dengeli kütle veren düşey güzergâh) ayrı taslak alternatif olsun; amaç işlevi, kısıtlar (en büyük/en küçük eğim, kontrol kotları, köprü/menfez açıklığı) ve çözücünün durumu raporlansın (ROAD-GRADE-08/09 ile aynı kural). (Y25, ADR 0926: PVI kotları araziye en küçük karelerle, kilitler, en büyük eğim ve dengeyle; öneri yeni boykesit olarak yazılır; zarf, K ve km'lerin değişmesi açık.)
 
 ## 11. ROAD-DEVER — Dever, enine eğim, genişletme ve geçişler — P1
 
@@ -615,6 +615,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y22 | Platform suyu | ROAD-DEVER-09 | Koridor platformunun yatık yerleri, sıfır enine eğim ve kenarlardaki alçak noktalar |
 | Y23 | Taşıma planı | ROAD-HAUL-02, 07 | Brüknerin hacmi en küçük taşıma momentiyle, ödünç ve döküm alanları kapasiteleriyle |
 | Y24 | Ekonomik taşıma | ROAD-HAUL-09, 10 | Serbest taşıma ve fiyatlarla en düşük maliyetli plan, ekonomik taşıma sınırı |
+| Y25 | Kırmızı kot önerisi | ROAD-PROFILE-14 | Araziye en yakın düşey güzergâh, kilitler, en büyük eğim ve dengeyle; yeni boykesit olarak yazma |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 
@@ -679,6 +680,8 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 **Y23'ün aşamaları ve durumu** ([ADR 0924](../docs/adr/0924-road-haul-plan.md); araştırma 4 Kasım 2026: Civil 3D'nin dengeleme seçenekleri, Trimble'ın alan kapasiteli kütle taşıması, Softree Optimal'in eniyilemesi; OpenRoads ve Netcad'in çevrimiçi eniyileme belgesi yok): Y23.1: çekirdekte taşıma planı (ardışık en kısa yollarla en küçük maliyetli akış). Y23.2: `road.hauls.plan` (26 ortak durum HiGHS doğrusal programıyla, Python, MCP). Y23.3: Koridor › Brükner › Taşıma planı penceresi (resimler `.run/gui-evidence/yol-y23-tasima-*`). Y23 bitti; serbest taşımalı ve fiyatlı maliyet amacı, taşıma yolu ağı, malzeme türleri ve takvim açık.
 
 **Y24'ün aşamaları ve durumu** ([ADR 0925](../docs/adr/0925-road-economic-haul-plan.md); araştırma 4 Kasım 2026: Civil 3D'nin serbest ve fazla taşıması, ekonomik taşıma sınırı (ders kitaplarının LEH'i), Trimble ve Softree'nin maliyet eniyilemesi; Netcad'in çevrimiçi belgesi yok): Y24.1: çekirdekte fiyatlı plan (ulaştırma ağı, maliyet sonra moment). Y24.2: `road.hauls.plan`'ın `objective`'i (14 yeni ortak durum iki aşamalı HiGHS ve kesirlerle). Y24.3: Taşıma planı penceresinde Amaç ve maliyet satırları (resimler `.run/gui-evidence/yol-y23-tasima-ekonomik-*`, `-serbest-*`). Y24 bitti; yan döküm, büyük kübajda başarım, taşıma yolu ve takvim açık.
+
+**Y25'in aşamaları ve durumu** ([ADR 0926](../docs/adr/0926-road-grade-line-proposal.md); araştırma 4 Kasım 2026: OpenRoads'un Best Fit Profile'ı (kilitler, zarf, kurp boyları), InfraWorks ve Softree'nin boykesit eniyilemesi; Civil 3D'de yerleşik araç ve Netcad'in çevrimiçi belgesi yok): Y25.1: çekirdekte öneri (tam integralli en küçük kareler, etkin kümeli ikinci dereceden program). Y25.2: `road.profiles.propose` (24 ortak durum kesirli KKT sertifikasıyla, Python, MCP). Y25.3: Güzergâh › Boykesit › Kırmızı kot önerisi penceresi ve yeni boykesit olarak yazma (resimler `.run/gui-evidence/yol-y25-oneri-*`). Y25 bitti; zarf, K, km'lerin değişmesi ve kübaja dayalı amaç açık.
 
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 

@@ -318,6 +318,8 @@ pub enum Dialog {
     SurfaceAnalysis,
     /// Görüş mesafesi (sight_window.rs, plan/road.md Y20); the window is `App::sight_window`.
     Sight,
+    /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25); the window is `App::propose_window`.
+    Propose,
     /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21); the window is `App::design_check_window`.
     DesignCheck,
     /// Platform suyu (platform_water_window.rs, plan/road.md Y22); the window is `App::platform_water_window`.
@@ -721,6 +723,8 @@ pub enum Message {
     SurfaceAnalysis(crate::surface_analysis_window::Event),
     /// An event of Görüş mesafesi (sight_window.rs, plan/road.md Y20).
     Sight(crate::sight_window::Event),
+    /// An event of Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
+    Propose(crate::propose_window::Event),
     /// An event of Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
     DesignCheck(crate::design_check_window::Event),
     /// An event of Platform suyu (platform_water_window.rs, plan/road.md Y22).
@@ -1341,6 +1345,8 @@ pub struct App {
     pub(crate) surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
     /// Görüş mesafesi (sight_window.rs, plan/road.md Y20).
     pub(crate) sight_window: Option<Box<crate::sight_window::Window>>,
+    /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
+    pub(crate) propose_window: Option<Box<crate::propose_window::Window>>,
     /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
     pub(crate) design_check_window: Option<Box<crate::design_check_window::Window>>,
     /// Platform suyu (platform_water_window.rs, plan/road.md Y22).
@@ -1798,6 +1804,7 @@ impl App {
             swept_window: None,
             surface_analysis_window: None,
             sight_window: None,
+            propose_window: None,
             design_check_window: None,
             platform_water_window: None,
             haul_plan_window: None,
@@ -2545,6 +2552,7 @@ impl App {
             Message::Swept(event) => return self.swept_event(event),
             Message::SurfaceAnalysis(event) => return self.surface_analysis_event(event),
             Message::Sight(event) => return self.sight_event(event),
+            Message::Propose(event) => return self.propose_event(event),
             Message::DesignCheck(event) => return self.design_check_event(event),
             Message::PlatformWater(event) => return self.platform_water_event(event),
             Message::HaulPlan(event) => return self.haul_plan_event(event),
@@ -3611,6 +3619,7 @@ impl App {
             "swept.editor" => self.open_swept(),
             "terrain.analysis" => self.open_surface_analysis(),
             "profile.sight" => self.open_sight(),
+            "profile.propose" => self.open_propose(),
             "alignment.check" => self.open_design_check(),
             "corridor.water" => self.open_platform_water(),
             "payItems.editor" => self.open_pay(),

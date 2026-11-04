@@ -2409,6 +2409,16 @@ GpkgTilesModeName = Literal["new", "add"]
 """The names of :class:`GpkgTilesMode`, for a plain string."""
 
 
+class GradeLimit(_StrEnum):
+    """Whether a proposed grade is at the most rise or fall."""
+    RISE = "rise"
+    FALL = "fall"
+
+
+GradeLimitName = Literal["rise", "fall"]
+"""The names of :class:`GradeLimit`, for a plain string."""
+
+
 class GradientShape(_StrEnum):
     """How a gradient runs over its hatch (docs/adr/0186 §3).
 
@@ -58457,6 +58467,52 @@ class ProfilePoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileProposed(_Model):
+    """Output of `road.profiles.propose` v1: the profile's id, the PVIs and grades proposed, ∫(red − black)² (m²·m) over
+    the length on the surface (m) and its root mean square (m), the areas cut and filled (m²) along the profile.
+    Attributes:
+        squares: Unit: volume.
+        covered: Unit: m.
+        rms: Unit: m.
+        cut: Unit: area.
+        fill: Unit: area.
+    """
+    profile: str
+    pvis: list[ProposedPvi]
+    grades: list[ProposedGrade]
+    squares: float
+    covered: float
+    rms: float
+    cut: float
+    fill: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["pvis"] = [e0.to_json() for e0 in self.pvis]
+        out["grades"] = [e0.to_json() for e0 in self.grades]
+        out["squares"] = float(self.squares)
+        out["covered"] = float(self.covered)
+        out["rms"] = float(self.rms)
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileProposed:
+        return cls(
+            profile=data["profile"],
+            pvis=[ProposedPvi.from_json(e0) for e0 in data["pvis"]],
+            grades=[ProposedGrade.from_json(e0) for e0 in data["grades"]],
+            squares=float(data["squares"]),
+            covered=float(data["covered"]),
+            rms=float(data["rms"]),
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilePvi(_Model):
     """A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own
     horizontal length from the start, not its km), its elevation, and the curve on it: a symmetric parabola (`length`),
@@ -59274,6 +59330,47 @@ class ProfilesMigrated(_Model):
             objects=data["objects"],
             revision=data["revision"],
             mapping=data.get("mapping", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesPropose(_Model):
+    """Input of `road.profiles.propose` v1 (docs/adr/0926; ROAD-PROFILE-14): new elevations for a profile's (its id or
+    name) PVIs, their stations and parabolic curves kept, that follow its surface's terrain profile as closely as the
+    rules allow: ∫(red − black)² least over the stretches on the surface, exactly. The held PVIs keep their elevations;
+    no grade rises or falls more than `mostGrade` (a ratio); `balanced`: the area cut equal to the area filled. Reads
+    only; the proposal is written, if at all, as a new profile with `road.profiles.create`.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_profile_proposal` (no surface, an
+    unknown held PVI, a most grade not above 0, a circular curve, no stretch on the surface, an elevation the ground
+    does not fix, rules that contradict; a surface that is not or does not build). Warnings: `profile_stale`.
+    Attributes:
+        hold: The PVIs (ids) that keep their elevations.
+        most_grade: Unit: 1.
+    """
+    profile: str
+    balanced: bool | Unset = UNSET
+    hold: list[str] | Unset = UNSET
+    most_grade: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        if self.balanced is not UNSET:
+            out["balanced"] = self.balanced
+        if self.hold is not UNSET:
+            out["hold"] = list(self.hold)
+        if self.most_grade is not UNSET:
+            out["mostGrade"] = None if self.most_grade is None else float(self.most_grade)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesPropose:
+        return cls(
+            profile=data["profile"],
+            balanced=data.get("balanced", UNSET),
+            hold=list(data["hold"]) if "hold" in data else UNSET,
+            most_grade=UNSET if "mostGrade" not in data else None if data["mostGrade"] is None else float(data["mostGrade"]),
         )
 
 
@@ -61715,6 +61812,67 @@ class ProjectVariable(_Model):
             kind=_enum_in(VariableKind, data["kind"]) if "kind" in data else VariableKind.TEXT,
             label=data.get("label", UNSET),
             value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProposedGrade(_Model):
+    """A proposed grade between two PVIs.
+    Attributes:
+        grade: Unit: 1.
+    """
+    between: list[str]
+    grade: float
+    limit: GradeLimit | GradeLimitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["between"] = list(self.between)
+        out["grade"] = float(self.grade)
+        if self.limit is not UNSET:
+            out["limit"] = None if self.limit is None else _enum_out(self.limit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProposedGrade:
+        return cls(
+            between=list(data["between"]),
+            grade=float(data["grade"]),
+            limit=UNSET if "limit" not in data else None if data["limit"] is None else _enum_in(GradeLimit, data["limit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProposedPvi(_Model):
+    """A proposed PVI: its id, station, the elevation proposed and the one it had, whether it was held.
+    Attributes:
+        station: Unit: m.
+        elevation: Unit: elevation.
+        was: Unit: elevation.
+    """
+    id: str
+    station: float
+    elevation: float
+    was: float
+    held: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["station"] = float(self.station)
+        out["elevation"] = float(self.elevation)
+        out["was"] = float(self.was)
+        out["held"] = self.held
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProposedPvi:
+        return cls(
+            id=data["id"],
+            station=float(data["station"]),
+            elevation=float(data["elevation"]),
+            was=float(data["was"]),
+            held=data["held"],
         )
 
 
@@ -106201,6 +106359,8 @@ __all__ = [
     "GpkgTileZoom",
     "GpkgTilesMode",
     "GpkgTilesModeName",
+    "GradeLimit",
+    "GradeLimitName",
     "GradientShape",
     "GradientShapeName",
     "GrantRole",
@@ -107325,6 +107485,7 @@ __all__ = [
     "ProfileMapping",
     "ProfileMigration",
     "ProfilePoint",
+    "ProfileProposed",
     "ProfilePvi",
     "ProfileRelation",
     "ProfileRemoved",
@@ -107348,6 +107509,7 @@ __all__ = [
     "ProfilesListed",
     "ProfilesMigrate",
     "ProfilesMigrated",
+    "ProfilesPropose",
     "ProfilesQueried",
     "ProfilesQuery",
     "ProfilesRemove",
@@ -107419,6 +107581,8 @@ __all__ = [
     "PropertiesOperation",
     "PropertiesOperationName",
     "PropertiesSelectRegion",
+    "ProposedGrade",
+    "ProposedPvi",
     "PublishFormsOp",
     "PublishSheets",
     "PushOpeningsOperation",

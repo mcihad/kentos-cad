@@ -428,6 +428,7 @@
     "swept.editor",
     "terrain.analysis",
     "profile.sight",
+    "profile.propose",
     "alignment.check",
     "corridor.water",
     "haul.plan",

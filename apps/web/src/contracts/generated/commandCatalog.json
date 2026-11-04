@@ -37349,6 +37349,198 @@
       ]
     },
     {
+      "id": "road.profiles.propose",
+      "version": 1,
+      "title": "Kırmızı kot önerisi",
+      "summary": "Bir boykesitin PVI'larına araziye en yakın kırmızı kotu önerir; hiçbir şey yazmaz. PVI'ların km'si ve parabolik kurpları kalır, kotları değişir: tasarım kotları PVI kotlarında doğrusaldır, arazi boykesiti noktaları arasında doğrusal; ∫(kırmızı − siyah)² yüzeyin üstündeki aralıklarda kesin (üç noktalı Gauss–Legendre) en küçüktür. hold'daki PVI'lar kotunu korur, mostGrade (oran) hiçbir eğimin aşamayacağı sınırdır, balanced kazı alanını dolgu alanına eşitler. Dışbükey ikinci dereceden program etkin kümeyle tam çözülür (KKT koşulları tutar). Sınırlar ve kilitler kullanıcınındır; KentOS değer vermez. Öneri yazılacaksa road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların önerilen ve önceki kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki boy, karesel ortalama fark, kazı ve dolgu alanları. Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da).",
+      "aliases": [
+        "kirmizikotoneri",
+        "bestfit"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.profiles.propose` v1 (docs/adr/0926; ROAD-PROFILE-14): new elevations for a profile's (its id or\nname) PVIs, their stations and parabolic curves kept, that follow its surface's terrain profile as closely as the\nrules allow: ∫(red − black)² least over the stretches on the surface, exactly. The held PVIs keep their elevations;\nno grade rises or falls more than `mostGrade` (a ratio); `balanced`: the area cut equal to the area filled. Reads\nonly; the proposal is written, if at all, as a new profile with `road.profiles.create`.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_profile_proposal` (no surface, an\nunknown held PVI, a most grade not above 0, a circular curve, no stretch on the surface, an elevation the ground\ndoes not fix, rules that contradict; a surface that is not or does not build). Warnings: `profile_stale`.",
+        "properties": {
+          "balanced": {
+            "type": "boolean"
+          },
+          "hold": {
+            "description": "The PVIs (ids) that keep their elevations.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mostGrade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "profile": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile"
+        ],
+        "title": "ProfilesPropose",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.propose` v1: the profile's id, the PVIs and grades proposed, ∫(red − black)² (m²·m) over\nthe length on the surface (m) and its root mean square (m), the areas cut and filled (m²) along the profile.",
+        "properties": {
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "grades": {
+            "items": {
+              "$ref": "#/$defs/ProposedGrade"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "pvis": {
+            "items": {
+              "$ref": "#/$defs/ProposedPvi"
+            },
+            "type": "array"
+          },
+          "rms": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "squares": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          }
+        },
+        "required": [
+          "profile",
+          "pvis",
+          "grades",
+          "squares",
+          "covered",
+          "rms",
+          "cut",
+          "fill"
+        ],
+        "title": "ProfileProposed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.profiles.propose` v1: the profile's id, the PVIs and grades proposed, ∫(red − black)² (m²·m) over\nthe length on the surface (m) and its root mean square (m), the areas cut and filled (m²) along the profile.",
+        "properties": {
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "grades": {
+            "items": {
+              "$ref": "#/$defs/ProposedGrade"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "pvis": {
+            "items": {
+              "$ref": "#/$defs/ProposedPvi"
+            },
+            "type": "array"
+          },
+          "rms": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "squares": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          }
+        },
+        "required": [
+          "profile",
+          "pvis",
+          "grades",
+          "squares",
+          "covered",
+          "rms",
+          "cut",
+          "fill"
+        ],
+        "title": "ProfileProposed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_profile",
+          "invalid_profile_proposal"
+        ],
+        "warnings": [
+          "profile_stale"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Göz 1,08 m, nesne 0,60 m, 20 m'de bir, 150 m gereken",
+          "input": {
+            "eye": 1.08,
+            "object": 0.6,
+            "profile": "b-1",
+            "reach": 300.0,
+            "required": 150.0,
+            "step": 20.0
+          }
+        }
+      ]
+    },
+    {
       "id": "road.profiles.draw",
       "version": 1,
       "title": "Boykesit çiz",
@@ -84262,6 +84454,12 @@
       "meaning": "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "invalid_profile_proposal",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kırmızı kot önerisi geçerli değil ya da kurulamıyor; ileti nedenini söyler."
+    },
+    {
       "code": "sight_short",
       "kind": "warning",
       "retryable": false,
@@ -115656,6 +115854,14 @@
         }
       ]
     },
+    "GradeLimit": {
+      "description": "Whether a proposed grade is at the most rise or fall.",
+      "enum": [
+        "rise",
+        "fall"
+      ],
+      "type": "string"
+    },
     "GradientShape": {
       "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
       "oneOf": [
@@ -146889,6 +147095,73 @@
           "type": "string"
         }
       ]
+    },
+    "ProposedGrade": {
+      "description": "A proposed grade between two PVIs.",
+      "properties": {
+        "between": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "grade": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GradeLimit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "between",
+        "grade"
+      ],
+      "type": "object"
+    },
+    "ProposedPvi": {
+      "description": "A proposed PVI: its id, station, the elevation proposed and the one it had, whether it was held.",
+      "properties": {
+        "elevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "held": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "was": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "id",
+        "station",
+        "elevation",
+        "was",
+        "held"
+      ],
+      "type": "object"
     },
     "QuantityTotals": {
       "description": "The rows' sums.",

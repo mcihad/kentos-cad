@@ -604,6 +604,10 @@
        {
         "command": "profile.sight",
         "size": "large"
+       },
+       {
+        "command": "profile.propose",
+        "size": "large"
        }
       ]
      },

@@ -635,6 +635,8 @@ pub const PORTED: &[&str] = &[
     "terrain.analysis",
     // plan/road.md Y20: Görüş mesafesi (sight_window.rs).
     "profile.sight",
+    // plan/road.md Y25: Kırmızı kot önerisi (propose_window.rs).
+    "profile.propose",
     // plan/road.md Y21: Tasarım denetimi (design_check_window.rs).
     "alignment.check",
     // plan/road.md Y22: Platform suyu (platform_water_window.rs).

@@ -575,3 +575,101 @@ pub struct ProfilesSightRead {
     pub least_backward: Option<SightLeast>,
     pub short: Vec<SightShort>,
 }
+
+pub const ROAD_PROFILES_PROPOSE: &str = "road.profiles.propose";
+pub const ROAD_PROFILES_PROPOSE_VERSION: u32 = 1;
+
+/// Input of `road.profiles.propose` v1 (docs/adr/0926; ROAD-PROFILE-14): new elevations for a profile's (its id or
+/// name) PVIs, their stations and parabolic curves kept, that follow its surface's terrain profile as closely as the
+/// rules allow: ∫(red − black)² least over the stretches on the surface, exactly. The held PVIs keep their elevations;
+/// no grade rises or falls more than `mostGrade` (a ratio); `balanced`: the area cut equal to the area filled. Reads
+/// only; the proposal is written, if at all, as a new profile with `road.profiles.create`.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_profile_proposal` (no surface, an
+/// unknown held PVI, a most grade not above 0, a circular curve, no stretch on the surface, an elevation the ground
+/// does not fix, rules that contradict; a surface that is not or does not build). Warnings: `profile_stale`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfilesPropose {
+    pub profile: String,
+    /// The PVIs (ids) that keep their elevations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub hold: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub most_grade: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub balanced: bool,
+}
+
+/// A proposed PVI: its id, station, the elevation proposed and the one it had, whether it was held.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProposedPvi {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub elevation: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub was: f64,
+    pub held: bool,
+}
+
+/// Whether a proposed grade is at the most rise or fall.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum GradeLimit {
+    Rise,
+    Fall,
+}
+
+/// A proposed grade between two PVIs.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProposedGrade {
+    pub between: [String; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub grade: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub limit: Option<GradeLimit>,
+}
+
+/// Output of `road.profiles.propose` v1: the profile's id, the PVIs and grades proposed, ∫(red − black)² (m²·m) over
+/// the length on the surface (m) and its root mean square (m), the areas cut and filled (m²) along the profile.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileProposed {
+    pub profile: String,
+    pub pvis: Vec<ProposedPvi>,
+    pub grades: Vec<ProposedGrade>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub squares: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub covered: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rms: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill: f64,
+}

@@ -274,6 +274,7 @@ mod design_check_window;
 mod platform_water_window;
 mod haul_plan_window;
 mod sight_window;
+mod propose_window;
 mod swept_window;
 mod surface_analysis_window;
 mod pay_window;
@@ -306,6 +307,8 @@ mod platform_water_window_tests;
 mod haul_plan_window_tests;
 #[cfg(test)]
 mod sight_window_tests;
+#[cfg(test)]
+mod propose_window_tests;
 #[cfg(test)]
 mod swept_window_tests;
 #[cfg(test)]

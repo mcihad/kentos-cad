@@ -653,6 +653,9 @@ codes! {
     /// A warning: an alignment or a profile breaks the design rules given (docs/adr/0922 §3).
     DESIGN_RULE_BROKEN = "design_rule_broken", Warning, false, "Aks ya da boykesit verilen tasarım kurallarına uymuyor.";
     INVALID_SIGHT = "invalid_sight", Failed, false, "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A grade line proposal asked that is not right or cannot be made: a circular curve, no surface, an unknown PVI,
+    /// a most grade not above 0, the ground does not fix an elevation, rules that contradict (docs/adr/0926 §2).
+    INVALID_PROFILE_PROPOSAL = "invalid_profile_proposal", Failed, false, "Kırmızı kot önerisi geçerli değil ya da kurulamıyor; ileti nedenini söyler.";
     /// A warning: somewhere the profile is seen shorter than the required sight distance (docs/adr/0921 §2).
     SIGHT_SHORT = "sight_short", Warning, false, "Boykesitin bir yerinde görüş mesafesi istenenden kısa.";
     /// A profile's definition, or PVIs that make no vertical alignment (docs/adr/0902 §3).

@@ -277,6 +277,7 @@ pub mod road_profiles_draw;
 pub mod road_profiles_edit;
 pub mod road_profiles_query;
 pub mod road_profiles_sight;
+pub mod road_profiles_propose;
 pub mod road_alignments_check;
 pub mod road_profiles_check;
 pub mod road_corridors;
@@ -1236,6 +1237,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_PROFILES_SIGHT,
         kentos_commands::ROAD_PROFILES_SIGHT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_PROPOSE,
+        kentos_commands::ROAD_PROFILES_PROPOSE_VERSION,
     ),
     (
         kentos_commands::ROAD_ALIGNMENTS_CHECK,

@@ -2815,6 +2815,14 @@
       ],
       "note": "Önizle road.profiles.sight ile okur; hiçbir şey yazmaz (plan/road.md Y20, ADR 0921 §3)."
     },
+    "profile.propose": {
+      "level": "semantic",
+      "via": [
+        "road.profiles.propose",
+        "road.profiles.create"
+      ],
+      "note": "Önizle road.profiles.propose ile okur; Yeni boykesit olarak yaz road.profiles.create ile yazar (plan/road.md Y25, ADR 0926 §3)."
+    },
     "terrain.analysis": {
       "level": "semantic",
       "via": [

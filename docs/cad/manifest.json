@@ -7783,6 +7783,23 @@
    "tests": 0
   },
   {
+   "id": "profile.propose",
+   "kind": "command",
+   "title": "Kırmızı kot önerisi…",
+   "level": "semantic",
+   "via": [
+    "road.profiles.propose",
+    "road.profiles.create"
+   ],
+   "operation": null,
+   "python": "Connection: road.profiles.propose, Connection: road.profiles.create",
+   "mcp": "road.profiles.propose, road.profiles.create",
+   "note": "Önizle road.profiles.propose ile okur; Yeni boykesit olarak yaz road.profiles.create ile yazar (plan/road.md Y25, ADR 0926 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "profile.sight",
    "kind": "command",
    "title": "Görüş mesafesi…",
