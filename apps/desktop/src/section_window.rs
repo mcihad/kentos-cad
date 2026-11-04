@@ -1204,14 +1204,11 @@ impl App {
             words::secondary(NEW_TEMPLATE, Some(msg(Event::NewTemplate))),
         ]
         .spacing(8);
+        // The editors are not scrolled on their own: the window's body scrolls as one and, resized or full screen,
+        // grows while the buttons stay on the bottom edge (a footer, DESIGN.md §7.19).
         let right: Element<'_, Message> = match w.chosen {
-            Some(Chosen::Set(i)) if i < w.sets.len() => {
-                scrollable(self.section_set_editor(w, &w.sets[i], stale_of(&w.sets[i]))).height(typography::scaled(360.0)).into()
-            }
-            Some(Chosen::Template(i)) if i < w.templates.len() => {
-                // Taller than a set's: the template and its pavement read without scrolling on a 900 px screen.
-                scrollable(section_template_editor(w, &w.templates[i])).height(typography::scaled(540.0)).into()
-            }
+            Some(Chosen::Set(i)) if i < w.sets.len() => self.section_set_editor(w, &w.sets[i], stale_of(&w.sets[i])),
+            Some(Chosen::Template(i)) if i < w.templates.len() => section_template_editor(w, &w.templates[i]),
             _ => container(label::caption("Bir kesit takımı ya da tip kesit seçin ya da yeni birini oluşturun.")).padding(12).into(),
         };
         let saved_set = match w.chosen {
@@ -1221,22 +1218,18 @@ impl App {
         let stale = matches!(w.chosen, Some(Chosen::Set(i)) if w.sets.get(i).is_some_and(stale_of));
         // The drawing row and the rebind are a set's: a template has neither (DESIGN.md §7.19, fewer dead controls).
         let on_set = matches!(w.chosen, Some(Chosen::Set(_)));
-        let draw_row: Element<'_, Message> = if on_set { self.section_draw_row(w, saved_set) } else { space::vertical().height(0).into() };
-        let body = column![
-            row![container(left).width(220), container(right).width(Fill)].spacing(16),
-            draw_row,
-            row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                words::secondary(REBIND, (saved_set && stale).then(|| msg(Event::Rebind))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(1080.0).modal(msg(Event::Cancel))
+        let main = row![container(left).width(220), container(right).width(Fill)].spacing(16);
+        let mut frame = Frame::new(TITLE).scroll(main);
+        if on_set {
+            frame = frame.push(self.section_draw_row(w, saved_set));
+        }
+        frame
+            .aside(words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))))
+            .aside(words::secondary(REBIND, (saved_set && stale).then(|| msg(Event::Rebind))))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, Some(msg(Event::Save))))
+            .width(1080.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn section_draw_row<'a>(&'a self, w: &'a Window, saved: bool) -> Element<'a, Message> {

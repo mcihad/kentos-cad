@@ -593,6 +593,8 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
   taşınır.
 - **Uyarı kendi denetiminin yanında:** bir onay kutusunun nedeni (Kesişen kolları kırp → kaç çift kesişiyor) onun
   satırında yazar, pencerenin altında değil (Enkesit, Y29.3).
+- **Düğmeler alt çubukta:** pencerenin düğmeleri `Dialog::action`/`aside` ile verilir, gövdenin içine konmaz. Kutu
+  büyütülünce ya da tam ekran yapılınca gövde (`scroll`) büyür, düğmeler alt kenarda kalır (ADR 0746 eki).
 - **Alt pencere:** bir pencerenin işine yardım eden pencere (Dever → Genişletme önerisi) onun yerine açılır, kapatma
   düğmesi “Geri”dir. Birincil eylem sonucu üst pencerenin formuna yazar; kaydetmek üst pencerenin işidir.
 - **Açıklama çizimin altındadır:** renklerin ne demek olduğunu çizimin içine yazmak, çizimi sola ve üste sıkıştırıyordu.

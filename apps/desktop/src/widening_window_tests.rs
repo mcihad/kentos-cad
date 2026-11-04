@@ -131,3 +131,39 @@ fn screens() {
         shot(&mut app, "dever");
     }
 }
+
+/// Full screen: the road windows' buttons sit at the bottom of the box (`.run/gui-evidence/yol-y26/tam-ekran-*`).
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_full_screen() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    use kentos_ui::widget::sizable::sizes;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = app();
+    let mut snapshot = Snapshot::new(Size::new(1920.0, 1080.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let mut shot = |app: &mut App, file: &str| {
+        snapshot.settle(app, App::view, &mut update);
+        let file = out.join(format!("tam-ekran-{file}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    };
+    for key in ["Dever", "Genişletme önerisi", "Enkesit", "Kübaj"] {
+        sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+    }
+    let _ = app.update(Message::Run("superelevation.editor"));
+    let _ = app.update(Message::Superelevations(D::Choose(1)));
+    shot(&mut app, "dever");
+    let _ = app.update(Message::Superelevations(D::Choose(0)));
+    let _ = app.update(Message::Superelevations(D::OpenWiden));
+    shot(&mut app, "genisletme");
+    let _ = app.update(Message::Superelevations(D::Widen(W::Back)));
+    let _ = app.update(Message::Superelevations(D::Cancel));
+    let _ = app.update(Message::Run("section.editor"));
+    shot(&mut app, "enkesit");
+}

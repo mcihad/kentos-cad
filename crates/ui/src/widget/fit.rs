@@ -31,6 +31,11 @@ pub struct Fit<'a, Message> {
     elastic: Vec<bool>,
     spacing: f32,
     width: Length,
+    /// Fill the height it is given, not only the least of it (a resized or full screen dialog, docs/adr/0746):
+    /// the box around passes loose limits, so the least is 0.
+    fill: bool,
+    /// The last child is a footer: with height over and no elastic child the space goes above it.
+    footer: bool,
 }
 
 impl<'a, Message: 'a> Default for Fit<'a, Message> {
@@ -46,6 +51,8 @@ impl<'a, Message: 'a> Fit<'a, Message> {
             elastic: Vec::new(),
             spacing: 0.0,
             width: Length::Fill,
+            fill: false,
+            footer: false,
         }
     }
 
@@ -60,6 +67,19 @@ impl<'a, Message: 'a> Fit<'a, Message> {
     pub fn push_elastic(mut self, child: impl Into<Element<'a, Message>>) -> Self {
         self.children.push(child.into());
         self.elastic.push(true);
+        self
+    }
+
+    /// Takes all the height it is given: the last elastic child grows to it, or with [`Fit::footer`] the last child
+    /// goes to the bottom. A resized or full screen dialog's buttons then sit on its bottom edge.
+    pub fn fill(mut self, fill: bool) -> Self {
+        self.fill = fill;
+        self
+    }
+
+    /// The last child is the footer (a dialog's buttons).
+    pub fn footer(mut self, footer: bool) -> Self {
+        self.footer = footer;
         self
     }
 
@@ -116,7 +136,8 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Fit<'a, Message> {
         // A box given a height of its own (a resized dialog, docs/adr/0746): the last elastic child takes what is
         // over, else the space goes above the last child (the buttons stay at the bottom).
         let mut gap_before_last = 0.0;
-        let over = limits.min().height - used;
+        let target = if self.fill && max.height.is_finite() { max.height } else { limits.min().height };
+        let over = target - used;
         if over > 0.5 && count > 0 {
             match (0..count).rev().find(|&i| elastic[i]) {
                 Some(i) => {
@@ -129,6 +150,8 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Fit<'a, Message> {
                         &room,
                     );
                 }
+                // Without a footer the space stays below everything (the body is not pushed down).
+                None if self.fill && !self.footer => {}
                 None => gap_before_last = over,
             }
         }
@@ -349,6 +372,24 @@ mod tests {
             .as_widget_mut()
             .layout(&mut tree, snapshot.renderer(), &limits);
         assert_eq!(node.children()[1].bounds().y, 460.0);
+    }
+
+    /// The box around a dialog centres it and so passes loose limits (the least height 0): a resized or full screen
+    /// dialog's Fit fills what it may (`fill`), and its buttons (`footer`) sit on the bottom edge.
+    #[test]
+    fn a_kept_box_fills_loose_limits_and_its_footer_goes_down() {
+        let (height, children) = laid_out(dialog(100.0).fill(true).footer(true), 500.0);
+        assert_eq!(height, 500.0);
+        assert_eq!(children, [(0.0, 30.0), (40.0, 410.0), (460.0, 40.0)]);
+        // Before: with loose limits the box stayed as short as its content, the buttons under the body.
+        let (height, children) = laid_out(dialog(100.0), 500.0);
+        assert_eq!((height, children[2]), (190.0, (150.0, 40.0)));
+        // No elastic child and a footer: the space goes above the buttons.
+        let fit = Fit::new().spacing(10.0).push(block(30.0)).push(block(40.0)).fill(true).footer(true);
+        assert_eq!(laid_out(fit, 500.0).1[1], (460.0, 40.0));
+        // No footer (the buttons inside the body): nothing is pushed down.
+        let fit = Fit::new().spacing(10.0).push(block(30.0)).push(block(40.0)).fill(true);
+        assert_eq!(laid_out(fit, 500.0).1[1], (40.0, 40.0));
     }
 
     #[test]

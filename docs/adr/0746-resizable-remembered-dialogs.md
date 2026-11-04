@@ -86,3 +86,28 @@ Formların pencereleri bunu kullanır:
 - Öbür pencerelerin iç sabit yükseklikleri (listeler, tablolar) kutuyla büyüsün: dokunuldukça.
 - Kutunun yerinin (ortadan kaydırma) saklanması: kutular modal ve ortadadır.
 - Web: aynı davranış TODOS.md §0.2'de.
+
+## Ek (4 Kasım 2026): büyütülmüş kutuda düğmeler alt kenarda
+
+Sahibin sözü: "pencereler genişletildiğinde veya tam ekran yapıldığında alttaki butonlar aşağı doğru insin, yani
+footer olsun."
+
+- **Kök neden.** Kutuyu ortalayan modal kap çocuğuna gevşek sınır verir, yani en küçük yükseklik 0'dır. `Fit`'in
+  "boyu verilmiş kutu" kuralı en küçük yüksekliğe bakıyordu. Bu yüzden büyütülmüş kutuda hiç işlemedi: düğmeler gövdenin
+  hemen altında kaldı, altta boş bir alan açıldı.
+  - Dever'de düğmelerin dibe yakın görünmesi tesadüftü: formu uzun olduğu için gövde zaten pencereyi dolduruyordu.
+- **Karar.** Kutunun tutulan bir boyu varsa (`kept`: elle büyütülmüş ya da tam ekran), `Dialog` içindeki `Fit`'e
+  `fill(true)` verilir, `Fit` de verilen en büyük yüksekliği hedefler.
+  - Artan yer son esnek parçaya gider: `scroll` ile verilen gövde büyür.
+  - Esnek parça yoksa ve kutunun alt çubuğu (`action`/`aside`) varsa, artan yer düğme satırının üstüne gider.
+  - Alt çubuğu olmayan kutuda hiçbir şey aşağı itilmez: düğmeleri gövdesinin içinde olan eski pencerenin gövdesi dibe
+    kaymaz.
+- **Pencerelere düşen.** Düğmeler `Dialog::action`/`aside` ile verilir, büyüyebilecek gövde `scroll` ile verilir.
+  Gövdenin içine konan düğme satırı alt çubuk olmaz. Ölçüm (1920×1080, tam ekran): Enkesit'in düğmeleri ilk görüntüde
+  pencerenin ortasında (y ≈ 560) asılıydı; alt çubuğa taşınınca alt kenardan 30 px yukarıdalar (iç pay 18 px).
+  Genişletme önerisi ve Dever de aynıdır.
+- 4 Kasım'da düğmeleri gövdede olan 105 pencere sayıldı. Yol pencereleri ortak düzene (RoadDialog) taşındıkça alt
+  çubuğa geçer. Öbürleri dokunuldukça taşınır.
+
+Bekçi: `widget::fit::tests::a_kept_box_fills_loose_limits_and_its_footer_goes_down`.
+

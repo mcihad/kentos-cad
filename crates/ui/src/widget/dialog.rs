@@ -221,7 +221,11 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
             };
         }
 
-        if !dialog.actions.is_empty() || !dialog.aside.is_empty() {
+        let has_footer = !dialog.actions.is_empty() || !dialog.aside.is_empty();
+        // A kept size (resized or full screen): the box takes all its height, the body's scrolling part grows and
+        // the buttons sit on the bottom edge (a footer), not under the content.
+        content = content.fill(kept).footer(has_footer);
+        if has_footer {
             let mut actions = iced::widget::Row::new().spacing(6);
 
             for action in dialog.aside {
