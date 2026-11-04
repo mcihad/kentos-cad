@@ -226,3 +226,40 @@ fn nested_block_fields_through_mcp_keep_the_real_owner_and_placed_location() {
     );
     std::fs::remove_file(path).unwrap();
 }
+
+#[test]
+fn explicit_text_profile_edit_through_mcp_keeps_curve_and_undoes_once() {
+    let mut server = Server::new();
+    let new = tool(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let layer = &new["summary"]["activeLayer"];
+    let mut geometry = json!({"kind":"text","p":{"x":5000000.,"y":4400000.},"height":0.18,"rotation":17.,
+        "text":"  Ög\u{306}ç  ","font":"arimo","widthFactor":0.8,"mask":true,
+        "path":{"pts":[{"x":2.,"y":1.}],"bulges":[0.4]},"layout":{"leftIndent":0.4,"tabs":[4.,8.]}});
+    let made = tool(
+        &mut server,
+        "cad.entities.create",
+        json!({"drawing":drawing,"layerId":layer,"objects":[{"geometry":geometry}]}),
+    );
+    assert_eq!(made["status"], "completed", "{made}");
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    geometry["layout"]["engine"] = json!("unicode-v1");
+    let edited = tool(
+        &mut server,
+        "cad.entities.edit",
+        json!({"drawing":drawing,"operation":"properties",
+        "changes":[{"kind":"update","uid":before["items"][0]["uid"],"geometry":geometry}]}),
+    );
+    assert_eq!(edited["status"], "completed", "{edited}");
+    let after = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let mut expected = before["items"].clone();
+    expected[0]["entity"]["layout"]["engine"] = json!("unicode-v1");
+    assert_eq!(after["items"][0]["entity"], expected[0]["entity"]);
+    assert_eq!(after["items"][0]["uid"], before["items"][0]["uid"]);
+    assert_ne!(after["items"][0]["stamp"], before["items"][0]["stamp"]);
+    tool(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        tool(&mut server, "drawing.entities", json!({"drawing":drawing}))["items"],
+        before["items"]
+    );
+}

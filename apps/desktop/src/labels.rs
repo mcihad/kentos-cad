@@ -232,6 +232,8 @@ pub fn lens_layer<'a>(
 /// (`paragraph_records`: its mask's box, then its lines), words and runs.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Preview {
+    /// Session/revision/font of the immutable prepared editor preview, never persisted.
+    pub revision: Option<(u64,u64,u8)>,
     pub text: String,
     pub runs: Vec<Run>,
     pub records: Vec<f64>,
@@ -344,7 +346,9 @@ fn build<'a>(
         p.text.hash(&mut look);
         format!("{:?}", p.runs).hash(&mut look);
         format!("{:?}", p.face).hash(&mut look);
-        format!("{:?}",p.unicode).hash(&mut look);
+        // The preview retains the immutable glyph plan. Hash its version, not a
+        // megabyte-sized Debug string of every contour on each camera frame.
+        p.revision.hash(&mut look);
         for r in &p.records {
             r.to_bits().hash(&mut look);
         }

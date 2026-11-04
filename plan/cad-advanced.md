@@ -1510,6 +1510,15 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   eski alanın konumuna gidildi ve baskı önizlemesinin açık hata verdiği görüldü.
   Denetim/ret sonrası GUI kaydı özgün dosyayla byte düzeyinde aynıydı.
   Tanımın toplu yenilenmesi veya Unicode geçişi bu kayıtla tamamlandı sayılmaz.
+- Tek yazının yerleşimi mevcut editörde Eski görünüm/Unicode olarak açıkça
+  önizlenebilir. Öznitelik menüsü de aynı taslağı açar; onay tek Değiştir,
+  Esc yazmaz. Eğri, boşluk ve güncel field korunur; eski field veya değişen
+  hedef sessizce yazılmaz. 81 düzenleyici/öznitelik/inline regresyon testi
+  (beş mevcut ignored), dokuz Python ve sekiz MCP testi geçti. Gerçek GUI'de
+  koyu/açık tema, kısa sahnede sabit onay/iptal, property menüsü, canlı
+  önizleme, eksik glyph reddi ve tek Undo denendi. Bağımsız okuyucu yalnız
+  motor bilgisinin değiştiğini ve Undo sonrası özgün byte'ları doğruladı.
+  Yeni yazının varsayılanı veya toplu dönüşüm bu adımla değiştirilmedi.
 - Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
   eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
 

@@ -136,6 +136,8 @@ pub enum Event {
     ViewMark(Slot, kentos_commands::ViewMarksOperation),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_commands::TextAlign>),
+    /// Preview an explicit layout choice in the existing in-place editor; never write immediately.
+    TextLayoutPreview(Slot, Option<kentos_geometry_core::text::paragraph::Engine>),
     /// Zemin ▾ of texts.
     TextMask(Vec<Slot>, bool),
     /// Kapalı ▾ of a polyline: a closed line, no area (docs/adr/0258 §1).
@@ -800,6 +802,27 @@ impl App {
             self.selection.set([slot]);
             return;
         }
+        if let Event::TextLayoutPreview(slot, engine) = event {
+            if self.session.is_running() || self.paragraph.is_some() || self.text_field.is_some() {
+                self.warn("Önce açık işlemi tamamlayın veya Esc ile vazgeçin.");
+                return;
+            }
+            let Some(doc) = &self.document else {
+                return;
+            };
+            let Some(Entity::Text(text)) = doc.model.get(slot) else {
+                return;
+            };
+            if doc.model.layers().is_locked(&text.base.layer_id) {
+                self.warn("Kilitli katmandaki yazı düzenlenemez.");
+                return;
+            }
+            let text = text.clone();
+            self.edit_paragraph(slot, &text);
+            self.paragraph_event(crate::paragraph_editor::Event::Layout(engine));
+            return;
+        }
+
         if let Event::Casework(slot, "select") = event {
             let Some(model) = self.document.as_ref().map(|doc| &doc.model) else {
                 return;
@@ -864,7 +887,7 @@ impl App {
         let drawing = doc.path.clone();
         let model = &mut doc.model;
         let said = match event {
-            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::Query | Event::Guarded(_, _) => Vec::new(),
+            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::Query | Event::Guarded(_, _) | Event::TextLayoutPreview(_, _) => Vec::new(),
             Event::Unlink(ids) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Unlink);
                 input.unlink = true;

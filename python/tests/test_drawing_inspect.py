@@ -153,3 +153,24 @@ class DrawingInspect(unittest.TestCase):
         again = cad.drawing.inspect(reopened, checks=['annotations'], uids=[owner])
         self.assertEqual([f.to_json() for f in again.findings], [f.to_json() for f in result.findings])
         self.assertEqual(reopened.to_bytes(), before)
+
+    def test_explicit_text_profile_edit_keeps_curve_format_and_one_undo(self):
+        geometry = dict(kind='text', p=dict(x=5000000., y=4400000.), height=.18, rotation=17.,
+                        text='  Ög\u0306ç  ', font='arimo', widthFactor=.8, mask=True,
+                        path=dict(pts=[dict(x=2., y=1.)], bulges=[.4]),
+                        layout=dict(leftIndent=.4, tabs=[4., 8.]))
+        doc = drawing([geometry])
+        row = next(iter(doc.entities()))
+        before = doc.to_bytes()
+        changed = json.loads(json.dumps(geometry))
+        changed['layout']['engine'] = 'unicode-v1'
+        result = doc.call('cad.entities.edit', dict(operation='properties',
+                         changes=[dict(kind='update', uid=row.uid, geometry=changed)]))
+        self.assertEqual(result.status, 'completed')
+        after = next(iter(doc.entities())).entity.to_json()
+        expected = row.entity.to_json()
+        expected['layout']['engine'] = 'unicode-v1'
+        self.assertEqual(after, expected)
+        self.assertEqual(cad.Document.from_bytes(doc.to_bytes()).to_bytes(), doc.to_bytes())
+        self.assertEqual(doc.undo(), 'Değiştir')
+        self.assertEqual(doc.to_bytes(), before)

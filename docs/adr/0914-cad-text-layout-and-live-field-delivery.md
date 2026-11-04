@@ -339,6 +339,58 @@ kararı, açılışı yenileme saymamak ve doğrulanmamış önbelleği teslimde
 sessizce güncel kabul etmemektir; AutoCAD'in bütün bağlamsal alan türlerinin
 uygulandığı iddia edilmez.
 
+## Açık yerleşim seçimi ve çizim üzerinde taslak — 4 Kasım 2026
+
+Mevcut paragraf düzenleyicisinde **Eski görünüm / Unicode** seçimi vardır.
+Öznitelikler'in **Yazı yerleşimi** menüsü de tek yazıyı aynı düzenleyicide
+önizlemeye açar; menü seçimi belgeye yazmaz. Mevcut tek satır çift tıklama
+alışkanlığı korunur. Çoklu seçim için habersiz toplu dönüşüm eklenmez.
+Yeni yazıda da açık seçim yapılabilir; eski/yeni dosyanın varsayılanı bu
+adımla değiştirilmez.
+
+- Önizleme mevcut sahne çizimini ve ortak glyph konturlarını kullanır.
+  Eğri üzerindeki yazının gerçek baseline'ı da taslağa taşınır. Onay,
+  mevcut `cad.entities.edit` / `properties` komutudur; tek **Değiştir**
+  geri alma adımıdır. Esc/Vazgeç salt okunurdur.
+- Yalnız profil değiştiğinde baş/son boşluklar, özgün scalar aralıkları,
+  field'lar, girinti, sekme, font, maske, genişlik ve eğri korunur.
+  Mevcut profili yeniden onaylamak boş işlem/boş Undo üretmez.
+- Desteklenmeyen glyph/biçim standard KentOS hata şeridinde görünür;
+  Tamam kapanır, klavye de aynı denetimden geçer. Taslak kaybolmadan
+  düzeltilebilir veya iptal edilebilir. Eski field'ı güncellemek profil
+  seçiminin yan etkisi değildir; eski/doğrulanamayan alan önce açıkça
+  yenilenmelidir. Özgün görünüşe dönmek için metni bozmak gerekmez.
+- Kaydetmeden önce belge oturumu, kalıcı hedef UUID'si ve belge sürümü
+  yeniden kontrol edilir. Başka işlem çizimi değiştirdiyse eski taslak
+  üzerine yazmaz; kilitli hedef yazılmaz. Yeni metin işlemlerinin mevcut
+  araç tamamlama yolu korunur.
+- Glyph hazırlığı editör oturumu, içerik sürümü ve gerçek fontla tek
+  önbellektir; imleç/seçim hareketi tekrar şekillendirme yapmaz. Sahnenin
+  önizleme anahtarı büyük kontur ağacının Debug çıktısını her karede
+  üretmez. Taslak kimliği kalıcı belgeye eklenmez.
+- Kısa sahnede yalnız düzenleyici gövdesi kayar; Tamam/Vazgeç sabit
+  erişilebilir kalır. Bütün kontroller mevcut KentOS düğme, property
+  seçici, tipografi ve Banner bileşenleridir. macOS kısayol yazısı gerçek
+  Command+Enter davranışını gösterir; diğer platformlarda Ctrl+Enter'dır.
+
+81 düzenleyici/öznitelik/inline regresyon testi (beş mevcut görsel test ignored),
+dokuz Python ve sekiz MCP testi geçti. Bunlar
+boşluk/alan/eğri korumasını, salt okunur taslağı, eksik glyph reddini,
+başka belge değişikliğine karşı korumayı, önbelleği ve tek Undo'yu kapsar.
+Gerçek uygulamada koyu/açık tema, kısa ve geniş sahne, çift tıklama ve property menüsünden
+önizleme, açık onay, eksik glyph reddi ve Esc denendi. Bağımsız KCAD
+okuyucusu GUI dönüşümünde yalnız ilk yazının `layout.engine` alanının
+değiştiğini; tek GUI Undo sonrası dosyanın özgün byte'larla aynı olduğunu
+kanıtladı. Ham ekran/çizimler repo dışındadır. Tablonun ortak glyph
+profiline geçişi, bütün harf biçimi sınırları ve okuyucular arası PDF kopyası
+bu dilimle tamamlanmış sayılmaz.
+
+[Autodesk'in yerinde MTEXT düzenleme açıklaması](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-LT/files/GUID-3740EC59-FB75-47FD-B042-03D6AC095D4F.htm)
+biçimi mevcut editörde düzenleme, açık bitirme ve Esc ile vazgeçme
+akışını destekler. KentOS kararı mevcut düzenleyiciyi genişletmek ve
+kalıcı metrik değişikliğini önizleme/onaydan ayırmaktır; yeni bir arayüz
+veya gizli font yükseltme yolu açılmaz.
+
 ## MTEXT aktarımındaki veri kaybı
 
 Sayısal geometri paketinin önceki `kind=10` yazı kaydı `flow` alanını

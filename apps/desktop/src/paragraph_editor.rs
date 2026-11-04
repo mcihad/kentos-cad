@@ -9,13 +9,15 @@
 //!   hidden meanwhile; Tamam writes it as Öznitelikler does
 //!   (`cad.entities.edit`, the step “Değiştir”).
 //!
-//! Enter starts a new line, Ctrl+Enter or Tamam keeps the text, Esc or
+//! Enter starts a new line, Command/Ctrl+Enter or Tamam keeps the text, Esc or
 //! Vazgeç drops it. Above the text: Kalın, Eğik, Altı çizili, Üst simge and
 //! Alt simge over the chosen letters (none chosen: the word at the cursor),
 //! Renk ▾ and Simge ▾. The editor shows the bold, italic and coloured
 //! letters; the drawing shows the text as it will be, lines, box and all.
 
+use std::cell::RefCell;
 use std::ops::Range;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -43,6 +45,8 @@ use crate::app::{App, Message};
 
 /// The editor's widget id: focused when it opens.
 pub const ID: &str = "cizim-paragraf";
+static NEXT_PREVIEW: AtomicU64 = AtomicU64::new(1);
+
 
 /// What Simge ▾ puts at the cursor.
 pub const SYMBOLS: [(char, &str); 9] = [
@@ -86,9 +90,16 @@ pub struct Open {
     pub runs: Vec<Run>,
     /// Its indents, tabs and columns (docs/adr/0324): the preview lays it out with them; the text keeps its own.
     pub flow: Option<Box<kentos_geometry_core::text::paragraph::Flow>>,
+    /// Preserve the actual curved baseline in the scene preview.
+    pub path: Option<kentos_geometry_core::text::along::Curve>,
     /// The text being edited; none for Çok satırlı yazı's new text.
     pub editing: Option<Slot>,
     pub menu: Option<Menu>,
+    apply_error: Option<String>,
+    source: Option<(u64,kentos_domain::Uuid,String)>,
+    preview_id: u64,
+    preview_revision: u64,
+    preview_cache: RefCell<Option<(u64, kentos_commands::DrawingFont, crate::labels::Preview)>>,
 }
 
 #[derive(Debug, Clone)]
@@ -101,6 +112,8 @@ pub enum Event {
     /// The chosen lines (the cursor's) made a list of a kind, or their marks taken away (docs/adr/0324 §3).
     List(ListKind),
     Menu(Option<Menu>),
+    /// An explicit draft choice; the document changes only on Keep.
+    Layout(Option<kentos_geometry_core::text::paragraph::Engine>),
     Keep,
     Drop,
 }
@@ -316,7 +329,7 @@ fn format(look: &Look, _theme: &Theme) -> Format<Font> {
     }
 }
 
-/// Enter a new line; Ctrl+Enter keeps, Esc drops; the rest as the editor's own.
+/// Enter a new line; platform Command/Ctrl+Enter keeps, Esc drops; the rest as the editor's own.
 fn keys(press: KeyPress) -> Option<Binding<Message>> {
     match press.key.as_ref() {
         Key::Named(Named::Enter) if press.modifiers.command() => {
@@ -333,6 +346,12 @@ impl Open {
     /// the project's; a text with a typeface of its own is measured in that.
     pub fn preview(&self, font: kentos_commands::DrawingFont) -> crate::labels::Preview {
         let font = self.face.font.unwrap_or(font);
+        if let Some((revision, cached_font, preview)) = &*self.preview_cache.borrow()
+            && *revision == self.preview_revision
+            && *cached_font == font
+        {
+            return preview.clone();
+        }
         let place = TextPlace {
             flow: self.flow.as_deref(),
             p: kentos_geometry_core::vec2::Vec2::new(self.p.x, self.p.y),
@@ -350,7 +369,7 @@ impl Open {
             bold: self.face.font.is_some() && self.face.bold,
             italic: self.face.font.is_some() && self.face.italic,
             lean: core_face(&self.face).lean(),
-            path: None,
+            path: self.path.as_ref(),
         };
         let mut records = Vec::new();
         paragraph_records(
@@ -361,13 +380,40 @@ impl Open {
             None,
             &mut records,
         );
-        crate::labels::Preview {
+        let preview = crate::labels::Preview {
+            revision: Some((self.preview_id, self.preview_revision, font as u8)),
             text: self.text.clone(),
             runs: self.runs.clone(),
             records,
-            unicode:kentos_interaction::spatial::UnicodeText::of_place(&place,drawing_font(Some(font)),self.mask),
+            unicode: kentos_interaction::spatial::UnicodeText::of_place(
+                &place,
+                drawing_font(Some(font)),
+                self.mask,
+            ),
             face: self.face.clone(),
-        }
+        };
+        *self.preview_cache.borrow_mut() = Some((self.preview_revision, font, preview.clone()));
+        preview
+    }
+
+    fn engine(&self) -> Option<kentos_geometry_core::text::paragraph::Engine> {
+        self.flow.as_deref().and_then(|flow| flow.engine)
+    }
+
+    fn layout_error(&self, font: kentos_commands::DrawingFont) -> Option<String> {
+        self.engine()?;
+        self.preview(font)
+            .unicode
+            .as_ref()?
+            .plan
+            .as_ref()
+            .err()
+            .map(|error| {
+                format!(
+                    "{} Önizlemeyi düzeltin veya eski yerleşimi koruyun.",
+                    error.message(&self.text)
+                )
+            })
     }
 
     /// How many lines the text has and how far apart they are, metres.
@@ -388,7 +434,7 @@ impl Open {
             bold: self.face.font.is_some() && self.face.bold,
             italic: self.face.font.is_some() && self.face.italic,
             lean: core_face(&self.face).lean(),
-            path: None,
+            path: self.path.as_ref(),
         };
         let laid = place.layout(drawing_font(Some(font)));
         (laid.depth, laid.pitch)
@@ -415,7 +461,7 @@ impl Open {
             bold: self.face.font.is_some() && self.face.bold,
             italic: self.face.font.is_some() && self.face.italic,
             lean: core_face(&self.face).lean(),
-            path: None,
+            path: self.path.as_ref(),
         };
         let o = place.origin(drawing_font(Some(font)));
         let r = self.rotation.to_radians();
@@ -440,8 +486,14 @@ impl App {
             text: String::new(),
             runs: Vec::new(),
             flow: None,
+            path: None,
             editing: None,
             menu: None,
+            apply_error: None,
+            source: None,
+            preview_id: NEXT_PREVIEW.fetch_add(1, Ordering::Relaxed),
+            preview_revision: 0,
+            preview_cache: RefCell::new(None),
         });
         self.paragraph_focus = true;
     }
@@ -462,8 +514,23 @@ impl App {
             text: t.text.clone(),
             runs: core_runs(&t.paragraph.runs).unwrap_or_default(),
             flow: kentos_native_application::geometry::core_layout(t.paragraph.layout.as_deref()),
+            path: t
+                .path
+                .as_ref()
+                .map(kentos_native_application::geometry::core_curve),
             editing: Some(slot),
             menu: None,
+            apply_error: None,
+            source: self.document.as_ref().and_then(|doc| {
+                Some((
+                    doc.session,
+                    doc.model.uid(slot)?,
+                    doc.model.revision().to_string(),
+                ))
+            }),
+            preview_id: NEXT_PREVIEW.fetch_add(1, Ordering::Relaxed),
+            preview_revision: 0,
+            preview_cache: RefCell::new(None),
         });
         self.paragraph_focus = true;
     }
@@ -472,6 +539,15 @@ impl App {
         let Some(open) = &mut self.paragraph else {
             return;
         };
+        let changes_preview = match &event {
+            Event::Edit(action) => action.is_edit(),
+            Event::Format(_) | Event::Symbol(_) | Event::List(_) | Event::Layout(_) => true,
+            _ => false,
+        };
+        if changes_preview {
+            open.preview_revision = open.preview_revision.wrapping_add(1);
+            open.apply_error = None;
+        }
         match event {
             Event::Edit(action) => {
                 let editing = action.is_edit();
@@ -537,6 +613,12 @@ impl App {
                 open.menu = None;
                 self.paragraph_focus = true;
             }
+            Event::Layout(engine) => {
+                let mut flow = open.flow.as_deref().cloned().unwrap_or_default();
+                flow.engine = engine;
+                open.flow = Some(Box::new(flow));
+                open.menu = None;
+            }
             Event::Menu(menu) => {
                 open.menu = if open.menu == menu { None } else { menu };
             }
@@ -545,9 +627,76 @@ impl App {
         }
     }
 
+    fn paragraph_refused(&mut self, message: impl Into<String>) {
+        let message = message.into();
+        if let Some(open) = &mut self.paragraph {
+            open.apply_error = Some(message.clone());
+        }
+        self.warn(message);
+    }
+
     /// Closes the editor: `keep`, the text goes where it belongs; otherwise
     /// nothing changes.
     pub(crate) fn close_paragraph(&mut self, keep: bool) {
+        if keep && let (Some(open), Some(doc)) = (&self.paragraph, &self.document) {
+            if let Some(slot) = open.editing {
+                let current = doc.model.get(slot);
+                let source_matches =
+                    open.source
+                        .as_ref()
+                        .is_some_and(|(session, uid, revision)| {
+                            *session == doc.session
+                                && doc.model.uid(slot) == Some(*uid)
+                                && *revision == doc.model.revision().to_string()
+                        });
+                if !source_matches {
+                    self.paragraph_refused("Yazı önizlenirken çizim değişti; eski taslak uygulanmadı. Esc ile çıkıp güncel yazıyı yeniden açın.");
+                    return;
+                }
+                if current
+                    .is_some_and(|entity| doc.model.layers().is_locked(&entity.base().layer_id))
+                {
+                    self.paragraph_refused("Kilitli katmandaki yazı düzenlenemez.");
+                    return;
+                }
+                if let Some(Entity::Text(original)) = current {
+                    let old = original
+                        .paragraph
+                        .layout
+                        .as_deref()
+                        .and_then(|layout| layout.engine);
+                    if old.is_some() != open.engine().is_some()
+                        && !original.paragraph.fields.is_empty()
+                    {
+                        let uid = doc.model.uid(slot).expect("verified target");
+                        if kentos_native_application::drawing_inspect::annotations::findings(
+                            &doc.model,
+                            uid,
+                            &Entity::Text(original.clone()),
+                        )
+                        .iter()
+                        .any(|finding| {
+                            matches!(
+                                finding.code.as_str(),
+                                "text_field_stale" | "text_field_unverified"
+                            )
+                        }) {
+                            self.paragraph_refused("Yerleşimi değiştirmeden önce yazının alanlarını açıkça yenileyip denetleyin. Eski değer önizleme sırasında değiştirilmedi.");
+                            return;
+                        }
+                    }
+                }
+            }
+            let font = doc
+                .model
+                .settings()
+                .drawing_font
+                .unwrap_or(kentos_commands::DrawingFont::Barlow);
+            if let Some(error) = open.layout_error(font) {
+                self.paragraph_refused(error);
+                return;
+            }
+        }
         let Some(open) = self.paragraph.take() else {
             return;
         };
@@ -565,10 +714,18 @@ impl App {
                 let layout =
                     kentos_native_application::geometry::contract_layout(open.flow.as_deref())
                         .map(|l| *l);
-                let (text, runs) = kentos_interaction::paragraph::trimmed_paragraph(
-                    &open.text,
-                    &contract_runs(Some(open.runs.clone())),
-                );
+                let (text, runs) = if let Some(Entity::Text(original)) =
+                    self.document.as_ref().and_then(|d| d.model.get(slot))
+                    && original.text == open.text
+                    && core_runs(&original.paragraph.runs).unwrap_or_default() == open.runs
+                {
+                    (original.text.clone(), original.paragraph.runs.clone())
+                } else {
+                    kentos_interaction::paragraph::trimmed_paragraph(
+                        &open.text,
+                        &contract_runs(Some(open.runs.clone())),
+                    )
+                };
                 let Some(doc) = &mut self.document else {
                     return;
                 };
@@ -594,7 +751,7 @@ impl App {
                     kentos_interaction::properties::set_geometry(&mut doc.model, slot, &entity)
                 });
                 for text in said {
-                    self.warn(text);
+                    self.paragraph_refused(text);
                 }
             }
             Some(_) => {}
@@ -696,10 +853,30 @@ impl App {
             .highlight_with::<Painter>(looks, format)
             .key_binding(keys)
             .style(style::field::text_area);
+        let error = open.layout_error(face).or_else(|| open.apply_error.clone());
+        let engine = open.engine();
+        let layout_choice = |label: &'static str, value| {
+            button(label::caption(label))
+                .padding(kentos_ui::theme::metrics::action_small())
+                .style(style::button::toggle(engine == value))
+                .on_press(Message::Paragraph(Event::Layout(value)))
+        };
+        let layout = row![
+            label::caption("Yerleşim"),
+            layout_choice("Eski görünüm", None),
+            layout_choice(
+                "Unicode",
+                Some(kentos_geometry_core::text::paragraph::Engine::UnicodeV1)
+            ),
+        ]
+        .spacing(6)
+        .align_y(Center);
         let buttons = row![
-            label::caption("Ctrl+Enter: ekle · Esc: vazgeç")
-                .wrapping(iced::widget::text::Wrapping::None)
-                .width(Fill),
+            label::caption(format!("{}+Enter: {} · Esc: vazgeç",
+                if cfg!(target_os="macos") {"⌘"} else {"Ctrl"},
+                if open.editing.is_some() {"kaydet"} else {"ekle"}))
+            .wrapping(iced::widget::text::Wrapping::None)
+            .width(Fill),
             button(label::body("Vazgeç"))
                 .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
@@ -707,19 +884,23 @@ impl App {
             button(label::body("Tamam"))
                 .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::primary)
-                .on_press(Message::Paragraph(Event::Keep)),
+                .on_press_maybe(error.is_none().then_some(Message::Paragraph(Event::Keep))),
         ]
         .spacing(6)
         .align_y(Center);
-        let mut card = column![tools, area].spacing(6);
+        let mut card = column![
+            tools,
+            layout,
+            label::caption("Çizimde önizlenir; Tamam ile uygulanır."),
+            area
+        ]
+        .spacing(6);
+        if let Some(error) = &error {
+            card = card.push(kentos_ui::widget::notice::Banner::error(error.clone()));
+        }
         if let Some(menu) = open.menu {
             card = card.push(self.paragraph_menu(menu));
         }
-        let card = card.push(buttons);
-        let panel = container(card)
-            .padding(8)
-            .width(width)
-            .style(kentos_ui::style::container::popover);
         let area_size = (camera.width as f32, camera.height as f32);
         let left = (x as f32).clamp(4.0, (area_size.0 - width - 4.0).max(4.0));
         // Beside the text, never over it: above the box's top when there is room, else under the
@@ -729,12 +910,33 @@ impl App {
         let editor_height =
             (lines * size * 1.3 + 12.0).clamp(typography::scaled(72.0), typography::scaled(320.0));
         let card_height = 16.0
+            + 64.0
+            + if error.is_some() { 100.0 } else { 0.0 }
             + 34.0
             + 6.0
             + editor_height
             + 6.0
             + 30.0
             + if open.menu.is_some() { 36.0 } else { 0.0 };
+        // Keep confirmation/cancel visible even when the scene is short because
+        // the dock is expanded. Only the editor body scrolls inside the popover.
+        let available = (area_size.1 - 8.0).max(80.0);
+        let footer = typography::scaled(36.0);
+        let body: Element<'_, Message> = if card_height > available {
+            column![
+                iced::widget::scrollable(card).height((available - 16.0 - footer - 6.0).max(16.0)),
+                buttons
+            ]
+            .spacing(6)
+            .into()
+        } else {
+            card.push(buttons).into()
+        };
+        let panel = container(body)
+            .padding(8)
+            .width(width)
+            .style(kentos_ui::style::container::popover);
+        let card_height = card_height.min(available);
         let (count, pitch) = open.lines(face);
         let depth = ((count.max(1) - 1) as f64 * pitch + open.height * 1.4) * camera.scale;
         let above = y as f32 - card_height - 8.0;
@@ -852,6 +1054,264 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn profile_app(words: &str, curved: bool) -> (App, Slot, TextEntity) {
+        let mut app = crate::files_testing::app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        let model = &mut app.document.as_mut().unwrap().model;
+        let mut value = serde_json::json!({"kind":"text","id":0,"layerId":model.layers().active(),"attrs":{},
+            "p":{"x":5000000.,"y":4400000.},"height":0.18,"rotation":17.,"text":words,"font":"arimo",
+            "widthFactor":0.8,"mask":true,"layout":{"leftIndent":0.4,"tabs":[4.,8.]}});
+        if curved {
+            value["path"] = serde_json::json!({"pts":[{"x":2.,"y":1.}],"bulges":[0.4]});
+        }
+        let slot = model.add(serde_json::from_value(value).unwrap()).unwrap();
+        let Entity::Text(text) = model.get(slot).unwrap() else {
+            panic!()
+        };
+        let text = text.clone();
+        (app, slot, text)
+    }
+
+    #[test]
+    fn profile_preview_is_read_only_keeps_curved_geometry_and_commits_one_undo() {
+        let (mut app, slot, original) = profile_app("  Ög\u{306}ç  ", true);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        app.edit_paragraph(slot, &original);
+        app.paragraph_event(Event::Layout(Some(
+            kentos_geometry_core::text::paragraph::Engine::UnicodeV1,
+        )));
+        let preview = app
+            .paragraph
+            .as_ref()
+            .unwrap()
+            .preview(kentos_commands::DrawingFont::Barlow);
+        let mut expected = original.clone();
+        expected.paragraph.layout.as_deref_mut().unwrap().engine =
+            Some(kentos_commands::TextLayoutEngine::UnicodeV1);
+        let shape = kentos_native_application::geometry::shape(&Entity::Text(expected.clone()));
+        let expected_plan = TextPlace::of(&shape)
+            .unwrap()
+            .unicode_plan(drawing_font(Some(kentos_commands::DrawingFont::Barlow)))
+            .unwrap();
+        assert_eq!(
+            preview.unicode.as_ref().unwrap().plan.as_ref().unwrap(),
+            &expected_plan
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        app.close_paragraph(false);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        app.properties_event(crate::properties::Event::TextLayoutPreview(
+            slot,
+            Some(kentos_geometry_core::text::paragraph::Engine::UnicodeV1),
+        ));
+        app.close_paragraph(true);
+        assert!(app.paragraph.is_none(), "supported profile must apply");
+        let model = &mut app.document.as_mut().unwrap().model;
+        assert_eq!(model.get(slot), Some(&Entity::Text(expected)));
+        assert_eq!(model.undo().as_deref(), Some("Değiştir"));
+        assert_eq!(model.to_snapshot_v2(), before);
+    }
+
+    #[test]
+    fn profile_preview_reuses_glyphs_for_cursor_and_invalidates_after_edit() {
+        let (mut app, slot, text) = profile_app("Ög\u{306}ç", false);
+        app.edit_paragraph(slot, &text);
+        app.paragraph_event(Event::Layout(Some(
+            kentos_geometry_core::text::paragraph::Engine::UnicodeV1,
+        )));
+        let first = app
+            .paragraph
+            .as_ref()
+            .unwrap()
+            .preview(kentos_commands::DrawingFont::Arimo);
+        app.paragraph_event(Event::Select(0, 1));
+        let cursor = app
+            .paragraph
+            .as_ref()
+            .unwrap()
+            .preview(kentos_commands::DrawingFont::Arimo);
+        assert!(std::rc::Rc::ptr_eq(
+            first.unicode.as_ref().unwrap(),
+            cursor.unicode.as_ref().unwrap()
+        ));
+        assert_eq!(first.revision, cursor.revision);
+        app.paragraph_event(Event::Symbol('A'));
+        let changed = app
+            .paragraph
+            .as_ref()
+            .unwrap()
+            .preview(kentos_commands::DrawingFont::Arimo);
+        assert!(!std::rc::Rc::ptr_eq(
+            first.unicode.as_ref().unwrap(),
+            changed.unicode.as_ref().unwrap()
+        ));
+        assert_ne!(first.revision, changed.revision);
+        app.close_paragraph(false);
+    }
+
+    #[test]
+    fn unsupported_profile_stays_editable_and_escape_preserves_original() {
+        let (mut app, slot, text) = profile_app("Eksik 🛸", false);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        app.edit_paragraph(slot, &text);
+        app.paragraph_event(Event::Layout(Some(
+            kentos_geometry_core::text::paragraph::Engine::UnicodeV1,
+        )));
+        assert!(
+            app.paragraph
+                .as_ref()
+                .unwrap()
+                .layout_error(kentos_commands::DrawingFont::Arimo)
+                .is_some()
+        );
+        app.close_paragraph(true);
+        assert!(app.paragraph.as_ref().unwrap().apply_error.is_some());
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        app.paragraph_event(Event::Layout(None));
+        assert!(app.paragraph.as_ref().unwrap().apply_error.is_none());
+        app.close_paragraph(false);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+    }
+
+    #[test]
+    fn changed_document_refuses_the_old_profile_draft_without_losing_it() {
+        let (mut app, slot, text) = profile_app("Eski yazı", false);
+        app.edit_paragraph(slot, &text);
+        app.paragraph_event(Event::Layout(Some(
+            kentos_geometry_core::text::paragraph::Engine::UnicodeV1,
+        )));
+        let model = &mut app.document.as_mut().unwrap().model;
+        model.add(serde_json::from_value(serde_json::json!({"kind":"point","id":0,"layerId":model.layers().active(),"attrs":{},"p":{"x":0.,"y":0.}})).unwrap()).unwrap();
+        let current = model.to_snapshot_v2();
+        app.close_paragraph(true);
+        assert!(
+            app.paragraph
+                .as_ref()
+                .unwrap()
+                .apply_error
+                .as_ref()
+                .unwrap()
+                .contains("çizim değişti")
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            current
+        );
+        app.close_paragraph(false);
+    }
+
+    #[test]
+    fn profile_conversion_does_not_refresh_a_stale_field_implicitly() {
+        let (mut app, slot, _) = profile_app("Eski", false);
+        let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let Entity::Text(text) = snapshot
+            .entities
+            .iter_mut()
+            .find(|e| e.base().id == slot.0)
+            .unwrap()
+        else {
+            panic!()
+        };
+        text.paragraph.fields = serde_json::from_value(
+            serde_json::json!([{"start":0,"end":4,"source":{"kind":"project","value":"name"}}]),
+        )
+        .unwrap();
+        let document = crate::document::Document::from_v2(snapshot, None).unwrap();
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(document)))));
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        app.properties_event(crate::properties::Event::TextLayoutPreview(
+            slot,
+            Some(kentos_geometry_core::text::paragraph::Engine::UnicodeV1),
+        ));
+        app.close_paragraph(true);
+        assert!(
+            app.paragraph
+                .as_ref()
+                .unwrap()
+                .apply_error
+                .as_ref()
+                .unwrap()
+                .contains("alanlarını")
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        app.close_paragraph(false);
+    }
+
+    #[test]
+    fn keeping_the_existing_profile_is_a_noop_even_with_outer_whitespace() {
+        let (mut app, slot, text) = profile_app("  Ög\u{306}ç  ", false);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let undo = app.document.as_ref().unwrap().model.undo_labels();
+        app.properties_event(crate::properties::Event::TextLayoutPreview(slot, None));
+        app.close_paragraph(true);
+        assert!(app.paragraph.is_none());
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        assert_eq!(app.document.as_ref().unwrap().model.undo_labels(), undo);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.get(slot),
+            Some(&Entity::Text(text))
+        );
+    }
+
+    #[test]
+    fn current_field_is_preserved_when_only_its_text_profile_changes() {
+        let (mut app, slot, _) = profile_app("Alan", false);
+        let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let name = snapshot.name.clone();
+        let Entity::Text(text) = snapshot
+            .entities
+            .iter_mut()
+            .find(|e| e.base().id == slot.0)
+            .unwrap()
+        else {
+            panic!()
+        };
+        text.text = name.clone();
+        text.paragraph.fields=serde_json::from_value(serde_json::json!([{"start":0,"end":name.chars().count(),"source":{"kind":"project","value":"name"}}])).unwrap();
+        let document = crate::document::Document::from_v2(snapshot, None).unwrap();
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(document)))));
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        app.properties_event(crate::properties::Event::TextLayoutPreview(
+            slot,
+            Some(kentos_geometry_core::text::paragraph::Engine::UnicodeV1),
+        ));
+        app.close_paragraph(true);
+        assert!(app.paragraph.is_none());
+        let mut expected = before.clone();
+        let Entity::Text(text) = expected
+            .entities
+            .iter_mut()
+            .find(|e| e.base().id == slot.0)
+            .unwrap()
+        else {
+            panic!()
+        };
+        text.paragraph.layout.as_deref_mut().unwrap().engine =
+            Some(kentos_commands::TextLayoutEngine::UnicodeV1);
+        let model = &mut app.document.as_mut().unwrap().model;
+        assert_eq!(model.to_snapshot_v2(), expected);
+        assert_eq!(model.undo().as_deref(), Some("Değiştir"));
+        assert_eq!(model.to_snapshot_v2(), before);
+    }
 
     #[test]
     fn deleting_visible_characters_preserves_scalar_run_offsets() {

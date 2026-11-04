@@ -3171,6 +3171,45 @@ fn text_rows(texts: &[&kentos_commands::TextEntity], slots: &[Slot], locked: boo
                 .editor(edit(Editor::Number(Field::TextColumnGap(slots.to_vec())))),
         );
     }
+    let engine = |text: &kentos_commands::TextEntity| layout(text).engine;
+    let engine_label = |engine: Option<kentos_commands::TextLayoutEngine>| {
+        if engine.is_some() {
+            "Unicode"
+        } else {
+            "Eski görünüm"
+        }
+    };
+    let engine_text =
+        common(&|text| engine_label(engine(text)).to_owned()).unwrap_or_else(|| MIXED.to_owned());
+    let editor = if let [slot] = slots {
+        edit(Editor::Select {
+            text: engine_text.clone(),
+            swatch: None,
+            icon: None,
+            items: [
+                None,
+                Some(kentos_geometry_core::text::paragraph::Engine::UnicodeV1),
+            ]
+            .into_iter()
+            .map(|value| Choice::Pick {
+                label: format!(
+                    "{} · çizimde önizle",
+                    engine_label(value.map(|_| kentos_commands::TextLayoutEngine::UnicodeV1))
+                ),
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: engine(texts[0]).is_some() == value.is_some(),
+                enabled: true,
+                message: Message::Properties(Event::TextLayoutPreview(*slot, value)),
+            })
+            .collect(),
+        })
+    } else {
+        None
+    };
+    rows.insert(0, Row::text("Yazı yerleşimi", engine_text).editor(editor));
+
     rows.push(Row::text("Zemin", mask_text).editor(edit(masks)));
     rows
 }
