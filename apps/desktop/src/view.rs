@@ -2046,6 +2046,7 @@ impl App {
             Asking::Sight => self.sight_view(),
             Asking::DesignCheck => self.design_check_view(),
             Asking::PlatformWater => self.platform_water_view(),
+            Asking::HaulPlan => self.haul_plan_view(),
             Asking::Pay => self.pay_view(),
             Asking::Route => self.route_view(),
             Asking::Junctions => self.junction_view(),

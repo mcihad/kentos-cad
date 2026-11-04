@@ -430,6 +430,7 @@
     "profile.sight",
     "alignment.check",
     "corridor.water",
+    "haul.plan",
     "payItems.editor",
     "route.finder",
     "junction.editor",

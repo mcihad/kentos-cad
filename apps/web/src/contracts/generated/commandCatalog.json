@@ -40190,6 +40190,213 @@
       ]
     },
     {
+      "id": "road.hauls.plan",
+      "version": 1,
+      "title": "Taşıma planı",
+      "summary": "Bir Brüknerin kübajındaki toprağı en küçük taşıma momentiyle (m³·m) taşır; hiçbir şey yazmaz. Her aralığın net hacmi (yarmanın dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul.",
+      "aliases": [
+        "tasimaplani",
+        "enkisatasima"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.hauls.plan` v1 (docs/adr/0924; ROAD-HAUL-02, ROAD-HAUL-07): a mass haul diagram's (its id or name)\nearthwork moved at the least haul moment: each stretch's net at its middle, its borrow and waste sites taking up to\ntheir volume (here a capacity). Every cut placed, every fill met; least cost flow by successive shortest paths,\nexact. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_haul`, `invalid_haul` (the volume does not\ncompute or has no stretch, a site off its stations). Warnings: `haul_plan_infeasible`, `corridor_stale`,\n`volume_gap`.",
+        "properties": {
+          "haul": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "haul"
+        ],
+        "title": "HaulsPlan",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the\nfill more than the cut over the stretches, what moves, the haul moment (m³·m) and its average (m; none where nothing\nmoves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets\nand the cut no waste takes.",
+        "properties": {
+          "average": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "feasible": {
+            "type": "boolean"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "haul": {
+            "type": "string"
+          },
+          "moment": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume-m"
+          },
+          "moved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/$defs/HaulSegment"
+            },
+            "type": "array"
+          },
+          "shortage": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/$defs/HaulPlanSite"
+            },
+            "type": "array"
+          },
+          "surplus": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          }
+        },
+        "required": [
+          "haul",
+          "feasible",
+          "cut",
+          "fill",
+          "moved",
+          "moment",
+          "sites",
+          "segments",
+          "shortage",
+          "surplus"
+        ],
+        "title": "HaulPlanned",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the\nfill more than the cut over the stretches, what moves, the haul moment (m³·m) and its average (m; none where nothing\nmoves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets\nand the cut no waste takes.",
+        "properties": {
+          "average": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "feasible": {
+            "type": "boolean"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "haul": {
+            "type": "string"
+          },
+          "moment": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume-m"
+          },
+          "moved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/$defs/HaulSegment"
+            },
+            "type": "array"
+          },
+          "shortage": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/$defs/HaulPlanSite"
+            },
+            "type": "array"
+          },
+          "surplus": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          }
+        },
+        "required": [
+          "haul",
+          "feasible",
+          "cut",
+          "fill",
+          "moved",
+          "moment",
+          "sites",
+          "segments",
+          "shortage",
+          "surplus"
+        ],
+        "title": "HaulPlanned",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_haul",
+          "invalid_haul"
+        ],
+        "warnings": [
+          "haul_plan_infeasible",
+          "corridor_stale",
+          "volume_gap"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Yan Brüknerin taşıma planı",
+          "input": {
+            "haul": "h-2"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.hauls.query",
       "version": 1,
       "title": "Brükneri sorgula",
@@ -84224,6 +84431,12 @@
       "meaning": "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin."
     },
     {
+      "code": "haul_plan_infeasible",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Taşıma planı her şeyi yerleştiremiyor; ödünç ya da döküm alanları yetmiyor."
+    },
+    {
       "code": "haul_unbalanced",
       "kind": "warning",
       "retryable": false,
@@ -117548,6 +117761,40 @@
       ],
       "type": "object"
     },
+    "HaulPlanSite": {
+      "description": "A site in a haul plan: its name, kind, station, capacity and the volume the plan gives or takes there.",
+      "properties": {
+        "capacity": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "kind": {
+          "$ref": "#/$defs/HaulSiteKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "used": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "station",
+        "capacity",
+        "used"
+      ],
+      "type": "object"
+    },
     "HaulReport": {
       "description": "A mass haul diagram as it reads now: its sources, whether its volume's corridor is stale, the ordinate's points\n(station, m³; with `points`), the balance points, the loops, the totals; why it does not read when it does not.",
       "properties": {
@@ -117685,6 +117932,32 @@
         "waste",
         "borrow",
         "method"
+      ],
+      "type": "object"
+    },
+    "HaulSegment": {
+      "description": "A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).",
+      "properties": {
+        "flow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "flow"
       ],
       "type": "object"
     },

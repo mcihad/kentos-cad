@@ -7486,6 +7486,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_HAULS_PLAN.into(),
+            version: crate::ROAD_HAULS_PLAN_VERSION,
+            title: "Taşıma planı".into(),
+            summary: "Bir Brüknerin kübajındaki toprağı en küçük taşıma momentiyle (m³·m) taşır; hiçbir şey yazmaz. Her aralığın net hacmi (yarmanın dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. \
+                      Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul."
+                .into(),
+            aliases: vec!["tasimaplani".into(), "enkisatasima".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsPlan>(),
+            output: schema::<crate::HaulPlanned>(),
+            plan: Some(schema::<crate::HaulPlanned>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Yan Brüknerin taşıma planı".into(),
+                input: json!({ "haul": "h-2" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_QUERY.into(),
             version: crate::ROAD_HAULS_QUERY_VERSION,
             title: "Brükneri sorgula".into(),
@@ -14395,6 +14420,7 @@ mod tests {
                     }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
                     crate::ROAD_GUARDRAILS_EDIT => {
                         serde_json::from_value::<crate::GuardrailsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15218,6 +15244,9 @@ mod tests {
                         }
                         crate::ROAD_HAULS_QUERY => {
                             serde_json::from_value::<crate::HaulsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_PLAN => {
+                            serde_json::from_value::<crate::HaulPlanned>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_GUARDRAILS_EDIT => {
                             serde_json::from_value::<crate::GuardrailsWritten>(output.clone()).map(|_| ())

@@ -377,12 +377,12 @@ Kesit yöntemleri: `V_AEA=L(A0+A1)/2`; gerçek orta kesit alınırsa `V_prismoid
 Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve engel/taşıma kısıtlarını birlikte ele alır. KentOS için öneri, basit net hacim grafiğinin üzerinde ayrı kısıtlı optimizasyon modelidir. [Mass-haul](https://help.fieldsystems.trimble.com/tbc/10433.htm), [haul roads](https://help.fieldsystems.trimble.com/tbc/9956_1.htm)
 
 - [x] **ROAD-HAUL-01:** Station boyunca cumulative cut/fill grafiği gross malzeme türü ve bank/loose/compacted bazını açık alsın.
-- [ ] **ROAD-HAUL-02:** Mass-haul network zone, borrow/waste/processing site, capacity, barrier, haul road ve direction typed kaynakları taşısın.
+- [~] **ROAD-HAUL-02:** Mass-haul network zone, borrow/waste/processing site, capacity, barrier, haul road ve direction typed kaynakları taşısın. (Y23, ADR 0924: ödünç ve döküm alanlarının hacmi kapasite olarak taşıma planında; bölge, işleme alanı, engel, taşıma yolu ve yön açık.)
 - [x] **ROAD-HAUL-03:** Haul cost birimi currency/(volume-state·distance) olsun; kullanılacak volume state ve kilometre/metre açık çevrilsin.
 - [ ] **ROAD-HAUL-04:** Geology/material suitability ve contamination/unsuitable malzeme fill'e otomatik transfer edilmesin.
 - [ ] **ROAD-HAUL-05:** Barriers, köprü geçişi, temporary road closure ve erişilebilirlik constraints taşıma planını ayırsın.
 - [ ] **ROAD-HAUL-06:** Haul network bağlantısı yalnız plan çizgilerinin ekranda kesişmesi sayılmasın; gerçek source/destination/topology gereksinimleri denetlensin.
-- [ ] **ROAD-HAUL-07:** Min-cost-flow veya seçilen optimizer feasibility/optimality gap ve solver version ile raporlansın; heuristic optimum diye sunulmasın.
+- [~] **ROAD-HAUL-07:** Min-cost-flow veya seçilen optimizer feasibility/optimality gap ve solver version ile raporlansın; heuristic optimum diye sunulmasın. (Y23, ADR 0924: tam en küçük maliyetli akış, kurulamazlık eksik dolgu ve artan yarmayla; algoritmanın adı ve sürümü cevapta açık.)
 - [ ] **ROAD-HAUL-08:** Borrow/waste kapasite ve iş takvimi değişince etkilenen taşıma planı stale olsun.
 - [ ] **ROAD-HAUL-09:** Kısıtlı kapasite, one-way taşıma, malzeme dönüşüm verimi ve yeniden işleme cost'u alternatif analizde olsun.
 - [ ] **ROAD-HAUL-10:** Maliyet/karbon/truck trip hesabı katsayı, taşıt payload ve varsayımlarını görünür tutsun; otomatik mevzuat/şantiye onayı üretmesin.
@@ -613,6 +613,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y20 | Görüş mesafesi | ROAD-PROFILE-08 | Boykesitte göz ve nesne yüksekliğiyle ileri ve geri görüş, gerekenden kısa aralıklar |
 | Y21 | Tasarım denetimi | ROAD-ALIGN-11, 15; ROAD-PROFILE-13 | Aks ve boykesit kullanıcının kurallarıyla: yarıçap, kurp ve klotoid boyu, ters ve kırık sırtlı kurplar, eğimler, K |
 | Y22 | Platform suyu | ROAD-DEVER-09 | Koridor platformunun yatık yerleri, sıfır enine eğim ve kenarlardaki alçak noktalar |
+| Y23 | Taşıma planı | ROAD-HAUL-02, 07 | Brüknerin hacmi en küçük taşıma momentiyle, ödünç ve döküm alanları kapasiteleriyle |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 
@@ -673,6 +674,8 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 **Y21'in aşamaları ve durumu** ([ADR 0922](../docs/adr/0922-road-design-checks.md); araştırma 4 Kasım 2026: Civil 3D'nin çizgi, kurp, klotoid ve teğet kesişimi denetimleri, OpenRoads'un sivil geometri tasarım standartları, Bentley Civil Designer'ın ters, kırık sırtlı ve birleşik kurp çiftleri; Netcad'in çevrimiçi belgesi yok): Y21.1: çekirdekte aksın ve boykesitin denetimi. Y21.2: `road.alignments.check` ve `road.profiles.check` (21 + 21 ortak durum, Python, MCP). Y21.3: Güzergâh › Tasarım denetimi penceresi (resimler `.run/gui-evidence/yol-y21-denetim-*`). Y21 bitti; hıza bağlı kurallar ve projede saklanan kural kümesi açık.
 
 **Y22'nin aşamaları ve durumu** ([ADR 0923](../docs/adr/0923-road-platform-water.md); araştırma 4 Kasım 2026: dever geçişinin yatık yeri ve en küçük bileşke eğim, Civil 3D'nin ve OpenRoads'un koridor yüzeyinde eğim analizi; Netcad'in çevrimiçi belgesi yok): Y22.1: çekirdekte platform suyu (üçgenin en dik eğimi, aralıklar, enine eğimin sıfırı, alçak noktalar). Y22.2: `road.corridors.water` (21 ortak durum, Python, MCP). Y22.3: Koridor › Platform suyu penceresi (resimler `.run/gui-evidence/yol-y22-su-*`). Y22 bitti; platformda suyun yolu, ızgara aralığı ve ters enine eğim açık.
+
+**Y23'ün aşamaları ve durumu** ([ADR 0924](../docs/adr/0924-road-haul-plan.md); araştırma 4 Kasım 2026: Civil 3D'nin dengeleme seçenekleri, Trimble'ın alan kapasiteli kütle taşıması, Softree Optimal'in eniyilemesi; OpenRoads ve Netcad'in çevrimiçi eniyileme belgesi yok): Y23.1: çekirdekte taşıma planı (ardışık en kısa yollarla en küçük maliyetli akış). Y23.2: `road.hauls.plan` (26 ortak durum HiGHS doğrusal programıyla, Python, MCP). Y23.3: Koridor › Brükner › Taşıma planı penceresi (resimler `.run/gui-evidence/yol-y23-tasima-*`). Y23 bitti; serbest taşımalı ve fiyatlı maliyet amacı, taşıma yolu ağı, malzeme türleri ve takvim açık.
 
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 

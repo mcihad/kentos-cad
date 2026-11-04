@@ -1867,6 +1867,12 @@ const ENTRIES: &[Entry] = &[
         warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
         targets: none,
     },
+    Entry {
+        id: "road.hauls.plan",
+        refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
+        warnings: &["haul_plan_infeasible", "corridor_stale", "volume_gap"],
+        targets: none,
+    },
     // KentOS Yol's guardrails (plan/road.md Y11.1, docs/adr/0909 §1).
     Entry {
         id: "road.guardrails.edit",

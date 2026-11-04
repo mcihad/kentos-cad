@@ -322,6 +322,8 @@ pub enum Dialog {
     DesignCheck,
     /// Platform suyu (platform_water_window.rs, plan/road.md Y22); the window is `App::platform_water_window`.
     PlatformWater,
+    /// Taşıma planı (haul_plan_window.rs, plan/road.md Y23); the window is `App::haul_plan_window`.
+    HaulPlan,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
     Pay,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
@@ -723,6 +725,8 @@ pub enum Message {
     DesignCheck(crate::design_check_window::Event),
     /// An event of Platform suyu (platform_water_window.rs, plan/road.md Y22).
     PlatformWater(crate::platform_water_window::Event),
+    /// An event of Taşıma planı (haul_plan_window.rs, plan/road.md Y23).
+    HaulPlan(crate::haul_plan_window::Event),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1341,6 +1345,8 @@ pub struct App {
     pub(crate) design_check_window: Option<Box<crate::design_check_window::Window>>,
     /// Platform suyu (platform_water_window.rs, plan/road.md Y22).
     pub(crate) platform_water_window: Option<Box<crate::platform_water_window::Window>>,
+    /// Taşıma planı (haul_plan_window.rs, plan/road.md Y23).
+    pub(crate) haul_plan_window: Option<Box<crate::haul_plan_window::Window>>,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1794,6 +1800,7 @@ impl App {
             sight_window: None,
             design_check_window: None,
             platform_water_window: None,
+            haul_plan_window: None,
             pay_window: None,
             route_window: None,
             junction_window: None,
@@ -2540,6 +2547,7 @@ impl App {
             Message::Sight(event) => return self.sight_event(event),
             Message::DesignCheck(event) => return self.design_check_event(event),
             Message::PlatformWater(event) => return self.platform_water_event(event),
+            Message::HaulPlan(event) => return self.haul_plan_event(event),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
@@ -3587,6 +3595,7 @@ impl App {
             // Brükner and Brükner oluştur (haul_window.rs, plan/road.md Y9).
             "haul.editor" => self.open_hauls(),
             "haul.new" => self.new_haul(),
+            "haul.plan" => self.open_haul_plan(),
             // Aplikasyon cetveli (stakeout_window.rs, plan/road.md Y10).
             "stakeout.table" => self.open_stakeout(),
             "road.sheets" => self.open_road_sheets(),

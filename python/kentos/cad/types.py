@@ -35980,6 +35980,100 @@ class HaulLoop(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulPlanSite(_Model):
+    """A site in a haul plan: its name, kind, station, capacity and the volume the plan gives or takes there.
+    Attributes:
+        station: Unit: m.
+        capacity: Unit: volume.
+        used: Unit: volume.
+    """
+    name: str
+    kind: HaulSiteKind | HaulSiteKindName
+    station: float
+    capacity: float
+    used: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["station"] = float(self.station)
+        out["capacity"] = float(self.capacity)
+        out["used"] = float(self.used)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulPlanSite:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(HaulSiteKind, data["kind"]),
+            station=float(data["station"]),
+            capacity=float(data["capacity"]),
+            used=float(data["used"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulPlanned(_Model):
+    """Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the
+    fill more than the cut over the stretches, what moves, the haul moment (m³·m) and its average (m; none where nothing
+    moves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets
+    and the cut no waste takes.
+    Attributes:
+        cut: Unit: volume.
+        fill: Unit: volume.
+        moved: Unit: volume.
+        moment: Unit: volume-m.
+        shortage: Unit: volume.
+        surplus: Unit: volume.
+        average: Unit: m.
+    """
+    haul: str
+    feasible: bool
+    cut: float
+    fill: float
+    moved: float
+    moment: float
+    sites: list[HaulPlanSite]
+    segments: list[HaulSegment]
+    shortage: float
+    surplus: float
+    average: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        out["feasible"] = self.feasible
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["moved"] = float(self.moved)
+        out["moment"] = float(self.moment)
+        out["sites"] = [e0.to_json() for e0 in self.sites]
+        out["segments"] = [e0.to_json() for e0 in self.segments]
+        out["shortage"] = float(self.shortage)
+        out["surplus"] = float(self.surplus)
+        if self.average is not UNSET:
+            out["average"] = None if self.average is None else float(self.average)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulPlanned:
+        return cls(
+            haul=data["haul"],
+            feasible=data["feasible"],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            moved=float(data["moved"]),
+            moment=float(data["moment"]),
+            sites=[HaulPlanSite.from_json(e0) for e0 in data["sites"]],
+            segments=[HaulSegment.from_json(e0) for e0 in data["segments"]],
+            shortage=float(data["shortage"]),
+            surplus=float(data["surplus"]),
+            average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulReport(_Model):
     """A mass haul diagram as it reads now: its sources, whether its volume's corridor is stale, the ordinate's points
     (station, m³; with `points`), the balance points, the loops, the totals; why it does not read when it does not.
@@ -36077,6 +36171,34 @@ class HaulReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulSegment(_Model):
+    """A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        flow: Unit: volume.
+    """
+    from_: float
+    to: float
+    flow: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["flow"] = float(self.flow)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulSegment:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            flow=float(data["flow"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulSiteDef(_Model):
     """A borrow site or a waste site on a mass haul diagram (docs/adr/0907 §1): its name, kind, station and the volume
     (m³, in the volume sheet's state) it gives (borrow) or takes (waste) there.
@@ -36165,6 +36287,31 @@ class HaulsEdit(_Model):
             name=data.get("name", UNSET),
             sites=UNSET if "sites" not in data else None if data["sites"] is None else [HaulSiteDef.from_json(e0) for e0 in data["sites"]],
             volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsPlan(_Model):
+    """Input of `road.hauls.plan` v1 (docs/adr/0924; ROAD-HAUL-02, ROAD-HAUL-07): a mass haul diagram's (its id or name)
+    earthwork moved at the least haul moment: each stretch's net at its middle, its borrow and waste sites taking up to
+    their volume (here a capacity). Every cut placed, every fill met; least cost flow by successive shortest paths,
+    exact. Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_haul`, `invalid_haul` (the volume does not
+    compute or has no stretch, a site off its stations). Warnings: `haul_plan_infeasible`, `corridor_stale`,
+    `volume_gap`.
+    """
+    haul: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsPlan:
+        return cls(
+            haul=data["haul"],
         )
 
 
@@ -106043,11 +106190,15 @@ __all__ = [
     "HaulDef",
     "HaulListed",
     "HaulLoop",
+    "HaulPlanSite",
+    "HaulPlanned",
     "HaulReport",
+    "HaulSegment",
     "HaulSiteDef",
     "HaulSiteKind",
     "HaulSiteKindName",
     "HaulsEdit",
+    "HaulsPlan",
     "HaulsQueried",
     "HaulsQuery",
     "HaulsWritten",

@@ -730,6 +730,8 @@ codes! {
     /// An earthwork volume a mass haul diagram uses.
     VOLUME_IN_USE = "volume_in_use", Failed, false, "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin.";
     /// A warning: material left over at an end of the diagram, to be wasted or borrowed (docs/adr/0907 §3).
+    /// A warning: the haul plan cannot place everything; the borrow or waste sites are too small (docs/adr/0924 §2).
+    HAUL_PLAN_INFEASIBLE = "haul_plan_infeasible", Warning, false, "Taşıma planı her şeyi yerleştiremiyor; ödünç ya da döküm alanları yetmiyor.";
     HAUL_UNBALANCED = "haul_unbalanced", Warning, false, "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir.";
     /// A LandXML file that cannot be written: a stamp that does not read, nothing to write, a chosen surface or
     /// alignment that does not build (docs/adr/0908).

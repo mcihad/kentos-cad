@@ -699,6 +699,10 @@
        {
         "command": "haul.new",
         "size": "large"
+       },
+       {
+        "command": "haul.plan",
+        "size": "large"
        }
       ]
      },

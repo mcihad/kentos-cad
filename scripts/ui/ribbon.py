@@ -285,7 +285,7 @@ CAD = [
         # The earthwork volumes (plan/road.md Y8, docs/adr/0906): the Kübaj window, a new volume and its sheet.
         P("Kübaj", "volumeEditor", [L("volume.editor"), L("volume.new"), L("volume.export")]),
         # The mass haul diagrams (plan/road.md Y9, docs/adr/0907): the Brükner window and a new diagram.
-        P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new")]),
+        P("Brükner", "haulEditor", [L("haul.editor"), L("haul.new"), L("haul.plan")]),
         # The stakeout table (plan/road.md Y10, docs/adr/0908).
         P("Aplikasyon", "stakeoutTable", [L("stakeout.table"), L("landxml.export"), L("ifc.export")]),
         # The plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10).

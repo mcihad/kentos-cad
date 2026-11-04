@@ -2903,6 +2903,13 @@
         "road.hauls.edit"
       ]
     },
+    "haul.plan": {
+      "level": "semantic",
+      "via": [
+        "road.hauls.plan"
+      ],
+      "note": "Önizle road.hauls.plan ile okur; hiçbir şey yazmaz (plan/road.md Y23, ADR 0924 §3)."
+    },
     "profile.new": {
       "level": "semantic",
       "via": [

@@ -4307,6 +4307,22 @@
    "tests": 0
   },
   {
+   "id": "haul.plan",
+   "kind": "command",
+   "title": "Taşıma planı…",
+   "level": "semantic",
+   "via": [
+    "road.hauls.plan"
+   ],
+   "operation": null,
+   "python": "Connection: road.hauls.plan",
+   "mcp": "road.hauls.plan",
+   "note": "Önizle road.hauls.plan ile okur; hiçbir şey yazmaz (plan/road.md Y23, ADR 0924 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "help.about",
    "kind": "command",
    "title": "KentOS CAD hakkında",
