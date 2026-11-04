@@ -53,7 +53,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - **Pencere düzeni:** sahibin “dialog formları çok karmaşık” sözü üzerine Yol pencereleri tek iskelettedir
     (`road_dialog::RoadDialog`, DESIGN.md §7.19). Solda gruplu form, sağda çizim, en çok dört özet ve parçalı seçimle tek
     tablo, alt çubukta tek birincil eylem vardır. Yalnız okuyan pencerede Önizle yoktur. Denetim sınırları formun son
-    bölümüdür ve kaydedilmemiş tanımı okur (Dever, Y27.3; oran sınırı 1:n'nin n'i). Taşınanlar: Kırmızı kot
+    bölümüdür ve kaydedilmemiş tanımı okur (Dever, Y27.3; oran sınırı 1:n'nin n'i). Yardımcı pencere üst pencerenin
+    yerine açılır, “Geri” ile döner, sonucu üstün formuna yazar (Genişletme önerisi, Y28.3). Taşınanlar: Kırmızı kot
     önerisi, Kübaj, tip kesit düzenleyicisi. `Form::wide` eklendi.
   - **KCAD şema 164:** üstyapı ve kural `SCHEMA_WITH_ROAD_PAVEMENT` ile yazılır. Yayımlanmış şemaya (162) alan
     eklemek, eski programın örnek projeye “bozuk” demesine yol açtı. Yeni okuyucu daha yeni şemaya “daha yeni bir

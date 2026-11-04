@@ -1,6 +1,6 @@
 # 0932 — KentOS Yol: kurpta tasarım taşıtına göre genişletme
 
-Tarih: 2026-11-04. plan/road.md Y28 (ROAD-DEVER-05). Durum: Y28.1–Y28.2 kabul; Y28.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y28 (ROAD-DEVER-05). Durum: Y28.1–Y28.3 kabul.
 
 ## Dayanak
 
@@ -99,6 +99,33 @@ gelir. Sürüş referansı bisiklet modelinin diferansiyel denklemleridir: ön d
 tümlenir, dördüncü mertebe Runge–Kutta 2,5 cm adımla. KentOS tractrix'i 25 cm kirişlerde kesin sürer. İkisi 5 mm
 içinde aynı çıkar. Ölçülen WB-19 durumunda (R 150 m, 40 m klotoid, 47° sapma) referans 0,6648, kararlı durum 0,6654 m
 verir.
+
+### §4 Masaüstü (Y28.3)
+
+Dever penceresinin alt çubuğunda **Genişletme öner…** vardır; seçili çizelge yazıldığı hâliyle okunuyorsa açıktır.
+Genişletme önerisi penceresi ortak düzendedir (DESIGN.md §7.19) ve Dever'in yerine açılır. Geri Dever'e döner.
+
+- **Form:** Taşıt (dingil aralığı, ön çıkıntı, genişlik, iz genişliği, Römork Yok | Var, mafsal, römork dingili),
+  Yol (tip kesit, yanal açıklık, proje hızı), Öneri (Standart | Basit, yuvarlama, en az genişletme, Sür). Taşıt Araç izi
+  penceresi açıksa ondan, tip kesit ve hız Dever'in Denetim bölümünden gelir. Başka hiçbir alan doldurulmaz.
+  Boş alan, formdaki sırayla adıyla söylenir ("Dingil aralığı (m) yazın.").
+- **Çizim:** taşıt için genişletmenin yarıçapa göre eğrisi (yatay eksen logaritmik), aksın kurpları nokta olarak ve en
+  az genişletme kesikli çizgi olarak çizilir. Eğri aksın kurplarının çevresinde çizilir: en küçük yarıçapın üçte
+  birinden en büyüğün dört katına kadar, en az 1000 m.
+  - İlk sürüm eğriyi taşıtın dönemediği yarıçapa (≈15 m) kadar indiriyordu. Dikey eksen 22 m'ye çıkıyor, etiketler üst
+    üste biniyor, p1 (2 m) dipte eziliyordu. Şimdi 5,3 m'de biter, en çok altı ızgara çizgisi vardır.
+- **Özetler:** kurp sayısı, en büyük öneri, en büyük kararlı iz, sürüşte izin kararlıya en küçük oranı.
+- **Tablo:** PI, R, iz, F_A, Z, genişletme, öneri, çizelgedeki değer ve Sür ile sürüşteki iz. U ve W_c tabloda
+  yoktur, çünkü öbürlerinden çıkar: on bir sütun 1100 px'te öneriyi kesiyordu.
+- **Çizelgeye yaz:** önerileri Dever'in Genişleme hücrelerine yazar (sıfır hücreyi boşaltır) ve Dever'e döner.
+  Yazma işini Dever'in Kaydet'i yapar. Km satırlı çizelgede bu düğme kapalıdır ve bir not söyler. Çizelgede satırı
+  olmayan kurp bir uyarıyla söylenir.
+- **Ölçüm** (örnek çizim, WB-19 boyutları, C 0,9 m, 80 km/sa, 0,1 m'ye yukarı): p1 (R 150 m) için kararlı iz 0,665 m,
+  F_A 0,058 m, Z 0,653 m ve genişletme 2,022 m çıkar; öneri 2,10 m'dir. Sürüş kararlı izin %100'üne ulaşır (47°'lik kurp
+  yeterince uzun). Çizelgeye yazılınca Dever'de en dik göreli eğim 1:148'den 1:87'ye iner: iç yan genişlerken kenarı
+  da yükselir.
+
+Bekçi: `widening_window_tests` (öneri okunur ve çizelgeye yazılır; eksik ölçü adıyla söylenir).
 
 ## Doğrulama
 

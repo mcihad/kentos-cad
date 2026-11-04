@@ -55,6 +55,7 @@ const REMOVE_ROW: &str = "Satırı sil";
 const ALL_CURVES: &str = "Bütün kurplar";
 const METHODS: [&str; 2] = ["Kurplardan", "Km satırlarından"];
 pub(crate) const PIVOT: &str = "Dönme ekseni";
+pub(crate) const WIDEN: &str = "Genişletme öner…";
 pub(crate) const SPEED: &str = "Proje hızı (km/sa)";
 pub(crate) const FRICTION: &str = "En büyük sürtünme";
 pub(crate) const RELATIVE: &str = "En dik göreli eğim (1:n)";
@@ -88,6 +89,11 @@ impl std::fmt::Display for Listed {
     }
 }
 
+/// A number written with the comma Turkish writes, for the widening window too.
+pub(crate) fn comma_text(v: f64, digits: usize) -> String {
+    comma(v, digits)
+}
+
 fn comma(v: f64, digits: usize) -> String {
     format!("{v:.digits$}").replace('.', ",")
 }
@@ -98,7 +104,7 @@ fn trimmed(v: f64) -> String {
     s.trim_end_matches('0').trim_end_matches('.').replace('.', ",")
 }
 
-fn number(text: &str) -> Result<Option<f64>, ()> {
+pub(crate) fn number(text: &str) -> Result<Option<f64>, ()> {
     let t = text.trim().replace(',', ".");
     if t.is_empty() {
         return Ok(None);
@@ -124,7 +130,7 @@ pub struct Row {
     alignment_revision: u32,
     normal: [String; 2],
     /// 0 from the curves, 1 from rows.
-    method: usize,
+    pub(crate) method: usize,
     curves: Vec<[String; 5]>,
     rows: Vec<[String; 3]>,
     /// The axis of rotation (docs/adr/0931 §3); none: the centreline.
@@ -160,7 +166,20 @@ impl Row {
         r
     }
 
-    fn def(&self) -> Result<SuperelevationDef, String> {
+    /// Genişletme önerisi's suggestions into the curves' Genişleme cells (a zero empties the cell); the PIs the
+    /// schedule has no row for.
+    pub(crate) fn set_widening(&mut self, suggested: &[(String, f64)]) -> Vec<String> {
+        let mut missing = Vec::new();
+        for (pi, w) in suggested {
+            match self.curves.iter_mut().find(|c| c[0].trim() == pi) {
+                Some(c) => c[4] = if *w > 0.0 { trimmed(*w) } else { String::new() },
+                None => missing.push(pi.clone()),
+            }
+        }
+        missing
+    }
+
+    pub(crate) fn def(&self) -> Result<SuperelevationDef, String> {
         let method = if self.method == 0 {
             let mut curves = Vec::new();
             for (i, c) in self.curves.iter().enumerate() {
@@ -217,10 +236,15 @@ pub struct Window {
     pub(crate) check: [String; 3],
     pub(crate) checked: Option<Result<kentos_commands::SuperelevationsChecked, String>>,
     pub(crate) list: Listed,
+    /// Genişletme önerisi over the window (widening_window.rs, docs/adr/0932 §4).
+    pub(crate) widen: Option<Box<crate::widening_window::Widen>>,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// Genişletme öner…: the widening window on the chosen schedule.
+    OpenWiden,
+    Widen(crate::widening_window::Event),
     Choose(usize),
     New,
     Remove,
@@ -281,7 +305,7 @@ impl App {
     }
 
     /// The chosen schedule built again as typed, and its alignment's curves.
-    fn refresh_superelevation(&mut self) {
+    pub(crate) fn refresh_superelevation(&mut self) {
         let Some(doc) = &self.document else { return };
         let Some(w) = self.superelevation_window.as_mut() else { return };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -330,6 +354,17 @@ impl App {
     }
 
     pub(crate) fn superelevation_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::OpenWiden => {
+                self.open_widening();
+                return Task::none();
+            }
+            Event::Widen(e) => {
+                self.widening_event(e);
+                return Task::none();
+            }
+            _ => {}
+        }
         let alignments = self.superelevation_alignments();
         let Some(w) = self.superelevation_window.as_mut() else { return Task::none() };
         let mut warning = None;
@@ -437,6 +472,8 @@ impl App {
                 w.list = l;
                 return Task::none();
             }
+            // Answered before the window is borrowed.
+            Event::OpenWiden | Event::Widen(_) => return Task::none(),
             Event::AllCurves => {
                 let pis: Vec<String> = w.curves.iter().map(|c| c.0.clone()).collect();
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
@@ -552,6 +589,9 @@ impl App {
         let Some(w) = &self.superelevation_window else {
             return iced::widget::text("").into();
         };
+        if let Some(x) = &w.widen {
+            return self.widening_view(w, x);
+        }
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let alignments = self.superelevation_alignments();
         let stale_of = |r: &Row| {
@@ -597,6 +637,7 @@ impl App {
             .width(1200.0)
             .close_caption(CANCEL)
             .ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove)))
+            .ghost(WIDEN, chosen.is_some_and(|r| r.def().is_ok()).then(|| msg(Event::OpenWiden)))
             .ghost(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind)));
         if let Some(r) = chosen {
             let normal = r.def().ok().map(|d| (d.normal_left, d.normal_right));
@@ -765,7 +806,21 @@ impl App {
         let Some(w) = &self.superelevation_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
+        if w.widen.is_some() {
+            use crate::widening_window::{APPLY, BACK, Event as X, FIELDS as WF};
+            let x = |e: X| msg(Event::Widen(e));
+            return Ok(match control {
+                Control::Press(APPLY) => Some(x(X::Apply)),
+                Control::Press(BACK) => Some(x(X::Back)),
+                Control::Fill(name, text) => match WF.iter().position(|f| *f == name) {
+                    Some(k) => Some(x(X::Field(k, text.to_owned()))),
+                    None => return Err(format!("“{}” penceresinde “{name}” alanı yok", crate::widening_window::TITLE)),
+                },
+                other => return Err(format!("“{}” penceresinde {other} yok", crate::widening_window::TITLE)),
+            });
+        }
         Ok(match control {
+            Control::Press(WIDEN) => Some(msg(Event::OpenWiden)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),

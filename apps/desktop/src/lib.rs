@@ -260,6 +260,7 @@ mod alignment_window;
 mod profile_window;
 mod section_window;
 mod superelevation_window;
+mod widening_window;
 mod corridor_window;
 mod volume_window;
 mod haul_window;
@@ -335,6 +336,8 @@ mod profile_window_tests;
 mod section_window_tests;
 #[cfg(test)]
 mod superelevation_window_tests;
+#[cfg(test)]
+mod widening_window_tests;
 #[cfg(test)]
 mod corridor_window_tests;
 #[cfg(test)]
