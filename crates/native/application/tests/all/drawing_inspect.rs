@@ -366,3 +366,24 @@ fn long_field_chains_stop_with_an_explicit_unverified_finding() {
     let found = drawing_inspect::annotations::findings(&doc, kentos_domain::Uuid::from_bytes(uids[0].0), &snapshot.entities[0]);
     assert!(found.iter().any(|f| f.code == "text_field_unverified"));
 }
+
+#[test]
+fn unicode_profile_reports_real_fallback_and_unsupported_text_without_rewriting_it() {
+    use kentos_commands::{Entity,InspectionSeverity};
+    for (words,code,severity) in [
+        ("Çap ⌀32 — العربية","text_font_fallback",InspectionSeverity::Info),
+        ("Eksik 🛸","text_layout_unsupported",InspectionSeverity::Error),
+    ] {
+        let mut snapshot=field_drawing(1);
+        let Entity::Text(t)=&mut snapshot.entities[0] else {panic!()};
+        t.text=words.into();t.face.font=Some(kentos_commands::DrawingFont::Arimo);
+        t.paragraph.layout=serde_json::from_value(json!({"engine":"unicode-v1"})).unwrap();
+        let doc=Document::from_snapshot_v2(snapshot).unwrap();
+        let before=doc.to_snapshot_v2();
+        let CommandResult::Completed {output,..}=drawing_inspect::inspect(&doc,&DrawingInspect::default(),||false) else {panic!()};
+        let f=output.findings.iter().find(|f|f.code==code).expect(words);
+        assert_eq!(f.severity,severity);
+        if code=="text_font_fallback" {assert!(f.message.contains("noto-sans-math")&&f.message.contains("noto-sans-arabic"));}
+        assert_eq!(doc.to_snapshot_v2(),before);
+    }
+}

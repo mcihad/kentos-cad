@@ -94,6 +94,8 @@ fn tangent(edge: &Edge, p: P) -> P {
         Edge::Arc { c, .. } => P::new(-(p.y - c.y), p.x - c.x),
     }
 }
+// One diagnostic record, with its source pair and delivery budget kept explicit.
+#[allow(clippy::too_many_arguments)]
 fn report(
     a: &SourceEdge,
     b: Option<&SourceEdge>,

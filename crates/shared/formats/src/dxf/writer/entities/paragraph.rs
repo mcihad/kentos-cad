@@ -218,6 +218,7 @@ impl Writer<'_> {
                     // Measured as the file draws it (Arimo for Arial); bold and slant its own.
                     font: None,
                     bold: t.face.font.is_some() && t.face.bold,
+                    italic: t.face.font.is_some() && t.face.italic,
                     lean: crate::blocks::core_face(&t.face).lean(),
                     path: None,
                 };
@@ -323,6 +324,7 @@ mod tests {
             },
         ];
         let layout = ParagraphLayout {
+            engine:None,
             indent: Some(-2.0),
             left_indent: Some(2.0),
             tabs: vec![2.0, 6.5],

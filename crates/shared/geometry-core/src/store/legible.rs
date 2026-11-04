@@ -468,7 +468,7 @@ impl Store {
             Shape::Text { p, .. } => (
                 *p,
                 TextPlace::of(shape)
-                    .map(|t| t.outline(self.font))
+                    .map(|t| if t.is_unicode() && piece.is_none() {corners(&item.bounds)} else {t.outline(self.font)})
                     .unwrap_or_default(),
             ),
             Shape::Leader { .. } => {

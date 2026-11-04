@@ -36,6 +36,28 @@ pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<Insp
             format!("Özgün font: {file} · Çizilen font: {}. Özgün fontun metrikleriyle eşdeğerlik doğrulanmadı.", style.font.label()),
             "Yazı stilini ve cad.fonts.report sonucunu inceleyin; desteklenen fonta dönüşümü açıkça onaylayın."));
     }
+    if text.paragraph.layout.as_ref().is_some_and(|l|l.engine.is_some()) {
+        let shape=crate::geometry::shape(&Entity::Text(text.clone()));
+        if let Some(place)=kentos_geometry_core::entity::TextPlace::of(&shape) {
+            let font=crate::geometry::drawing_font(doc.settings().drawing_font);
+            match place.unicode_plan(font).and_then(|p|p.contours().map(|_|p)) {
+                Err(error)=>out.push(emit("text_layout_unsupported",InspectionSeverity::Error,
+                    format!("{} Metin kısmen çizilemez veya farklı metrikle ölçülemez.",error.message(&text.text)),
+                    "Desteklenmeyen karakteri/biçim sınırını inceleyin; yazıyı sessizce değiştirmeyin.")),
+                Ok(plan)=> {
+                    let requested=place.font_or(font).id();
+                    let fallbacks:std::collections::BTreeSet<_>=plan.glyphs.iter()
+                        .filter_map(|g|kentos_geometry_core::text::shaping::font_key(g.glyph.font))
+                        .filter(|(family,_,_)|*family!=requested).map(|(family,_,_)|family).collect();
+                    if !fallbacks.is_empty() {
+                        out.push(emit("text_font_fallback",InspectionSeverity::Info,
+                            format!("İstenen font: {requested} · Bu yazının bazı harfleri paketli {} ile çiziliyor. Ekran, ölçülen kutu ve PDF aynı harf ölçülerini kullanır.",fallbacks.into_iter().collect::<Vec<_>>().join(", ")),
+                            "Karakter kapsamı için kullanılan paketli fontları inceleyin; metin veya stil otomatik değiştirilmez."));
+                    }
+                }
+            }
+        }
+    }
     if text.paragraph.fields.is_empty() {
         return out;
     }

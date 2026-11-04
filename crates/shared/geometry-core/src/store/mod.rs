@@ -119,6 +119,9 @@ fn stamp() -> u64 {
 }
 
 impl Item {
+    /// Ephemeral identity of this exact put, never reused in any store.
+    pub fn stamp(&self) -> u64 { self.stamp }
+
     /// The shapes the queries test: an insert's pieces but an attribute's
     /// text that shows nothing (docs/adr/0144 §7), or the object's own shape.
     pub fn shapes(&self) -> impl Iterator<Item = &Shape> + Clone {

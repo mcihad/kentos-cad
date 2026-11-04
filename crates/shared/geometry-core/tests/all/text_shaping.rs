@@ -1331,3 +1331,236 @@ fn mixed_latin_greek_cyrillic_and_paired_brackets_match_explicit_external_script
         assert!((line.advance - c["advance"].as_f64().unwrap()).abs() < 1e-9);
     }
 }
+
+#[test]
+fn positioned_glyphs_match_external_flow_at_rotated_top_center_without_losing_large_coordinates() {
+    use kentos_geometry_core::{
+        entity::TextPlace, Vec2,
+        api::json::{FromJson, Json},
+        geom::affine::apply,
+        text::{Font, TextAlign, paragraph::Flow},
+    };
+    let reference: Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/text/v1/shaping.json")).unwrap();
+    for c in reference["flow"].as_array().unwrap() {
+        let flow = Flow::from_json(&Json::parse(&c["flow"].to_string()).unwrap()).unwrap();
+        let mut t = TextPlace::line(
+            Vec2::new(5_000_000., 4_400_000.),
+            c["text"].as_str().unwrap(),
+            c["height"].as_f64().unwrap(),
+            90.,
+            Some(TextAlign::TopCenter),
+            c["widthFactor"].as_f64(),
+        );
+        t.box_width = c["boxWidth"].as_f64();
+        t.line_spacing = c["lineSpacing"].as_f64();
+        t.flow = Some(&flow);
+        let font = Font::from_id(c["family"].as_str().unwrap());
+        // Noto Arabic is a fallback face, not a selectable DrawingFont. Its
+        // explicit-family paragraph is covered by the lower-level C oracle.
+        if font.id() != c["family"].as_str().unwrap() { continue; }
+        // The external flow uses its own alignment within a fixed box. For
+        // each actual center-aligned row measure the glyph positions with C
+        // HarfBuzz again; the persisted oracle already provides exact advances.
+        let plan = shaping::placed::layout(&t, font, false).unwrap();
+        let h = t.height;
+        let sx = h * t.width_factor.unwrap();
+        let width = c["width"].as_f64().unwrap();
+        let depth = c["depth"].as_u64().unwrap() as usize;
+        let pitch = c["pitch"].as_f64().unwrap();
+        let up = h;
+        assert_eq!(plan.depth, depth);
+        let mut index = 0;
+        for row in c["pieces"].as_array().unwrap() {
+            let row_width = row["advance"].as_f64().unwrap() * sx;
+            let original = row["x"].as_f64().unwrap();
+            let old_align = c["along"].as_f64().unwrap();
+            // Actual available row width comes from the external profile's
+            // known left offset and original alignment; don't use our plan.
+            let left = original - old_align * (width - row_width);
+            // Tabbed/column pieces have shared row adjustment, so compare only
+            // cases with full-row pieces below (other flow tests cover tabs).
+            let simple = c["flow"].get("columns").is_none()
+                && !c["text"].as_str().unwrap().contains('\t')
+                && c["flow"].get("indent").is_none()
+                && c["flow"].get("leftIndent").is_none();
+            let x = left + 0.5 * (width - row_width);
+            let y = row["y"].as_f64().unwrap();
+            let mut cursor = 0.;
+            let em = c["unitsPerEm"].as_f64().unwrap();
+            for g in row["glyphs"].as_array().unwrap() {
+                let actual = &plan.glyphs[index];
+                assert_eq!(u64::from(actual.glyph.id), g["g"].as_u64().unwrap());
+                if simple {
+                    let local_x = x + (cursor + g["dx"].as_f64().unwrap() / em) * sx - width / 2.;
+                    let local_y = y + g["dy"].as_f64().unwrap() / em * h - up;
+                    let p = apply(
+                        &actual.transform,
+                        Vec2::new(actual.glyph.origin[0], actual.glyph.origin[1]),
+                    );
+                    assert!(
+                        (p.x + local_y).abs() < 1e-9 && (p.y - local_x).abs() < 1e-9,
+                        "{c}"
+                    );
+                }
+                cursor += g["ax"].as_f64().unwrap() / em;
+                index += 1;
+            }
+        }
+        assert_eq!(index, plan.glyphs.len());
+        assert!((plan.pitch - pitch).abs() < 1e-9);
+        // p stays a separate f64 origin; no cancellation in model glyphs.
+        t.p = Vec2::new(-9e12, 2e12);
+        assert_eq!(plan, shaping::placed::layout(&t, font, false).unwrap());
+        let ink = plan.ink.unwrap();
+        for g in &plan.glyphs {
+            for op in g.outline().unwrap() {
+                let pts = match op {
+                    shaping::OutlineOp::Move(p) | shaping::OutlineOp::Line(p) => vec![p],
+                    shaping::OutlineOp::Quad(a, b) => vec![a, b],
+                    shaping::OutlineOp::Cubic(a, b, c) => vec![a, b, c],
+                    shaping::OutlineOp::Close => vec![],
+                };
+                // Bézier control points can exceed the TTF ink extrema;
+                // endpoints are checked separately in the contour oracle.
+                assert!(pts.iter().flatten().all(|v| v.is_finite()));
+            }
+        }
+        assert!(ink.iter().all(|x| x.is_finite()));
+    }
+}
+
+#[test]
+fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent() {
+    use kentos_geometry_core::{
+        entity::TextPlace, Vec2,
+        text::{
+            Font,
+            along::Curve,
+            paragraph::{Run, Script},
+        },
+    };
+    let curve = Curve {
+        pts: vec![Vec2::new(10., 10.)],
+        bulges: Some(vec![(std::f64::consts::PI / 8.).tan()]),
+    };
+    let runs = [Run {
+        start: 3,
+        end: 6,
+        script: Some(Script::Stack),
+        underline: true,
+        ..Run::default()
+    }];
+    let mut t = TextPlace::line(
+        Vec2::new(5e6, 4.4e6),
+        "a\u{0301}\u{0323}1/2",
+        1.,
+        0.,
+        None,
+        None,
+    );
+    t.runs = &runs;
+    t.path = Some(&curve);
+    let plan = shaping::placed::layout(&t, Font::from_id("arimo"), false).unwrap();
+    let base = plan
+        .glyphs
+        .iter()
+        .filter(|g| g.glyph.scalars.start == 0)
+        .collect::<Vec<_>>();
+    assert!(base.len() >= 2, "must exercise separate base/mark glyphs");
+    for g in &base {
+        assert_eq!(g.transform, base[0].transform);
+    }
+    let fraction = plan
+        .glyphs
+        .iter()
+        .filter(|g| g.glyph.scalars.start >= 3)
+        .collect::<Vec<_>>();
+    assert_eq!(fraction.len(), 2);
+    assert_eq!(fraction[0].transform, fraction[1].transform);
+    // The arc is x=10sin(theta), y=10-10cos(theta), radius ten.
+    // Its glyph group's center lies at arc length (left+right)/2.
+    for group in [&base, &fraction] {
+        let left = group
+            .iter()
+            .map(|g| g.glyph.pen)
+            .fold(f64::INFINITY, f64::min);
+        let right = group
+            .iter()
+            .map(|g| g.glyph.pen + g.glyph.advance)
+            .fold(f64::NEG_INFINITY, f64::max);
+        let middle = (left + right) / 2.;
+        let theta = middle / 10.;
+        let m = group[0].transform;
+        assert!((m[0] - theta.cos()).abs() < 1e-12);
+        assert!((m[1] - theta.sin()).abs() < 1e-12);
+        assert!((m[4] - (10. * theta.sin() - middle * theta.cos())).abs() < 1e-12);
+        assert!((m[5] - (10. - 10. * theta.cos() - middle * theta.sin())).abs() < 1e-12);
+    }
+    assert_eq!(
+        plan.rules.len(),
+        2,
+        "fraction bar and underline are both preserved"
+    );
+}
+
+#[test]
+fn straight_curve_and_straight_text_share_contours_and_profile_geometry_rejects_overflow() {
+    use kentos_geometry_core::{
+        entity::TextPlace, Vec2,
+        text::{Font, along::Curve},
+    };
+    let curve = Curve {
+        pts: vec![Vec2::new(0., 0.), Vec2::new(100., 0.)],
+        bulges: None,
+    };
+    let mut t = TextPlace::line(
+        Vec2::new(0., 0.),
+        "Ög\u{0306}ç AV مرحبا",
+        0.3,
+        37.,
+        None,
+        Some(0.8),
+    );
+    let flat = shaping::placed::layout(&t, Font::from_id("arimo"), true).unwrap();
+    t.path = Some(&curve);
+    let bent = shaping::placed::layout(&t, Font::from_id("arimo"), true).unwrap();
+    assert_eq!(flat.glyphs.len(), bent.glyphs.len());
+    for (a, b) in flat.glyphs.iter().zip(&bent.glyphs) {
+        assert_eq!(a.glyph, b.glyph);
+        for (x, y) in a.transform.iter().zip(b.transform) {
+            assert!((x - y).abs() < 1e-12);
+        }
+    }
+    t.height = f64::MAX;
+    assert_eq!(
+        shaping::placed::layout(&t, Font::DEFAULT, false),
+        Err(Error::InvalidGeometry)
+    );
+}
+
+#[test]
+fn curved_profile_geometry_uses_atomic_groups_for_origin_direction_width_and_masks() {
+    use kentos_geometry_core::{entity::TextPlace,Vec2,text::{Font,along::Curve,paragraph::{Flow,Engine}}};
+    let flow=Flow {engine:Some(Engine::UnicodeV1),..Default::default()};
+    let curve=Curve {pts:vec![Vec2::new(100.,0.)],bulges:None};
+    let mut t=TextPlace::line(Vec2::new(5_000_000.,4_400_000.),"a\u{301}\u{323} AV",0.3,0.,None,Some(0.8));
+    t.flow=Some(&flow);t.path=Some(&curve);t.box_width=Some(0.01);
+    let font=Font::from_id("arimo");
+    let plan=t.unicode_plan(font).unwrap();
+    assert_eq!(plan.clusters.len(),4,"base/marks, space, A, V");
+    assert_eq!(t.origin(font),t.p);
+    assert_eq!(t.curved_baseline(font),Some((t.p,0.)));
+    assert!((t.width(font)-plan.width).abs()<1e-12,"curve text ignores paragraph wrapping");
+    let [a,b,c,d]=plan.frame.unwrap();
+    let margin=t.height*0.1;
+    let ring=t.mask(font);
+    assert!((ring[0].x-(t.p.x+a-margin)).abs()<1e-9);
+    assert!((ring[0].y-(t.p.y+b-margin)).abs()<1e-9);
+    assert!((ring[2].x-(t.p.x+c+margin)).abs()<1e-9);
+    assert!((ring[2].y-(t.p.y+d+margin)).abs()<1e-9);
+    t.rotation=180.;
+    let reversed=t.readable_curve(font).unwrap();
+    assert!((reversed.p.x-(t.p.x-100.)).abs()<1e-9);
+    assert_eq!(reversed.rotation,0.);
+}

@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-ADV-10 / ADR0914 (devam ediyor): `layout.engine: unicode-v1`, KCAD şema 163 ve ortak glyph/contour
+  planı. Web'e dönüldüğünde codec/kolon aktarımı, profil dönüşümü, seçim/maske kutusu, Canvas/WebGPU yazı çizimi
+  ve pafta PDF girdisi aynı gerçek GID/yerleşim planına bağlanmalı; kaynak metni CSS fontuyla yeniden dizmek
+  eşdeğer değildir. Birleşik karakter, RTL, kesir, sütun, büyük koordinat, zoom/Undo ve 1:20–1:50 çıktı izleri
+  oynatılmalı. Web desteği yapılmış sayılmaz; mevcut web paketinin yeni şemayı okuyabildiği varsayılmamalı.
 - plan/road.md Y1–Y13 (ADR 0900–0911): KentOS Yol bütünüyle masaüstünde; web'de yol projesi türü, Arazi, Güzergâh
   ve Koridor sekmeleri, pencereler, Yol projesi paneli ve Görünüşler yok. Çekirdek (`kentos-road`) paylaşılır;
   web'e dönüşte dar WASM bağlayıcısıyla ve aynı ortak durumlarla gelir.

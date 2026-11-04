@@ -1474,6 +1474,25 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   ve iki yazı sistemi testi geçti; eski metin regresyonlarıyla 39 test temiz.
   Ligatür içi parçalı renk/kırpma henüz eksik ve açık hata olarak tutuluyor.
   Yeni ortak planın gerçek ekran/PDF hattına bağlanması devam ediyor.
+- Açık `unicode-v1` profili KCAD şema 163 ile kök/blok yazılarında saklanıyor;
+  alanı olmayan eski dosya legacy kalır. Ortak model konturu, gerçek ink kutusu,
+  eğri üzerindeki atomik kümeler ve sürüm anahtarlı sahne önbelleği bağlandı.
+  44 çekirdek ve 15 uygulama denetim testi geçti; zoom/değişiklik/Undo önbellek
+  testi temiz. Gerçek GUI'de yedi yazı, düzenleme/Undo/zoom/Farklı kaydet
+  denendi; bağımsız okuyucu Undo sonrası kaydın aynı byte'ları verdiğini doğruladı.
+- PDF aynı GID ve dönüşüm matrisleriyle gerçek font alt kümeleri üretiyor.
+  29 font/328 CID ve GUI dosyasından beş font/60 CID konturu bağımsız okuyucuyla
+  eşleşti. 13 PDF testi geçti; eksik harf/profil/matris açık hata. RTL metnin
+  farklı PDF okuyucularında arama/kopyalama kabulü henüz eksik; yalnız doğru
+  görseli tam kabul saymıyoruz. Ekran/PDF dosyaları repo dışında.
+- Güncel uygulamada iki pafta (1:20 ve 1:50) açıldı ve arayüzden birlikte PDF'ye
+  kaydedildi. Beş font/64 CID konturu bağımsız okundu; yazı boyu oranı tam 2,5,
+  ilk baseline kâğıt konumu bağımsız hesaba 0,00002 mm toleransla uydu.
+  Tam KCAD takımı 235/235, yerel kitap PDF takımı 8/8 (bir ayrı dosya testi ignored) ve ortak PDF takımı
+  13/13 geçti (ayrı dosya üretme testi ignored).
+- CPU baskı önizlemesi de ortak konturlara bağlandı. İki paftada üretildi;
+  bağımsız Poppler rasteriyle 1:50 sayfanın mürekkep sınırları bir piksel
+  içinde eşleşti. Python bağlamasında altı ve MCP'de beş sözleşme testi geçti.
 - Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
   eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
 

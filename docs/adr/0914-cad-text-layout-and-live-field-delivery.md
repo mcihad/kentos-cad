@@ -166,6 +166,91 @@ ve ithal dosyalar için tek bir cap-height dönüşümü çıkarılmaz. Mevcut K
 model/em davranışı korunur; DWG/DXF yüksekliği ve gerçek kâğıt ölçüsü,
 font metrikleri ve karşılaştırılabilir gerçek çıktı ile ayrıca doğrulanacak.
 
+## Açık profil entegrasyonu — 4 Kasım 2026, devam ediyor
+
+Önceki hazırlık kayıtlarının ardından `layout.engine: "unicode-v1"` açık
+profili eklendi. Alan yoksa legacy ölçü ve satır düzeni korunur. Dosya
+açılması, kaydedilmesi veya font listesinin değişmesi profil yükseltmez.
+KCAD şema 163 bu bilgiyi kök ve blok yazılarında taşır; önceki şemalar
+motor alanını reddeder. Motor dışında düzen bilgisi olmayan yazı da
+legacy sayılıp alanını kaybedemez. Genel arayüzde varsayılan etkinleştirme
+ve açık, tek Undo ile profil dönüşümü henüz yapılmadı.
+
+- Ortak `shaping::placed` planı gerçek font konturunu, eğri üzerindeki
+  grapheme/ligatür/kesir gruplarını, alt çizgileri ve fontun gerçek taşmasını
+  içeren seçim/maske kutusunu üretir. Koordinatlar yazı noktasına göredir;
+  kamera çıkarımı f64 yapılır, çizime geçerken f32'ye çevrilir.
+- Yerel sahne kaynak metni UI font motorunda yeniden dizmez. Hazırlanmış
+  konturlar nesne sürümü, font ve blok açılımı kimliğiyle önbelleklenir.
+  Yakınlaştırma planı bozmaz; değişiklik ve Undo sürümü geçersizleştirir.
+  Önbellek 128 yazı ve toplam bir milyon kontur işlemiyle sınırlıdır.
+- Açık profilin ölçüm sorguları desteklenmeyen metin için hata verir;
+  sahnedeki hata işaretinin kutusunu gerçek yazı ölçüsü olarak döndürmez.
+  Eğriye oturtma/düzleştirme, okunurluk ve maske hesabı aynı kümeleri kullanır.
+- PDF aynı GID'leri ve em dönüşüm matrislerini alır. Yirmi dokuz yüzün
+  sabit paketli byte'larından gerçek font alt kümesi, açık CID→GID tablosu
+  ve ToUnicode üretilir. Aynı glyph'in farklı kaynak kümeleri ayrı CID
+  alabilir; font byte'ları alt küme adına da katılır. Sistem fontu yoktur.
+- PDF'de gerçek yazı nesneleri korunur; yalnız kontur çizip görünmez
+  sahte metin eklenmez. `ActualText` mantıksal kaynak metni taşır; kesir
+  yazımındaki `#` görünür `/`, tolerans ayıracı `^` boşluk olarak aktarılır.
+  Tek yazının PDF replacement metni 16.382 UTF-16 birimiyle sınırlıdır;
+  aşınca metin kesilmez, yazıyı bölmeyi isteyen açık hata verilir.
+- Desteklenmeyen profil, font/GID, sıfır veya sonlu olmayan dönüşüm ve
+  aşırı kaynak/yerleşim bütçesi PDF'de reddedilir. Paketli tamamlayıcı
+  fontların gerçekten kullanıldığı yerler denetimde bilgi olarak gösterilir.
+
+Kabul kanıtları: 44 çekirdek metin testi, 15 uygulama denetim testi,
+13 PDF testi (bir dosya üretme testi ayrı/ignored) geçti. Gerçek GUI'de
+yedi yazı açıldı; birleşik karakter silme, onay, Undo, yakınlaştırma ve
+Farklı kaydet denendi. Bağımsız KCAD okuyucusu, Undo sonrası kaydedilen
+dosyanın özgün dosyayla **byte düzeyinde aynı** olduğunu doğruladı.
+Bağımsız pypdf + FontTools okuyucusu 29 yüzün 328 CID konturunu paketli
+orijinalleriyle karşılaştırdı; GUI'den kaydedilen örneğin PDF'sindeki beş
+yüz ve 60 CID de eşleşti. Sonraki gerçek GUI kabulünde 1:20 ve 1:50 iki
+pafta açıldı, arayüzden birlikte PDF'ye kaydedildi. Bu çıktının beş yüz ve
+64 CID konturu da doğrulandı. Bağımsız PDF okuyucusu ilk glyph matrisindeki
+boyut oranını tam 2,5 buldu; ilk baseline konumları bağımsız kâğıt hesabına
+0,00002 mm toleransla uydu. KCAD'in 235 testi, yerel kitap PDF yolunun
+sekiz testi (ayrı dosya testi ignored) ve ortak PDF'nin 13 testi tekrar geçti. Bunlar yeni profilin
+bütün kabulü değildir.
+
+CPU baskı önizlemesi/raster map çıktısı da hazırlanmış konturları ve satır
+renklerini kullanır; ikinci kez legacy fontla şekillendirme yapmaz. Gerçek
+GUI dosyasının iki paftasının 144 dpi önizlemesi üretildi. 1:50 önizlemesi
+bağımsız Poppler PDF rasteriyle aynı 2382 × 1684 pikselde karşılaştırıldı:
+tüm mürekkep sınırları bir piksel içinde; bir piksel komşuluğunda eşleşmeyen
+CPU pikseli 0/6726, PDF pikseli 1/7084. Anti-aliasing motorları farklıdır;
+bu sonuç byte düzeyinde raster eşitliği veya bütün metin çeşitleri kabulü
+olarak yorumlanmaz. Deneme dosyaları repo dışında kalır.
+
+Ek otomatik çıktı testinde renkli kesir/alt çizgi, karışık yazı ve eğri
+metin, 900 milyon/400 milyon metre referans ve 17° döndürülmüş iki pafta
+(1:50/1:100) kullanıldı. Her yönde renkli mürekkebin en az %99'u bir piksel
+komşuluğunda bağımsız PDF rasteriyle eşleşti; kırmızı kesir ve mavi temel
+harfler ayrıca sayıldı. Belge bu kontrollerle değişmez. Güncel gerçek
+GUI'de 1:50 baskı önizlemesi açıldı; font fallback bilgisi hata rengi yerine
+standart vurgu rengiyle gösterildi. Aynı bilgi PDF ön denetiminde de bilgi
+düzeyinde tutulur.
+
+**Açık kabul:** PDF görseli ve mantıksal ActualText doğru olsa da kullanılan
+Poppler sürümü bazı karışık RTL replacement metnini çıkarırken ters
+sıralıyor; tüm okuyucularda arama/kopyalama kabulü tamamlanmış sayılmaz.
+PDFium 156.0.8076.0 ile Arapça ve İbranice sözcüklerin ayrı ayrı araması
+ve kopyası doğru; bütün karışık satırın run sırası kaynak sırayla aynı değil.
+Bu nedenle yalnız sözcük araması tam paragraf kopyası kabulü sayılmaz.
+Ligatür içi parçalı renk/alt çizgi, bütün field taşıyıcıları ve açık profil
+dönüşümü sürüyor. Python SDK ve komut kataloğu güncellendi; yeniden derlenen
+Python bağlamasıyla altı test, MCP üzerinden beş test geçti. Kaynak metin,
+profil ve salt okunur denetim aynı sözleşmeyle korunur.
+Web çizimi ADR0228 uyarınca TODOS.md §0.2'ye ertelendi. CAD-ADV-10 bu nedenle açık kalır. Ekranlar ve deneme dosyaları
+repo dışında tutulur.
+
+PDF kaynakları: [pdf-writer 0.15.0](https://docs.rs/pdf-writer/0.15.0/pdf_writer/),
+[PDF Association, ActualText](https://pdfa.org/download-area/publications/Tagged-PDF-Best-Practice-Guide.pdf),
+[PDFium RTL ActualText kabul örneği](https://pdfium.googlesource.com/pdfium.git/+/refs/heads/chromium/8077/testing/resources/actual_text_rtl.in).
+Bu kontroller PDF/A veya PDF/UA uygunluk sertifikası değildir.
+
 ## MTEXT aktarımındaki veri kaybı
 
 Sayısal geometri paketinin önceki `kind=10` yazı kaydı `flow` alanını

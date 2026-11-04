@@ -348,7 +348,7 @@ impl App {
                 if !self.cad_inspection_current() { return Task::none(); }
                 let Some(f) = self.cad_inspection.selected.and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i)).cloned() else { return Task::none(); };
                 if f.group == InspectionGroup::Annotations {
-                    if f.code.starts_with("text_font_") || f.code == "text_field_unverified" { return Task::none(); }
+                    if f.code.starts_with("text_font_") || matches!(f.code.as_str(),"text_field_unverified"|"text_layout_unsupported") { return Task::none(); }
                     if f.code.starts_with("text_field_") {
                         let doc = &self.document.as_ref().unwrap().model;
                         let slots = f.uids.iter().filter_map(|u| Uuid::parse_str(u).ok())
@@ -501,9 +501,10 @@ impl App {
                         else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" }
                         else if finding.code.starts_with("text_field_") { "Alanları yenile" }
                         else if finding.code.starts_with("text_font_") { "Yazı stilini inceleyin" }
+                        else if finding.code == "text_layout_unsupported" { "Yazı biçimini inceleyin" }
                         else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
                         (current && finding.group != InspectionGroup::Boundaries && finding.code != "dimension_override"
-                            && !finding.code.starts_with("text_font_") && finding.code != "text_field_unverified")
+                            && !finding.code.starts_with("text_font_") && !matches!(finding.code.as_str(),"text_field_unverified"|"text_layout_unsupported"))
                             .then(|| msg(Event::Repair))
                     ).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
                 ]
@@ -523,17 +524,18 @@ impl App {
             .cad_inspection
             .selected
             .and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i))?;
+        let tone = if f.severity == kentos_commands::InspectionSeverity::Info {Tone::Accent} else {Tone::Danger};
         let points: Vec<_> = f.points.iter().map(|p| Vec2::new(p.x, p.y)).collect();
         let markers = points
             .iter()
             .map(|p| Marker {
                 at: *p,
                 shape: MarkerShape::Ring(7.),
-                tone: Tone::Danger,
+                tone,
             })
             .collect();
         let strokes = if points.len() == 2 {
-            vec![Stroke::dashed(points.clone(), false, [5., 4.]).tone(Tone::Danger)]
+            vec![Stroke::dashed(points.clone(), false, [5., 4.]).tone(tone)]
         } else {
             Vec::new()
         };
@@ -544,7 +546,7 @@ impl App {
                 at: *p,
                 lines: vec![finding_title(&f.code).to_owned()],
             }),
-            tag_tone: Tone::Danger,
+            tag_tone: tone,
             ..Preview::default()
         })
     }
@@ -571,6 +573,8 @@ fn finding_title(code: &str) -> &'static str {
         "text_field_stale" => "Alan metni güncel değil",
         "text_field_broken" => "Alan kaynağı okunamıyor",
         "text_field_unverified" => "Alan zinciri doğrulanamadı",
+        "text_layout_unsupported" => "Yazı yerleşimi üretilemedi",
+        "text_font_fallback" => "Paketli tamamlayıcı font kullanılıyor",
         "text_font_substituted" => "Özgün font yerine başka font",
         _ => "Sınırı inceleyin",
     }

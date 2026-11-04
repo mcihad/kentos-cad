@@ -19,6 +19,7 @@ mod fonts;
 mod geo;
 mod images;
 mod maps;
+mod glyphs;
 pub use maps::includes_text_anchor;
 mod write;
 
@@ -202,6 +203,11 @@ pub enum TextAnchor {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapText {
+    /// Frozen Unicode glyphs in paper millimetres, relative to `at`, y up.
+    /// No further font lookup, shaping or anchor adjustment is permitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub glyphs: Option<GlyphText>,
     /// `[east (Y), north (X)]`, metres.
     pub at: [f64; 2],
     pub text: String,
@@ -234,6 +240,41 @@ pub struct MapText {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub lean: Option<f64>,
+}
+
+/// Exact placements from the shared CAD text engine; never an alternate text source.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct GlyphText {
+    pub profile: String,
+    pub glyphs: Vec<PdfGlyph>,
+    pub rules: Vec<PdfGlyphRule>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct PdfGlyph {
+    /// Index in the frozen unicode-v1 face manifest, not a system font index.
+    pub font: u16,
+    pub glyph: u16,
+    /// Logical cluster text, empty on subsequent glyphs of the same cluster.
+    pub text: String,
+    /// Normalized font em to paper millimetres, relative to the text anchor.
+    pub matrix: [f64; 6],
+    pub color: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct PdfGlyphRule {
+    pub corners: [[f64; 2]; 4],
+    pub color: String,
 }
 
 fn black() -> String {

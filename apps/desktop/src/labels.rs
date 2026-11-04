@@ -43,6 +43,7 @@ use crate::viewport::Canvas;
 use kentos_native_style::color::ColorMode;
 
 mod layer;
+mod unicode;
 #[cfg(test)]
 mod parts_tests;
 
@@ -234,6 +235,7 @@ pub struct Preview {
     pub text: String,
     pub runs: Vec<Run>,
     pub records: Vec<f64>,
+    pub unicode: Option<Rc<kentos_interaction::spatial::UnicodeText>>,
     /// Its face (docs/adr/0183 §2): its typeface, bold, italic and slant.
     pub face: kentos_commands::TextFace,
 }
@@ -342,6 +344,7 @@ fn build<'a>(
         p.text.hash(&mut look);
         format!("{:?}", p.runs).hash(&mut look);
         format!("{:?}", p.face).hash(&mut look);
+        format!("{:?}",p.unicode).hash(&mut look);
         for r in &p.records {
             r.to_bits().hash(&mut look);
         }
@@ -735,6 +738,7 @@ trait Ink {
     /// The picture's size (a frame's own; a fenced map's is the camera's).
     fn size(&self) -> Size;
     fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>);
+    fn shaped(&mut self,piece:&unicode::Piece<'_>);
     /// A quadrilateral of the screen filled (a multi-line text's mask, docs/adr/0182 §3).
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>);
     /// Segments stroked `width` wide in one colour (the texts too small to read, docs/adr/0626 §6).
@@ -760,6 +764,7 @@ trait Ink {
 }
 
 impl Ink for Frame {
+    fn shaped(&mut self,piece:&unicode::Piece<'_>) {unicode::paint(self,piece);}
     fn size(&self) -> Size {
         Frame::size(self)
     }
@@ -878,6 +883,7 @@ impl Collect<'_> {
         Some((
             ground,
             MapLabel {
+                unicode:None,
                 layer,
                 text: String::new(),
                 at,
@@ -902,6 +908,7 @@ impl Collect<'_> {
 
 #[cfg(test)]
 impl Ink for Collect<'_> {
+    fn shaped(&mut self,piece:&unicode::Piece<'_>) {unicode::collect(self,piece);}
     fn size(&self) -> Size {
         Size::ZERO
     }
@@ -941,6 +948,7 @@ impl Ink for Collect<'_> {
             .collect()
         });
         self.labels.push(MapLabel {
+            unicode:None,
             layer,
             text: piece.text.to_owned(),
             at,
@@ -1028,6 +1036,7 @@ impl Ink for Collect<'_> {
             .screen_to_world(f64::from(quad[0].x), f64::from(quad[0].y));
         // A mask without words: the PDF fills it in the paper's colour, under the layer's texts.
         self.labels.push(MapLabel {
+            unicode:None,
             layer,
             text: String::new(),
             at,
@@ -1259,6 +1268,7 @@ impl Labels<'_> {
         let scale = self.view.map_px() as f32;
         let letters = |text: &str, height: f64| (text.chars().count() as f32 * 0.8 + 2.0) * height as f32 * scale;
         let (at, reach) = match spot {
+            LabelSpot::Line {unicode:Some(_),..} => return true,
             LabelSpot::Text { slot, at, .. } => {
                 let reach = match self.doc.get(*slot) {
                     Some(Entity::Text(t)) => {
@@ -1895,6 +1905,10 @@ impl Labels<'_> {
                             frame.fill_quad(quad, self.colors.halo, Some(slot));
                         }
                     }
+                    (LabelSpot::Line{unicode:Some(text),at,..},_)=> {
+                        let color=self.ink_of(base.color.as_deref().or(self.layer_color(layer)));
+                        self.draw_unicode(frame,text,*at,color);
+                    }
                     (
                         LabelSpot::Line {
                             at,
@@ -2042,6 +2056,11 @@ impl Labels<'_> {
         self.camera.set(self.view);
         // The multi-line text being written or edited, over the rest (docs/adr/0182 §4).
         if let Some(p) = &self.preview {
+            if let Some(text)=&p.unicode {
+                if let Some(r)=p.records.chunks_exact(kentos_geometry_core::store::labels::LABEL_STRIDE).next() {
+                    self.draw_unicode(frame,text,Vec2::new(r[2],r[3]),self.colors.label);
+                }
+            } else {
             for r in p
                 .records
                 .chunks_exact(kentos_geometry_core::store::labels::LABEL_STRIDE)
@@ -2082,6 +2101,7 @@ impl Labels<'_> {
                     );
                 }
             }
+        }
         }
         // The texts too small to read, as faint bands, one stroke a colour and thickness (docs/adr/0626 §6): a
         // stroke's tessellation is linear where a fill's sweeps and sorts, and a butt-ended stroke as thick as the
@@ -2532,6 +2552,7 @@ struct Counted<'f, I: Ink> {
 }
 
 impl<I: Ink> Ink for Counted<'_, I> {
+    fn shaped(&mut self,piece:&unicode::Piece<'_>) {self.ops+=1;self.ink.shaped(piece);}
     fn size(&self) -> Size {
         self.ink.size()
     }

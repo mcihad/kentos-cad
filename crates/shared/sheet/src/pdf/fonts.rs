@@ -45,6 +45,7 @@ fn key_of(m: &FaceMetrics) -> Key {
 #[derive(Default)]
 pub(super) struct Usage {
     chars: BTreeMap<Key, BTreeSet<char>>,
+    pub glyphs: super::glyphs::Usage,
 }
 
 impl Usage {
@@ -117,6 +118,7 @@ impl Embedded {
 #[derive(Default)]
 pub(super) struct Fonts {
     by_key: BTreeMap<Key, Embedded>,
+    pub glyphs: super::glyphs::Fonts,
 }
 
 impl Fonts {
@@ -243,13 +245,13 @@ impl Fonts {
                 },
             );
         }
-        Ok(Fonts { by_key })
+        Ok(Fonts { by_key, glyphs: super::glyphs::Fonts::embed(doc, &usage.glyphs)? })
     }
 }
 
 /// The subset's PostScript name with its tag: six capitals from the face and its glyphs, so
 /// the same subset has the same name (and two subsets of a face differ).
-fn base_name(face: &ttf_parser::Face<'_>, key: &Key, glyphs: &[u16]) -> String {
+pub(super) fn base_name(face: &ttf_parser::Face<'_>, key: &Key, glyphs: &[u16]) -> String {
     let ps = face
         .names()
         .into_iter()

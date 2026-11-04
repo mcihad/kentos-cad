@@ -31,7 +31,7 @@ fn slot(s: &LabelSpot) -> Slot {
     }
 }
 
-fn paper_color(c: Option<&str>) -> String {
+pub(crate) fn paper_color(c: Option<&str>) -> String {
     match c {
         Some("fg" | "label" | "ink") | None => "#111111".into(),
         Some("fg-dim") => "#68717d".into(),
@@ -42,6 +42,7 @@ fn paper_color(c: Option<&str>) -> String {
 
 fn label(layer: &str, font: DrawingFont) -> MapLabel {
     MapLabel {
+        unicode: None,
         layer: layer.into(),
         text: String::new(),
         at: Vec2::new(0., 0.),
@@ -151,7 +152,7 @@ pub fn moved(mut l: MapLabel, map: &kentos_geometry_core::crs::map::MapProjectio
             .collect()
     };
     l.at = at;
-    l.rotation += turn;
+    if let Some(u) = &mut l.unicode { u.rotation += turn.to_radians(); } else { l.rotation += turn; }
     l.mask = match l.mask.take() {
         Some(r) => Some(ring(&r)?),
         None => None,
@@ -230,6 +231,7 @@ pub fn labels_in_view(
     let fade = |out: &mut [MapLabel]| {
         for l in out {
             l.color = crate::layers::faint_on_paper(&l.color);
+            if let Some(u)=&mut l.unicode {for c in u.colors.iter_mut().flatten() {*c=crate::layers::faint_on_paper(c);}}
         }
     };
     // A recipe's pens and black and white (docs/adr/0783 §1): the words of an object take its category's pen colour,
@@ -247,6 +249,7 @@ pub fn labels_in_view(
     let recolor = |out: &mut [MapLabel], c: &str| {
         for l in out {
             l.color = c.to_owned();
+            if let Some(u)=&mut l.unicode {u.colors.fill(Some(c.to_owned()));}
         }
     };
     for spot in spots {
@@ -415,6 +418,16 @@ pub fn labels_in_view(
                 if *masked {
                     ground_mask = -1.;
                 }
+            }
+            (LabelSpot::Line {unicode:Some(text),at,height,..},_)=> {
+                l.at = *at;
+                l.text = text.source.clone();
+                ground_height = *height;
+                l.unicode = Some(crate::maps::UnicodeLabel {
+                    text: text.clone(), scale: 1., rotation: 0.,
+                    colors: text.runs.iter().map(|r| r.color.as_deref().map(|c| paper_color(Some(c)))).collect(),
+                });
+                l.mask = text.mask_outline().map(|points| points.map(|[x,y]| [at.x+x,at.y+y]).to_vec());
             }
             (
                 LabelSpot::Line {

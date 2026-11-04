@@ -1255,6 +1255,7 @@ fn text_flow(
     use kentos_geometry_core::text::paragraph::{Columns, Flow};
     l.map(|l| {
         Box::new(Flow {
+            engine:l.engine.map(|e|match e {kentos_contracts::TextLayoutEngine::UnicodeV1=>kentos_geometry_core::text::paragraph::Engine::UnicodeV1}),
             first: l.indent.unwrap_or(0.0),
             left: l.left_indent.unwrap_or(0.0),
             tabs: l.tabs.clone(),

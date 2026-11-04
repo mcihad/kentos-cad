@@ -1410,6 +1410,8 @@ pub struct TextPlace<'a> {
     /// its box with its letters. None, false and 0 for the project's look.
     pub font: Option<Font>,
     pub bold: bool,
+    /// Actual italic face selection for the explicit Unicode profile.
+    pub italic: bool,
     pub lean: f64,
     /// The curve its letters stand on (docs/adr/0196); none for a straight text.
     pub path: Option<&'a crate::text::along::Curve>,
@@ -1446,6 +1448,7 @@ impl<'a> TextPlace<'a> {
                 flow: flow.as_deref(),
                 font: face.font,
                 bold: face.is_bold(),
+                italic: face.font.is_some() && face.italic,
                 lean: face.lean(),
                 path: path.as_ref(),
             }),
@@ -1475,6 +1478,7 @@ impl<'a> TextPlace<'a> {
             flow: None,
             font: None,
             bold: false,
+            italic: false,
             lean: 0.0,
             path: None,
         }
@@ -1519,8 +1523,93 @@ impl<'a> TextPlace<'a> {
         self.font.unwrap_or(drawing)
     }
 
+    /// Whether the document explicitly selected the frozen Unicode profile.
+    pub fn is_unicode(&self) -> bool {
+        self.flow
+            .is_some_and(|f| f.engine == Some(crate::text::paragraph::Engine::UnicodeV1))
+    }
+
+    /// One glyph plan for model geometry and both drawing targets. This is
+    /// fallible: unsupported text never silently gets a different font metric.
+    pub fn unicode_plan(
+        &self,
+        font: Font,
+    ) -> Result<crate::text::shaping::placed::Layout, crate::text::shaping::Error> {
+        crate::text::shaping::placed::layout(self, font, self.italic)
+    }
+
+    fn check_profile(&self, font: Font) -> Result<(), String> {
+        if self.is_unicode() {
+            self.unicode_plan(font).map_err(|e| e.message(self.text))?;
+        }
+        Ok(())
+    }
+
+    /// Curved text's actual cluster baseline and direction; legacy scalar
+    /// widths never participate in a Unicode profile's straighten/readable tools.
+    pub fn curved_baseline(&self, font: Font) -> Option<(Vec2, f64)> {
+        if !self.is_unicode() {
+            return self.along(font).map(|a| a.straight());
+        }
+        self.path?;
+        let plan = self.unicode_plan(font).ok()?;
+        let (Some(first), Some(last)) = (plan.clusters.first(), plan.clusters.last()) else {
+            return Some((self.p, self.rotation));
+        };
+        let d = Vec2::new(last.mid.x - first.mid.x, last.mid.y - first.mid.y);
+        let turn = if plan.clusters.len() == 1 || crate::jsmath::js_hypot(d.x, d.y) <= 1e-9 {
+            first.turn
+        } else {
+            crate::text::along::degrees(crate::jsmath::atan2(d.y, d.x))
+        };
+        Some((
+            Vec2::new(self.p.x + first.at.x, self.p.y + first.at.y),
+            turn,
+        ))
+    }
+    pub fn readable_curve(&self, font: Font) -> Option<crate::text::along::Placed> {
+        if !self.is_unicode() {
+            return self.along(font)?.readable();
+        }
+        let (_, turn) = self.curved_baseline(font)?;
+        if !crate::text::along::upside_down(turn) {
+            return None;
+        }
+        let (p, rotation, curve) = self.path?.reversed(self.p, self.rotation);
+        Some(crate::text::along::Placed {
+            p,
+            rotation,
+            curve,
+            align: crate::text::along::swapped(self.align, true),
+        })
+    }
+
     /// Its lines and box (docs/adr/0182 §2).
     pub fn layout(&self, font: Font) -> crate::text::paragraph::Layout {
+        if self.is_unicode() {
+            use crate::text::{paragraph::{Layout,Line},shaping::{self,Style}};
+            let laid=shaping::rich::layout(self.text,self.runs,Style {
+                family:self.font_or(font).id(),weight:if self.bold {600}else{400},
+                italic:self.italic,..Style::default()
+            },shaping::paragraph::Settings {
+                height:self.height,width_factor:self.width_factor.unwrap_or(1.),
+                box_width:if self.path.is_some() {None}else{self.box_width},line_spacing:self.line_spacing.unwrap_or(1.),
+                along:if self.path.is_some(){0.}else{self.align.map_or(0.,TextAlign::along)},flow:if self.path.is_some(){None}else{self.flow},
+            });
+            return match laid {
+                Ok(laid)=>Layout {
+                    lines:laid.flow.pieces.iter().map(|p|Line {
+                        start:p.scalars.start as usize,end:p.scalars.end as usize,
+                        width:p.line.advance*self.height*self.width_factor.unwrap_or(1.),
+                        x:p.at[0],y:-p.at[1],
+                    }).collect(),
+                    width:laid.flow.width,pitch:laid.flow.pitch,depth:laid.flow.depth,
+                },
+                // A failed profile has a finite one-em error marker. Never
+                // use legacy approximate widths for a Unicode profile.
+                Err(_)=>Layout {lines:Vec::new(),width:self.height,pitch:self.height,depth:1},
+            };
+        }
         crate::text::paragraph::lay_out(&crate::text::paragraph::Paragraph {
             text: self.text,
             runs: self.runs,
@@ -1584,6 +1673,9 @@ impl<'a> TextPlace<'a> {
     /// `p` less its alignment's share of its width along the baseline and
     /// of its height up from it.
     pub fn origin(&self, font: Font) -> Vec2 {
+        if self.is_unicode() && self.path.is_some() {
+            return self.curved_baseline(font).map_or(self.p,|b|b.0);
+        }
         // Along a curve, its first letter's (docs/adr/0196 §2).
         if let Some(a) = self.along(font) {
             return a.letters().first().map_or(self.p, |l| l.at);
@@ -1624,6 +1716,14 @@ impl<'a> TextPlace<'a> {
     /// Its rotated box `margin` wider all round (a hatch leaves it open so,
     /// docs/adr/0186 §4).
     pub fn outline_grown(&self, font: Font, margin: f64) -> Vec<Vec2> {
+        if self.is_unicode() {
+            let frame=self.unicode_plan(font).ok().and_then(|p|p.frame)
+                .unwrap_or([0.,-0.23*self.height,self.height,1.15*self.height]);
+            let [a,b,c,d]=frame;
+            let (u,v)=self.axes();
+            return [[a-margin,b-margin],[c+margin,b-margin],[c+margin,d+margin],[a-margin,d+margin]]
+                .map(|[x,y]|Vec2::new(self.p.x+u.x*x+v.x*y,self.p.y+u.y*x+v.y*y)).to_vec();
+        }
         // Along a curve, its letters' boxes as one ring (docs/adr/0196 §2.7).
         if let Some(a) = self.along(font) {
             let letters = a.letters();
@@ -1734,6 +1834,7 @@ impl<'a> TextPlace<'a> {
     /// The box its mask fills (docs/adr/0145 §4): its outline with a tenth
     /// of its height around it.
     pub fn mask(&self, font: Font) -> Vec<Vec2> {
+        if self.is_unicode() {return self.outline_grown(font,self.height*0.1);}
         let (h, m) = (self.height * 1.15, self.height * 0.1);
         let (w, below, _, _) = self.extent(font);
         self.frame(font, (-m, -h * 0.2 - m - below), (w + m, h + m))
@@ -2214,9 +2315,11 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
+        italic: italic_of(v)?,
         lean: lean_of(v)?,
         path: path.as_ref(),
     };
+    place.check_profile(font)?;
     let width: Option<f64> = json::read_field(v, "width")?;
     let turned = match width {
         Some(w) => place.readable_at(w),
@@ -2249,9 +2352,11 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
         flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
+        italic: italic_of(v)?,
         lean: lean_of(v)?,
         path: path.as_ref(),
     };
+    place.check_profile(font)?;
     let width: Option<f64> = json::read_field(v, "width")?;
     Ok(match width {
         Some(w) => place.realigned_at(to, w),
@@ -2286,6 +2391,7 @@ pub(crate) fn along_json<T>(
         flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
+        italic: italic_of(v)?,
         lean: lean_of(v)?,
         path: path.as_ref(),
     };
@@ -2297,6 +2403,12 @@ pub(crate) fn along_json<T>(
 fn bold_of(v: &Json) -> Result<bool, String> {
     use crate::api::json::Flat;
     Ok(crate::text::face::Face::read_flat(v)?.is_bold())
+}
+
+fn italic_of(v: &Json) -> Result<bool, String> {
+    use crate::api::json::Flat;
+    let f = crate::text::face::Face::read_flat(v)?;
+    Ok(f.font.is_some() && f.italic)
 }
 
 /// A text's slant's tangent as the JSON ops read it: 0 without one.
@@ -2335,9 +2447,11 @@ fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
         flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
+        italic: italic_of(v)?,
         lean: lean_of(v)?,
         path: path.as_ref(),
     };
+    place.check_profile(font)?;
     let mask: Option<bool> = json::read_field(v, "mask")?;
     let mut out = Vec::new();
     crate::store::labels::paragraph_records(&place, font, mask == Some(true), 0.0, None, &mut out);
@@ -2384,9 +2498,11 @@ fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
         flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
+        italic: italic_of(v)?,
         lean: lean_of(v)?,
         path: path.as_ref(),
     };
+    place.check_profile(font)?;
     let laid = place.layout(font);
     let (along, up) = place.shares(place.align, font);
     Ok(LaidOut {
@@ -2423,9 +2539,11 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
         flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
+        italic: italic_of(v)?,
         lean: lean_of(v)?,
         path: path.as_ref(),
     };
+    place.check_profile(font)?;
     Ok(place.outline(font))
 }
 

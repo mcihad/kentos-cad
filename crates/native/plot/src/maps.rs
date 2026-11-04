@@ -31,8 +31,18 @@ pub const PX_MM: f64 = 25.4 / 96.0;
 /// the paper), its size in paper mm (the screen's pixels at 100 % are the paper's CSS pixels), its
 /// face, its colour and its halo's (`#rrggbb` or `#rrggbbaa`); the paper-coloured box under a
 /// masked text (docs/adr/0145), on the ground. The host lays them out (the desktop's labels.rs).
+#[derive(Clone,Debug,PartialEq)]
+pub struct UnicodeLabel {
+    pub text: std::rc::Rc<kentos_interaction::spatial::UnicodeText>,
+    pub scale: f64,
+    pub rotation: f64,
+    pub colors: Vec<Option<String>>,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct MapLabel {
+    /// The exact glyph plan; absent for legacy scalar text.
+    pub unicode: Option<UnicodeLabel>,
     /// The layer of the object it is written for.
     pub layer: String,
     pub text: String,
@@ -61,8 +71,9 @@ pub struct MapLabel {
 /// A label as the PDF writes it (the web's pdfExport.ts `coreText`).
 fn text_of(l: &MapLabel, font: &str) -> MapText {
     MapText {
+        glyphs: glyphs_of(l),
         at: [l.at.x, l.at.y],
-        text: l.text.clone(),
+        text: pdf_text(l),
         size: l.size,
         rotation: l.rotation,
         color: l.color.clone(),
@@ -75,6 +86,117 @@ fn text_of(l: &MapLabel, font: &str) -> MapText {
         width_factor: (l.width_factor != 1.0).then_some(l.width_factor),
         lean: (l.lean != 0.0).then_some(l.lean),
     }
+}
+
+/// Stack separators are authoring syntax, not visible PDF characters.
+fn pdf_text(l: &MapLabel) -> String {
+    let Some(u) = &l.unicode else {
+        return l.text.clone();
+    };
+    l.text
+        .chars()
+        .enumerate()
+        .map(|(i, c)| {
+            if matches!(c, '#' | '^')
+                && u.text
+                    .runs
+                    .get(u.text.runs.partition_point(|r| r.end <= i as u32))
+                    .is_some_and(|r| {
+                        r.script == Some(kentos_geometry_core::text::paragraph::Script::Stack)
+                            && r.start <= i as u32
+                    })
+            {
+                if c == '#' { '/' } else { ' ' }
+            } else {
+                c
+            }
+        })
+        .collect()
+}
+
+/// Convert the prepared model-relative plan to paper-relative em matrices.
+/// The world anchor never participates in these small-coordinate calculations.
+fn glyphs_of(l: &MapLabel) -> Option<kentos_sheet::pdf::GlyphText> {
+    use kentos_geometry_core::geom::affine;
+    use kentos_sheet::pdf::{GlyphText, PdfGlyph, PdfGlyphRule};
+    let u = l.unicode.as_ref()?;
+    let plan = u.text.plan.as_ref().ok()?;
+    let k = l.size / u.text.height * u.scale;
+    let outer = affine::compose(
+        &affine::rotation(u.rotation, Vec2::new(0., 0.)),
+        &affine::scaling(k, Vec2::new(0., 0.)),
+    );
+    let color = |scalar| {
+        let i = u.text.runs.partition_point(|r| r.end <= scalar);
+        u.text
+            .runs
+            .get(i)
+            .filter(|r| r.start <= scalar)
+            .and_then(|_| u.colors.get(i))
+            .and_then(|c| c.clone())
+            .unwrap_or_else(|| l.color.clone())
+    };
+    let mut seen = std::collections::HashSet::new();
+    let glyphs = plan
+        .glyphs
+        .iter()
+        .map(|placed| {
+            let g = &placed.glyph;
+            let em = [
+                g.size,
+                0.,
+                g.slant * g.size,
+                g.size,
+                g.origin[0],
+                g.origin[1],
+            ];
+            let matrix = affine::compose(&outer, &affine::compose(&placed.transform, &em));
+            let mut text = if seen.insert((g.bytes.start, g.bytes.end)) {
+                u.text.source[g.bytes.clone()].to_owned()
+            } else {
+                String::new()
+            };
+            if text == "#"
+                && u.text
+                    .runs
+                    .get(u.text.runs.partition_point(|r| r.end <= g.scalars.start))
+                    .is_some_and(|r| {
+                        r.script == Some(kentos_geometry_core::text::paragraph::Script::Stack)
+                            && r.start <= g.scalars.start
+                            && g.scalars.end <= r.end
+                    })
+            {
+                text = "/".into();
+            }
+            PdfGlyph {
+                font: g.font.0,
+                glyph: g.id,
+                text,
+                matrix,
+                color: color(g.scalars.start),
+            }
+        })
+        .collect();
+    let rules = plan
+        .rules
+        .iter()
+        .map(|r| PdfGlyphRule {
+            corners: r.corners.map(|[x, y]| {
+                let p = affine::apply(&outer, Vec2::new(x, y));
+                [p.x, p.y]
+            }),
+            color: u
+                .text
+                .runs
+                .get(r.run)
+                .map_or_else(|| l.color.clone(), |r| color(r.start)),
+        })
+        .collect();
+    Some(GlyphText {
+        profile: "unicode-v1".into(),
+        glyphs,
+        rules,
+    })
 }
 
 /// A masked text's paper-coloured box.
@@ -330,6 +452,12 @@ pub fn collect_vector_profile(
     labels: &[MapLabel],
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Result<MapContent, VectorIssue> {
+    for l in labels {
+        if let Some(u) = &l.unicode
+            && let Err(error) = &u.text.plan {
+            return Err(VectorIssue::Invalid(error.message(&u.text.source)));
+        }
+    }
     let doc = src.doc;
     let scale = scale.max(1e-6);
     let pen_mm = profile

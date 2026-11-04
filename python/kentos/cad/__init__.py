@@ -3156,6 +3156,8 @@ __all__ = [
     "TextFinding",
     "TextFindingKind",
     "TextFindingKindName",
+    "TextLayoutEngine",
+    "TextLayoutEngineName",
     "TextPaperItemKind",
     "TextPath",
     "TextRun",

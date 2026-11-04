@@ -348,6 +348,7 @@ impl Open {
             runs: &self.runs,
             font: None,
             bold: self.face.font.is_some() && self.face.bold,
+            italic: self.face.font.is_some() && self.face.italic,
             lean: core_face(&self.face).lean(),
             path: None,
         };
@@ -364,6 +365,7 @@ impl Open {
             text: self.text.clone(),
             runs: self.runs.clone(),
             records,
+            unicode:kentos_interaction::spatial::UnicodeText::of_place(&place,drawing_font(Some(font)),self.mask),
             face: self.face.clone(),
         }
     }
@@ -384,6 +386,7 @@ impl Open {
             runs: &self.runs,
             font: None,
             bold: self.face.font.is_some() && self.face.bold,
+            italic: self.face.font.is_some() && self.face.italic,
             lean: core_face(&self.face).lean(),
             path: None,
         };
@@ -410,6 +413,7 @@ impl Open {
             runs: &self.runs,
             font: None,
             bold: self.face.font.is_some() && self.face.bold,
+            italic: self.face.font.is_some() && self.face.italic,
             lean: core_face(&self.face).lean(),
             path: None,
         };

@@ -134736,6 +134736,17 @@
           ],
           "description": "Static columns; a text in columns has a box."
         },
+        "engine": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TextLayoutEngine"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Explicit metric/glyph profile; absent: the existing legacy layout."
+        },
         "indent": {
           "description": "A paragraph's first line from the others', heights; below 0 a hanging indent (a list's). Absent: 0.",
           "format": "double",
@@ -157535,6 +157546,13 @@
           "type": "string"
         }
       ]
+    },
+    "TextLayoutEngine": {
+      "description": "The explicitly selected, frozen text-layout profile (ADR 0914).\nAbsence preserves legacy layout; loading a file never upgrades it.",
+      "enum": [
+        "unicode-v1"
+      ],
+      "type": "string"
     },
     "TextPath": {
       "description": "The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are\nin the text's own frame: `p` its start, x along the text's `rotation`, y\nsquare to it on the left, metres. The first vertex is `p` itself and is\nnot written; `pts` are the ones after it. The frame carries the curve with\nthe text when it moves, turns or scales.",

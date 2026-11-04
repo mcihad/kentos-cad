@@ -136,6 +136,9 @@ fn render_image_captured(
         for l in &mut writing {
             if let Some(s) = resolved.model(&l.layer) {
                 l.color = kentos_sheet::plot_profile::apply::color(&l.color, s);
+                if let Some(u)=&mut l.unicode {
+                    for color in u.colors.iter_mut().flatten() {*color=kentos_sheet::plot_profile::apply::color(color,s);}
+                }
             }
         }
     }
@@ -147,7 +150,7 @@ fn render_image_captured(
         &images,
         scale,
         profile,
-    );
+    )?;
     let straight: Vec<u8> = pixmap
         .pixels()
         .iter()
@@ -226,7 +229,7 @@ fn draw_labels(
     _images: &Images<'_>,
     scale: f64,
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
-) {
+) -> Result<(),String> {
     use resvg::tiny_skia::{
         FillRule, PathBuilder, Stroke, Transform, StrokeDash, LineCap, LineJoin,
     };
@@ -329,6 +332,10 @@ fn draw_labels(
                 None,
             );
         }
+        if l.unicode.is_some() {
+            draw_unicode(pixmap,view,origin,l,scale)?;
+            continue;
+        }
         if l.text.is_empty() {
             continue;
         }
@@ -385,4 +392,120 @@ fn draw_labels(
             }
         }
     }
+    Ok(())
+}
+
+/// CPU previews and raster fallback use the prepared model contours too.
+/// A raster map never silently switches the Unicode profile back to legacy shaping.
+fn draw_unicode(
+    pixmap: &mut resvg::tiny_skia::Pixmap,
+    view: &CpuView,
+    origin: [f64; 2],
+    label: &MapLabel,
+    scale: f64,
+) -> Result<(), String> {
+    use kentos_geometry_core::text::shaping::OutlineOp;
+    use resvg::tiny_skia::{FillRule, PathBuilder, Transform};
+    let Some(u) = &label.unicode else {
+        return Ok(());
+    };
+    let plan = u
+        .text
+        .plan
+        .as_ref()
+        .map_err(|e| e.message(&u.text.source))?;
+    let k = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(label.size)
+        / u.text.height
+        * u.scale;
+    let (s, c) = u.rotation.sin_cos();
+    let anchor = [label.at.x - origin[0], label.at.y - origin[1]];
+    let anchor = [
+        view.m[0] * anchor[0] + view.m[1] * anchor[1] + view.t[0],
+        view.m[2] * anchor[0] + view.m[3] * anchor[1] + view.t[1],
+    ];
+    let pixel = |[x, y]: [f64; 2]| -> Result<[f32; 2], String> {
+        let [x, y] = [k * (c * x - s * y), k * (s * x + c * y)];
+        let p = [
+            (anchor[0] + view.m[0] * x + view.m[1] * y) as f32,
+            (anchor[1] + view.m[2] * x + view.m[3] * y) as f32,
+        ];
+        if p.iter().all(|v| v.is_finite()) {
+            Ok(p)
+        } else {
+            Err("Yazı konturu bu çıktı çözünürlüğünde çizilemiyor; yazı boyunu ve ölçeği denetleyin.".into())
+        }
+    };
+    let color = |scalar| {
+        let i = u.text.runs.partition_point(|r| r.end <= scalar);
+        u.text
+            .runs
+            .get(i)
+            .filter(|r| r.start <= scalar)
+            .and_then(|_| u.colors.get(i))
+            .and_then(|c| c.as_deref())
+            .unwrap_or(&label.color)
+    };
+    for (glyph, contour) in plan.glyphs.iter().zip(&u.text.contours) {
+        let mut path = PathBuilder::new();
+        for op in contour {
+            match *op {
+                OutlineOp::Move(p) => {
+                    let p = pixel(p)?;
+                    path.move_to(p[0], p[1]);
+                }
+                OutlineOp::Line(p) => {
+                    let p = pixel(p)?;
+                    path.line_to(p[0], p[1]);
+                }
+                OutlineOp::Quad(a, b) => {
+                    let a = pixel(a)?;
+                    let b = pixel(b)?;
+                    path.quad_to(a[0], a[1], b[0], b[1]);
+                }
+                OutlineOp::Cubic(a, b, c) => {
+                    let a = pixel(a)?;
+                    let b = pixel(b)?;
+                    let c = pixel(c)?;
+                    path.cubic_to(a[0], a[1], b[0], b[1], c[0], c[1]);
+                }
+                OutlineOp::Close => path.close(),
+            }
+        }
+        if let Some(path) = path.finish() {
+            pixmap.fill_path(
+                &path,
+                &ink(color(glyph.glyph.scalars.start)),
+                FillRule::Winding,
+                Transform::identity(),
+                None,
+            );
+        }
+    }
+    for rule in &plan.rules {
+        let mut path = PathBuilder::new();
+        for (i, p) in rule.corners.into_iter().enumerate() {
+            let p = pixel(p)?;
+            if i == 0 {
+                path.move_to(p[0], p[1]);
+            } else {
+                path.line_to(p[0], p[1]);
+            }
+        }
+        path.close();
+        if let Some(path) = path.finish() {
+            let fill = u
+                .text
+                .runs
+                .get(rule.run)
+                .map_or(label.color.as_str(), |r| color(r.start));
+            pixmap.fill_path(
+                &path,
+                &ink(fill),
+                FillRule::Winding,
+                Transform::identity(),
+                None,
+            );
+        }
+    }
+    Ok(())
 }

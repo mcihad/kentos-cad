@@ -169,3 +169,14 @@ fn the_editor_s_runs_follow_the_rules() {
         );
     }
 }
+
+#[test]
+fn unicode_profile_queries_refuse_unsupported_text_instead_of_returning_error_marker_measurements() {
+    let body=json!({"p":{"x":0.,"y":0.},"height":0.25,"rotation":180.,"text":"Eksik 🛸",
+        "layout":{"engine":"unicode-v1"},"font":"arimo"});
+    for name in ["textBox","textLayout","textLines","textReadable","textRealign"] {
+        let args=if name=="textRealign" {json!([body,null])} else {json!([body])};
+        let error=run_named(name,&args.to_string()).expect_err(name);
+        assert!(error.contains("U+1F6F8"),"{name}: {error}");
+    }
+}

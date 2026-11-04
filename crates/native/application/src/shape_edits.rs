@@ -472,7 +472,7 @@ fn readable_of(doc: &Document, ids: &[String]) -> Result<Prepared, Stop> {
             let s = shape(&Entity::Text((*t).clone()));
             let place = TextPlace::of(&s)?;
             let turned = if t.path.is_some() {
-                let placed = place.along(font)?.readable()?;
+                let placed = place.readable_curve(font)?;
                 TextEntity {
                     p: Wire {
                         x: placed.p.x,

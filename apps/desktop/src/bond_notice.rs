@@ -62,10 +62,9 @@ impl App {
         format: &kentos_interaction::Format,
     ) -> Option<kentos_interaction::Preview> {
         let marks = self.bonds_refused_preview();
-        if marks.is_none() && !self.session.is_running() && !self.session.grip_active() {
-            if let Some(preview) = self.cad_inspection_preview() {
-                return Some(preview);
-            }
+        if marks.is_none() && !self.session.is_running() && !self.session.grip_active()
+            && let Some(preview) = self.cad_inspection_preview() {
+            return Some(preview);
         }
         match (self.session.preview(format), marks) {
             (Some(mut p), Some(m)) if !p.labels.iter().any(|l| l.text.starts_with('×')) => {

@@ -395,6 +395,7 @@ pub(super) struct Features {
     annotative: bool,
     /// Schema 65: a text's `layout` and a run's `stack` script (docs/adr/0324).
     paragraph_layout: bool,
+    text_engine: bool,
     /// Schema 66: a text's `fields` (docs/adr/0325).
     text_fields: bool,
     /// Schema 67: a leader's `arms`, `tip`, `blocks` and `leaderStyle` (docs/adr/0326).
@@ -492,6 +493,7 @@ impl Features {
             overrides: schema >= crate::SCHEMA_WITH_OVERRIDES,
             annotative: schema >= crate::SCHEMA_WITH_ANNOTATIVE,
             paragraph_layout: schema >= crate::SCHEMA_WITH_PARAGRAPH_LAYOUT,
+            text_engine: schema >= crate::SCHEMA_WITH_TEXT_ENGINE,
             text_fields: schema >= crate::SCHEMA_WITH_TEXT_FIELDS,
             multileader: schema >= crate::SCHEMA_WITH_MULTILEADER,
             table_cells: schema >= crate::SCHEMA_WITH_TABLE_CELLS,
@@ -1729,6 +1731,9 @@ pub(super) fn object(
             "layout" => {
                 let (l, at): (kentos_contracts::ParagraphLayout, usize) =
                     json_part(r, "yazının düzeni")?;
+                if l.engine.is_some() && !has.text_engine {
+                    return Err(r.fail_at(Code::UnknownField, at, "bu şemada yazı yerleşim motoru yok"));
+                }
                 f.layout_at = at;
                 f.paragraph.layout = Some(Box::new(l));
             }

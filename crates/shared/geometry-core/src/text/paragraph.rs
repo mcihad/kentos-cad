@@ -40,10 +40,25 @@ pub enum Script {
 /// A tab stop every this many heights past the last given one (MTEXT's own).
 pub const DEFAULT_TAB: f64 = 4.0;
 
+/// An opt-in frozen metric/glyph profile. None on Flow preserves legacy text.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Engine { UnicodeV1 }
+
+impl crate::api::json::FromJson for Engine {
+    fn from_json(v:&crate::api::json::Json)->Result<Self,String> {
+        match v {crate::api::json::Json::Str(s) if s=="unicode-v1"=>Ok(Self::UnicodeV1),
+            _=>Err("Bilinmeyen yazı yerleşimi profili.".into())}
+    }
+}
+impl crate::api::json::ToJson for Engine {
+    fn write_json(&self,out:&mut String) {crate::api::json::write_str(out,"unicode-v1");}
+}
+
 /// A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in
 /// heights; columns' height in metres.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Flow {
+    pub engine: Option<Engine>,
     /// A paragraph's first line from its others.
     pub first: f64,
     /// Every line but a paragraph's first from the box's left.
@@ -767,6 +782,7 @@ impl crate::api::json::FromJson for Flow {
     fn from_json(v: &crate::api::json::Json) -> Result<Flow, String> {
         use crate::api::json::read_field;
         Ok(Flow {
+            engine:read_field(v,"engine")?,
             first: read_field::<Option<f64>>(v, "indent")?.unwrap_or(0.0),
             left: read_field::<Option<f64>>(v, "leftIndent")?.unwrap_or(0.0),
             tabs: read_field::<Option<Vec<f64>>>(v, "tabs")?.unwrap_or_default(),
@@ -789,6 +805,7 @@ impl crate::api::json::ToJson for Flow {
         if !self.tabs.is_empty() {
             field(out, &mut first, "tabs", &self.tabs);
         }
+        field(out,&mut first,"engine",&self.engine);
         field(out, &mut first, "columns", &self.columns);
         out.push('}');
     }

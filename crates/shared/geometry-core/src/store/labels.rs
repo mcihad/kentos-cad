@@ -508,6 +508,13 @@ pub fn paragraph_records(
     piece: Option<f64>,
     out: &mut Vec<f64>,
 ) {
+    if t.is_unicode() {
+        // One cached glyph plan, including its mask and all actual lines.
+        // Native readers resolve the shape once; no scalar line re-shaping.
+        let (kind,c)=piece.map_or((LABEL_LINE,t.width_factor.unwrap_or(1.)),|p|(LABEL_PIECE_LINE,p));
+        out.extend([id,kind,t.p.x,t.p.y,t.rotation,t.height,c,0.,t.text.chars().count() as f64]);
+        return;
+    }
     if let Some(a) = t.along(font) {
         let letters = a.letters();
         a.records(&letters, masked, id, piece, out);

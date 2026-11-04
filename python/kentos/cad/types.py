@@ -6681,6 +6681,17 @@ TextFindingKindName = Literal["doubleSpace", "repeatedWord", "unbalanced", "brok
 """The names of :class:`TextFindingKind`, for a plain string."""
 
 
+class TextLayoutEngine(_StrEnum):
+    """The explicitly selected, frozen text-layout profile (ADR 0914).
+    Absence preserves legacy layout; loading a file never upgrades it.
+    """
+    UNICODE_V1 = "unicode-v1"
+
+
+TextLayoutEngineName = Literal["unicode-v1"]
+"""The names of :class:`TextLayoutEngine`, for a plain string."""
+
+
 class TextScript(_StrEnum):
     """A run raised over the line (superscript) or lowered under it (subscript).
 
@@ -52649,11 +52660,13 @@ class ParagraphLayout(_Model):
     given; columns take the lines in turn, each `columns.height` metres tall.
     Attributes:
         columns: Static columns; a text in columns has a box.
+        engine: Explicit metric/glyph profile; absent: the existing legacy layout.
         indent: A paragraph's first line from the others', heights; below 0 a hanging indent (a list's). Absent: 0. Unit: 1.
         left_indent: Every line but a paragraph's first from the box's left, heights. Absent: 0. Unit: 1.
         tabs: The tab stops from the box's left, heights, ascending, each over 0. Unit: 1.
     """
     columns: TextColumns | None | Unset = UNSET
+    engine: TextLayoutEngine | TextLayoutEngineName | None | Unset = UNSET
     indent: float | None | Unset = UNSET
     left_indent: float | None | Unset = UNSET
     tabs: list[float] | Unset = UNSET
@@ -52662,6 +52675,8 @@ class ParagraphLayout(_Model):
         out: dict[str, Any] = {}
         if self.columns is not UNSET:
             out["columns"] = None if self.columns is None else self.columns.to_json()
+        if self.engine is not UNSET:
+            out["engine"] = None if self.engine is None else _enum_out(self.engine)
         if self.indent is not UNSET:
             out["indent"] = None if self.indent is None else float(self.indent)
         if self.left_indent is not UNSET:
@@ -52674,6 +52689,7 @@ class ParagraphLayout(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ParagraphLayout:
         return cls(
             columns=UNSET if "columns" not in data else None if data["columns"] is None else TextColumns.from_json(data["columns"]),
+            engine=UNSET if "engine" not in data else None if data["engine"] is None else _enum_in(TextLayoutEngine, data["engine"]),
             indent=UNSET if "indent" not in data else None if data["indent"] is None else float(data["indent"]),
             left_indent=UNSET if "leftIndent" not in data else None if data["leftIndent"] is None else float(data["leftIndent"]),
             tabs=[float(e0) for e0 in data["tabs"]] if "tabs" in data else UNSET,
@@ -104267,6 +104283,8 @@ __all__ = [
     "TextFinding",
     "TextFindingKind",
     "TextFindingKindName",
+    "TextLayoutEngine",
+    "TextLayoutEngineName",
     "TextPaperItemKind",
     "TextPath",
     "TextRun",

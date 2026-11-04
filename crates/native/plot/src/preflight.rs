@@ -175,7 +175,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                             || f.code.starts_with("text_"))
                     {
                         out.push(finding(&m.item, &f.code, format!("{id}: {}", f.message), &f.repair,
-                            if f.severity == kentos_commands::InspectionSeverity::Error { Severity::Error } else { Severity::Warning }));
+                            match f.severity { kentos_commands::InspectionSeverity::Error => Severity::Error, kentos_commands::InspectionSeverity::Warning => Severity::Warning, kentos_commands::InspectionSeverity::Info => Severity::Info }));
                     }
                 }
                 for fault in doc.audit_object(kentos_domain::Slot(id)) {
@@ -294,9 +294,17 @@ fn map_text_coverage(doc: &Document, map: &kentos_sheet::display::MapPrim) -> Ve
     let mut spatial = Spatial::new();
     spatial.ignore_object_isolation();
     spatial.reload(source);
+    let mut out=Vec::new();
     let mut missing: BTreeMap<(String, u16, bool), BTreeSet<char>> = BTreeMap::new();
     for label in crate::labels::map_labels(source, &spatial, map) {
         if !kentos_sheet::pdf::includes_text_anchor(map, [label.at.x, label.at.y]) { continue; }
+        if let Some(unicode)=&label.unicode {
+            if let Err(error)=&unicode.text.plan {
+                out.push(finding(&map.item,"text_layout_unsupported",error.message(&unicode.text.source),
+                    "Yazı denetimindeki harf ve biçim sorununu giderin; kısmi metin teslim edilmez.",Severity::Error));
+            }
+            continue;
+        }
         let key = (label.font.map_or("barlow", crate::fonts::sheet_font).to_owned(), label.weight, label.italic);
         let Some(face) = text::face(&TextStyle { font:key.0.clone(), weight:key.1, italic:key.2,
             size:1000, color:String::new() }) else { continue; };
@@ -306,13 +314,14 @@ fn map_text_coverage(doc: &Document, map: &kentos_sheet::display::MapPrim) -> Ve
             }
         }
     }
-    missing.into_iter().map(|((font, weight, italic), chars)| {
+    out.extend(missing.into_iter().map(|((font, weight, italic), chars)| {
         let chars = chars.into_iter().take(32).map(|c| format!("U+{:04X} ({c})", c as u32)).collect::<Vec<_>>().join(", ");
         finding(&map.item, "map_text_unsupported", format!(
             "Viewport yazısı {font} {weight}{} ile PDF'ye eksiksiz yazılamıyor: {chars}. Bu karakterler soru işaretine dönüştürülemez.",
             if italic { " eğik" } else { "" }),
             "Desteklenen ortak metin yerleşimini kullanın; kaynak yazıyı silerek veya sessiz karakter değiştirerek teslim etmeyin.", Severity::Error)
-    }).collect()
+    }));
+    out
 }
 
 /// Live tables, legends and coordinates must be populated before judging their layout.

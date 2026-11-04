@@ -2352,6 +2352,9 @@ def document(d):
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
     assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    texts = d["entities"] + [e for b in d.get("blocks", []) for e in b["entities"]]
+    if any(e.get("kind") == "text" and e.get("layout", {}).get("engine") for e in texts):
+        schema = max(schema, 163)
     if any(a["layout"]["kind"] == "lattice" for a in d.get("arrays", [])):
         schema = max(schema, 161)
     if any(b.get("card", {}).get("publication") is not None for b in d.get("blocks", [])):
@@ -3271,7 +3274,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-163.kcad"] = container(root(cmap(parts), version=uint(163)))
+    files["schema-version-164.kcad"] = container(root(cmap(parts), version=uint(164)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4733,6 +4736,20 @@ def build():
     out["overrides.kcad"] = container(document(load("overrides.json")))
     out["annotative.kcad"] = container(document(load("annotative.json")))
     out["paragraph-layout.kcad"] = container(document(load("paragraph-layout.json")))
+    for name in ("text-engine-only", "text-engine-blocks"):
+        profile = document(load(name + ".json"))
+        assert profile.count(b"\x67version\x18\xa3") == 1
+        out[name + ".kcad"] = container(profile)
+        out["broken/" + name + "-in-schema-162.kcad"] = container(
+            profile.replace(b"\x67version\x18\xa3", b"\x67version\x18\xa2"))
+    unicode_text = document(load("text-engine.json"))
+    assert unicode_text.count(b"\x67version\x18\xa3") == 1
+    out["text-engine.kcad"] = container(unicode_text)
+    out["broken/text-engine-in-schema-162.kcad"] = container(
+        unicode_text.replace(b"\x67version\x18\xa3", b"\x67version\x18\xa2"))
+    bad_engine = copy.deepcopy(load("text-engine.json"))
+    bad_engine["entities"][0]["layout"]["engine"] = "future"
+    out["broken/text-engine-unknown.kcad"] = container(document(bad_engine))
     out["text-fields.kcad"] = container(document(load("text-fields.json")))
     out["multileader.kcad"] = container(document(load("multileader.json")))
     # A table's cells' styles, formulas and fields, a linked file and a block schedule are schema 68's (docs/adr/0327):

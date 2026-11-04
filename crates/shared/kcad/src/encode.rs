@@ -2107,6 +2107,11 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    let new_text = |e: &Entity| matches!(e, Entity::Text(t)
+        if t.paragraph.layout.as_ref().is_some_and(|l| l.engine.is_some()));
+    if objs.iter().any(new_text) || doc.blocks.iter().any(|b| b.entities.iter().any(new_text)) {
+        return crate::SCHEMA_WITH_TEXT_ENGINE;
+    }
     // Schema 162 (plan/road.md Y1.1): a road project's work.
     if doc.settings.cad_work == Some(kentos_contracts::CadWork::Road) {
         return crate::SCHEMA_WITH_ROAD_WORK;

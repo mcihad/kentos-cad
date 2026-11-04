@@ -418,6 +418,7 @@ pub(crate) fn core_layout(
 ) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
     l.map(|l| {
         Box::new(kentos_geometry_core::text::paragraph::Flow {
+            engine:l.engine.map(|e|match e { kentos_contracts::TextLayoutEngine::UnicodeV1=>kentos_geometry_core::text::paragraph::Engine::UnicodeV1 }),
             first: l.indent.unwrap_or(0.0),
             left: l.left_indent.unwrap_or(0.0),
             tabs: l.tabs.clone(),
@@ -436,6 +437,7 @@ pub(crate) fn contract_layout(
 ) -> Option<Box<kentos_contracts::ParagraphLayout>> {
     f.map(|f| {
         Box::new(kentos_contracts::ParagraphLayout {
+            engine:f.engine.map(|e|match e {kentos_geometry_core::text::paragraph::Engine::UnicodeV1=>kentos_contracts::TextLayoutEngine::UnicodeV1}),
             indent: (f.first != 0.0).then_some(f.first),
             left_indent: (f.left != 0.0).then_some(f.left),
             tabs: f.tabs.clone(),

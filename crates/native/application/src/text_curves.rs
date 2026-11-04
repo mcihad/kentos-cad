@@ -86,6 +86,26 @@ pub fn on_curve(
     share: f64,
     font: Font,
 ) -> Option<TextEntity> {
+    let unicode = t
+        .paragraph
+        .layout
+        .as_ref()
+        .is_some_and(|f| f.engine == Some(kentos_commands::TextLayoutEngine::UnicodeV1));
+    if unicode {
+        let flat = TextEntity {
+            path: None,
+            ..t.clone()
+        };
+        let s = shape(&Entity::Text(flat));
+        let length = TextPlace::of(&s)?.unicode_plan(font).ok()?.width;
+        let (p, rotation, path) = piece(curve, at, length, share)?;
+        return Some(TextEntity {
+            p: wire(p),
+            rotation,
+            path: Some(contract_curve(path)),
+            ..t.clone()
+        });
+    }
     let (p, rotation, path) = placed(
         &t.text,
         t.height,
@@ -106,7 +126,7 @@ pub fn on_curve(
 
 /// Whether Eğriye oturt takes the text: one line, no box, not linked to an object (§1).
 pub fn fits(t: &TextEntity) -> bool {
-    !t.text.contains('\n')
+    !t.text.contains(['\r', '\n', '\t'])
         && t.paragraph.box_width.is_none()
         && t.paragraph.line_spacing.is_none()
         && t.label_of.is_none()
@@ -141,7 +161,7 @@ pub fn turn_toward(edge_of: &Shape, at: Vec2) -> Option<f64> {
 /// Düzleştir: the curved text straight at its first letter, along its direction; its alignment gone.
 pub fn straightened(t: &TextEntity, font: Font) -> Option<TextEntity> {
     let s = shape(&Entity::Text(t.clone()));
-    let (p, rotation) = TextPlace::of(&s)?.along(font)?.straight();
+    let (p, rotation) = TextPlace::of(&s)?.curved_baseline(font)?;
     Some(TextEntity {
         p: wire(p),
         rotation,

@@ -183,3 +183,168 @@ fn model_text_never_silently_exports_question_mark_substitutions() {
         assert_eq!(doc.to_snapshot_v2(), before);
     }
 }
+
+#[test]
+fn unicode_profile_prints_combining_marks_symbols_and_bidi_without_mutating_text() {
+    let scenario:Value=serde_json::from_str(SCENARIO).unwrap();
+    let mut doc=drawing(&scenario);
+    for (n,text) in ["Ög\u{306}ç — İstanbul", "⌀32 ≤ 5‰ ±25 °C", "Türkçe / العربية / עברית 123"].into_iter().enumerate() {
+        let layer=doc.layers().active().to_owned();
+        doc.add(serde_json::from_value(json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
+            "p":{"x":1.,"y":0.5-n as f64*0.2},"text":text,"height":0.125,"rotation":0.,"font":"arimo",
+            "layout":{"engine":"unicode-v1"}})).unwrap()).unwrap();
+    }
+    let before=doc.to_snapshot_v2();
+    let made=book_pdf(&doc,&[],"kabul","2026-11-04").unwrap();
+    assert!(!made.findings.iter().any(|f|f.code=="map_text_unsupported" || f.code=="text_layout_unsupported"));
+    let fallback:Vec<_>=made.findings.iter().filter(|f|f.code=="text_font_fallback").collect();
+    assert!(!fallback.is_empty());
+    assert!(fallback.iter().all(|f|f.severity==kentos_sheet::preflight::Severity::Info));
+    assert_eq!(doc.to_snapshot_v2(),before);
+    if let Ok(dir)=std::env::var("KENTOS_TEXT_PDF_OUT") {std::fs::write(std::path::Path::new(&dir).join("unicode-profile-native.pdf"),made.bytes).unwrap();}
+    let mut bad=before.clone();
+    let Entity::Text(t)=bad.entities.last_mut().unwrap() else {panic!()};
+    t.text="Desteklenmeyen 🛸".into();
+    let doc=Document::from_snapshot_v2(bad).unwrap();
+    assert_eq!(book_pdf(&doc,&[],"kabul","2026-11-04").unwrap_err().code,"text_layout_unsupported");
+}
+
+/// Real GUI's saved snapshot is supplied explicitly; screenshots/files stay outside Git.
+#[test]
+#[ignore]
+fn unicode_profile_gui_snapshot_pdf() {
+    let path=std::env::var("KENTOS_TEXT_GUI_SNAPSHOT").expect("saved GUI snapshot path");
+    let snapshot=serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let doc=Document::from_snapshot_v2(snapshot).unwrap();
+    let made=book_pdf(&doc,&[],"kabul","2026-11-04").unwrap();
+    let out=std::env::var("KENTOS_TEXT_PDF_OUT").expect("PDF output directory");
+    std::fs::write(std::path::Path::new(&out).join("unicode-profile-gui.pdf"),made.bytes).unwrap();
+    let (book,_)=kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    for (i,sheet) in book.sheets.iter().enumerate() {
+        let preview=kentos_plot::preview::page(&doc,&sheet.id,"kabul","2026-11-04",None,144).unwrap();
+        std::fs::write(std::path::Path::new(&out).join(format!("unicode-profile-gui-preview-{i}.png")),preview.png).unwrap();
+    }
+}
+/// Independent PDF rasterization catches a preview that re-shapes the source,
+/// loses rich-run colours/rules, or rounds georeferenced coordinates to f32.
+#[test]
+fn unicode_profile_preview_matches_pdf_ink_at_two_scales_and_large_coordinates() {
+    let scenario: Value = serde_json::from_str(SCENARIO).unwrap();
+    let mut doc = drawing(&scenario);
+    let offset = [900_000_000., 400_000_000.];
+    let (mut book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    let mut value = serde_json::to_value(&book).unwrap();
+    for sheet in value["sheets"].as_array_mut().unwrap() {
+        for item in sheet["items"].as_array_mut().unwrap() {
+            if item["kind"]["type"] == "map" {
+                item["kind"]["view"]["center"] = json!({"x":offset[0]+2.,"y":offset[1]+1.});
+                item["kind"]["view"]["rotation"] = json!(17_000);
+            }
+        }
+    }
+    book = serde_json::from_value(value).unwrap();
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    for (n, curved) in [false, true].into_iter().enumerate() {
+        let layer = doc.layers().active().to_owned();
+        let mut text = json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
+            "p":{"x":offset[0]+1.,"y":offset[1]+0.5-n as f64},
+            "text":"Ög\u{306}ç 1/2 العربية", "height":0.25,"rotation":12.,"font":"arimo",
+            "color":"#0055cc","lean":0.15,"mask":true,"layout":{"engine":"unicode-v1"},
+            "runs":[{"start":5,"end":8,"script":"stack","underline":true,"color":"#cc3300"}]});
+        if curved {
+            text["path"] = json!({"pts":[{"x":offset[0]+5.,"y":offset[1]+1.5}],"bulges":[0.41421356237309503]});
+        }
+        doc.add(serde_json::from_value(text).unwrap()).unwrap();
+    }
+    let before = doc.to_snapshot_v2();
+    let out = std::env::temp_dir().join(format!("kentos-unicode-preview-{}", std::process::id()));
+    std::fs::create_dir_all(&out).unwrap();
+    let is_coloured = |p: &[u8]| p[0].max(p[1]).max(p[2]) - p[0].min(p[1]).min(p[2]) > 70;
+    for (n, sheet) in book.sheets.iter().enumerate() {
+        let preview =
+            kentos_plot::preview::page(&doc, &sheet.id, "test", "2026-11-04", None, 144).unwrap();
+        let pdf = book_pdf(&doc, std::slice::from_ref(&sheet.id), "test", "2026-11-04").unwrap();
+        let stem = out.join(n.to_string());
+        std::fs::write(stem.with_extension("pdf"), pdf.bytes).unwrap();
+        assert!(
+            std::process::Command::new("pdftoppm")
+                .args(["-r", "144", "-singlefile", "-png"])
+                .arg(stem.with_extension("pdf"))
+                .arg(&stem)
+                .status()
+                .unwrap()
+                .success()
+        );
+        let mut reader = png::Decoder::new(std::io::BufReader::new(
+            std::fs::File::open(stem.with_extension("png")).unwrap(),
+        ))
+        .read_info()
+        .unwrap();
+        let mut bytes = vec![0; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut bytes).unwrap();
+        assert_eq!([preview.width, preview.height], [info.width, info.height]);
+        assert_eq!(info.color_type, png::ColorType::Rgb);
+        let a: Vec<_> = preview.rgba.chunks_exact(4).map(is_coloured).collect();
+        let b: Vec<_> = bytes[..info.buffer_size()]
+            .chunks_exact(3)
+            .map(is_coloured)
+            .collect();
+        for (from, to) in [(&a, &b), (&b, &a)] {
+            let mut ink = 0;
+            let mut matched = 0;
+            for (i, &yes) in from.iter().enumerate() {
+                if !yes {
+                    continue;
+                }
+                ink += 1;
+                let (x, y) = (
+                    (i % info.width as usize) as i32,
+                    (i / info.width as usize) as i32,
+                );
+                if (-1..=1).any(|dy| {
+                    (-1..=1).any(|dx| {
+                        let (x, y) = (x + dx, y + dy);
+                        x >= 0
+                            && y >= 0
+                            && x < info.width as i32
+                            && y < info.height as i32
+                            && to[y as usize * info.width as usize + x as usize]
+                    })
+                }) {
+                    matched += 1;
+                }
+            }
+            assert!(
+                ink > 200 && matched * 100 >= ink * 99,
+                "{}: {matched}/{ink}",
+                sheet.name
+            );
+        }
+        for bytes in [&preview.rgba[..], &bytes[..info.buffer_size()]] {
+            let channels = if bytes.len() == preview.rgba.len() {
+                4
+            } else {
+                3
+            };
+            assert!(
+                bytes
+                    .chunks_exact(channels)
+                    .filter(|p| p[0] > p[2].saturating_add(70))
+                    .count()
+                    > 10,
+                "red fraction/rule"
+            );
+            assert!(
+                bytes
+                    .chunks_exact(channels)
+                    .filter(|p| p[2] > p[0].saturating_add(70))
+                    .count()
+                    > 100,
+                "blue base glyphs"
+            );
+        }
+    }
+    assert_eq!(doc.to_snapshot_v2(), before);
+    std::fs::remove_dir_all(out).unwrap();
+}

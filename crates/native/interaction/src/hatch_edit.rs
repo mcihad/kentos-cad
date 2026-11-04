@@ -441,7 +441,10 @@ impl Tool for HatchEditor {
         if self.choose_mode(&key, cx) { return true; }
         if mode(cx) == Mode::Origin && self.picked.is_some() {
             if let Some(point) = cx.typed_point(text, None, None) {
-                let uid = self.uid(cx).unwrap();
+                let Some(uid) = self.uid(cx) else {
+                    cx.say(Level::Warn, "Seçili tarama artık bulunamıyor. Taramayı yeniden seçin.");
+                    return true;
+                };
                 self.apply(Edit::Origin { uids: vec![uid], origin: kentos_commands::HatchOrigin::Point { at: wire(point) } }, cx);
             } else {
                 cx.say(Level::Warn, "Desen başlangıcı için bir nokta seçin veya koordinat girin.");

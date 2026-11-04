@@ -93,3 +93,19 @@ class DrawingInspect(unittest.TestCase):
         self.assertNotEqual(sources.snaps[0].uid, sources.snaps[1].uid)
         self.assertEqual(sources.snaps[0].point, sources.snaps[1].point)
         self.assertEqual(doc.to_bytes(), before)
+
+    def test_unicode_profile_metadata_and_font_diagnostics_survive_python_save_reopen(self):
+        words='Ög\u0306ç ⌀32 — العربية עברית'
+        doc=drawing([dict(kind='text',p=dict(x=5000000.,y=4400000.),height=.18,rotation=37.,
+                          text=words,font='arimo',layout=dict(engine='unicode-v1'))])
+        before=doc.to_bytes()
+        result=cad.drawing.inspect(doc,checks=['annotations'])
+        fallback=next(f for f in result.findings if f.code=='text_font_fallback')
+        self.assertEqual(fallback.severity,'info')
+        self.assertIn('noto-sans-arabic',fallback.message)
+        self.assertEqual(doc.to_bytes(),before)
+        reopened=cad.Document.from_bytes(before)
+        entity=next(iter(reopened.entities())).entity.to_json()
+        self.assertEqual(entity['text'],words)
+        self.assertEqual(entity['layout']['engine'],'unicode-v1')
+        self.assertEqual(reopened.to_bytes(),before)

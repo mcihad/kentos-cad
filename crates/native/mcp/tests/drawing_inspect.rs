@@ -101,3 +101,23 @@ fn source_snap_query_preserves_coincident_owner_uuids_without_changing_default_c
     assert_ne!(snaps[0]["uid"],snaps[1]["uid"]);
     assert_eq!(snaps[0]["point"],snaps[1]["point"]);
 }
+
+#[test]
+fn unicode_profile_creation_and_diagnostics_use_the_same_public_mcp_contract() {
+    let mut server=Server::new();
+    let new=tool(&mut server,"drawing.new",json!({"workspace":"cad"}));
+    let drawing=&new["drawing"];let layer=&new["summary"]["activeLayer"];
+    let words="Ög\u{306}ç ⌀32 — العربية עברית";
+    let made=tool(&mut server,"cad.entities.create",json!({"drawing":drawing,"layerId":layer,
+        "objects":[{"geometry":{"kind":"text","p":{"x":5000000.,"y":4400000.},"height":0.18,"rotation":37.,
+            "text":words,"font":"arimo","layout":{"engine":"unicode-v1"}}}]}));
+    assert_eq!(made["status"],"completed","{made}");
+    let before=tool(&mut server,"drawing.entities",json!({"drawing":drawing}));
+    assert_eq!(before["items"][0]["entity"]["layout"]["engine"],"unicode-v1");
+    assert_eq!(before["items"][0]["entity"]["text"],words);
+    let found=tool(&mut server,"cad.drawing.inspect",json!({"drawing":drawing,"checks":["annotations"]}));
+    let fallback=found["output"]["findings"].as_array().unwrap().iter().find(|f|f["code"]=="text_font_fallback").unwrap();
+    assert_eq!(fallback["severity"],"info");
+    assert!(fallback["message"].as_str().unwrap().contains("noto-sans-arabic"));
+    assert_eq!(tool(&mut server,"drawing.entities",json!({"drawing":drawing})),before);
+}

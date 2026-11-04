@@ -156,7 +156,7 @@ fn content_of<'a>(
 }
 
 /// The text every page writes, by face: the sheets', the maps' and the empty maps' “harita”.
-fn usage_of(lists: &[Listed], inputs: &PdfInputs) -> Usage {
+fn usage_of(lists: &[Listed], inputs: &PdfInputs) -> Result<Usage> {
     let mut u = Usage::default();
     for l in lists {
         for p in &l.prims {
@@ -166,7 +166,15 @@ fn usage_of(lists: &[Listed], inputs: &PdfInputs) -> Usage {
                     Some(MapContent::Vector(v)) if m.view.center.is_some() => {
                         for layer in &v.layers {
                             for t in &layer.texts {
-                                u.add(&t.font, t.weight, t.italic, &t.text);
+                                if let Some(glyphs) = &t.glyphs {
+                                    if t.text.encode_utf16().count() > 16_382 {
+                                        return Err(SheetError::new("pdf_text_layout_invalid",
+                                            "Tek yazı PDF metin sınırını aşıyor. Yazıyı ayrı nesnelere bölün; arama ve kopyalama verisi kesilmez."));
+                                    }
+                                    u.glyphs.add(glyphs)?;
+                                } else {
+                                    u.add(&t.font, t.weight, t.italic, &t.text);
+                                }
                             }
                         }
                     }
@@ -180,7 +188,7 @@ fn usage_of(lists: &[Listed], inputs: &PdfInputs) -> Usage {
             }
         }
     }
-    u
+    Ok(u)
 }
 
 pub(super) fn faces_of(
@@ -188,7 +196,7 @@ pub(super) fn faces_of(
     inputs: &PdfInputs,
     sheets: &[SheetId],
 ) -> Result<Vec<PdfFace>> {
-    Ok(usage_of(&lists(book, inputs, sheets)?, inputs).faces())
+    Ok(usage_of(&lists(book, inputs, sheets)?, inputs)?.faces())
 }
 
 /// A picture as an image object (and its soft mask): `Im…` for the pages.
@@ -291,7 +299,7 @@ pub(super) fn document(
     sheets: &[SheetId],
 ) -> Result<Vec<u8>> {
     let lists = lists(book, inputs, sheets)?;
-    let usage = usage_of(&lists, inputs);
+    let usage = usage_of(&lists, inputs)?;
     let mut doc = Doc::new();
     let catalog = doc.alloc();
     let tree = doc.alloc();

@@ -464,3 +464,39 @@ fn okunur_yap_says_when_there_is_nothing_to_turn() {
         )
     );
 }
+
+#[test]
+fn unicode_text_caches_one_complete_glyph_plan_while_zooming_and_legacy_text_stays_legacy() {
+    use kentos_commands::DocumentSnapshotV2;
+    use kentos_domain::Document;
+    use kentos_interaction::{Spatial,LabelSpot,Vec2};
+    use kentos_interaction::spatial::LabelSize;
+    let raw=include_str!("../../../../../fixtures/kcad/v2/text-engine-only.json");
+    let snapshot:DocumentSnapshotV2=serde_json::from_str(raw).unwrap();
+    let mut doc=Document::from_snapshot_v2(snapshot).unwrap();
+    let mut spatial=Spatial::new();spatial.reload(&doc);
+    let query=|scale| spatial.label_parts(Vec2::new(499900.,4399900.),Vec2::new(500100.,4400100.),scale,LabelSize::True,Default::default(),true,None,None);
+    let get=|parts:&kentos_interaction::spatial::LabelParts| parts.iter().filter_map(|(s,_)|match s {LabelSpot::Line{unicode:Some(u),..}=>Some(u.clone()),_=>None}).collect::<Vec<_>>();
+    let first=get(&query(30.));assert_eq!(first.len(),1,"one record for all rows and tabs");
+    let profile=&first[0];let plan=profile.plan.as_ref().unwrap();
+    assert!(!plan.glyphs.is_empty());assert_eq!(plan.glyphs.len(),profile.contours.len());
+    let kentos_commands::Entity::Text(stored)=doc.entities().next().unwrap() else {panic!("text fixture")};
+    assert_eq!(profile.source,stored.text);
+    let second=get(&query(45.));assert_eq!(second.len(),1);
+    assert!(std::rc::Rc::ptr_eq(profile,&second[0]),"zoom must retain prepared contours");
+    let slot=kentos_domain::Slot(stored.base.id);
+    let mut edited=kentos_commands::Entity::Text(stored.clone());
+    if let kentos_commands::Entity::Text(t)=&mut edited {t.text="Değişen yazı".into();t.paragraph.runs.clear();}
+    assert!(doc.update(slot,edited));spatial.sync(&doc);
+    let changed=get(&spatial.label_parts(Vec2::new(499900.,4399900.),Vec2::new(500100.,4400100.),45.,LabelSize::True,Default::default(),true,None,None));
+    assert_eq!(changed[0].source,"Değişen yazı");assert!(!std::rc::Rc::ptr_eq(profile,&changed[0]));
+    assert!(doc.undo().is_some());spatial.sync(&doc);
+    let undone=get(&spatial.label_parts(Vec2::new(499900.,4399900.),Vec2::new(500100.,4400100.),45.,LabelSize::True,Default::default(),true,None,None));
+    assert_eq!(profile.plan,undone[0].plan);assert_eq!(profile.contours,undone[0].contours);
+    let mut snapshot:DocumentSnapshotV2=serde_json::from_str(raw).unwrap();
+    if let kentos_commands::Entity::Text(t)=&mut snapshot.entities[0] {t.paragraph.layout=None;}
+    let old=Document::from_snapshot_v2(snapshot).unwrap();
+    spatial.reload(&old);
+    let labels=spatial.labels_print(Vec2::new(499900.,4399900.),Vec2::new(500100.,4400100.),30.,Default::default(),&|_|true);
+    assert!(labels.iter().all(|s|!matches!(s,LabelSpot::Line{unicode:Some(_),..})),"opening legacy data must not upgrade it");
+}

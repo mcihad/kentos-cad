@@ -633,6 +633,17 @@ pub struct Paragraph {
     pub fields: Vec<crate::TextField>,
 }
 
+/// The explicitly selected, frozen text-layout profile (ADR 0914).
+/// Absence preserves legacy layout; loading a file never upgrades it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TextLayoutEngine {
+    #[serde(rename = "unicode-v1")]
+    UnicodeV1,
+}
+
 /// A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\p` codes):
 /// every paragraph's first line starts `leftIndent + indent` heights from the box's left, its other lines
 /// `leftIndent`; a tab goes to the next stop past where it is, a stop every `DEFAULT_TAB` heights after the last
@@ -643,6 +654,10 @@ pub struct Paragraph {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ParagraphLayout {
+    /// Explicit metric/glyph profile; absent: the existing legacy layout.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub engine: Option<TextLayoutEngine>,
     /// A paragraph's first line from the others', heights; below 0 a hanging indent (a list's). Absent: 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -693,7 +708,7 @@ pub const MAX_TABS: usize = 32;
 impl ParagraphLayout {
     /// Nothing set: none at all.
     pub fn is_plain(&self) -> bool {
-        self.indent.is_none_or(|i| i == 0.0)
+        self.engine.is_none() && self.indent.is_none_or(|i| i == 0.0)
             && self.left_indent.is_none_or(|i| i == 0.0)
             && self.tabs.is_empty()
             && self.columns.is_none()

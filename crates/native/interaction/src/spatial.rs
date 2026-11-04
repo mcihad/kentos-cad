@@ -118,6 +118,7 @@ pub struct Spatial {
     label_memo: std::cell::RefCell<kentos_geometry_core::store::label_memo::LabelMemo>,
     /// The main view's objects' parts as typed last, by the store's part they were typed from (docs/adr/0786 §1).
     label_typed: std::cell::RefCell<Typed>,
+    unicode_memo: std::cell::RefCell<UnicodeMemo>,
     /// The active view's theme (docs/adr/0523 §2): its layer state's visibility and freeze are what is picked
     /// and snapped to; none, the drawing's.
     theme: Option<kentos_commands::LayerState>,
@@ -325,6 +326,7 @@ impl Spatial {
     /// document's journal no longer reaches back to the store's mark.
     pub fn reload(&mut self, doc: &Document) {
         self.reloads += 1;
+        *self.unicode_memo.get_mut()=UnicodeMemo::default();
         self.store.clear();
         if let Err(e) = self.store.set_label_defaults_json(&label_defaults_json()) {
             debug_assert!(false, "the kinds' label styles: {e}");
@@ -1669,6 +1671,37 @@ impl Spatial {
         *self.label_typed.borrow_mut() = Typed::default();
     }
 
+    fn unicode(&self,id:f64,piece:Option<f64>,shape:&Shape)->Option<Rc<UnicodeText>> {
+        let place=kentos_geometry_core::entity::TextPlace::of(shape)?;
+        if !place.is_unicode() {return None;}
+        let item=self.store.get(id)?;
+        let key=(id.to_bits(),piece.map_or(usize::MAX,|p|p as usize));
+        let font=self.store.font();
+        let expanded=item.expanded.as_ref().map(Arc::downgrade);
+        let mut memo=self.unicode_memo.borrow_mut();
+        memo.round=memo.round.wrapping_add(1);
+        let round=memo.round;
+        if let Some(entry)=memo.entries.get_mut(&key) {
+            let same_expanded=match (&entry.expanded,&expanded) {
+                (None,None)=>true,(Some(a),Some(b))=>std::sync::Weak::ptr_eq(a,b),_=>false,
+            };
+            if entry.stamp==item.stamp() && entry.font==font && same_expanded {
+                entry.round=round;return Some(entry.text.clone());
+            }
+        }
+        if let Some(old)=memo.entries.remove(&key) {memo.ops-=old.ops;}
+        let text=UnicodeText::of(shape,font)?;
+        let ops=text.contours.iter().map(Vec::len).sum::<usize>();
+        while memo.entries.len()>=128 || memo.ops+ops>1_000_000 {
+            let oldest=memo.entries.iter().min_by_key(|(_,e)|e.round).map(|(k,_)|*k);
+            let Some(old)=oldest.and_then(|k|memo.entries.remove(&k)) else {break;};
+            memo.ops-=old.ops;
+        }
+        memo.ops+=ops;
+        memo.entries.insert(key,UnicodeKept {stamp:item.stamp(),font,expanded,text:text.clone(),round,ops});
+        Some(text)
+    }
+
     /// One label record, typed.
     fn spot(&self, r: &[f64], texts: &[String]) -> Option<LabelSpot> {
         {
@@ -1765,15 +1798,18 @@ impl Spatial {
                         end: r[8] as usize,
                         piece: None,
                         face: None,
+                        unicode: self.store.get(r[0]).and_then(|it| self.unicode(r[0],None,&it.shape)),
                     }
                 } else if what == LABEL_PIECE_LINE {
+                    let shape = self.piece(r[0],r[6])?.shape;
+                    let unicode = self.unicode(r[0],Some(r[6]),&shape);
                     let Shape::Text {
                         text,
                         width_factor,
                         runs,
                         face,
                         ..
-                    } = self.piece(r[0], r[6])?.shape
+                    } = shape
                     else {
                         return None;
                     };
@@ -1787,6 +1823,7 @@ impl Spatial {
                         end: r[8] as usize,
                         piece: Some(std::rc::Rc::new((text, runs.unwrap_or_default()))),
                         face: Some(face),
+                        unicode,
                     }
                 } else if what == LABEL_PARAGRAPH_MASK {
                     // Its text's slant: the object's own, or a block's piece's (its place, d).
@@ -1952,6 +1989,62 @@ impl Grow {
     };
 }
 
+#[derive(Default)]
+struct UnicodeMemo {
+    entries:std::collections::HashMap<(u64,usize),UnicodeKept>,
+    round:u64,
+    ops:usize,
+}
+struct UnicodeKept {
+    stamp:u64,
+    font:kentos_geometry_core::text::Font,
+    expanded:Option<std::sync::Weak<kentos_geometry_core::store::Expanded>>,
+    text:Rc<UnicodeText>,
+    round:u64,
+    ops:usize,
+}
+
+/// A text's glyph geometry is prepared when its spatial label part changes,
+/// never re-shaped while panning/zooming. Legacy line labels have no such plan.
+#[derive(Clone,Debug,PartialEq)]
+pub struct UnicodeText {
+    pub plan: Result<kentos_geometry_core::text::shaping::placed::Layout,kentos_geometry_core::text::shaping::Error>,
+    pub contours: Vec<Vec<kentos_geometry_core::text::shaping::OutlineOp>>,
+    pub height: f64,
+    pub source: String,
+    pub runs: Vec<kentos_geometry_core::text::paragraph::Run>,
+    pub masked: bool,
+    pub rotation: f64,
+}
+impl UnicodeText {
+    pub fn mask_outline(&self)->Option<[[f64;2];4]> {
+        if !self.masked {return None;}
+        let [a,b,c,d]=self.plan.as_ref().ok()?.frame?;
+        let m=self.height*0.1;
+        let (s,cost)=self.rotation.to_radians().sin_cos();
+        Some([[a-m,b-m],[c+m,b-m],[c+m,d+m],[a-m,d+m]]
+            .map(|[x,y]|[cost*x-s*y,s*x+cost*y]))
+    }
+    pub fn of(shape: &Shape,font:kentos_geometry_core::text::Font) -> Option<std::rc::Rc<Self>> {
+        let place=kentos_geometry_core::entity::TextPlace::of(shape)?;
+        Self::of_place(&place,font,matches!(shape,Shape::Text{mask:Some(true),..}))
+    }
+    pub fn of_place(place:&kentos_geometry_core::entity::TextPlace<'_>,font:kentos_geometry_core::text::Font,masked:bool)->Option<std::rc::Rc<Self>> {
+        if !place.is_unicode() {return None;}
+        let mut plan=place.unicode_plan(font);
+        let contours=match &plan {
+            Ok(layout)=>match layout.contours() {
+                Ok(paths)=>paths,Err(error)=>{plan=Err(error);Vec::new()}
+            },
+            Err(_)=>Vec::new(),
+        };
+        Some(std::rc::Rc::new(Self {
+            plan,contours,height:place.height,source:place.text.to_owned(),runs:place.runs.to_vec(),
+            masked,rotation:place.rotation,
+        }))
+    }
+}
+
 /// One thing a view draws as text (the store's label records, typed).
 /// Points are in world units; angles in degrees, counter-clockwise.
 #[derive(Clone, Debug, PartialEq)]
@@ -2045,6 +2138,8 @@ pub enum LabelSpot {
         piece: Option<std::rc::Rc<(String, Vec<kentos_geometry_core::text::paragraph::Run>)>>,
         /// A block's piece's face (docs/adr/0183 §2); a text's own is its object's.
         face: Option<kentos_geometry_core::text::face::Face>,
+        /// One shared Unicode plan, retained with this object's label part.
+        unicode: Option<std::rc::Rc<UnicodeText>>,
     },
     /// A multi-line text's mask (docs/adr/0182 §3): the box from `at` (its
     /// corner under the first letter's left) `width` along its baseline and

@@ -3,6 +3,7 @@
 //! all source ranges refer to the unchanged logical input, and no OS font is read.
 pub mod paragraph;
 pub mod rich;
+pub mod placed;
 mod scripts;
 
 use std::ops::Range;
@@ -102,7 +103,32 @@ pub enum Error {
     MixedClusterPaint { bytes: Range<usize> },
     TooManyAtoms,
     TooManyGlyphs,
+    TooManyContours,
     TooManyFormats,
+}
+
+impl Error {
+    /// User-facing explanation; byte ranges remain diagnostic metadata only.
+    pub fn message(&self,text:&str)->String {
+        match self {
+            Self::Unsupported{bytes}=> {
+                let sample=text.get(bytes.clone()).unwrap_or("");
+                let codes=sample.chars().take(16).map(|c|format!("U+{:04X}",c as u32)).collect::<Vec<_>>().join(", ");
+                format!("“{}” karakter kümesi paketli yazı tiplerinde bulunamadı ({codes}).",sample.chars().take(24).collect::<String>())
+            }
+            Self::MixedClusterPaint{..}=>"Birleşik harfin veya ligatürün içinde farklı renk/alt çizgi sınırı var. Biçimi görünür harfin tamamına uygulayın.".into(),
+            Self::InvalidFormats=>"Yazı biçimlerinin aralıkları görünür karakter kümelerinin sınırlarında, sıralı ve ayrı olmalı.".into(),
+            Self::LineBreak=>"Bu yerleşimdeki satır/tab karakteri desteklenmiyor. Eğri üzerindeki yazıyı tek satır olarak düzenleyin.".into(),
+            Self::InvalidGeometry=>"Yazının yükseklik, genişlik, aralık veya konum değerleri geçerli aralıkta değil.".into(),
+            Self::InvalidStack{..}=>"Kesir biçimi için /, # veya ^ ayıracı ve geçerli bir karakter aralığı gerekli.".into(),
+            Self::TooLong=>"Tek yazının ortak yerleşimi en çok 65.536 UTF-8 baytı destekler. Metni ayrı yazılara bölün.".into(),
+            Self::TooManyContours=>"Tek yazının çizim karmaşıklığı sınırı aşıldı. Metni ayrı yazılara bölün; kısmi metin çizilmez.".into(),
+            Self::TooManyGlyphs|Self::TooManyFormats|Self::TooManyAtoms=>"Tek yazının harf veya biçim sayısı sınırı aşıldı. Metni ayrı yazılara bölün.".into(),
+            Self::UnknownFamily|Self::BadFont(_)|Self::BadGlyph{..}=>"Paketli yazı tipi bilgisiyle harf eşleşmiyor. Yazı tipi paketini doğrulayın; eksik harf basılamaz.".into(),
+            Self::InvalidRange|Self::InvalidCluster|Self::InvalidAtoms=>"Yazı aralığı görünür karakter kümesini veya kesri bölüyor. Aralığı tam karakter sınırına getirin.".into(),
+            Self::BadLanguage=>"Yazının dil bilgisi geçerli bir dil etiketi olmalı.".into(),
+        }
+    }
 }
 
 /// Baseline coordinates, positive y upward. A fallback italic face can carry

@@ -500,6 +500,71 @@ impl<'a> Page<'a> {
         show(&mut self.c, TextRenderingMode::Fill);
     }
 
+    /// A frozen glyph plan. Matrices are relative paper mm with y up;
+    /// only the map/frame's rotation and the page's unit conversion remain.
+    pub fn glyph_text(
+        &mut self,
+        text: &super::GlyphText,
+        actual: &str,
+        at: [f64; 2],
+        turn: f64,
+        style: Option<&crate::plot_profile::PlotStyle>,
+    ) {
+        let (s, c) = (libm::sin(turn), libm::cos(turn));
+        let point = |[x, y]: [f64; 2]| {
+            [
+                at[0] + 1000. * (c * x + s * y),
+                at[1] + 1000. * (s * x - c * y),
+            ]
+        };
+        let ink = |color: &str| {
+            style.map_or_else(
+                || color.to_owned(),
+                |style| crate::plot_profile::apply::color(color, style),
+            )
+        };
+        self.c
+            .begin_marked_content_with_properties(Name(b"Span"))
+            .properties()
+            .actual_text(TextStr(actual));
+        for glyph in &text.glyphs {
+            let Some(font) = self.fonts.glyphs.get(glyph.font) else {
+                continue;
+            };
+            let Some(code) = font.code(glyph) else {
+                continue;
+            };
+            let Some((rgb, alpha)) = color(&ink(&glyph.color)) else {
+                continue;
+            };
+            let [a, b, e, d, x, y] = glyph.matrix;
+            let (x, y) = self.xy(point([x, y]));
+            let k = 1000. * PT;
+            let matrix = [
+                (k * (c * a + s * b)) as f32,
+                (k * (-s * a + c * b)) as f32,
+                (k * (c * e + s * d)) as f32,
+                (k * (-s * e + c * d)) as f32,
+                x,
+                y,
+            ];
+            self.used_fonts.insert(font.name.clone(), font.font);
+            self.alpha_for(alpha, 1.);
+            self.fill_rgb(rgb);
+            self.c.begin_text();
+            self.c.set_font(Name(font.name.as_bytes()), 1.);
+            self.c.set_text_matrix(matrix);
+            self.c.set_text_rendering_mode(TextRenderingMode::Fill);
+            self.c.show(Str(&code));
+            self.c.end_text();
+        }
+        self.c.end_marked_content();
+        for rule in &text.rules {
+            self.poly(&rule.corners.map(point), true);
+            self.paint(Some(&ink(&rule.color)), None, false);
+        }
+    }
+
     // ── Pictures ─────────────────────────────────────────────────────────
 
     /// A picture (its image object named `name`) in its rectangle, turned about its centre;

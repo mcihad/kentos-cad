@@ -266,6 +266,10 @@ fn text(
     };
     // The baseline's direction on the paper (y down: clockwise from the paper's x axis).
     let turn = libm::atan2(p1[1] - p0[1], p1[0] - p0[0]);
+    if let Some(glyphs) = &t.glyphs {
+        page.glyph_text(glyphs, &t.text, p0, turn, style);
+        return;
+    }
     let Some(font) = page.fonts.get(&t.font, t.weight, t.italic) else {
         return;
     };

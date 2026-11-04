@@ -240,7 +240,7 @@ pub struct Along<'a> {
 }
 
 /// The curve walked by distance.
-struct Walk {
+pub(crate) struct Walk {
     edges: Vec<Edge>,
     lens: Vec<f64>,
     starts: Vec<Vec2>,
@@ -249,7 +249,9 @@ struct Walk {
 }
 
 impl Walk {
-    fn of(curve: &Curve, p: Vec2, rotation: f64) -> Walk {
+    pub(crate) fn total(&self) -> f64 { self.total }
+
+    pub(crate) fn of(curve: &Curve, p: Vec2, rotation: f64) -> Walk {
         let vs = curve.world(p, rotation);
         let edges = curve.edges(p, rotation);
         let lens: Vec<f64> = edges.iter().map(edge_length).collect();
@@ -263,8 +265,42 @@ impl Walk {
         }
     }
 
+    /// Indexed locator for glyph clusters. Legacy placement retains its original
+    /// walk; this allocation is made once by the Unicode plan, not per glyph.
+    pub(crate) fn locator(&self) -> impl Fn(f64, f64) -> (Vec2, Vec2) + '_ {
+        let mut starts = Vec::new();
+        let mut sum = 0.;
+        for (i, &length) in self.lens.iter().enumerate() {
+            if length > 0. { starts.push((i, sum)); }
+            sum += length;
+        }
+        move |m, rotation| {
+            let Some(&(first, _)) = starts.first() else {
+                let (c,s) = axes(rotation);
+                let o = self.starts.first().copied().unwrap_or(Vec2::new(0.,0.));
+                return (Vec2::new(o.x+c*m,o.y+s*m),Vec2::new(c,s));
+            };
+            if m < 0. {
+                let t = tangent(&self.edges[first],0.);
+                let a = self.starts[first];
+                return (Vec2::new(a.x+t.x*m,a.y+t.y*m),t);
+            }
+            if m > self.total {
+                let last = starts.last().map_or(first, |p| p.0);
+                let t = tangent(&self.edges[last],1.);
+                let b = self.ends[last];
+                let over = m-self.total;
+                return (Vec2::new(b.x+t.x*over,b.y+t.y*over),t);
+            }
+            let index = starts.partition_point(|&(_,s)| s <= m).saturating_sub(1);
+            let (i,start) = starts[index];
+            let t = js_min(1.,(m-start)/self.lens[i]);
+            (point_at(&self.edges[i],t),tangent(&self.edges[i],t))
+        }
+    }
+
     /// The point and unit tangent `m` metres along (§2.4).
-    fn locate(&self, m: f64, rotation: f64) -> (Vec2, Vec2) {
+    pub(crate) fn locate(&self, m: f64, rotation: f64) -> (Vec2, Vec2) {
         let live = |i: &usize| self.lens[*i] > 0.0;
         let Some(first) = (0..self.edges.len()).find(live) else {
             let (c, s) = axes(rotation);

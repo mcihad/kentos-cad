@@ -462,6 +462,7 @@ pub fn map_vector(m: &MapPrim) -> Option<kentos_sheet::pdf::MapContent> {
     let rect = |a: f64, b: f64, c: f64, d: f64| vec![[a, b], [c, b], [c, d], [a, d]];
     let label =
         |at: [f64; 2], text: String, size: f64, weight: u16, italic: bool, color: &str| MapText {
+            glyphs: None,
             at,
             text,
             size,
