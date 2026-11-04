@@ -1654,6 +1654,15 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
   zoom yapılarak karşılaştırıldı; sınır farkı en fazla 1 piksel.
   Kapsam ve kalan hassasiyet sınırları ADR 0930'da; ana madde `[~]`.
 
+**Karmaşık dosya kaynakları (4 Kasım 2026):**
+
+- Yalnız çizgi tipinin kullandığı yazı stilleri ve ayrı adsız SHX kaynakları
+  içe almada korunur. Sabit/değişken STYLE yüksekliğinin farklı S birimleri,
+  gerçek yazı stili handle'ı ve U yönü aktarımda izlenir.
+- Ham derece açısı bağımsız kodekle; kaynaklar AC1027/AC1032 DWG ile
+  karşılaştırıldı. Gerçek GUI'de iki kaynak yazı stili ve parametreleri
+  doğrulandı. Test ayrıntıları ADR 0930'da. Yazı/SHX çizimi hâlâ açık.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

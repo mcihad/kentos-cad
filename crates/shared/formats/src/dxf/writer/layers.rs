@@ -61,16 +61,19 @@ pub(super) fn ltype_name(t: LineType) -> &'static str {
 }
 
 /// A project line type's LTYPE record (docs/adr/0313 §6): its elements' lengths in drawing units (a paper pattern's
-/// millimetres at the plot scale); a text attached to the element before it (74 2, the Standard style, its height,
-/// turn and shift); a shape left out and said, DXF holding only a shape file's number.
+/// millimetres at the plot scale); text attached to the element before it, referencing its own STYLE;
+/// a shape left out and said, DXF holding only a shape file's number.
+#[allow(clippy::too_many_arguments)]
 fn pattern_record(
     out: &mut Out,
     handle: u64,
     p: &kentos_contracts::LineTypeDef,
     name: &str,
     scale: f64,
+    styles: &[kentos_contracts::TextStyleDef],
     report: &mut crate::report::Report,
-) {
+) -> Vec<(usize, String)> {
+    let mut references = Vec::new();
     let length = |l: f64| match p.unit {
         kentos_contracts::PatternUnit::Paper => l * scale / 1000.0,
         kentos_contracts::PatternUnit::Drawing => l,
@@ -109,10 +112,19 @@ fn pattern_record(
             None => out.int(74, 0),
             Some(t) => {
                 let place = &t.place;
-                out.int(74, 2 | i64::from(place.absolute));
+                out.int(74, 2 | i64::from(place.absolute) | (i64::from(place.upright) << 3));
                 out.int(75, 0);
-                out.handle(340, template::STYLE);
-                out.real(46, length(place.scale));
+                let style = styles.iter().find(|s| s.name.eq_ignore_ascii_case(&t.style));
+                if let Some(style) = style {
+                    references.push((out.forward_handle(340), style.id.clone()));
+                } else {
+                    out.handle(340, template::STYLE);
+                    if !t.style.eq_ignore_ascii_case("STANDARD") {
+                        report.note("Çizgi tipi", &format!("“{}”: “{}” yazı stili bulunamadı; DXF metni Standard stiline bağlandı.", p.name, t.style), 0);
+                    }
+                }
+                let fixed = style.is_some_and(|s| s.height.is_some_and(|h| h > 0.));
+                out.real(46, if fixed { place.scale } else { length(place.scale) });
                 out.real(50, place.rotation);
                 out.real(44, length(place.x));
                 out.real(45, length(place.y));
@@ -120,6 +132,7 @@ fn pattern_record(
             }
         }
     }
+    references
 }
 
 /// The AutoCAD weight nearest to `mm`, and whether it differs.
@@ -305,6 +318,7 @@ impl Layers {
     /// LTYPE: the built-in three and the dashed ones the layers use, sized
     /// for paper at `scale`, then those only dimensions' lines take; `given`
     /// the records given a handle before (docs/adr/0205 §6).
+    #[allow(clippy::too_many_arguments)]
     pub fn ltype_table(
         &self,
         out: &mut Out,
@@ -312,8 +326,10 @@ impl Layers {
         scale: f64,
         given: &[(LineType, u64)],
         patterns: &[kentos_contracts::LineTypeDef],
+        styles: &[kentos_contracts::TextStyleDef],
         report: &mut crate::report::Report,
-    ) {
+    ) -> Vec<(usize, String)> {
+        let mut references = Vec::new();
         let names: Vec<String> = patterns.iter().map(|p| valid_name(&p.name)).collect();
         let taken = |n: &str| names.iter().any(|x| x.eq_ignore_ascii_case(n));
         let mut used: Vec<LineType> = Vec::new();
@@ -333,7 +349,7 @@ impl Layers {
         template::builtin_ltypes(out);
         for (p, name) in patterns.iter().zip(&names) {
             let handle = handles.take();
-            pattern_record(out, handle, p, name, scale, report);
+            references.extend(pattern_record(out, handle, p, name, scale, styles, report));
         }
         for t in used {
             let Some(d) = dashes(t) else { continue };
@@ -355,6 +371,7 @@ impl Layers {
             }
         }
         out.str(0, "ENDTAB");
+        references
     }
 
     /// LAYER: "0" first (the drawing's own "0" when it has one), then the layers in the drawing's order.

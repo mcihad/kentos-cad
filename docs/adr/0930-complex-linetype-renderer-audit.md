@@ -384,3 +384,53 @@ Repo dışı kanıtlar: `make-remote-phase-fixture.py`,
 Bu düzeltme, tek bir çok uzun GPU segmentinin yerel interpolasyonuna veya
 ekran-piksel birimindeki desenin dünya-mesafe fazına genel çözüm iddiası
 olmaz. Yazı/SHX işaretleri, affine blok ve önceki açık kabul matrisi sürüyor.
+
+
+## Karmaşık DXF kaynakları ve bağımsız kodek kontrolü (4 Kasım 2026)
+
+Yalnız LTYPE'ın kullandığı STYLE kayıtları, TEXT/DIMENSION bulunmadığı için
+önceden içe alma listesinden düşüyordu. Okuyucu artık bu referansları da
+izler. Adsız SHX STYLE kayıtları adla değil handle ile ayrılır; farklı dosyalar
+birbirini ezmez. Bulunamayan handle kaynakta tutulur, boş ada çevrilmez.
+Sabit STYLE yüksekliğinde `S` boyutsuz çarpandır; değişken yükseklikte `S`
+çizim uzunluğudur. X/Y her iki durumda çizim biriminden dönüştürülür.
+
+Yazıcı karmaşık metni her zaman Standard'a bağlamak yerine gerçek STYLE
+handle'ını ileri referansla yazar. Önceki handle dağılımı ve karmaşık metin
+olmayan altın dosyaların baytları korunur. Stil bulunamazsa Standard'a
+geçildiği raporda açıkça belirtilir. U/dik okunma 74 bit 8 ile korunur;
+özellik kullanılan DXF'nin başlığı AC1027/R2013 olur, diğer dosyalar AC1021
+kalır. SHX dışa yazımı bu dilimde tamamlanmadı; mevcut kayıp raporu sürer.
+
+Açı kaynakları çelişkilidir: Autodesk'in [LTYPE sayfası](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-DXF/files/GUID-F57A316C-94A2-416C-8280-191E34B182AC.htm)
+radyan derken [genel DXF grup kodu kuralı](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-DXF/files/GUID-3F0380A5-1C15-464D-BC66-2C5F094BCFB9.htm)
+50–58 için DXF'de derece, uygulama API'sinde radyan ayrımını yapar.
+[ezdxf'nin gerçek LIN derleyicisi](https://github.com/mozman/ezdxf/blob/master/src/ezdxf/tools/complex_ltype.py)
+dereceyi grup 50'ye olduğu gibi taşır. Sabitlenmiş OpenCADCodec ff75fdd'nin
+`src/io/dxf/writer/section_writer.rs::write_ltype_entry` kodu da iç radyanı
+DXF derecesine çevirir ve U bitini R2013'e bağlar. Bu yüzden dosya açısı
+derece kalır; kendi yazıcı-okuyucumuz arasında iki yanlış dönüşümle geçen
+bir round-trip kabul kanıtı sayılmaz.
+
+Doğrulama:
+
+- Elle yazılmış `fixtures/formats/v1/complex-ltype-resources.dxf` derece
+  açıları, ileri STYLE referansları, iki adsız SHX kaynağı, sabit/değişken
+  yükseklik ve hiç TEXT içermeyen çizimi kapsar.
+- Yazma testi gerçek stil handle'ını, ham DXF'de 90 dereceyi, değişmeyen
+  kaynak girdiyi, kayıp stil raporunu ve U için sürüm yükseltmesini sınar.
+- Bağımsız OpenCADCodec DXF ayrıştırıcısı 90 dereceyi iç PI/2 olarak okur.
+  AC1027/AC1032 ikili DWG üzerinden desenler ve stil kaynakları yeniden
+  karşılaştırıldı; eğiklikte derece/radyan dönüşümünün Float64 toleransı
+  dışında değerler aynıdır. Bu gerçek AutoCAD testi değildir.
+- Formats: 124 okuma/diğer entegrasyon + 52 DXF yazma testi geçti;
+  9 mevcut ignored. DWG: tüm 6 entegrasyon testi geçti. Strict masaüstü
+  Clippy ve yeni masaüstü derlemesi geçti. Python SDK yeniden derlendi,
+  `test_sheet_line_types.py` üç alt durumu geçti.
+- Yeni binary SHA-256 `9536fddd9a3471e1ba4f7deb1a5740b2750540c9570499685a2168c754fd282e`.
+  Gerçek GUI'de DXF Aç ile açıldı; Yazı stilleri listesindeki Utility Text ve
+  Variable Text seçildi, Barlow/Arimo kaynak dosyaları, sabit/boş yükseklik,
+  12 derece eğiklik ve 0.8 genişlik görüldü. Kaydetmeden kapatıldı.
+  `complex-resource-{fixed,variable}-style-gui.png` ve `complex-*.log`
+  repo dışı önceki kanıt dizininde. Bu kontrol desen yazısını render etme
+  kabulü değildir; CAD-ADV-11 hâlâ kısmen tamamdır.

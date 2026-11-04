@@ -223,7 +223,8 @@ pub fn style_table(
     names: &StyleNames,
     styles: &[TextStyleDef],
     length: &dyn Fn(f64) -> f64,
-) {
+) -> HashMap<String, u64> {
+    let mut written = HashMap::new();
     table(
         out,
         "STYLE",
@@ -243,6 +244,7 @@ pub fn style_table(
             continue;
         };
         let h = handles.take();
+        written.insert(s.id.clone(), h);
         record(
             out,
             "STYLE",
@@ -281,6 +283,7 @@ pub fn style_table(
         style_data(out, font, *bold, *italic, super::super::xdata::STYLELESS);
     }
     out.str(0, "ENDTAB");
+    written
 }
 
 /// What the report says of open arrows and dots: DXF's arrowhead blocks are not written.
