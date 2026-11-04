@@ -38,6 +38,47 @@ pub fn end_areas(sections: &[SectionAreas]) -> Vec<Between> {
         .collect()
 }
 
+/// A section on a curve (docs/adr/0934 §1): its station, cut and fill areas (m²), their first moments about the
+/// alignment (`∫ o dA`, offset right positive, m³/m), the alignment's curvature there (left turns positive, 1/m) and
+/// the farthest offsets the section reaches on each side (left negative, right positive).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CurvedSection {
+    pub station: f64,
+    pub areas: Option<(f64, f64)>,
+    pub moments: (f64, f64),
+    pub curvature: f64,
+    pub reach: (f64, f64),
+}
+
+/// The section's areas as they sweep along a curve: an element at offset o travels `ds·(1 + κ·o)` while the alignment
+/// travels ds (κ left positive, o right positive: on a left turn the left side is inside and travels less). So the
+/// volume is `∫ (A + κ·Q) ds` (Pappus's centroid theorem when the section is constant on a circle); `A + κ·Q` is the
+/// effective area. None where the section reaches past the curve's centre (`1 + κ·o ≤ 0`: the lines cross, Y29).
+pub fn effective(s: &CurvedSection) -> Option<Option<(f64, f64)>> {
+    let k = s.curvature;
+    let inside = if k > 0.0 { s.reach.0 } else { s.reach.1 };
+    if k != 0.0 && 1.0 + k * inside <= 0.0 {
+        return None;
+    }
+    Some(s.areas.map(|(c, f)| (c + k * s.moments.0, f + k * s.moments.1)))
+}
+
+/// The average end area volumes of the effective areas: `L·(A′₀ + A′₁)/2`, cut and fill apart; exact for a constant
+/// section on a circle, second order in L on a clothoid. A stretch with a section past its centre is left out (none).
+pub fn end_areas_curved(sections: &[CurvedSection]) -> Vec<Between> {
+    sections
+        .windows(2)
+        .map(|w| {
+            let l = w[1].station - w[0].station;
+            let volumes = match (effective(&w[0]), effective(&w[1])) {
+                (Some(Some((c0, f0))), Some(Some((c1, f1)))) => Some((l * (c0 + c1) / 2.0, l * (f0 + f1) / 2.0)),
+                _ => None,
+            };
+            Between { from: w[0].station, to: w[1].station, volumes }
+        })
+        .collect()
+}
+
 /// The prismoidal volume between end areas `a0`, `a1` with the middle section's area `am`, over the length `l`:
 /// `L·(A₀ + 4Aₘ + A₁)/6`.
 pub fn prismoidal(a0: f64, am: f64, a1: f64, l: f64) -> f64 {

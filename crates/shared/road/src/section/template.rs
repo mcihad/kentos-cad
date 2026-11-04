@@ -214,6 +214,14 @@ fn side(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> SideSect
 
 /// The cut and fill areas between the design line (offsets in order) and the terrain.
 fn areas(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64) {
+    let (cut, fill, _, _) = areas_moments(design, ground);
+    (cut, fill)
+}
+
+/// The cut and fill areas between the design line and the terrain and their first moments about the alignment
+/// (`∫ o dA`, the offset right positive; docs/adr/0934 §1): for a linear depth f over [x₀, x₁] the area is
+/// `(f₀ + f₁)(x₁ − x₀)/2` and the moment `(x₁ − x₀)(f₀(2x₀ + x₁) + f₁(x₀ + 2x₁))/6`, both split where f changes sign.
+fn areas_moments(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64, f64, f64) {
     let t: Vec<(f64, Option<f64>, bool)> = ground.iter().map(|g| (g.offset, g.z, g.gap)).collect();
     let (lo, hi) = (design[0][0], design[design.len() - 1][0]);
     let mut stops: Vec<f64> = design.iter().map(|p| p[0]).chain(ground.iter().map(|g| g.offset)).filter(|o| *o >= lo && *o <= hi).collect();
@@ -224,7 +232,7 @@ fn areas(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64) {
         let (a, b) = (design[i - 1], design[i]);
         if b[0] == a[0] { b[1] } else { a[1] + (b[1] - a[1]) * (o - a[0]) / (b[0] - a[0]) }
     };
-    let (mut cut, mut fill) = (0.0, 0.0);
+    let (mut cut, mut fill, mut qcut, mut qfill) = (0.0, 0.0, 0.0, 0.0);
     for w in stops.windows(2) {
         let (a, b) = (w[0], w[1]);
         let mid = 0.5 * (a + b);
@@ -233,10 +241,17 @@ fn areas(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64) {
         }
         let (Some(ga), Some(gb)) = (height(&t, a), height(&t, b)) else { continue };
         let (fa, fb) = (line(a) - ga, line(b) - gb);
-        // The integral of a linear f, split where it changes sign.
+        // The integral of a linear f and of o·f, split where f changes sign.
         let mut add = |x0: f64, x1: f64, f0: f64, f1: f64| {
             let area = 0.5 * (f0 + f1) * (x1 - x0);
-            if f0 + f1 > 0.0 { fill += area } else { cut -= area }
+            let moment = (x1 - x0) * (f0 * (2.0 * x0 + x1) + f1 * (x0 + 2.0 * x1)) / 6.0;
+            if f0 + f1 > 0.0 {
+                fill += area;
+                qfill += moment;
+            } else {
+                cut -= area;
+                qcut -= moment;
+            }
         };
         if (fa < 0.0 && fb > 0.0) || (fa > 0.0 && fb < 0.0) {
             let x = a + (b - a) * fa / (fa - fb);
@@ -246,7 +261,17 @@ fn areas(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64) {
             add(a, b, fa, fb);
         }
     }
-    (cut, fill)
+    (cut, fill, qcut, qfill)
+}
+
+/// The cut and fill's first moments about the alignment (m³ per metre: `∫ o dA`, the offset right positive) of the
+/// section's earthwork against the ground lowered by `strip` (the same areas as [`earthwork`]'s cut and fill), for the
+/// correction of their volumes on a curve (docs/adr/0934 §1).
+pub fn moments(section: &Section, ground: &[GroundPoint], strip: f64) -> (f64, f64) {
+    let design: Vec<[f64; 2]> = section.left.points.iter().rev().chain(section.right.points.iter().skip(1)).copied().collect();
+    let lowered: Vec<GroundPoint> = ground.iter().map(|g| GroundPoint { z: g.z.map(|z| z - strip), ..*g }).collect();
+    let (_, _, qcut, qfill) = areas_moments(&design, &lowered);
+    (qcut, qfill)
 }
 
 /// The section a template builds with its axis at `axis` on the terrain `ground` (offsets from left to right).

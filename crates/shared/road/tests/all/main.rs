@@ -4,6 +4,7 @@ mod alignments;
 mod analysis;
 mod cloud_ground;
 mod corridor;
+mod curve_volumes;
 mod cutout;
 mod drainage;
 mod pavements;
