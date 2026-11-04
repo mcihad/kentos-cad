@@ -333,6 +333,8 @@ pub(super) struct Features {
     pub(super) volume_curve: bool,
     /// Schema 168: a corridor's vertical chord height and sampling check (docs/adr/0939).
     pub(super) corridor_sampling: bool,
+    /// Schema 169: a mass haul diagram's unsuitable cut and barriers (docs/adr/0944).
+    pub(super) haul_sorting: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -581,6 +583,7 @@ impl Features {
             section_breaks: schema >= crate::SCHEMA_WITH_SECTION_BREAKS,
             volume_curve: schema >= crate::SCHEMA_WITH_VOLUME_CURVE,
             corridor_sampling: schema >= crate::SCHEMA_WITH_CORRIDOR_SAMPLING,
+            haul_sorting: schema >= crate::SCHEMA_WITH_HAUL_SORTING,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,

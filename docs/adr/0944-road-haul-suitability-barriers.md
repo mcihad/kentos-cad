@@ -1,6 +1,6 @@
 # 0944 — Taşıma planında malzeme uygunluğu ve engeller
 
-Tarih: 2026-11-05. Durum: kabul (Y38.1 çekirdek). Kapsam ROAD-HAUL-04 ve ROAD-HAUL-05.
+Tarih: 2026-11-05. Durum: kabul (Y38.1 çekirdek, Y38.2 komut ve şema 169, Y38.3 pencereler). Kapsam ROAD-HAUL-04 ve ROAD-HAUL-05.
 
 ## Sorun
 
@@ -54,7 +54,66 @@ ROAD-HAUL-05: "Barriers, köprü geçişi, temporary road closure ve erişilebil
 - moment ve uygunsuz kısmı;
 - her engelden geçen hacim.
 
-## Ortak durumlar ve ölçüm
+### Komut ve kayıt (Y38.2)
+
+**Brükner tanımı** iki alan kazanır (KCAD şema 169; 168 ve öncesi `unknown_field` ile reddeder):
+
+- `unsuitable`: km aralıklarıyla kazının dolguya konamayan yüzde payı. Satırlar kesişmez; pay 0–100 arasıdır.
+- `barriers`: ad, km ve isteğe bağlı dolaşma (m). Dolaşma yoksa engel kapalıdır.
+
+`road.hauls.edit` ikisini yazar; boş liste kaldırır.
+
+**`road.hauls.plan`:**
+
+- Brüknerde biri varsa aralıkların düzeltilmiş kazı ve dolgusuyla, uygunsuz payı aralık ortasında okunarak
+  `plan_sorted` çalışır.
+- **Rapora eklenenler:** toplam uygunsuz kazı, dökülemeyen kısmı, momentteki payı, her döküm alanının uygunsuz kısmı,
+  her aralıkta akışın uygunsuz kısmı ve engellerden geçen hacim.
+- **Yapılamazlık uyarısı** dökülemeyen uygunsuz kazıyı ayrıca söyler.
+- **Ekonomik amaç** (ADR 0925) bu alanlarla birlikte henüz çözülmez ve açıkça reddedilir. Sessizce momente dönmez.
+
+**Ortak durumlar:** başvuru (`road_haul_plan_cases.py`) aynı doğrusal programı kurar ve her yerleştirmenin tek
+olduğunu denetler: en küçük moment altında en küçük ve en büyük değeri aynı olmalı. Sonra çözücünün toleransını
+cilalar:
+
+- sınırına 1e-6 yakın değer sınırdır;
+- kapalı engellerin ayırdığı her parçada sınır dışında kalan tek yerleştirme o parçanın dengesinden kesin bulunur.
+
+Bu durumlar bağıl 1e-5 ile karşılaştırılır:
+
+- 10⁷ m³·m'lik momentler farklı sırayla toplanınca 1e-9 kadar ayrılır;
+- yapılamaz planlarda birden çok yerleştirme serbest kalır ve HiGHS'in ~1e-5 m³ toleransı orada durur;
+- farklı bir plan binlerce m³'ü metrelerce taşıdığı için bu tolerans onu yine yakalar.
+
+48 plan ve 42 düzenleme durumu Rust'ta ve Python tipli katmanında aynıdır.
+
+**Örnek proje** (Ana Brükner; döküm alanı km 30, ödünç alanı km 560):
+
+| Durum | Moment (m³·m) | Not |
+|---|---|---|
+| Uygunsuz ve engel yok | 9.515.458 | Y23'ün planı |
+| 0–300 m arası %40 uygunsuz | 9.515.458 | yol yarma fazlası: fazla zaten dökümde, uygunsuz onun yerini alır |
+| Dere km 250, 400 m dolaşma | 16.446.719 | %73 fazla; 17.328 m³ dereyi geçer |
+| %30 uygunsuz ve dere km 420, 150 m dolaşma | 12.062.999 | uygunsuz 1.277 m³, momentin 212.459'u; 16.984 m³ geçer |
+| Kavşak km 300 kapalı | yapılamaz | doğudaki 14.276 m³ yarma döküme ulaşamaz |
+| Döküm 500 m³, %60 uygunsuz | yapılamaz | 18.467 m³ uygunsuz dökülemez |
+
+Uygunsuz malzemenin planı değiştirmediği ikinci satır önemlidir. Yarma fazlası olan bir yolda uygunsuz kazı, zaten
+döküme gidecek fazlanın yerini alır. Plan ancak uygunsuz pay dolgu ihtiyacını karşılayan kazıya dokununca değişir. Engel
+ise hacmi değil yolu değiştirir.
+
+### Pencereler (Y38.3)
+
+- **Brükner:** "Uygunsuz malzeme" (baş, son, yüzde) ve "Engeller" (ad, km, dolaşma; boşsa kapalı) tabloları.
+- **Taşıma planı:**
+  - resimde akışın uygunsuz kısmı mor, engeller kesikli çizgi (dolaşmasıyla ya da "kapalı");
+  - uygunsuz yarma ve dökülemeyeni rakam olarak;
+  - engellerden geçen hacim bir cümlede;
+  - alan tablosunda döküm alanlarının uygunsuz kısmı.
+
+Resimler `.run/gui-evidence/yol-y38/` altındadır.
+
+## Ortak durumlar ve ölçüm (çekirdek)
 
 `scripts/fixtures/road_haul_sorted_cases.py` KentOS kodu olmadan çalışır. Problemi doğrusal programlama olarak kurar ve
 HiGHS ile çözer:

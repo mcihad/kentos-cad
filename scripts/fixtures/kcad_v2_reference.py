@@ -2421,6 +2421,9 @@ def document(d):
     if any("verticalSag" in c or "refine" in c for c in road.get("corridors", [])):
         # A corridor's vertical chord height or sampling check (docs/adr/0939).
         schema = max(schema, 168)
+    if any(h.get("unsuitable") or h.get("barriers") for h in road.get("hauls", [])):
+        # A mass haul diagram's unsuitable cut or barriers (docs/adr/0944).
+        schema = max(schema, 169)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3291,7 +3294,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-169.kcad"] = container(root(cmap(parts), version=uint(169)))
+    files["schema-version-170.kcad"] = container(root(cmap(parts), version=uint(170)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5653,6 +5656,12 @@ def build():
     assert sd.count(b"\x67version\x18\xa8") == 1, "the corridor's sampling check is schema 168"
     out["road-corridor-sampling.kcad"] = container(sd)
     out["broken/road-corridor-sampling-in-schema-167.kcad"] = container(sd.replace(b"\x67version\x18\xa8", b"\x67version\x18\xa7"))
+    # Schema 169 (docs/adr/0944): a mass haul diagram's unsuitable cut and barriers; schema 168 refuses them.
+    sorting = load("road-haul-sorting.json")
+    hd = document(sorting)
+    assert hd.count(b"\x67version\x18\xa9") == 1, "the haul's unsuitable cut and barriers are schema 169"
+    out["road-haul-sorting.kcad"] = container(hd)
+    out["broken/road-haul-sorting-in-schema-168.kcad"] = container(hd.replace(b"\x67version\x18\xa9", b"\x67version\x18\xa8"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

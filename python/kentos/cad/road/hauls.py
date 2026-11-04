@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    HaulBarrierDef,
     HaulCostDef,
     HaulObjective,
     HaulObjectiveName,
@@ -20,6 +21,7 @@ from ..types import (  # noqa: F401
     HaulTrackName,
     HaulTruckDef,
     HaulTrucked,
+    HaulUnsuitableDef,
     HaulsEdit,
     HaulsPlan,
     HaulsQueried,
@@ -44,9 +46,12 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
     cost birim fiyatlar: currency para birimi, overhaul fazla taşımanın para/(m³·km)'si,
     waste ve borrow döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır.
     KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden
-    bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n.
-    Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul,
-    unknown_volume, invalid_haul, invalid_revision, revision_conflict.
+    bağlanmaz ve başka kübaja geçmez.  Uygunsuz malzeme (unsuitable: km aralıklarıyla
+    kazının dolguya konamayan yüzde payı) ve engeller (barriers: ad, km, isteğe bağlı
+    dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (docs/adr/0944, KCAD şema
+    169). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
+    “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.hauls.edit"
@@ -64,12 +69,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        barriers: Sequence[HaulBarrierDef] | None | Unset = UNSET,
         cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         sites: Sequence[HaulSiteDef] | None | Unset = UNSET,
+        unsuitable: Sequence[HaulUnsuitableDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -83,20 +90,25 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         currency para birimi, overhaul fazla taşımanın para/(m³·km)'si, waste ve borrow
         döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır. KentOS
         öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden
-        bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n.
-        Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul,
-        unknown_volume, invalid_haul, invalid_revision, revision_conflict.
+        bağlanmaz ve başka kübaja geçmez.  Uygunsuz malzeme (unsuitable: km aralıklarıyla
+        kazının dolguya konamayan yüzde payı) ve engeller (barriers: ad, km, isteğe bağlı
+        dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (docs/adr/0944, KCAD şema
+        169). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
+        “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul,
+        invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
             operation:
             balance: Unit: volume.
+            barriers: What the haul road crosses (docs/adr/0944); an empty list takes them off.
             cost: The prices and the truck's payload; null takes them off.
             expected_revision:
             free: The free haul distance; null takes it off. Unit: m.
             haul:
             name:
             sites:
+            unsuitable: The cut unsuitable for fill by stations (docs/adr/0944); an empty list takes them off.
             volume:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -113,12 +125,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.execute_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            barriers=_opt(barriers, lambda x: list(x)),
             cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
             name=name,
             sites=_opt(sites, lambda x: list(x)),
+            unsuitable=_opt(unsuitable, lambda x: list(x)),
             volume=volume,
         ), request_id=request_id, expected=expected)
 
@@ -129,12 +143,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        barriers: Sequence[HaulBarrierDef] | None | Unset = UNSET,
         cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         sites: Sequence[HaulSiteDef] | None | Unset = UNSET,
+        unsuitable: Sequence[HaulUnsuitableDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
     ) -> HaulsWritten:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -143,12 +159,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.plan_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            barriers=_opt(barriers, lambda x: list(x)),
             cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
             name=name,
             sites=_opt(sites, lambda x: list(x)),
+            unsuitable=_opt(unsuitable, lambda x: list(x)),
             volume=volume,
         ))
 
@@ -159,12 +177,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        barriers: Sequence[HaulBarrierDef] | None | Unset = UNSET,
         cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         sites: Sequence[HaulSiteDef] | None | Unset = UNSET,
+        unsuitable: Sequence[HaulUnsuitableDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -173,12 +193,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.validate_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            barriers=_opt(barriers, lambda x: list(x)),
             cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
             name=name,
             sites=_opt(sites, lambda x: list(x)),
+            unsuitable=_opt(unsuitable, lambda x: list(x)),
             volume=volume,
         ))
 
@@ -189,12 +211,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         balance: float | None | Unset = UNSET,
+        barriers: Sequence[HaulBarrierDef] | None | Unset = UNSET,
         cost: HaulCostDef | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         free: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         sites: Sequence[HaulSiteDef] | None | Unset = UNSET,
+        unsuitable: Sequence[HaulUnsuitableDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -208,12 +232,14 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         return self.answer_input(doc, HaulsEdit(
             operation=operation,
             balance=balance,
+            barriers=_opt(barriers, lambda x: list(x)),
             cost=cost,
             expected_revision=expected_revision,
             free=free,
             haul=haul,
             name=name,
             sites=_opt(sites, lambda x: list(x)),
+            unsuitable=_opt(unsuitable, lambda x: list(x)),
             volume=volume,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -236,8 +262,13 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
     yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim
     fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette
     en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik
-    taşıma sınırı. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler:
-    not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).
+    taşıma sınırı.  Brüknerde uygunsuz malzeme ya da engel varsa plan malzemeyi ayırır
+    (docs/adr/0944): uygunsuz kazı yalnız döküm alanlarına gider ve döküm yetmezse önce
+    o yerleşir, açık engeli geçen taşıma dolaşmayı da yürür, kapalısını geçemez; rapor
+    uygunsuz kazıyı, dökülemeyeni, momentteki payını, alanların uygunsuz kısmını ve
+    engellerden geçeni verir; ekonomik amaçla birlikte reddedilir. Uyarılar:
+    haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project,
+    unknown_haul, invalid_haul (maliyette fiyat yoksa da).
     """
     __slots__ = ()
     id = "road.hauls.plan"
@@ -271,8 +302,13 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim
         fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette
         en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik
-        taşıma sınırı. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler:
-        not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).
+        taşıma sınırı.  Brüknerde uygunsuz malzeme ya da engel varsa plan malzemeyi ayırır
+        (docs/adr/0944): uygunsuz kazı yalnız döküm alanlarına gider ve döküm yetmezse önce
+        o yerleşir, açık engeli geçen taşıma dolaşmayı da yürür, kapalısını geçemez; rapor
+        uygunsuz kazıyı, dökülemeyeni, momentteki payını, alanların uygunsuz kısmını ve
+        engellerden geçeni verir; ekonomik amaçla birlikte reddedilir. Uyarılar:
+        haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project,
+        unknown_haul, invalid_haul (maliyette fiyat yoksa da).
 
         Args:
             doc: The drawing it works on.

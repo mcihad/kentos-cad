@@ -42002,7 +42002,7 @@
       "id": "road.hauls.edit",
       "version": 1,
       "title": "Brükneri düzenle",
-      "summary": "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). cost birim fiyatlar: currency para birimi, overhaul fazla taşımanın para/(m³·km)'si, waste ve borrow döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır. KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez. Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin Brüknerini (haul: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Brükner bir kübaj hesabının (volume) kütle ordinatıdır (birikimli düzeltilmiş kazı eksi dolgu): denge çizgisi balance (m³, öntanımlı 0), serbest taşıma uzaklığı free (m; null kaldırır, yoksa bütün taşıma fazla taşımadır), ödünç ve döküm alanları sites (name, kind borrow ya da waste, station aksın istasyonu, volume m³; ödünç eğriyi yükseltir, döküm düşürür). cost birim fiyatlar: currency para birimi, overhaul fazla taşımanın para/(m³·km)'si, waste ve borrow döküm ve ödüncün para/m³'ü, payload kamyon yükü (m³); null kaldırır. KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden bağlanmaz ve başka kübaja geçmez.  Uygunsuz malzeme (unsuitable: km aralıklarıyla kazının dolguya konamayan yüzde payı) ve engeller (barriers: ad, km, isteğe bağlı dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (docs/adr/0944, KCAD şema 169). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision, revision_conflict.",
       "aliases": [
         "bruckner",
         "brükner"
@@ -42029,6 +42029,16 @@
               "null"
             ],
             "x-unit": "volume"
+          },
+          "barriers": {
+            "description": "What the haul road crosses (docs/adr/0944); an empty list takes them off.",
+            "items": {
+              "$ref": "#/$defs/HaulBarrierDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "cost": {
             "anyOf": [
@@ -42075,6 +42085,16 @@
           "sites": {
             "items": {
               "$ref": "#/$defs/HaulSiteDef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "unsuitable": {
+            "description": "The cut unsuitable for fill by stations (docs/adr/0944); an empty list takes them off.",
+            "items": {
+              "$ref": "#/$defs/HaulUnsuitableDef"
             },
             "type": [
               "array",
@@ -42192,7 +42212,7 @@
       "id": "road.hauls.plan",
       "version": 1,
       "title": "Taşıma planı",
-      "summary": "Bir Brüknerin kübajındaki toprağı en küçük taşıma momentiyle (m³·m) taşır; hiçbir şey yazmaz. Her aralığın net hacmi (yarmanın dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik taşıma sınırı. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).",
+      "summary": "Bir Brüknerin kübajındaki toprağı en küçük taşıma momentiyle (m³·m) taşır; hiçbir şey yazmaz. Her aralığın net hacmi (yarmanın dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik taşıma sınırı.  Brüknerde uygunsuz malzeme ya da engel varsa plan malzemeyi ayırır (docs/adr/0944): uygunsuz kazı yalnız döküm alanlarına gider ve döküm yetmezse önce o yerleşir, açık engeli geçen taşıma dolaşmayı da yürür, kapalısını geçemez; rapor uygunsuz kazıyı, dökülemeyeni, momentteki payını, alanların uygunsuz kısmını ve engellerden geçeni verir; ekonomik amaçla birlikte reddedilir. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).",
       "aliases": [
         "tasimaplani",
         "enkisatasima"
@@ -42245,6 +42265,13 @@
             ],
             "x-unit": "m"
           },
+          "barriers": {
+            "description": "The barriers and what crosses each.",
+            "items": {
+              "$ref": "#/$defs/HaulPlanBarrier"
+            },
+            "type": "array"
+          },
           "cost": {
             "anyOf": [
               {
@@ -42311,10 +42338,35 @@
             },
             "type": "array"
           },
+          "stranded": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
           "surplus": {
             "format": "double",
             "type": "number",
             "x-unit": "volume"
+          },
+          "unsuitable": {
+            "description": "Where the diagram has unsuitable cut or barriers (docs/adr/0944): the unsuitable cut in all, the part of it no\nwaste site takes, and its part of the moment (m³·m); none otherwise.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
+          "unsuitableMoment": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume-m"
           }
         },
         "required": [
@@ -42345,6 +42397,13 @@
             ],
             "x-unit": "m"
           },
+          "barriers": {
+            "description": "The barriers and what crosses each.",
+            "items": {
+              "$ref": "#/$defs/HaulPlanBarrier"
+            },
+            "type": "array"
+          },
           "cost": {
             "anyOf": [
               {
@@ -42411,10 +42470,35 @@
             },
             "type": "array"
           },
+          "stranded": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
           "surplus": {
             "format": "double",
             "type": "number",
             "x-unit": "volume"
+          },
+          "unsuitable": {
+            "description": "Where the diagram has unsuitable cut or barriers (docs/adr/0944): the unsuitable cut in all, the part of it no\nwaste site takes, and its part of the moment (m³·m); none otherwise.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume"
+          },
+          "unsuitableMoment": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume-m"
           }
         },
         "required": [
@@ -120812,6 +120896,33 @@
         }
       ]
     },
+    "HaulBarrierDef": {
+      "additionalProperties": false,
+      "description": "Something the haul road crosses (docs/adr/0944): its name, station, and the extra distance a load goes round it\n(m); absent: closed, nothing crosses.",
+      "properties": {
+        "detour": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "station"
+      ],
+      "type": "object"
+    },
     "HaulCostDef": {
       "additionalProperties": false,
       "description": "A mass haul diagram's prices (docs/adr/0907 §5): the currency, the overhaul's price per m³·km beyond the free haul,\nthe waste's and the borrow's per m³ (absent: not priced), and a truck's payload (m³, in the volume sheet's state) for\nthe trips; all the project's (its contract and price list).",
@@ -120916,6 +121027,13 @@
           "type": "number",
           "x-unit": "volume"
         },
+        "barriers": {
+          "description": "What the haul road crosses (docs/adr/0944; KCAD schema 169).",
+          "items": {
+            "$ref": "#/$defs/HaulBarrierDef"
+          },
+          "type": "array"
+        },
         "cost": {
           "anyOf": [
             {
@@ -120950,6 +121068,13 @@
         "sites": {
           "items": {
             "$ref": "#/$defs/HaulSiteDef"
+          },
+          "type": "array"
+        },
+        "unsuitable": {
+          "description": "The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).",
+          "items": {
+            "$ref": "#/$defs/HaulUnsuitableDef"
           },
           "type": "array"
         },
@@ -121076,6 +121201,38 @@
         }
       ]
     },
+    "HaulPlanBarrier": {
+      "description": "A barrier in a haul plan (docs/adr/0944): its name, station, detour (none: closed) and what crosses it (m³, both\nways).",
+      "properties": {
+        "crossed": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "detour": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "station",
+        "crossed"
+      ],
+      "type": "object"
+    },
     "HaulPlanCost": {
       "description": "An economic haul plan's cost (docs/adr/0925): the currency, the moment beyond the free haul (m³·m), the overhaul,\nthe waste and the borrow priced, and their total.",
       "properties": {
@@ -121149,6 +121306,15 @@
         "used": {
           "format": "double",
           "type": "number",
+          "x-unit": "volume"
+        },
+        "usedUnsuitable": {
+          "description": "Of a waste site's, the unsuitable cut (docs/adr/0944); none where the plan does not sort its material.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
           "x-unit": "volume"
         }
       },
@@ -121318,6 +121484,15 @@
           "format": "double",
           "type": "number",
           "x-unit": "m"
+        },
+        "unsuitableFlow": {
+          "description": "The unsuitable cut's part of the flow (docs/adr/0944); none where the plan does not sort its material.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
         }
       },
       "required": [
@@ -121433,6 +121608,33 @@
         "traction",
         "drive",
         "brake"
+      ],
+      "type": "object"
+    },
+    "HaulUnsuitableDef": {
+      "additionalProperties": false,
+      "description": "The share of the cut unsuitable for fill between two stations (docs/adr/0944): percent, from the soil report;\nKentOS gives none. It goes to waste sites only.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "share": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "share"
       ],
       "type": "object"
     },

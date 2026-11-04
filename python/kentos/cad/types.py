@@ -36561,6 +36561,35 @@ class HatchesPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulBarrierDef(_Model):
+    """Something the haul road crosses (docs/adr/0944): its name, station, and the extra distance a load goes round it
+    (m); absent: closed, nothing crosses.
+    Attributes:
+        station: Unit: m.
+        detour: Unit: m.
+    """
+    name: str
+    station: float
+    detour: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["station"] = float(self.station)
+        if self.detour is not UNSET:
+            out["detour"] = None if self.detour is None else float(self.detour)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulBarrierDef:
+        return cls(
+            name=data["name"],
+            station=float(data["station"]),
+            detour=UNSET if "detour" not in data else None if data["detour"] is None else float(data["detour"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulCostDef(_Model):
     """A mass haul diagram's prices (docs/adr/0907 §5): the currency, the overhaul's price per m³·km beyond the free haul,
     the waste's and the borrow's per m³ (absent: not priced), and a truck's payload (m³, in the volume sheet's state) for
@@ -36652,18 +36681,22 @@ class HaulDef(_Model):
     haul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.
     Attributes:
         balance: Unit: volume.
+        barriers: What the haul road crosses (docs/adr/0944; KCAD schema 169).
         cost: Its prices and the truck's payload.
         free: Unit: m.
         revision: Unit: version.
+        unsuitable: The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).
     """
     id: str
     name: str
     volume: str
     balance: float | Unset = UNSET
+    barriers: list[HaulBarrierDef] | Unset = UNSET
     cost: HaulCostDef | None | Unset = UNSET
     free: float | None | Unset = UNSET
     revision: int | Unset = UNSET
     sites: list[HaulSiteDef] | Unset = UNSET
+    unsuitable: list[HaulUnsuitableDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36672,6 +36705,8 @@ class HaulDef(_Model):
         out["volume"] = self.volume
         if self.balance is not UNSET:
             out["balance"] = float(self.balance)
+        if self.barriers is not UNSET:
+            out["barriers"] = [e0.to_json() for e0 in self.barriers]
         if self.cost is not UNSET:
             out["cost"] = None if self.cost is None else self.cost.to_json()
         if self.free is not UNSET:
@@ -36680,6 +36715,8 @@ class HaulDef(_Model):
             out["revision"] = self.revision
         if self.sites is not UNSET:
             out["sites"] = [e0.to_json() for e0 in self.sites]
+        if self.unsuitable is not UNSET:
+            out["unsuitable"] = [e0.to_json() for e0 in self.unsuitable]
         return out
 
     @classmethod
@@ -36689,10 +36726,12 @@ class HaulDef(_Model):
             name=data["name"],
             volume=data["volume"],
             balance=float(data["balance"]) if "balance" in data else UNSET,
+            barriers=[HaulBarrierDef.from_json(e0) for e0 in data["barriers"]] if "barriers" in data else UNSET,
             cost=UNSET if "cost" not in data else None if data["cost"] is None else HaulCostDef.from_json(data["cost"]),
             free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
             revision=data.get("revision", UNSET),
             sites=[HaulSiteDef.from_json(e0) for e0 in data["sites"]] if "sites" in data else UNSET,
+            unsuitable=[HaulUnsuitableDef.from_json(e0) for e0 in data["unsuitable"]] if "unsuitable" in data else UNSET,
         )
 
 
@@ -36786,6 +36825,39 @@ class HaulLoop(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulPlanBarrier(_Model):
+    """A barrier in a haul plan (docs/adr/0944): its name, station, detour (none: closed) and what crosses it (m³, both
+    ways).
+    Attributes:
+        station: Unit: m.
+        crossed: Unit: volume.
+        detour: Unit: m.
+    """
+    name: str
+    station: float
+    crossed: float
+    detour: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["station"] = float(self.station)
+        out["crossed"] = float(self.crossed)
+        if self.detour is not UNSET:
+            out["detour"] = None if self.detour is None else float(self.detour)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulPlanBarrier:
+        return cls(
+            name=data["name"],
+            station=float(data["station"]),
+            crossed=float(data["crossed"]),
+            detour=UNSET if "detour" not in data else None if data["detour"] is None else float(data["detour"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulPlanCost(_Model):
     """An economic haul plan's cost (docs/adr/0925): the currency, the moment beyond the free haul (m³·m), the overhaul,
     the waste and the borrow priced, and their total.
@@ -36839,12 +36911,14 @@ class HaulPlanSite(_Model):
         station: Unit: m.
         capacity: Unit: volume.
         used: Unit: volume.
+        used_unsuitable: Of a waste site's, the unsuitable cut (docs/adr/0944); none where the plan does not sort its material. Unit: volume.
     """
     name: str
     kind: HaulSiteKind | HaulSiteKindName
     station: float
     capacity: float
     used: float
+    used_unsuitable: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36853,6 +36927,8 @@ class HaulPlanSite(_Model):
         out["station"] = float(self.station)
         out["capacity"] = float(self.capacity)
         out["used"] = float(self.used)
+        if self.used_unsuitable is not UNSET:
+            out["usedUnsuitable"] = None if self.used_unsuitable is None else float(self.used_unsuitable)
         return out
 
     @classmethod
@@ -36863,6 +36939,7 @@ class HaulPlanSite(_Model):
             station=float(data["station"]),
             capacity=float(data["capacity"]),
             used=float(data["used"]),
+            used_unsuitable=UNSET if "usedUnsuitable" not in data else None if data["usedUnsuitable"] is None else float(data["usedUnsuitable"]),
         )
 
 
@@ -36880,8 +36957,13 @@ class HaulPlanned(_Model):
         shortage: Unit: volume.
         surplus: Unit: volume.
         average: Unit: m.
+        barriers: The barriers and what crosses each.
         cost: The cost, for the cost objective.
         free: The free haul the cost read (m); none for the moment, or where the diagram has none. Unit: m.
+        stranded: Unit: volume.
+        unsuitable: Where the diagram has unsuitable cut or barriers (docs/adr/0944): the unsuitable cut in all, the part of it no
+            waste site takes, and its part of the moment (m³·m); none otherwise. Unit: volume.
+        unsuitable_moment: Unit: volume-m.
     """
     haul: str
     feasible: bool
@@ -36895,8 +36977,12 @@ class HaulPlanned(_Model):
     surplus: float
     objective: HaulObjective | HaulObjectiveName
     average: float | None | Unset = UNSET
+    barriers: list[HaulPlanBarrier] | Unset = UNSET
     cost: HaulPlanCost | None | Unset = UNSET
     free: float | None | Unset = UNSET
+    stranded: float | None | Unset = UNSET
+    unsuitable: float | None | Unset = UNSET
+    unsuitable_moment: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36913,10 +36999,18 @@ class HaulPlanned(_Model):
         out["objective"] = _enum_out(self.objective)
         if self.average is not UNSET:
             out["average"] = None if self.average is None else float(self.average)
+        if self.barriers is not UNSET:
+            out["barriers"] = [e0.to_json() for e0 in self.barriers]
         if self.cost is not UNSET:
             out["cost"] = None if self.cost is None else self.cost.to_json()
         if self.free is not UNSET:
             out["free"] = None if self.free is None else float(self.free)
+        if self.stranded is not UNSET:
+            out["stranded"] = None if self.stranded is None else float(self.stranded)
+        if self.unsuitable is not UNSET:
+            out["unsuitable"] = None if self.unsuitable is None else float(self.unsuitable)
+        if self.unsuitable_moment is not UNSET:
+            out["unsuitableMoment"] = None if self.unsuitable_moment is None else float(self.unsuitable_moment)
         return out
 
     @classmethod
@@ -36934,8 +37028,12 @@ class HaulPlanned(_Model):
             surplus=float(data["surplus"]),
             objective=_enum_in(HaulObjective, data["objective"]),
             average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
+            barriers=[HaulPlanBarrier.from_json(e0) for e0 in data["barriers"]] if "barriers" in data else UNSET,
             cost=UNSET if "cost" not in data else None if data["cost"] is None else HaulPlanCost.from_json(data["cost"]),
             free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
+            stranded=UNSET if "stranded" not in data else None if data["stranded"] is None else float(data["stranded"]),
+            unsuitable=UNSET if "unsuitable" not in data else None if data["unsuitable"] is None else float(data["unsuitable"]),
+            unsuitable_moment=UNSET if "unsuitableMoment" not in data else None if data["unsuitableMoment"] is None else float(data["unsuitableMoment"]),
         )
 
 
@@ -37043,16 +37141,20 @@ class HaulSegment(_Model):
         from_: Unit: m.
         to: Unit: m.
         flow: Unit: volume.
+        unsuitable_flow: The unsuitable cut's part of the flow (docs/adr/0944); none where the plan does not sort its material. Unit: volume.
     """
     from_: float
     to: float
     flow: float
+    unsuitable_flow: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = float(self.from_)
         out["to"] = float(self.to)
         out["flow"] = float(self.flow)
+        if self.unsuitable_flow is not UNSET:
+            out["unsuitableFlow"] = None if self.unsuitable_flow is None else float(self.unsuitable_flow)
         return out
 
     @classmethod
@@ -37061,6 +37163,7 @@ class HaulSegment(_Model):
             from_=float(data["from"]),
             to=float(data["to"]),
             flow=float(data["flow"]),
+            unsuitable_flow=UNSET if "unsuitableFlow" not in data else None if data["unsuitableFlow"] is None else float(data["unsuitableFlow"]),
         )
 
 
@@ -37215,6 +37318,35 @@ class HaulTrucked(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulUnsuitableDef(_Model):
+    """The share of the cut unsuitable for fill between two stations (docs/adr/0944): percent, from the soil report;
+    KentOS gives none. It goes to waste sites only.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        share: Unit: percent.
+    """
+    from_: float
+    to: float
+    share: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["share"] = float(self.share)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulUnsuitableDef:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            share=float(data["share"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulsEdit(_Model):
     """Input of `road.hauls.edit` v1: the diagram by its id or name (absent: a new one). A new one needs `name` and
     `volume`. A diagram follows its volume: it is not rebound to another.
@@ -37226,17 +37358,21 @@ class HaulsEdit(_Model):
     site off its stations), `invalid_revision`, `revision_conflict`.
     Attributes:
         balance: Unit: volume.
+        barriers: What the haul road crosses (docs/adr/0944); an empty list takes them off.
         cost: The prices and the truck's payload; null takes them off.
         free: The free haul distance; null takes it off. Unit: m.
+        unsuitable: The cut unsuitable for fill by stations (docs/adr/0944); an empty list takes them off.
     """
     operation: RoadEditOperation | RoadEditOperationName
     balance: float | None | Unset = UNSET
+    barriers: list[HaulBarrierDef] | None | Unset = UNSET
     cost: HaulCostDef | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     free: float | None | Unset = UNSET
     haul: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     sites: list[HaulSiteDef] | None | Unset = UNSET
+    unsuitable: list[HaulUnsuitableDef] | None | Unset = UNSET
     volume: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -37244,6 +37380,8 @@ class HaulsEdit(_Model):
         out["operation"] = _enum_out(self.operation)
         if self.balance is not UNSET:
             out["balance"] = None if self.balance is None else float(self.balance)
+        if self.barriers is not UNSET:
+            out["barriers"] = None if self.barriers is None else [e0.to_json() for e0 in self.barriers]
         if self.cost is not UNSET:
             out["cost"] = None if self.cost is None else self.cost.to_json()
         if self.expected_revision is not UNSET:
@@ -37256,6 +37394,8 @@ class HaulsEdit(_Model):
             out["name"] = self.name
         if self.sites is not UNSET:
             out["sites"] = None if self.sites is None else [e0.to_json() for e0 in self.sites]
+        if self.unsuitable is not UNSET:
+            out["unsuitable"] = None if self.unsuitable is None else [e0.to_json() for e0 in self.unsuitable]
         if self.volume is not UNSET:
             out["volume"] = self.volume
         return out
@@ -37265,12 +37405,14 @@ class HaulsEdit(_Model):
         return cls(
             operation=_enum_in(RoadEditOperation, data["operation"]),
             balance=UNSET if "balance" not in data else None if data["balance"] is None else float(data["balance"]),
+            barriers=UNSET if "barriers" not in data else None if data["barriers"] is None else [HaulBarrierDef.from_json(e0) for e0 in data["barriers"]],
             cost=UNSET if "cost" not in data else None if data["cost"] is None else HaulCostDef.from_json(data["cost"]),
             expected_revision=data.get("expectedRevision", UNSET),
             free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
             haul=data.get("haul", UNSET),
             name=data.get("name", UNSET),
             sites=UNSET if "sites" not in data else None if data["sites"] is None else [HaulSiteDef.from_json(e0) for e0 in data["sites"]],
+            unsuitable=UNSET if "unsuitable" not in data else None if data["unsuitable"] is None else [HaulUnsuitableDef.from_json(e0) for e0 in data["unsuitable"]],
             volume=data.get("volume", UNSET),
         )
 
@@ -109170,6 +109312,7 @@ __all__ = [
     "HatchesEdit",
     "HatchesEdited",
     "HatchesPlan",
+    "HaulBarrierDef",
     "HaulCostDef",
     "HaulCostReport",
     "HaulDef",
@@ -109177,6 +109320,7 @@ __all__ = [
     "HaulLoop",
     "HaulObjective",
     "HaulObjectiveName",
+    "HaulPlanBarrier",
     "HaulPlanCost",
     "HaulPlanSite",
     "HaulPlanned",
@@ -109189,6 +109333,7 @@ __all__ = [
     "HaulTrackName",
     "HaulTruckDef",
     "HaulTrucked",
+    "HaulUnsuitableDef",
     "HaulsEdit",
     "HaulsPlan",
     "HaulsQueried",

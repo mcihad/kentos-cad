@@ -3,4 +3,8 @@
 /**
  * A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).
  */
-export type HaulSegment = { from: number, to: number, flow: number, };
+export type HaulSegment = { from: number, to: number, flow: number, 
+/**
+ * The unsuitable cut's part of the flow (docs/adr/0944); none where the plan does not sort its material.
+ */
+unsuitableFlow?: number, };

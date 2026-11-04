@@ -116,3 +116,60 @@ fn screens() {
         }
     }
 }
+
+/// Y38.3 (docs/adr/0944): a diagram with unsuitable cut and a barrier is planned as `road.hauls.plan`'s shared case
+/// does: the unsuitable cut and its waste, the barrier's crossing.
+#[test]
+fn the_window_reads_a_sorted_plan() {
+    const NAME: &str = "Uygunsuz yarma ve engel birlikte";
+    let mut app = plan_app(Some(NAME));
+    let _ = app.update(Message::Run("haul.plan"));
+    send(&mut app, W::Haul("h-1".into()));
+    send(&mut app, W::Preview);
+    let w = app.haul_plan_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    let want = &case(NAME)["steps"][0]["result"]["output"];
+    let close = |a: f64, v: &serde_json::Value| (a - v.as_f64().expect("a number")).abs() <= 1e-5 * v.as_f64().unwrap().abs().max(1.0);
+    assert!(close(r.moment, &want["moment"]) && close(r.unsuitable.expect("sorted"), &want["unsuitable"]));
+    assert_eq!(r.barriers.len(), 1);
+    assert!(close(r.barriers[0].crossed, &want["barriers"][0]["crossed"]));
+    assert!(r.segments.iter().any(|s| s.unsuitable_flow.is_some_and(|u| u.abs() > 0.0)), "the unsuitable cut moves");
+}
+
+/// The sorted plans, light and dark; `.run/gui-evidence/yol-y38/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib haul_plan_window_tests::screens_sorted -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_sorted() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y38");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        for (case_name, file) in [
+            ("Uygunsuz yarma ve engel birlikte", "uygunsuz-engel"),
+            ("Kapalı kavşak taşımayı ikiye böler", "kapali"),
+            ("Uygunsuz için döküm yetmez", "dokum-yetmez"),
+        ] {
+            let mut app = plan_app(Some(case_name));
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("haul.plan"));
+            send(&mut app, W::Haul("h-1".into()));
+            send(&mut app, W::Preview);
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("y38-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+            println!("{}", path.display());
+        }
+    }
+}

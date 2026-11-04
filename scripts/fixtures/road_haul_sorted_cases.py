@@ -27,7 +27,7 @@ from scipy.optimize import linprog
 OUT = Path(__file__).resolve().parents[2] / "fixtures" / "road" / "v1" / "haul_sorted.json"
 
 
-def solve(stretches, sites, barriers):
+def solve(stretches, sites, barriers, detail=False):
     kept = [r for r in stretches if r["to"] > r["from"] and (r["cut"] > 0 or r["fill"] > 0)]
     mids = [(r["from"] + r["to"]) / 2 for r in kept]
     st = sorted(set(mids + [s["station"] for s in sites]))
@@ -122,6 +122,9 @@ def solve(stretches, sites, barriers):
     two = linprog(moment, A_eq=kw["A_eq"], b_eq=kw["b_eq"], A_ub=a2, b_ub=b2, bounds=bounds, method="highs")
     assert two.status == 0, two.message
     x = two.x
+    if detail:
+        return plan_detail(x, var, flows, good, bad, met, borrow, waste, st, segs, sites, barriers, kept, two, moment, kw,
+                           a2, b2, bounds)
     shortage = sum(cap - x[v] for v, cap in met)
     surplus = sum(cap - x[v] for v, cap in good)
     stranded = sum(cap - x[v] for v, cap in bad)
@@ -131,6 +134,95 @@ def solve(stretches, sites, barriers):
             "cut": cut, "fill": sum(r["fill"] for r in kept),
             "unsuitable": sum(r["cut"] * min(max(r["unsuitable"], 0.0), 1.0) for r in kept),
             "moment": float(two.fun), "shortage": max(shortage, 0.0), "surplus": max(surplus, 0.0),
+            "stranded": max(stranded, 0.0)}
+
+
+def plan_detail(x, var, flows, good, bad, met, borrow, waste, st, segs, sites, barriers, kept, two, moment, kw, a2, b2,
+                bounds):
+    """The plan in full, as the command reports it: every placement checked unique (its least and its most among plans
+    of the least moment), the segments' flows following from them on the two lines."""
+    nv = len(var)
+    a3 = np.vstack([a2, moment])
+    b3 = list(b2) + [two.fun + 1e-11 * max(abs(two.fun), 1.0)]
+    placed = [v for v, _ in good + bad + met] + [v for _, v, _ in borrow] + [v for _, vg, vb, _ in waste for v in (vg, vb)]
+    for v in placed:
+        c = np.zeros(nv)
+        c[v] = 1
+        lo = linprog(c, A_eq=kw["A_eq"], b_eq=kw["b_eq"], A_ub=a3, b_ub=b3, bounds=bounds, method="highs")
+        hi = linprog(-c, A_eq=kw["A_eq"], b_eq=kw["b_eq"], A_ub=a3, b_ub=b3, bounds=bounds, method="highs")
+        assert lo.status == 0 and hi.status == 0
+        # HiGHS's own tolerance on volumes of thousands of m³ is ~1e-4 m³: unique within 1e-5 of the value.
+        assert -hi.fun - lo.fun < 1e-4 + 1e-5 * abs(lo.fun), ("a placement is not unique", var[v], lo.fun, -hi.fun)
+    n = len(st)
+    # Polish the solver's answer (its tolerance leaves ~1e-5 m³ where a bound belongs): a placement near its bound is
+    # the bound; on each stretch of road between closed barriers the one placement left off its bounds follows exactly
+    # from that stretch's balance (what is placed there is what is taken there).
+    x = list(x)
+    scale = max(1.0, sum(abs(b[1]) if b[1] is not None else 0.0 for b in bounds if b[1] is not None))
+    for v in placed:
+        lo_b, hi_b = bounds[v]
+        if abs(x[v] - lo_b) < 1e-6 * scale:
+            x[v] = float(lo_b)
+        elif hi_b is not None and abs(x[v] - hi_b) < 1e-6 * scale:
+            x[v] = float(hi_b)
+    open_ = {i: length for i, length in segs}
+    comp = [0] * n
+    for i in range(1, n):
+        comp[i] = comp[i - 1] + (0 if (i - 1) in open_ else 1)
+    sign = {}
+    for (v, _) in good + bad:
+        sign[v] = 1.0
+    for (_, v, _) in borrow:
+        sign[v] = 1.0
+    for (v, _) in met:
+        sign[v] = -1.0
+    for (_, vg, vb, _) in waste:
+        sign[vg] = sign[vb] = -1.0
+    for c in set(comp):
+        mine = [v for v in placed if comp[var[v][1]] == c]
+        free = [v for v in mine if not (x[v] == bounds[v][0] or (bounds[v][1] is not None and x[v] == bounds[v][1]))]
+        if len(free) == 1:
+            v = free[0]
+            rest = sum(sign[u] * x[u] for u in mine if u != v)
+            x[v] = -rest / sign[v]
+    # Each node's balance on each line, from the placements; the segment's flow is what lies to its left.
+    bal = [[0.0] * n, [0.0] * n]
+    for (v, _) in good:
+        bal[0][var[v][1]] += x[v]
+    for (v, _) in met:
+        bal[0][var[v][1]] -= x[v]
+    for (v, _) in bad:
+        bal[1][var[v][1]] += x[v]
+    for (_, v, _) in borrow:
+        bal[0][var[v][1]] += x[v]
+    for (_, vg, vb, _) in waste:
+        bal[0][var[vg][1]] -= x[vg]
+        bal[1][var[vb][1]] -= x[vb]
+    segments, moment_total, bad_moment = [], 0.0, 0.0
+    crossed = [0.0] * len(barriers)
+    run = [0.0, 0.0]
+    for i in range(n - 1):
+        run = [run[0] + bal[0][i], run[1] + bal[1][i]]
+        g, b = (run[0], run[1]) if i in open_ else (0.0, 0.0)
+        if i in open_:
+            moment_total += (abs(g) + abs(b)) * open_[i]
+            bad_moment += abs(b) * open_[i]
+            for m, bar in enumerate(barriers):
+                if st[i] <= bar["station"] < st[i + 1]:
+                    crossed[m] += abs(g) + abs(b)
+        segments.append((st[i], st[i + 1], g, b))
+    used = [0.0] * len(sites)
+    used_bad = [None] * len(sites)
+    for (j, v, _) in borrow:
+        used[j] = x[v]
+    for (j, vg, vb, _) in waste:
+        used[j] = x[vg] + x[vb]
+        used_bad[j] = x[vb]
+    shortage = sum(cap - x[v] for v, cap in met)
+    surplus = sum(cap - x[v] for v, cap in good)
+    stranded = sum(cap - x[v] for v, cap in bad)
+    return {"x": x, "segments": segments, "moment": moment_total, "unsuitableMoment": bad_moment, "crossed": crossed,
+            "used": used, "usedUnsuitable": used_bad, "shortage": max(shortage, 0.0), "surplus": max(surplus, 0.0),
             "stranded": max(stranded, 0.0)}
 
 

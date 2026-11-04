@@ -45,6 +45,13 @@ const NEW: &str = "Yeni Brükner";
 const REMOVE: &str = "Sil";
 const ADD: &str = "Alan ekle";
 const REMOVE_ROW: &str = "Alanı sil";
+/// The plan's material and barriers (docs/adr/0944).
+pub(crate) const UNSUITABLE: &str = "Uygunsuz malzeme";
+pub(crate) const BARRIERS: &str = "Engeller";
+const ADD_UNSUITABLE: &str = "Uygunsuz satır ekle";
+const REMOVE_UNSUITABLE: &str = "Uygunsuz satırı sil";
+const ADD_BARRIER: &str = "Engel ekle";
+const REMOVE_BARRIER: &str = "Engeli sil";
 
 fn trimmed(v: f64) -> String {
     let s = format!("{v:.6}");
@@ -85,6 +92,10 @@ pub struct Row {
     fields: [String; 7],
     /// A site's name, kind, station and volume.
     sites: Vec<(String, HaulSiteKind, String, String)>,
+    /// The cut unsuitable for fill (docs/adr/0944): from, to, share (%).
+    pub(crate) unsuitable: Vec<[String; 3]>,
+    /// The barriers: name, station, detour (empty: closed).
+    pub(crate) barriers: Vec<[String; 3]>,
 }
 
 impl Row {
@@ -107,6 +118,8 @@ impl Row {
                 ]
             },
             sites: d.sites.iter().map(|s| (s.name.clone(), s.kind, trimmed(s.station), trimmed(s.volume))).collect(),
+            unsuitable: d.unsuitable.iter().map(|u| [trimmed(u.from), trimmed(u.to), trimmed(u.share)]).collect(),
+            barriers: d.barriers.iter().map(|b| [b.name.clone(), trimmed(b.station), b.detour.map(trimmed).unwrap_or_default()]).collect(),
         }
     }
 
@@ -139,7 +152,37 @@ impl Row {
             };
             sites.push(HaulSiteDef { name: name.clone(), kind: *kind, station: need(station, "km'si")?, volume: need(volume, "hacmi")? });
         }
-        Ok(HaulDef { id: self.id.clone(), name: self.name.clone(), volume, revision: self.revision, balance, free, sites, cost })
+        let mut unsuitable = Vec::new();
+        for (i, u) in self.unsuitable.iter().enumerate() {
+            let n = i + 1;
+            let need = |t: &str, what: &str| match number(t) {
+                Ok(Some(v)) => Ok(v),
+                _ => Err(format!("{n}. uygunsuz malzeme satırının {what} bir sayı olmalı.")),
+            };
+            unsuitable.push(kentos_commands::HaulUnsuitableDef { from: need(&u[0], "başı")?, to: need(&u[1], "sonu")?, share: need(&u[2], "payı")? });
+        }
+        let mut barriers = Vec::new();
+        for (i, b) in self.barriers.iter().enumerate() {
+            let n = i + 1;
+            let station = match number(&b[1]) {
+                Ok(Some(v)) => v,
+                _ => return Err(format!("{n}. engelin km'si bir sayı olmalı.")),
+            };
+            let detour = number(&b[2]).map_err(|()| format!("{n}. engelin dolaşması bir sayı olmalı (boş: kapalı)."))?;
+            barriers.push(kentos_commands::HaulBarrierDef { name: b[0].trim().to_owned(), station, detour });
+        }
+        Ok(HaulDef {
+            id: self.id.clone(),
+            name: self.name.clone(),
+            volume,
+            revision: self.revision,
+            balance,
+            free,
+            sites,
+            cost,
+            unsuitable,
+            barriers,
+        })
     }
 }
 
@@ -157,6 +200,8 @@ pub struct Window {
     kept: Vec<HaulDef>,
     pub(crate) chosen: Option<usize>,
     line: Option<usize>,
+    unsuitable_line: Option<usize>,
+    barrier_line: Option<usize>,
     pub(crate) preview: Preview,
 }
 
@@ -173,6 +218,16 @@ pub enum Event {
     Site(usize, usize, String),
     Kind(usize, HaulSiteKind),
     Line(usize),
+    /// An unsuitable row's from (0), to (1) or share (2) (docs/adr/0944).
+    Unsuitable(usize, usize, String),
+    UnsuitableLine(usize),
+    AddUnsuitable,
+    RemoveUnsuitable,
+    /// A barrier's name (0), station (1) or detour (2).
+    Barrier(usize, usize, String),
+    BarrierLine(usize),
+    AddBarrier,
+    RemoveBarrier,
     Add,
     RemoveRow,
     Save,
@@ -260,6 +315,8 @@ impl App {
                         volume: Some(id.clone()),
                         fields: Default::default(),
                         sites: Vec::new(),
+                        unsuitable: Vec::new(),
+                        barriers: Vec::new(),
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.line = None;
@@ -322,6 +379,48 @@ impl App {
                     w.line = None;
                 }
             }
+            Event::Unsuitable(j, k, t) => {
+                if let Some(x) = chosen_row(w).and_then(|r| r.unsuitable.get_mut(j)) {
+                    x[k.min(2)] = t;
+                }
+                w.unsuitable_line = Some(j);
+            }
+            Event::UnsuitableLine(j) => w.unsuitable_line = Some(j),
+            Event::AddUnsuitable => {
+                if let Some(r) = chosen_row(w) {
+                    r.unsuitable.push(Default::default());
+                    w.unsuitable_line = Some(r.unsuitable.len() - 1);
+                }
+            }
+            Event::RemoveUnsuitable => {
+                if let Some(j) = w.unsuitable_line.take()
+                    && let Some(r) = chosen_row(w).filter(|r| j < r.unsuitable.len())
+                {
+                    r.unsuitable.remove(j);
+                }
+            }
+            Event::Barrier(j, k, t) => {
+                if let Some(x) = chosen_row(w).and_then(|r| r.barriers.get_mut(j)) {
+                    x[k.min(2)] = t;
+                }
+                w.barrier_line = Some(j);
+            }
+            Event::BarrierLine(j) => w.barrier_line = Some(j),
+            Event::AddBarrier => {
+                if let Some(r) = chosen_row(w) {
+                    // A new barrier's name follows the count; its station and detour are the user's.
+                    let n = r.barriers.len() + 1;
+                    r.barriers.push([format!("Engel {n}"), String::new(), String::new()]);
+                    w.barrier_line = Some(n - 1);
+                }
+            }
+            Event::RemoveBarrier => {
+                if let Some(j) = w.barrier_line.take()
+                    && let Some(r) = chosen_row(w).filter(|r| j < r.barriers.len())
+                {
+                    r.barriers.remove(j);
+                }
+            }
             Event::Cancel => {
                 self.haul_window = None;
                 self.dialog = None;
@@ -346,6 +445,8 @@ impl App {
             free: None,
             sites: None,
             cost: None,
+            unsuitable: None,
+            barriers: None,
             expected_revision: None,
         }
     }
@@ -385,6 +486,8 @@ impl App {
                 free: Some(d.free),
                 sites: Some(d.sites.clone()),
                 cost: Some(d.cost.clone()),
+                unsuitable: Some(d.unsuitable.clone()),
+                barriers: Some(d.barriers.clone()),
                 ..Self::blank_haul_edit(RoadEditOperation::Set, &d.id)
             };
             if !self.haul_write(edit) {
@@ -525,6 +628,60 @@ impl App {
             ]
             .spacing(16),
         );
+        // The cut unsuitable for fill and the barriers (docs/adr/0944): the plan sorts by them.
+        let rows_u = &r.unsuitable;
+        let unsuitable = road_dialog::edit_table(
+            vec![
+                road_dialog::col("Baş (m)", 100.0),
+                road_dialog::col("Son (m)", 100.0),
+                road_dialog::Col { title: "Uygunsuz (%)", width: None, number: true },
+            ],
+            rows_u.len(),
+            move |j, k| road_dialog::edit(&rows_u[j][k], true, move |v| msg(Event::Unsuitable(j, k, v))),
+            w.unsuitable_line,
+            |j| msg(Event::UnsuitableLine(j)),
+            "Uygunsuz malzeme yok: bütün yarma dolguya uygun sayılır",
+        );
+        let rows_b = &r.barriers;
+        let barriers = road_dialog::edit_table(
+            vec![
+                road_dialog::Col { title: "Ad", width: None, number: false },
+                road_dialog::col("Km (m)", 100.0),
+                road_dialog::col("Dolaşma (m)", 110.0),
+            ],
+            rows_b.len(),
+            move |j, k| road_dialog::edit(&rows_b[j][k], k > 0, move |v| msg(Event::Barrier(j, k, v))),
+            w.barrier_line,
+            |j| msg(Event::BarrierLine(j)),
+            "Engel yok",
+        );
+        col = col.push(
+            row![
+                column![
+                    words::field(UNSUITABLE, unsuitable, None),
+                    row![
+                        words::secondary(ADD_UNSUITABLE, Some(msg(Event::AddUnsuitable))),
+                        words::ghost(REMOVE_UNSUITABLE, w.unsuitable_line.map(|_| msg(Event::RemoveUnsuitable))),
+                    ]
+                    .spacing(8),
+                    label::caption("Kazının dolguya konamayan payı zemin etüdünden yazılır;\nbu kısım yalnız döküm alanına gider.").style(muted),
+                ]
+                .spacing(6)
+                .width(Length::FillPortion(1)),
+                column![
+                    words::field(BARRIERS, barriers, None),
+                    row![
+                        words::secondary(ADD_BARRIER, Some(msg(Event::AddBarrier))),
+                        words::ghost(REMOVE_BARRIER, w.barrier_line.map(|_| msg(Event::RemoveBarrier))),
+                    ]
+                    .spacing(8),
+                    label::caption("Köprüsü olmayan dere, kapalı yol: dolaşma uzunluğu boşsa\nengel kapalıdır, taşıma onu geçmez.").style(muted),
+                ]
+                .spacing(6)
+                .width(Length::FillPortion(1)),
+            ]
+            .spacing(16),
+        );
         match (&w.preview.why, &w.preview.report) {
             // The totals and the cost over the diagram, the loops under it.
             (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
@@ -570,6 +727,10 @@ impl App {
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Press(ADD) => Some(msg(Event::Add)),
             Control::Press(REMOVE_ROW) => Some(msg(Event::RemoveRow)),
+            Control::Press(ADD_UNSUITABLE) => Some(msg(Event::AddUnsuitable)),
+            Control::Press(REMOVE_UNSUITABLE) => Some(msg(Event::RemoveUnsuitable)),
+            Control::Press(ADD_BARRIER) => Some(msg(Event::AddBarrier)),
+            Control::Press(REMOVE_BARRIER) => Some(msg(Event::RemoveBarrier)),
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),

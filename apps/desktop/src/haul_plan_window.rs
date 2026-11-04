@@ -220,7 +220,11 @@ impl App {
             Some(Ok(r)) => {
                 d = d
                     .picture(iced::widget::canvas(Flow { read: r }).width(Fill).height(Fill), 320.0)
-                    .legend("Mavi ileri, turuncu geri taşınan hacim; yeşil ödünç, kırmızı döküm alanı")
+                    .legend(if r.unsuitable.is_some() {
+                        "Mavi ileri, turuncu geri taşınan hacim, mor uygunsuz kısmı; yeşil ödünç, kırmızı döküm alanı; gri çizgi engel"
+                    } else {
+                        "Mavi ileri, turuncu geri taşınan hacim; yeşil ödünç, kırmızı döküm alanı"
+                    })
                     .figure("Durum", if r.feasible { "Kurulur".to_owned() } else { "Kurulamaz".to_owned() })
                     .figure("Yarma / dolgu fazlası", format!("{} / {} m³", grouped(r.cut, 0), grouped(r.fill, 0)));
                 if r.feasible {
@@ -234,21 +238,52 @@ impl App {
                         .figure("Karşılanmayan dolgu", format!("{} m³", grouped(r.shortage, 1)))
                         .figure("Yerleşmeyen yarma", format!("{} m³", grouped(r.surplus, 1)));
                 }
-                for wn in &w.warnings {
-                    d = d.note(Banner::warning(wn.clone()));
+                // The unsuitable cut and the barriers (docs/adr/0944): each said only where there is one.
+                if let Some(u) = r.unsuitable.filter(|u| *u > 0.05) {
+                    let stranded = r.stranded.unwrap_or(0.0);
+                    d = d.figure("Uygunsuz yarma", format!("{} m³", grouped(u, 0)));
+                    if stranded > 0.05 {
+                        d = d.figure("Dökülemeyen uygunsuz", format!("{} m³", grouped(stranded, 1)));
+                    }
+                    d = d.note(Banner::info(format!(
+                        "Uygunsuz yarma {} m³ yalnız döküm alanlarına gider; momentin {} m³·m'si onun.",
+                        grouped(u, 0),
+                        grouped(r.unsuitable_moment.unwrap_or(0.0), 0),
+                    )));
                 }
+                if !r.barriers.is_empty() {
+                    let crossings: Vec<String> = r
+                        .barriers
+                        .iter()
+                        .map(|b| match b.detour {
+                            Some(dt) => format!("{} (km {}, {} m dolaşma): {} m³ geçiyor", b.name, grouped(b.station, 0), grouped(dt, 0), grouped(b.crossed, 0)),
+                            None => format!("{} (km {}) kapalı: taşıma geçmiyor", b.name, grouped(b.station, 0)),
+                        })
+                        .collect();
+                    d = d.note(Banner::info(format!("Engeller: {}.", crossings.join("; "))));
+                }
+                let sorted = r.unsuitable.is_some();
+                let mut columns = vec![col("Alan", 180.0), col("Tür", 80.0), num("Km (m)", 100.0), num("Kullanılan (m³)", 130.0)];
+                if sorted {
+                    columns.push(num("Uygunsuz (m³)", 120.0));
+                }
+                columns.push(num("Kapasite (m³)", 130.0));
                 let sites = road_dialog::table(
-                    vec![col("Alan", 180.0), col("Tür", 80.0), num("Km (m)", 100.0), num("Kullanılan (m³)", 130.0), num("Kapasite (m³)", 130.0)],
+                    columns,
                     r.sites
                         .iter()
                         .map(|s| {
-                            vec![
+                            let mut row = vec![
                                 s.name.clone(),
                                 if s.kind == HaulSiteKind::Borrow { "ödünç" } else { "döküm" }.to_owned(),
                                 grouped(s.station, 1),
                                 grouped(s.used, 1),
-                                grouped(s.capacity, 1),
-                            ]
+                            ];
+                            if sorted {
+                                row.push(s.used_unsuitable.map_or_else(|| "—".into(), |u| grouped(u, 1)));
+                            }
+                            row.push(grouped(s.capacity, 1));
+                            row
                         })
                         .collect(),
                     "Ödünç ya da döküm alanı yok",
@@ -347,6 +382,24 @@ impl canvas::Program<Message> for Flow<'_> {
                 iced::Size::new(x(s.to) - x(s.from), (y(0.0) - y(s.flow.abs())).abs()),
             );
             frame.fill(&band, if s.flow > 0.0 { ahead } else { back });
+            // The unsuitable cut's part, over the band from the axis (docs/adr/0944).
+            if let Some(u) = s.unsuitable_flow.filter(|u| u.abs() > 1e-9) {
+                let part = Path::rectangle(
+                    Point::new(x(s.from), y(u.max(0.0))),
+                    iced::Size::new(x(s.to) - x(s.from), (y(0.0) - y(u.abs())).abs()),
+                );
+                frame.fill(&part, Color { a: 0.75, ..Color::from_rgb8(0x93, 0x33, 0xea) });
+            }
+        }
+        for b in &r.barriers {
+            let at = x(b.station);
+            let dash = Stroke { line_dash: canvas::LineDash { segments: &[5.0, 4.0], offset: 0 }, ..Stroke::default().with_width(1.5).with_color(tk.muted) };
+            frame.stroke(&Path::line(Point::new(at, top as f32), Point::new(at, (h - bottom) as f32)), dash);
+            let words = match b.detour {
+                Some(dt) => format!("{} · +{} m", b.name, grouped(dt, 0)),
+                None => format!("{} · kapalı", b.name),
+            };
+            caption(&mut frame, words, Point::new(at + 4.0, 6.0), tk.muted);
         }
         frame.stroke(&Path::line(Point::new(x(x0), y(0.0)), Point::new(x(x1), y(0.0))), Stroke::default().with_width(1.0).with_color(tk.muted));
         caption(&mut frame, format!("{} m³", grouped(most, 0)), Point::new(4.0, y(most) - 6.0), tk.muted);

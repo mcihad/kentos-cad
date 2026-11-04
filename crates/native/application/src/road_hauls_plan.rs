@@ -7,7 +7,7 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
-use kentos_road::haul_plan::{PlanSite, Prices, plan as solve, plan_priced};
+use kentos_road::haul_plan::{Barrier, PlanSite, Prices, SortedStretch, plan as solve, plan_priced, plan_sorted};
 
 use crate::ExecutionContext;
 use crate::checks::Stop;
@@ -55,6 +55,16 @@ pub(crate) fn answer(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, 
         .map(|s| PlanSite { station: s.station, capacity: s.volume, borrow: s.kind == HaulSiteKind::Borrow })
         .collect();
     let objective = input.objective.unwrap_or(HaulObjective::Moment);
+    if !def.unsuitable.is_empty() || !def.barriers.is_empty() {
+        if objective == HaulObjective::Cost {
+            return Err(fail(
+                codes::INVALID_HAUL,
+                format!("“{}” Brüknerinde uygunsuz malzeme ya da engel var; ekonomik plan onlarla henüz çözülmez, momentle planlayın.", def.name),
+                "objective",
+            ));
+        }
+        return Ok(sorted(def, &report, &sites, warnings));
+    }
     let (p, priced) = match objective {
         HaulObjective::Moment => (solve(&curve, &sites), None),
         HaulObjective::Cost => {
@@ -114,17 +124,119 @@ pub(crate) fn answer(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, 
                 .sites
                 .iter()
                 .zip(&p.used)
-                .map(|(s, u)| HaulPlanSite { name: s.name.clone(), kind: s.kind, station: s.station, capacity: s.volume, used: *u })
+                .map(|(s, u)| HaulPlanSite {
+                    name: s.name.clone(),
+                    kind: s.kind,
+                    station: s.station,
+                    capacity: s.volume,
+                    used: *u,
+                    used_unsuitable: None,
+                })
                 .collect(),
-            segments: p.segments.iter().map(|&(from, to, flow)| HaulSegment { from, to, flow }).collect(),
+            segments: p.segments.iter().map(|&(from, to, flow)| HaulSegment { from, to, flow, unsuitable_flow: None }).collect(),
             shortage: p.shortage,
             surplus: p.surplus,
             objective,
             free: priced.as_ref().and_then(|x| x.0),
             cost: priced.and_then(|x| x.1),
+            unsuitable: None,
+            stranded: None,
+            unsuitable_moment: None,
+            barriers: Vec::new(),
         },
         warnings,
     ))
+}
+
+/// The share (0 to 1) of the cut unsuitable at station `s`: the row it falls in, none outside them.
+fn share_at(def: &kentos_commands::HaulDef, s: f64) -> f64 {
+    def.unsuitable.iter().find(|u| u.from <= s && s < u.to).map_or(0.0, |u| u.share / 100.0)
+}
+
+/// The plan of a diagram with unsuitable cut or barriers (docs/adr/0944): each stretch's factored cut and fill, the cut's
+/// unsuitable share at its middle, by `kentos_road::haul_plan::plan_sorted`.
+fn sorted(
+    def: &kentos_commands::HaulDef,
+    report: &kentos_commands::VolumeReport,
+    sites: &[PlanSite],
+    mut warnings: Vec<CommandWarning>,
+) -> (HaulPlanned, Vec<CommandWarning>) {
+    let stretches: Vec<SortedStretch> = report
+        .rows
+        .iter()
+        .filter_map(|r| {
+            Some(SortedStretch {
+                from: r.from,
+                to: r.to,
+                cut: r.cut? * r.cut_factor.unwrap_or(1.0),
+                fill: r.fill? * r.fill_factor.unwrap_or(1.0),
+                unsuitable: share_at(def, 0.5 * (r.from + r.to)),
+            })
+        })
+        .collect();
+    let barriers: Vec<Barrier> = def.barriers.iter().map(|b| Barrier { station: b.station, detour: b.detour }).collect();
+    let p = plan_sorted(&stretches, sites, &barriers);
+    // As the plain plan says them: the cut more than the fill and the fill more than the cut over the stretches.
+    let cut: f64 = stretches.iter().map(|r| (r.cut - r.fill).max(0.0)).sum();
+    let fill: f64 = stretches.iter().map(|r| (r.fill - r.cut).max(0.0)).sum();
+    // What leaves its stretch: the suitable cut beyond its own fill and the unsuitable cut, placed; and the borrow.
+    let leaves: f64 = stretches.iter().map(|r| (r.cut * (1.0 - r.unsuitable) - r.fill).max(0.0) + r.cut * r.unsuitable).sum();
+    let borrowed: f64 = sites.iter().zip(&p.used).filter(|(s, _)| s.borrow).map(|(_, u)| u).sum();
+    let moved = (leaves - p.surplus - p.stranded).max(0.0) + borrowed;
+    if !p.feasible {
+        warnings.push(CommandWarning {
+            code: codes::HAUL_PLAN_INFEASIBLE.into(),
+            message: format!(
+                "“{}” taşıma planı her şeyi yerleştiremiyor: karşılanmayan dolgu {:.3} m³, yerleşmeyen uygun yarma {:.3} m³, dökülemeyen uygunsuz yarma {:.3} m³; ödünç ya da döküm alanı ekleyin, büyütün ya da kapalı engeli açın.",
+                def.name, p.shortage, p.surplus, p.stranded
+            ),
+            path: Some("haul".into()),
+        });
+    }
+    (
+        HaulPlanned {
+            haul: def.id.clone(),
+            feasible: p.feasible,
+            cut,
+            fill,
+            moved,
+            moment: p.moment,
+            average: (moved > 0.0 && p.feasible).then(|| p.moment / moved),
+            sites: def
+                .sites
+                .iter()
+                .enumerate()
+                .map(|(j, s)| HaulPlanSite {
+                    name: s.name.clone(),
+                    kind: s.kind,
+                    station: s.station,
+                    capacity: s.volume,
+                    used: p.used[j],
+                    used_unsuitable: (s.kind == HaulSiteKind::Waste).then_some(p.used_unsuitable[j]),
+                })
+                .collect(),
+            segments: p
+                .segments
+                .iter()
+                .map(|&(from, to, good, bad)| HaulSegment { from, to, flow: good + bad, unsuitable_flow: Some(bad) })
+                .collect(),
+            shortage: p.shortage,
+            surplus: p.surplus,
+            objective: HaulObjective::Moment,
+            free: None,
+            cost: None,
+            unsuitable: Some(p.unsuitable),
+            stranded: Some(p.stranded),
+            unsuitable_moment: Some(p.unsuitable_moment),
+            barriers: def
+                .barriers
+                .iter()
+                .zip(&p.crossed)
+                .map(|(b, c)| kentos_commands::HaulPlanBarrier { name: b.name.clone(), station: b.station, detour: b.detour, crossed: *c })
+                .collect(),
+        },
+        warnings,
+    )
 }
 
 /// Checks `input` against the document.

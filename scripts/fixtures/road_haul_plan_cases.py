@@ -29,6 +29,7 @@ from scipy.optimize import linprog
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_haul_command_cases as hc  # noqa: E402
+import road_haul_sorted_cases as sref  # noqa: E402
 import road_volume_command_cases as vcmd  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1"
@@ -314,6 +315,11 @@ def answer(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
                                              f"{ccmd.km_text(c['alignment'], first)} – {ccmd.km_text(c['alignment'], last)} arası.",
                              f"sites[{j}]")
     objective = inp.get("objective", "moment")
+    if h.get("unsuitable") or h.get("barriers"):
+        if objective == "cost":
+            raise hc.Refused("invalid_haul", f"“{h['name']}” Brüknerinde uygunsuz malzeme ya da engel var; ekonomik plan "
+                                             "onlarla henüz çözülmez, momentle planlayın.", "objective")
+        return sorted_answer(h, rep, sites, warnings)
     priced = None
     if objective == "cost":
         c = h.get("cost")
@@ -359,6 +365,49 @@ def answer(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
     return out, warnings
 
 
+def sorted_answer(h, rep, sites, warnings):
+    """A diagram with unsuitable cut or barriers (docs/adr/0944): road_haul_sorted_cases.py's programme on each
+    stretch's factored cut and fill, the unsuitable share at its middle."""
+    def share(s):
+        return next((u["share"] / 100 for u in h.get("unsuitable", []) if u["from"] <= s < u["to"]), 0.0)
+    stretches = [{"from": r["from"], "to": r["to"], "cut": r["cut"] * r.get("cutFactor", 1.0),
+                  "fill": r["fill"] * r.get("fillFactor", 1.0), "unsuitable": share((r["from"] + r["to"]) / 2)}
+                 for r in rep["rows"] if r.get("cut") is not None and r.get("fill") is not None]
+    plan_sites = [{"station": x["station"], "capacity": x["volume"], "borrow": x["kind"] == "borrow"} for x in sites]
+    barriers = [{"station": b["station"], "detour": b.get("detour")} for b in h.get("barriers", [])]
+    d = sref.solve(stretches, plan_sites, barriers, detail=True)
+    tiny = 1e-6 * max(sum(r["cut"] + r["fill"] for r in stretches) + sum(x["volume"] for x in sites), 1.0)
+    feasible = bool(d["shortage"] <= tiny and d["surplus"] <= tiny and d["stranded"] <= tiny)
+    cut = sum(max(r["cut"] - r["fill"], 0.0) for r in stretches)
+    fill = sum(max(r["fill"] - r["cut"], 0.0) for r in stretches)
+    leaves = sum(max(r["cut"] * (1 - r["unsuitable"]) - r["fill"], 0.0) + r["cut"] * r["unsuitable"] for r in stretches)
+    borrowed = sum(u for x, u in zip(sites, d["used"]) if x["kind"] == "borrow")
+    moved = max(leaves - d["surplus"] - d["stranded"], 0.0) + borrowed
+    if not feasible:
+        warnings.append({"code": "haul_plan_infeasible", "path": "haul",
+                         "message": f"“{h['name']}” taşıma planı her şeyi yerleştiremiyor: karşılanmayan dolgu "
+                                    f"{d['shortage']:.3f} m³, yerleşmeyen uygun yarma {d['surplus']:.3f} m³, dökülemeyen "
+                                    f"uygunsuz yarma {d['stranded']:.3f} m³; ödünç ya da döküm alanı ekleyin, büyütün ya da "
+                                    "kapalı engeli açın."})
+    out = {"haul": h["id"], "feasible": feasible, "cut": cut, "fill": fill, "moved": moved, "moment": d["moment"]}
+    if feasible and moved > 0:
+        out["average"] = d["moment"] / moved
+    out["sites"] = []
+    for x, u, ub in zip(sites, d["used"], d["usedUnsuitable"]):
+        row = {"name": x["name"], "kind": x["kind"], "station": x["station"], "capacity": x["volume"], "used": u}
+        if x["kind"] == "waste":
+            row["usedUnsuitable"] = ub
+        out["sites"].append(row)
+    out["segments"] = [{"from": a, "to": b, "flow": g + bb, "unsuitableFlow": bb} for a, b, g, bb in d["segments"]]
+    out.update({"shortage": d["shortage"], "surplus": d["surplus"], "objective": "moment",
+                "unsuitable": sum(r["cut"] * r["unsuitable"] for r in stretches), "stranded": d["stranded"],
+                "unsuitableMoment": d["unsuitableMoment"]})
+    if h.get("barriers"):
+        out["barriers"] = [{"name": b["name"], "station": b["station"], **({"detour": b["detour"]} if "detour" in b else {}),
+                            "crossed": c} for b, c in zip(h["barriers"], d["crossed"])]
+    return out, warnings
+
+
 def site(name, kind, station, volume):
     return {"name": name, "kind": kind, "station": station, "volume": volume}
 
@@ -366,7 +415,8 @@ def site(name, kind, station, volume):
 def cases():
     out = []
 
-    def q(name, inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS, op="execute", setup_=None, result=None):
+    def q(name, inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS, op="execute", setup_=None, result=None,
+          relative=False):
         if result is None:
             try:
                 o, w = answer(inp, hauls, volumes, corridors)
@@ -379,6 +429,11 @@ def cases():
         else:
             road = setup_["settings"].get("road")
         step = {"op": op, "input": inp, "result": result, "expect": {**UNCHANGED, "road": road}, "within": W}
+        if relative:
+            # Moments of 10⁷ m³·m summed in other orders agree to ~1e-9 of their size, not to 1e-3 m³·m; and where the
+            # plan cannot place everything, more than one placement is free on a stretch and HiGHS's tolerance stays in
+            # them (~1e-5 m³). A different plan moves thousands of m³ over metres: 1e-5 of the size still tells it.
+            step.update({"within": 1e-5, "relative": True})
         out.append(case(name, [step], setup_))
 
     big = 30000.0
@@ -455,6 +510,26 @@ def cases():
               [{**H1, "cost": {"currency": "TL", "overhaul": 800.0}, "sites": [site("Döküm", "waste", 600.0, big)]}, H2, H3])
     cost_case("Ekonomik: ödünç fiyatı yok", "h-3",
               [H1, H2, {**H3, "cost": {"currency": "TL", "overhaul": 800.0}, "sites": [site("Ödünç", "borrow", 400.0, 20000.0)]}])
+    # Docs/adr/0944: the unsuitable cut goes to waste only; barriers detour or close the haul road.
+    sorting = {"sites": [site("Döküm", "waste", 30.0, big), site("Ödünç", "borrow", 560.0, big)]}
+    q("Uygunsuz yarma yalnız dökümde", {"haul": "h-1"},
+      [{**H1, **sorting, "unsuitable": [{"from": 0.0, "to": 300.0, "share": 40.0}]}, H2, H3], relative=True)
+    q("Bütün yarma uygunsuz: dolgular ödünçten", {"haul": "h-1"},
+      [{**H1, **sorting, "unsuitable": [{"from": 0.0, "to": 600.0, "share": 100.0}]}, H2, H3], relative=True)
+    q("Uygunsuz için döküm yetmez", {"haul": "h-1"},
+      [{**H1, "sites": [site("Döküm", "waste", 30.0, 500.0), site("Ödünç", "borrow", 560.0, big)],
+        "unsuitable": [{"from": 0.0, "to": 600.0, "share": 60.0}]}, H2, H3], relative=True)
+    q("Dere geçişinde 400 m dolaşma", {"haul": "h-1"},
+      [{**H1, **sorting, "barriers": [{"name": "Dere", "station": 250.0, "detour": 400.0}]}, H2, H3], relative=True)
+    q("Kapalı kavşak taşımayı ikiye böler", {"haul": "h-1"},
+      [{**H1, **sorting, "barriers": [{"name": "Kavşak", "station": 300.0}]}, H2, H3], relative=True)
+    q("Uygunsuz yarma ve engel birlikte", {"haul": "Ana Brükner"},
+      [{**H1, **sorting, "unsuitable": [{"from": 100.0, "to": 250.0, "share": 30.0}],
+        "barriers": [{"name": "Dere", "station": 420.0, "detour": 150.0}]}, H2, H3], relative=True)
+    q("Engel sona yakın, kimse geçmiyor", {"haul": "h-1"},
+      [{**H1, **sorting, "barriers": [{"name": "Uzak dere", "station": 590.0, "detour": 50.0}]}, H2, H3], relative=True)
+    q("Uygunsuzla ekonomik plan çözülmez", {"haul": "h-1", "objective": "cost"},
+      [{**H1, **sorting, "cost": P, "unsuitable": [{"from": 0.0, "to": 300.0, "share": 40.0}]}, H2, H3])
     # Refusals.
     q("Yol projesi değil", {"haul": "h-1"}, [H1, H2, H3], setup_=hc.setup(work="map"), result=hc.NOT_ROAD)
     q("Olmayan Brükner", {"haul": "yok"}, [H1, H2, H3])

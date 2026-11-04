@@ -140,3 +140,67 @@ fn screens() {
         send(&mut app, W::Cancel);
     }
 }
+
+/// Y38.3 (docs/adr/0944): the unsuitable cut and the barriers typed in Brükner are written through `road.hauls.edit`
+/// (a closed barrier without a detour) and read back.
+#[test]
+fn unsuitable_cut_and_barriers_are_typed_and_saved() {
+    let mut app = app();
+    let _ = app.update(Message::Run("haul.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::AddUnsuitable);
+    for (k, v) in [(0, "0"), (1, "250"), (2, "35")] {
+        send(&mut app, W::Unsuitable(0, k, v.into()));
+    }
+    send(&mut app, W::AddBarrier);
+    send(&mut app, W::Barrier(0, 0, "Dere".into()));
+    send(&mut app, W::Barrier(0, 1, "300".into()));
+    send(&mut app, W::Barrier(0, 2, "400".into()));
+    send(&mut app, W::AddBarrier);
+    send(&mut app, W::Barrier(1, 1, "450".into()));
+    send(&mut app, W::Save);
+    let h = &app.document.as_ref().expect("a drawing").model.road_hauls()[0];
+    assert_eq!(h.unsuitable, vec![kentos_commands::HaulUnsuitableDef { from: 0.0, to: 250.0, share: 35.0 }]);
+    assert_eq!(h.barriers.len(), 2);
+    assert_eq!(h.barriers[0].detour, Some(400.0));
+    assert_eq!((h.barriers[1].name.as_str(), h.barriers[1].detour), ("Engel 2", None), "no detour: closed");
+}
+
+/// The unsuitable cut and the barriers in Brükner; `.run/gui-evidence/yol-y38/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib haul_window_tests::screens_sorting -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_sorting() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y38");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("haul.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::AddUnsuitable);
+        for (k, v) in [(0, "100"), (1, "250"), (2, "30")] {
+            send(&mut app, W::Unsuitable(0, k, v.into()));
+        }
+        send(&mut app, W::AddBarrier);
+        for (k, v) in [(0, "Dere"), (1, "420"), (2, "150")] {
+            send(&mut app, W::Barrier(0, k, v.into()));
+        }
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("y38-bruckner-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        println!("{}", path.display());
+    }
+}

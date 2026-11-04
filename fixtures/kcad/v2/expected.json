@@ -11,6 +11,8 @@
     {"file": "broken/road-volume-curve-in-schema-166.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "road-corridor-sampling.kcad", "sniff": "kcad", "content": "road-corridor-sampling.json"},
     {"file": "broken/road-corridor-sampling-in-schema-167.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "road-haul-sorting.kcad", "sniff": "kcad", "content": "road-haul-sorting.json"},
+    {"file": "broken/road-haul-sorting-in-schema-168.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "road-pavement.kcad", "sniff": "kcad", "content": "road-pavement.json"},
     {"file": "broken/road-pavement-in-schema-163.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "broken/road-volume-rule-in-schema-163.kcad", "sniff": "kcad", "error": "unknown_field"},
@@ -387,7 +389,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-169.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-170.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

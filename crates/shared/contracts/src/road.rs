@@ -1331,6 +1331,47 @@ pub struct HaulDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub cost: Option<HaulCostDef>,
+    /// The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulUnsuitableDef>>", optional))]
+    pub unsuitable: Vec<HaulUnsuitableDef>,
+    /// What the haul road crosses (docs/adr/0944; KCAD schema 169).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulBarrierDef>>", optional))]
+    pub barriers: Vec<HaulBarrierDef>,
+}
+
+/// The share of the cut unsuitable for fill between two stations (docs/adr/0944): percent, from the soil report;
+/// KentOS gives none. It goes to waste sites only.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulUnsuitableDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub share: f64,
+}
+
+/// Something the haul road crosses (docs/adr/0944): its name, station, and the extra distance a load goes round it
+/// (m); absent: closed, nothing crosses.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulBarrierDef {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub detour: Option<f64>,
 }
 
 fn is_zero_f64(v: &f64) -> bool {
@@ -2755,6 +2796,37 @@ fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
             if c.payload.is_some_and(|p| !(p.is_finite() && p > 0.0 && p <= 1000.0)) {
                 return fail(at("cost"), "kamyon yükü 0'dan büyük, en çok 1000 m³ olur");
+            }
+        }
+        if h.unsuitable.len() > MAX_HAUL_SITES {
+            return fail(at("unsuitable"), &format!("en çok {MAX_HAUL_SITES} uygunsuz malzeme satırı olur"));
+        }
+        for (j, u) in h.unsuitable.iter().enumerate() {
+            let path = at(&format!("unsuitable[{j}]"));
+            if !(u.from.is_finite() && u.to.is_finite() && u.to > u.from) {
+                return fail(path, "uygunsuz malzeme satırının sonu başından sonra olmalı");
+            }
+            if !(u.share.is_finite() && (0.0..=100.0).contains(&u.share)) {
+                return fail(path, "uygunsuz malzemenin payı yüzde 0 ile 100 arası olur");
+            }
+            if h.unsuitable[..j].iter().any(|o| o.from < u.to && u.from < o.to) {
+                return fail(path, "uygunsuz malzeme satırları kesişmemeli");
+            }
+        }
+        if h.barriers.len() > MAX_HAUL_SITES {
+            return fail(at("barriers"), &format!("en çok {MAX_HAUL_SITES} engel olur"));
+        }
+        for (j, b) in h.barriers.iter().enumerate() {
+            let path = at(&format!("barriers[{j}]"));
+            let nm = b.name.trim();
+            if nm.is_empty() || nm != b.name || b.name.chars().count() > 120 {
+                return fail(path, "engelin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            }
+            if !b.station.is_finite() {
+                return fail(path, "engelin km'si sonlu olmalı");
+            }
+            if b.detour.is_some_and(|d| !(d.is_finite() && (0.0..=100_000.0).contains(&d))) {
+                return fail(path, "dolaşma uzunluğu 0 ile 100 km arası olur");
             }
         }
     }

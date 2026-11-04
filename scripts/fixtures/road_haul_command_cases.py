@@ -240,6 +240,18 @@ def edit_cases():
         "execute", {"operation": "set", "haul": "h-1", "cost": None},
         completed({"hauls": listed([{**H1, "revision": 2}, H2]), "revision": "$current", "haul": report({**H1, "revision": 2})}),
         {**STEPPED, "road": road_of([{**H1, "revision": 2}, H2])})], setup([hp, H2])))
+    # Docs/adr/0944: the cut unsuitable for fill and the barriers (schema 169).
+    unsuitable = [{"from": 0.0, "to": 200.0, "share": 35.0}, {"from": 200.0, "to": 400.0, "share": 10.0}]
+    barriers = [{"name": "Dere", "station": 250.0, "detour": 400.0}, {"name": "Kavşak", "station": 450.0}]
+    ok("Uygunsuz malzeme ve engellerle", {**base, "unsuitable": unsuitable, "barriers": barriers},
+       START + [new("h-3", unsuitable=unsuitable, barriers=barriers)], "h-3")
+    ok("Uygunsuz malzeme yazılır", {"operation": "set", "haul": "h-1", "unsuitable": unsuitable},
+       put(0, {**H1, "unsuitable": unsuitable, "revision": 2}), "h-1")
+    hs = {**H1, "unsuitable": unsuitable, "barriers": barriers}
+    cases.append(case("Engeller ve uygunsuz malzeme boş listeyle kalkar", [step(
+        "execute", {"operation": "set", "haul": "h-1", "unsuitable": [], "barriers": []},
+        completed({"hauls": listed([{**H1, "revision": 2}, H2]), "revision": "$current", "haul": report({**H1, "revision": 2})}),
+        {**STEPPED, "road": road_of([{**H1, "revision": 2}, H2])})], setup([hs, H2])))
     ok("Aynı değerler: değişiklik yok, adım yok", {"operation": "set", "haul": "h-1", "name": "Ana Brükner"}, START, "h-1")
     ok("Brükner silinir", {"operation": "remove", "haul": "h-2"}, [H1], None)
     ok("Silme tek geri alma adımı", {"operation": "remove", "haul": "Ana Brükner"}, [H2], None, undo=True)
@@ -258,7 +270,7 @@ def edit_cases():
     no("Başka kübaja geçmez", {"operation": "set", "haul": "h-1", "volume": "v-2"},
        failed("invalid_haul", "“Ana Brükner” Brüknerinin kübajı değiştirilmez; başka kübaj için yeni bir Brükner yazın.", "volume"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "haul": "h-1"},
-       failed("invalid_haul", "Değiştirilecek bir şey yok: name, balance, free, sites ya da cost verin."))
+       failed("invalid_haul", "Değiştirilecek bir şey yok: name, balance, free, sites, cost, unsuitable ya da barriers verin."))
     no("Yeni Brüknerin kübajı yok", {"operation": "set", "name": "x"},
        failed("invalid_haul", "Yeni Brükner için name ve volume verilmeli.", "volume"))
     no("Aynı ad", {**base, "name": "YAN Brükner"}, rulefail("bu adda başka bir Brükner var", "name"))
@@ -281,6 +293,17 @@ def edit_cases():
        rulefail("birim fiyat 0 ya da daha büyük, sonlu olmalı", "cost"))
     no("Sıfır kamyon yükü", {**base, "cost": {"currency": "TL", "payload": 0.0}},
        rulefail("kamyon yükü 0'dan büyük, en çok 1000 m³ olur", "cost"))
+    no("Yüzde 100'den büyük uygunsuz pay", {**base, "unsuitable": [{"from": 0.0, "to": 100.0, "share": 150.0}]},
+       rulefail("uygunsuz malzemenin payı yüzde 0 ile 100 arası olur", "unsuitable[0]"))
+    no("Ters uygunsuz satırı", {**base, "unsuitable": [{"from": 300.0, "to": 100.0, "share": 20.0}]},
+       rulefail("uygunsuz malzeme satırının sonu başından sonra olmalı", "unsuitable[0]"))
+    no("Kesişen uygunsuz satırları", {**base, "unsuitable": [{"from": 0.0, "to": 200.0, "share": 20.0},
+                                                            {"from": 150.0, "to": 300.0, "share": 30.0}]},
+       rulefail("uygunsuz malzeme satırları kesişmemeli", "unsuitable[1]"))
+    no("Adsız engel", {**base, "barriers": [{"name": "", "station": 100.0}]},
+       rulefail("engelin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter", "barriers[0]"))
+    no("Eksi dolaşma", {**base, "barriers": [{"name": "Dere", "station": 100.0, "detour": -5.0}]},
+       rulefail("dolaşma uzunluğu 0 ile 100 km arası olur", "barriers[0]"))
     no("Geçersiz beklenen sürüm", {"operation": "remove", "haul": "h-2", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "remove", "haul": "h-2", "expectedRevision": "41"}, CONFLICT)
     return file("road.hauls.edit", "Brükneri düzenle", setup(), cases)

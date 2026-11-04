@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{HaulCostDef, HaulSiteDef, RoadEditOperation};
+use crate::{HaulBarrierDef, HaulCostDef, HaulSiteDef, HaulUnsuitableDef, RoadEditOperation};
 
 pub const ROAD_HAULS_EDIT: &str = "road.hauls.edit";
 pub const ROAD_HAULS_EDIT_VERSION: u32 = 1;
@@ -61,6 +61,14 @@ pub struct HaulsEdit {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<HaulCostDef>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<HaulCostDef>"))]
     pub cost: Option<Option<HaulCostDef>>,
+    /// The cut unsuitable for fill by stations (docs/adr/0944); an empty list takes them off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unsuitable: Option<Vec<HaulUnsuitableDef>>,
+    /// What the haul road crosses (docs/adr/0944); an empty list takes them off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub barriers: Option<Vec<HaulBarrierDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -322,6 +330,11 @@ pub struct HaulPlanSite {
     pub capacity: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub used: f64,
+    /// Of a waste site's, the unsuitable cut (docs/adr/0944); none where the plan does not sort its material.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub used_unsuitable: Option<f64>,
 }
 
 /// A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).
@@ -337,6 +350,30 @@ pub struct HaulSegment {
     pub to: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub flow: f64,
+    /// The unsuitable cut's part of the flow (docs/adr/0944); none where the plan does not sort its material.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub unsuitable_flow: Option<f64>,
+}
+
+/// A barrier in a haul plan (docs/adr/0944): its name, station, detour (none: closed) and what crosses it (m³, both
+/// ways).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulPlanBarrier {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub detour: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub crossed: f64,
 }
 
 /// Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the
@@ -379,6 +416,24 @@ pub struct HaulPlanned {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub cost: Option<HaulPlanCost>,
+    /// Where the diagram has unsuitable cut or barriers (docs/adr/0944): the unsuitable cut in all, the part of it no
+    /// waste site takes, and its part of the moment (m³·m); none otherwise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub unsuitable: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub stranded: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
+    pub unsuitable_moment: Option<f64>,
+    /// The barriers and what crosses each.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulPlanBarrier>>", optional))]
+    pub barriers: Vec<HaulPlanBarrier>,
 }
 
 pub const ROAD_HAULS_TRUCKS: &str = "road.hauls.trucks";

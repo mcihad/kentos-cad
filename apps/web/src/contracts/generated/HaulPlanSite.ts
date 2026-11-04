@@ -4,4 +4,8 @@ import type { HaulSiteKind } from "./HaulSiteKind";
 /**
  * A site in a haul plan: its name, kind, station, capacity and the volume the plan gives or takes there.
  */
-export type HaulPlanSite = { name: string, kind: HaulSiteKind, station: number, capacity: number, used: number, };
+export type HaulPlanSite = { name: string, kind: HaulSiteKind, station: number, capacity: number, used: number, 
+/**
+ * Of a waste site's, the unsuitable cut (docs/adr/0944); none where the plan does not sort its material.
+ */
+usedUnsuitable?: number, };

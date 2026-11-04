@@ -52,10 +52,17 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                     "volume",
                 ));
             }
-            if input.name.is_none() && input.balance.is_none() && input.free.is_none() && input.sites.is_none() && input.cost.is_none() {
+            if input.name.is_none()
+                && input.balance.is_none()
+                && input.free.is_none()
+                && input.sites.is_none()
+                && input.cost.is_none()
+                && input.unsuitable.is_none()
+                && input.barriers.is_none()
+            {
                 return Err(fail(
                     codes::INVALID_HAUL,
-                    "Değiştirilecek bir şey yok: name, balance, free, sites ya da cost verin.".into(),
+                    "Değiştirilecek bir şey yok: name, balance, free, sites, cost, unsuitable ya da barriers verin.".into(),
                     "",
                 ));
             }
@@ -74,6 +81,12 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
             }
             if let Some(c) = &input.cost {
                 d.cost = c.clone();
+            }
+            if let Some(u) = &input.unsuitable {
+                d.unsuitable = u.clone();
+            }
+            if let Some(b) = &input.barriers {
+                d.barriers = b.clone();
             }
             if d != *old {
                 d.revision = old.revision.saturating_add(1);
@@ -102,6 +115,8 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                 free: input.free.flatten(),
                 sites: input.sites.clone().unwrap_or_default(),
                 cost: input.cost.clone().flatten(),
+                unsuitable: input.unsuitable.clone().unwrap_or_default(),
+                barriers: input.barriers.clone().unwrap_or_default(),
             });
             Some(id)
         }

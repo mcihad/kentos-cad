@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 169 (docs/adr/0944): a mass haul diagram's unsuitable cut or barriers.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_sorting) {
+        return crate::SCHEMA_WITH_HAUL_SORTING;
+    }
     // Schema 168 (docs/adr/0939): a corridor's vertical chord height or sampling check.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_corridor_sampling) {
         return crate::SCHEMA_WITH_CORRIDOR_SAMPLING;
