@@ -1,12 +1,17 @@
 //! Shared OpenType/bidi glyph placement for the explicit Unicode text profile (ADR 0914).
 //! This module does not change legacy text layout. All coordinates are ems,
 //! all source ranges refer to the unchanged logical input, and no OS font is read.
+pub mod paragraph;
+pub mod rich;
+mod scripts;
+
 use std::ops::Range;
 use std::sync::OnceLock;
 
 use crate::jsmath::{js_max, js_min};
 use rustybuzz::{BufferClusterLevel, Direction, Feature, UnicodeBuffer};
-use unicode_bidi::{BidiInfo, Level};
+use unicode_bidi::{BidiClass, BidiInfo, Level, ParagraphInfo, bidi_class};
+use unicode_script::Script as WritingScript;
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::font_data::{DRAWING_FACES, DRAWING_KEYS, FALLBACK_FACES, FALLBACK_KEYS};
@@ -28,6 +33,31 @@ pub enum BaseDirection {
     RightToLeft,
 }
 
+/// Baseline shift is part of glyph layout, so measurement, hit boxes and
+/// drawing share the same size/offset rather than estimating scalar advances.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Shift {
+    #[default]
+    Baseline,
+    Super,
+    Sub,
+}
+impl Shift {
+    pub fn scale(self) -> f64 {
+        match self {
+            Self::Baseline => 1.,
+            Self::Super | Self::Sub => super::paragraph::SCRIPT_SIZE,
+        }
+    }
+    pub fn lift(self) -> f64 {
+        match self {
+            Self::Baseline => 0.,
+            Self::Super => 0.4,
+            Self::Sub => -0.15,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Style<'a> {
     pub family: &'a str,
@@ -37,6 +67,7 @@ pub struct Style<'a> {
     pub language: Option<&'a str>,
     pub kerning: bool,
     pub ligatures: bool,
+    pub shift: Shift,
 }
 impl Default for Style<'_> {
     fn default() -> Self {
@@ -48,6 +79,7 @@ impl Default for Style<'_> {
             language: None,
             kerning: true,
             ligatures: true,
+            shift: Shift::Baseline,
         }
     }
 }
@@ -58,11 +90,17 @@ pub enum Error {
     LineBreak,
     UnknownFamily,
     BadFont(FontId),
+    BadGlyph { font: FontId, id: u16 },
     BadLanguage,
     Unsupported { bytes: Range<usize> },
     InvalidCluster,
     InvalidRange,
     InvalidFormats,
+    InvalidGeometry,
+    InvalidAtoms,
+    InvalidStack { bytes: Range<usize> },
+    MixedClusterPaint { bytes: Range<usize> },
+    TooManyAtoms,
     TooManyGlyphs,
     TooManyFormats,
 }
@@ -77,6 +115,10 @@ pub struct Glyph {
     pub scalars: Range<u32>,
     pub bidi_level: u8,
     pub origin: [f64; 2],
+    /// Baseline pen before this glyph, distinct from its OpenType x offset.
+    pub pen: f64,
+    /// This glyph's em size relative to the containing text's height.
+    pub size: f64,
     pub advance: f64,
     pub slant: f64,
 }
@@ -85,6 +127,7 @@ pub struct Glyph {
 pub struct Line {
     pub requested: FontId,
     pub glyphs: Vec<Glyph>,
+    pub objects: Vec<PlacedAtom>,
     pub advance: f64,
     /// Actual outline union, separate from advance width. None for spaces/empty text.
     pub ink: Option<[f64; 4]>,
@@ -174,7 +217,7 @@ fn shape_buffer(
     rtl: bool,
     style: &Style<'_>,
 ) -> Result<rustybuzz::GlyphBuffer, Error> {
-    shape_buffer_context(face, text, rtl, style, "", "")
+    shape_buffer_context(face, text, rtl, style, "", "", None)
 }
 
 fn shape_buffer_context(
@@ -184,11 +227,25 @@ fn shape_buffer_context(
     style: &Style<'_>,
     before: &str,
     after: &str,
+    script: Option<WritingScript>,
 ) -> Result<rustybuzz::GlyphBuffer, Error> {
     let mut buffer = UnicodeBuffer::new();
     buffer.push_str(text);
     buffer.set_pre_context(before);
     buffer.set_post_context(after);
+    if let Some(script) = script
+        .filter(|s| {
+            !matches!(
+                s,
+                WritingScript::Common | WritingScript::Inherited | WritingScript::Unknown
+            )
+        })
+        .and_then(|s| {
+            rustybuzz::Script::from_iso15924_tag(rustybuzz::ttf_parser::Tag(s.as_iso15924_tag()))
+        })
+    {
+        buffer.set_script(script);
+    }
     buffer.set_direction(if rtl {
         Direction::RightToLeft
     } else {
@@ -242,6 +299,58 @@ pub struct Format<'a> {
     pub style: Style<'a>,
 }
 
+/// An atomic inline object (for example a stacked fraction). It resolves as
+/// U+FFFC for bidi but its stored source/ranges are never rewritten. Its caller
+/// supplies the actual measured advance/ink in ems and renders its contents.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Atom {
+    pub tag: usize,
+    pub bytes: Range<usize>,
+    pub advance: f64,
+    pub ink: Option<[f64; 4]>,
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlacedAtom {
+    pub tag: usize,
+    pub bytes: Range<usize>,
+    pub scalars: Range<u32>,
+    pub origin: [f64; 2],
+    pub advance: f64,
+}
+
+pub(super) fn validate_atoms(
+    text: &str,
+    atoms: &[Atom],
+    boundaries: &[usize],
+) -> Result<(), Error> {
+    if atoms.len() > MAX_FORMATS {
+        return Err(Error::TooManyAtoms);
+    }
+    let mut previous = 0;
+    for a in atoms {
+        if a.bytes.start < previous
+            || a.bytes.start >= a.bytes.end
+            || a.bytes.end > text.len()
+            || boundaries.binary_search(&a.bytes.start).is_err()
+            || boundaries.binary_search(&a.bytes.end).is_err()
+            || !a.advance.is_finite()
+            || a.advance < 0.
+            || a.ink
+                .is_some_and(|b| b.iter().any(|x| !x.is_finite()) || b[0] > b[2] || b[1] > b[3])
+        {
+            return Err(Error::InvalidAtoms);
+        }
+        if text[a.bytes.clone()]
+            .chars()
+            .any(|c| c == '\t' || c == '\u{2028}' || bidi_class(c) == BidiClass::B)
+        {
+            return Err(Error::InvalidAtoms);
+        }
+        previous = a.bytes.end;
+    }
+    Ok(())
+}
+
 /// Resolve bidi once for the whole logical paragraph, then reorder each actual
 /// wrapped line from these levels (UAX #9 L1/L2). Re-detecting direction on each
 /// substring loses the context of numbers, brackets and directional isolates.
@@ -250,14 +359,27 @@ pub struct Paragraph<'a> {
     bidi: BidiInfo<'a>,
     scalar_at: Vec<u32>,
     boundaries: Vec<usize>,
+    atoms: Vec<Atom>,
+    scripts: Vec<WritingScript>,
 }
 
 impl<'a> Paragraph<'a> {
     pub fn new(text: &'a str, direction: BaseDirection) -> Result<Self, Error> {
+        Self::with_atoms(text, direction, &[])
+    }
+
+    pub fn with_atoms(
+        text: &'a str,
+        direction: BaseDirection,
+        atoms: &[Atom],
+    ) -> Result<Self, Error> {
         if text.len() > MAX_BYTES {
             return Err(Error::TooLong);
         }
-        if text.contains(['\n', '\r']) {
+        if text
+            .chars()
+            .any(|c| c == '\u{2028}' || bidi_class(c) == BidiClass::B)
+        {
             return Err(Error::LineBreak);
         }
         let level = match direction {
@@ -274,12 +396,61 @@ impl<'a> Paragraph<'a> {
         }
         let mut boundaries: Vec<_> = text.grapheme_indices(true).map(|(at, _)| at).collect();
         boundaries.push(text.len());
+        validate_atoms(text, atoms, &boundaries)?;
+        let (bidi, scripts) = if atoms.is_empty() {
+            (BidiInfo::new(text, level), scripts::resolve(text))
+        } else {
+            let mut shadow = String::new();
+            let mut map = vec![0; text.len()];
+            let mut from = 0;
+            for atom in atoms {
+                let at = shadow.len();
+                shadow.push_str(&text[from..atom.bytes.start]);
+                for (i, value) in map[from..atom.bytes.start].iter_mut().enumerate() {
+                    *value = at + i;
+                }
+                let at = shadow.len();
+                shadow.push('\u{fffc}');
+                map[atom.bytes.clone()].fill(at);
+                from = atom.bytes.end;
+            }
+            let at = shadow.len();
+            shadow.push_str(&text[from..]);
+            for (i, value) in map[from..].iter_mut().enumerate() {
+                *value = at + i;
+            }
+            let resolved = BidiInfo::new(&shadow, level);
+            let paragraph = resolved.paragraphs.first().ok_or(Error::InvalidAtoms)?;
+            // Keep resolved object levels/classes on every original source byte.
+            // The library's L1/L2 then uses the original line/source indices.
+            let resolved_scripts = scripts::resolve(&shadow);
+            let scripts = map.iter().map(|&i| resolved_scripts[i]).collect();
+            (
+                BidiInfo {
+                    text,
+                    levels: map.iter().map(|&i| resolved.levels[i]).collect(),
+                    original_classes: map.iter().map(|&i| resolved.original_classes[i]).collect(),
+                    paragraphs: vec![ParagraphInfo {
+                        range: 0..text.len(),
+                        level: paragraph.level,
+                    }],
+                },
+                scripts,
+            )
+        };
         Ok(Self {
             text,
-            bidi: BidiInfo::new(text, level),
+            bidi,
             scalar_at,
             boundaries,
+            atoms: atoms.to_vec(),
+            scripts,
         })
+    }
+
+    fn atom_interior(&self, at: usize) -> bool {
+        let i = self.atoms.partition_point(|a| a.bytes.end <= at);
+        self.atoms.get(i).is_some_and(|a| a.bytes.start < at)
     }
 
     /// Glyphs for an actual line between grapheme boundaries. Source ranges
@@ -296,6 +467,8 @@ impl<'a> Paragraph<'a> {
             || range.end > text.len()
             || self.boundaries.binary_search(&range.start).is_err()
             || self.boundaries.binary_search(&range.end).is_err()
+            || self.atom_interior(range.start)
+            || self.atom_interior(range.end)
         {
             return Err(Error::InvalidRange);
         }
@@ -312,6 +485,8 @@ impl<'a> Paragraph<'a> {
                 || f.bytes.end > text.len()
                 || self.boundaries.binary_search(&f.bytes.start).is_err()
                 || self.boundaries.binary_search(&f.bytes.end).is_err()
+                || self.atom_interior(f.bytes.start)
+                || self.atom_interior(f.bytes.end)
             {
                 return Err(Error::InvalidFormats);
             }
@@ -339,6 +514,7 @@ impl<'a> Paragraph<'a> {
         let mut out = Line {
             requested,
             glyphs: Vec::new(),
+            objects: Vec::new(),
             advance: 0.,
             ink: None,
         };
@@ -352,10 +528,21 @@ impl<'a> Paragraph<'a> {
         let scalar_at = &self.scalar_at;
         for run in runs {
             let rtl = levels.get(run.start).is_some_and(Level::is_rtl);
-            let mut spans: Vec<(Range<usize>, FontId, Style<'_>)> = Vec::new();
+            enum Span<'s> {
+                Font(Range<usize>, FontId, Style<'s>, WritingScript),
+                Object(usize),
+            }
+            let mut spans = Vec::new();
             for (relative, cluster) in text[run.clone()].grapheme_indices(true) {
                 let start = run.start + relative;
                 let end = start + cluster.len();
+                let atom = self.atoms.partition_point(|a| a.bytes.end <= start);
+                if let Some(a) = self.atoms.get(atom).filter(|a| a.bytes.contains(&start)) {
+                    if a.bytes.start == start {
+                        spans.push(Span::Object(atom));
+                    }
+                    continue;
+                }
                 let format = formats.partition_point(|f| f.bytes.end <= start);
                 let index = if formats
                     .get(format)
@@ -366,6 +553,7 @@ impl<'a> Paragraph<'a> {
                     0
                 };
                 let (style, requested, fallback) = prepared[index];
+                let script = self.scripts[start];
                 let mut chosen = None;
                 for id in std::iter::once(requested).chain(fallback.into_iter().flatten()) {
                     if supports(id, cluster, rtl, &style)? {
@@ -376,21 +564,60 @@ impl<'a> Paragraph<'a> {
                 let Some(id) = chosen else {
                     return Err(Error::Unsupported { bytes: start..end });
                 };
-                if let Some((range, last, last_style)) = spans.last_mut()
+                if let Some(Span::Font(range, last, last_style, last_script)) = spans.last_mut()
                     && *last == id
                     && *last_style == style
+                    && *last_script == script
                     && range.end == start
                 {
                     range.end = end;
                 } else {
-                    spans.push((start..end, id, style));
+                    spans.push(Span::Font(start..end, id, style, script));
                 }
             }
             if rtl {
                 spans.reverse();
             }
-            for (span, id, style) in spans {
+            for span in spans {
+                let (span, id, style, script) = match span {
+                    Span::Font(range, id, style, script) => (range, id, style, script),
+                    Span::Object(i) => {
+                        let a = &self.atoms[i];
+                        if let Some(b) = a.ink {
+                            let b = [out.advance + b[0], b[1], out.advance + b[2], b[3]];
+                            out.ink = Some(match out.ink {
+                                None => b,
+                                Some(v) => [
+                                    js_min(v[0], b[0]),
+                                    js_min(v[1], b[1]),
+                                    js_max(v[2], b[2]),
+                                    js_max(v[3], b[3]),
+                                ],
+                            });
+                        }
+                        out.objects.push(PlacedAtom {
+                            tag: a.tag,
+                            bytes: a.bytes.clone(),
+                            scalars: scalar_at[a.bytes.start]..scalar_at[a.bytes.end],
+                            origin: [out.advance, 0.],
+                            advance: a.advance,
+                        });
+                        out.advance += a.advance;
+                        continue;
+                    }
+                };
                 let face = parsed(id)?;
+                let before = self
+                    .atoms
+                    .iter()
+                    .rev()
+                    .find(|a| a.bytes.end <= span.start)
+                    .map_or(range.start, |a| a.bytes.end.max(range.start));
+                let after = self
+                    .atoms
+                    .iter()
+                    .find(|a| a.bytes.start >= span.end)
+                    .map_or(range.end, |a| a.bytes.start.min(range.end));
                 // Shape joining across style/font boundaries, but never across a
                 // real line break. The output contains only the span's own glyphs.
                 let glyphs = shape_buffer_context(
@@ -398,8 +625,9 @@ impl<'a> Paragraph<'a> {
                     &text[span.clone()],
                     rtl,
                     &style,
-                    &text[range.start..span.start],
-                    &text[span.end..range.end],
+                    &text[before..span.start],
+                    &text[span.end..after],
+                    Some(script),
                 )?;
                 let range = span;
                 let mut boundaries: Vec<_> = glyphs
@@ -430,17 +658,19 @@ impl<'a> Paragraph<'a> {
                     if !text.is_char_boundary(a) || !text.is_char_boundary(b) || b > range.end {
                         return Err(Error::InvalidCluster);
                     }
-                    let advance = f64::from(pos.x_advance) / units;
+                    let size = style.shift.scale();
+                    let advance = f64::from(pos.x_advance) / units * size;
                     let origin = [
-                        out.advance + f64::from(pos.x_offset) / units,
-                        f64::from(pos.y_offset) / units,
+                        out.advance + f64::from(pos.x_offset) / units * size,
+                        f64::from(pos.y_offset) / units * size + style.shift.lift(),
                     ];
                     if let Some(box_) = face
                         .glyph_bounding_box(rustybuzz::ttf_parser::GlyphId(info.glyph_id as u16))
                     {
                         for x in [box_.x_min, box_.x_max] {
                             for y in [box_.y_min, box_.y_max] {
-                                let (x, y) = (f64::from(x) / units, f64::from(y) / units);
+                                let (x, y) =
+                                    (f64::from(x) / units * size, f64::from(y) / units * size);
                                 let (x, y) = (origin[0] + x + y * slant, origin[1] + y);
                                 match &mut out.ink {
                                     Some(b) => {
@@ -461,6 +691,8 @@ impl<'a> Paragraph<'a> {
                         scalars: scalar_at[a]..scalar_at[b],
                         bidi_level: levels[run.start].number(),
                         origin,
+                        pen: out.advance,
+                        size,
                         advance,
                         slant,
                     });
@@ -471,6 +703,9 @@ impl<'a> Paragraph<'a> {
                 }
             }
         }
+        if !out.advance.is_finite() || out.ink.is_some_and(|b| b.iter().any(|x| !x.is_finite())) {
+            return Err(Error::InvalidGeometry);
+        }
         Ok(out)
     }
 }
@@ -478,8 +713,100 @@ impl<'a> Paragraph<'a> {
 /// One logical line in visual glyph order. Wrapping and tabs belong to the
 /// caller; shaping never reverses or rewrites the stored string.
 pub fn line(text: &str, style: Style<'_>) -> Result<Line, Error> {
+    if text.len() > MAX_BYTES {
+        return Err(Error::TooLong);
+    }
     if text.contains('\t') {
         return Err(Error::LineBreak);
     }
     Paragraph::new(text, style.direction)?.line(0..text.len(), style, &[])
+}
+
+/// Exact outline operations, normalized to ems in the shaped line's baseline
+/// frame (positive y up). Consumers apply their one model-to-screen/paper
+/// transform; they must not shape the source string a second time.
+#[derive(Clone, Debug, PartialEq)]
+pub enum OutlineOp {
+    Move([f64; 2]),
+    Line([f64; 2]),
+    Quad([f64; 2], [f64; 2]),
+    Cubic([f64; 2], [f64; 2], [f64; 2]),
+    Close,
+}
+
+/// A glyph's actual bundled contour in exactly the same position/slant used
+/// by the shared ink measurement. Spaces have no outline; an invalid glyph
+/// or face is an error rather than an empty character.
+pub fn outline(glyph: &Glyph) -> Result<Vec<OutlineOp>, Error> {
+    use rustybuzz::ttf_parser::{GlyphId, OutlineBuilder};
+    let face = parsed(glyph.font)?;
+    if glyph.origin.iter().any(|x| !x.is_finite())
+        || !glyph.slant.is_finite()
+        || !glyph.pen.is_finite()
+        || !glyph.size.is_finite()
+        || glyph.size <= 0.
+    {
+        return Err(Error::InvalidGeometry);
+    }
+    if glyph.id >= face.number_of_glyphs() {
+        return Err(Error::BadGlyph {
+            font: glyph.font,
+            id: glyph.id,
+        });
+    }
+    struct Builder<'a> {
+        glyph: &'a Glyph,
+        units: f64,
+        ops: Vec<OutlineOp>,
+    }
+    impl Builder<'_> {
+        fn point(&self, x: f32, y: f32) -> [f64; 2] {
+            let (x, y) = (
+                f64::from(x) / self.units * self.glyph.size,
+                f64::from(y) / self.units * self.glyph.size,
+            );
+            [
+                self.glyph.origin[0] + x + y * self.glyph.slant,
+                self.glyph.origin[1] + y,
+            ]
+        }
+    }
+    impl OutlineBuilder for Builder<'_> {
+        fn move_to(&mut self, x: f32, y: f32) {
+            self.ops.push(OutlineOp::Move(self.point(x, y)));
+        }
+        fn line_to(&mut self, x: f32, y: f32) {
+            self.ops.push(OutlineOp::Line(self.point(x, y)));
+        }
+        fn quad_to(&mut self, cx: f32, cy: f32, x: f32, y: f32) {
+            self.ops
+                .push(OutlineOp::Quad(self.point(cx, cy), self.point(x, y)));
+        }
+        fn curve_to(&mut self, ax: f32, ay: f32, bx: f32, by: f32, x: f32, y: f32) {
+            self.ops.push(OutlineOp::Cubic(
+                self.point(ax, ay),
+                self.point(bx, by),
+                self.point(x, y),
+            ));
+        }
+        fn close(&mut self) {
+            self.ops.push(OutlineOp::Close);
+        }
+    }
+    let mut builder = Builder {
+        glyph,
+        units: f64::from(face.units_per_em()),
+        ops: Vec::new(),
+    };
+    face.outline_glyph(GlyphId(glyph.id), &mut builder);
+    let invalid = |p: &[f64; 2]| p.iter().any(|v| !v.is_finite());
+    if builder.ops.iter().any(|op| match op {
+        OutlineOp::Move(p) | OutlineOp::Line(p) => invalid(p),
+        OutlineOp::Quad(a, p) => invalid(a) || invalid(p),
+        OutlineOp::Cubic(a, b, p) => invalid(a) || invalid(b) || invalid(p),
+        OutlineOp::Close => false,
+    }) {
+        return Err(Error::InvalidGeometry);
+    }
+    Ok(builder.ops)
 }

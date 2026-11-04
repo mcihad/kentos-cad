@@ -13,6 +13,7 @@ import hashlib
 import importlib.metadata
 import io
 import json
+import re
 from pathlib import Path
 import urllib.request
 
@@ -87,6 +88,21 @@ def main():
             name = next(f['file'].rsplit('-', 1)[0] for f in manifest['faces'] if f['file'].rsplit('-', 1)[0].lower() == folder)
             if not args.check:
                 (OUT / (name + '-OFL.txt')).write_bytes(licence)
+    # This is a frozen rendering profile, not a discovery list. A font update
+    # requires another profile while this profile's bytes remain available.
+    code = ROOT / 'crates/shared/geometry-core/src/text/font_data.rs'
+    source = code.read_text()
+    files = re.findall(r'include_bytes!\("([^"]+)"\)', source)
+    keys = re.findall(r'\("([^"]+)", (\d+), (true|false)\)', source)
+    profile = manifest['profileFaces']
+    if manifest['profile'] != 'unicode-v1' or len(files) != len(keys) or len(files) != len(profile):
+        raise SystemExit('Unicode v1 font kataloğunun sürümü/sayısı değişmiş.')
+    for index, (relative, key, expected) in enumerate(zip(files, keys, profile)):
+        path = (code.parent / relative).resolve()
+        actual = dict(index=index, file=str(path.relative_to(ROOT)), family=key[0], weight=int(key[1]),
+                      italic=key[2] == 'true', sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+        if actual != expected:
+            raise SystemExit(f'Unicode v1 font profili değişmiş: {path}; eski profili koruyarak yeni sürüm tanımlayın.')
     for face in manifest['faces']:
         path = OUT / face['file']
         if hashlib.sha256(path.read_bytes()).hexdigest() != face['sha256']:
@@ -95,7 +111,7 @@ def main():
         name = next(f['file'].rsplit('-', 1)[0] for f in manifest['faces'] if f['file'].rsplit('-', 1)[0].lower() == source['folder'])
         if hashlib.sha256((OUT / (name + '-OFL.txt')).read_bytes()).hexdigest() != source['licence']['sha256']:
             raise SystemExit(f'Lisans değişmiş: {name}')
-    print(f"{len(manifest['faces'])} font ve {len(manifest['sources'])} OFL lisansı doğrulandı.")
+    print(f"{len(profile)} sabit profil yüzü, {len(manifest['faces'])} üretilen font ve {len(manifest['sources'])} OFL lisansı doğrulandı.")
 
 
 if __name__ == '__main__':

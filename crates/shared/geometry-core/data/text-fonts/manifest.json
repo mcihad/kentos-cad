@@ -121,5 +121,240 @@
       "sha256": "2d564eb558428b82d33873beb5ccd4502a8a4227c157f1831209f19c4fdf5015",
       "bytes": 492328
     }
+  ],
+  "profile": "unicode-v1",
+  "profileFaces": [
+    {
+      "index": 0,
+      "file": "apps/desktop/assets/fonts/drawing/ArchitectsDaughter-400.ttf",
+      "family": "architects-daughter",
+      "weight": 400,
+      "italic": false,
+      "sha256": "ddfc8a1e277da101a5d0e17670f0e40e4ba9a198d9438e2d69b6f81596e7bd88"
+    },
+    {
+      "index": 1,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-400.ttf",
+      "family": "arimo",
+      "weight": 400,
+      "italic": false,
+      "sha256": "bff6260ba15d755a1d31c54acadf2da9dfb77109a790ee5d3bdbacd971d37634"
+    },
+    {
+      "index": 2,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-500.ttf",
+      "family": "arimo",
+      "weight": 500,
+      "italic": false,
+      "sha256": "d969ee6b7c51fb6dc627585749ffe8a2355863a043e233d9a29c593bf3fd62f1"
+    },
+    {
+      "index": 3,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-600.ttf",
+      "family": "arimo",
+      "weight": 600,
+      "italic": false,
+      "sha256": "1f048e73c622b8cceee05218cfaf8a646cf670bf26fb6c5ea01b67ddfa38b588"
+    },
+    {
+      "index": 4,
+      "file": "apps/desktop/assets/fonts/drawing/Arimo-700.ttf",
+      "family": "arimo",
+      "weight": 700,
+      "italic": false,
+      "sha256": "17feb545abf5082e8da6d4094fd96da5e4adf700a883dfce61a4091c471756b2"
+    },
+    {
+      "index": 5,
+      "file": "apps/desktop/assets/fonts/drawing/Barlow-400-italic.ttf",
+      "family": "barlow",
+      "weight": 400,
+      "italic": true,
+      "sha256": "90d48d6daa60853a3317d116c6091a8c7c46d15d394b8d92ff6b44f4dd073cb4"
+    },
+    {
+      "index": 6,
+      "file": "apps/desktop/assets/fonts/drawing/Barlow-400.ttf",
+      "family": "barlow",
+      "weight": 400,
+      "italic": false,
+      "sha256": "20db3a61d460f5d41b285065d70e01c206d7ccba944d72e252f2d7ac62bfa7a0"
+    },
+    {
+      "index": 7,
+      "file": "apps/desktop/assets/fonts/drawing/Barlow-500.ttf",
+      "family": "barlow",
+      "weight": 500,
+      "italic": false,
+      "sha256": "4351db105f59e72b2d1285f8172adad80aa080018ad8864665aa219ad9cb6743"
+    },
+    {
+      "index": 8,
+      "file": "apps/desktop/assets/fonts/drawing/Barlow-600.ttf",
+      "family": "barlow",
+      "weight": 600,
+      "italic": false,
+      "sha256": "0a182becf160ec36cf9507991131dd1054ca9b74e13b99b390395b1a1e250493"
+    },
+    {
+      "index": 9,
+      "file": "apps/desktop/assets/fonts/drawing/CourierPrime-400-italic.ttf",
+      "family": "courier-prime",
+      "weight": 400,
+      "italic": true,
+      "sha256": "bf5eb3b20dbcd343b790ffd0fc6ed0ae17eff42cf6bf553160388cc3739d2a28"
+    },
+    {
+      "index": 10,
+      "file": "apps/desktop/assets/fonts/drawing/CourierPrime-400.ttf",
+      "family": "courier-prime",
+      "weight": 400,
+      "italic": false,
+      "sha256": "043844aa8d4917f03f22d8f63ae26962da0f50ad0aa946738a9c451e17eb9261"
+    },
+    {
+      "index": 11,
+      "file": "apps/desktop/assets/fonts/drawing/CourierPrime-700.ttf",
+      "family": "courier-prime",
+      "weight": 700,
+      "italic": false,
+      "sha256": "54009ab163b12864af5da7ce11096e2a9b37a8bba791421a0f96b05f57cb1280"
+    },
+    {
+      "index": 12,
+      "file": "apps/desktop/assets/fonts/drawing/IBMPlexMono-400.ttf",
+      "family": "plex-mono",
+      "weight": 400,
+      "italic": false,
+      "sha256": "e9cdfb6a14e810914a03b389a286a21dfcda639825db4519009397adc7390013"
+    },
+    {
+      "index": 13,
+      "file": "apps/desktop/assets/fonts/drawing/IBMPlexMono-500.ttf",
+      "family": "plex-mono",
+      "weight": 500,
+      "italic": false,
+      "sha256": "8f38a758aff524b88b97347ab371637d66bd4bda62b56bceefaccd303f1dc2c5"
+    },
+    {
+      "index": 14,
+      "file": "apps/desktop/assets/fonts/drawing/Overpass-400.ttf",
+      "family": "overpass",
+      "weight": 400,
+      "italic": false,
+      "sha256": "6eec04bd145977e0e69bb8d29fddd4d42b370fae3dbe59aedb7d73340d4818ed"
+    },
+    {
+      "index": 15,
+      "file": "apps/desktop/assets/fonts/drawing/Overpass-500.ttf",
+      "family": "overpass",
+      "weight": 500,
+      "italic": false,
+      "sha256": "4b1951a08757c0da0e9b85296cee7c2a0e370f6dd96edbf9a461b437581a4018"
+    },
+    {
+      "index": 16,
+      "file": "apps/desktop/assets/fonts/drawing/Overpass-600.ttf",
+      "family": "overpass",
+      "weight": 600,
+      "italic": false,
+      "sha256": "4ca3a8a72a1c4416cbb477026ca8a4d520d7fd351587e0ec0fef58a13564fed6"
+    },
+    {
+      "index": 17,
+      "file": "apps/desktop/assets/fonts/drawing/Overpass-700.ttf",
+      "family": "overpass",
+      "weight": 700,
+      "italic": false,
+      "sha256": "6cd0f5258d921510d1cdb50d309b573fda42ba85a3c111ce6223646f3c98a7ea"
+    },
+    {
+      "index": 18,
+      "file": "apps/desktop/assets/fonts/drawing/Quicksand-400.ttf",
+      "family": "quicksand",
+      "weight": 400,
+      "italic": false,
+      "sha256": "d329a632ba789df56a15a41e924baf796102a03774026779d96ab5a918edff7c"
+    },
+    {
+      "index": 19,
+      "file": "apps/desktop/assets/fonts/drawing/Quicksand-500.ttf",
+      "family": "quicksand",
+      "weight": 500,
+      "italic": false,
+      "sha256": "8aab04db2386589e96a5ec1aaed6421a2512267ce05218a86005ad062c91d1b4"
+    },
+    {
+      "index": 20,
+      "file": "apps/desktop/assets/fonts/drawing/Quicksand-600.ttf",
+      "family": "quicksand",
+      "weight": 600,
+      "italic": false,
+      "sha256": "cbed9eda6efd44b289963bda317fb13301ace1972d82d9df1e59fcbd4dc238a3"
+    },
+    {
+      "index": 21,
+      "file": "apps/desktop/assets/fonts/drawing/Quicksand-700.ttf",
+      "family": "quicksand",
+      "weight": 700,
+      "italic": false,
+      "sha256": "be16404abca0366223f6a792eaed4037119d19de812b263f2f64b79307b87208"
+    },
+    {
+      "index": 22,
+      "file": "crates/shared/geometry-core/data/text-fonts/NotoSans-400.ttf",
+      "family": "noto-sans",
+      "weight": 400,
+      "italic": false,
+      "sha256": "a9e60f3e05ec08956e3be59b7aedfa7db0f1b8921265097e22170bc8dff997f4"
+    },
+    {
+      "index": 23,
+      "file": "crates/shared/geometry-core/data/text-fonts/NotoSans-600.ttf",
+      "family": "noto-sans",
+      "weight": 600,
+      "italic": false,
+      "sha256": "b34c1fe719325f43593d6e13f008fd33f401f1186a337b038b2a710724787c5c"
+    },
+    {
+      "index": 24,
+      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansArabic-400.ttf",
+      "family": "noto-sans-arabic",
+      "weight": 400,
+      "italic": false,
+      "sha256": "797fa8fe35f712e376c9fa8d9e4d851b0f2efabead295b0d3d59f179c3164b11"
+    },
+    {
+      "index": 25,
+      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansArabic-600.ttf",
+      "family": "noto-sans-arabic",
+      "weight": 600,
+      "italic": false,
+      "sha256": "31e7ab08dc1483ec19039ee2ccdfb5680d70b677e21df1f68b2dbfad40877cb8"
+    },
+    {
+      "index": 26,
+      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansHebrew-400.ttf",
+      "family": "noto-sans-hebrew",
+      "weight": 400,
+      "italic": false,
+      "sha256": "f850ef5304d12ad9d640ad312e66513b128767f031066ab9b77020178dbc32d7"
+    },
+    {
+      "index": 27,
+      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansHebrew-600.ttf",
+      "family": "noto-sans-hebrew",
+      "weight": 600,
+      "italic": false,
+      "sha256": "850fa38a959b8625c0f131896750059f5c86f6e2e6e79f50ff1d83cb9e885f82"
+    },
+    {
+      "index": 28,
+      "file": "crates/shared/geometry-core/data/text-fonts/NotoSansMath-400.ttf",
+      "family": "noto-sans-math",
+      "weight": 400,
+      "italic": false,
+      "sha256": "2d564eb558428b82d33873beb5ccd4502a8a4227c157f1831209f19c4fdf5015"
+    }
   ]
 }

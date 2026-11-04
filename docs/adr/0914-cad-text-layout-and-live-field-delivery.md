@@ -70,6 +70,102 @@ geometrisinin, ekranın veya PDF'nin legacy yerleşimi yerine kullanılmaz.
   HarfBuzz pre/post-context sonucuyla karşılaştırılır. Yedi Rust testi geçti.
   Unicode tablo sürümleri farklı olduğundan tüm Unicode 18 uyumluluğu iddia edilmez.
 
+### Fiziksel akış ve kontur doğrulaması — ikinci hazırlık bölümü
+
+`shaping/paragraph.rs`, aynı gerçek glyph satırlarını ölçerek girinti,
+sekme, kutuya sözcük bazlı sığdırma ve statik sütun yerleşimini üretir.
+Girdi yüksekliği CAD model yüksekliğidir; glyph koordinatları em, satır
+baseline'ları model birimidir. Width factor yalnız baseline doğrultusuna
+uygulanır. Ölçülen advance kutusuyla gerçek ink kutusu ayrı kalır.
+Satır kırıldıktan sonra yönü yeniden tahmin edilmez. CR/LF/CRLF kaynak
+indeksleri ve sondaki boş paragraf korunur. Boşluğa bağlanmış aksan da
+bir kümedir; sarma veya satır sonu temizliği kümeyi bölemez.
+
+Ölçümde artan aday aralığı ve ikili arama kullanılır; her kısa satır için
+kalan bütün paragrafın yarısını tekrar tekrar shape etmekten kaçınılır.
+Yedi aile ve beş kutu genişliği, basit doğrusal sözcük taramasıyla
+karşılaştırılır. 6.000 satırlık birleşik aksan örneği de sınanır. Bu bir
+GPU/sahne performansı kabulü değildir; sahne önbelleği/gerçek çizim
+performansı entegrasyon sırasında ölçülecek.
+
+- Harici C HarfBuzz + FriBidi ile dört fiziksel akış örneğinde satır
+  aralıkları, global byte/scalar aralıkları, glyph'ler, ofsetler, advance,
+  girinti/tab/sütun baseline'ları karşılaştırıldı. Referans üretimi KentOS
+  çağırmaz; hızlandırılmış aramadan ayrı doğrusal bir sarma algoritmasıdır.
+- `outline` aynı yerleştirilmiş glyph'in gerçek konturunu verir. 13 Latin,
+  birleşik aksan, Arapça/İbranice ve teknik sembol konturu bağımsız
+  FontTools BasePen verisiyle eşleşti. Kontur kapatmanın örtük düz kenarı
+  karşılaştırmada açık çizgi olarak temsil edilir; beklenen geometri
+  KentOS çıktısından türetilmez.
+- Kesir için gereken atomik satır içi nesne temeli eklendi. Nesnenin özgün
+  metni değişmeden kalır; yalnız bidi çözümünde U+FFFC yer tutucusu kullanılır.
+  Çözülen seviyeler özgün kaynak aralıklarına taşınır. Bu,
+  [Unicode 18, bölüm 23.8.4](https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-23/)
+  içindeki nesne yer tutucusunun kullanımıdır. 15 harici FriBidi örneğiyle
+  görsel sıra, nesne sınırında kesilen Arapça birleşmesiyle de harici
+  HarfBuzz glyph sonucu karşılaştırılır. Bir kesrin kaynak metninin
+  içindeki boşluklar satır bölme fırsatı olmaz. Bu temel, kesir içeriğinin
+  ve üst/alt simgenin son renderer entegrasyonunun tamamlandığı anlamına gelmez.
+- Tüm 29 runtime font kimliği ve font byte özeti `unicode-v1` manifestinde
+  sabitlendi; ilk 22 yüzün UI varlıklarından gelmesi bu denetimi atlatmaz.
+  Eski dosyayı yeniden akıtan bir font güncellemesi, mevcut manifesti yeniden
+  üreterek kabul edilmez: eski profil byte'ları korunarak yeni profil gerekir.
+  Kontrol hem Python kaynak doğrulamasında hem Rust testinde yapılır.
+
+Bu aşamada Unicode LS/PS ve diğer özel paragraf kontrol kodları glyph
+satırına sessizce gömülmez; desteklenmeyen sınır hata döndürür. Tam UAX #14
+sarma veya bütün Unicode yazıları için uygunluk iddia edilmez. Yeni profilin
+kalıcı KCAD ayrımı, açık dönüşümü, rich-run adaptörü, gerçek sahne/hit-test ve
+aranabilir PDF entegrasyonu henüz tamamlanmamıştır.
+
+Ek kod incelemesi: mevcut alan denetimi belge içindeki bağımsız yazılar ve
+onların kaynak zincirini kapsar. Blok tanımlarındaki anonim yazı geometrileri,
+tablo/kılavuz alan yolları ve bunların açık yenileme/teslim davranışı ayrıca
+incelenecek; yalnız bağımsız yazı kabulü bütün field ekosisteminin kabulü değildir.
+
+### Rich-run ve yazı sistemi hazırlığının güncel durumu
+
+- `shaping/rich.rs` üst/alt simgeyi gerçek glyph boyu ve baseline kaymasıyla,
+  üç kesir/tolerans biçimini atomik yerleşimle üretir. Beş bağımsız C
+  HarfBuzz örneği, Arapça rakamlar ve kesir içindeki boşluklar dahil geçti.
+  Alt çizgi ve kesir çubukları da ink kutusuna katılır; renk metni her satır
+  için çoğaltılmak yerine özgün run'a referans verir.
+- Renk veya alt çizgi değişimi glyph'leri yeniden shape ederek kerning'i
+  değiştirmez. Bir ligatürün tamamına renk uygulama yerleşimi değiştirmeden
+  çalışır. Bir ligatürün içindeki bileşenleri ayrı boyama/kırpma yolu henüz
+  tamamlanmadı; `MixedClusterPaint` bunu açıkça reddeder. Mevcut legacy
+  metinler bu adaptörden geçirilmez.
+- [UAX #24 §5](https://unicode.org/reports/tr24/) uyarınca bir grapheme'in
+  yazı sistemi birlikte çözülür; ortak işaretler bağlamla, eşleşen parantezler
+  çevreleyen yazıyla ilişkilendirilir. Latin/Yunanca/Kiril karışımları dört
+  açık ISO 15924 script etiketli C HarfBuzz örneğiyle eşleşti. Unicode
+  blok aralıklarından alfabe tahmini yapılmaz. Yeni doğrudan bağımlılık
+  `unicode-script 0.5.8` Unicode 17 tablolarını kullanır.
+- Güncel 20 entegrasyon testi ve iki yazı sistemi birim testi geçti;
+  eski metin testleriyle `--test all text` toplam 39 testi geçti.
+  Altı bin satırın alt çizgileri ve 601 scalar'lık tek birleşik karakter
+  kümesi de sınırlı metadata işiyle işlendi. Bunlar GPU/sahne kabulü değildir.
+- Mevcut GUI yolu Cosmic Text 0.15/Harfrust kullanır; Rustybuzz ile aynı
+  motor olduğu varsayılmaz. Yeni ortak glyph planının gerçek ekranda ve
+  PDF'de kullanılması hâlâ gerekiyor.
+
+Kapatılmadan önce kalan entegrasyon koşulları: kalıcı profil ayrımı ve
+tek geri alınabilir açık dönüşüm; güvenli glyph hata/onarım davranışı;
+sahne önbelleği ve yerel koordinatta GPU çizimi; eğri boyunca yazıda
+aksanın/ligatürün ve kesrin tek grup tutulması; glyph kimlikli font alt
+kümesi ve mantıksal okunabilir PDF metni (`#`/`^` gösterim semantiği dahil);
+blok/tablo/kılavuz alan denetimi; Python/MCP eşdeğerliği ve gerçek GUI kabulü.
+Hiçbiri henüz tamamlandı sayılmaz.
+
+Yükseklik konusunda otomatik yeniden yorumlama yapılmaz.
+[Autodesk'in TrueType açıklaması](https://help.autodesk.com/cloudhelp/2025/ENU/AutoCAD-LT/files/GUID-7BC6132F-BF07-4A49-B8A8-4FCB524EB736.htm)
+nominal yüksekliği büyük harf ve ayrılan aksan alanıyla birlikte açıklar;
+[BricsCAD Height](https://developer.bricsys.com/bricscad/help/en_US/V25/DevRef/source/Properties_Height.htm)
+büyük harf yüksekliği ifadesini kullanır. Bu açıklamalardan bütün fontlar
+ve ithal dosyalar için tek bir cap-height dönüşümü çıkarılmaz. Mevcut KentOS
+model/em davranışı korunur; DWG/DXF yüksekliği ve gerçek kâğıt ölçüsü,
+font metrikleri ve karşılaştırılabilir gerçek çıktı ile ayrıca doğrulanacak.
+
 ## MTEXT aktarımındaki veri kaybı
 
 Sayısal geometri paketinin önceki `kind=10` yazı kaydı `flow` alanını

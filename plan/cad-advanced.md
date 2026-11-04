@@ -1459,6 +1459,21 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
 - Güncel derlemede yedi PDF kitap testi ve beş editör testi yeniden geçti.
   Gerçek GUI'de tam hata açıklaması, alan yenileme ve temiz denetim tekrar
   kontrol edildi. Standart KentOS bileşenleri kullanıldı; ekranlar repo dışında.
+- Aynı glyph satırlarından fiziksel girinti/tab/sütun ve sözcük bazlı sarma
+  üretimi eklendi; dört harici akış örneği, 13 bağımsız FontTools konturu,
+  15 satır içi nesne sırası ve 6.000 satırlık küme bütünlüğü kontrolü geçti.
+  Mevcut metin regresyonlarıyla 32 test temizdi. Bu çekirdek henüz sahne/PDF
+  motoru yerine etkinleştirilmedi; üst/alt simge ve kesir adaptörü sürüyor.
+- Tüm 29 yüzün byte'ları ve runtime font sırası yeni profil manifestinde
+  sabitlendi; UI fontu güncellemesinin eski metni sessizce yeniden
+  akıtmaması için sürüm sınırı korunuyor.
+- Ek incelemede blok tanımı, tablo ve kılavuz içindeki field yollarının
+  ayrıca doğrulanması gerektiği belirlendi; bu kabul de tamamlanmadan madde kapanmaz.
+- Üst/alt simge, beş kesir/tolerans örneği, alt çizginin gerçek kutusu ve
+  dört karışık Latin/Yunanca/Kiril örneği eklendi. Güncel 20 entegrasyon
+  ve iki yazı sistemi testi geçti; eski metin regresyonlarıyla 39 test temiz.
+  Ligatür içi parçalı renk/kırpma henüz eksik ve açık hata olarak tutuluyor.
+  Yeni ortak planın gerçek ekran/PDF hattına bağlanması devam ediyor.
 - Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
   eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
 
