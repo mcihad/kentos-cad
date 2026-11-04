@@ -563,6 +563,31 @@ Bütün uygulamaların paneli ([ADR 0803](docs/adr/0803-launcher-sheet-and-plate
 - **Yazı.** Sayfa başlığı 28 px normal ağırlıkta, gerisi §4'ün ölçeğinde. Soluk bilgi `--c-text-3` değil, onunla `--c-text-2` arasındaki tondur (en az 4,5:1).
 - **Masadaki çizim.** Boş kalan yerde bir imar planı parçası, ince çizgilerle, yazı rengi %22–26 opaklıkta; üstten ve alttan masaya karışır. Yazının altına girmez. Launcher'ın tek süsüdür, ikincisi eklenmez.
 
+### 7.19 Yol pencereleri
+
+Sahibin sözü: “Dialog form tasarımları çok karmaşık oluyor, daha derli toplu hale getir.” KentOS Yol'un hesap
+pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
+[ADR 0930](docs/adr/0930-road-pavement-formation-and-volume-rules.md) §4). Bu, §7.11'in işlem penceresi ailesidir.
+
+- **Solda form.** Genişliği 300 px'tir, gruplu yazılır (Girdi, Kurallar, Çıktı) ve `Form` kullanılır. Etiket
+  sütunu 130 px'tir. Yardım yalnız etiketin söylemediğini söyler ve alanın altında durur. Pencerenin üstünde açıklama
+  paragrafı olmaz.
+- **Sağda sonuç.**
+  - Önce çizim gelir, alan kutusunun içinde. Çizginin ne olduğunu çizimin altındaki tek satır söyler; çizimin içine
+    yazı yazılmaz.
+  - Ardından en çok dört özet kart (`StatCard`) gelir. Sonra notlar (uyarı, hata) gelir.
+  - En altta tek tablo durur. Hangi liste olduğunu üstündeki parçalı seçim belirler (PVI'lar | Eğimler). Listeler
+    alt alta yığılmaz.
+- **Sonuç formu izler.** Yalnız okuyan pencere değer değişince kendiliğinden yeniden okur, “Önizle” düğmesi yoktur.
+  Sonuç yokken yerinde tek soluk cümle durur.
+- **Alt çubuk.** Solda durum yazar, sağda Kapat ve tek birincil eylem durur (yazan iş: “Yeni boykesit olarak yaz”).
+  Yazılacak bir şey yoksa birincil eylem kapalıdır.
+- Ölçüm (Kırmızı kot önerisi, 1440 × 900):
+  - Önce: dört ayar tek satırdaydı. Sonuçlar 20 anahtar–değer satırlık tek sütundu. Üç eşit düğme vardı, birincil
+    yoktu.
+  - Sonra: form dört satırdır, dört özet kart vardır, tablo 5 satırdır (PVI'lar) ve bir birincil düğme vardır. Resimler
+    `.run/gui-evidence/yol-y26/once|sonra`'dadır.
+
 ### 7.13 Kontroller (genel)
 
 | Kontrol | Kural |

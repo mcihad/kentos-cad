@@ -1,32 +1,36 @@
 //! Kırmızı kot önerisi (plan/road.md Y25, docs/adr/0926 §3, `profile.propose`): new elevations for a profile's PVIs
 //! that follow the terrain profile as closely as the user's rules allow: the ends held or not, a most grade, the area
-//! cut equal to the area filled. The rules are the user's; KentOS fills in none. Önizle runs `road.profiles.propose`
-//! (nothing written): the ground, the profile as it is and the proposal; beside, the PVIs (was → proposed), the grades
-//! and those at the limit, the root mean square difference, the areas cut and filled. Yeni boykesit olarak yaz writes
-//! the proposal as a new profile with `road.profiles.create` (one undo step).
+//! cut equal to the area filled. The rules are the user's; KentOS fills in none. The window reads
+//! `road.profiles.propose` (nothing written) whenever a value changes (docs/adr/0930 §4: no Önizle): the ground, the
+//! profile as it is and the proposal; under it the root mean square difference, the areas cut and filled and the
+//! length on the surface; the PVIs (was → proposed) or the grades (those at the limit) one table at a time. Yeni
+//! boykesit olarak yaz, the window's one primary action, writes the proposal as a new profile with
+//! `road.profiles.create` (one undo step). The layout is the road windows' one (road_dialog.rs).
 //!
 //! ```text
-//! ┌ Kırmızı kot önerisi ────────────────────────────────────────────────────────────────────────────┐
-//! │ Boykesit [Uzun kot ▾]  En büyük eğim (%) [ ]  ☐ Uçları kilitle  ☐ Dengeli                        │
-//! │ ┌ ground, profile, proposal ┐  PVI'lar · Eğimler · Fark · Kazı ve dolgu alanı                     │
-//! │ └───────────────────────────┘                                                                    │
-//! │                                       [Yeni boykesit olarak yaz] [Önizle] [Kapat]                │
-//! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
+//! ┌ Kırmızı kot önerisi ───────────────────────────────────────────────────────────── × ┐
+//! │ Girdi ───────────────   ┌ ground, profile, proposal ───────────────────────────────┐ │
+//! │  Boykesit [Uzun kot ▾]  └──────────────────────────────────────────────────────────┘ │
+//! │ Kurallar ────────────   [fark] [kazı alanı] [dolgu alanı] [yüzeydeki boy]           │
+//! │  En büyük eğim [ ] %    (PVI'lar | Eğimler)                                         │
+//! │  ☐ Uçları kilitle       table                                                       │
+//! │  ☐ Dengeli                                                                          │
+//! │                                               [Kapat] [■ Yeni boykesit olarak yaz] │
+//! └─────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
-use iced::widget::{Column, container, row, scrollable, space};
-use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
+use iced::{Color, Element, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{GradeLimit, ProfileProposed, ProfilePvi, ProfilesCreate, ProfilesPropose};
 use kentos_native_application::{ExecutionContext, road_profiles, road_profiles_create, road_profiles_propose};
 use kentos_road::profile::vertical;
-use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::Dialog as Frame;
+use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::widget::{Banner, Form};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog::{self, RoadDialog, num};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -55,6 +59,24 @@ pub struct Window {
     pub(crate) balanced: bool,
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
+    pub(crate) detail: Detail,
+}
+
+/// Which list the window shows under its figures.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Detail {
+    #[default]
+    Pvis,
+    Grades,
+}
+
+impl std::fmt::Display for Detail {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Detail::Pvis => "PVI'lar",
+            Detail::Grades => "Eğimler",
+        })
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -63,6 +85,7 @@ pub enum Event {
     Most(String),
     Ends(bool),
     Balanced(bool),
+    Detail(Detail),
     Preview,
     Write,
     Close,
@@ -127,6 +150,7 @@ impl App {
         };
         self.propose_window = Some(Box::new(Window { profile: Some(first), ..Window::default() }));
         self.dialog = Some(Dialog::Propose);
+        let _ = self.propose_event(Event::Preview);
     }
 
     pub(crate) fn propose_event(&mut self, event: Event) -> Task<Message> {
@@ -136,6 +160,10 @@ impl App {
             Event::Most(t) => w.most = t,
             Event::Ends(on) => w.ends = on,
             Event::Balanced(on) => w.balanced = on,
+            Event::Detail(d) => {
+                w.detail = d;
+                return Task::none();
+            }
             Event::Preview => {
                 let Some(doc) = &self.document else { return Task::none() };
                 let def = w.profile.as_ref().and_then(|id| doc.model.road_profiles().iter().find(|p| &p.id == id)).cloned();
@@ -204,86 +232,94 @@ impl App {
                 return Task::none();
             }
         }
-        w.preview = None;
-        w.warnings.clear();
-        Task::none()
+        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        self.propose_event(Event::Preview)
     }
 
     pub(crate) fn propose_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.propose_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
         let list: Vec<(String, String)> = self
             .document
             .as_ref()
             .map_or_else(Vec::new, |d| d.model.road_profiles().iter().map(|p| (p.id.clone(), p.name.clone())).collect());
         let ids: Vec<String> = list.iter().map(|c| c.0.clone()).collect();
         let at = w.profile.as_ref().and_then(|c| ids.iter().position(|i| i == c));
-        let pick = container(Select::new(list.iter().map(|c| Choice::new(c.1.clone())), at, move |i| msg(Event::Profile(ids[i].clone())))).width(200);
-        let most = kentos_ui::widget::text_field("", &w.most).on_input(|t| msg(Event::Most(t))).width(110);
-        let top = row![
-            words::field("Boykesit", pick, None),
-            words::field(MOST, most, None),
-            words::check(w.ends, ENDS, Some(msg(Event::Ends(!w.ends)))),
-            words::check(w.balanced, BALANCED, Some(msg(Event::Balanced(!w.balanced)))),
-        ]
-        .spacing(14)
-        .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = Column::new().spacing(12).push(top);
-        let mut can_write = false;
+        let pick = Select::new(list.iter().map(|c| Choice::new(c.1.clone())), at, move |i| msg(Event::Profile(ids[i].clone())));
+        let most = kentos_ui::widget::text_field("sınırsız", &w.most).on_input(|t| msg(Event::Most(t)));
+        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let form = Form::new()
+            .label_width(130.0)
+            .section("Girdi")
+            .field("Boykesit", pick)
+            .section("Kurallar")
+            .field(MOST, most)
+            .help("Boş: eğim sınırı yok.")
+            .row(words::check(w.ends, ENDS, Some(msg(Event::Ends(!w.ends)))))
+            .row(words::check(w.balanced, BALANCED, Some(msg(Event::Balanced(!w.balanced)))))
+            .row(kentos_ui::label::caption("Dengeli: kazı alanı dolgu alanına eşit olur.").style(muted));
+        let close = msg(Event::Close);
+        let mut d = RoadDialog::new(TITLE, form, close).legend(
+            "Siyah arazi · kesikli şimdiki kırmızı kot · kırmızı öneri · dolu kare kilitli PVI",
+        );
         match &w.preview {
             None => {
-                body = body.push(
-                    label::caption(
-                        "Öneri PVI'ların km'sini ve parabolik kurplarını korur, kotlarını araziye en yakın yapar. Sınırlar tasarım standardınındır; KentOS değer vermez.",
-                    )
-                    .style(muted),
-                );
+                d = d.empty("Öneri PVI'ların km'sini ve kurplarını korur, kotlarını araziye en yakın yapar.");
             }
-            Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
+            Some(Err(why)) => d = d.note(Banner::error(why.clone())),
             Some(Ok(r)) => {
-                can_write = true;
-                let picture = container(iced::widget::canvas(Draw { read: r }).width(Fill).height(typography::scaled(360.0))).style(style::container::field_box);
-                let line = |k: String, v: String| row![label::caption(k).style(muted).width(130), label::body(v)].spacing(8);
                 let a = &r.answer;
-                let mut side = Column::new().spacing(5).width(400).padding(iced::Padding { right: 14.0, ..iced::Padding::ZERO });
-                side = side.push(line("Karesel ortalama fark".into(), format!("{:.3} m", a.rms)));
-                side = side.push(line("Kazı alanı".into(), format!("{:.1} m²", a.cut)));
-                side = side.push(line("Dolgu alanı".into(), format!("{:.1} m²", a.fill)));
-                side = side.push(line("Yüzeydeki boy".into(), format!("{:.1} m", a.covered)));
-                side = side.push(label::caption("PVI'lar: önceki → önerilen kot").style(muted));
-                for p in &a.pvis {
-                    let lock = if p.held { " · kilitli" } else { "" };
-                    side = side.push(line(format!("{} · {:.1} m", p.id, p.station), format!("{:.3} → {:.3}{lock}", p.was, p.elevation)));
-                }
-                side = side.push(label::caption("Eğimler").style(muted));
-                for g in &a.grades {
-                    let limit = match g.limit {
-                        Some(GradeLimit::Rise) => " · en büyük çıkış",
-                        Some(GradeLimit::Fall) => " · en büyük iniş",
-                        None => "",
-                    };
-                    side = side.push(line(format!("{} – {}", g.between[0], g.between[1]), format!("%{:.3}{limit}", 100.0 * g.grade)));
-                }
+                d = d
+                    .picture(iced::widget::canvas(Draw { read: r }).width(iced::Fill).height(iced::Fill), 300.0)
+                    .figure("Karesel ortalama fark", format!("{:.3} m", a.rms))
+                    .figure("Kazı alanı", format!("{:.1} m²", a.cut))
+                    .figure("Dolgu alanı", format!("{:.1} m²", a.fill))
+                    .figure("Yüzeydeki boy", format!("{:.1} m", a.covered));
                 for wn in &w.warnings {
-                    side = side.push(label::caption(wn.clone()).style(warn));
+                    d = d.note(Banner::warning(wn.clone()));
                 }
-                body = body.push(row![picture, scrollable(side).height(typography::scaled(360.0))].spacing(12));
+                let table = match w.detail {
+                    Detail::Pvis => road_dialog::table(
+                        vec![road_dialog::col("PVI", 90.0), num("Km", 90.0), num("Önceki kot", 110.0), num("Önerilen kot", 110.0), road_dialog::col("", 80.0)],
+                        a.pvis
+                            .iter()
+                            .map(|p| {
+                                vec![
+                                    p.id.clone(),
+                                    format!("{:.1}", p.station),
+                                    format!("{:.3}", p.was),
+                                    format!("{:.3}", p.elevation),
+                                    if p.held { "kilitli".into() } else { String::new() },
+                                ]
+                            })
+                            .collect(),
+                        "PVI yok",
+                    ),
+                    Detail::Grades => road_dialog::table(
+                        vec![road_dialog::col("Aralık", 120.0), num("Eğim (%)", 100.0), road_dialog::col("Sınır", 140.0)],
+                        a.grades
+                            .iter()
+                            .map(|g| {
+                                vec![
+                                    format!("{} – {}", g.between[0], g.between[1]),
+                                    format!("{:.3}", 100.0 * g.grade),
+                                    match g.limit {
+                                        Some(GradeLimit::Rise) => "en büyük çıkış".into(),
+                                        Some(GradeLimit::Fall) => "en büyük iniş".into(),
+                                        None => String::new(),
+                                    },
+                                ]
+                            })
+                            .collect(),
+                        "Eğim yok",
+                    ),
+                };
+                d = d.detail(road_dialog::detail_choice([Detail::Pvis, Detail::Grades], w.detail, |x| msg(Event::Detail(x)), table));
             }
         }
-        body = body.push(
-            row![
-                space::horizontal().width(Fill),
-                words::secondary(WRITE, can_write.then(|| msg(Event::Write))),
-                words::secondary(PREVIEW, Some(msg(Event::Preview))),
-                words::secondary(CLOSE, Some(msg(Event::Close)))
-            ]
-            .spacing(8),
-        );
-        Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
+        let can_write = matches!(w.preview, Some(Ok(_)));
+        d.primary(WRITE, can_write.then(|| msg(Event::Write))).view()
     }
 
     pub(crate) fn propose_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -371,11 +407,6 @@ impl canvas::Program<Message> for Draw<'_> {
         caption(&mut frame, format!("{y0:.1} m"), Point::new(4.0, y(y0) - 6.0));
         caption(&mut frame, format!("{x0:.0} m"), Point::new(x(x0) - 6.0, (h - bottom + 8.0) as f32));
         caption(&mut frame, format!("{x1:.0} m"), Point::new(x(x1) - 30.0, (h - bottom + 8.0) as f32));
-        caption(
-            &mut frame,
-            "Siyah arazi, kesikli şimdiki kırmızı kot, kırmızı öneri; dolu kare kilitli PVI".into(),
-            Point::new(10.0, 6.0),
-        );
         vec![frame.into_geometry()]
     }
 }

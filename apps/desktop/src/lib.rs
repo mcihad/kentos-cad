@@ -276,6 +276,7 @@ mod platform_water_window;
 mod haul_plan_window;
 mod sight_window;
 mod propose_window;
+mod road_dialog;
 mod swept_window;
 mod surface_analysis_window;
 mod pay_window;
