@@ -331,3 +331,175 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
     out.total = out.overhaul + out.waste + out.borrow;
     out
 }
+
+/// A stretch for a plan that sorts its material (docs/adr/0944, plan/road.md Y38; ROAD-HAUL-04): its stations, its cut
+/// and fill (m³, the volumes the plan moves: factored where the volume has factors) and the share of its cut unsuitable
+/// for fill (0 to 1, from the soil report; KentOS gives none).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SortedStretch {
+    pub from: f64,
+    pub to: f64,
+    pub cut: f64,
+    pub fill: f64,
+    pub unsuitable: f64,
+}
+
+/// Something the haul road crosses (ROAD-HAUL-05): its station, and the extra distance a load goes round it (m); none:
+/// closed, nothing crosses.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Barrier {
+    pub station: f64,
+    pub detour: Option<f64>,
+}
+
+/// A plan that sorts its material.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Sorted {
+    /// Whether everything is placed: every fill met, every cut placed (the unsuitable in waste sites).
+    pub feasible: bool,
+    /// The cut (suitable and unsuitable), the fill and the unsuitable cut, over all stretches (m³).
+    pub cut: f64,
+    pub fill: f64,
+    pub unsuitable: f64,
+    /// Each site's use (m³), in the order given, and of a waste site's the unsuitable part.
+    pub used: Vec<f64>,
+    pub used_unsuitable: Vec<f64>,
+    /// The segments between neighbouring places: from, to, the suitable and the unsuitable flow (m³, forward
+    /// positive).
+    pub segments: Vec<(f64, f64, f64, f64)>,
+    /// Σ |flow| × (length + the detours of the barriers it crosses) (m³·m), and the unsuitable flow's part.
+    pub moment: f64,
+    pub unsuitable_moment: f64,
+    /// Each barrier's crossing (m³, both ways together) in the order given.
+    pub crossed: Vec<f64>,
+    /// Where infeasible: the fill not met, the suitable cut and the unsuitable cut not placed (m³).
+    pub shortage: f64,
+    pub surplus: f64,
+    pub stranded: f64,
+}
+
+/// The plan for `stretches` and `sites` across `barriers` at the least haul moment, its material sorted: a stretch's
+/// suitable cut fills its own fill first at no distance and any other fill; its unsuitable cut goes only to waste
+/// sites; borrow sites give suitable material. Two lines of the same places carry the two (the unsuitable one reaching
+/// only the waste sites, whose capacity both share); an arc crossing a barrier costs its detour more, a closed one is
+/// left out. Placing earns more than any route costs (twice the road and its detours, plus one), so the most is
+/// placed, the unsuitable cut earning twice (it goes first where the waste sites are short); then the least moment. Exact by the same successive shortest paths as [`plan`]: with no unsuitable share
+/// and no barrier, it is [`plan`].
+pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[Barrier]) -> Sorted {
+    let mid = |r: &SortedStretch| 0.5 * (r.from + r.to);
+    let kept: Vec<&SortedStretch> = stretches.iter().filter(|r| r.to > r.from && (r.cut > 0.0 || r.fill > 0.0)).collect();
+    let cut: f64 = kept.iter().map(|r| r.cut).sum();
+    let fill: f64 = kept.iter().map(|r| r.fill).sum();
+    let unsuitable: f64 = kept.iter().map(|r| r.cut * r.unsuitable.clamp(0.0, 1.0)).sum();
+    let gives: f64 = sites.iter().filter(|s| s.borrow).map(|s| s.capacity).sum();
+    let takes: f64 = sites.iter().filter(|s| !s.borrow).map(|s| s.capacity).sum();
+    let tiny = 1e-9 * (cut + fill + gives + takes).max(1.0);
+    let mut out = Sorted {
+        cut,
+        fill,
+        unsuitable,
+        used: vec![0.0; sites.len()],
+        used_unsuitable: vec![0.0; sites.len()],
+        crossed: vec![0.0; barriers.len()],
+        ..Sorted::default()
+    };
+    let mut stations: Vec<f64> = kept.iter().map(|r| mid(r)).chain(sites.iter().map(|s| s.station)).collect();
+    stations.sort_by(f64::total_cmp);
+    stations.dedup();
+    let n = stations.len();
+    if n == 0 {
+        out.feasible = true;
+        return out;
+    }
+    let at = |s: f64| stations.partition_point(|x| *x < s);
+    // Nodes: the suitable line 0..n, the unsuitable line n..2n, the waste sites, the source and the sink.
+    let wastes: Vec<usize> = (0..sites.len()).filter(|j| !sites[*j].borrow).collect();
+    let (s, t) = (2 * n + wastes.len(), 2 * n + wastes.len() + 1);
+    let mut net = Network::new(t + 1);
+    // The barriers on each segment: their detours, and whether one is closed. A barrier at a place's station lies
+    // just after it.
+    let on = |i: usize, b: &Barrier| stations[i] <= b.station && b.station < stations[i + 1];
+    let span = stations[n - 1] - stations[0] + barriers.iter().filter_map(|b| b.detour).sum::<f64>();
+    let earn = -(2.0 * span + 1.0);
+    let mut arcs = Vec::with_capacity(n.saturating_sub(1));
+    for i in 0..n.saturating_sub(1) {
+        let crossing: Vec<&Barrier> = barriers.iter().filter(|b| on(i, b)).collect();
+        if crossing.iter().any(|b| b.detour.is_none()) {
+            arcs.push(None);
+            continue;
+        }
+        let length = stations[i + 1] - stations[i] + crossing.iter().filter_map(|b| b.detour).sum::<f64>();
+        let mut pair = [[0usize; 2]; 2];
+        for (layer, base) in [0, n].into_iter().enumerate() {
+            pair[layer] = [
+                net.add(base + i, base + i + 1, f64::INFINITY, [length, 0.0]),
+                net.add(base + i + 1, base + i, f64::INFINITY, [length, 0.0]),
+            ];
+        }
+        arcs.push(Some((pair, length)));
+    }
+    let mut supplies = Vec::new();
+    let mut demands = Vec::new();
+    for r in &kept {
+        let k = at(mid(r));
+        let share = r.unsuitable.clamp(0.0, 1.0);
+        let (good, bad) = (r.cut * (1.0 - share), r.cut * share);
+        if good > 0.0 {
+            supplies.push((net.add(s, k, good, [earn, 0.0]), good, false));
+        }
+        if bad > 0.0 {
+            // The unsuitable cut is placed first: where the waste sites cannot take all, the suitable is left (it can
+            // wait for a fill), not the unsuitable (it has nowhere else to go).
+            supplies.push((net.add(s, n + k, bad, [2.0 * earn, 0.0]), bad, true));
+        }
+        if r.fill > 0.0 {
+            demands.push((net.add(k, t, r.fill, [earn, 0.0]), r.fill));
+        }
+    }
+    let mut site_arcs: Vec<(usize, Option<usize>)> = Vec::with_capacity(sites.len());
+    for (j, p) in sites.iter().enumerate() {
+        let k = at(p.station);
+        if p.borrow {
+            site_arcs.push((net.add(s, k, p.capacity, [0.0, 0.0]), None));
+        } else {
+            let w = 2 * n + wastes.iter().position(|x| *x == j).unwrap_or(0);
+            net.add(k, w, f64::INFINITY, [0.0, 0.0]);
+            let from_bad = net.add(n + k, w, f64::INFINITY, [0.0, 0.0]);
+            site_arcs.push((net.add(w, t, p.capacity, [0.0, 0.0]), Some(from_bad)));
+        }
+    }
+    net.least_cost(s, t, tiny);
+    for (j, (k, bad)) in site_arcs.iter().enumerate() {
+        out.used[j] = net.edges[*k].flow;
+        out.used_unsuitable[j] = bad.map_or(0.0, |b| net.edges[b].flow);
+    }
+    for (k, v, bad) in &supplies {
+        let left = (v - net.edges[*k].flow).max(0.0);
+        if *bad {
+            out.stranded += left;
+        } else {
+            out.surplus += left;
+        }
+    }
+    out.shortage = demands.iter().map(|(k, v)| (v - net.edges[*k].flow).max(0.0)).sum();
+    for (i, arc) in arcs.iter().enumerate() {
+        let (good, bad) = match arc {
+            Some((pair, length)) => {
+                let flow = |p: [usize; 2]| net.edges[p[0]].flow - net.edges[p[1]].flow;
+                let (g, b) = (flow(pair[0]), flow(pair[1]));
+                out.moment += (g.abs() + b.abs()) * length;
+                out.unsuitable_moment += b.abs() * length;
+                for (m, bar) in barriers.iter().enumerate() {
+                    if on(i, bar) {
+                        out.crossed[m] += g.abs() + b.abs();
+                    }
+                }
+                (g, b)
+            }
+            None => (0.0, 0.0),
+        };
+        out.segments.push((stations[i], stations[i + 1], good, bad));
+    }
+    out.feasible = out.shortage <= tiny && out.surplus <= tiny && out.stranded <= tiny;
+    out
+}

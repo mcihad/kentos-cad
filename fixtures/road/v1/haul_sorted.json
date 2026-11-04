@@ -1,0 +1,1453 @@
+{
+ "cases": [
+  {
+   "name": "Bir yarma bir dolgu",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [],
+   "barriers": [],
+   "expected": {
+    "feasible": true,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 0.0,
+    "moment": 9999.99999,
+    "shortage": 9.999999406318238e-08,
+    "surplus": 9.999999406318238e-08,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Yarmanın %30'u uygunsuz",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.3
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": 300.0,
+     "capacity": 100.0,
+     "borrow": true
+    },
+    {
+     "station": 0.0,
+     "capacity": 100.0,
+     "borrow": false
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": true,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 30.0,
+    "moment": 12999.9999655,
+    "shortage": 2.3000001192485797e-07,
+    "surplus": 0.0,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Uygunsuz için döküm yok",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.3
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": 300.0,
+     "capacity": 100.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": false,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 30.0,
+    "moment": 11499.999974500002,
+    "shortage": 1.69999992749581e-07,
+    "surplus": 0.0,
+    "stranded": 30.0
+   }
+  },
+  {
+   "name": "Aynı aralıkta yarma ve dolgu, yarısı uygunsuz",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 80.0,
+     "unsuitable": 0.5
+    }
+   ],
+   "sites": [
+    {
+     "station": 150.0,
+     "capacity": 100.0,
+     "borrow": true
+    },
+    {
+     "station": -20.0,
+     "capacity": 100.0,
+     "borrow": false
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": true,
+    "cut": 100.0,
+    "fill": 80.0,
+    "unsuitable": 50.0,
+    "moment": 6499.999976999999,
+    "shortage": 2.3000001192485797e-07,
+    "surplus": 0.0,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Döküm kapasitesini iki tür paylaşır",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 120.0,
+     "fill": 0.0,
+     "unsuitable": 0.5
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": 300.0,
+     "capacity": 100.0,
+     "borrow": false
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": false,
+    "cut": 120.0,
+    "fill": 0.0,
+    "unsuitable": 60.0,
+    "moment": 24999.999959999997,
+    "shortage": 0.0,
+    "surplus": 20.000000160000013,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Kapalı engel: dere geçilmiyor",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": 20.0,
+     "capacity": 100.0,
+     "borrow": false
+    },
+    {
+     "station": 180.0,
+     "capacity": 100.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [
+    {
+     "station": 100.0,
+     "detour": null
+    }
+   ],
+   "expected": {
+    "feasible": true,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 0.0,
+    "moment": 5999.999994,
+    "shortage": 0.0,
+    "surplus": 1.9999998812636477e-07,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Engelde 700 m dolaşma: döküm ve ödünç daha ucuz",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": -300.0,
+     "capacity": 100.0,
+     "borrow": false
+    },
+    {
+     "station": 500.0,
+     "capacity": 100.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [
+    {
+     "station": 100.0,
+     "detour": 700.0
+    }
+   ],
+   "expected": {
+    "feasible": true,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 0.0,
+    "moment": 69999.99993,
+    "shortage": 0.0,
+    "surplus": 1.9999998812636477e-07,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Engelde 20 m dolaşma: dengelemek daha ucuz",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": -300.0,
+     "capacity": 100.0,
+     "borrow": false
+    },
+    {
+     "station": 500.0,
+     "capacity": 100.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [
+    {
+     "station": 100.0,
+     "detour": 20.0
+    }
+   ],
+   "expected": {
+    "feasible": true,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 0.0,
+    "moment": 11999.999988000001,
+    "shortage": 9.999999406318238e-08,
+    "surplus": 9.999999406318238e-08,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Yakın döküm ve ödünç dengelemekten ucuz",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": 20.0,
+     "capacity": 100.0,
+     "borrow": false
+    },
+    {
+     "station": 180.0,
+     "capacity": 100.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": true,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 0.0,
+    "moment": 5999.999994,
+    "shortage": 0.0,
+    "surplus": 1.9999998812636477e-07,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Kapalı engel, başka yol yok",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [],
+   "barriers": [
+    {
+     "station": 100.0,
+     "detour": null
+    }
+   ],
+   "expected": {
+    "feasible": false,
+    "cut": 100.0,
+    "fill": 100.0,
+    "unsuitable": 0.0,
+    "moment": 0.0,
+    "shortage": 100.0,
+    "surplus": 100.0,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Uygunsuzsuz, engelsiz rastgele yol",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 40.0,
+     "cut": 0.0,
+     "fill": 687.4,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 40.0,
+     "to": 80.0,
+     "cut": 445.9,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 80.0,
+     "to": 120.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 120.0,
+     "to": 160.0,
+     "cut": 1.9,
+     "fill": 649.4,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 160.0,
+     "to": 200.0,
+     "cut": 811.3,
+     "fill": 22.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 200.0,
+     "to": 240.0,
+     "cut": 343.1,
+     "fill": 379.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 240.0,
+     "to": 280.0,
+     "cut": 394.1,
+     "fill": 209.8,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 280.0,
+     "to": 320.0,
+     "cut": 413.6,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 320.0,
+     "to": 360.0,
+     "cut": 578.1,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 360.0,
+     "to": 400.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 400.0,
+     "to": 440.0,
+     "cut": 0.0,
+     "fill": 603.3,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 440.0,
+     "to": 480.0,
+     "cut": 0.0,
+     "fill": 761.6,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 480.0,
+     "to": 520.0,
+     "cut": 530.1,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 520.0,
+     "to": 560.0,
+     "cut": 155.7,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 560.0,
+     "to": 600.0,
+     "cut": 395.1,
+     "fill": 700.6,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 600.0,
+     "to": 640.0,
+     "cut": 440.7,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 640.0,
+     "to": 680.0,
+     "cut": 533.9,
+     "fill": 153.3,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 680.0,
+     "to": 720.0,
+     "cut": 693.5,
+     "fill": 774.3,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 720.0,
+     "to": 760.0,
+     "cut": 0.0,
+     "fill": 413.2,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 760.0,
+     "to": 800.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 800.0,
+     "to": 840.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 840.0,
+     "to": 880.0,
+     "cut": 0.0,
+     "fill": 383.5,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 880.0,
+     "to": 920.0,
+     "cut": 0.0,
+     "fill": 179.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 920.0,
+     "to": 960.0,
+     "cut": 436.4,
+     "fill": 311.5,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": -50.0,
+     "capacity": 4000.0,
+     "borrow": false
+    },
+    {
+     "station": 1000.0,
+     "capacity": 4000.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": true,
+    "cut": 6173.399999999999,
+    "fill": 6230.599999999999,
+    "unsuitable": 0.0,
+    "moment": 390292.9957826401,
+    "shortage": 0.0,
+    "surplus": 1.2403999448906688e-05,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Rastgele yol, %40'a kadar uygunsuz",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 40.0,
+     "cut": 0.0,
+     "fill": 50.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 40.0,
+     "to": 80.0,
+     "cut": 0.0,
+     "fill": 602.8,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 80.0,
+     "to": 120.0,
+     "cut": 0.0,
+     "fill": 523.1,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 120.0,
+     "to": 160.0,
+     "cut": 387.6,
+     "fill": 0.0,
+     "unsuitable": 0.38
+    },
+    {
+     "from": 160.0,
+     "to": 200.0,
+     "cut": 489.8,
+     "fill": 241.4,
+     "unsuitable": 0.011
+    },
+    {
+     "from": 200.0,
+     "to": 240.0,
+     "cut": 418.4,
+     "fill": 0.0,
+     "unsuitable": 0.21
+    },
+    {
+     "from": 240.0,
+     "to": 280.0,
+     "cut": 504.5,
+     "fill": 21.5,
+     "unsuitable": 0.055
+    },
+    {
+     "from": 280.0,
+     "to": 320.0,
+     "cut": 0.0,
+     "fill": 607.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 320.0,
+     "to": 360.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 360.0,
+     "to": 400.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 400.0,
+     "to": 440.0,
+     "cut": 865.7,
+     "fill": 0.0,
+     "unsuitable": 0.185
+    },
+    {
+     "from": 440.0,
+     "to": 480.0,
+     "cut": 477.3,
+     "fill": 832.3,
+     "unsuitable": 0.333
+    },
+    {
+     "from": 480.0,
+     "to": 520.0,
+     "cut": 0.0,
+     "fill": 809.7,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 520.0,
+     "to": 560.0,
+     "cut": 0.0,
+     "fill": 651.4,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 560.0,
+     "to": 600.0,
+     "cut": 199.6,
+     "fill": 629.6,
+     "unsuitable": 0.363
+    },
+    {
+     "from": 600.0,
+     "to": 640.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 640.0,
+     "to": 680.0,
+     "cut": 635.6,
+     "fill": 0.0,
+     "unsuitable": 0.235
+    },
+    {
+     "from": 680.0,
+     "to": 720.0,
+     "cut": 280.7,
+     "fill": 0.0,
+     "unsuitable": 0.249
+    },
+    {
+     "from": 720.0,
+     "to": 760.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 760.0,
+     "to": 800.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 800.0,
+     "to": 840.0,
+     "cut": 245.8,
+     "fill": 787.9,
+     "unsuitable": 0.209
+    },
+    {
+     "from": 840.0,
+     "to": 880.0,
+     "cut": 768.5,
+     "fill": 0.0,
+     "unsuitable": 0.169
+    },
+    {
+     "from": 880.0,
+     "to": 920.0,
+     "cut": 645.3,
+     "fill": 326.1,
+     "unsuitable": 0.269
+    },
+    {
+     "from": 920.0,
+     "to": 960.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": -50.0,
+     "capacity": 6000.0,
+     "borrow": false
+    },
+    {
+     "station": 500.0,
+     "capacity": 3000.0,
+     "borrow": false
+    },
+    {
+     "station": 1000.0,
+     "capacity": 6000.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": true,
+    "cut": 5918.8,
+    "fill": 6083.7,
+    "unsuitable": 1233.9322000000002,
+    "moment": 1347425.4431461263,
+    "shortage": 1.3236431549046301e-05,
+    "surplus": 0.0,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Rastgele yol, iki engel",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 40.0,
+     "cut": 214.2,
+     "fill": 0.0,
+     "unsuitable": 0.125
+    },
+    {
+     "from": 40.0,
+     "to": 80.0,
+     "cut": 59.0,
+     "fill": 753.7,
+     "unsuitable": 0.047
+    },
+    {
+     "from": 80.0,
+     "to": 120.0,
+     "cut": 896.1,
+     "fill": 752.8,
+     "unsuitable": 0.128
+    },
+    {
+     "from": 120.0,
+     "to": 160.0,
+     "cut": 0.0,
+     "fill": 781.2,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 160.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 200.0,
+     "to": 240.0,
+     "cut": 532.0,
+     "fill": 0.0,
+     "unsuitable": 0.095
+    },
+    {
+     "from": 240.0,
+     "to": 280.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 280.0,
+     "to": 320.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 320.0,
+     "to": 360.0,
+     "cut": 791.0,
+     "fill": 122.4,
+     "unsuitable": 0.193
+    },
+    {
+     "from": 360.0,
+     "to": 400.0,
+     "cut": 0.0,
+     "fill": 270.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 400.0,
+     "to": 440.0,
+     "cut": 347.3,
+     "fill": 0.0,
+     "unsuitable": 0.181
+    },
+    {
+     "from": 440.0,
+     "to": 480.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 480.0,
+     "to": 520.0,
+     "cut": 604.1,
+     "fill": 0.0,
+     "unsuitable": 0.181
+    },
+    {
+     "from": 520.0,
+     "to": 560.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 560.0,
+     "to": 600.0,
+     "cut": 516.2,
+     "fill": 0.0,
+     "unsuitable": 0.198
+    },
+    {
+     "from": 600.0,
+     "to": 640.0,
+     "cut": 0.0,
+     "fill": 369.4,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 640.0,
+     "to": 680.0,
+     "cut": 0.0,
+     "fill": 785.5,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 680.0,
+     "to": 720.0,
+     "cut": 553.1,
+     "fill": 646.6,
+     "unsuitable": 0.176
+    },
+    {
+     "from": 720.0,
+     "to": 760.0,
+     "cut": 882.6,
+     "fill": 898.7,
+     "unsuitable": 0.015
+    },
+    {
+     "from": 760.0,
+     "to": 800.0,
+     "cut": 539.8,
+     "fill": 177.6,
+     "unsuitable": 0.122
+    },
+    {
+     "from": 800.0,
+     "to": 840.0,
+     "cut": 140.6,
+     "fill": 781.0,
+     "unsuitable": 0.192
+    },
+    {
+     "from": 840.0,
+     "to": 880.0,
+     "cut": 807.0,
+     "fill": 414.4,
+     "unsuitable": 0.129
+    },
+    {
+     "from": 880.0,
+     "to": 920.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 920.0,
+     "to": 960.0,
+     "cut": 456.3,
+     "fill": 648.3,
+     "unsuitable": 0.06
+    }
+   ],
+   "sites": [
+    {
+     "station": -50.0,
+     "capacity": 8000.0,
+     "borrow": false
+    },
+    {
+     "station": 1000.0,
+     "capacity": 8000.0,
+     "borrow": true
+    },
+    {
+     "station": 450.0,
+     "capacity": 3000.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [
+    {
+     "station": 300.0,
+     "detour": 250.0
+    },
+    {
+     "station": 700.0,
+     "detour": null
+    }
+   ],
+   "expected": {
+    "feasible": false,
+    "cut": 7339.300000000002,
+    "fill": 7402.5,
+    "unsuitable": 956.7791999999998,
+    "moment": 1181177.3162569997,
+    "shortage": 1.5223438140310463e-05,
+    "surplus": 0.0,
+    "stranded": 237.57080000000002
+   }
+  },
+  {
+   "name": "Rastgele yol, dökümü yetmeyen",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 40.0,
+     "cut": 212.4,
+     "fill": 356.5,
+     "unsuitable": 0.04
+    },
+    {
+     "from": 40.0,
+     "to": 80.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 80.0,
+     "to": 120.0,
+     "cut": 199.7,
+     "fill": 249.0,
+     "unsuitable": 0.064
+    },
+    {
+     "from": 120.0,
+     "to": 160.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 160.0,
+     "to": 200.0,
+     "cut": 720.4,
+     "fill": 0.0,
+     "unsuitable": 0.439
+    },
+    {
+     "from": 200.0,
+     "to": 240.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 240.0,
+     "to": 280.0,
+     "cut": 604.5,
+     "fill": 160.0,
+     "unsuitable": 0.054
+    },
+    {
+     "from": 280.0,
+     "to": 320.0,
+     "cut": 0.0,
+     "fill": 492.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 320.0,
+     "to": 360.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 360.0,
+     "to": 400.0,
+     "cut": 457.5,
+     "fill": 539.0,
+     "unsuitable": 0.097
+    },
+    {
+     "from": 400.0,
+     "to": 440.0,
+     "cut": 0.0,
+     "fill": 38.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 440.0,
+     "to": 480.0,
+     "cut": 563.7,
+     "fill": 481.2,
+     "unsuitable": 0.206
+    },
+    {
+     "from": 480.0,
+     "to": 520.0,
+     "cut": 897.6,
+     "fill": 371.5,
+     "unsuitable": 0.38
+    },
+    {
+     "from": 520.0,
+     "to": 560.0,
+     "cut": 248.7,
+     "fill": 672.2,
+     "unsuitable": 0.335
+    },
+    {
+     "from": 560.0,
+     "to": 600.0,
+     "cut": 813.9,
+     "fill": 55.4,
+     "unsuitable": 0.459
+    },
+    {
+     "from": 600.0,
+     "to": 640.0,
+     "cut": 553.9,
+     "fill": 298.0,
+     "unsuitable": 0.275
+    },
+    {
+     "from": 640.0,
+     "to": 680.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 680.0,
+     "to": 720.0,
+     "cut": 0.0,
+     "fill": 16.4,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 720.0,
+     "to": 760.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 760.0,
+     "to": 800.0,
+     "cut": 0.0,
+     "fill": 264.1,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 800.0,
+     "to": 840.0,
+     "cut": 399.7,
+     "fill": 0.0,
+     "unsuitable": 0.199
+    },
+    {
+     "from": 840.0,
+     "to": 880.0,
+     "cut": 8.5,
+     "fill": 0.0,
+     "unsuitable": 0.218
+    },
+    {
+     "from": 880.0,
+     "to": 920.0,
+     "cut": 261.3,
+     "fill": 883.6,
+     "unsuitable": 0.125
+    },
+    {
+     "from": 920.0,
+     "to": 960.0,
+     "cut": 53.4,
+     "fill": 0.0,
+     "unsuitable": 0.09
+    }
+   ],
+   "sites": [
+    {
+     "station": 1000.0,
+     "capacity": 1500.0,
+     "borrow": false
+    },
+    {
+     "station": 0.0,
+     "capacity": 9000.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": false,
+    "cut": 5995.199999999999,
+    "fill": 4878.7,
+    "unsuitable": 1599.8419999999996,
+    "moment": 1198615.2449533471,
+    "shortage": 1.2274058803996013e-05,
+    "surplus": 0.0,
+    "stranded": 99.84200000000016
+   }
+  },
+  {
+   "name": "Bütün yarma uygunsuz",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 40.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 40.0,
+     "to": 80.0,
+     "cut": 0.0,
+     "fill": 26.1,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 80.0,
+     "to": 120.0,
+     "cut": 0.0,
+     "fill": 810.8,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 120.0,
+     "to": 160.0,
+     "cut": 422.2,
+     "fill": 0.0,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 160.0,
+     "to": 200.0,
+     "cut": 195.1,
+     "fill": 0.0,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 200.0,
+     "to": 240.0,
+     "cut": 717.4,
+     "fill": 555.7,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 240.0,
+     "to": 280.0,
+     "cut": 784.3,
+     "fill": 0.0,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 280.0,
+     "to": 320.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 320.0,
+     "to": 360.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 360.0,
+     "to": 400.0,
+     "cut": 804.4,
+     "fill": 325.1,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 400.0,
+     "to": 440.0,
+     "cut": 58.6,
+     "fill": 542.8,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 440.0,
+     "to": 480.0,
+     "cut": 304.1,
+     "fill": 736.7,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 480.0,
+     "to": 520.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 520.0,
+     "to": 560.0,
+     "cut": 0.0,
+     "fill": 760.4,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 560.0,
+     "to": 600.0,
+     "cut": 709.0,
+     "fill": 520.7,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 600.0,
+     "to": 640.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 640.0,
+     "to": 680.0,
+     "cut": 0.0,
+     "fill": 309.9,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 680.0,
+     "to": 720.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 720.0,
+     "to": 760.0,
+     "cut": 0.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 760.0,
+     "to": 800.0,
+     "cut": 82.1,
+     "fill": 0.0,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 800.0,
+     "to": 840.0,
+     "cut": 831.8,
+     "fill": 281.2,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 840.0,
+     "to": 880.0,
+     "cut": 70.4,
+     "fill": 0.0,
+     "unsuitable": 1.0
+    },
+    {
+     "from": 880.0,
+     "to": 920.0,
+     "cut": 0.0,
+     "fill": 480.2,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 920.0,
+     "to": 960.0,
+     "cut": 0.0,
+     "fill": 743.7,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": -50.0,
+     "capacity": 20000.0,
+     "borrow": false
+    },
+    {
+     "station": 1000.0,
+     "capacity": 20000.0,
+     "borrow": true
+    }
+   ],
+   "barriers": [],
+   "expected": {
+    "feasible": true,
+    "cut": 4979.4,
+    "fill": 6093.299999999999,
+    "unsuitable": 4979.4,
+    "moment": 5311995.984911027,
+    "shortage": 1.605209909172345e-05,
+    "surplus": 0.0,
+    "stranded": 0.0
+   }
+  },
+  {
+   "name": "Engel bir yerin tam istasyonunda",
+   "stretches": [
+    {
+     "from": 0.0,
+     "to": 100.0,
+     "cut": 100.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 200.0,
+     "cut": 0.0,
+     "fill": 100.0,
+     "unsuitable": 0.0
+    },
+    {
+     "from": 200.0,
+     "to": 300.0,
+     "cut": 50.0,
+     "fill": 0.0,
+     "unsuitable": 0.0
+    }
+   ],
+   "sites": [
+    {
+     "station": 350.0,
+     "capacity": 100.0,
+     "borrow": false
+    }
+   ],
+   "barriers": [
+    {
+     "station": 150.0,
+     "detour": 40.0
+    }
+   ],
+   "expected": {
+    "feasible": true,
+    "cut": 150.0,
+    "fill": 100.0,
+    "unsuitable": 0.0,
+    "moment": 14999.999974999999,
+    "shortage": 0.0,
+    "surplus": 2.499999993688107e-07,
+    "stranded": 0.0
+   }
+  }
+ ]
+}

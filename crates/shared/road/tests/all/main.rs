@@ -20,6 +20,7 @@ mod vertical_lengths;
 mod grading;
 mod haul;
 mod haul_fleet;
+mod haul_sorted;
 mod volume;
 mod volume_uncertainty;
 mod volume_progress;
