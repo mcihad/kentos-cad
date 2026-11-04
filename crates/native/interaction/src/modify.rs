@@ -26,7 +26,7 @@ use kentos_commands::{
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::jsmath::js_hypot;
-use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape_with};
+use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape_in};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::{shape, with_shape};
 use kentos_native_application::{ExecutionContext, array, transform};
@@ -276,7 +276,7 @@ impl<S: Stages> Modify<S> {
                     }
                     with_shape(
                         entity,
-                        transform_shape_with(&shape(entity), matrix, TextPolicy::Readable),
+                        transform_shape_in(&shape(entity), matrix, TextPolicy::Readable, kentos_native_application::geometry::drawing_font(cx.doc.settings().drawing_font)),
                     )
                     .map(|after| (slot, after))
                 })

@@ -143,7 +143,7 @@ impl AlignDistribute {
 
     /// The selection's objects off locked layers and their boxes (as the command measures them).
     fn measure(&mut self, cx: &Context<'_>) {
-        self.blocks = kentos_native_application::blocks::core_blocks(cx.doc.blocks());
+        self.blocks = kentos_native_application::blocks::drawing_blocks(cx.doc);
         self.font = drawing_font(cx.doc.settings().drawing_font);
         self.slots.clear();
         self.boxes.clear();

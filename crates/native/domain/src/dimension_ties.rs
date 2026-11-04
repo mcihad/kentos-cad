@@ -165,6 +165,12 @@ const RELOCATE_TOLERANCE: f64 = 1e-6;
 type Changed = BTreeMap<Uuid, (Arc<Entity>, Option<Arc<Entity>>)>;
 
 impl Document {
+    pub(crate) fn blocks_in_drawing_font(&self, blocks: &[Arc<BlockDefinition>]) -> Blocks {
+        let family = self.settings().drawing_font.unwrap_or(kentos_contracts::DrawingFont::Barlow);
+        let font = kentos_geometry_core::text::Font::from_id(family.id());
+        core_blocks(blocks).with_font(font)
+    }
+
     /// What keeps the associative dimensions with their objects after `ops` (a
     /// step about to be recorded), applied: the step takes them in.
     pub(crate) fn follow_dimensions(
@@ -296,8 +302,8 @@ impl Document {
                     };
                     let (was, now) = definitions.get_or_insert_with(|| {
                         (
-                            core_blocks(&self.blocks_before(ops)),
-                            core_blocks(&self.blocks),
+                            self.blocks_in_drawing_font(&self.blocks_before(ops)),
+                            self.blocks_in_drawing_font(&self.blocks),
                         )
                     });
                     let Some(b) = core(&before) else {
@@ -519,7 +525,7 @@ impl Document {
         if r.path.is_empty() {
             return Some(e);
         }
-        piece(&core_blocks(&self.blocks), &e, &r.path)
+        piece(&self.blocks_in_drawing_font(&self.blocks), &e, &r.path)
     }
 
     /// The object a reference named before the step: as the step found it when it changed it, else as it is.

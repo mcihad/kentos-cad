@@ -423,6 +423,58 @@ yerleşimin dönüşüm formülü değiştirilmez.
   profilin validate/plan/execute aşamalarında Undo üretmediğini denetler.
   Python ve MCP aynı mevcut komuta bağlanır; ikinci dönüşüm yolu eklenmez.
 
+## Aynalama, miras alınan font ve blok önbelleği — 4 Kasım 2026
+
+[AutoCAD MIRROR](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-595277C8-9B87-4CFB-A3AF-769537A22F3D.htm)
+kaynakları koruma/silme ve yazı yönünü koruma kararlarını ayrı tutar.
+KentOS'un ADR 0292'deki mevcut politikası korunur; ters glyph bayrağı
+olmayan `mirrored` kipini tam AutoCAD MIRRTEXT=1 eşdeğeri saymıyoruz.
+
+Unicode yazının okunur aynasında nominal hiza tablosu tek başına gerçek
+harf kutusunu doğru yere koymuyordu. `transform_shape_in`, gerçek kaynak
+çerçevesinin merkezini aynalama matrisiyle taşır ve yeni okunur yazının
+ölçülen merkezini o konuma oturtur. Yalnız açık Unicode profili etkilenir;
+eski metin dönüşümleri ve donmuş web politikası aynı kalır. Eğri yazısının
+mevcut eğri dönüşümü bu düz yazı düzeltmesine sokulmaz.
+
+- Fontu olmayan yazı projenin seçtiği paketli fontla ölçülür. Araç komutu,
+  seçim önizlemesi ve paketli store kopyası aynı fontu iletir. Oda modülü
+  dönüşümleri de fontu belge üzerinden geçirir; nesneye yeni bir font
+  yazılarak miras alma davranışı bozulmaz.
+- İç içe ve dinamik bloklar çizimin fontuyla hazırlanır. Nadir proje-fontu
+  değişiminde düzleştirilmiş parçalar tekrar kaynak sayılmaz; saklanan
+  özgün parçalar, öznitelikler, dinamik tarif ve küçük PDF-altlık metadata'sı
+  üzerinden yeniden hazırlanır. Sırf bunun için bütün statik kaynak
+  geometrisinin ikinci kalıcı kopyası tutulmaz. Varyant önbelleği yenilenir.
+- Sahne, çıktı, denetim, nesne/parça seçimi ve kaynağa bağlı ölçü/kılavuz
+  okuyucuları aynı fontlu blok konumunu kullanır. Font değişikliği model
+  sürümü ilerlemese de sahne store'u fontu kontrol eder; eski glyph planı
+  geçerli kabul edilmez.
+- Aynalama ile Okunur yap aynı alan/profil ön denetimini kullanır:
+  eski alanın otomatik yenilenmesi ölçülen konumu değiştiremez. Ret bütün
+  seçime aittir ve validate/plan/execute yazmaz.
+- Gerçek ölçülen merkez; dört açı, yatay/düşey/eğik eksen, aksan ve karışık
+  yönlü paragrafla sınanır. İki kez iç içe aynalanan blokta Arimo/Overpass/
+  Barlow değişimi, yeni hazırlanmış blokla aynı parçayı verir; font mirası
+  ve altlık saydamlığı korunur. Native plan/execute eşitliği ve tek Undo
+  ayrıca sınanır. Nokta bulutu testindeki eski “bilinmeyen 35” beklentisi,
+  35'in artık `Tag` olması nedeniyle gerçek atanmamış 65535 ile düzeltilir;
+  paket okuyucusunun üretim kodu değiştirilmez.
+
+Gerçek GUI kabulünde önce ikinci eksen noktası beklenirken Esc denendi:
+çizim dört nesne ve temiz kayıt olarak kaldı. Yeniden aynalama başlatılıp
+fareyle eksen onaylandı; kaynak dört nesne kaldı, dört bağımsız kopya oluştu.
+Harici HarfBuzz/FontTools ölçüsünden hazırlanmış iki referans çerçevesinin
+köşeleri ve iki yazının gerçek merkezleri aynı yansıma eksenine 4 nm içinde
+uydu. Tek Ctrl+Z sonrası Farklı kaydet dosyası özgün KCAD byte'larıyla aynı.
+Önizleme, onay ve Undo ekranları repo dışında tutulur. Mevcut aynalama
+önizlemesi yazı için yer işaretini gösterir; canlı glyph önizlemesi iddia edilmez.
+
+Bu dilimde tam geometry-core takımı 973 geçti/31 ignored; native uygulama
+459 geçti/37 ignored; interaction 72, MCP denetimi 10, Python 12 testi geçti.
+Sıkı masaüstü Clippy ve güncel masaüstü derlemesi başarılı. Bu kayıt,
+CAD-ADV-10'un kalan toplu metin ve genel kabul koşullarını kapatmaz.
+
 ## MTEXT aktarımındaki veri kaybı
 
 Sayısal geometri paketinin önceki `kind=10` yazı kaydı `flow` alanını

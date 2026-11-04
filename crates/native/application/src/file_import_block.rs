@@ -540,7 +540,7 @@ fn write(doc: &mut Document, input: &ImportBlock) -> CommandResult<BlockFileImpo
 
 /// The sizes of the drawing's blocks `which` takes, in its order: those that draw something.
 fn sizes_of(doc: &Document, which: impl Fn(BlockId) -> bool) -> Vec<BlockSize> {
-    let core = crate::blocks::core_blocks(doc.blocks());
+    let core = crate::blocks::drawing_blocks(doc);
     let font = crate::geometry::drawing_font(doc.settings().drawing_font);
     doc.blocks()
         .iter()

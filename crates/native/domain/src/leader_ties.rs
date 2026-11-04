@@ -23,7 +23,7 @@ use kentos_geometry_core::geom::leader::layout_of;
 use kentos_geometry_core::jsmath::{PI, cos, sin};
 use kentos_geometry_core::ops::subref::{Followed, follow, follow_path};
 
-use crate::dimension_ties::{contract_place, core_place, core_blocks};
+use crate::dimension_ties::{contract_place, core_place};
 use crate::document::Document;
 use crate::history::Op;
 use crate::identity::{Slot, Uuid};
@@ -283,7 +283,7 @@ impl Document {
                         },
                     };
                     let (old_blocks, new_blocks) = definitions.get_or_insert_with(|| (
-                        core_blocks(&self.blocks_before(ops)), core_blocks(&self.blocks),
+                        self.blocks_in_drawing_font(&self.blocks_before(ops)), self.blocks_in_drawing_font(&self.blocks),
                     ));
                     let Some(before) = core(&before) else { continue; };
                     let after = after.as_ref().and_then(|e| core(e));

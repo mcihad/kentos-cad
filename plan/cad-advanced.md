@@ -1529,6 +1529,13 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   Tek GUI Undo sonrası dosya özgün byte'lara döndü. Eski alanlı seçimin
   açıklamalı reddi de GUI'de denendi; ret sonrası kayıt özgün byte'larla aynı.
   Ekranlar ve QA dosyaları repo dışında; madde genel kabulü hâlâ açık.
+- Unicode aynalama gerçek ölçülen merkezle ve miras alınan proje fontuyla
+  çalışır; iç içe/dinamik blok önbelleği font değişiminde kaynaklardan yenilenir.
+  Gerçek GUI'de önizlemeden Esc, kopyalı onay, kayıt ve tek Undo doğrulandı.
+  Bağımsız referans çerçeveleri ve yazı merkezleri aynı aynaya 4 nm içinde uydu;
+  Undo dosyası özgün byte'larla aynı. Tam çekirdek 973, uygulama 459,
+  interaction 72, MCP 10, Python 12 testi; sıkı Clippy ve derleme geçti.
+  31 çekirdek ve 37 uygulama testi kendi ayrı/ignored koşullarında kaldı.
 - Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
   eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
 

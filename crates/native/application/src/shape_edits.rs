@@ -447,6 +447,48 @@ fn elevation_of(doc: &Document, ids: &[String], z: ShapeElevation) -> Result<Pre
     Ok(p)
 }
 
+/// A geometry-only text orientation must not silently refresh an old field or
+/// estimate an unsupported Unicode profile. Shared by readable and mirror.
+pub(crate) fn text_orientation_ready(
+    doc: &Document,
+    uid: &str,
+    t: &TextEntity,
+    path: &str,
+) -> Result<(), Stop> {
+    let font = drawing_font(doc.settings().drawing_font);
+    let entity = Entity::Text(t.clone());
+    if !t.paragraph.fields.is_empty() {
+        let id = Uuid::parse_str(uid)
+            .map_err(|_| refuse(codes::INVALID_UID, "Yazının kalıcı kimliği geçersiz.", path))?;
+        if crate::drawing_inspect::annotations::findings(doc, id, &entity)
+            .iter()
+            .any(|f| {
+                matches!(
+                    f.code.as_str(),
+                    "text_field_stale" | "text_field_unverified"
+                )
+            })
+        {
+            return Err(refuse(
+                codes::INVALID_INPUT,
+                "Yazının yönünü değiştirmeden önce alanlarını açıkça yenileyip denetleyin. Eski veya doğrulanamayan alan, dönüşüm sırasında değiştirilmedi.",
+                path,
+            ));
+        }
+    }
+    let s = shape(&entity);
+    if let Some(place) = TextPlace::of(&s).filter(TextPlace::is_unicode) {
+        place.unicode_plan(font).map_err(|why| {
+            refuse(
+                codes::INVALID_INPUT,
+                format!("“{uid}” yazısı çevrilemiyor: {}", why.message(&t.text)),
+                path,
+            )
+        })?;
+    }
+    Ok(())
+}
+
 fn readable_of(doc: &Document, ids: &[String]) -> Result<Prepared, Stop> {
     let list = objects(doc, ids)?;
     let texts: Vec<(&String, &TextEntity)> = list
@@ -464,44 +506,8 @@ fn readable_of(doc: &Document, ids: &[String]) -> Result<Prepared, Stop> {
         ));
     }
     let font = drawing_font(doc.settings().drawing_font);
-    // Validate every explicit profile before planning any write. A broken
-    // glyph plan is a refusal, not an apparently already-readable skipped text.
     for (uid, t) in &texts {
-        let entity = Entity::Text((*t).clone());
-        if !t.paragraph.fields.is_empty() {
-            let id = Uuid::parse_str(uid).map_err(|_| {
-                refuse(
-                    codes::INVALID_UID,
-                    "Yazının kalıcı kimliği geçersiz.",
-                    "work.ids",
-                )
-            })?;
-            if crate::drawing_inspect::annotations::findings(doc, id, &entity)
-                .iter()
-                .any(|f| {
-                    matches!(
-                        f.code.as_str(),
-                        "text_field_stale" | "text_field_unverified"
-                    )
-                })
-            {
-                return Err(refuse(
-                    codes::INVALID_INPUT,
-                    "Yazıyı çevirmeden önce alanlarını açıkça yenileyip denetleyin. Eski veya doğrulanamayan alan, dönüşüm sırasında değiştirilmedi.",
-                    "work.ids",
-                ));
-            }
-        }
-        let s = shape(&entity);
-        if let Some(place) = TextPlace::of(&s).filter(TextPlace::is_unicode) {
-            place.unicode_plan(font).map_err(|why| {
-                refuse(
-                    codes::INVALID_INPUT,
-                    format!("“{uid}” yazısı çevrilemiyor: {}", why.message(&t.text)),
-                    "work.ids",
-                )
-            })?;
-        }
+        text_orientation_ready(doc, uid, t, "work.ids")?;
     }
     let changes: Vec<EntityEdit> = texts
         .iter()

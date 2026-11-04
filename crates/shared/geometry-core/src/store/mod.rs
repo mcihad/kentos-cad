@@ -582,6 +582,7 @@ impl Store {
             return;
         }
         self.font = font;
+        self.blocks = std::mem::take(&mut self.blocks).with_font(font);
         let texts: Vec<u32> = (0..self.slots.len() as u32)
             .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Text { .. } | Shape::Insert { .. })))
             .collect();
@@ -607,7 +608,7 @@ impl Store {
     /// expanded again, whether its definition changed or not (a definition
     /// is flattened once, however many inserts use it).
     pub fn set_blocks(&mut self, blocks: Blocks) {
-        self.blocks = blocks;
+        self.blocks = blocks.with_font(self.font);
         let inserts: Vec<u32> = (0..self.slots.len() as u32)
             .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Insert { .. })))
             .collect();

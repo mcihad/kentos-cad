@@ -658,7 +658,7 @@ fn affected_by(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<String>) {
             }
         }
     }
-    let blocks = crate::blocks::core_blocks(doc.blocks());
+    let blocks = crate::blocks::drawing_blocks(doc);
     let font = crate::geometry::drawing_font(doc.settings().drawing_font);
     let boxes: Vec<kentos_geometry_core::geometry::Bounds> = uids
         .iter()

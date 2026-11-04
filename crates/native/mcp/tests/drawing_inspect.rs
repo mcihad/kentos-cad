@@ -302,3 +302,42 @@ fn unicode_readable_through_mcp_preserves_metadata_and_undoes_once() {
         before["items"]
     );
 }
+
+#[test]
+fn unicode_mirror_through_mcp_keeps_an_inherited_font_and_logical_text() {
+    let mut server = Server::new();
+    let new = tool(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let made = tool(
+        &mut server,
+        "cad.entities.create",
+        json!({"drawing":drawing,"layerId":new["summary"]["activeLayer"],
+        "objects":[{"geometry":{"kind":"text","p":{"x":5000000.,"y":4400000.},"text":"Ög\u{306}ç AV مرحبا",
+            "height":0.3,"rotation":37.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}}}]}),
+    );
+    assert_eq!(made["status"], "completed", "{made}");
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let mirrored = tool(
+        &mut server,
+        "cad.entities.transform",
+        json!({"drawing":drawing,"uids":[before["items"][0]["uid"]],
+        "transform":{"kind":"mirror","a":{"x":5000001.,"y":4400001.},"b":{"x":5000002.,"y":4400001.4}},"copy":false}),
+    );
+    assert_eq!(mirrored["status"], "completed", "{mirrored}");
+    let after = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    assert!(after["items"][0]["entity"].get("font").is_none());
+    assert_eq!(
+        after["items"][0]["entity"]["text"],
+        before["items"][0]["entity"]["text"]
+    );
+    assert_eq!(
+        after["items"][0]["entity"]["layout"],
+        before["items"][0]["entity"]["layout"]
+    );
+    assert_eq!(after["items"][0]["uid"], before["items"][0]["uid"]);
+    tool(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        tool(&mut server, "drawing.entities", json!({"drawing":drawing}))["items"],
+        before["items"]
+    );
+}

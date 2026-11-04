@@ -199,7 +199,7 @@ pub(crate) fn snapped_place(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) ->
     let slot = kentos_domain::Slot(hit.id as u32);
     let e = cx.doc.get(slot)?;
     let (path, place) = if matches!(e, Entity::Insert(_)) {
-        let blocks = kentos_domain::dimension_ties::core_blocks(cx.doc.blocks());
+        let blocks = kentos_native_application::blocks::drawing_blocks(cx.doc);
         place_in(&blocks, &core_entity(e), hit.kind, hit.point)?
     } else {
         (Vec::new(), place_at(&core_entity(e), hit.kind, hit.point)?)

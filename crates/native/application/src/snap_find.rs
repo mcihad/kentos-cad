@@ -6,7 +6,7 @@
 //! (`scripts/fixtures/snap_find_cases.py`).
 
 use kentos_commands::{CommandResult, FoundSnap, SnapFind, SnapFound, SnapKindName, Vec2 as Point};
-use kentos_domain::dimension_ties::{contract_place, core_blocks};
+use kentos_domain::dimension_ties::contract_place;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::subref::{place_at, place_in};
 use kentos_geometry_core::store::Store;
@@ -226,7 +226,7 @@ fn found(doc: &Document, h: SnapHit, scale: Option<f64>) -> FoundSnap {
         let core = core_entity(&e);
         // An insert's own insertion point is its place; its pieces' points are inside it.
         if matches!(&*e, kentos_commands::Entity::Insert(_)) && h.kind != SnapKind::Insertion {
-            place_in(&core_blocks(doc.blocks()), &core, h.kind, h.point)
+            place_in(&crate::blocks::drawing_blocks(doc), &core, h.kind, h.point)
         } else {
             place_at(&core, h.kind, h.point).map(|p| (Vec::new(), p))
         }

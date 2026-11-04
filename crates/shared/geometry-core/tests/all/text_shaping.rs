@@ -1716,3 +1716,134 @@ fn unicode_realign_keeps_every_glyph_and_rule_in_world_coordinates() {
         }
     }
 }
+
+#[test]
+fn unicode_mirror_keeps_the_measured_center_at_the_reflected_location() {
+    use kentos_geometry_core::api::json::{FromJson, Json};
+    use kentos_geometry_core::{
+        Vec2,
+        entity::{Shape, TextPlace},
+        geom::affine::{apply, mirror},
+        ops::transform::{TextPolicy, transform_shape_with},
+        text::Font,
+    };
+    let center = |s: &Shape| {
+        let t = TextPlace::of(s).unwrap();
+        let ring = t.outline(Font::DEFAULT);
+        Vec2::new((ring[0].x + ring[2].x) / 2., (ring[0].y + ring[2].y) / 2.)
+    };
+    for words in ["Ög\u{301}\u{306}\u{323}ç — AV", "مرحبا עברית\n⌀32 ≤ 5‰"] {
+        for rotation in [0., 37., 137., 257.] {
+            let e: kentos_geometry_core::entity::Entity = kentos_geometry_core::entity::Entity::from_json(&Json::parse(&serde_json::json!({
+                "kind":"text","p":{"x":5000000.,"y":4400000.},"text":words,"height":0.3,"rotation":rotation,
+                "font":"arimo","oblique":24.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}
+            }).to_string()).unwrap()).unwrap();
+            for b in [Vec2::new(1., 0.), Vec2::new(0., 1.), Vec2::new(1., 0.4)] {
+                let m = mirror(
+                    Vec2::new(5000001., 4400001.),
+                    Vec2::new(5000001. + b.x, 4400001. + b.y),
+                );
+                let expected = apply(&m, center(&e.shape));
+                let changed = transform_shape_with(&e.shape, &m, TextPolicy::Readable);
+                let actual = center(&changed);
+                assert!(
+                    (actual.x - expected.x).abs() < 2e-9 && (actual.y - expected.y).abs() < 2e-9,
+                    "{words:?} {rotation}: {actual:?} != {expected:?}"
+                );
+                let t = TextPlace::of(&changed).unwrap();
+                assert!(!(t.rotation > 90. && t.rotation <= 270.));
+                assert_eq!(t.text, words);
+                assert!(t.is_unicode());
+            }
+        }
+    }
+}
+
+#[test]
+fn unicode_nested_mirrors_keep_inherited_fonts_and_rebuild_after_a_project_font_change() {
+    use kentos_geometry_core::{
+        Vec2,
+        api::json::{FromJson, Json},
+        block::{Blocks, Definition, Underlay, placement},
+        entity::{Entity, Shape, TextPlace},
+        geom::affine::apply,
+        store::Store,
+        text::Font,
+    };
+    let entity = |v: Value| Entity::from_json(&Json::parse(&v.to_string()).unwrap()).unwrap();
+    let original = entity(
+        serde_json::json!({"kind":"text","p":{"x":0.,"y":0.},"text":"Ög\u{306}ç AV مرحبا","height":0.3,
+        "rotation":37.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}}),
+    );
+    let inner = entity(
+        serde_json::json!({"kind":"insert","block":"inner","p":{"x":2.,"y":1.},"scale":2.,"rotation":0.3,"mirror":true}),
+    );
+    let outer = entity(
+        serde_json::json!({"kind":"insert","block":"outer","p":{"x":5000000.,"y":4400000.},"scale":1.5,"rotation":0.7,"mirror":true}),
+    );
+    let defs = vec![
+        Definition {
+            id: "inner".into(),
+            base: Vec2::new(0., 0.),
+            entities: vec![original.clone()],
+            attributes: vec![],
+            dynamic: None,
+            underlay: Some(Underlay {
+                fade: 0.3,
+                monochrome: false,
+            }),
+        },
+        Definition {
+            id: "outer".into(),
+            base: Vec2::new(0., 0.),
+            entities: vec![inner],
+            attributes: vec![],
+            dynamic: None,
+            underlay: None,
+        },
+    ];
+    let center = |shape: &Shape, font| {
+        let t = TextPlace::of(shape).unwrap();
+        let ring = t.outline(font);
+        Vec2::new((ring[0].x + ring[2].x) / 2., (ring[0].y + ring[2].y) / 2.)
+    };
+    let mut store = Store::new();
+    store.set_blocks(Blocks::new_in(defs.clone(), Font::DEFAULT));
+    store.put(1., "a", false, outer.shape.clone());
+    for font in [
+        Font::from_id("arimo"),
+        Font::from_id("overpass"),
+        Font::DEFAULT,
+    ] {
+        store.set_font(font);
+        let expected = apply(
+            &placement(Vec2::new(5000000., 4400000.), 1.5, 0.7, true),
+            apply(
+                &placement(Vec2::new(2., 1.), 2., 0.3, true),
+                center(&original.shape, font),
+            ),
+        );
+        let parts = store.get(1.).unwrap().expanded.as_ref().unwrap();
+        let piece = &parts.shapes[0];
+        let actual = center(piece, font);
+        assert!(
+            (actual.x - expected.x).abs() < 3e-9 && (actual.y - expected.y).abs() < 3e-9,
+            "{font:?}: {actual:?} != {expected:?}"
+        );
+        assert_eq!(
+            parts.strokes[0].transparency,
+            Some(0.3),
+            "rebuilding retains source metadata"
+        );
+        let placed = TextPlace::of(piece).unwrap();
+        assert_eq!(
+            placed.font, None,
+            "a runtime measurement must not freeze an inherited font into the object"
+        );
+        let rebuilt = Blocks::new_in(defs.clone(), font).expand(&outer.shape);
+        assert_eq!(
+            &rebuilt[0].shape, piece,
+            "font-change cache matches a fresh library"
+        );
+    }
+}

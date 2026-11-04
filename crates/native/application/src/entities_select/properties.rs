@@ -48,7 +48,7 @@ pub(super) fn check(doc: &Document, q: &SelectProperties) -> Result<(), Stop> {
 
 pub(super) fn filter(doc: &Document, store: &Store, ids: Vec<Slot>, q: &SelectProperties) -> Vec<Slot> {
     let layers = doc.layers();
-    let blocks = (!q.block_path.is_empty()).then(|| crate::blocks::core_blocks(doc.blocks()));
+    let blocks = (!q.block_path.is_empty()).then(|| crate::blocks::drawing_blocks(doc));
     let ids: Vec<_> = ids.into_iter().filter(|slot| {
         let Some(e) = doc.get(*slot) else { return false; };
         if q.text_height_min.is_some() || q.text_height_max.is_some() {

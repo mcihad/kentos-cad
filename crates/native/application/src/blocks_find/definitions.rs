@@ -107,5 +107,5 @@ pub(super) fn checked(
         let cost = review.visit(id)?;
         review.charge(cost)?; // Every placed expansion, including repeated roots, is bounded.
     }
-    Ok(crate::blocks::core_blocks(&review.definitions))
+    Ok(crate::blocks::core_blocks_in(&review.definitions, crate::geometry::drawing_font(doc.settings().drawing_font)))
 }

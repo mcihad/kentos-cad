@@ -105,18 +105,29 @@ fn unreadable_unicode_profile_refuses_the_entire_readable_selection_without_undo
         .entities_with_uids()
         .map(|(u, _)| u.to_string())
         .collect();
-    for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
-        let result = registry::run(
-            &mut ExecutionContext::new(&mut doc),
+    for (command, args) in [
+        (
             "cad.shapes.edit",
-            op,
             json!({"work":{"kind":"readable","ids":ids}}),
-        )
-        .unwrap();
-        assert_eq!(result["status"], "failed", "{result}");
-        assert_eq!(result["error"]["code"], "invalid_input");
-        assert_eq!(doc.to_snapshot_v2(), before);
-        assert_eq!(doc.undo_labels(), undo);
+        ),
+        (
+            "cad.entities.transform",
+            json!({"uids":ids,"transform":{"kind":"mirror","a":{"x":2.,"y":0.},"b":{"x":2.,"y":1.}},"copy":false}),
+        ),
+    ] {
+        for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+            let result = registry::run(
+                &mut ExecutionContext::new(&mut doc),
+                command,
+                op,
+                args.clone(),
+            )
+            .unwrap();
+            assert_eq!(result["status"], "failed", "{result}");
+            assert_eq!(result["error"]["code"], "invalid_input");
+            assert_eq!(doc.to_snapshot_v2(), before);
+            assert_eq!(doc.undo_labels(), undo);
+        }
     }
 }
 
@@ -145,26 +156,106 @@ fn readable_does_not_remeasure_after_silently_refreshing_a_stale_field() {
             .entities_with_uids()
             .map(|(u, _)| u.to_string())
             .collect();
-        for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
-            let result = registry::run(
-                &mut ExecutionContext::new(&mut doc),
+        for (command, args) in [
+            (
                 "cad.shapes.edit",
-                op,
                 json!({"work":{"kind":"readable","ids":ids}}),
-            )
-            .unwrap();
-            assert_eq!(result["status"], "failed", "{result}");
-            assert_eq!(result["error"]["code"], "invalid_input");
-            assert!(
-                result["error"]["message"]
-                    .as_str()
-                    .unwrap()
-                    .contains("açıkça yenileyip")
-            );
-            assert_eq!(doc.to_snapshot_v2(), before);
-            assert_eq!(doc.undo_labels(), undo);
+            ),
+            (
+                "cad.entities.transform",
+                json!({"uids":ids,"transform":{"kind":"mirror","a":{"x":2.,"y":0.},"b":{"x":2.,"y":1.}},"copy":false}),
+            ),
+        ] {
+            for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+                let result = registry::run(
+                    &mut ExecutionContext::new(&mut doc),
+                    command,
+                    op,
+                    args.clone(),
+                )
+                .unwrap();
+                assert_eq!(result["status"], "failed", "{result}");
+                assert_eq!(result["error"]["code"], "invalid_input");
+                assert!(
+                    result["error"]["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains("açıkça yenileyip")
+                );
+                assert_eq!(doc.to_snapshot_v2(), before);
+                assert_eq!(doc.undo_labels(), undo);
+            }
         }
     }
+}
+
+#[test]
+fn unicode_mirror_uses_the_inherited_drawing_font_in_plan_execute_and_undo() {
+    use kentos_commands::CallOp;
+    use kentos_geometry_core::{
+        Vec2,
+        entity::TextPlace,
+        geom::affine::{apply, mirror},
+    };
+    use kentos_native_application::{
+        ExecutionContext,
+        geometry::{drawing_font, shape},
+        registry,
+    };
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["settings"]["drawingFont"] = json!("overpass");
+    raw["entities"] = json!([{"kind":"text","id":1,"layerId":"a","attrs":{},"p":{"x":5000000.,"y":4400000.},
+        "text":"Ög\u{306}ç — AV مرحبا\n⌀32 ≤ 5‰","height":0.3,"rotation":37.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}}]);
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let (uid, original) = doc
+        .entities_with_uids()
+        .next()
+        .map(|(u, e)| (u.to_string(), e.clone()))
+        .unwrap();
+    let font = drawing_font(doc.settings().drawing_font);
+    let center = |e: &kentos_commands::Entity| {
+        let shape = shape(e);
+        let t = TextPlace::of(&shape).unwrap();
+        let ring = t.outline(font);
+        assert_eq!(t.font, None);
+        assert!(t.is_unicode());
+        Vec2::new((ring[0].x + ring[2].x) / 2., (ring[0].y + ring[2].y) / 2.)
+    };
+    let a = Vec2::new(5000001., 4400001.);
+    let b = Vec2::new(5000002., 4400001.4);
+    let expected = apply(&mirror(a, b), center(&original));
+    let args = json!({"uids":[uid],"transform":{"kind":"mirror","a":{"x":a.x,"y":a.y},"b":{"x":b.x,"y":b.y}},"copy":false});
+    let planned = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.entities.transform",
+        CallOp::Plan,
+        args.clone(),
+    )
+    .unwrap();
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let executed = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.entities.transform",
+        CallOp::Execute,
+        args,
+    )
+    .unwrap();
+    assert_eq!(executed["status"], "completed", "{executed}");
+    let actual = center(doc.entities().next().unwrap());
+    assert!((actual.x - expected.x).abs() < 3e-9 && (actual.y - expected.y).abs() < 3e-9);
+    assert_eq!(
+        serde_json::to_value(doc.entities().next().unwrap()).unwrap(),
+        planned["output"]["entities"][0]
+    );
+    doc.undo();
+    assert_eq!(doc.to_snapshot_v2(), before);
 }
 
 #[test]

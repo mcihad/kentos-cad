@@ -29,7 +29,7 @@ pub fn extent_of<'a>(
     doc: &Document,
     entities: impl Iterator<Item = &'a kentos_commands::Entity>,
 ) -> Option<[f64; 4]> {
-    let blocks = crate::blocks::core_blocks(doc.blocks());
+    let blocks = crate::blocks::drawing_blocks(doc);
     let font = geometry::drawing_font(doc.settings().drawing_font);
     let mut extent: Option<[f64; 4]> = None;
     for e in entities {

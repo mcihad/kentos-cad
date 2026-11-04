@@ -15,6 +15,26 @@ def drawing(entities):
 
 
 class DrawingInspect(unittest.TestCase):
+    def test_unicode_mirror_inherits_project_font_and_matches_its_read_only_plan(self):
+        raw = json.loads((ROOT / 'fixtures/commands/v1/cad.blocks.find.json').read_text())['setup']
+        raw['settings']['drawingFont'] = 'overpass'
+        raw['entities'] = [dict(kind='text', id=1, layerId='a', attrs={}, p=dict(x=5000000., y=4400000.),
+                                text='Ög\u0306ç AV مرحبا', height=.3, rotation=37., boxWidth=2.,
+                                layout=dict(engine='unicode-v1'))]
+        doc = cad.Document.from_bytes(json.dumps(raw).encode())
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        transform = cad.MirrorTransform(a=cad.Vec2(x=5000001., y=4400001.), b=cad.Vec2(x=5000002., y=4400001.4))
+        plan = cad.entities.transform.plan(doc, uids=[row.uid], transform=transform, copy=False)
+        self.assertEqual(doc.to_bytes(), before)
+        cad.entities.transform(doc, uids=[row.uid], transform=transform, copy=False)
+        changed = next(iter(doc.entities()))
+        self.assertEqual(changed.uid, row.uid)
+        self.assertEqual(changed.entity.to_json(), plan.entities[0].to_json())
+        self.assertNotIn('font', changed.entity.to_json())
+        self.assertEqual(doc.undo(), 'Aynala')
+        self.assertEqual(doc.to_bytes(), before)
+
     def test_unicode_readable_uses_the_shared_plan_and_preserves_metadata_in_one_undo(self):
         doc = drawing([dict(kind='text', p=dict(x=5000000., y=4400000.), text='Ög\u0301\u0306\u0323ç — AV',
                             height=.3, rotation=137., font='arimo', oblique=24., mask=True,

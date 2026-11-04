@@ -347,14 +347,15 @@ mod tests {
         back.put_packed(&out.nums, &out.strings).expect("reads");
         assert_eq!(back.get(1.0).map(|it| &it.shape), Some(&cloud));
         assert_eq!(back.get(2.0).map(|it| &it.shape), Some(&raster));
-        // The first number that is no kind.
+        // An unassigned kind. 35 is now the architectural Tag, so it no
+        // longer exercises the unknown-kind boundary.
         let mut bad = Packer::default();
         bad.object(3.0, "a", false, &cloud);
-        bad.nums[3] = 35.0;
+        bad.nums[3] = 65535.0;
         assert!(
             Store::new()
                 .put_packed(&bad.nums, &bad.strings)
-                .is_err_and(|e| e.contains("bilinmeyen bir nesne türü (35)"))
+                .is_err_and(|e| e.contains("bilinmeyen bir nesne türü (65535)"))
         );
     }
 }

@@ -145,7 +145,7 @@ pub struct CaseworkDrawn {
 pub(crate) fn shapes_of(doc: &Document, laid: &Laid) -> Vec<(kentos_geometry_core::entity::Shape, bool)> {
     let mut defs: Vec<std::sync::Arc<BlockDefinition>> = doc.blocks().to_vec();
     defs.extend(laid.added.iter().cloned().map(std::sync::Arc::new));
-    let blocks = crate::blocks::core_blocks(&defs);
+    let blocks = crate::blocks::core_blocks_in(&defs, crate::geometry::drawing_font(doc.settings().drawing_font));
     let mut shapes = Vec::new();
     for m in &laid.members {
         let shape = crate::geometry::shape(&m.entity);

@@ -12,7 +12,6 @@ use kentos_domain::{Document, LayerTree};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::store::{LayerFlags, Store};
 
-use crate::blocks::core_blocks;
 use crate::geometry::{drawing_font, shape};
 use crate::layer_filter::left_out;
 
@@ -84,7 +83,7 @@ pub fn store_for_viewport(
 ) -> Store {
     let mut store = Store::new();
     store.set_font(drawing_font(doc.settings().drawing_font));
-    store.set_blocks(core_blocks(doc.blocks()));
+    store.set_blocks(crate::blocks::drawing_blocks(doc));
     store.set_wall_view(scope.map_or_else(
         || crate::walls::view_of(doc.settings()),
         |v| crate::walls::view_at(doc.settings(), v.denominator),

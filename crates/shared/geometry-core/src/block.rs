@@ -45,7 +45,7 @@ use crate::geom::affine::{Affine, apply, compose, translation};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
 use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, sin};
 use crate::ops::curve_cuts::Cut;
-use crate::ops::transform::transform_shape;
+use crate::ops::transform::{transform_shape, transform_shape_in, TextPolicy};
 use crate::ops::warp::{Warp, warp_shape};
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
@@ -269,6 +269,10 @@ pub struct Flat {
 #[derive(Clone, Debug, Default)]
 pub struct Blocks {
     by_id: HashMap<String, Arc<Flat>>,
+    /// Font inherited by Unicode pieces; it affects reflected frame placement.
+    font: Font,
+    /// Small source metadata needed when rebuilding for another drawing font.
+    underlays: Arc<HashMap<String, Underlay>>,
     /// The dynamic definitions as given, for their variants.
     dynamic: Arc<HashMap<String, Arc<Definition>>>,
     /// Their variants by block id and values (`Params::key`); emptied when it grows past `MAX_VARIANTS`.
@@ -281,12 +285,17 @@ const MAX_VARIANTS: usize = 4096;
 impl Blocks {
     /// The definitions flattened, each once whatever uses it.
     pub fn new(defs: Vec<Definition>) -> Blocks {
+        Self::new_in(defs, Font::DEFAULT)
+    }
+
+    pub fn new_in(defs: Vec<Definition>, font: Font) -> Blocks {
         let sources: HashMap<&str, &Definition> = defs.iter().map(|d| (d.id.as_str(), d)).collect();
         let mut done: HashMap<String, Arc<Flat>> = HashMap::with_capacity(defs.len());
         let mut stack = Vec::new();
         for d in &defs {
-            flatten(&d.id, &sources, &mut done, &mut stack);
+            flatten(&d.id, &sources, &mut done, &mut stack, font);
         }
+        let underlays = defs.iter().filter_map(|d| d.underlay.map(|u| (d.id.clone(), u))).collect();
         let dynamic = defs
             .iter()
             .filter(|d| d.dynamic.is_some())
@@ -294,9 +303,24 @@ impl Blocks {
             .collect();
         Blocks {
             by_id: done,
+            font,
+            underlays: Arc::new(underlays),
             dynamic: Arc::new(dynamic),
             variants: Arc::default(),
         }
+    }
+
+    /// Rebuild rare project-font changes from the retained original entities,
+    /// not the already flattened pieces. No second copy of static source
+    /// geometry is retained solely for this operation.
+    pub fn with_font(self, font: Font) -> Blocks {
+        if self.font == font {return self;}
+        let defs = self.by_id.iter().map(|(id, f)| Definition {
+            id:id.clone(), base:f.base, entities:f.entities.clone(), attributes:f.attributes.clone(),
+            dynamic:self.dynamic.get(id).and_then(|d|d.dynamic.clone()),
+            underlay:self.underlays.get(id).copied(),
+        }).collect();
+        Self::new_in(defs, font)
     }
 
     /// The flat an insert draws: its definition's, or the variant its parameter values make (docs/adr/0318 §2).
@@ -319,7 +343,7 @@ impl Blocks {
             entities: dynamic.vary(&def.entities, params),
             ..(**def).clone()
         };
-        let variant = variant_flat(&varied, &self.by_id, &self.dynamic);
+        let variant = variant_flat(&varied, &self.by_id, &self.dynamic, self.font);
         if let Ok(mut cache) = self.variants.lock() {
             if cache.len() >= MAX_VARIANTS {
                 cache.clear();
@@ -468,7 +492,7 @@ impl Blocks {
                 continue;
             }
             batch.push(Piece {
-                shape: place(&attribute_piece(&flat, piece, values, places), &m, similar),
+                shape: place_in(&attribute_piece(&flat, piece, values, places), &m, similar, self.font),
                 color: piece.color.clone(),
                 line_weight: piece.line_weight,
                 by_layer: piece.by_layer.clone(),
@@ -492,7 +516,7 @@ impl Blocks {
             .pieces
             .iter()
             .map(|piece| {
-                let shape = place(&attribute_piece(&flat, piece, values, places), &m, similar);
+                let shape = place_in(&attribute_piece(&flat, piece, values, places), &m, similar, self.font);
                 Piece {
                     shape,
                     color: piece.color.clone(),
@@ -550,7 +574,7 @@ impl Blocks {
                 }
                 cur = e.shape.clone();
             } else {
-                return (!inner).then(|| place(&e.shape, &m, similar));
+                return (!inner).then(|| place_in(&e.shape, &m, similar, self.font));
             }
         }
         None
@@ -741,7 +765,7 @@ impl Blocks {
         let mut nested = Vec::with_capacity(flat.entities.len());
         for e in &flat.entities {
             nested.push(if similar || !matches!(e.shape, Shape::Insert { .. }) {
-                place(&e.shape, &m, similar)
+                place_in(&e.shape, &m, similar, self.font)
             } else {
                 match insert_through(&e.shape, &m) {
                     Some(s) => s,
@@ -801,7 +825,7 @@ impl Blocks {
                     }
                 }
                 Entity {
-                    shape: place(&a.shape_at(at, text), &m, similar),
+                    shape: place_in(&a.shape_at(at, text), &m, similar, self.font),
                     rest,
                 }
             }))
@@ -897,19 +921,25 @@ pub fn uniform(scale: f64, y_scale: Option<f64>) -> bool {
 /// A shape placed by `m`: moved, turned and scaled when `m` is a similarity (`similar`), else warped as an affine
 /// (docs/adr/0315 §3): curves the exact ellipse of their image, a path's arcs straight vertices within 0.1 mm.
 pub fn place(shape: &Shape, m: &Affine, similar: bool) -> Shape {
+    place_in(shape, m, similar, Font::DEFAULT)
+}
+
+pub fn place_in(shape: &Shape, m: &Affine, similar: bool, font: Font) -> Shape {
     if similar {
-        return transform_shape(shape, m);
+        return transform_shape_in(shape, m, TextPolicy::Readable, font);
     }
     let warp = Warp::Affine {
         from: Vec2::new(0.0, 0.0),
         to: Vec2::new(m[4], m[5]),
         m: [m[0], m[1], m[2], m[3]],
     };
-    match warp_shape(shape, &[], &warp) {
+    let mut placed = match warp_shape(shape, &[], &warp) {
         Ok(w) => w.shape,
         // An affine has no horizon; the similarity's own way all the same.
-        Err(_) => transform_shape(shape, m),
-    }
+        Err(_) => transform_shape_in(shape, m, TextPolicy::Readable, font),
+    };
+    crate::ops::transform::keep_unicode_mirror_center(shape, &mut placed, m, TextPolicy::Readable, font);
+    placed
 }
 
 /// A nested insert placed by an affine `m` (docs/adr/0315 §3): its point moved, its own placement composed with
@@ -1051,12 +1081,13 @@ fn flatten(
     sources: &HashMap<&str, &Definition>,
     done: &mut HashMap<String, Arc<Flat>>,
     stack: &mut Vec<String>,
+    font: Font,
 ) {
     if done.contains_key(id) {
         return;
     }
     let Some(def) = sources.get(id) else { return };
-    if let Some(flat) = flat_of(def, sources, done, stack) {
+    if let Some(flat) = flat_of(def, sources, done, stack, font) {
         done.insert(id.to_owned(), flat);
     }
 }
@@ -1067,11 +1098,12 @@ fn variant_flat(
     def: &Definition,
     flats: &HashMap<String, Arc<Flat>>,
     dynamic: &HashMap<String, Arc<Definition>>,
+    font: Font,
 ) -> Arc<Flat> {
     let sources: HashMap<&str, &Definition> =
         dynamic.iter().map(|(k, d)| (k.as_str(), &**d)).collect();
     let mut done = flats.clone();
-    flat_of(def, &sources, &mut done, &mut Vec::new()).unwrap_or_else(|| {
+    flat_of(def, &sources, &mut done, &mut Vec::new(), font).unwrap_or_else(|| {
         Arc::new(Flat {
             base: def.base,
             entities: Vec::new(),
@@ -1087,6 +1119,7 @@ fn flat_of(
     sources: &HashMap<&str, &Definition>,
     done: &mut HashMap<String, Arc<Flat>>,
     stack: &mut Vec<String>,
+    font: Font,
 ) -> Option<Arc<Flat>> {
     let id = def.id.as_str();
     // A cycle, or deeper than the documents allow: nothing more below here.
@@ -1115,7 +1148,7 @@ fn flat_of(
             clip: _,
         } = &e.shape
         {
-            flatten(block, sources, done, stack);
+            flatten(block, sources, done, stack, font);
             // A nested dynamic insert draws its own variant (docs/adr/0318 §2).
             let varied = sources
                 .get(block.as_str())
@@ -1126,7 +1159,7 @@ fn flat_of(
                         entities: dy.vary(&d.entities, params.as_ref()),
                         ..(**d).clone()
                     };
-                    flat_of(&varied, sources, done, stack)
+                    flat_of(&varied, sources, done, stack, font)
                 });
             let Some(inner) = varied.or_else(|| done.get(block.as_str()).cloned()) else {
                 continue;
@@ -1147,10 +1180,11 @@ fn flat_of(
             let insert_mask = own_follows.as_ref().map_or(0, |(_, m)| *m);
             for piece in &inner.pieces {
                 // A nested insert's attribute shows its value where it put it, fixed in this definition.
-                let shape = place(
+                let shape = place_in(
                     &attribute_piece(&inner, piece, attrs.as_ref(), places.as_ref()),
                     &m,
                     similar,
+                    font,
                 );
                 if matches!(&shape, Shape::Text { text, .. } if text.is_empty()) {
                     continue;

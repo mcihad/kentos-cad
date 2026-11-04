@@ -427,7 +427,7 @@ pub(super) fn add_members(
         } else {
             0
         };
-        let mut t = crate::transform::by_matrix(e, &back).ok_or_else(|| {
+        let mut t = crate::transform::by_matrix(e, &back, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
             fail(
                 codes::NOT_FINITE,
                 "Nesne modüle alınamadı.".into(),

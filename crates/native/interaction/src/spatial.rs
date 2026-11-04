@@ -55,7 +55,7 @@ use kentos_geometry_core::store::placing::{
 use kentos_geometry_core::store::polygon::PolygonMode;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
-use kentos_native_application::blocks::{core_blocks, piece_entities_shown};
+use kentos_native_application::blocks::{core_blocks_in, piece_entities_shown};
 use kentos_native_application::expression_unit::{Unit, reading_unit};
 use kentos_native_application::geometry::{drawing_font, shape};
 use kentos_native_application::label_texts::{
@@ -335,7 +335,7 @@ impl Spatial {
             .set_font(drawing_font(doc.settings().drawing_font));
         self.store.set_wall_view(self.wall_view_of(doc));
         self.blocks = doc.blocks().to_vec();
-        self.store.set_blocks(core_blocks(&self.blocks));
+        self.store.set_blocks(core_blocks_in(&self.blocks, drawing_font(doc.settings().drawing_font)));
         // Before the objects: a tagged space is drawn without its label at once.
         self.tagged_spaces.clear();
         self.sync_tagged_spaces(doc);
@@ -537,6 +537,7 @@ impl Spatial {
     pub fn sync(&mut self, doc: &Document) {
         // The definitions first, whatever else moved: another editor's change of
         // them moves neither the journal nor the revision (docs/adr/0144 §5).
+        self.store.set_font(drawing_font(doc.settings().drawing_font));
         let blocks = doc.blocks();
         if blocks.len() != self.blocks.len()
             || blocks
@@ -545,7 +546,7 @@ impl Spatial {
                 .any(|(a, b)| !Arc::ptr_eq(a, b))
         {
             self.blocks = blocks.to_vec();
-            self.store.set_blocks(core_blocks(&self.blocks));
+            self.store.set_blocks(core_blocks_in(&self.blocks, drawing_font(doc.settings().drawing_font)));
         }
         let mark = doc.change_mark();
         if mark == self.mark && self.revision == Some(doc.revision()) {

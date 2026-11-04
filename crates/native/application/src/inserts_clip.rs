@@ -215,7 +215,7 @@ fn check(doc: &Document, input: &InsertsClip) -> Result<Planned, Stop> {
     }
     // A boundary that leaves an insert nothing is said, not refused: the content may still change.
     if matches!(input.operation, InsertsClipOperation::Set { .. } | InsertsClipOperation::Invert) {
-        let blocks = crate::blocks::core_blocks(doc.blocks());
+        let blocks = crate::blocks::drawing_blocks(doc);
         let empty: Vec<&str> = writes
             .iter()
             .filter(|(_, e, _)| {
