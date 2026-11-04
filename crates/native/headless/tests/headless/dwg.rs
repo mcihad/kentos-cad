@@ -2,6 +2,100 @@
 use super::*;
 
 #[test]
+fn cad_exports_keep_shx_indices_and_write_matching_sidecars_without_mutating_the_drawing() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/native-preflight.json"
+    ))
+    .unwrap();
+    let resource: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/shape-resources.json"
+    ))
+    .unwrap();
+    let mut raw = fixture["model"].clone();
+    raw["settings"]["srid"] = json!(0);
+    raw["settings"]["workspace"] = json!("cad");
+    raw["settings"]["drawingUnit"] = json!("mm");
+    raw["settings"]["plotScale"] = json!(50.);
+    raw["settings"]["lineTypes"] = json!([{"name":"FENCE","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"FENCE.SHX","scale":1.5,"upright":true,"rotation":45.,"x":-0.5,"y":0.25}},{"length":-2.}]}]);
+    raw["entities"][0]["linePattern"] = json!("FENCE");
+    raw["styles"]["items"] = resource["styles"]["items"].clone();
+    let bytes = serde_json::to_vec(&raw).unwrap();
+    let mut s = Session::from_bytes(&bytes).unwrap();
+    let before = s.document().to_snapshot_v2();
+    let root = scratch("shx-export");
+    for format in ["dxf", "dwg"] {
+        let folder = root.join(format);
+        std::fs::create_dir(&folder).unwrap();
+        let path = folder.join(format!("out.{format}"));
+        let command = format!("file.export.{format}");
+        let mut input = json!({"path":path});
+        if format == "dwg" {
+            input["version"] = json!("AC1032");
+        }
+        let planned = s
+            .call(json!({"command":command,"op":"plan","input":input}))
+            .unwrap();
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 0);
+        assert_eq!(
+            planned["output"]["report"]["shapeResources"][0]["available"],
+            true
+        );
+        let done = s.call(json!({"command":command,"input":input})).unwrap();
+        assert_eq!(done["status"], "completed", "{done}");
+        assert_eq!(done["output"], planned["output"]);
+        let source = std::fs::read(folder.join("fence.shx")).unwrap();
+        assert_eq!(
+            kentos_commands::shape_resource::read(&resource["styles"]["items"][0]).unwrap(),
+            source
+        );
+        let bytes = std::fs::read(&path).unwrap();
+        let read = if format == "dxf" {
+            kentos_formats::dxf::read(&bytes, &Default::default()).unwrap()
+        } else {
+            assert_eq!(done["output"]["report"]["codec"]["sourceVersion"], "AC1027");
+            kentos_dwg::read(&bytes, &Default::default()).unwrap()
+        };
+        let shape = read
+            .line_types
+            .iter()
+            .find(|p| p.name == "FENCE")
+            .unwrap()
+            .elements
+            .iter()
+            .find_map(|e| e.shape.as_ref())
+            .unwrap();
+        assert_eq!((&*shape.name, &*shape.file), ("1", "fence.shx"));
+        assert!(shape.place.upright);
+        assert_eq!(
+            (
+                shape.place.scale,
+                shape.place.rotation,
+                shape.place.x,
+                shape.place.y
+            ),
+            (75., 45., -25., 12.5)
+        );
+        std::fs::write(folder.join("fence.shx"), b"Different source").unwrap();
+        input["path"] = json!(folder.join(format!("conflict.{format}")));
+        let refused = s
+            .call(json!({"command":command,"op":"plan","input":input}))
+            .unwrap();
+        assert_eq!(
+            refused["error"]["code"], "shape_resource_conflict",
+            "{refused}"
+        );
+        assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 2);
+        assert_eq!(
+            std::fs::read(folder.join("fence.shx")).unwrap(),
+            b"Different source"
+        );
+    }
+    assert_eq!(s.document().to_snapshot_v2(), before);
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn dwg_targets_share_the_command_path_and_preserve_atomic_file_effects() {
     let folder = scratch("dwg-commands");
     let mut s = new_drawing();

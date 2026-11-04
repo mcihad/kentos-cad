@@ -125,14 +125,20 @@ impl<'a> ShapeFile<'a> {
     }
 
     /// Resolve a LIN name or the decimal shape number retained by DXF/DWG.
-    pub fn draw(&self, name: &str) -> Result<Vec<Vec<Vec2>>, String> {
+    pub fn number(&self, name: &str) -> Option<u16> {
         let by_name = self
             .shapes
             .iter()
             .find(|(_, s)| s.name.eq_ignore_ascii_case(name.as_bytes()))
             .map(|(n, _)| *n);
-        let number = by_name
+        by_name
             .or_else(|| name.strip_prefix('#').unwrap_or(name).parse().ok())
+            .filter(|n| self.shapes.contains_key(n))
+    }
+
+    pub fn draw(&self, name: &str) -> Result<Vec<Vec<Vec2>>, String> {
+        let number = self
+            .number(name)
             .ok_or_else(|| format!("“{name}” şekli SHX kaynağında bulunamadı."))?;
         self.draw_number(number)
     }

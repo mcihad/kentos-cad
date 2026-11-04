@@ -706,3 +706,57 @@ Doğrulama:
 paketinde harici SHX kaynağını taşıma, 12 öğelik kalıcı tarif sınırının
 sürümlü genişletilmesi, analitik metin/şekil-yay fazı, tam affine/blok ve
 viewport/performance kabulü henüz tamamlanmadı. CAD-ADV-11 `[~]` kalır.
+
+
+## 17. SHX numarası ve CAD teslim kaynakları — 4 Kasım 2026
+
+DXF yazıcısı önce SHX öğesini bütünüyle atlıyordu. Artık `#n`/sayısal
+şekil için group 75 numarayı, 340 gerçek adsız STYLE handle'ını taşır;
+STYLE 70=1 ve 3=SHX dosyasıdır. Kaynak:
+[Autodesk STYLE](https://help.autodesk.com/cloudhelp/2020/ENU/AutoCAD-DXF/files/GUID-EF68AF7C-13EF-45A1-8175-ED6CE66C8FC9.htm).
+Ortak export builder adları yalnız projeye açıkça eklenmiş SHX dizininden
+çözer; dosya sisteminde ad aramaz ve asıl belgeyi değiştirmez. S/X/Y mevcut
+paper/drawing birim kurallarını kullanır; R/A/U korunur. U için DXF AC1027
+seçilir; DWG raporu köprü sürümünü artık gerçek başlıktan bildirir.
+
+`cad_shape_files` doğrulanmış kaynakları CAD dosyasının yanına yazar.
+Dosya başına mevcut 4 MiB, toplam 64 MiB sınırı vardır. Eşit dosya yeniden
+kullanılır; farklı içerik, dizin, symlink ve ana çıktı/kaynak ad çakışması
+reddedilir. CAD dosyasının overwrite izni SHX üzerine yazma izni değildir.
+Kaynaklar önce, ana dosya en son mevcut atomik yazıcıyla kaydedilir;
+başarısızlıkta yalnız yeni oluşturulmuş ve hâlâ aynı içerikteki kaynaklar
+geri alınır. Bu bir çok dosyalı dosya sistemi atomikliği iddiası değildir.
+Plan `report.shapeResources` içinde yol/boy/özet/reused bilgisini verir,
+dosya yazmaz. Eklenmemiş kaynak eski açık kayıp notunu ve komut uyarısını
+korur; otomatik kaynak içe alma bu dilimde uygulanmadı.
+Desktop DXF'in ayrı save-export yolu da aynı kaynak yazıcısını kullanır;
+DWG, Python ve MCP mevcut ortak file command yolundadır.
+
+Doğrulama:
+
+- Formats DXF writer 53 test; yeni başvuru testinde padded handle ile kısa
+  handle sayısal olarak karşılaştırılır. Native kaynak transaction testi
+  planın salt okunur oluşunu, başarısızlıkta yeni dosyaların geri alınmasını,
+  mevcut eşit kaynağı korumayı ve farklı kaynağı reddetmeyi doğruladı.
+- Native command testi hem DXF hem AC1032 DWG için plan/execute, yeniden
+  okunan #1 şekli, S=75, R=45, X=-25, Y=12.5, U ve AC1027 köprü raporunu
+  doğruladı. Ana belge değişmedi. Diğer DWG sürümleri bu yeni SHX matrisiyle
+  doğrulanmış sayılmadı. Strict desktop Clippy ve binary build geçti.
+- Gerçek GUI 128 nesneli gömülü kaynaklı KCAD'den `scene.dxf` ve AC1032
+  `scene.dwg` üretti. `ezdxf` bağımsız denetimi sıfır hata verdi; 128 nesne,
+  FENCE/FENCE_45/CIRCLES için 1/1/2 numara, 0/45/0° ve aynı adsız STYLE
+  (flag=1, fence.shx) bulundu. Yan kaynak özgün gömülü baytlarla aynı SHA-256:
+  `ebeb203dd53ed077b4b42492a5c130db604b0f184a0ea6a2968d15b1340aa68d`.
+  DWG GUI dosyası 41661 bayt, AC1032 imzalı; semantik DWG dönüşü yukarıdaki
+  native testte doğrulandı, bağımsız AutoCAD doğrulaması yapılmadı.
+- Ayrı GUI klasöründe farklı içerikli `fence.shx` varken aktarım reddedildi;
+  `refused.dxf` oluşmadı ve mevcut kaynak baytları korundu. Arayüz hatayı
+  göstererek açık kaldı. Kanıtlar repo dışında aynı `/tmp` dizininde
+  `shx-export-gui-success.png`, `shx-conflict-gui.png`,
+  `shx-export-independent.json`, `shx-export-*.log` ve `shx-export-gui/`.
+  Test binary SHA-256:
+  `7fd7bcd1b11d2491b73f56318ba4b69c6e1bf046731bcc0a0129896152d103c1`.
+
+CAD-ADV-11 hâlâ `[~]`: genel SHX metin fontları/Unicode BigFont, analitik
+metin/şekil yay fazı, tam affine/blok, noktalı geniş bant ve kapsamlı viewport/
+performans kabulü bu teslim düzeltmesinden bağımsız olarak açık kalır.

@@ -1704,6 +1704,16 @@ KCAD kaydı ve harici dosya olmadan yeniden açma doğrulandı. Testler ve
 fontları, harici teslim paketi ve kalan geometri/performance kabulü açık;
 maddenin durumu `[~]` olarak korunur.
 
+**SHX CAD teslimi (4 Kasım 2026):** Gömülü kaynak içindeki şekil adı gerçek
+numarasına çözülür; DXF LTYPE kaydı adsız, shape-flag'li STYLE kaydına bağlanır.
+DXF/DWG aktarımı doğrulanmış SHX baytlarını çizimin yanına yazar; aynı dosya
+tekrar kullanılır, farklı içerik/symlink üzerine yazılmaz. Python/MCP planı
+kaynak yolu, özet ve tekrar kullanımını bildirir, dosya yazmaz. Gerçek GUI'den
+DXF ve AC1032 DWG üretildi; bağımsız DXF denetimi 128 nesne, şekil 1/2,
+45° açı ve doğru kaynak bağlantısını doğruladı. Çakışan kaynakla GUI aktarımı
+reddedildi, mevcut dosya korundu. Ayrıntılar ADR 0930'da; otomatik kaynak
+ithali, diğer DWG sürümleri ve ana maddenin kalan çizim kabulü açık.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

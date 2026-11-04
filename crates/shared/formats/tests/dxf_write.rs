@@ -3280,6 +3280,68 @@ fn line_types_with_patterns_go_out_and_come_back() {
 }
 
 #[test]
+fn numeric_shx_marks_write_real_anonymous_shape_styles_and_keep_units_and_upright() {
+    let mut input = input(Vec::new());
+    input.unit = Some(DrawingUnit::Mm);
+    input.scale = 20.;
+    input.line_types=serde_json::from_value(serde_json::json!([
+        {"name":"FENCE","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"1","file":"fence.shx","scale":1.5,"rotation":45.,"upright":true,"x":-0.5,"y":0.25}},{"length":-2.}]},
+        {"name":"FENCE_ABSOLUTE","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"#1","file":"FENCE.SHX","scale":2.,"rotation":30.,"absolute":true}},{"length":-2.}]},
+        {"name":"GATES","unit":"drawing","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"2","file":"gates.shx"}},{"length":-2.}]}
+    ])).unwrap();
+    let (text, report) = write(&input);
+    assert!(
+        !report
+            .notes
+            .iter()
+            .any(|n| n.reason.contains("şekli yazılmadı"))
+    );
+    assert!(text.contains("AC1027"));
+    let pairs = pairs(&text);
+    let styles = entities_of(&pairs, "STYLE");
+    let anonymous: Vec<_> = styles.iter().filter(|s| s.contains(&(70, "1"))).collect();
+    assert_eq!(anonymous.len(), 2);
+    for style in &anonymous {
+        assert!(style.contains(&(2, "")));
+    }
+    let handles: Vec<_> = anonymous
+        .iter()
+        .map(|s| u64::from_str_radix(s.iter().find(|g| g.0 == 5).unwrap().1, 16).unwrap())
+        .collect();
+    let references: Vec<_> = entities_of(&pairs, "LTYPE")
+        .iter()
+        .flat_map(|s| s.iter().filter(|g| g.0 == 340).map(|g| g.1))
+        .collect();
+    assert_eq!(references.len(), 3);
+    assert!(
+        references
+            .iter()
+            .all(|h| handles.contains(&u64::from_str_radix(h, 16).unwrap()))
+    );
+    assert_eq!(references[0], references[1]);
+    assert_ne!(references[0], references[2]);
+    let read = dxf::read(text.as_bytes(), &DxfReadOptions::default()).unwrap();
+    let a = read.line_types[0]
+        .elements
+        .iter()
+        .find_map(|e| e.shape.as_ref())
+        .unwrap();
+    assert_eq!((&*a.name, &*a.file), ("1", "fence.shx"));
+    assert_eq!((a.place.scale, a.place.x, a.place.y), (30., -10., 5.));
+    assert!(a.place.upright);
+    assert!(!a.place.absolute);
+    assert_eq!(a.place.rotation, 45.);
+    let a = read.line_types[1]
+        .elements
+        .iter()
+        .find_map(|e| e.shape.as_ref())
+        .unwrap();
+    assert_eq!(a.place.scale, 40.);
+    assert!(a.place.absolute);
+    assert_eq!(a.place.rotation, 30.);
+}
+
+#[test]
 fn complex_linetype_exports_its_actual_style_handle_fixed_height_and_degree_angle() {
     use kentos_contracts::{
         DrawingFont, LineTypeDef, PatternElement, PatternPlace, PatternText, PatternUnit,

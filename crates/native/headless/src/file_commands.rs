@@ -158,6 +158,11 @@ fn dxf_selected(
     let layers = u32::try_from(dxf_input.layers.len()).unwrap_or(u32::MAX);
     let (bytes, report) = kentos_formats::dxf::write_checked(&dxf_input)
         .map_err(|e| refuse(e.code, e.message, "allowPolylineLoss"))?;
+    let sources = crate::cad_shape_files::plan(doc, &path)?;
+    let mut export_report = serde_json::to_value(&report).unwrap_or(Value::Null);
+    if !sources.is_empty() {
+        export_report["shapeResources"] = crate::cad_shape_files::report(&sources);
+    }
     let output = DxfExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
@@ -165,7 +170,7 @@ fn dxf_selected(
         objects: report.counts.values().sum::<u32>(),
         layers,
         replaced: exists,
-        report: serde_json::to_value(&report).unwrap_or(Value::Null),
+        report: export_report,
     };
     Ok((path, exists, bytes, output))
 }
@@ -178,8 +183,13 @@ fn dwg(
     let dxf_input = ExportDxf { allow_polyline_loss: input.allow_polyline_loss, path: input.path.clone(), layers: input.layers.clone(),
         overwrite: input.overwrite, annotations: input.annotations };
     let (path, exists, dxf, mut output) = dxf_selected(doc, &dxf_input, input.uids.as_deref())?;
-    let bytes = kentos_dwg::encode(&dxf, input.version)
-        .map_err(|e| refuse(e.code, e.message, "path"))?;
+    let source_version = std::str::from_utf8(&dxf)
+        .ok()
+        .and_then(|s| s.lines().skip_while(|l| *l != "$ACADVER").nth(2))
+        .unwrap_or("unknown")
+        .to_owned();
+    let bytes =
+        kentos_dwg::encode(&dxf, input.version).map_err(|e| refuse(e.code, e.message, "path"))?;
     output.bytes = bytes.len() as u64;
     output.sha256 = sha256_hex(&bytes);
     if input.version == kentos_commands::DwgVersion::AC1014
@@ -189,7 +199,7 @@ fn dwg(
     }
     output.report["codec"] = serde_json::json!({
         "provider": kentos_dwg::PROVIDER, "revision": kentos_dwg::REVISION,
-        "sourceFormat": "DXF", "sourceVersion": "AC1021",
+        "sourceFormat": "DXF", "sourceVersion": source_version,
         "targetFormat": "DWG", "targetVersion": input.version.signature(),
         "reopened": true, "independentValidation": false
     });
@@ -200,7 +210,7 @@ fn dwg(
 pub fn export_dwg(doc: &Document, input: &kentos_commands::ExportDwg)
     -> Result<kentos_commands::DwgExported, Refused> {
     let (path, _, bytes, output) = dwg(doc, input)?;
-    write_guarded(&path, &bytes, input.overwrite)?;
+    write_cad_bytes(doc, &path, &bytes, input.overwrite)?;
     Ok(output)
 }
 
@@ -976,6 +986,18 @@ fn write_guarded(path: &Path, bytes: &[u8], overwrite: bool) -> Result<(), Refus
         .map_err(|e| refuse(e.code, e.message, "path"))
 }
 
+/// Commit a shared-builder CAD file together with its embedded SHX sources.
+/// The drawing's overwrite permission never replaces a different SHX file.
+pub fn write_cad_bytes(
+    doc: &Document,
+    path: &Path,
+    bytes: &[u8],
+    overwrite: bool,
+) -> Result<(), Refused> {
+    let sources = crate::cad_shape_files::plan(doc, path)?;
+    crate::cad_shape_files::commit(&sources, || write_guarded(path, bytes, overwrite))
+}
+
 /// What a file command answers with, written or planned: its output as JSON.
 struct Done {
     output: Value,
@@ -1099,7 +1121,10 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
                         effect: None,
                     },
                     CallOp::Execute => {
-                        if let Err(refused) = write_guarded(&path, &bytes, typed.overwrite) {
+                        let written=if matches!(command,FILE_EXPORT_DXF|kentos_commands::FILE_EXPORT_DWG) {
+                            write_cad_bytes(doc,&path,&bytes,typed.overwrite)
+                        } else {write_guarded(&path,&bytes,typed.overwrite)};
+                        if let Err(refused) = written {
                             return Ok((CommandResult::Failed { error: *refused }, None));
                         }
                         Done {
@@ -1113,7 +1138,10 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
                     }
                 },
             };
-            let warnings = if command == kentos_commands::FILE_EXPORT_DWG
+            let missing_shape=done.output["report"]["shapeResources"].as_array().is_some_and(|a|a.iter().any(|s|s["available"]==false));
+            let warnings = if missing_shape {
+                vec![CommandWarning {code:codes::EXPORT_LOSSES.into(),message:"Bazı SHX kaynakları projeye eklenmemiş; CAD aktarımı bu kaynakları içermez. Ayrıntılar report.shapeResources alanında.".into(),path:Some("report.shapeResources".into())}]
+            } else if command == kentos_commands::FILE_EXPORT_DWG
                 && (done.output["report"]["skipped"].as_array().is_some_and(|a| !a.is_empty())
                     || typed_version_loss(command, &done.output)) {
                 vec![CommandWarning { code: codes::EXPORT_LOSSES.into(),

@@ -60,9 +60,28 @@ pub(super) fn ltype_name(t: LineType) -> &'static str {
     dashes(t).map_or("Continuous", |d| d.name)
 }
 
+pub(super) enum PatternStyle {
+    Text(String),
+    Shape(String),
+}
+pub(super) fn shape_number(shape: &kentos_contracts::PatternShape) -> Option<u16> {
+    shape
+        .name
+        .strip_prefix('#')
+        .unwrap_or(&shape.name)
+        .parse()
+        .ok()
+        .filter(|n| *n > 0 && !shape.file.is_empty())
+}
+enum Complex<'a> {
+    Text(&'a kentos_contracts::PatternText),
+    Shape(&'a kentos_contracts::PatternShape, u16),
+}
+
 /// A project line type's LTYPE record (docs/adr/0313 §6): its elements' lengths in drawing units (a paper pattern's
 /// millimetres at the plot scale); text attached to the element before it, referencing its own STYLE;
-/// a shape left out and said, DXF holding only a shape file's number.
+/// numeric SHX shapes reference an anonymous shape STYLE; unresolved names are
+/// omitted with an explicit loss note.
 #[allow(clippy::too_many_arguments)]
 fn pattern_record(
     out: &mut Out,
@@ -72,21 +91,29 @@ fn pattern_record(
     scale: f64,
     styles: &[kentos_contracts::TextStyleDef],
     report: &mut crate::report::Report,
-) -> Vec<(usize, String)> {
+) -> Vec<(usize, PatternStyle)> {
     let mut references = Vec::new();
     let length = |l: f64| match p.unit {
         kentos_contracts::PatternUnit::Paper => l * scale / 1000.0,
         kentos_contracts::PatternUnit::Drawing => l,
     };
     // Each drawn element with the complex one that follows it.
-    let mut parts: Vec<(f64, Option<&kentos_contracts::PatternText>)> = Vec::new();
+    let mut parts: Vec<(f64, Option<Complex<'_>>)> = Vec::new();
     for e in &p.elements {
         if let Some(t) = &e.text {
             match parts.last_mut() {
-                Some(last) if last.1.is_none() => last.1 = Some(t),
-                _ => parts.push((0.0, Some(t))),
+                Some(last) if last.1.is_none() => last.1 = Some(Complex::Text(t)),
+                _ => parts.push((0.0, Some(Complex::Text(t)))),
             }
-        } else if e.shape.is_some() {
+        } else if let Some(shape) = &e.shape {
+            if let Some(number) = shape_number(shape) {
+                let complex = Some(Complex::Shape(shape, number));
+                match parts.last_mut() {
+                    Some(last) if last.1.is_none() => last.1 = complex,
+                    _ => parts.push((0., complex)),
+                }
+                continue;
+            }
             report.note(
                 "Çizgi tipi",
                 &format!(
@@ -110,13 +137,33 @@ fn pattern_record(
         out.real(49, l);
         match text {
             None => out.int(74, 0),
-            Some(t) => {
+            Some(Complex::Shape(shape, number)) => {
+                let place = &shape.place;
+                out.int(
+                    74,
+                    4 | i64::from(place.absolute) | (i64::from(place.upright) << 3),
+                );
+                out.int(75, i64::from(number));
+                references.push((
+                    out.forward_handle(340),
+                    PatternStyle::Shape(shape.file.clone()),
+                ));
+                out.real(46, length(place.scale));
+                out.real(50, place.rotation);
+                out.real(44, length(place.x));
+                out.real(45, length(place.y));
+                report.note("SHX kaynağı",&format!("“{}” şekil dosyası CAD çiziminin yanında bulunmalıdır; dosyayı çizimle birlikte iletin.",shape.file),0);
+            }
+            Some(Complex::Text(t)) => {
                 let place = &t.place;
                 out.int(74, 2 | i64::from(place.absolute) | (i64::from(place.upright) << 3));
                 out.int(75, 0);
                 let style = styles.iter().find(|s| s.name.eq_ignore_ascii_case(&t.style));
                 if let Some(style) = style {
-                    references.push((out.forward_handle(340), style.id.clone()));
+                    references.push((
+                        out.forward_handle(340),
+                        PatternStyle::Text(style.id.clone()),
+                    ));
                 } else {
                     out.handle(340, template::STYLE);
                     if !t.style.eq_ignore_ascii_case("STANDARD") {
@@ -328,7 +375,7 @@ impl Layers {
         patterns: &[kentos_contracts::LineTypeDef],
         styles: &[kentos_contracts::TextStyleDef],
         report: &mut crate::report::Report,
-    ) -> Vec<(usize, String)> {
+    ) -> Vec<(usize, PatternStyle)> {
         let mut references = Vec::new();
         let names: Vec<String> = patterns.iter().map(|p| valid_name(&p.name)).collect();
         let taken = |n: &str| names.iter().any(|x| x.eq_ignore_ascii_case(n));

@@ -707,11 +707,15 @@ impl App {
         suggested: String,
         filter: (&'static str, &'static str),
     ) -> Task<Message> {
+        let cad_model = (filter.1 == "dxf")
+            .then(|| self.document.as_ref().map(|d| d.model.clone()))
+            .flatten();
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
-            return Task::perform(async move { Some(write_file(&path, &bytes)) }, |outcome| {
-                message(Event::Written(outcome))
-            });
+            return Task::perform(
+                async move { Some(write_file(&path, &bytes, cad_model.as_ref())) },
+                |outcome| message(Event::Written(outcome)),
+            );
         }
         let (description, extension) = filter;
         Task::perform(
@@ -726,7 +730,7 @@ impl App {
                 if path.extension().is_none() {
                     path.set_extension(extension);
                 }
-                Some(write_file(&path, &bytes))
+                Some(write_file(&path, &bytes, cad_model.as_ref()))
             },
             |outcome| message(Event::Written(outcome)),
         )
@@ -789,9 +793,18 @@ fn read_file(path: &PathBuf, kind: Kind) -> Result<Picked, String> {
 /// Writes an export whole or not at all (docs/adr/0253 §10): a temporary file
 /// beside the target, made durable, read back, renamed over it. A failed write
 /// leaves the file that was there as it was.
-fn write_file(path: &std::path::Path, bytes: &[u8]) -> Result<String, String> {
-    kentos_headless::files::write_bytes(bytes, path)
-        .map_err(|e| format!("{} Başka bir yere kaydetmeyi deneyin.", e.message))?;
+fn write_file(
+    path: &std::path::Path,
+    bytes: &[u8],
+    cad_model: Option<&kentos_domain::Document>,
+) -> Result<String, String> {
+    if let Some(doc) = cad_model {
+        kentos_headless::file_commands::write_cad_bytes(doc, path, bytes, true)
+            .map_err(|e| e.message)?;
+    } else {
+        kentos_headless::files::write_bytes(bytes, path)
+            .map_err(|e| format!("{} Başka bir yere kaydetmeyi deneyin.", e.message))?;
+    }
     Ok(path.file_name().map_or_else(
         || path.display().to_string(),
         |n| n.to_string_lossy().into_owned(),

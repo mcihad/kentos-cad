@@ -587,15 +587,30 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     layers.layer_table(&mut tables, &mut handles);
     // A style's paper mm in drawing units (docs/adr/0183 §7).
     let length = |mm: f64| mm / 1000.0 * paper;
+    let mut shape_files = BTreeMap::new();
+    for (_, reference) in &pattern_styles {
+        if let layers::PatternStyle::Shape(file) = reference {
+            shape_files
+                .entry(file.to_lowercase())
+                .or_insert_with(|| file.clone());
+        }
+    }
+    let shape_files: Vec<_> = shape_files.into_values().collect();
     let style_handles = styles::style_table(
         &mut tables,
         &mut handles,
         &style_names,
         &input.text_styles,
+        &shape_files,
         &length,
     );
-    for (at, id) in pattern_styles {
-        let handle = style_handles.get(&id).copied().unwrap_or(template::STYLE);
+    for (at, reference) in pattern_styles {
+        let handle = match reference {
+            layers::PatternStyle::Text(id) => style_handles.0.get(&id),
+            layers::PatternStyle::Shape(file) => style_handles.1.get(&file.to_lowercase()),
+        }
+        .copied()
+        .unwrap_or(template::STYLE);
         tables.resolve_handle(at, handle);
     }
     template::view_ucs(&mut tables);
@@ -624,8 +639,12 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             point_size: points.then_some(1.5 * paper / 1000.0),
             insunits: units::insunits_of(unit),
             ltscale: input.line_type_scale.unwrap_or(1.0),
-            upright_linetypes: input.line_types.iter().flat_map(|p| &p.elements)
-                .any(|e| e.text.as_ref().is_some_and(|t| t.place.upright)),
+            upright_linetypes: input.line_types.iter().flat_map(|p| &p.elements).any(|e| {
+                e.text.as_ref().is_some_and(|t| t.place.upright)
+                    || e.shape
+                        .as_ref()
+                        .is_some_and(|s| s.place.upright && layers::shape_number(s).is_some())
+            }),
         },
     );
     template::classes(&mut out);
