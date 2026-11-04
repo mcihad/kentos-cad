@@ -514,3 +514,162 @@ pub fn sensitivity(design: &[Triangle], vertices: &[[f64; 3]], triangles: &[[u32
     out.covered = covered.0;
     out
 }
+
+/// What an earthwork has come to between its original ground and a later survey, against its design (docs/adr/0942,
+/// plan/road.md Y36; ROAD-VOL-15), m³; at each place, with `z_o` the original ground, `z_n` the survey now and `z_d`
+/// the design:
+///
+/// - in cut (`z_o > z_d`): done `max(0, z_o − max(z_n, z_d))`, left `max(0, min(z_n, z_o) − z_d)`, over (dug below the
+///   design) `max(0, z_d − z_n)`;
+/// - in fill (`z_d > z_o`): done `max(0, min(z_n, z_d) − z_o)`, left `max(0, z_d − max(z_n, z_o))`, over (placed above
+///   the design) `max(0, z_n − z_d)`.
+///
+/// Done + left is the design's own cut (or fill) at every place the survey covers, whatever the survey says: the survey
+/// moves volume between the two, never makes or loses any. Material
+/// heaped on a cut above its original ground or dug out of a fill below its original ground is neither (a stockpile, a
+/// borrow pit of the site): it is not the design's work. Also the plan areas: covered by all three surfaces, the
+/// design's not covered by the original or the survey.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Progress {
+    pub cut_done: f64,
+    pub cut_left: f64,
+    pub cut_over: f64,
+    pub fill_done: f64,
+    pub fill_left: f64,
+    pub fill_over: f64,
+    pub covered: f64,
+    pub uncovered: f64,
+}
+
+/// A convex polygon's corners with the design's, the original's and the survey's heights there.
+type Tri3 = Vec<([f64; 2], [f64; 3])>;
+
+/// The part of a convex polygon (three linear heights at its corners) where `f` (a linear combination of them, given
+/// by its coefficients) is ≥ 0 (`above`) or ≤ 0.
+fn split3(poly: &Tri3, f: [f64; 3], above: bool) -> Tri3 {
+    let val = |z: &[f64; 3]| f[0] * z[0] + f[1] * z[1] + f[2] * z[2];
+    let keep = |v: f64| if above { v >= 0.0 } else { v <= 0.0 };
+    let mut out = Vec::with_capacity(poly.len() + 1);
+    for i in 0..poly.len() {
+        let (p, q) = (&poly[i], &poly[(i + 1) % poly.len()]);
+        let (vp, vq) = (val(&p.1), val(&q.1));
+        if keep(vp) {
+            out.push(*p);
+        }
+        if (vp > 0.0 && vq < 0.0) || (vp < 0.0 && vq > 0.0) {
+            let t = vp / (vp - vq);
+            let at = [p.0[0] + (q.0[0] - p.0[0]) * t, p.0[1] + (q.0[1] - p.0[1]) * t];
+            let z = [0, 1, 2].map(|k| p.1[k] + (q.1[k] - p.1[k]) * t);
+            out.push((at, z));
+        }
+    }
+    out
+}
+
+/// A convex polygon's area and its three heights at its centroid (each linear on it: the mean over it).
+fn mean3(poly: &Tri3) -> (f64, [f64; 3]) {
+    let (mut area, mut z) = (0.0, [0.0; 3]);
+    for i in 1..poly.len().saturating_sub(1) {
+        let (a, b, c) = (&poly[0], &poly[i], &poly[i + 1]);
+        let s = area2(a.0, b.0, c.0) / 2.0;
+        area += s;
+        for (k, zk) in z.iter_mut().enumerate() {
+            *zk += s * (a.1[k] + b.1[k] + c.1[k]) / 3.0;
+        }
+    }
+    if area > 0.0 { (area, z.map(|v| v / area)) } else { (0.0, [0.0; 3]) }
+}
+
+/// The progress of `design` over `original` as `now` surveys it (each a set of triangles that do not overlap in plan),
+/// over the design's plan. Each place where a design, an original and a survey triangle overlap is cut along the
+/// lines where two of the three heights meet; on each piece their order is fixed, every quantity is linear and its
+/// integral is the area times its value at the centroid: exact.
+pub fn progress(design: &[Triangle], original: &[Triangle], now: &[Triangle]) -> Progress {
+    let (o_tris, n_tris): (Vec<Triangle>, Vec<Triangle>) =
+        (original.iter().filter_map(ccw).collect(), now.iter().filter_map(ccw).collect());
+    let mut out = Progress::default();
+    let (Some(go), Some(gn)) = ((!o_tris.is_empty()).then(|| Grid::new(&o_tris)), (!n_tris.is_empty()).then(|| Grid::new(&n_tris)))
+    else {
+        out.uncovered = design.iter().filter_map(ccw).map(|d| area2([d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]) / 2.0).sum();
+        return out;
+    };
+    let near = |grid: &Grid, t: &Triangle| {
+        let (lo, hi) = grid.span(t);
+        let mut ids: Vec<u32> = Vec::new();
+        for cy in lo[1]..=hi[1] {
+            for cx in lo[0]..=hi[0] {
+                ids.extend_from_slice(&grid.cells[cy * grid.nx + cx]);
+            }
+        }
+        ids.sort_unstable();
+        ids.dedup();
+        ids
+    };
+    for d in design {
+        let Some(d) = ccw(d) else { continue };
+        let plan = [[d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]];
+        let whole = area2(plan[0], plan[1], plan[2]) / 2.0;
+        let mut covered = 0.0;
+        let ns = near(&gn, &d);
+        for oi in near(&go, &d) {
+            let o = &o_tris[oi as usize];
+            let mut base = plan.to_vec();
+            for k in 0..3 {
+                base = clip(&base, [o[k][0], o[k][1]], [o[(k + 1) % 3][0], o[(k + 1) % 3][1]]);
+                if base.len() < 3 {
+                    break;
+                }
+            }
+            if base.len() < 3 {
+                continue;
+            }
+            for &ni in &ns {
+                let n = &n_tris[ni as usize];
+                let mut poly = base.clone();
+                for k in 0..3 {
+                    poly = clip(&poly, [n[k][0], n[k][1]], [n[(k + 1) % 3][0], n[(k + 1) % 3][1]]);
+                    if poly.len() < 3 {
+                        break;
+                    }
+                }
+                if poly.len() < 3 {
+                    continue;
+                }
+                let piece: Tri3 = poly.iter().map(|p| (*p, [plane_z(&d, *p), plane_z(o, *p), plane_z(n, *p)])).collect();
+                covered += mean3(&piece).0;
+                // The lines z_o = z_d, z_n = z_d, z_o = z_n (heights in the order design, original, survey). A piece
+                // on such a line throughout (a survey that has reached the design) goes to one side only, or it would
+                // be counted twice.
+                let mut parts = vec![piece];
+                for f in [[-1.0, 1.0, 0.0], [-1.0, 0.0, 1.0], [0.0, 1.0, -1.0]] {
+                    parts = parts
+                        .into_iter()
+                        .flat_map(|p| {
+                            let flat = p.iter().all(|(_, z)| (f[0] * z[0] + f[1] * z[1] + f[2] * z[2]).abs() <= 1e-12);
+                            if flat { vec![p] } else { vec![split3(&p, f, true), split3(&p, f, false)] }
+                        })
+                        .filter(|p| p.len() >= 3)
+                        .collect();
+                }
+                for p in &parts {
+                    let (area, [zd, zo, zn]) = mean3(p);
+                    if area <= 0.0 {
+                        continue;
+                    }
+                    if zo > zd {
+                        out.cut_done += area * (zo - zn.max(zd)).max(0.0);
+                        out.cut_left += area * (zn.min(zo) - zd).max(0.0);
+                        out.cut_over += area * (zd - zn).max(0.0);
+                    } else if zd > zo {
+                        out.fill_done += area * (zn.min(zd) - zo).max(0.0);
+                        out.fill_left += area * (zd - zn.max(zo)).max(0.0);
+                        out.fill_over += area * (zn - zd).max(0.0);
+                    }
+                }
+            }
+        }
+        out.covered += covered;
+        out.uncovered += (whole - covered).max(0.0);
+    }
+    out
+}
