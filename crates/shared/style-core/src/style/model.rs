@@ -396,6 +396,8 @@ pub struct SimpleLine {
     pub width: Option<Dd<f64>>,
     pub dash: Option<Vec<f64>>,
     pub dash_offset: Option<f64>,
+    /// Host source diagnostic, carried only by emitted strokes, never painted.
+    pub line_type_loss: Option<String>,
     pub cap: Option<String>,
     pub join: Option<String>,
     pub offset: Option<Dd<f64>>,
@@ -649,6 +651,7 @@ impl Exprs {
                     width: self.dd_num(v.get("width")),
                     dash: numbers(v.get("dash")),
                     dash_offset: opt_num(v.get("dashOffset")),
+                    line_type_loss: opt_str(v.get("lineTypeLoss")),
                     cap: opt_str(v.get("cap")),
                     join: opt_str(v.get("join")),
                     offset: self.dd_num(v.get("offset")),

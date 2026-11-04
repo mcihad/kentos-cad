@@ -70,6 +70,8 @@ pub fn dashes_of(def: &LineTypeDef, plot_scale: f64, project_unit: (f64, f64)) -
 #[derive(Clone, Debug, PartialEq)]
 pub struct LineTypes {
     by_name: HashMap<String, Option<Dashes>>,
+    /// Kept separately: a continuous pattern can still lose its complex marks.
+    losses: HashMap<String, String>,
     /// The project's line type scale (LTSCALE), 1 without one.
     pub scale: f64,
 }
@@ -79,6 +81,7 @@ impl Default for LineTypes {
     fn default() -> Self {
         Self {
             by_name: HashMap::new(),
+            losses: HashMap::new(),
             scale: 1.0,
         }
     }
@@ -92,6 +95,14 @@ impl LineTypes {
             .unwrap_or(kentos_contracts::DrawingUnit::M)
             .metres();
         Self {
+            losses: settings.line_types.iter().filter_map(|t| {
+                let complex = t.elements.iter().any(|e| e.is_complex());
+                let long = dashes_of(t, settings.plot_scale, unit).is_some_and(|d| d.lossy);
+                (complex || long).then(|| (t.name.to_lowercase(), format!(
+                    "“{}” çizgi tipinin {} mevcut çizim hattında eksiksiz üretilemiyor.",
+                    t.name, if complex { "yazı/şekil işaretleri" } else { "uzun çizgi/boşluk deseni" }
+                )))
+            }).collect(),
             by_name: settings
                 .line_types
                 .iter()
@@ -111,22 +122,41 @@ impl LineTypes {
         self.by_name.is_empty() && self.scale == 1.0
     }
 
+    pub fn has_losses(&self) -> bool {
+        !self.losses.is_empty()
+    }
+
     /// A named type's dashes, `Some(None)` for a continuous one; none for a name the project does not have.
     pub fn dashes(&self, name: &str) -> Option<Option<&Dashes>> {
         self.by_name.get(&name.to_lowercase()).map(Option::as_ref)
+    }
+
+    /// A source problem, before simplifying its appearance. Only carried by
+    /// actual simple-line primitives: unused definitions are not output errors.
+    pub fn loss(&self, name: &str) -> Option<String> {
+        let key = name.to_lowercase();
+        self.losses.get(&key).cloned().or_else(|| {
+            (!self.by_name.contains_key(&key)).then(|| format!(
+                "“{name}” çizgi tipinin kaynak tanımı projede yok."
+            ))
+        })
     }
 
     /// `symbols` with their simple lines drawn in `pattern` (a known type's dashes, LTSCALE times) or, without one,
     /// their built-in dashes LTSCALE times. A name the project does not have keeps the built-in type.
     pub fn apply(&self, pattern: Option<&str>, mut symbols: Value) -> Value {
         let dash = pattern.and_then(|p| self.dashes(p));
-        if dash.is_none() && self.scale == 1.0 {
+        let loss = pattern.and_then(|p| self.loss(p));
+        if dash.is_none() && self.scale == 1.0 && loss.is_none() {
             return symbols;
         }
-        fn walk(v: &mut Value, dash: Option<Option<&Dashes>>, scale: f64) {
+        fn walk(v: &mut Value, dash: Option<Option<&Dashes>>, scale: f64, loss: Option<&str>) {
             match v {
                 Value::Object(map) => {
                     if map.get("type").and_then(Value::as_str) == Some("simpleLine") {
+                        if let Some(loss) = loss {
+                            map.insert("lineTypeLoss".into(), json!(loss));
+                        }
                         match dash {
                             Some(Some(d)) => {
                                 map.insert(
@@ -149,14 +179,14 @@ impl LineTypes {
                         }
                     }
                     for (_, x) in map.iter_mut() {
-                        walk(x, dash, scale);
+                        walk(x, dash, scale, loss);
                     }
                 }
-                Value::Array(list) => list.iter_mut().for_each(|x| walk(x, dash, scale)),
+                Value::Array(list) => list.iter_mut().for_each(|x| walk(x, dash, scale, loss)),
                 _ => {}
             }
         }
-        walk(&mut symbols, dash, self.scale);
+        walk(&mut symbols, dash, self.scale, loss.as_deref());
         symbols
     }
 }

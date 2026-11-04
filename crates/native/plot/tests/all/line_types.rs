@@ -1,0 +1,219 @@
+//! CAD-ADV-11: output must report the pattern actually selected by the style
+//! compiler, not every definition in a drawing. All inspections are read-only.
+use kentos_domain::Document;
+use kentos_interaction::Spatial;
+use kentos_plot::{book, maps::MapSource};
+use kentos_sheet::{
+    SheetBook,
+    display::{self, Prim},
+    project::project_sheets,
+};
+use serde_json::{Value, json};
+
+fn source() -> (Value, Value) {
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/native-preflight.json"
+    ))
+    .unwrap();
+    (fx["model"].clone(), fx["book"].clone())
+}
+fn pattern(kind: &str) -> Value {
+    match kind {
+        "long" => {
+            json!({"name":"P","unit":"paper","elements":(0..12).map(|i|json!({"length":if i%2==0 {1.} else {-1.}})).collect::<Vec<_>>()})
+        }
+        "shape" => {
+            json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":0.,"shape":{"name":"FENCE","file":"missing.shx"}}]})
+        }
+        "short" => json!({"name":"P","unit":"paper","elements":[{"length":3.},{"length":-1.}]}),
+        _ => {
+            json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"STANDARD","scale":0.1}},{"length":-1.}]})
+        }
+    }
+}
+fn document(raw: Value, page: Value) -> (Document, SheetBook) {
+    let mut doc = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+    let book: SheetBook = serde_json::from_value(page).unwrap();
+    doc.set_sheets(project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    (doc, book)
+}
+fn losses(doc: &Document, b: &SheetBook) -> Vec<kentos_sheet::preflight::Finding> {
+    let render = book::base_inputs(doc, "Test", "2026-11-04");
+    kentos_plot::preflight::inspect(doc, b, "ground", &render, None)
+        .unwrap()
+        .into_iter()
+        .filter(|f| f.code == "linetype_unsupported")
+        .collect()
+}
+#[test]
+fn named_pattern_loss_follows_actual_visibility_and_overrides() {
+    for kind in ["text", "shape", "long", "missing", "short"] {
+        for mode in [
+            "own", "layer", "unused", "outside", "hidden", "frozen", "builtin",
+        ] {
+            let (mut raw, mut page) = source();
+            if kind != "missing" {
+                raw["settings"]["lineTypes"] = json!([pattern(kind)]);
+            }
+            let line = &mut raw["entities"][0];
+            if mode == "layer" || mode == "builtin" {
+                raw["layers"][0]["style"]["linePattern"] = json!("P");
+            } else if mode != "unused" {
+                line["linePattern"] = json!("P");
+            }
+            if mode == "builtin" {
+                raw["entities"][0]["lineType"] = json!("continuous");
+            }
+            if mode == "outside" {
+                raw["entities"][0]["a"]["x"] = json!(10000.);
+                raw["entities"][0]["b"]["x"] = json!(10005.);
+            }
+            if mode == "hidden" {
+                raw["layers"][0]["visible"] = json!(false);
+            }
+            if mode == "frozen" {
+                page["sheets"][0]["items"][0]["kind"]["layerOverrides"] =
+                    json!([{"layer":"cizim","frozen":true}]);
+            }
+            let (doc, book) = document(raw, page);
+            let before = doc.to_snapshot_v2();
+            let found = losses(&doc, &book);
+            let blocked = kind != "short" && matches!(mode, "own" | "layer");
+            assert_eq!(!found.is_empty(), blocked, "{kind}/{mode}: {found:?}");
+            let pdf = book::book_pdf(&doc, &[], "Test", "2026-11-04");
+            if blocked {
+                assert!(
+                    found
+                        .iter()
+                        .all(|f| f.severity == kentos_sheet::preflight::Severity::Error)
+                );
+                assert!(found[0].message.contains('P'));
+                assert_eq!(
+                    pdf.err().unwrap().code,
+                    "linetype_unsupported",
+                    "{kind}/{mode}"
+                );
+            } else {
+                pdf.unwrap_or_else(|e| panic!("{kind}/{mode}: {e:?}"));
+            }
+            assert_eq!(doc.to_snapshot_v2(), before);
+        }
+    }
+}
+#[test]
+fn complex_marks_without_any_gap_still_refuse_preview_vector_and_direct_cpu_output() {
+    let (mut raw, page) = source();
+    raw["settings"]["lineTypes"] = json!([pattern("shape")]);
+    raw["entities"][0]["linePattern"] = json!("P");
+    let (doc, book) = document(raw, page);
+    let before = doc.to_snapshot_v2();
+    assert_eq!(
+        kentos_plot::preview::page(&doc, "ground", "Test", "2026-11-04", None, 72)
+            .err()
+            .unwrap()
+            .code,
+        "linetype_unsupported"
+    );
+    let render = book::base_inputs(&doc, "Test", "2026-11-04");
+    let list = display::display_list(&book, "ground", &render).unwrap();
+    let map = list
+        .prims
+        .iter()
+        .find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None })
+        .unwrap();
+    let mut spatial = Spatial::new();
+    spatial.reload(&doc);
+    let library = book::library_of(&doc);
+    let c = map.view.center.unwrap();
+    let src = MapSource {
+        doc: &doc,
+        store: spatial.store(),
+        library: &library,
+        origin: kentos_geometry_core::Vec2::new(c.x, c.y),
+        map: None,
+        level: None,
+        phase: None,
+        hidden: &[],
+        pens: &[],
+        mono: false,
+        options: &[],
+    };
+    assert!(
+        kentos_plot::maps::vector_content(
+            &src,
+            &map.layers,
+            &map.layer_overrides,
+            map.view.scale,
+            map.extent.unwrap(),
+            &[]
+        )
+        .is_err()
+    );
+    let error = kentos_plot::render_map_image(&src, map, &[], [64, 64], None)
+        .err()
+        .unwrap();
+    assert!(
+        error.contains('P') && error.contains("Eksik çizgi"),
+        "{error}"
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+#[test]
+fn explicit_supported_symbol_does_not_inherit_unused_layer_pattern_loss() {
+    let (mut raw, page) = source();
+    raw["settings"]["lineTypes"] = json!([pattern("text")]);
+    raw["layers"][0]["style"]["linePattern"] = json!("P");
+    raw["entities"][0]["symbol"] = json!("line-ok");
+    raw["styles"]["items"] = json!([{"id":"line-ok","kind":"symbol","name":"Solid","symbol":{"type":"line","layers":[{"id":"stroke","type":"simpleLine","color":"#111111","width":0.25}]}}]);
+    let (doc, book) = document(raw, page);
+    assert!(losses(&doc, &book).is_empty());
+    book::book_pdf(&doc, &[], "Test", "2026-11-04").unwrap();
+}
+#[test]
+fn block_own_and_inherited_patterns_are_checked_only_for_visible_leaves() {
+    for mode in ["own", "byblock", "hidden", "clipped", "outside"] {
+        let (mut raw, page) = source();
+        raw["settings"]["lineTypes"] = json!([pattern("text")]);
+        let block = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4051";
+        let mut leaf = json!({"kind":"line","id":17,"layerId":"cizim","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.,"y":0.},"linePattern":"P"});
+        let mut insert = json!({"kind":"insert","id":1,"layerId":"cizim","attrs":{},"block":block,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.});
+        if mode == "byblock" {
+            leaf.as_object_mut().unwrap().remove("linePattern");
+            insert["linePattern"] = json!("P");
+        }
+        if mode == "hidden" {
+            leaf["layerId"] = json!("resources");
+        }
+        if mode == "outside" {
+            insert["p"]["x"] = json!(10000.);
+        }
+        if mode == "clipped" {
+            insert["clipping"] = json!({"boundary":[{"x":100.,"y":100.},{"x":101.,"y":100.},{"x":101.,"y":101.},{"x":100.,"y":101.}]});
+        }
+        raw["entities"] = json!([insert]);
+        raw["blocks"] = json!([{"id":block,"name":"Pipe","base":{"x":0.,"y":0.},"units":"m","entities":[leaf]}]);
+        let (doc, book) = document(raw, page);
+        assert_eq!(
+            !losses(&doc, &book).is_empty(),
+            matches!(mode, "own" | "byblock"),
+            "{mode}"
+        );
+    }
+}
+
+#[test]
+fn long_dash_custom_symbol_refuses_even_without_a_named_pattern() {
+    let (mut raw, page) = source();
+    raw["entities"][0]["symbol"] = json!("line-long");
+    raw["styles"]["items"] = json!([{"id":"line-long","kind":"symbol","name":"Long","symbol":{"type":"line","layers":[{"id":"stroke","type":"simpleLine","color":"#111111","width":0.25,"dash":[1.,1.,2.,1.,3.,1.,4.,1.,5.,1.]}]}}]);
+    let (doc, book) = document(raw, page);
+    assert!(!losses(&doc, &book).is_empty());
+    assert_eq!(
+        book::book_pdf(&doc, &[], "Test", "2026-11-04")
+            .err()
+            .unwrap()
+            .code,
+        "linetype_unsupported"
+    );
+}

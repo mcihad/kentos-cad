@@ -1217,6 +1217,7 @@ mod tests {
             group: 0,
             effect: None,
             weight_cap: 0.0,
+            line_type_loss: None,
         }
     }
 

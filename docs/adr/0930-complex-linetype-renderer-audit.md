@@ -1,7 +1,8 @@
 # 0930 — Karmaşık çizgi tipi: gerçek kayıp noktaları ve ortak yürütme
 
 Tarih: 4 Kasım 2026. Kapsam: CAD-ADV-11. Durum: araştırma ve başlangıç
-kabulü; uygulama tamamlanmadı. CAD-ADV-10'un kapanışından sonraki iştir.
+kabulü ve ilk çıktı koruması; uygulama tamamlanmadı. CAD-ADV-10'un
+kapanışından sonraki iştir.
 
 ## Dış davranış sözleşmesi
 
@@ -92,4 +93,48 @@ Dosyalar/ekran repo dışında:
    atanmış baskı rengini değiştirmemeli. Eksik kaynak ret, round-trip ve
    salt okunur plan sorgusu da kabulün parçası.
 
-Bu belge yalnız incelemeyi ve uygulama sırasını kaydeder; CAD-ADV-11 açık.
+## İlk uygulama: eksik desenle sessiz teslimi engelle
+
+Kaynak desen kaybı `LineTypes` → simpleLine → `StrokeStyle` → gerçek
+`StyledBatch` zincirinde taşınıyor. Gap içermeyen kompleks tanımın
+`None`/continuous kolu da kayıp bilgisini korur. Ön denetim başka bir
+görünüş çözümleyicisi kurmaz; `MapDrawer`ın ölçek/kat/faz seçenekleriyle
+hazırladığı kaynağı aynı stil derleyicisinden geçirir. Sıradan kısa/built-in
+desenler ucuz kaynak kapısı sayesinde ikinci kez derlenmez.
+
+`linetype_unsupported` hata bulgusu mevcut tam baskı ön denetiminde ve
+`file.preflight.sheets` Python/MCP sorgusunda görülür. PDF ve CPU önizleme
+reddeder; doğrudan vektör/CPU/atlas yolları da ortak çıktı korumasından
+geçer. Kullanılmayan tanım, built-in nesne override'ı, desteklenen özel
+sembol, gizli/donmuş katman, görünüm dışında kalan batch ve XCLIP ile
+çıkarılmış blok parçası için deneyler var. Denetim belgeyi değiştirmez.
+
+**Sınır:** Bu ilk koruma batch sınır kutusunun viewportun eksenlere paralel
+alanıyla kesişmesini kullanır. Döndürülmüş/çokgen viewport kırpmasında
+yalnız kırpma dışında kalan batch için gereğinden ihtiyatlı ret olabilir;
+bu henüz tam kırpma kabulü değildir. Uzun desen ve yazı/şekil çizimi
+henüz düzeltilmedi; açık kayıp artık teslim başarısı sayılmaz.
+
+Gerçek GUI testinde çıktı üretim hatasının yalnız günlüğe yazılıp PDF
+penceresinin kapandığı da görüldü. Host artık üretim/yazma hatasında aynı
+KentOS çıktı seçeneklerini kapsam ve DPI ile yeniden açar; standart hata
+bandı nedenini gösterir. Bu davranış hem paylaşılan UI hem desktop host
+testiyle kapsandı. Ayrı bir özel hata bileşeni eklenmedi.
+
+**Doğrulama:** plot 18 birim + 64 entegrasyon testi geçti (3 test bilinçli
+ignored); style-core 36, native-style 34 + batches 2, MCP kabul filtresi 2,
+Python testi 1, çıktı hatası için UI/desktop testleri 1'er geçti. Desktop
+strict Clippy ve derleme, GPU test hedefinin derlenmesi geçti; bu sonuncusu
+GPU piksel kabulü sayılmaz. Python uzantısı yeniden derlendi.
+
+Gerçek uygulama binary SHA-256:
+`8fd737d460090516a9ac5872bf1304c1250870aa36af407b3bc39a3f2f0eeb9f`.
+1:50 paftada PDF kaydı fareyle denendi: hedef PDF oluşmadı, neden standart
+pencerede kaldı. Tam denetim LONG12 ve WATER için iki ayrı hata gösterdi.
+Aynı tanımlar korunup nesnelere desteklenen built-in desen atanmış bağımsız
+olumlu kontrol dosyası GUI'den başarıyla PDF verdi (13.241 bayt). Ekranlar
+repo dışında `linetype-guard-pdf-failure-visible-gui.png`,
+`linetype-guard-preflight-gui.png`, `linetype-supported-pdf-gui.png`;
+olumlu çıktı `linetype-supported-guard-gui.pdf`, yukarıdaki deney dizininde.
+
+CAD-ADV-11 açık; ortak tam desen/GPU buffer ve yazı/şekil uygulaması sürüyor.

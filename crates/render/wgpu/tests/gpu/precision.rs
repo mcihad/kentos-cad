@@ -113,6 +113,7 @@ fn scene(center: Vec2, kind: usize, id: u64) -> StyledScene {
                     group: 0,
                     effect: None,
                     weight_cap: 0.,
+                    line_type_loss: None,
                 }],
                 ..Default::default()
             },

@@ -164,7 +164,10 @@ impl App {
                     path.display()
                 )),
             },
-            Err(e) => self.warn(format!("Yazdırılamadı: PDF yazılamadı: {e}")),
+            Err(e) => {
+                self.sheets.output_failed(kentos_sheet_ui::ExportKind::Pdf, true, &e);
+                self.warn(format!("Yazdırılamadı: PDF yazılamadı: {e}"));
+            }
         }
         Task::none()
     }

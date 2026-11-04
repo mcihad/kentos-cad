@@ -1979,17 +1979,17 @@ impl App {
         let written = made.and_then(|(bytes, findings)| {
             kentos_headless::files::write_bytes(&bytes, &path)
                 .map(|_| findings)
-                .map_err(|e| {
-                    self.sheets.export_failed(&e.message);
-                    e.message
-                })
+                .map_err(|e| e.message)
         });
         match written {
             Ok(findings) => {
                 self.output(format!("{} yazıldı.", path.display()));
                 self.say_pdf_findings(&findings);
             }
-            Err(e) => self.warn(format!("Dışa aktarılamadı: {e}")),
+            Err(e) => {
+                self.sheets.output_failed(kind, false, &e);
+                self.warn(format!("Dışa aktarılamadı: {e}"));
+            }
         }
     }
 

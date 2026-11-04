@@ -392,6 +392,8 @@ pub struct StyledBatch {
     /// on the model screen (docs/adr/0793 §1): zoomed in past the drawing scale the line keeps its paper width instead
     /// of swelling with the world. 0 holds nothing (a sheet, a width on the ground or in px).
     pub weight_cap: f64,
+    /// Source diagnostic attached to an actually emitted stroke.
+    pub line_type_loss: Option<String>,
 }
 
 /// A shadow as the page draws it (docs/adr/0226 §2): its offset (x right,
@@ -493,6 +495,14 @@ fn dash8(v: &Value, k: &str) -> Option<Vec<f64>> {
             .take(8)
             .map(|x| x.as_f64().unwrap_or(0.0))
             .collect()
+    })
+}
+
+fn line_type_loss(style: &Value) -> Option<String> {
+    opt_s(style, "lineTypeLoss").map(str::to_owned).or_else(|| {
+        style.get("dash").and_then(Value::as_array)
+            .filter(|d| d.len() * if d.len() % 2 == 1 { 2 } else { 1 } > 8)
+            .map(|_| "Sembolün uzun çizgi/boşluk deseni mevcut çizim hattında eksiksiz üretilemiyor.".into())
     })
 }
 
@@ -1208,6 +1218,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     group,
                     effect: effect.clone(),
                     weight_cap: if paper(style) { held } else { 0.0 },
+                    line_type_loss: line_type_loss(style),
                 }
             }
             "fill" => StyledBatch {
@@ -1226,6 +1237,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                 group,
                 effect: effect.clone(),
                 weight_cap: if s(style, "kind") == "hatch" && paper(style) { held } else { 0.0 },
+                line_type_loss: (s(style, "kind") == "hatch").then(|| line_type_loss(style)).flatten(),
             },
             _ => {
                 let common = style.get("common").unwrap_or(&Value::Null);
@@ -1268,6 +1280,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     group,
                     effect: effect.clone(),
                     weight_cap: 0.0,
+                    line_type_loss: None,
                 }
             }
         };
@@ -1709,6 +1722,9 @@ impl StyledLayer {
             }),
         };
         if let Value::Object(o) = &mut v {
+            if let Some(loss) = &b.line_type_loss {
+                o.insert("lineTypeLoss".into(), json!(loss));
+            }
             o.insert("bounds".into(), json!(b.bounds));
             if b.origin != [0.0, 0.0] {
                 o.insert("origin".into(), json!(b.origin));

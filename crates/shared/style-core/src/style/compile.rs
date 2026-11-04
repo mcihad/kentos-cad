@@ -393,6 +393,7 @@ fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Op
             .dash_offset
             .filter(|&x| truthy_num(x))
             .map_or(0.0, len),
+        line_type_loss: layer.line_type_loss.clone(),
         cap: layer.cap.clone().unwrap_or_else(|| "butt".into()),
         join: layer.join.clone().unwrap_or_else(|| "miter".into()),
         blur: layer.blur.filter(|&x| truthy_num(x)).map_or(0.0, len),

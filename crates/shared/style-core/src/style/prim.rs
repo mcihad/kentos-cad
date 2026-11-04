@@ -37,6 +37,7 @@ pub struct StrokeStyle {
     /// On/off lengths in `unit`, or None.
     pub dash: Option<Vec<f64>>,
     pub dash_offset: f64,
+    pub line_type_loss: Option<String>,
     pub cap: String,
     pub join: String,
     /// Soft edge width in `unit` (0 = crisp).
@@ -417,6 +418,9 @@ impl StrokeStyle {
         o.str("join", &self.join);
         o.num("blur", self.blur);
         o.num("level", self.level);
+        if let Some(loss) = &self.line_type_loss {
+            o.str("lineTypeLoss", loss);
+        }
         o.end();
     }
 }

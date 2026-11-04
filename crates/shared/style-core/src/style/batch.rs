@@ -881,6 +881,7 @@ mod tests {
             unit: PrimUnit::World,
             dash: None,
             dash_offset: 0.0,
+            line_type_loss: None,
             cap: "butt".into(),
             join: "miter".into(),
             blur: 0.0,

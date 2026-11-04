@@ -75,6 +75,7 @@ fn batch(
         max_scale: None,
         group: u32::from(effect.is_some()),
         weight_cap: 0.0,
+        line_type_loss: None,
         effect: effect.cloned(),
     }
 }

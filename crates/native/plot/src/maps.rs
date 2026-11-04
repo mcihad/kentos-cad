@@ -310,6 +310,90 @@ pub(crate) fn built_layers_profile(
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
     labels: &[MapLabel],
 ) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
+    let built = built_layers_profile_unchecked(src, layers, overrides, scale, extent, profile, labels)?;
+    let losses = emitted_line_type_losses(&built, scale, extent, src.origin);
+    if !losses.is_empty() {
+        return Err(format!("{} Eksik çizgi deseniyle çıktı üretilmedi.", losses.join("\n")));
+    }
+    Ok(built)
+}
+
+/// Uses the same resolved primitives as delivery, including BYBLOCK, layer
+/// overrides, custom symbols, filters and hidden expanded pieces.
+pub(crate) fn line_type_losses(
+    src: &MapSource<'_>,
+    map: &kentos_sheet::display::MapPrim,
+) -> Result<Vec<String>, String> {
+    let Some(extent) = map.extent else { return Ok(Vec::new()); };
+    if !line_type_check_needed(src.doc, map, src.library) {
+        return Ok(Vec::new());
+    }
+    let built = built_layers_profile_unchecked(src, &map.layers, &map.layer_overrides,
+        map.view.scale, extent, None, &[])?;
+    Ok(emitted_line_type_losses(&built, map.view.scale, extent, src.origin))
+}
+
+/// Cheap source gate, not the finding itself. The ordinary built-in/short
+/// pattern project must not compile its map a second time for this check.
+pub(crate) fn line_type_check_needed(
+    doc: &kentos_domain::Document, map: &kentos_sheet::display::MapPrim, library: &StyleLibrary,
+) -> bool {
+    let types = kentos_native_style::line_types::LineTypes::of(doc.settings());
+    if types.has_losses() { return true; }
+    let bad = |name: Option<&str>| name.is_some_and(|n| types.loss(n).is_some());
+    fn long_dash(v: &serde_json::Value) -> bool {
+        match v {
+            serde_json::Value::Object(m) => m.get("lineTypeLoss").is_some()
+                || m.get("dash").and_then(serde_json::Value::as_array)
+                    .is_some_and(|d| d.len() * if d.len()%2==1 {2} else {1} > 8)
+                || m.values().any(long_dash),
+            serde_json::Value::Array(a) => a.iter().any(long_dash),
+            _ => false,
+        }
+    }
+    fn layers(nodes: &[kentos_contracts::LayerNode], bad: &impl Fn(Option<&str>)->bool) -> bool {
+        nodes.iter().any(|n| bad(n.style.line_pattern.as_deref())
+            || n.style.renderer.as_ref().is_some_and(long_dash) || layers(&n.children,bad))
+    }
+    layers(doc.layers().nodes(), &bad)
+        || doc.entities().any(|e| bad(e.base().look.line_pattern.as_deref()))
+        || doc.blocks().iter().flat_map(|b| &b.entities).any(|e| bad(e.base().look.line_pattern.as_deref()))
+        || doc.settings().layer_states.iter().flat_map(|s| &s.nodes)
+            .any(|n| n.style.as_ref().is_some_and(|s|bad(s.line_pattern.as_deref()) || s.renderer.as_ref().is_some_and(long_dash)))
+        || map.layer_overrides.iter().any(|o|bad(o.line_pattern.as_deref()))
+        || library.items(None).iter().any(|(item,_)|item.symbol().is_some_and(long_dash))
+}
+
+fn emitted_line_type_losses(
+    built: &[(String, String, kentos_native_style::StyledLayer)],
+    scale: f64,
+    extent: [f64; 4],
+    origin: Vec2,
+) -> Vec<String> {
+    let seen = [extent[0]-origin.x, extent[1]-origin.y, extent[2]-origin.x, extent[3]-origin.y];
+    let px_per_m = 1. / (scale.max(1e-6) * kentos_native_style::program::METRES_PER_PX);
+    built.iter().flat_map(|(_, name, layer)| layer.batches.iter().filter_map(move |b| {
+        b.line_type_loss.as_ref().filter(|_| {
+            let ink = match &b.kind {
+                kentos_native_style::batches::BatchKind::Stroke { color, .. } => color[3] > 0.,
+                kentos_native_style::batches::BatchKind::Fill { paint: kentos_native_style::FillPaintBatch::Hatch { color, .. } } => color[3] > 0.,
+                _ => false,
+            };
+            ink && b.in_scale(scale) && b.in_view(seen, px_per_m, 1.)
+        })
+            .map(|loss| format!("{name}: {loss}"))
+    })).collect::<std::collections::BTreeSet<_>>().into_iter().collect()
+}
+
+fn built_layers_profile_unchecked(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+    labels: &[MapLabel],
+) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
     let pen_mm = profile

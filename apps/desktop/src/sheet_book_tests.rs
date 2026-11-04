@@ -2623,3 +2623,22 @@ fn sheet_snapshot_source_report_screens(){
         snap.render(app.view(),&app.theme()).save(out.join(format!("sheet29-source-{theme}-{text}.png"))).unwrap();
     }
 }
+
+#[test]
+fn a_host_pdf_refusal_reopens_output_options_and_never_creates_the_chosen_file() {
+    use kentos_sheet_ui::{DemoMaps, ExportKind, message::PdfMessage, painter::lend};
+    let mut app = sheet_preflight_app("light", 13);
+    sheet(&mut app, Sheet::Print);
+    let options = app.sheets.output_pdf_options();
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    // The native file chooser already returned; no OS dialog is needed here.
+    app.sheets.update(Sheet::Pdf(PdfMessage::Save));
+    let path = scratch("sheet-host-refusal").join("must-not-exist.pdf");
+    assert!(!path.exists());
+    app.sheet_export_to(ExportKind::Pdf, Some(path.clone()));
+    assert!(!path.exists());
+    assert!(app.sheets.error().is_some_and(|e| e.starts_with("Dışa aktarılamadı:")));
+    assert!(app.sheets.window(lend(&DemoMaps)).is_some());
+    assert_eq!(app.sheets.output_pdf_options(), options);
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+}

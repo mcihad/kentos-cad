@@ -48,6 +48,8 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     out.retain(|f| f.code != "low_resolution");
     let scene = kentos_sheet::scene::Scene::new(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
+    let library = crate::book::library_of(doc);
+    let mut line_type_drawer = crate::book::MapDrawer::new(doc, &spatial, &library, None);
     for prim in &list.prims {
         if let Prim::Image(i) = prim
             && let Some(a) = book
@@ -137,6 +139,15 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
             continue;
         };
         out.extend(map_text_coverage(doc, m));
+        let losses = if crate::maps::line_type_check_needed(doc, m, &library) {
+            line_type_drawer.inspect_line_types(book, m, sheet)
+            .map_err(|message| PlotError::new("style_compile_failed", message))?
+        } else { Vec::new() };
+        for message in losses {
+            out.push(finding(&m.item, "linetype_unsupported", message,
+                "Çizgi tipinin kaynak ve görünüş sorununu giderin veya desteklenen deseni açıkça seçin; eksik desen teslim edilmez.",
+                Severity::Error));
+        }
         let shown = crate::layers::map_layers(
             doc.layers().nodes(),
             &doc.settings().layer_states,

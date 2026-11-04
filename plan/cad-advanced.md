@@ -1594,6 +1594,22 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
   Ekran ve deney dosyaları repo dışında. Bu başlangıç hatası kanıtıdır;
   düzeltme sonrası kabul veya maddenin tamamlanması değildir.
 
+**İlk çıktı koruması (4 Kasım 2026):**
+
+- Gerçek stil derleme sonucundaki kaynak kaybı artık `linetype_unsupported`
+  bulgusuyla GUI tam ön denetimine, Python ve MCP sorgusuna taşınır.
+  PDF/önizleme ve doğrudan CPU/vektör çıktısı eksik görünüşü sessizce
+  teslim etmez. Kullanılmayan tanım ve desteklenen özel sembol yanlış
+  engel oluşturmamalı; bunlar regresyon testleriyle kapsandı.
+- Gerçek 1:50 GUI testinde LONG12 ve WATER ayrı hata verdi; eksik PDF
+  oluşmadı. Kaydetme reddinde kapanıp açıklamayı kaybeden çıktı penceresi
+  düzeltildi. Aynı kullanılmayan tanımları taşıyan desteklenen desen
+  dosyası GUI'den PDF üretti. Kanıtlar repo dışında; test sayıları ve
+  kapsam sınırları ADR 0930'da.
+- Bu, uzun/yazılı/şekilli deseni çizme tamamlanması değildir. Çokgen veya
+  döndürülmüş viewportun tam kırpma denetimi de açık; ilk koruma batch
+  sınır kutusunu kullanır. Maddenin tamamlandı işareti değiştirilmedi.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

@@ -1202,3 +1202,35 @@ fn import_scale_agent_uses_the_same_physical_reference_and_undo_in_a_project_wit
     call(&mut server,"drawing.undo",json!({"drawing":drawing}));assert_eq!(call(&mut server,"drawing.summary",json!({"drawing":drawing}))["objects"],before["objects"]);
     let refused=tool_result(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":path,"fileUnit":"mm","scaleReference":reference}));assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"invalid_scale");std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn sheet_preflight_agent_reports_visible_linetype_loss_without_writing_or_mutating() {
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/file.preflight.sheets.json"
+    )).unwrap();
+    let root = std::env::temp_dir().join(format!("kentos-mcp-linetype-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    let mut model = fx["model"].clone();
+    model["settings"]["lineTypes"] = json!([{"name":"HW", "unit":"paper", "elements":[
+        {"length":2.}, {"length":-1.}, {"length":0.,"text":{"text":"HW","style":"STANDARD","scale":0.1}}, {"length":-1.}
+    ]}]);
+    model["entities"][0]["linePattern"] = json!("HW");
+    let source = root.join("source.kcad");
+    let bytes = serde_json::to_vec(&model).unwrap();
+    std::fs::write(&source, &bytes).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let ops = fx["book"]["sheets"].as_array().unwrap().iter()
+        .map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();
+    call(&mut server, "cad.sheets.edit", json!({"drawing":drawing,"ops":ops}));
+    let result = call(&mut server, "file.preflight.sheets", json!({"drawing":drawing}));
+    assert_eq!(result["status"], "completed", "{result}");
+    assert_eq!(result["output"]["ready"], false, "{result}");
+    assert!(result["output"]["issues"].as_array().unwrap().iter().any(|i|
+        i["code"]=="linetype_unsupported" && i["error"]==true
+            && i["message"].as_str().unwrap().contains("HW")));
+    assert_eq!(std::fs::read(&source).unwrap(), bytes);
+    assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
+    std::fs::remove_dir_all(root).unwrap();
+}
