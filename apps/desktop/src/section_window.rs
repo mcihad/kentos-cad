@@ -165,6 +165,8 @@ pub struct TemplateRow {
     right: SideRow,
     /// The right side mirrors the left.
     mirror: bool,
+    /// The pavement, kept as it is (docs/adr/0930 §3).
+    pavement: Option<kentos_commands::PavementDef>,
 }
 
 impl TemplateRow {
@@ -176,6 +178,7 @@ impl TemplateRow {
             left: SideRow::of(&t.left),
             right: t.right.as_ref().map_or_else(|| SideRow::of(&t.left), SideRow::of),
             mirror: t.right.is_none(),
+            pavement: t.pavement.clone(),
         }
     }
 
@@ -186,6 +189,7 @@ impl TemplateRow {
             revision: self.revision,
             left: self.left.def("Sol")?,
             right: if self.mirror { None } else { Some(self.right.def("Sağ")?) },
+            pavement: self.pavement.clone(),
         })
     }
 }
@@ -559,6 +563,7 @@ impl App {
                     left: side.clone(),
                     right: side,
                     mirror: true,
+                    pavement: None,
                 });
                 w.chosen = Some(Chosen::Template(w.templates.len() - 1));
                 w.right = false;
@@ -914,7 +919,7 @@ impl App {
         }
         for d in &templates {
             let kept = w.kept_templates.iter().find(|k| k.id == d.id);
-            if kept.is_some_and(|k| k.left == d.left && k.right == d.right && k.name == d.name) {
+            if kept.is_some_and(|k| k.left == d.left && k.right == d.right && k.name == d.name && k.pavement == d.pavement) {
                 continue;
             }
             let edit = TemplatesEdit {
@@ -924,6 +929,8 @@ impl App {
                 left: Some(d.left.clone()),
                 right: d.right.clone(),
                 mirror: d.right.is_none(),
+                remove_pavement: d.pavement.is_none() && kept.is_some_and(|k| k.pavement.is_some()),
+                pavement: d.pavement.clone(),
                 expected_revision: None,
             };
             if !self.section_write(|cx| road_templates_edit::execute(cx, edit)) {
@@ -979,6 +986,8 @@ impl App {
                 left: None,
                 right: None,
                 mirror: false,
+                pavement: None,
+                remove_pavement: false,
                 expected_revision: None,
             };
             if !self.section_write(|cx| road_templates_edit::execute(cx, edit)) {

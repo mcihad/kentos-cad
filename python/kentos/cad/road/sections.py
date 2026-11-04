@@ -442,11 +442,15 @@ class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQu
     yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer
     daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi
     arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan
-    open'dır, kot uydurulmaz. Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı
-    kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar:
-    section_set_stale, section_surface_gone, section_open. Retler: not_a_road_project,
-    unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık
-    kurulamıyorsa geometrinin retleri.
+    open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları,
+    zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan
+    sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin
+    altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi
+    silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden
+    söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open,
+    pavement_unbuilt. Retler: not_a_road_project, unknown_section_set,
+    invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa
+    geometrinin retleri.
     """
     __slots__ = ()
     id = "road.sections.query"
@@ -475,12 +479,15 @@ class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQu
         ve şevleri. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse
         dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve
         dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde
-        integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Raporda
-        km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi
-        boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale,
-        section_surface_gone, section_open. Retler: not_a_road_project, unknown_section_set,
-        invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa
-        geometrinin retleri.
+        integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip
+        kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan
+        üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu
+        alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu −
+        üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen)
+        takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar:
+        section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler:
+        not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks
+        ya da boykesit artık kurulamıyorsa geometrinin retleri.
 
         Args:
             doc: The drawing it works on.

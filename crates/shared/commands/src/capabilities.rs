@@ -1742,7 +1742,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.sections.query",
         refusals: &[&["not_a_road_project", "unknown_section_set", "invalid_section_set", "invalid_places"]],
-        warnings: &["section_set_stale", "section_surface_gone", "section_open", "section_superelevation_gone"],
+        warnings: &["section_set_stale", "section_surface_gone", "section_open", "section_superelevation_gone", "pavement_unbuilt"],
         targets: none,
     },
     Entry {
@@ -1862,7 +1862,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.volumes.query",
         refusals: &[&["not_a_road_project", "unknown_volume", "invalid_volume"]],
-        warnings: &["corridor_stale", "volume_gap", "volume_uncovered", "volume_unfactored", "volume_changed"],
+        warnings: &["corridor_stale", "volume_gap", "pavement_unbuilt", "volume_uncovered", "volume_unfactored", "volume_changed"],
         targets: none,
     },
     // KentOS Yol's mass haul diagrams (plan/road.md Y9, docs/adr/0907).

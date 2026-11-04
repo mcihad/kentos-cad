@@ -17,6 +17,8 @@ from ..types import (  # noqa: F401
     VolumeFactorDef,
     VolumeMethod,
     VolumeMethodName,
+    VolumeRule,
+    VolumeRuleName,
     VolumeStripDef,
     VolumesApprove,
     VolumesEdit,
@@ -186,13 +188,18 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
     (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel
     toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu
     yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik ×
-    yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. Kübaj
-    koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her
-    okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma
-    adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce
-    road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez
-    (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved,
-    volume_in_use, unknown_corridor, invalid_volume, invalid_revision,
+    yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule
+    kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround
+    Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil
+    Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı
+    kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa
+    Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir.
+    Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç
+    saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n.
+    Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez
+    (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj
+    silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume,
+    volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision,
     revision_conflict.
     """
     __slots__ = ()
@@ -216,6 +223,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        rule: VolumeRule | VolumeRuleName | None | Unset = UNSET,
         strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -233,13 +241,18 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş
         kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height:
         basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya
-        katılmaz; bench null kaldırır. Kübaj koridorunu izler, başka koridora bağlanmaz,
-        yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği
-        verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez
-        ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin
-        kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project,
-        unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume,
-        invalid_revision, revision_conflict.
+        katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla):
+        roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel
+        Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip
+        ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister;
+        rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her
+        kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden
+        bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya
+        da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez
+        (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj
+        silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume,
+        volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -250,6 +263,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             factors:
             method:
             name:
+            rule: Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
             strip: The topsoil stripped by stations; an empty list takes it off.
             volume:
             request_id: Names this write: sent again with the same call it is answered as
@@ -272,6 +286,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            rule=rule,
             strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ), request_id=request_id, expected=expected)
@@ -288,6 +303,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        rule: VolumeRule | VolumeRuleName | None | Unset = UNSET,
         strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
     ) -> VolumesWritten:
@@ -302,6 +318,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            rule=rule,
             strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ))
@@ -318,6 +335,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        rule: VolumeRule | VolumeRuleName | None | Unset = UNSET,
         strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -332,6 +350,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            rule=rule,
             strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ))
@@ -348,6 +367,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        rule: VolumeRule | VolumeRuleName | None | Unset = UNSET,
         strip: Sequence[VolumeStripDef] | None | Unset = UNSET,
         volume: str | None | Unset = UNSET,
         op: str = "execute",
@@ -367,6 +387,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             factors=_opt(factors, lambda x: list(x)),
             method=method,
             name=name,
+            rule=rule,
             strip=_opt(strip, lambda x: list(x)),
             volume=volume,
         ), op=op, request_id=request_id, expected=expected)
@@ -384,11 +405,13 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
     birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş;
     surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi
     olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı
-    hacimleri (satırda ve toplamda); hesaplanamıyorsa nedeni. volume ile yalnız biri.
-    Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve
-    değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap,
-    volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project,
-    unknown_volume, invalid_volume.
+    hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı
+    varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla);
+    hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval):
+    onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan
+    aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered,
+    volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume,
+    invalid_volume.
     """
     __slots__ = ()
     id = "road.volumes.query"
@@ -414,12 +437,13 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
         kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı
         (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu
         plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş
-        kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda);
-        hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval):
-        onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan
-        aralıklar. Uyarılar: corridor_stale, volume_gap, volume_uncovered,
-        volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume,
-        invalid_volume.
+        kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural
+        (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad,
+        malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile
+        yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların
+        farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale,
+        volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed.
+        Retler: not_a_road_project, unknown_volume, invalid_volume.
 
         Args:
             doc: The drawing it works on.

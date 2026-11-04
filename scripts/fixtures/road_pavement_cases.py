@@ -202,6 +202,69 @@ def make(name, template, axis, ground, layers, edge, strip=0):
     return out
 
 
+def bottom_line(pts, caps, end, hinge, edge, d):
+    """A layer's bottom `d` deep, outward to where it meets the edge: the hinge's foot for a vertical edge, the edge line
+    for a slope (clamped to the hinge and the pavement's end)."""
+    line = shifted(pts, d)
+    if edge is None:
+        stop = hinge[0]
+    else:
+        (h0, h1) = caps[0]
+        me = (h1[1] - h0[1]) / (h1[0] - h0[0])
+        p, q = line[-2], line[-1]
+        ml = (q[1] - p[1]) / (q[0] - p[0])
+        u = (p[1] - ml * p[0] - h0[1] + me * h0[0]) / (me - ml)
+        stop = min(max(u, hinge[0]), end)
+    out = [x for x in line if x[0] < stop]
+    for a, b in zip(line, line[1:]):
+        if a[0] <= stop <= b[0] and b[0] > a[0]:
+            out.append((stop, a[1] + (b[1] - a[1]) * (stop - a[0]) / (b[0] - a[0])))
+            break
+    return out
+
+
+def section_pavement(template, axis, ground, pavement, built, cut, fill):
+    """A section's pavement row (road.sections.query's `pavement`) for a template's `pavement` definition: none where
+    it does not build. `built`: the two sides as road_template_cases.py builds them; `cut`, `fill` the road's areas."""
+    layers = [F(l["thickness"]) for l in pavement["layers"]]
+    edge = pavement["edge"]["h"] if pavement["edge"]["kind"] == "slope" else None
+    for key in ("left", "right"):
+        if not template[key]["components"]:
+            return None
+        if edge is not None:
+            last = F(template[key]["components"][-1]["slope"]) / 100
+            if last + 1 / F(edge) <= 0:
+                return None
+    depths, d = [], F(0)
+    for t in layers:
+        d += t
+        depths.append(d)
+    areas_l = [F(0)] * len(depths)
+    below = above = F(0)
+    halves = []
+    for key, right in (("left", False), ("right", True)):
+        pts, caps, end, hinge = pave_side(template[key], built[key], axis, depths, edge, right)
+        top_d = F(0)
+        for i, dd in enumerate(depths):
+            areas_l[i] += integrate([shifted(pts, top_d)], caps, [shifted(pts, dd)], F(0), end)
+            top_d = dd
+        for run in ground_runs(ground, right):
+            below += integrate([pts, run], caps, [shifted(pts, depths[-1])], F(0), end)
+            above += integrate([pts], caps, [shifted(pts, depths[-1]), run], F(0), end)
+        sign = 1 if right else -1
+        halves.append([[(sign * u, z) for u, z in bottom_line(pts, caps, end, hinge, edge, dd)] for dd in depths])
+    bottoms = [[[float(u), float(z)] for u, z in list(reversed(halves[0][i])) + halves[1][i][1:]] for i in range(len(depths))]
+    return {
+        "layers": [{"name": l["name"], "area": float(a)} for l, a in zip(pavement["layers"], areas_l)],
+        "below": float(below),
+        "above": float(above),
+        "formation": bottoms[-1],
+        "bottoms": bottoms,
+        "formationCut": float(F(cut) + below),
+        "formationFill": float(F(fill) - above),
+    }
+
+
 ROAD = [lane(3.5, -2.5), shoulder(1.0, -4)]
 SYM = {"left": side(ROAD), "right": side(ROAD)}
 DITCH = {"left": side(ROAD, 1.0, 1.5, (2.0, 0.8, 0.5)), "right": side(ROAD, 1.0, 1.5, (2.0, 0.8, 0.5))}

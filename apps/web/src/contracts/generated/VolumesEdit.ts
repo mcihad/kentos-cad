@@ -3,6 +3,7 @@ import type { RoadEditOperation } from "./RoadEditOperation";
 import type { VolumeBenchDef } from "./VolumeBenchDef";
 import type { VolumeFactorDef } from "./VolumeFactorDef";
 import type { VolumeMethod } from "./VolumeMethod";
+import type { VolumeRule } from "./VolumeRule";
 import type { VolumeStripDef } from "./VolumeStripDef";
 
 /**
@@ -14,7 +15,8 @@ import type { VolumeStripDef } from "./VolumeStripDef";
  * uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
  * set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
  * overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
- * benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
+ * benching between surfaces; a corridor that does not build; a Bitkisel Toprak rule without stripping, a Formasyon rule
+ * between surfaces or on a template without a pavement), `invalid_revision`, `revision_conflict`.
  */
 export type VolumesEdit = { operation: RoadEditOperation, volume?: string, name?: string, corridor?: string, method?: VolumeMethod, factors?: Array<VolumeFactorDef>, 
 /**
@@ -24,4 +26,8 @@ strip?: Array<VolumeStripDef>,
 /**
  * The fill's foundation benched; null takes it off.
  */
-bench?: VolumeBenchDef | null, expectedRevision?: string, };
+bench?: VolumeBenchDef | null, 
+/**
+ * Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
+ */
+rule?: VolumeRule, expectedRevision?: string, };

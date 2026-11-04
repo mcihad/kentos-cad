@@ -19,6 +19,13 @@ struct Checked {
 
 fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked, Stop> {
     common::road_project(doc)?;
+    if input.pavement.is_some() && input.remove_pavement {
+        return Err(fail(
+            codes::INVALID_ROAD_TEMPLATE,
+            "pavement ile removePavement birlikte verilmez: üstyapı ya yazılır ya kaldırılır.".into(),
+            "removePavement",
+        ));
+    }
     let own = doc.road_templates();
     let mut list = own.to_vec();
     let found = input.template.as_deref().and_then(|t| common::find_template(own, t, "template").ok());
@@ -62,10 +69,16 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
         }
         (RoadEditOperation::Set, found) => match found {
             Some((at, old)) => {
-                if input.name.is_none() && input.left.is_none() && input.right.is_none() && !input.mirror {
+                if input.name.is_none()
+                    && input.left.is_none()
+                    && input.right.is_none()
+                    && !input.mirror
+                    && input.pavement.is_none()
+                    && !input.remove_pavement
+                {
                     return Err(fail(
                         codes::INVALID_ROAD_TEMPLATE,
-                        "Değiştirilecek bir şey yok: name, left, right ya da mirror verin.".into(),
+                        "Değiştirilecek bir şey yok: name, left, right, mirror, pavement ya da removePavement verin.".into(),
                         "",
                     ));
                 }
@@ -81,6 +94,12 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
                 }
                 if input.mirror {
                     t.right = None;
+                }
+                if let Some(p) = &input.pavement {
+                    t.pavement = Some(p.clone());
+                }
+                if input.remove_pavement {
+                    t.pavement = None;
                 }
                 if t != *old {
                     t.revision = old.revision.saturating_add(1);
@@ -105,6 +124,7 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
                     revision: 1,
                     left: left.clone(),
                     right: if input.mirror { None } else { input.right.clone() },
+                    pavement: if input.remove_pavement { None } else { input.pavement.clone() },
                 });
                 Some(id)
             }

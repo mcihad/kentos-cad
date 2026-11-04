@@ -13,4 +13,9 @@ strip?: number,
 /**
  * The benches cut over it (m³), where the volume benches.
  */
-bench?: number, totalCut: number, totalFill: number, mass: number, };
+bench?: number, 
+/**
+ * Each pavement layer's volume over it (m³), in the report's `layers` order; none where a section is not solved or
+ * its template has no such layer. Empty without a pavement.
+ */
+layers?: Array<number | null>, totalCut: number, totalFill: number, mass: number, };

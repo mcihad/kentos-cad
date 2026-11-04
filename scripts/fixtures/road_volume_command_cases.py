@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_pavement_cases as pvref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_template_cases as tref  # noqa: E402
@@ -50,6 +51,24 @@ def setup(volumes=START, corridors=CORRIDORS, work="road"):
 
 def road_of(volumes, corridors=CORRIDORS):
     return ccmd.road_of(corridors, volumes=volumes)
+
+
+class paved_templates:
+    """The corridors' templates with a pavement while the block runs (docs/adr/0930 §2): the main road's four layers on a
+    slope, the side road's two on a vertical edge; `flat_edge`: the side road's edge flatter than its shoulder."""
+
+    def __init__(self, flat_edge=False):
+        self.flat_edge = flat_edge
+
+    def __enter__(self):
+        self.saved = list(ccmd.TEMPLATES)
+        side = {**scmd.PAVE_V, "edge": {"kind": "slope", "h": 30.0}} if self.flat_edge else scmd.PAVE_V
+        ccmd.TEMPLATES[:] = [{**scmd.TK1, "pavement": scmd.PAVE}, {**scmd.TK2, "pavement": side}]
+        return self
+
+    def __exit__(self, *exc):
+        ccmd.TEMPLATES[:] = self.saved
+        return False
 
 
 class Refused(Exception):
@@ -96,17 +115,41 @@ def depth_at(v, s):
     return 0.0
 
 
-def earthwork(c, r, s, v):
-    """A section's cut, fill, topsoil and benches (docs/adr/0906 §6) in fractions: the design line against the terrain
-    lowered by the topsoil depth; the topsoil the depth times the footprint where the terrain is; the benches half their
-    height times the width where the stripped terrain under a fill falls steeper than the bench's slope. None where no
-    section is built."""
+def template_here(c, r, s):
+    """The region's template definition and the template as built at station `s` (the corridor's superelevation)."""
+    t = next(x for x in ccmd.TEMPLATES if x["id"] == r["template"])
+    plain = {"left": t["left"], "right": t.get("right") or t["left"]}
+    sup = c.get("superelevation")
+    if sup:
+        d = next(x for x in ccmd.SUPERS if x["id"] == sup)
+        if not ccmd.supcmd.build(d)[1]:
+            return t, scmd.superelevated(plain, d, s)
+    return t, plain
+
+
+def rule_of(v):
+    """The volume's rule (docs/adr/0930 §2): whether it measures from the formation and against the stripped ground."""
+    rule = v.get("rule")
+    if rule is None:
+        return False, bool(v.get("strip"))
+    return rule.startswith("formation"), rule.endswith("Topsoil")
+
+
+def earthwork(c, r, s, v, names=()):
+    """A section's cut, fill, topsoil and benches (docs/adr/0906 §6) in fractions as the volume's rule reads them
+    (docs/adr/0930 §2): the design line against the terrain lowered by the topsoil depth when the rule strips; the topsoil
+    the depth times the footprint where the terrain is, whichever the rule; the benches half their height times the
+    width where the (rule's) terrain under a fill falls steeper than the bench's slope; with the template's pavement, each
+    layer's area (by `names`, the report's layers) and, from the formation, the pavement under the ground added to the
+    cut and the one above taken from the fill. None where no section is built; "unbuilt" where the pavement does not."""
     row = section_row(c, r, s)
     if "left" not in row:
         return None
+    formation, topsoil = rule_of(v)
     depth = F(depth_at(v, s))
+    used = depth if topsoil else F(0)
     design = [(F(o), F(z)) for o, z in reversed(row["left"]["points"])] + [(F(o), F(z)) for o, z in row["right"]["points"][1:]]
-    ground = [{"offset": F(g["offset"]), "z": None if g.get("z") is None else F(g["z"]) - depth, "gap": g["gap"]}
+    ground = [{"offset": F(g["offset"]), "z": None if g.get("z") is None else F(g["z"]) - used, "gap": g["gap"]}
               for g in row["ground"]]
     cut, fill = tref.areas(design, ground)
     t = [(g["offset"], g["z"], g["gap"]) for g in ground]
@@ -136,7 +179,23 @@ def earthwork(c, r, s, v):
             benched += (b - a) * fa / (fa - fb)
         elif fb > 0:
             benched += (b - a) * fb / (fb - fa)
-    out = {"cut": float(cut), "fill": float(fill), "strip": float(depth * covered), "bench": 0.0}
+    layers = [None] * len(names)
+    tdef, here = template_here(c, r, s)
+    if tdef.get("pavement"):
+        built = {"left": row["left"], "right": row["right"]}
+        gr = [{"offset": g["offset"], "z": g["z"], "gap": g["gap"]} for g in ground]
+        pv = pvref.section_pavement(here, row["axis"], gr, tdef["pavement"], built, cut, fill)
+        if pv is None:
+            if formation:
+                return "unbuilt"
+            layers = "unbuilt-layers"
+        else:
+            layers = [None] * len(names)
+            for l in pv["layers"]:
+                layers[names.index(l["name"])] = l["area"]
+            if formation:
+                cut, fill = F(pv["formationCut"]), F(pv["formationFill"])
+    out = {"cut": float(cut), "fill": float(fill), "strip": float(depth * covered), "bench": 0.0, "layers": layers}
     if bench is not None:
         out["bench"] = float(benched * F(bench["height"]) / 2)
     return out
@@ -176,7 +235,23 @@ def compute(v, corridors=CORRIDORS):
     if method == "surfaces" and c["surface"] != "t-1":
         raise Refused("invalid_volume", f"“{c['name']}” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.",
                       "corridor")
-    worked = bool(v.get("strip")) or v.get("bench") is not None
+    tdefs = [next((x for x in ccmd.TEMPLATES if x["id"] == rg["template"]), {}) for rg in c["regions"]]
+    formation, _ = rule_of(v)
+    if formation:
+        for rg, td in zip(c["regions"], tdefs):
+            if not td.get("pavement"):
+                words = "Formasyon–Zemin" if v["rule"] == "formationGround" else "Formasyon–Bitkisel Toprak"
+                raise Refused("invalid_volume", f"{words} kuralı formasyonu ister: “{td.get('name', rg['template'])}” tip "
+                                                "kesitinde üstyapı yok. Tip kesite üstyapı tabakalarını yazın.", "rule")
+    names, materials = [], {}
+    for td in tdefs:
+        for l in (td.get("pavement") or {}).get("layers", []):
+            if l["name"] not in names:
+                names.append(l["name"])
+                materials[l["name"]] = l.get("material")
+    paved = bool(names)
+    unbuilt = set()
+    worked = bool(v.get("strip")) or v.get("bench") is not None or paved or v.get("rule") is not None
     for ri, reg in enumerate(regs):
         region = c["regions"][ri]
         for x, y in zip(reg["crosses"], reg["crosses"][1:]):
@@ -184,15 +259,35 @@ def compute(v, corridors=CORRIDORS):
             length = s1 - s0
             a, b = x["section"], y["section"]
             vol = extra = None
+            lay = [None] * len(names) if paved else []
             if a is not None and b is not None and worked:
-                ea, eb = earthwork(c, region, s0, v), earthwork(c, region, s1, v)
-                if method == "endArea":
-                    q = {k: length * (ea[k] + eb[k]) / 2 for k in ea}
-                else:
-                    em = earthwork(c, region, (s0 + s1) / 2, v)
-                    q = None if em is None else {k: length * (ea[k] + 4 * em[k] + eb[k]) / 6 for k in ea}
+                def ew(at):
+                    e = earthwork(c, region, at, v, names)
+                    if e == "unbuilt":
+                        unbuilt.add(at)
+                        return None
+                    if e is not None and e["layers"] == "unbuilt-layers":
+                        unbuilt.add(at)
+                        e["layers"] = [None] * len(names)
+                    return e
+                ea, eb = ew(s0), ew(s1)
+                q = None
+                if ea is not None and eb is not None:
+                    keys = ("cut", "fill", "strip", "bench")
+                    if method == "endArea":
+                        q = {k: length * (ea[k] + eb[k]) / 2 for k in keys}
+                        q["layers"] = [None if x is None or y is None else length * (x + y) / 2
+                                       for x, y in zip(ea["layers"], eb["layers"])]
+                    else:
+                        em = ew((s0 + s1) / 2)
+                        if em is not None:
+                            q = {k: length * (ea[k] + 4 * em[k] + eb[k]) / 6 for k in keys}
+                            q["layers"] = [None if None in (x, m, y) else length * (x + 4 * m + y) / 6
+                                           for x, m, y in zip(ea["layers"], em["layers"], eb["layers"])]
                 if q is not None:
                     vol, extra = (q["cut"], q["fill"]), (q["strip"], q["bench"])
+                    if paved:
+                        lay = q["layers"]
             elif a is not None and b is not None:
                 if method == "endArea":
                     vol = (length * (a["cut"] + b["cut"]) / 2, length * (a["fill"] + b["fill"]) / 2)
@@ -210,12 +305,13 @@ def compute(v, corridors=CORRIDORS):
                         areas["fill"] += r["fillArea"]
                         areas["uncovered"] += r["uncovered"]
                         vol = (r["cut"], r["fill"])
-            raws.append((s0, s1, vol, extra))
+            raws.append((s0, s1, vol, extra, lay))
     text = lambda s: ccmd.km_text(c["alignment"], s)  # noqa: E731
     cut = fill = fcut = ffill = strip = benched = 0.0
     unfactored = 0
     rows = []
-    for s0, s1, vol, extra in raws:
+    totals = [0.0] * len(names)
+    for s0, s1, vol, extra, lay in raws:
         cf, ff = factors_at(v, (s0 + s1) / 2)
         row = {"from": s0, "to": s1, "fromText": text(s0), "toText": text(s1)}
         if vol is not None:
@@ -233,13 +329,17 @@ def compute(v, corridors=CORRIDORS):
                 row["strip"] = extra[0]
             if v.get("bench") is not None:
                 row["bench"] = extra[1]
+        if lay:
+            row["layers"] = lay
+            for k, x in enumerate(lay):
+                totals[k] += 0.0 if x is None else x
         if cf is not None:
             row["cutFactor"] = cf
         if ff is not None:
             row["fillFactor"] = ff
         row.update({"totalCut": fcut, "totalFill": ffill, "mass": fcut - ffill})
         rows.append(row)
-    gaps = sorted([list(g) for g in cr["gaps"]] + [[s0, s1] for s0, s1, vol, _ in raws if vol is None], key=lambda g: g[0])
+    gaps = sorted([list(g) for g in cr["gaps"]] + [[s0, s1] for s0, s1, vol, _, _ in raws if vol is None], key=lambda g: g[0])
     joined = []
     for g in gaps:
         if joined and g[0] <= joined[-1][1] + 1e-9:
@@ -250,6 +350,12 @@ def compute(v, corridors=CORRIDORS):
         words = ", ".join(f"{text(g[0])} – {text(g[1])}" for g in joined[:8])
         more = f" ve {len(joined) - 8} aralık daha" if len(joined) > 8 else ""
         warnings.append(warn("volume_gap", f"“{v['name']}” kübajında hacmi olmayan aralıklar: {words}{more}."))
+    if unbuilt:
+        at = sorted(unbuilt)
+        words = ", ".join(text(x) for x in at[:8])
+        more = f" ve {len(at) - 8} kesit daha" if len(at) > 8 else ""
+        warnings.append(warn("pavement_unbuilt", f"“{v['name']}” kübajında şu kesitlerde üstyapı kurulamadı (kenar şevi "
+                                                 f"son bileşenden yatık ya da bileşensiz yan): {words}{more}."))
     if method == "surfaces" and areas["uncovered"] > 1e-6:
         warnings.append(warn("volume_uncovered", f"“{v['name']}” kübajında tasarım yüzeyinin {areas['uncovered']:.3f} m²'sini "
                                                  "arazi örtmüyor; o alanın hacmi yok."))
@@ -265,6 +371,11 @@ def compute(v, corridors=CORRIDORS):
         report["strip"] = strip
     if v.get("bench") is not None:
         report["bench"] = benched
+    if v.get("rule"):
+        report["rule"] = v["rule"]
+    if names:
+        report["layers"] = [{"name": n, **({"material": materials[n]} if materials[n] else {}), "volume": tot}
+                            for n, tot in zip(names, totals)]
     if v.get("approved"):
         approval = compare(v["approved"], report)
         if approval["changed"]:
@@ -414,6 +525,24 @@ def edit_cases():
         "execute", {"operation": "set", "volume": "v-1", "bench": None},
         completed({"volumes": listed([{**V1, "revision": 2}, V2]), "revision": "$current", "volume": report({**V1, "revision": 2})}),
         {**STEPPED, "road": road_of([{**V1, "revision": 2}, V2])})], setup([vb, V2])))
+    # Rules (docs/adr/0930 §2): Netpro's Yol/Formasyon against Zemin/Bitkisel Toprak.
+    ok("Yol–Zemin kuralı açıkça", {"operation": "set", "volume": "v-1", "rule": "roadGround"},
+       put(0, {**V1, "rule": "roadGround", "revision": 2}), "v-1")
+    ok("Yol–Bitkisel Toprak, sıyırmayla", {**base, "strip": strips, "rule": "roadTopsoil"},
+       START + [new("v-3", strip=strips, rule="roadTopsoil")], "v-3")
+    no("Bitkisel toprak kuralı sıyırmasız", {"operation": "set", "volume": "v-1", "rule": "roadTopsoil"},
+       rulefail("Yol–Bitkisel Toprak kuralı bitkisel toprak sıyırması ister: önce sıyırma kalınlıklarını (strip) verin", "rule"))
+    no("Yüzeyler arasında formasyon kuralı", {"operation": "set", "volume": "v-2", "rule": "formationGround"},
+       rulefail("Formasyon–Zemin kuralı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır", "rule"))
+    no("Üstyapısız tip kesitte formasyon kuralı", {"operation": "set", "volume": "v-1", "rule": "formationGround"},
+       failed("invalid_volume", "Formasyon–Zemin kuralı formasyonu ister: “Tip 1” tip kesitinde üstyapı yok. Tip kesite "
+                                "üstyapı tabakalarını yazın.", "rule"))
+    with paved_templates():
+        cases.append(case("Üstyapılı tip kesitlerde Formasyon–Zemin yazılır", [step(
+            "execute", {"operation": "set", "volume": "v-1", "rule": "formationGround"},
+            completed({"volumes": listed([{**V1, "rule": "formationGround", "revision": 2}, V2]), "revision": "$current",
+                       "volume": report({**V1, "rule": "formationGround", "revision": 2})}),
+            {**STEPPED, "road": road_of([{**V1, "rule": "formationGround", "revision": 2}, V2])})], setup()))
     no("Yol projesi değil", {"operation": "remove", "volume": "v-1"}, NOT_ROAD, setup(work="map"))
     no("Yeniden bağlanmaz", {"operation": "rebind", "volume": "v-1"},
        failed("invalid_volume", "Kübaj hesabı koridorunu izler, yeniden bağlanmaz; koridoru aksa yeniden bağlayın.", "operation"))
@@ -425,7 +554,7 @@ def edit_cases():
        failed("invalid_volume", "“Ana kübaj” kübaj hesabının koridoru değiştirilmez; başka koridor için yeni bir kübaj "
                                 "hesabı yazın.", "corridor"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "volume": "v-1"},
-       failed("invalid_volume", "Değiştirilecek bir şey yok: name, method, factors, strip ya da bench verin."))
+       failed("invalid_volume", "Değiştirilecek bir şey yok: name, method, factors, strip, bench ya da rule verin."))
     no("Yeni kübajın yöntemi yok", {k: val for k, val in base.items() if k != "method"},
        failed("invalid_volume", "Yeni kübaj hesabı için name, corridor ve method verilmeli.", "method"))
     no("Aynı ad", {**base, "name": "YAN kübaj"}, rulefail("bu adda başka bir kübaj hesabı var", "name"))
@@ -493,7 +622,7 @@ def query_cases():
             r, warns = compute(v, corridors)
             out = {"volumes": [r]}
         result = completed(None, warns) if op == "validate" else completed(out, warns)
-        default = volumes is START and corridors is CORRIDORS
+        default = volumes is START and corridors is CORRIDORS and ccmd.TEMPLATES == [scmd.TK1, scmd.TK2]
         cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(volumes, corridors)})],
                           None if default else setup(volumes, corridors)))
 
@@ -543,6 +672,18 @@ def query_cases():
     q("Onaydan sonra koridor sıklaştı: fark", {"volume": "v-1"}, [approved(V1), V2], [c_dense, ccmd.C2])
     c_short = {**ccmd.C1, "regions": [{"from": 0.0, "to": 300.0, "template": "tk-1"}]}
     q("Onaydan sonra bölge kısaldı: kalkan aralıklar", {"volume": "v-1"}, [approved(V1), V2], [c_short, ccmd.C2])
+    # Rules and pavement layers (docs/adr/0930 §2), on templates with a pavement.
+    with paved_templates():
+        q("Üstyapılı tip kesitler: tabaka hacimleri, Yol–Zemin", {"volume": "v-1"})
+        q("Formasyon–Zemin", {"volume": "v-1"}, [v(rule="formationGround"), V2])
+        q("Formasyon–Zemin, prizmoidal", {"volume": "v-1"}, [v(rule="formationGround", method="prismoidal"), V2])
+        q("Formasyon–Bitkisel Toprak", {"volume": "v-1"}, [v(rule="formationTopsoil", strip=strips), V2])
+        q("Yol–Bitkisel Toprak açıkça", {"volume": "v-1"}, [v(rule="roadTopsoil", strip=strips), V2])
+        q("Yol–Zemin: sıyırma ayrı kalem, kübaj doğal zemine", {"volume": "v-1"}, [v(rule="roadGround", strip=strips), V2])
+        q("Devere bağlı koridorda Formasyon–Zemin", {"volume": "v-2"}, [V1, {**V2, "method": "endArea", "rule": "formationGround"}])
+    with paved_templates(flat_edge=True):
+        q("Banketten yatık kenar: formasyon kurulmaz, hacimsiz, uyarı", {"volume": "v-1"}, [v(rule="formationGround"), V2])
+        q("Banketten yatık kenar, Yol–Zemin: tabakası yok, hacmi var", {"volume": "v-1"})
     q("Plan cevabı verir", {"volume": "v-1"}, op="plan")
     q("Doğrulama uyarıları verir", {"volume": "v-2"}, op="validate")
     q("Kübaj yok: boş liste", {}, [])

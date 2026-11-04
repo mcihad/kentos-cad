@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    PavementDef,
     RoadEditOperation,
     RoadEditOperationName,
     TemplateSideDef,
@@ -29,12 +30,17 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
     enine eğim (yüzde, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill
     (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik
     depth, taban bottom) yalnız yarmada. right verilmezse ya da mirror ile sağ yan solun
-    aynısıdır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı
-    sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol
-    yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir
-    artar. remove: tip kesit kalkar. Tek geri alma adımı “Tip kesit”. Retler:
-    not_a_road_project, unknown_road_template, invalid_road_template,
-    road_template_in_use, invalid_revision, revision_conflict.
+    aynısıdır. pavement üstyapıdır (iki yanda aynı): layers yukarıdan aşağı tabakalar
+    (ad name, kalınlık thickness m, isteğe bağlı malzeme kodu material), bitmiş yüze
+    paralel; edge menteşede nasıl bittikleri: vertical dik, slope h ile menteşeden 1
+    düşeye h yatay inen çizgiye kadar (h dolgu şevi olunca kenar dolgunun yüzü). Son
+    tabakanın tabanı formasyondur. removePavement üstyapıyı kaldırır. Değerleri KGM'nin
+    standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip
+    kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın
+    verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit
+    kalkar. Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project,
+    unknown_road_template, invalid_road_template, road_template_in_use,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.templates.edit"
@@ -55,6 +61,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
         left: TemplateSideDef | None | Unset = UNSET,
         mirror: bool | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        pavement: PavementDef | None | Unset = UNSET,
+        remove_pavement: bool | Unset = UNSET,
         right: TemplateSideDef | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -65,13 +73,17 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
         banket (shoulder), her biri genişlik (m) ve enine eğim (yüzde, dışa düşen eksi); uç
         koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe
         bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada.
-        right verilmezse ya da mirror ile sağ yan solun aynısıdır. Değerleri KGM'nin
-        standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip
-        kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın
-        verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit
-        kalkar. Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project,
-        unknown_road_template, invalid_road_template, road_template_in_use,
-        invalid_revision, revision_conflict.
+        right verilmezse ya da mirror ile sağ yan solun aynısıdır. pavement üstyapıdır (iki
+        yanda aynı): layers yukarıdan aşağı tabakalar (ad name, kalınlık thickness m, isteğe
+        bağlı malzeme kodu material), bitmiş yüze paralel; edge menteşede nasıl bittikleri:
+        vertical dik, slope h ile menteşeden 1 düşeye h yatay inen çizgiye kadar (h dolgu
+        şevi olunca kenar dolgunun yüzü). Son tabakanın tabanı formasyondur. removePavement
+        üstyapıyı kaldırır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar;
+        öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı
+        ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu
+        bir artar. remove: tip kesit kalkar. Tek geri alma adımı “Tip kesit”. Retler:
+        not_a_road_project, unknown_road_template, invalid_road_template,
+        road_template_in_use, invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -80,6 +92,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
             left:
             mirror: The right side mirrors the left (its own goes).
             name:
+            pavement: The pavement under the finish grade (docs/adr/0930 §2), replacing the template's.
+            remove_pavement: The template's pavement goes.
             right:
             template:
             request_id: Names this write: sent again with the same call it is answered as
@@ -100,6 +114,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
             left=left,
             mirror=mirror,
             name=name,
+            pavement=pavement,
+            remove_pavement=remove_pavement,
             right=right,
             template=template,
         ), request_id=request_id, expected=expected)
@@ -114,6 +130,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
         left: TemplateSideDef | None | Unset = UNSET,
         mirror: bool | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        pavement: PavementDef | None | Unset = UNSET,
+        remove_pavement: bool | Unset = UNSET,
         right: TemplateSideDef | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
     ) -> TemplatesWritten:
@@ -126,6 +144,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
             left=left,
             mirror=mirror,
             name=name,
+            pavement=pavement,
+            remove_pavement=remove_pavement,
             right=right,
             template=template,
         ))
@@ -140,6 +160,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
         left: TemplateSideDef | None | Unset = UNSET,
         mirror: bool | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        pavement: PavementDef | None | Unset = UNSET,
+        remove_pavement: bool | Unset = UNSET,
         right: TemplateSideDef | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -152,6 +174,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
             left=left,
             mirror=mirror,
             name=name,
+            pavement=pavement,
+            remove_pavement=remove_pavement,
             right=right,
             template=template,
         ))
@@ -166,6 +190,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
         left: TemplateSideDef | None | Unset = UNSET,
         mirror: bool | Unset = UNSET,
         name: str | None | Unset = UNSET,
+        pavement: PavementDef | None | Unset = UNSET,
+        remove_pavement: bool | Unset = UNSET,
         right: TemplateSideDef | None | Unset = UNSET,
         template: str | None | Unset = UNSET,
         op: str = "execute",
@@ -183,6 +209,8 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
             left=left,
             mirror=mirror,
             name=name,
+            pavement=pavement,
+            remove_pavement=remove_pavement,
             right=right,
             template=template,
         ), op=op, request_id=request_id, expected=expected)

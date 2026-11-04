@@ -68,15 +68,45 @@ Retler:
 
 ### §2 Kayıt ve komut (Y26.2)
 
-- Tip kesit tanımının `pavement` alanı: `layers[]` (ad, kalınlık m, isteğe bağlı malzeme kodu) ve `edge`
-  (`vertical` | `slope` + `h`). `.kcad`'de alan isteğe bağlıdır, üstyapısız tip kesit değişmez.
-- `road.templates.edit` alanı yazar; `road.sections.query` kesit başına tabaka alanlarını ve formasyonu verir.
-- Kübajın `rule` alanı NETPRO'nun adlarını taşır: `roadGround`, `formationGround`, `roadTopsoil`, `formationTopsoil`.
-  Sıyırma kazısı Y8.4'teki gibi ayrı kalemdir. Bitkisel topraklı kural sıyırma tanımı ister. Kuralın adı, karşılaştırdığı
-  iki çizgi ve zemin durumu cevapta yazılır.
-- Kübaj cetveline tabaka tabaka hacim sütunları gelir (ortalama alan, kesitlerin tabaka alanlarından).
+**Kayıt.** Tip kesit tanımının `pavement` alanı şunları taşır:
+
+- `layers[]`: ad, kalınlık (0–2 m), isteğe bağlı malzeme kodu. En çok 12 tabaka, toplam en çok 5 m.
+- `edge`: `{kind: vertical}` ya da `{kind: slope, h}` (0 < h ≤ 100).
+
+Yol ayarlarının bütünü gibi `.kcad` şema 162'dedir (yol işi). Alan isteğe bağlıdır, üstyapısız tip kesitin dosyası
+değişmez.
+
+**Komutlar.**
+
+- `road.templates.edit` `pavement` alanını yazar, `removePavement` kaldırır. İkisi birlikte verilirse ret.
+- `road.sections.query` her kesitte `pavement` verir:
+  - tabaka alanları;
+  - üstyapının zeminin altında (`below`) ve üstünde (`above`) kalan alanı;
+  - formasyon ve tabaka tabanları, soldan sağa;
+  - `formationCut`, `formationFill`.
+- Kurulamayan kesitler `pavement_unbuilt` uyarısıyla km'leriyle söylenir. Koridorun km kaydırıcısı (ADR 0911 §5) aynı
+  satırı verir.
+- Kübajın `rule` alanı NETPRO'nun dört kuralından biridir: `roadGround`, `formationGround`, `roadTopsoil`,
+  `formationTopsoil`.
+  - Kural yoksa davranış öncekidir: sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Var olan 17063 ortak durum bit
+    bit aynı kaldı.
+  - Sıyırma kazısı her kuralda ayrı kalemdir. Yol–Zemin'de sıyırma tanımlıysa kübaj doğal zemine göre yapılır, bitkisel
+    toprak yine ayrı yazılır.
+  - Retler (`invalid_volume`, yol `rule`):
+    - bitkisel topraklı kuralda `strip` yok;
+    - yüzeyler arası yöntemde Yol–Zemin dışı bir kural;
+    - formasyon kuralında koridorun bir tip kesitinde üstyapı yok (tip kesitin adı söylenir).
+  - Formasyon kurulamayan kesit hacimsizdir. Aralığı `volume_gap` söyler, nedenini `pavement_unbuilt` söyler.
+- Kübaj cetveli tabaka hacimlerini taşır:
+  - `layers`: bütün bölgelerin tip kesitlerindeki tabakalar, karşılaşma sırasıyla ve adlarıyla; ilk karşılaşılanın
+    malzemesi ve toplamı yazılır.
+  - Satırda tabaka sırasıyla `layers[]`. Hacim ortalama alanla ya da prizmoidal hesaplanır.
+  - Tabakası olmayan bölgede değer `null`'dur.
 
 ### §3 Masaüstü (Y26.3)
+
+**Dikkat (ölçüldü):** Python durum testi, katalogdaki `road.profiles.propose` örneğinin görüş mesafesi girdisini (`eye`)
+taşıdığını yakaladı (Y25'ten kalma). Örnek, önerinin kendi alanlarıyla düzeltildi.
 
 - Tip kesit penceresinde Üstyapı bölümü: tabaka tablosu (ad, kalınlık, malzeme), Kenar (Dik | Şevli, h). Pencere
   Y26.0'ın ortak düzenindedir.
@@ -97,7 +127,17 @@ Yalnız okuyan pencere değer değişince kendiliğinden yeniden okur, “Önizl
 
 ## Doğrulama
 
-19 ortak durum (`scripts/fixtures/road_pavement_cases.py` → `fixtures/road/v1/pavements.json`). Referans kesirlerledir;
+Komutlar için (Y26.2) referans `road_section_command_cases.py` ve `road_volume_command_cases.py`'dir. Kesit satırının
+üstyapısını `road_pavement_cases.section_pavement` hesaplar, KentOS kodu kullanılmaz. Yeni durumlar:
+
+- tip kesit: 7 durum (yazma, yeni tip kesit, kaldırma ve geri alma, 5 ret);
+- kesit sorgusu: 4 durum (şevli ve dik kenar, deverle dönen, kurulmayan);
+- kübaj düzenleme: 6 durum;
+- kübaj sorgusu: 9 durum (dört kural, prizmoidal, deverli koridor, kurulmayan formasyon).
+
+17091 durum Rust'ta geçer. Yol durumları Python'un tipli katmanından da geçer.
+
+Çekirdek için (Y26.1) 19 ortak durum (`scripts/fixtures/road_pavement_cases.py` → `fixtures/road/v1/pavements.json`). Referans kesirlerledir;
 kesiti road_template_cases.py'nin başvurusu kurar. İntegral bütün parçaların ikişer ikişer kesişimleri kaba kuvvetle
 kırılma noktası alınarak hesaplanır (zarf kullanılmaz). KentOS kodu kullanılmaz.
 

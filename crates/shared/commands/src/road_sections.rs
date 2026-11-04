@@ -13,7 +13,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{SectionStations, TemplateDef, TemplateSideDef};
+use crate::{PavementDef, SectionStations, TemplateDef, TemplateSideDef};
 
 pub const ROAD_TEMPLATES_EDIT: &str = "road.templates.edit";
 pub const ROAD_TEMPLATES_EDIT_VERSION: u32 = 1;
@@ -69,6 +69,14 @@ pub struct TemplatesEdit {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
+    /// The pavement under the finish grade (docs/adr/0930 §2), replacing the template's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pavement: Option<PavementDef>,
+    /// The template's pavement goes.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub remove_pavement: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -302,6 +310,46 @@ pub struct SectionRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill: Option<f64>,
+    /// The template's pavement on the section, where it has one and it builds (docs/adr/0930 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pavement: Option<SectionPavement>,
+}
+
+/// A pavement on a section (docs/adr/0930 §1): each layer's name and area, the pavement under and above the ground,
+/// the formation line and each layer's bottom (offset, elevation; left to right), and the earthwork from the formation
+/// (Formasyon–Zemin): the road's cut plus the pavement under the ground, its fill less the pavement above it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionPavement {
+    pub layers: Vec<SectionLayer>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub below: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub above: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub formation: Vec<[f64; 2]>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub bottoms: Vec<Vec<[f64; 2]>>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub formation_cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub formation_fill: f64,
+}
+
+/// A pavement layer on a section: its name and area (m²).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionLayer {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
 }
 
 /// Output of `road.sections.query` v1.

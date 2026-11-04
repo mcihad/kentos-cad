@@ -7104,6 +7104,26 @@ VolumeMethodName = Literal["endArea", "prismoidal", "surfaces"]
 """The names of :class:`VolumeMethod`, for a plain string."""
 
 
+class VolumeRule(_StrEnum):
+    """An earthwork volume's rule (docs/adr/0930 §2): the road's top (Yol) or the formation (Formasyon) against the ground
+    (Zemin) or the ground with its topsoil stripped (Bitkisel Toprak). The topsoil stripped is its own item (Sıyırma
+    Kazısı) whichever rule.
+
+    - ``roadGround``: Yol–Zemin.
+    - ``formationGround``: Formasyon–Zemin.
+    - ``roadTopsoil``: Yol–Bitkisel Toprak.
+    - ``formationTopsoil``: Formasyon–Bitkisel Toprak.
+    """
+    ROAD_GROUND = "roadGround"
+    FORMATION_GROUND = "formationGround"
+    ROAD_TOPSOIL = "roadTopsoil"
+    FORMATION_TOPSOIL = "formationTopsoil"
+
+
+VolumeRuleName = Literal["roadGround", "formationGround", "roadTopsoil", "formationTopsoil"]
+"""The names of :class:`VolumeRule`, for a plain string."""
+
+
 class WallAnchor(_StrEnum):
     """Which end of an edge stays when its length changes (docs/adr/0728 §3).
 
@@ -9863,6 +9883,27 @@ class PartitionExtent(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PartitionExtent:
         return _variant(_PARTITION_EXTENT, "PartitionExtent", "kind", data).from_json(data)
+
+
+class PavementEdge(_Union):
+    """How a pavement's layers end at a side's hinge (docs/adr/0930 §1).
+
+    One of:
+
+    - :class:`VerticalPavementEdge` (``kind: vertical``)
+    - :class:`SlopePavementEdge` (``kind: slope``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PavementEdge:
+        return _variant(_PAVEMENT_EDGE, "PavementEdge", "kind", data).from_json(data)
 
 
 class PerpendicularReference(_Union):
@@ -54917,6 +54958,54 @@ class PatternText(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PavementDef(_Model):
+    """A template's pavement: its layers from the top down and how they end."""
+    layers: list[PavementLayerDef]
+    edge: PavementEdge
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["edge"] = self.edge.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PavementDef:
+        return cls(
+            layers=[PavementLayerDef.from_json(e0) for e0 in data["layers"]],
+            edge=PavementEdge.from_json(data["edge"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PavementLayerDef(_Model):
+    """A pavement layer: its name (aşınma, binder, temel …), its thickness and an optional material code (a pay item's,
+    docs/adr/0909).
+    Attributes:
+        thickness: Unit: m.
+    """
+    name: str
+    thickness: float
+    material: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["thickness"] = float(self.thickness)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PavementLayerDef:
+        return cls(
+            name=data["name"],
+            thickness=float(data["thickness"]),
+            material=data.get("material", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PayBookDef(_Model):
     """The project's pay item book (docs/adr/0909 §4): its source (the agency's list and year, required: KentOS gives no
     item), its version, its currency, its items and its rules.
@@ -68418,6 +68507,74 @@ class SectionGround(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SectionLayer(_Model):
+    """A pavement layer on a section: its name and area (m²).
+    Attributes:
+        area: Unit: area.
+    """
+    name: str
+    area: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["area"] = float(self.area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionLayer:
+        return cls(
+            name=data["name"],
+            area=float(data["area"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionPavement(_Model):
+    """A pavement on a section (docs/adr/0930 §1): each layer's name and area, the pavement under and above the ground,
+    the formation line and each layer's bottom (offset, elevation; left to right), and the earthwork from the formation
+    (Formasyon–Zemin): the road's cut plus the pavement under the ground, its fill less the pavement above it.
+    Attributes:
+        below: Unit: area.
+        above: Unit: area.
+        formation: Unit: length.
+        bottoms: Unit: length.
+        formation_cut: Unit: area.
+        formation_fill: Unit: area.
+    """
+    layers: list[SectionLayer]
+    below: float
+    above: float
+    formation: list[list[float]]
+    bottoms: list[list[list[float]]]
+    formation_cut: float
+    formation_fill: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["below"] = float(self.below)
+        out["above"] = float(self.above)
+        out["formation"] = [[float(e1) for e1 in e0] for e0 in self.formation]
+        out["bottoms"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.bottoms]
+        out["formationCut"] = float(self.formation_cut)
+        out["formationFill"] = float(self.formation_fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionPavement:
+        return cls(
+            layers=[SectionLayer.from_json(e0) for e0 in data["layers"]],
+            below=float(data["below"]),
+            above=float(data["above"]),
+            formation=[[float(e1) for e1 in e0] for e0 in data["formation"]],
+            bottoms=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["bottoms"]],
+            formation_cut=float(data["formationCut"]),
+            formation_fill=float(data["formationFill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SectionRow(_Model):
     """A cross section: where it is, the terrain along it and, with a profile, a template and a surface, the platform
     built on it and its cut and fill areas (m²).
@@ -68428,6 +68585,7 @@ class SectionRow(_Model):
         axis: The axis' design elevation; absent without a profile or outside it. Unit: elevation.
         cut: Unit: area.
         fill: Unit: area.
+        pavement: The template's pavement on the section, where it has one and it builds (docs/adr/0930 §2).
     """
     station: float
     km: float
@@ -68438,6 +68596,7 @@ class SectionRow(_Model):
     cut: float | None | Unset = UNSET
     fill: float | None | Unset = UNSET
     left: SectionSide | None | Unset = UNSET
+    pavement: SectionPavement | None | Unset = UNSET
     right: SectionSide | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -68455,6 +68614,8 @@ class SectionRow(_Model):
             out["fill"] = None if self.fill is None else float(self.fill)
         if self.left is not UNSET:
             out["left"] = None if self.left is None else self.left.to_json()
+        if self.pavement is not UNSET:
+            out["pavement"] = None if self.pavement is None else self.pavement.to_json()
         if self.right is not UNSET:
             out["right"] = None if self.right is None else self.right.to_json()
         return out
@@ -68471,6 +68632,7 @@ class SectionRow(_Model):
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
             left=UNSET if "left" not in data else None if data["left"] is None else SectionSide.from_json(data["left"]),
+            pavement=UNSET if "pavement" not in data else None if data["pavement"] is None else SectionPavement.from_json(data["pavement"]),
             right=UNSET if "right" not in data else None if data["right"] is None else SectionSide.from_json(data["right"]),
         )
 
@@ -79023,11 +79185,13 @@ class TemplateComponentDef(_Model):
 class TemplateDef(_Model):
     """A template (docs/adr/0903 §3): its left side and its right; absent right: the left's mirror.
     Attributes:
+        pavement: The pavement under the finish grade, both sides alike (docs/adr/0930 §2); absent: none (an older template).
         revision: Unit: version.
     """
     id: str
     name: str
     left: TemplateSideDef
+    pavement: PavementDef | None | Unset = UNSET
     revision: int | Unset = UNSET
     right: TemplateSideDef | None | Unset = UNSET
 
@@ -79036,6 +79200,8 @@ class TemplateDef(_Model):
         out["id"] = self.id
         out["name"] = self.name
         out["left"] = self.left.to_json()
+        if self.pavement is not UNSET:
+            out["pavement"] = None if self.pavement is None else self.pavement.to_json()
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.right is not UNSET:
@@ -79048,6 +79214,7 @@ class TemplateDef(_Model):
             id=data["id"],
             name=data["name"],
             left=TemplateSideDef.from_json(data["left"]),
+            pavement=UNSET if "pavement" not in data else None if data["pavement"] is None else PavementDef.from_json(data["pavement"]),
             revision=data.get("revision", UNSET),
             right=UNSET if "right" not in data else None if data["right"] is None else TemplateSideDef.from_json(data["right"]),
         )
@@ -79321,12 +79488,16 @@ class TemplatesEdit(_Model):
     `revision_conflict`.
     Attributes:
         mirror: The right side mirrors the left (its own goes).
+        pavement: The pavement under the finish grade (docs/adr/0930 §2), replacing the template's.
+        remove_pavement: The template's pavement goes.
     """
     operation: RoadEditOperation | RoadEditOperationName
     expected_revision: str | None | Unset = UNSET
     left: TemplateSideDef | None | Unset = UNSET
     mirror: bool | Unset = UNSET
     name: str | None | Unset = UNSET
+    pavement: PavementDef | None | Unset = UNSET
+    remove_pavement: bool | Unset = UNSET
     right: TemplateSideDef | None | Unset = UNSET
     template: str | None | Unset = UNSET
 
@@ -79341,6 +79512,10 @@ class TemplatesEdit(_Model):
             out["mirror"] = self.mirror
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.pavement is not UNSET:
+            out["pavement"] = None if self.pavement is None else self.pavement.to_json()
+        if self.remove_pavement is not UNSET:
+            out["removePavement"] = self.remove_pavement
         if self.right is not UNSET:
             out["right"] = None if self.right is None else self.right.to_json()
         if self.template is not UNSET:
@@ -79355,6 +79530,8 @@ class TemplatesEdit(_Model):
             left=UNSET if "left" not in data else None if data["left"] is None else TemplateSideDef.from_json(data["left"]),
             mirror=data.get("mirror", UNSET),
             name=data.get("name", UNSET),
+            pavement=UNSET if "pavement" not in data else None if data["pavement"] is None else PavementDef.from_json(data["pavement"]),
+            remove_pavement=data.get("removePavement", UNSET),
             right=UNSET if "right" not in data else None if data["right"] is None else TemplateSideDef.from_json(data["right"]),
             template=data.get("template", UNSET),
         )
@@ -84375,6 +84552,8 @@ class VolumeDef(_Model):
         approved: Its figures as approved; an approved volume's definition does not change.
         bench: The fill's foundation benched (a section method's).
         revision: Unit: version.
+        rule: Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
+            ground, stripped when it strips (as before the rule).
         strip: The topsoil stripped by stations (a section method's).
     """
     id: str
@@ -84385,6 +84564,7 @@ class VolumeDef(_Model):
     bench: VolumeBenchDef | None | Unset = UNSET
     factors: list[VolumeFactorDef] | Unset = UNSET
     revision: int | Unset = UNSET
+    rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
     strip: list[VolumeStripDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -84401,6 +84581,8 @@ class VolumeDef(_Model):
             out["factors"] = [e0.to_json() for e0 in self.factors]
         if self.revision is not UNSET:
             out["revision"] = self.revision
+        if self.rule is not UNSET:
+            out["rule"] = None if self.rule is None else _enum_out(self.rule)
         if self.strip is not UNSET:
             out["strip"] = [e0.to_json() for e0 in self.strip]
         return out
@@ -84416,6 +84598,7 @@ class VolumeDef(_Model):
             bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
             factors=[VolumeFactorDef.from_json(e0) for e0 in data["factors"]] if "factors" in data else UNSET,
             revision=data.get("revision", UNSET),
+            rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
             strip=[VolumeStripDef.from_json(e0) for e0 in data["strip"]] if "strip" in data else UNSET,
         )
 
@@ -84452,6 +84635,33 @@ class VolumeFactorDef(_Model):
             to=float(data["to"]),
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeLayer(_Model):
+    """A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0930 §2).
+    Attributes:
+        volume: Unit: volume.
+    """
+    name: str
+    volume: float
+    material: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["volume"] = float(self.volume)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeLayer:
+        return cls(
+            name=data["name"],
+            volume=float(data["volume"]),
+            material=data.get("material", UNSET),
         )
 
 
@@ -84506,6 +84716,9 @@ class VolumeReport(_Model):
         bench: The benches cut in all (m³), where the volume benches. Unit: volume.
         cut_area: Unit: area.
         fill_area: Unit: area.
+        layers: The pavement layers its templates have, by name in the order met, with their volumes in all (m³). Empty without a
+            pavement.
+        rule: Its rule, where it has one (docs/adr/0930 §2).
         strip: The topsoil stripped in all (m³), where the volume strips. Unit: volume.
         uncovered: Unit: area.
     """
@@ -84525,7 +84738,9 @@ class VolumeReport(_Model):
     bench: float | None | Unset = UNSET
     cut_area: float | None | Unset = UNSET
     fill_area: float | None | Unset = UNSET
+    layers: list[VolumeLayer] | Unset = UNSET
     problem: str | None | Unset = UNSET
+    rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
     strip: float | None | Unset = UNSET
     uncovered: float | None | Unset = UNSET
 
@@ -84551,8 +84766,12 @@ class VolumeReport(_Model):
             out["cutArea"] = None if self.cut_area is None else float(self.cut_area)
         if self.fill_area is not UNSET:
             out["fillArea"] = None if self.fill_area is None else float(self.fill_area)
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
         if self.problem is not UNSET:
             out["problem"] = self.problem
+        if self.rule is not UNSET:
+            out["rule"] = None if self.rule is None else _enum_out(self.rule)
         if self.strip is not UNSET:
             out["strip"] = None if self.strip is None else float(self.strip)
         if self.uncovered is not UNSET:
@@ -84578,7 +84797,9 @@ class VolumeReport(_Model):
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
             fill_area=UNSET if "fillArea" not in data else None if data["fillArea"] is None else float(data["fillArea"]),
+            layers=[VolumeLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             problem=data.get("problem", UNSET),
+            rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
             uncovered=UNSET if "uncovered" not in data else None if data["uncovered"] is None else float(data["uncovered"]),
         )
@@ -84600,6 +84821,8 @@ class VolumeRow(_Model):
         cut_factor: Unit: 1.
         fill: Unit: volume.
         fill_factor: Unit: 1.
+        layers: Each pavement layer's volume over it (m³), in the report's `layers` order; none where a section is not solved or
+            its template has no such layer. Empty without a pavement. Unit: volume.
         strip: The topsoil stripped over it (m³), where the volume strips. Unit: volume.
     """
     from_: float
@@ -84614,6 +84837,7 @@ class VolumeRow(_Model):
     cut_factor: float | None | Unset = UNSET
     fill: float | None | Unset = UNSET
     fill_factor: float | None | Unset = UNSET
+    layers: list[float | None] | Unset = UNSET
     strip: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -84635,6 +84859,8 @@ class VolumeRow(_Model):
             out["fill"] = None if self.fill is None else float(self.fill)
         if self.fill_factor is not UNSET:
             out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
+        if self.layers is not UNSET:
+            out["layers"] = [None if e0 is None else float(e0) for e0 in self.layers]
         if self.strip is not UNSET:
             out["strip"] = None if self.strip is None else float(self.strip)
         return out
@@ -84654,6 +84880,7 @@ class VolumeRow(_Model):
             cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
             fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+            layers=[None if e0 is None else float(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
         )
 
@@ -84780,9 +85007,11 @@ class VolumesEdit(_Model):
     uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
     set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
     overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
-    benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
+    benching between surfaces; a corridor that does not build; a Bitkisel Toprak rule without stripping, a Formasyon rule
+    between surfaces or on a template without a pavement), `invalid_revision`, `revision_conflict`.
     Attributes:
         bench: The fill's foundation benched; null takes it off.
+        rule: Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
         strip: The topsoil stripped by stations; an empty list takes it off.
     """
     operation: RoadEditOperation | RoadEditOperationName
@@ -84792,6 +85021,7 @@ class VolumesEdit(_Model):
     factors: list[VolumeFactorDef] | None | Unset = UNSET
     method: VolumeMethod | VolumeMethodName | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
     strip: list[VolumeStripDef] | None | Unset = UNSET
     volume: str | None | Unset = UNSET
 
@@ -84810,6 +85040,8 @@ class VolumesEdit(_Model):
             out["method"] = None if self.method is None else _enum_out(self.method)
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.rule is not UNSET:
+            out["rule"] = None if self.rule is None else _enum_out(self.rule)
         if self.strip is not UNSET:
             out["strip"] = None if self.strip is None else [e0.to_json() for e0 in self.strip]
         if self.volume is not UNSET:
@@ -84826,6 +85058,7 @@ class VolumesEdit(_Model):
             factors=UNSET if "factors" not in data else None if data["factors"] is None else [VolumeFactorDef.from_json(e0) for e0 in data["factors"]],
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(VolumeMethod, data["method"]),
             name=data.get("name", UNSET),
+            rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else [VolumeStripDef.from_json(e0) for e0 in data["strip"]],
             volume=data.get("volume", UNSET),
         )
@@ -100320,6 +100553,41 @@ class LengthPartitionExtent(PartitionExtent):
 
 
 @dataclass(kw_only=True, slots=True)
+class VerticalPavementEdge(PavementEdge):
+    """A vertical line at the hinge."""
+    TAG_VALUE: ClassVar[str] = "vertical"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "vertical"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VerticalPavementEdge:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class SlopePavementEdge(PavementEdge):
+    """A line from the hinge falling `h` horizontal per one vertical, the layers carried out to it.
+    Attributes:
+        h: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "slope"
+    h: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "slope"}
+        out["h"] = float(self.h)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlopePavementEdge:
+        return cls(
+            h=float(data["h"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinePerpendicularReference(PerpendicularReference):
     """
     Attributes:
@@ -105387,6 +105655,9 @@ _PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set
 _PARTITION_EXTENT: dict[str, type[PartitionExtent]] = {"source": SourcePartitionExtent, "between": BetweenPartitionExtent, "length": LengthPartitionExtent}
 
 
+_PAVEMENT_EDGE: dict[str, type[PavementEdge]] = {"vertical": VerticalPavementEdge, "slope": SlopePavementEdge}
+
+
 _PERPENDICULAR_REFERENCE: dict[str, type[PerpendicularReference]] = {"line": LinePerpendicularReference, "circle": CirclePerpendicularReference}
 
 
@@ -107580,6 +107851,9 @@ __all__ = [
     "PatternText",
     "PatternUnit",
     "PatternUnitName",
+    "PavementDef",
+    "PavementEdge",
+    "PavementLayerDef",
     "PayBookDef",
     "PayEdit",
     "PayItemDef",
@@ -108163,6 +108437,8 @@ __all__ = [
     "SchemaKind",
     "SchemaKindName",
     "SectionGround",
+    "SectionLayer",
+    "SectionPavement",
     "SectionRow",
     "SectionSetDef",
     "SectionSetReport",
@@ -108318,6 +108594,7 @@ __all__ = [
     "SldExported",
     "SldImported",
     "SlopeDimensionMeasure",
+    "SlopePavementEdge",
     "SnapFind",
     "SnapFound",
     "SnapKindName",
@@ -108803,6 +109080,7 @@ __all__ = [
     "VertexPointsDeriveWork",
     "VertexSubPlace",
     "VerticalConstraintRule",
+    "VerticalPavementEdge",
     "ViewCategory",
     "ViewCategoryName",
     "ViewLinkPaperViewportSource",
@@ -108835,12 +109113,15 @@ __all__ = [
     "VolumeBenchDef",
     "VolumeDef",
     "VolumeFactorDef",
+    "VolumeLayer",
     "VolumeListed",
     "VolumeMethod",
     "VolumeMethodName",
     "VolumeReport",
     "VolumeRow",
     "VolumeRowChange",
+    "VolumeRule",
+    "VolumeRuleName",
     "VolumeStripDef",
     "VolumesApprove",
     "VolumesEdit",

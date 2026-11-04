@@ -3,6 +3,7 @@ import type { VolumeApprovalDef } from "./VolumeApprovalDef";
 import type { VolumeBenchDef } from "./VolumeBenchDef";
 import type { VolumeFactorDef } from "./VolumeFactorDef";
 import type { VolumeMethod } from "./VolumeMethod";
+import type { VolumeRule } from "./VolumeRule";
 import type { VolumeStripDef } from "./VolumeStripDef";
 
 /**
@@ -20,4 +21,9 @@ bench?: VolumeBenchDef,
 /**
  * Its figures as approved; an approved volume's definition does not change.
  */
-approved?: VolumeApprovalDef, };
+approved?: VolumeApprovalDef, 
+/**
+ * Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
+ * ground, stripped when it strips (as before the rule).
+ */
+rule?: VolumeRule, };

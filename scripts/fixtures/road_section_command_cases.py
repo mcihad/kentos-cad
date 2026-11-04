@@ -24,6 +24,7 @@ import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
+import road_pavement_cases as pvref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_cases as sref  # noqa: E402
 import road_superelevation_cases as supref  # noqa: E402
@@ -68,6 +69,17 @@ TK2 = {"id": "tk-2", "name": "Tip 2", "revision": 2,
        "left": {"components": [comp("lane", 3.0, -2.0), comp("shoulder", 1.5, -4.0)], "cut": 1.5, "fill": 2.0},
        "right": {"components": [comp("lane", 3.5, -2.5), comp("lane", 3.5, -2.5), comp("shoulder", 1.0, -4.0)],
                  "cut": 1.0, "fill": 1.5}}
+def layer(name, thickness, material=None):
+    out = {"name": name, "thickness": thickness}
+    if material:
+        out["material"] = material
+    return out
+
+
+# KGM'nin bitümlü sıcak karışım üstyapısı gibi dört tabaka; kalınlıklar örnektir, standart değildir (docs/adr/0930).
+PAVE = {"layers": [layer("Aşınma", 0.05, "KGM-a"), layer("Binder", 0.08), layer("Plentmiks temel", 0.2),
+                   layer("Alttemel", 0.25)], "edge": {"kind": "slope", "h": 1.5}}
+PAVE_V = {"layers": [layer("Beton", 0.25), layer("Alttemel", 0.3)], "edge": {"kind": "vertical"}}
 S1 = {"id": "k-1", "name": "Enkesitler", "alignment": "g-1", "alignmentRevision": 1, "revision": 1, "profile": "b-1",
       "template": "tk-1", "surface": "t-1", "left": 25.0, "right": 25.0,
       "stations": {"method": "range", "from": 100.0, "to": 300.0, "every": 50.0, "geometry": True}}
@@ -284,7 +296,7 @@ def sections(d, at, templates):
                          "message": f"“{d['name']}” kesit takımının dever çizelgesi kurulamıyor (“p9” PI'sinde kurp yok); "
                                     "şeritler tip kesitin eğimiyle verildi.", "path": "set"})
         sup = None
-    rows, open_ = [], []
+    rows, open_, unpaved = [], [], []
     for s in at:
         e, (x, y) = aref.place_at(b.els, mp.mpf(s))
         th = e.theta(mp.mpf(s) - e.station)
@@ -312,10 +324,20 @@ def sections(d, at, templates):
             cut, fill = tref.areas(list(reversed(lside["points"])) + rside["points"][1:], gr)
             row["left"], row["right"] = side_row(lside), side_row(rside)
             row["cut"], row["fill"] = float(cut), float(fill)
+            if t.get("pavement"):
+                pv = pvref.section_pavement(here, red[0], gr, t["pavement"], {"left": lside, "right": rside}, cut, fill)
+                if pv is None:
+                    unpaved.append(f"km {row['kmText']}")
+                else:
+                    row["pavement"] = pv
             for side, word in ((lside, "sol"), (rside, "sağ")):
                 if side["kind"] == "open":
                     open_.append(f"km {row['kmText']} {word}")
         rows.append(row)
+    if unpaved:
+        warnings.append({"code": "pavement_unbuilt",
+                         "message": "Şu kesitlerde üstyapı kurulamadı (kenar şevi son bileşenden yatık ya da bileşensiz "
+                                    f"yan): {', '.join(unpaved)}.", "path": "set"})
     if open_:
         warnings.append({"code": "section_open",
                          "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: "
@@ -417,6 +439,34 @@ def templates_cases():
     ok("Doğrulama yazmaz", {"operation": "set", "template": "tk-1", "name": "Tip A"},
        put(0, {**TK1, "name": "Tip A", "revision": 2}), "tk-1", op="validate")
 
+    # The pavement (docs/adr/0930 §2): its layers from the top down and how they end; the thicknesses are examples.
+    ok("Üstyapı yazılır: dört tabaka, kenar dolgu şevinde", {"operation": "set", "template": "tk-1", "pavement": PAVE},
+       put(0, {**TK1, "pavement": PAVE, "revision": 2}), "tk-1")
+    ok("Yeni tip kesit üstyapısıyla, dik kenar", {"operation": "set", "name": "Üstyapılı", "left": plain, "pavement": PAVE_V},
+       start + [{"id": "tk-3", "name": "Üstyapılı", "revision": 1, "left": plain, "pavement": PAVE_V}], "tk-3")
+    paved = [{**TK1, "pavement": PAVE}, TK2]
+    cases.append(case("Üstyapı kaldırılır, tek geri alma adımı", [step(
+        "execute", {"operation": "set", "template": "tk-1", "removePavement": True},
+        completed({"templates": listed_templates([{**TK1, "revision": 2}, TK2], sets), "revision": "$current",
+                   "template": {**TK1, "revision": 2}}),
+        {**STEPPED, "road": road_of([{**TK1, "revision": 2}, TK2], sets)}),
+        {"op": "undo", "returns": "Tip kesit", "expect": {"road": road_of(paved, sets), "canRedo": True}}],
+        setup(templates=paved)))
+    no("Üstyapı ile kaldırma birlikte", {"operation": "set", "template": "tk-1", "pavement": PAVE, "removePavement": True},
+       failed("invalid_road_template", "pavement ile removePavement birlikte verilmez: üstyapı ya yazılır ya kaldırılır.",
+              "removePavement"))
+    no("Tabakasız üstyapı", {"operation": "set", "template": "tk-1", "pavement": {**PAVE, "layers": []}},
+       rule("üstyapının 1 ile 12 arasında tabakası olur", "pavement.layers"))
+    no("Sıfır kalınlıklı tabaka",
+       {"operation": "set", "template": "tk-1", "pavement": {**PAVE, "layers": [layer("Aşınma", 0.05), layer("Binder", 0.0)]}},
+       rule("tabakanın kalınlığı 0'dan büyük, en çok 2 m olmalı", "pavement.layers[1].thickness"))
+    no("Adsız tabaka", {"operation": "set", "template": "tk-1", "pavement": {**PAVE, "layers": [layer("", 0.05)]}},
+       rule("tabakanın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 60 karakter", "pavement.layers[0].name"))
+    no("Üstyapı 5 m'den derin",
+       {"operation": "set", "template": "tk-1", "pavement": {**PAVE, "layers": [layer("A", 2.0), layer("B", 2.0), layer("C", 1.5)]}},
+       rule("üstyapının toplam kalınlığı en çok 5 m olur", "pavement.layers"))
+    no("Sıfır kenar şevi", {"operation": "set", "template": "tk-1", "pavement": {**PAVE, "edge": {"kind": "slope", "h": 0.0}}},
+       rule("kenar şevi 0'dan büyük, en çok 100 olmalı (yatay / 1 düşey)", "pavement.edge.h"))
     no("Yol projesi değil", {"operation": "remove", "template": "tk-1"}, NOT_ROAD, setup(work="map"), before=None)
     no("Olmayan tip kesit silinmez", {"operation": "remove", "template": "yok"},
        failed("unknown_road_template", "“yok” kimlikli ya da adlı tip kesit projede yok.", "template"))
@@ -426,7 +476,8 @@ def templates_cases():
        failed("road_template_in_use", "“Tip 1” tip kesitini şu kesit takımları kullanıyor: Enkesitler. Önce "
                                       "takımlardan kaldırın.", "template"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "template": "tk-1"},
-       failed("invalid_road_template", "Değiştirilecek bir şey yok: name, left, right ya da mirror verin."))
+       failed("invalid_road_template",
+              "Değiştirilecek bir şey yok: name, left, right, mirror, pavement ya da removePavement verin."))
     no("Yeni tip kesitin adı yok", {"operation": "set", "left": plain},
        failed("invalid_road_template", "Yeni tip kesitin adı (name) ve sol yanı (left) verilmeli.", "name"))
     no("Yeni tip kesitin sol yanı yok", {"operation": "set", "name": "x"},
@@ -646,6 +697,21 @@ def query_cases():
     ask("Km satırlarından dever, eskiyen takım", rows, {"set": "k-2"}, sets=[S1, rows])
     flat = {**S1, "template": "tk-2", "stations": {"method": "range", "from": 300.0, "to": 600.0, "every": 100.0}}
     ask("Hendeksiz tip kesit, aralığın her 100 m'si", flat, {"set": "k-1"}, sets=[flat, S2])
+    # The template's pavement on the sections (docs/adr/0930 §2): the layers, the formation, Formasyon–Zemin.
+    for name, pave, stations_, sup_ in (
+        ("Üstyapılı tip kesit: tabakalar, formasyon ve Formasyon–Zemin alanları", PAVE, None, None),
+        ("Dik kenarlı üstyapı", PAVE_V, [150.0, 250.0], None),
+        ("Üstyapı deverle döner", PAVE, [150.0, 194.0, 220.0, 260.0], "d-1"),
+        ("Banketten yatık kenar: üstyapı kurulmaz, uyarı", {**PAVE, "edge": {"kind": "slope", "h": 30.0}}, [200.0], None),
+    ):
+        tpls = [{**TK1, "pavement": pave}, TK2]
+        d = {**S1, **({"superelevation": sup_, "stations": {"method": "stations", "stations": stations_}} if sup_ else {})}
+        at = stations_of(d) if stations_ is None or sup_ else stations_
+        rows_, warns_ = sections(d, at, tpls)
+        input_ = {"set": "k-1", **({"stations": stations_} if stations_ and not sup_ else {})}
+        cases.append(case(name, [step("execute", input_, completed({"sets": [report(d)], "sections": rows_}, warns_),
+                                      {**UNCHANGED, "road": road_of(tpls, [d, S2], supers=SUPERS if sup_ else None)})],
+                          setup(templates=tpls, sets=[d, S2], supers=SUPERS if sup_ else None)))
     out, warns = one(S1, [200.0])
     q("Plan cevabı verir", {"set": "k-1", "stations": [200.0]}, out, warns, op="plan")
     q("Doğrulama uyarıları verir", {"set": "k-2"}, None, one(S2)[1], op="validate")

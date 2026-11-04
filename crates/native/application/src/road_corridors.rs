@@ -104,6 +104,14 @@ impl Sampler {
         self.sample(template, s).map(|(cross, _)| cross)
     }
 
+    /// The template as built at station `s`: with the superelevation schedule's cross slopes there, if any.
+    pub fn template_at(&self, template: &tpl::Template, s: f64) -> tpl::Template {
+        match &self.schedule {
+            Some((sch, normal)) => superelevated(template, sch, *normal, s),
+            None => template.clone(),
+        }
+    }
+
     /// The cross at station `s` with the terrain along its line (empty where there is no surface).
     pub fn sample(&self, template: &tpl::Template, s: f64) -> Option<(Cross, Vec<kentos_road::section::GroundPoint>)> {
         let line = sample_line(&self.alignment.core, s, self.left, self.right)?;
@@ -395,13 +403,20 @@ pub type MadeCorridor = Result<(CorridorReport, core::Built), String>;
 /// at any station of a region with that region's template, as the section sets' rows are.
 pub struct CorridorSections {
     made: Made,
+    /// Each region's template's pavement (docs/adr/0930 §2), in the regions' order.
+    pavements: Vec<Option<kentos_commands::PavementDef>>,
 }
 
 impl CorridorSections {
     /// The corridor `id` built now, or why it does not build.
     pub fn of(doc: &Document, id: &str) -> Result<Self, String> {
         let def = doc.road_corridors().iter().find(|c| c.id == id).ok_or_else(|| format!("({id}) koridoru projede yok."))?;
-        make(doc, def, false).map(|made| Self { made }).map_err(words)
+        let pavements = def
+            .regions
+            .iter()
+            .map(|r| doc.road_templates().iter().find(|t| t.id == r.template).and_then(|t| t.pavement.clone()))
+            .collect();
+        make(doc, def, false).map(|made| Self { made, pavements }).map_err(words)
     }
 
     /// The stations the corridor is sampled at, in order.
@@ -415,14 +430,19 @@ impl CorridorSections {
     /// The section at station `s`: the template of the region it is in (its sampled ends), none off every region or
     /// where the sample line does not lie on the alignment.
     pub fn row_at(&self, s: f64) -> Option<kentos_commands::SectionRow> {
-        let region = self.made.regions.iter().find(|r| {
+        let ri = self.made.regions.iter().position(|r| {
             let (a, b) = (r.crosses.first().map(|c| c.line.station), r.crosses.last().map(|c| c.line.station));
             matches!((a, b), (Some(a), Some(b)) if s >= a - 1e-9 && s <= b + 1e-9)
         })?;
+        let region = &self.made.regions[ri];
         let sampler = &self.made.sampler;
         let (cross, terrain) = sampler.sample(&region.template, s)?;
         let km = sampler.alignment.km(s);
-        Some(crate::road_sections::row_of(s, km, cross.line.ends, sampler.elevation(s), &terrain, cross.section.as_ref()))
+        let paved = match (self.pavements.get(ri).and_then(Option::as_ref), &cross.section) {
+            (Some(p), Some(sec)) => crate::road_sections::pavement_row(p, &sampler.template_at(&region.template, s), sec, &terrain),
+            _ => None,
+        };
+        Some(crate::road_sections::row_of(s, km, cross.line.ends, sampler.elevation(s), &terrain, cross.section.as_ref(), paved))
     }
 }
 

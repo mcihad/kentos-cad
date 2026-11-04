@@ -711,6 +711,53 @@ pub struct TemplateDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<TemplateSideDef>,
+    /// The pavement under the finish grade, both sides alike (docs/adr/0930 §2); absent: none (an older template).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pavement: Option<PavementDef>,
+}
+
+/// A pavement layer: its name (aşınma, binder, temel …), its thickness and an optional material code (a pay item's,
+/// docs/adr/0909).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PavementLayerDef {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub thickness: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+}
+
+/// How a pavement's layers end at a side's hinge (docs/adr/0930 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PavementEdge {
+    /// A vertical line at the hinge.
+    Vertical,
+    /// A line from the hinge falling `h` horizontal per one vertical, the layers carried out to it.
+    Slope {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        h: f64,
+    },
+}
+
+/// A template's pavement: its layers from the top down and how they end.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PavementDef {
+    pub layers: Vec<PavementLayerDef>,
+    pub edge: PavementEdge,
 }
 
 /// How a sample line set's stations are had (docs/adr/0903 §2).
@@ -1057,6 +1104,50 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<VolumeApprovalDef>,
+    /// Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
+    /// ground, stripped when it strips (as before the rule).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rule: Option<VolumeRule>,
+}
+
+/// An earthwork volume's rule (docs/adr/0930 §2): the road's top (Yol) or the formation (Formasyon) against the ground
+/// (Zemin) or the ground with its topsoil stripped (Bitkisel Toprak). The topsoil stripped is its own item (Sıyırma
+/// Kazısı) whichever rule.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeRule {
+    /// Yol–Zemin.
+    RoadGround,
+    /// Formasyon–Zemin.
+    FormationGround,
+    /// Yol–Bitkisel Toprak.
+    RoadTopsoil,
+    /// Formasyon–Bitkisel Toprak.
+    FormationTopsoil,
+}
+
+impl VolumeRule {
+    /// Netpro's name.
+    pub fn words(self) -> &'static str {
+        match self {
+            VolumeRule::RoadGround => "Yol–Zemin",
+            VolumeRule::FormationGround => "Formasyon–Zemin",
+            VolumeRule::RoadTopsoil => "Yol–Bitkisel Toprak",
+            VolumeRule::FormationTopsoil => "Formasyon–Bitkisel Toprak",
+        }
+    }
+
+    pub fn formation(self) -> bool {
+        matches!(self, VolumeRule::FormationGround | VolumeRule::FormationTopsoil)
+    }
+
+    pub fn topsoil(self) -> bool {
+        matches!(self, VolumeRule::RoadTopsoil | VolumeRule::FormationTopsoil)
+    }
 }
 
 /// A borrow site or a waste site on a mass haul diagram (docs/adr/0907 §1): its name, kind, station and the volume
@@ -1333,6 +1424,46 @@ fn templates_problem(list: &[TemplateDef]) -> Option<(String, String)> {
         if let Some(p) = t.right.as_ref().and_then(|r| side_problem(r, &at("right"))) {
             return Some(p);
         }
+        if let Some(p) = t.pavement.as_ref().and_then(|p| pavement_problem(p, &at("pavement"))) {
+            return Some(p);
+        }
+    }
+    None
+}
+
+/// The most layers a pavement has, and the deepest it goes (m).
+pub const MAX_PAVEMENT_LAYERS: usize = 12;
+pub const MAX_PAVEMENT_DEPTH: f64 = 5.0;
+
+/// What is wrong with a pavement (docs/adr/0930 §2): at least one layer, each named and in (0, 2] m, the whole not
+/// deeper than 5 m; the edge's slope in (0, 100]. Whether its edge meets the layers is the template's (its last
+/// component's slope) and is said when a section is built.
+fn pavement_problem(p: &PavementDef, at: &str) -> Option<(String, String)> {
+    let fail = |path: String, words: &str| Some((path, words.to_string()));
+    if p.layers.is_empty() || p.layers.len() > MAX_PAVEMENT_LAYERS {
+        return fail(format!("{at}.layers"), &format!("üstyapının 1 ile {MAX_PAVEMENT_LAYERS} arasında tabakası olur"));
+    }
+    let mut depth = 0.0;
+    for (i, l) in p.layers.iter().enumerate() {
+        let name = l.name.trim();
+        if name.is_empty() || name != l.name || l.name.chars().count() > 60 {
+            return fail(format!("{at}.layers[{i}].name"), "tabakanın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 60 karakter");
+        }
+        if !(l.thickness.is_finite() && l.thickness > 0.0 && l.thickness <= 2.0) {
+            return fail(format!("{at}.layers[{i}].thickness"), "tabakanın kalınlığı 0'dan büyük, en çok 2 m olmalı");
+        }
+        if l.material.as_ref().is_some_and(|m| m.trim().is_empty() || m.chars().count() > 64) {
+            return fail(format!("{at}.layers[{i}].material"), "malzeme kodu boş olmamalı, en çok 64 karakter");
+        }
+        depth += l.thickness;
+    }
+    if depth > MAX_PAVEMENT_DEPTH {
+        return fail(format!("{at}.layers"), "üstyapının toplam kalınlığı en çok 5 m olur");
+    }
+    if let PavementEdge::Slope { h } = p.edge
+        && !(h.is_finite() && h > 0.0 && h <= 100.0)
+    {
+        return fail(format!("{at}.edge.h"), "kenar şevi 0'dan büyük, en çok 100 olmalı (yatay / 1 düşey)");
     }
     None
 }
@@ -2561,6 +2692,14 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
         let sections = v.method != VolumeMethod::Surfaces;
         if !sections && (!v.strip.is_empty() || v.bench.is_some()) {
             return fail(at("method"), "sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır");
+        }
+        if let Some(r) = v.rule {
+            if !sections && r != VolumeRule::RoadGround {
+                return fail(at("rule"), &format!("{} kuralı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır", r.words()));
+            }
+            if r.topsoil() && v.strip.is_empty() {
+                return fail(at("rule"), &format!("{} kuralı bitkisel toprak sıyırması ister: önce sıyırma kalınlıklarını (strip) verin", r.words()));
+            }
         }
         if v.strip.len() > MAX_VOLUME_FACTORS {
             return fail(at("strip"), &format!("en çok {MAX_VOLUME_FACTORS} sıyırma satırı olur"));

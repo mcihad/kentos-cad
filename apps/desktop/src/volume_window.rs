@@ -110,6 +110,8 @@ pub struct Row {
     bench: [String; 2],
     /// Its figures as approved, kept as they are.
     approved: Option<VolumeApprovalDef>,
+    /// Its rule (docs/adr/0930 §2); none: as before the rule.
+    pub(crate) rule: Option<kentos_commands::VolumeRule>,
 }
 
 impl Row {
@@ -128,6 +130,7 @@ impl Row {
             strip: d.strip.iter().map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)]).collect(),
             bench: d.bench.as_ref().map_or_else(Default::default, |b| [trimmed(b.slope), trimmed(b.height)]),
             approved: d.approved.clone(),
+            rule: d.rule,
         }
     }
 
@@ -172,6 +175,7 @@ impl Row {
             strip,
             bench,
             approved: self.approved.clone(),
+            rule: self.rule,
         })
     }
 }
@@ -320,6 +324,7 @@ impl App {
                         strip: Vec::new(),
                         bench: Default::default(),
                         approved: None,
+                        rule: None,
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.line = None;
@@ -429,6 +434,7 @@ impl App {
             factors: None,
             strip: None,
             bench: None,
+            rule: None,
             expected_revision: None,
         }
     }
@@ -512,6 +518,7 @@ impl App {
                 factors: Some(d.factors.clone()),
                 strip: Some(d.strip.clone()),
                 bench: Some(d.bench.clone()),
+                rule: d.rule,
                 ..Self::blank_volume_edit(RoadEditOperation::Set, &d.id)
             };
             if !self.volume_write(edit) {

@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{RoadEditOperation, VolumeBenchDef, VolumeFactorDef, VolumeMethod, VolumeStripDef};
+use crate::{RoadEditOperation, VolumeBenchDef, VolumeFactorDef, VolumeMethod, VolumeRule, VolumeStripDef};
 
 pub const ROAD_VOLUMES_EDIT: &str = "road.volumes.edit";
 pub const ROAD_VOLUMES_EDIT_VERSION: u32 = 1;
@@ -29,7 +29,8 @@ pub const ROAD_VOLUMES_APPROVE_VERSION: u32 = 1;
 /// uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
 /// set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
 /// overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
-/// benching between surfaces; a corridor that does not build), `invalid_revision`, `revision_conflict`.
+/// benching between surfaces; a corridor that does not build; a Bitkisel Toprak rule without stripping, a Formasyon rule
+/// between surfaces or on a template without a pavement), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -61,6 +62,10 @@ pub struct VolumesEdit {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<VolumeBenchDef>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<VolumeBenchDef>"))]
     pub bench: Option<Option<VolumeBenchDef>>,
+    /// Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rule: Option<VolumeRule>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -108,6 +113,12 @@ pub struct VolumeRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub bench: Option<f64>,
+    /// Each pavement layer's volume over it (m³), in the report's `layers` order; none where a section is not solved or
+    /// its template has no such layer. Empty without a pavement.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<f64>>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub layers: Vec<Option<f64>>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub total_cut: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -165,6 +176,15 @@ pub struct VolumeReport {
     pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub gaps: Vec<[f64; 2]>,
+    /// Its rule, where it has one (docs/adr/0930 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rule: Option<VolumeRule>,
+    /// The pavement layers its templates have, by name in the order met, with their volumes in all (m³). Empty without a
+    /// pavement.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeLayer>>", optional))]
+    pub layers: Vec<VolumeLayer>,
     /// The approval against today's figures, where approved.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -172,6 +192,21 @@ pub struct VolumeReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
+}
+
+/// A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0930 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeLayer {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
 }
 
 /// A stretch whose figures differ from the approved ones (beyond 1 cm³, 1e-6 m³), or that is new or gone: the approved cut and

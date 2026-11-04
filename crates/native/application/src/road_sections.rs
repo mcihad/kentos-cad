@@ -266,6 +266,7 @@ pub(crate) fn row_of(
     axis: Option<f64>,
     g: &[kentos_road::section::GroundPoint],
     section: Option<&tpl::Section>,
+    pavement: Option<kentos_commands::SectionPavement>,
 ) -> SectionRow {
     SectionRow {
         station: s,
@@ -278,7 +279,33 @@ pub(crate) fn row_of(
         right: section.map(|x| side_row(&x.right)),
         cut: section.map(|x| x.cut),
         fill: section.map(|x| x.fill),
+        pavement,
     }
+}
+
+/// A template's pavement on a section built from `template` (the one at its station) against the natural ground
+/// (docs/adr/0930 §2); none where it does not build.
+pub(crate) fn pavement_row(
+    def: &kentos_commands::PavementDef,
+    template: &Template,
+    section: &tpl::Section,
+    g: &[kentos_road::section::GroundPoint],
+) -> Option<kentos_commands::SectionPavement> {
+    let built = kentos_road::section::pavement::build(template, section, &crate::road_volumes::core_pavement(def), g).ok()?;
+    Some(kentos_commands::SectionPavement {
+        layers: def
+            .layers
+            .iter()
+            .zip(&built.layers)
+            .map(|(l, a)| kentos_commands::SectionLayer { name: l.name.clone(), area: *a })
+            .collect(),
+        below: built.below,
+        above: built.above,
+        formation_cut: section.cut + built.below,
+        formation_fill: section.fill - built.above,
+        formation: built.formation,
+        bottoms: built.bottoms,
+    })
 }
 
 fn side_row(s: &tpl::SideSection) -> SectionSide {
@@ -369,6 +396,8 @@ fn sections_with(
         .as_ref()
         .and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p))
         .and_then(|p| kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)).ok());
+    let paving = template.and_then(|t| t.pavement.as_ref());
+    let mut unpaved: Vec<String> = Vec::new();
     let template = template.map(core_template);
     // The lanes' cross slopes and the inside widening from the set's superelevation schedule (docs/adr/0904 §3).
     let schedule = match def.superelevation.as_deref().map(|id| crate::road_superelevations::schedule_of(doc, id, &def.name)) {
@@ -386,11 +415,22 @@ fn sections_with(
         let km = built.km(s);
         let g = surface.as_ref().map(|surf| ground(surf, &line)).unwrap_or_default();
         let axis = vertical.as_ref().and_then(|v| v.at(s)).map(|r| r.0);
-        let built_section = match (&template, axis, surface.is_some()) {
-            (Some(t), Some(z), true) => match &schedule {
-                Some((sch, normal)) => tpl::build(&superelevated(t, sch, *normal, s), z, &g).ok(),
-                None => tpl::build(t, z, &g).ok(),
-            },
+        let at = template.as_ref().map(|t| match &schedule {
+            Some((sch, normal)) => superelevated(t, sch, *normal, s),
+            None => t.clone(),
+        });
+        let built_section = match (&at, axis, surface.is_some()) {
+            (Some(t), Some(z), true) => tpl::build(t, z, &g).ok(),
+            _ => None,
+        };
+        let paved = match (paving, &at, &built_section) {
+            (Some(p), Some(t), Some(sec)) => {
+                let row = pavement_row(p, t, sec, &g);
+                if row.is_none() {
+                    unpaved.push(format!("km {}", km_text(km, 3)));
+                }
+                row
+            }
             _ => None,
         };
         if let Some(sec) = &built_section {
@@ -400,7 +440,17 @@ fn sections_with(
                 }
             }
         }
-        rows.push(row_of(s, km, line.ends, axis, &g, built_section.as_ref()));
+        rows.push(row_of(s, km, line.ends, axis, &g, built_section.as_ref(), paved));
+    }
+    if !unpaved.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::PAVEMENT_UNBUILT.into(),
+            message: format!(
+                "Şu kesitlerde üstyapı kurulamadı (kenar şevi son bileşenden yatık ya da bileşensiz yan): {}.",
+                unpaved.join(", ")
+            ),
+            path: Some("set".into()),
+        });
     }
     if !open.is_empty() {
         warnings.push(CommandWarning {
