@@ -142,6 +142,7 @@ pub const UNITS: &[(&str, &str)] = &[
         "m/%",
         "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı.",
     ),
+    ("1/m2", "Yoğunluk: metrekare başına sayı (nokta bölü m²)."),
 ];
 
 /// Whether `unit` is one of [`UNITS`].

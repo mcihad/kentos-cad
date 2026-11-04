@@ -42685,6 +42685,505 @@
       ]
     },
     {
+      "id": "road.terrains.density",
+      "version": 1,
+      "title": "Nokta yoğunluğu",
+      "summary": "Bir arazi yüzeyinin köşelerini cell metrelik kare hücrelerde sayar; hiçbir şey yazmaz. Hücreler dünyanın başlangıcından cell'in katlarıdır, kenardaki nokta sağ ve üstteki hücrenindir. Merkezi sınırın (boundary: road.terrains.coverage'daki gibi kapalı nesne, alanın delikleri dışarıda) içinde ya da sınır yoksa yüzeyin üstünde olan hücre sayılır. USGS'nin yoğunluk ızgarası budur (hücre nominal nokta aralığının iki katı); cell, least ve share kullanıcınındır. least ile bundan az noktalı hücreler seyrektir; share (0–1) ile noktası olan hücrelerin payı istenene ulaşıyor mu söylenir. Cevap: ızgara (hücre, başlangıç, sütun ve satır), sayılan, noktalı ve boş hücreler, pay, seyrek hücreler, noktalar, alan, ortalama yoğunluk (nokta/m²), en kalabalık hücre, istenen pay tuttu mu. Uyarılar: terrain_density_short. Retler: invalid_point_density, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage.",
+      "aliases": [
+        "noktayogunlugu",
+        "yogunlukizgarasi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.density` v1 (docs/adr/0920 §6; ROAD-SURVEY-08): a terrain surface's corners counted in\nsquare cells of `cell` metres (the user's; USGS's density raster takes twice the nominal point spacing), whole\nmultiples of the cell from the world's origin. A cell counts when its centre is inside `boundary` (a closed object as\nin `road.terrains.coverage`, an area's holes out) or, without one, on the surface. With `least`, the cells with fewer\npoints are sparse; with `share` (0–1, the user's; USGS asks 0.9 of the cells to hold a point) the answer says whether\nthat share of the cells holds a point. Reads only.\n\nRefusals, in this order: `invalid_point_density` (cell not positive, least 0, share outside (0, 1]),\n`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary\nthat is not one), `invalid_point_density` (more than [`MOST_DENSITY_CELLS`] cells). Warnings: `terrain_density_short`.",
+        "properties": {
+          "boundary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "least": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "share": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface",
+          "cell"
+        ],
+        "title": "TerrainsDensity",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.density` v1: the grid (its cell, the lower left corner of column 0 row 0, columns and\nrows), the cells that count, those holding a point and those empty, the share holding one (none without cells),\nthe sparse cells (with `least`), the points in the cells that count, their area (cells × cell²), the mean density\n(points per m²; none without area), the most points in a cell, and whether the share asked is met (with `share`).",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "empty": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "filled": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "mean": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1/m2"
+          },
+          "meets": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "most": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "origin": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "points": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "share": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "sparse": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface",
+          "cell",
+          "origin",
+          "columns",
+          "rows",
+          "cells",
+          "filled",
+          "empty",
+          "points",
+          "area",
+          "most"
+        ],
+        "title": "TerrainsDensityRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.density` v1: the grid (its cell, the lower left corner of column 0 row 0, columns and\nrows), the cells that count, those holding a point and those empty, the share holding one (none without cells),\nthe sparse cells (with `least`), the points in the cells that count, their area (cells × cell²), the mean density\n(points per m²; none without area), the most points in a cell, and whether the share asked is met (with `share`).",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "empty": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "filled": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "mean": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1/m2"
+          },
+          "meets": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "most": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "origin": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "points": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "share": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "sparse": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface",
+          "cell",
+          "origin",
+          "columns",
+          "rows",
+          "cells",
+          "filled",
+          "empty",
+          "points",
+          "area",
+          "most"
+        ],
+        "title": "TerrainsDensityRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_point_density",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "entity_not_found",
+          "invalid_coverage"
+        ],
+        "warnings": [
+          "terrain_density_short"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Proje sınırında 2 m hücre, 1'den az nokta seyrek",
+          "input": {
+            "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124",
+            "cell": 2.0,
+            "least": 1,
+            "share": 0.9,
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.terrains.sparse",
+      "version": 1,
+      "title": "Seyrek alanları çiz",
+      "summary": "Bir arazi yüzeyinin yoğunluk ızgarasında (road.terrains.density'deki gibi) least'ten az noktalı hücrelerini layerId katmanına kapalı çoklu çizgi olarak çizer: kenarla birleşen hücreler tek alan, dış çizgisi saat yönü tersine, delikleri saat yönünde. cell ve least kullanıcınındır. labels ile her alanın alanı ortasında. Tek geri alma adımı “Seyrek alanları çiz”. Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, invalid_point_density, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage, layer_not_found, not_a_layer, layer_locked.",
+      "aliases": [
+        "seyrekalan",
+        "yogunlukciz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.sparse` v1 (docs/adr/0920 §7): a density grid's (as in `road.terrains.density`) cells with\nfewer than `least` points (the user's) drawn on `layerId` as closed polylines, their merged outlines (cells meeting\nat an edge one area), with `labels` each area's area at its outline's centre. One undo step “Seyrek alanları çiz”.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_point_density`, `not_a_road_project`,\n`unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage`, `invalid_point_density` (too many cells),\n`layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`.",
+        "properties": {
+          "boundary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": "boolean"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "least": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface",
+          "cell",
+          "least",
+          "layerId"
+        ],
+        "title": "TerrainsSparseDraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.lowconfidence` v1, and its plan: the surface, how many estimated areas (outer outlines)\nand holes in them, their area, the objects written (in the plan, none) and the revision.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "areas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "holes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surface",
+          "areas",
+          "holes",
+          "area",
+          "uids",
+          "revision"
+        ],
+        "title": "TerrainsCoverageDrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.lowconfidence` v1, and its plan: the surface, how many estimated areas (outer outlines)\nand holes in them, their area, the objects written (in the plan, none) and the revision.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "areas": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "holes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "surface",
+          "areas",
+          "holes",
+          "area",
+          "uids",
+          "revision"
+        ],
+        "title": "TerrainsCoverageDrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_point_density",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "entity_not_found",
+          "invalid_coverage",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "2 m hücrede noktasız yerler, alanlarıyla",
+          "input": {
+            "cell": 2.0,
+            "labels": true,
+            "layerId": "kapsam",
+            "least": 1,
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -83314,6 +83813,18 @@
       "meaning": "Yüzey sınırın tamamını örtmüyor; kalan yerde veri yok."
     },
     {
+      "code": "invalid_point_density",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nokta yoğunluğu sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "terrain_density_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Noktası olan hücrelerin payı istenenin altında."
+    },
+    {
       "code": "invalid_swept",
       "kind": "failed",
       "retryable": false,
@@ -88723,6 +89234,10 @@
     {
       "unit": "m/%",
       "meaning": "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı."
+    },
+    {
+      "unit": "1/m2",
+      "meaning": "Yoğunluk: metrekare başına sayı (nokta bölü m²)."
     }
   ],
   "effects": [
@@ -100751,6 +101266,11 @@
         {
           "const": "lowConfidence",
           "description": "`road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları\nçiz”.",
+          "type": "string"
+        },
+        {
+          "const": "sparse",
+          "description": "`road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.",
           "type": "string"
         }
       ]

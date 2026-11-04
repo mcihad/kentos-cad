@@ -6,6 +6,7 @@
 mod analysis;
 mod contours;
 mod coverage;
+mod density;
 mod figures;
 mod mesh;
 mod quality;
@@ -21,6 +22,7 @@ use serde::{Deserialize, Serialize};
 
 pub use analysis::{AnalysisError, Band, BandParts, Bands, GridSlope, MAX_CELLS as MAX_GRID_CELLS, Measure, Roughness};
 pub use coverage::{Coverage, Region, clipped_area, ring_area};
+pub use density::{Density, ring_holds};
 pub use contours::{ContourError, ContourLine, MAX_LEVELS, Slope};
 pub use figures::{Figures, SectionPoint};
 pub use quality::{Gaps, NearPair, Spike};

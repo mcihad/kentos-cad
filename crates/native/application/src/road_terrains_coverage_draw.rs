@@ -19,7 +19,7 @@ use crate::road_terrains::{self as terrains, fail};
 /// A text's paper height (mm) at the drawing's plot scale.
 const TEXT_MM: f64 = 2.5;
 
-fn object(geometry: EntityGeometry) -> NewObject {
+pub(crate) fn object(geometry: EntityGeometry) -> NewObject {
     NewObject {
         geometry,
         color: None,
@@ -35,7 +35,7 @@ fn object(geometry: EntityGeometry) -> NewObject {
     }
 }
 
-fn ring(pts: &[[f64; 2]]) -> NewObject {
+pub(crate) fn ring(pts: &[[f64; 2]]) -> NewObject {
     object(EntityGeometry::Polyline {
         pts: pts.iter().map(|p| Vec2 { x: p[0], y: p[1] }).collect(),
         bulges: None,
@@ -74,6 +74,50 @@ fn centre(ring: &[[f64; 2]]) -> [f64; 2] {
     [cx / (3.0 * a), cy / (3.0 * a)]
 }
 
+/// Outlines as closed polylines and, with `label`, each outer outline's area (less the holes it holds) at its centre:
+/// the objects, how many outer outlines and holes, and their area.
+pub(crate) fn outlined(loops: &[Vec<[f64; 2]>], plot_scale: f64, label: Option<&str>) -> (Vec<NewObject>, u32, u32, f64) {
+    let outers: Vec<&Vec<[f64; 2]>> = loops.iter().filter(|r| ring_area(r) > 0.0).collect();
+    let holes: Vec<&Vec<[f64; 2]>> = loops.iter().filter(|r| ring_area(r) <= 0.0).collect();
+    let mut objects: Vec<NewObject> = loops.iter().map(|r| ring(r)).collect();
+    let mut area = 0.0;
+    let height = TEXT_MM * plot_scale / 1000.0;
+    for outer in &outers {
+        // Its holes: those whose first corner it holds, not held by a smaller outer outline also holding it.
+        let own: f64 = holes
+            .iter()
+            .filter(|h| {
+                inside(outer, h[0])
+                    && !outers.iter().any(|o| !std::ptr::eq(*o, *outer) && inside(o, h[0]) && ring_area(o) < ring_area(outer))
+            })
+            .map(|h| -ring_area(h))
+            .sum();
+        let a = ring_area(outer) - own;
+        area += a;
+        if let Some(label) = label {
+            let c = centre(outer);
+            objects.push(object(EntityGeometry::Text {
+                layout: None,
+                annotative: None,
+                p: Vec2 { x: c[0], y: c[1] },
+                text: format!("{label} · {} m²", format!("{a:.1}").replace('.', ",")),
+                height,
+                rotation: 0.0,
+                align: Some(TextAlign::MiddleCenter),
+                width_factor: None,
+                mask: false,
+                box_width: None,
+                line_spacing: None,
+                runs: Vec::new(),
+                face: TextFace::default(),
+                path: None,
+            }));
+        }
+    }
+    let n = |v: usize| u32::try_from(v).unwrap_or(u32::MAX);
+    (objects, n(outers.len()), n(holes.len()), area)
+}
+
 struct Checked {
     objects: Vec<NewObject>,
     surface: String,
@@ -95,51 +139,15 @@ fn check(doc: &Document, input: &TerrainsCoverageDraw) -> Result<Checked, Stop> 
     let surface = made.built()?;
     let warnings = checks::layer(doc, &input.layer_id)?;
     let loops = surface.outlines(|i| surface.longest_edge(i) > input.longest);
-    let outers: Vec<&Vec<[f64; 2]>> = loops.iter().filter(|r| ring_area(r) > 0.0).collect();
-    let holes: Vec<&Vec<[f64; 2]>> = loops.iter().filter(|r| ring_area(r) <= 0.0).collect();
-    let mut objects: Vec<NewObject> = loops.iter().map(|r| ring(r)).collect();
-    let mut area = 0.0;
-    let height = TEXT_MM * doc.settings().plot_scale / 1000.0;
-    for outer in &outers {
-        // Its holes: those whose first corner it holds, not held by a smaller outer outline also holding it.
-        let own: f64 = holes
-            .iter()
-            .filter(|h| {
-                inside(outer, h[0])
-                    && !outers.iter().any(|o| !std::ptr::eq(*o, *outer) && inside(o, h[0]) && ring_area(o) < ring_area(outer))
-            })
-            .map(|h| -ring_area(h))
-            .sum();
-        let a = ring_area(outer) - own;
-        area += a;
-        if input.labels {
-            let c = centre(outer);
-            objects.push(object(EntityGeometry::Text {
-                layout: None,
-                annotative: None,
-                p: Vec2 { x: c[0], y: c[1] },
-                text: format!("Düşük güven · {} m²", format!("{a:.1}").replace('.', ",")),
-                height,
-                rotation: 0.0,
-                align: Some(TextAlign::MiddleCenter),
-                width_factor: None,
-                mask: false,
-                box_width: None,
-                line_spacing: None,
-                runs: Vec::new(),
-                face: TextFace::default(),
-                path: None,
-            }));
-        }
-    }
+    let (mut objects, areas, holes, area) = outlined(&loops, doc.settings().plot_scale, input.labels.then_some("Düşük güven"));
     if input.outline {
         objects.extend(surface.outlines(|_| true).iter().map(|r| ring(r)));
     }
     Ok(Checked {
         objects,
         surface: id,
-        areas: u32::try_from(outers.len()).unwrap_or(u32::MAX),
-        holes: u32::try_from(holes.len()).unwrap_or(u32::MAX),
+        areas,
+        holes,
         area,
         warnings,
     })

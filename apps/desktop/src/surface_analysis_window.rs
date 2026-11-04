@@ -24,13 +24,13 @@ use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     TerrainBands, TerrainCheckpointsAsk, TerrainSpikesAsk, TerrainsAnalysed, TerrainsAnalysis, TerrainsCompare,
-    TerrainsCompared, TerrainsCoverage, TerrainsCoverageDraw, TerrainsCovered, TerrainsQuality, TerrainsQualityRead,
-    TerrainsRepair, TerrainsRepaired,
+    TerrainsCompared, TerrainsCoverage, TerrainsCoverageDraw, TerrainsCovered, TerrainsDensity, TerrainsDensityRead,
+    TerrainsQuality, TerrainsQualityRead, TerrainsRepair, TerrainsRepaired, TerrainsSparseDraw,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
     ExecutionContext, road_terrains_analysis, road_terrains_compare, road_terrains_coverage, road_terrains_coverage_draw,
-    road_terrains_quality, road_terrains_repair,
+    road_terrains_density, road_terrains_quality, road_terrains_repair, road_terrains_sparse,
 };
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
@@ -49,8 +49,9 @@ const RESTORE: &str = "Bırakılanları geri al";
 const APPLY: &str = "Onarımı uygula";
 const CLOSE: &str = "Kapat";
 const DRAW_LOW: &str = "Düşük güvenli alanları çiz";
+const DRAW_SPARSE: &str = "Seyrek alanları çiz";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 9] = [
+pub(crate) const FIELDS: [&str; 12] = [
     "Sınırlar",
     "Raster hücresi (m)",
     "Fark aralıkları (m)",
@@ -60,8 +61,11 @@ pub(crate) const FIELDS: [&str; 9] = [
     "Boşluk kenarı (m)",
     "Sınıf alanı",
     "En uzun kenar (m)",
+    "Hücre (m)",
+    "En az nokta",
+    "İstenen pay",
 ];
-const MODES: [&str; 4] = ["Analiz", "Fark", "Kalite", "Kapsam"];
+const MODES: [&str; 5] = ["Analiz", "Fark", "Kalite", "Kapsam", "Yoğunluk"];
 const MEASURES: [&str; 3] = ["Kot (m)", "Eğim (%)", "Bakı (°)"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -70,6 +74,7 @@ pub enum Mode {
     Compare,
     Quality,
     Coverage,
+    Density,
 }
 
 /// What was read last.
@@ -79,6 +84,7 @@ pub(crate) enum Read {
     Compare(TerrainsCompared),
     Quality(TerrainsQualityRead),
     Coverage(TerrainsCovered, road_terrains_coverage::CoveragePicture),
+    Density(TerrainsDensityRead, road_terrains_density::DensityPicture),
 }
 
 #[derive(Debug, Clone)]
@@ -93,7 +99,7 @@ pub struct Window {
     pub(crate) boundary: Option<String>,
     /// Kapsam's layer for the low confidence areas.
     pub(crate) layer: Option<String>,
-    pub(crate) fields: [String; 9],
+    pub(crate) fields: [String; 12],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     /// A repair asked (Kalite: the spikes left out, or everything taken back) and its difference, before it is written.
@@ -111,6 +117,7 @@ pub enum Event {
     Boundary(Option<String>),
     Layer(String),
     DrawLow,
+    DrawSparse,
     Field(usize, String),
     Preview,
     LeaveSpikes,
@@ -173,6 +180,28 @@ impl Window {
 
     pub(crate) fn coverage(&self) -> Result<TerrainsCoverage, String> {
         Ok(TerrainsCoverage { surface: self.surface()?, boundary: self.boundary.clone(), longest: number(&self.fields[8], FIELDS[8])? })
+    }
+
+    /// A count typed: a whole number, none when empty.
+    fn least(&self) -> Result<Option<u32>, String> {
+        let t = self.fields[10].trim();
+        if t.is_empty() {
+            return Ok(None);
+        }
+        t.parse::<u32>().map(Some).map_err(|_| format!("{} tam sayı olmalı: “{t}”.", FIELDS[10]))
+    }
+
+    pub(crate) fn density(&self) -> Result<TerrainsDensity, String> {
+        let Some(cell) = number(&self.fields[9], FIELDS[9])? else {
+            return Err("Yoğunluk ızgarası için hücre boyunu yazın: USGS'nin ızgarası nominal nokta aralığının iki katıdır.".into());
+        };
+        Ok(TerrainsDensity {
+            surface: self.surface()?,
+            cell,
+            boundary: self.boundary.clone(),
+            least: self.least()?,
+            share: number(&self.fields[11], FIELDS[11])?,
+        })
     }
 
     pub(crate) fn quality(&self) -> Result<TerrainsQuality, String> {
@@ -248,6 +277,10 @@ impl App {
                 let (r, x) = road_terrains_coverage::preview(&doc.model, &q)?;
                 Ok((Read::Coverage(r, road_terrains_coverage::picture(&doc.model, &q)?), x))
             }),
+            Mode::Density => w.density().and_then(|q| {
+                let (r, x) = road_terrains_density::preview(&doc.model, &q)?;
+                Ok((Read::Density(r, road_terrains_density::picture(&doc.model, &q)?), x))
+            }),
         };
         match read {
             Ok((r, warnings)) => {
@@ -289,7 +322,28 @@ impl App {
                 }
                 return Task::none();
             }
-            Event::Field(k, t) => w.fields[k.min(8)] = t,
+            Event::DrawSparse => {
+                let (Some(surface), Some(layer)) = (w.surface.clone(), w.layer.clone()) else { return Task::none() };
+                let q = match w.density() {
+                    Ok(q) => q,
+                    Err(why) => {
+                        self.warn(why);
+                        return Task::none();
+                    }
+                };
+                let Some(least) = q.least else {
+                    self.warn("Seyrek alan için en az nokta sayısını yazın.".to_owned());
+                    return Task::none();
+                };
+                let input = TerrainsSparseDraw { surface, cell: q.cell, least, boundary: q.boundary, layer_id: layer, labels: true, expected_revision: None };
+                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let result = road_terrains_sparse::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                if let Some(out) = self.answered(result) {
+                    self.say(Level::Success, format!("{} seyrek alan çizildi ({:.1} m²).", out.areas, out.area));
+                }
+                return Task::none();
+            }
+            Event::Field(k, t) => w.fields[k.min(FIELDS.len() - 1)] = t,
             Event::Preview => {
                 w.repair = None;
                 self.preview_surface_analysis();
@@ -371,9 +425,10 @@ impl App {
             Mode::Compare => 1,
             Mode::Quality => 2,
             Mode::Coverage => 3,
+            Mode::Density => 4,
         };
         let mode = container(Select::new(MODES.iter().map(|m| Choice::new(*m)), Some(mode_at), |i| {
-            msg(Event::Mode([Mode::Analysis, Mode::Compare, Mode::Quality, Mode::Coverage][i]))
+            msg(Event::Mode([Mode::Analysis, Mode::Compare, Mode::Quality, Mode::Coverage, Mode::Density][i]))
         }))
         .width(110);
         let mut top = row![words::field("Kip", mode, None), words::field("Yüzey", pick_surface(&w.surface, Event::Surface), None)]
@@ -409,7 +464,7 @@ impl App {
                     .push(words::field("Kontrol katmanı", checks, None))
                     .push(field("ör. Sınıf", 7, 100.0));
             }
-            Mode::Coverage => {
+            Mode::Coverage | Mode::Density => {
                 // The drawing's closed straight-edged objects, by their layer and number.
                 let mut ids: Vec<Option<String>> = vec![None];
                 let mut names = vec!["Yüzeyin kendisi".to_owned()];
@@ -428,7 +483,12 @@ impl App {
                 }
                 let at = ids.iter().position(|b| *b == w.boundary);
                 let boundary = container(Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::Boundary(ids[i].clone())))).width(240);
-                top = top.push(words::field("Proje sınırı", boundary, None)).push(field("yok", 8, 130.0));
+                top = top.push(words::field("Proje sınırı", boundary, None));
+                top = if w.mode == Mode::Coverage {
+                    top.push(field("yok", 8, 130.0))
+                } else {
+                    top.push(field("ör. 2", 9, 90.0)).push(field("yok", 10, 90.0)).push(field("yok", 11, 90.0))
+                };
             }
         }
         let mut body = Column::new().spacing(12).push(top);
@@ -436,7 +496,7 @@ impl App {
             None => body = body.push(label::caption("Sınırlar ve değerler kullanıcının; KentOS değer vermez. Önizle yüzeyi okur, hiçbir şey yazmaz.").style(muted)),
             Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
             Some(Ok(read)) => {
-                let picture = container(iced::widget::canvas(Plan { read, measure: w.measure }).width(Fill).height(typography::scaled(360.0)))
+                let picture = container(iced::widget::canvas(Plan { read, measure: w.measure, least: w.least().ok().flatten() }).width(Fill).height(typography::scaled(360.0)))
                     .style(style::container::field_box);
                 let mut side = Column::new().spacing(5).width(430);
                 let line = |k: String, v: String| row![label::caption(k).style(muted).width(150), label::body(v)].spacing(8);
@@ -521,6 +581,25 @@ impl App {
                             ))
                             .push(line("En uzun kenar".into(), format!("{:.2} m", c.longest_edge)));
                     }
+                    Read::Density(d, _) => {
+                        side = side
+                            .push(line("Izgara".into(), format!("{} × {} · {} m hücre", d.columns, d.rows, d.cell)))
+                            .push(line("Sayılan hücre".into(), format!("{} · {:.2} m²", d.cells, d.area)))
+                            .push(line(
+                                "Noktalı".into(),
+                                format!("{} · %{:.1}", d.filled, 100.0 * d.share.unwrap_or(0.0)),
+                            ))
+                            .push(line("Boş".into(), d.empty.to_string()));
+                        if let Some(n) = d.sparse {
+                            side = side.push(line("Seyrek".into(), n.to_string()));
+                        }
+                        side = side
+                            .push(line("Nokta".into(), format!("{} · en kalabalık hücre {}", d.points, d.most)))
+                            .push(line("Ortalama yoğunluk".into(), d.mean.map_or("—".into(), |m| format!("{m:.3} nokta/m²"))));
+                        if let Some(meets) = d.meets {
+                            side = side.push(line("İstenen pay".into(), if meets { "tutuyor".into() } else { "tutmuyor".into() }));
+                        }
+                    }
                 }
                 for wn in &w.warnings {
                     side = side.push(label::caption(wn.clone()).style(warn));
@@ -567,6 +646,21 @@ impl App {
                 .push(container(on_layer).width(150))
                 .push(words::secondary(DRAW_LOW, can.then(|| msg(Event::DrawLow))));
         }
+        if w.mode == Mode::Density {
+            let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+            let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
+            let on_layer = Select::new(
+                lnames.iter().map(|n| Choice::new(n.clone())),
+                w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+                move |i| msg(Event::Layer(lids[i].clone())),
+            )
+            .placeholder("Katman");
+            let can = w.layer.is_some() && !w.fields[9].trim().is_empty() && !w.fields[10].trim().is_empty();
+            bottom = bottom
+                .push(label::caption("Katman").style(muted))
+                .push(container(on_layer).width(150))
+                .push(words::secondary(DRAW_SPARSE, can.then(|| msg(Event::DrawSparse))));
+        }
         if w.mode == Mode::Quality {
             bottom = bottom
                 .push(words::secondary(LEAVE, spikes.then(|| msg(Event::LeaveSpikes))))
@@ -593,6 +687,7 @@ impl App {
             Control::Press(RESTORE) => Some(msg(Event::RestoreAll)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(DRAW_LOW) => Some(msg(Event::DrawLow)),
+            Control::Press(DRAW_SPARSE) => Some(msg(Event::DrawSparse)),
             Control::Fill(name, t) if !name.is_empty() && FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))
@@ -651,6 +746,8 @@ impl canvas::Program<Message> for Swatch {
 struct Plan<'a> {
     read: &'a Read,
     measure: usize,
+    /// Yoğunluk's least: a cell with fewer points is sparse.
+    least: Option<u32>,
 }
 
 impl canvas::Program<Message> for Plan<'_> {
@@ -731,6 +828,55 @@ impl canvas::Program<Message> for Plan<'_> {
                     frame.stroke(&shape, Stroke::default().with_width(2.0).with_color(tk.accent));
                 }
                 text(&mut frame, "Yeşil ölçülen, turuncu tahmin edilen; çizgi proje sınırı".into(), Point::new(10.0, 6.0));
+            }
+            Read::Density(d, pic) => {
+                let (w, h) = (pic.columns as f64 * pic.cell, pic.rows as f64 * pic.cell);
+                let corners = [pic.origin, [pic.origin[0] + w, pic.origin[1] + h]];
+                let pts: Vec<[f64; 2]> = corners.into_iter().chain(pic.rings.iter().flatten().copied()).collect();
+                let Some(fit) = Fit::of(&pts, bounds) else {
+                    text(&mut frame, "Gösterilecek hücre yok.".into(), Point::new(10.0, 10.0));
+                    return vec![frame.into_geometry()];
+                };
+                let most = d.most.max(1);
+                for (k, n) in pic.counts.iter().enumerate() {
+                    let Some(n) = *n else { continue };
+                    let (i, j) = (k % pic.columns, k / pic.columns);
+                    let x = pic.origin[0] + i as f64 * pic.cell;
+                    let y = pic.origin[1] + j as f64 * pic.cell;
+                    let (a, b) = (fit.at([x, y + pic.cell]), fit.at([x + pic.cell, y]));
+                    let size = iced::Size::new((b.x - a.x).max(1.0), (b.y - a.y).max(1.0));
+                    let sparse = d.sparse.is_some() && self.least.is_some_and(|l| n < l);
+                    let color = if n == 0 {
+                        Color { a: 0.45, ..tk.danger }
+                    } else if sparse {
+                        Color { a: 0.5, ..tk.warning }
+                    } else {
+                        Color { a: 0.2 + 0.6 * (n as f32 / most as f32), ..tk.success }
+                    };
+                    frame.fill_rectangle(a, size, color);
+                    if size.width > 14.0 && size.height > 12.0 {
+                        frame.fill_text(Text {
+                            content: n.to_string(),
+                            position: Point::new(a.x + size.width / 2.0, a.y + size.height / 2.0),
+                            color: tk.text,
+                            size: Pixels(10.0),
+                            align_x: iced::widget::text::Alignment::Center,
+                            align_y: iced::alignment::Vertical::Center,
+                            ..Text::default()
+                        });
+                    }
+                }
+                for ring in &pic.rings {
+                    let shape = Path::new(|p| {
+                        p.move_to(fit.at(ring[0]));
+                        for q in &ring[1..] {
+                            p.line_to(fit.at(*q));
+                        }
+                        p.close();
+                    });
+                    frame.stroke(&shape, Stroke::default().with_width(2.0).with_color(tk.accent));
+                }
+                text(&mut frame, "Hücrelerde nokta sayısı: kırmızı boş, turuncu seyrek; çizgi proje sınırı".into(), Point::new(10.0, 6.0));
             }
             Read::Quality(q) => {
                 let mut pts: Vec<[f64; 2]> = q.spikes.iter().map(|s| [s.at[0], s.at[1]]).collect();

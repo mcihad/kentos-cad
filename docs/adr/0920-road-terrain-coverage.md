@@ -14,6 +14,13 @@ Tarih: 2026-11-04. plan/road.md Y19.1 (ROAD-SURVEY-08, ROAD-UX-07). Durum: kabul
   adaydır; boşluğun kabul edilen nedenleri su, yansıtmayan yüzey ve gölgedir
   ([GeoCue: Generating Low Confidence Polygons](https://support.geocue.com/wp-content/uploads/2015/04/Generating-Low-Confidence-Polygons.pdf),
   [USGS Lidar Base Specification](https://www.usgs.gov/node/28848)).
+- **USGS Lidar Base Specification (yoğunluk ızgarası):** hücre tasarımdaki toplam nominal nokta aralığının iki katıdır
+  (QL2'de 2 × 0,71 m), her hücre içindeki noktaların sayısıyla doldurulur; hücrelerin en az %90'ında en az bir nokta
+  olmalıdır ([Lidar Base Specification: Collection Requirements](https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-collection-requirements),
+  [Tables](https://www.usgs.gov/ngp-standards-and-specifications/lidar-base-specification-tables), 4 Kasım 2026'da
+  okundu). Bu sayılar USGS'nindir; KentOS'ta hücre, en az nokta ve pay kullanıcınındır.
+- **Civil 3D ve OpenRoads Designer:** yüzeyin istatistiklerinde nokta sayısı ve alan var, hücre hücre yoğunluk aracı
+  yok; OpenRoads'un arazi analizi (Analyze Point, Analyze Elevation) yoğunluk vermiyor.
 - **OpenRoads Designer:** arazi modelinin kenar yöntemi en büyük üçgen boyuyla dış kenarı keser (Y2'de ADR 0900 §5'in
   dayanağı).
 - **Netcad:** NETPRO için verisiz alanı ve tahmin edilen yüzeyi raporlayan çevrimiçi resmî belge bulunamadı.
@@ -57,6 +64,28 @@ dış çizgisi de yazılır, yani verinin olduğu yer. Tahmin yoksa ve dış çi
 Ret: `invalid_revision`, `revision_conflict`, `invalid_coverage`, `not_a_road_project`, `unknown_terrain`,
 `terrain_unbuildable`, katmanın retleri; uyarı `layer_hidden`.
 
+### §6 Nokta yoğunluğu
+
+`road.terrains.density` v1, yalnız okur. Yüzeyin köşeleri `cell` metrelik kare hücrelerde sayılır. Hücreler dünyanın
+başlangıcından `cell`'in katlarıdır, satırlar y'ye, sütunlar x'e göre dizilir. Nokta ⌊x/cell⌋, ⌊y/cell⌋ hücresinindir:
+kenardaki nokta sağdaki ve üstteki hücreye düşer. Izgara sınırın dış halkasının ya da sınır yoksa yüzeyin köşelerinin
+kutusunu örter. Merkezi sınırın içinde (tek-çift kuralı, deliklerde değil) ya da sınır yoksa yüzeyin üstünde (kenarı
+dahil) olan hücre sayılır. Sayılmayan hücreye düşen nokta da sayılmaz. `least` ile bundan az noktalı hücreler seyrektir.
+`share` (0–1) ile noktası olan hücrelerin payının ona ulaşıp ulaşmadığı söylenir. Cevap: ızgara, sayılan, noktalı ve
+boş hücreler, pay, seyrek hücreler, noktalar, alan (hücre × hücre²), ortalama yoğunluk, en kalabalık hücre ve tuttu mu.
+En çok 1 000 000 hücre okunur. Ret: `invalid_point_density` (hücre, least 0, pay, çok hücre), `not_a_road_project`,
+`unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage`. Uyarı: `terrain_density_short`.
+Yüzey analizi'nde Yoğunluk kipi: hücreler sayılarıyla, boş kırmızı, seyrek turuncu.
+
+### §7 Seyrek alanlar
+
+`road.terrains.sparse` v1, tek geri alma adımı “Seyrek alanları çiz”. Yoğunluk ızgarasının `least`'ten az noktalı
+sayılan hücreleri birleştirilir: yalnız bir seçili hücrenin kenarı olan kenarlar §5'in kuralıyla zincirlenir (iki
+alanın köşeden değdiği yerde en sağa dönüş). Kenarla birleşen hücreler tek alandır. Dış çizgiler ve delikler kapalı
+çoklu çizgi olarak yazılır, `labels` ile alanları §5'teki gibi. Ret: §6'nınkiler, katmanın retleri,
+`invalid_revision`, `revision_conflict`; uyarı `layer_hidden`.
+
 ## Açıklar
 
-- Yaylı sınır, çok parçalı sınır, nokta yoğunluğu ızgarası ve alan olarak (delikleriyle) yazım açık.
+- Yaylı sınır, çok parçalı sınır, alan olarak (delikleriyle) yazım, kaynak nokta bulutunun kendi yoğunluğu (yüzeyin
+  köşeleri değil, buluttaki zemin noktaları; ADR 0913'ün kaydı) ve yalnız ilk dönüşlerle sayım açık.

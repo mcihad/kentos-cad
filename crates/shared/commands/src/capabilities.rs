@@ -1991,6 +1991,22 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden"],
         targets: none,
     },
+    Entry {
+        id: "road.terrains.density",
+        refusals: &[&["invalid_point_density", "not_a_road_project", "unknown_terrain", "terrain_unbuildable", "entity_not_found", "invalid_coverage"]],
+        warnings: &["terrain_density_short"],
+        targets: none,
+    },
+    Entry {
+        id: "road.terrains.sparse",
+        refusals: &[
+            &["invalid_point_density", "not_a_road_project", "unknown_terrain", "terrain_unbuildable", "entity_not_found", "invalid_coverage"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
     // KentOS Yol's design vehicle swept path (plan/road.md Y17, docs/adr/0915).
     Entry {
         id: "road.swept.query",

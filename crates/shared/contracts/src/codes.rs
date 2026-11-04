@@ -859,6 +859,11 @@ codes! {
     INVALID_COVERAGE = "invalid_coverage", Failed, false, "Yüzey kapsamı sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: the surface does not wholly cover the boundary; the rest has no data (docs/adr/0920 §3).
     TERRAIN_NO_DATA = "terrain_no_data", Warning, false, "Yüzey sınırın tamamını örtmüyor; kalan yerde veri yok.";
+    /// A density grid asked that is not right: a cell not positive, a least of 0, a share outside (0, 1], too many
+    /// cells (docs/adr/0920 §6).
+    INVALID_POINT_DENSITY = "invalid_point_density", Failed, false, "Nokta yoğunluğu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: fewer of the density grid's cells hold a point than the share asked (docs/adr/0920 §6).
+    TERRAIN_DENSITY_SHORT = "terrain_density_short", Warning, false, "Noktası olan hücrelerin payı istenenin altında.";
     INVALID_SWEPT = "invalid_swept", Failed, false, "Araç izi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a vehicle's body meets an obstacle somewhere on its path (docs/adr/0915 §2).
     SWEPT_TOUCHES = "swept_touches", Warning, false, "Aracın gövdesi yolunun bir yerinde bir engele değiyor.";

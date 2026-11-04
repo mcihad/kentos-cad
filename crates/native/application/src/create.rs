@@ -205,6 +205,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Drainage) => "Drenaj çiz",
         Some(CreateOperation::Swept) => "Araç izi çiz",
         Some(CreateOperation::LowConfidence) => "Düşük güvenli alanları çiz",
+        Some(CreateOperation::Sparse) => "Seyrek alanları çiz",
     }
 }
 

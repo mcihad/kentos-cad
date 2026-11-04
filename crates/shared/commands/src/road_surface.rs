@@ -652,3 +652,123 @@ pub struct TerrainsCoverageDrawn {
     pub uids: Vec<String>,
     pub revision: String,
 }
+
+pub const ROAD_TERRAINS_DENSITY: &str = "road.terrains.density";
+pub const ROAD_TERRAINS_DENSITY_VERSION: u32 = 1;
+
+/// The most cells a density grid may have.
+pub const MOST_DENSITY_CELLS: u32 = 1_000_000;
+
+/// Input of `road.terrains.density` v1 (docs/adr/0920 §6; ROAD-SURVEY-08): a terrain surface's corners counted in
+/// square cells of `cell` metres (the user's; USGS's density raster takes twice the nominal point spacing), whole
+/// multiples of the cell from the world's origin. A cell counts when its centre is inside `boundary` (a closed object as
+/// in `road.terrains.coverage`, an area's holes out) or, without one, on the surface. With `least`, the cells with fewer
+/// points are sparse; with `share` (0–1, the user's; USGS asks 0.9 of the cells to hold a point) the answer says whether
+/// that share of the cells holds a point. Reads only.
+///
+/// Refusals, in this order: `invalid_point_density` (cell not positive, least 0, share outside (0, 1]),
+/// `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary
+/// that is not one), `invalid_point_density` (more than [`MOST_DENSITY_CELLS`] cells). Warnings: `terrain_density_short`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsDensity {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub boundary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub least: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub share: Option<f64>,
+}
+
+/// Output of `road.terrains.density` v1: the grid (its cell, the lower left corner of column 0 row 0, columns and
+/// rows), the cells that count, those holding a point and those empty, the share holding one (none without cells),
+/// the sparse cells (with `least`), the points in the cells that count, their area (cells × cell²), the mean density
+/// (points per m²; none without area), the most points in a cell, and whether the share asked is met (with `share`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsDensityRead {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub origin: crate::Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub columns: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub cells: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub filled: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub empty: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub share: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub sparse: Option<u32>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub points: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m2")))]
+    pub mean: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub most: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub meets: Option<bool>,
+}
+
+pub const ROAD_TERRAINS_SPARSE_DRAW: &str = "road.terrains.sparse";
+pub const ROAD_TERRAINS_SPARSE_DRAW_VERSION: u32 = 1;
+
+/// Input of `road.terrains.sparse` v1 (docs/adr/0920 §7): a density grid's (as in `road.terrains.density`) cells with
+/// fewer than `least` points (the user's) drawn on `layerId` as closed polylines, their merged outlines (cells meeting
+/// at an edge one area), with `labels` each area's area at its outline's centre. One undo step “Seyrek alanları çiz”.
+///
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_point_density`, `not_a_road_project`,
+/// `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage`, `invalid_point_density` (too many cells),
+/// `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsSparseDraw {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub least: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub boundary: Option<String>,
+    pub layer_id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub labels: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}

@@ -180,10 +180,17 @@ impl Surface {
                 next.entry(a).or_default().push(b);
             }
         }
-        let at = |v: u32| {
+        chain(|v| {
             let p = self.vertices[v as usize];
             [p[0], p[1]]
-        };
+        }, next)
+    }
+}
+
+/// Directed outline edges (`next`: each corner's outgoing ends) chained into rings end to start, at a corner where two
+/// outlines touch the rightmost turn; corners where a ring goes straight on dropped; each ring from its least corner
+/// (x, then y), the rings in that order.
+pub(super) fn chain(at: impl Fn(u32) -> [f64; 2], mut next: std::collections::BTreeMap<u32, Vec<u32>>) -> Vec<Vec<[f64; 2]>> {
         let mut loops = Vec::new();
         while let Some((&start, _)) = next.iter().find(|(_, v)| !v.is_empty()) {
             let mut ring = vec![start];
@@ -232,5 +239,4 @@ impl Surface {
         }
         loops.sort_by(|a, b| a[0][0].total_cmp(&b[0][0]).then(a[0][1].total_cmp(&b[0][1])));
         loops
-    }
 }

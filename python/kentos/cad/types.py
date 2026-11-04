@@ -90,6 +90,7 @@ UNITS: dict[str, str] = {
     "ms": "Milisaniye: bir işin süresi.",
     "1/m": "Eğrilik: metrede dönüş (radyan bölü metre), 1/yarıçap; sola dönüş artı.",
     "m/%": "Düşey kurbun K değeri: yatay metre bölü yüzde eğim farkı.",
+    "1/m2": "Yoğunluk: metrekare başına sayı (nokta bölü m²).",
 }
 
 
@@ -1317,6 +1318,7 @@ class CreateOperation(_StrEnum):
     - ``cloudTerrain``: A terrain's ground points from point clouds (`road.terrains.cloud`, docs/adr/0913).
     - ``drainage``: `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
     - ``lowConfidence``: `road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları
+    - ``sparse``: `road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.
     """
     SWEPT = "swept"
     PARALLEL = "parallel"
@@ -1369,9 +1371,10 @@ class CreateOperation(_StrEnum):
     CLOUD_TERRAIN = "cloudTerrain"
     DRAINAGE = "drainage"
     LOW_CONFIDENCE = "lowConfidence"
+    SPARSE = "sparse"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -79459,6 +79462,133 @@ class TerrainsCreate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainsDensity(_Model):
+    """Input of `road.terrains.density` v1 (docs/adr/0920 §6; ROAD-SURVEY-08): a terrain surface's corners counted in
+    square cells of `cell` metres (the user's; USGS's density raster takes twice the nominal point spacing), whole
+    multiples of the cell from the world's origin. A cell counts when its centre is inside `boundary` (a closed object as
+    in `road.terrains.coverage`, an area's holes out) or, without one, on the surface. With `least`, the cells with fewer
+    points are sparse; with `share` (0–1, the user's; USGS asks 0.9 of the cells to hold a point) the answer says whether
+    that share of the cells holds a point. Reads only.
+
+    Refusals, in this order: `invalid_point_density` (cell not positive, least 0, share outside (0, 1]),
+    `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary
+    that is not one), `invalid_point_density` (more than [`MOST_DENSITY_CELLS`] cells). Warnings: `terrain_density_short`.
+    Attributes:
+        cell: Unit: m.
+        least: Unit: count.
+        share: Unit: 1.
+    """
+    surface: str
+    cell: float
+    boundary: str | None | Unset = UNSET
+    least: int | None | Unset = UNSET
+    share: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["cell"] = float(self.cell)
+        if self.boundary is not UNSET:
+            out["boundary"] = self.boundary
+        if self.least is not UNSET:
+            out["least"] = self.least
+        if self.share is not UNSET:
+            out["share"] = None if self.share is None else float(self.share)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsDensity:
+        return cls(
+            surface=data["surface"],
+            cell=float(data["cell"]),
+            boundary=data.get("boundary", UNSET),
+            least=data.get("least", UNSET),
+            share=UNSET if "share" not in data else None if data["share"] is None else float(data["share"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsDensityRead(_Model):
+    """Output of `road.terrains.density` v1: the grid (its cell, the lower left corner of column 0 row 0, columns and
+    rows), the cells that count, those holding a point and those empty, the share holding one (none without cells),
+    the sparse cells (with `least`), the points in the cells that count, their area (cells × cell²), the mean density
+    (points per m²; none without area), the most points in a cell, and whether the share asked is met (with `share`).
+    Attributes:
+        cell: Unit: m.
+        origin: Unit: length.
+        columns: Unit: count.
+        rows: Unit: count.
+        cells: Unit: count.
+        filled: Unit: count.
+        empty: Unit: count.
+        points: Unit: count.
+        area: Unit: area.
+        most: Unit: count.
+        mean: Unit: 1/m2.
+        share: Unit: 1.
+        sparse: Unit: count.
+    """
+    surface: str
+    cell: float
+    origin: Vec2
+    columns: int
+    rows: int
+    cells: int
+    filled: int
+    empty: int
+    points: int
+    area: float
+    most: int
+    mean: float | None | Unset = UNSET
+    meets: bool | None | Unset = UNSET
+    share: float | None | Unset = UNSET
+    sparse: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["cell"] = float(self.cell)
+        out["origin"] = _vec2_out(self.origin)
+        out["columns"] = self.columns
+        out["rows"] = self.rows
+        out["cells"] = self.cells
+        out["filled"] = self.filled
+        out["empty"] = self.empty
+        out["points"] = self.points
+        out["area"] = float(self.area)
+        out["most"] = self.most
+        if self.mean is not UNSET:
+            out["mean"] = None if self.mean is None else float(self.mean)
+        if self.meets is not UNSET:
+            out["meets"] = self.meets
+        if self.share is not UNSET:
+            out["share"] = None if self.share is None else float(self.share)
+        if self.sparse is not UNSET:
+            out["sparse"] = self.sparse
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsDensityRead:
+        return cls(
+            surface=data["surface"],
+            cell=float(data["cell"]),
+            origin=Vec2.from_json(data["origin"]),
+            columns=data["columns"],
+            rows=data["rows"],
+            cells=data["cells"],
+            filled=data["filled"],
+            empty=data["empty"],
+            points=data["points"],
+            area=float(data["area"]),
+            most=data["most"],
+            mean=UNSET if "mean" not in data else None if data["mean"] is None else float(data["mean"]),
+            meets=data.get("meets", UNSET),
+            share=UNSET if "share" not in data else None if data["share"] is None else float(data["share"]),
+            sparse=data.get("sparse", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsEdit(_Model):
     """Input of `road.terrains.edit` v1.
 
@@ -79899,6 +80029,54 @@ class TerrainsRepaired(_Model):
             revision=data["revision"],
             excluded=[[float(e1) for e1 in e0] for e0 in data["excluded"]] if "excluded" in data else UNSET,
             largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsSparseDraw(_Model):
+    """Input of `road.terrains.sparse` v1 (docs/adr/0920 §7): a density grid's (as in `road.terrains.density`) cells with
+    fewer than `least` points (the user's) drawn on `layerId` as closed polylines, their merged outlines (cells meeting
+    at an edge one area), with `labels` each area's area at its outline's centre. One undo step “Seyrek alanları çiz”.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_point_density`, `not_a_road_project`,
+    `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage`, `invalid_point_density` (too many cells),
+    `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings: `layer_hidden`.
+    Attributes:
+        cell: Unit: m.
+        least: Unit: count.
+    """
+    surface: str
+    cell: float
+    least: int
+    layer_id: str
+    boundary: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    labels: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["cell"] = float(self.cell)
+        out["least"] = self.least
+        out["layerId"] = self.layer_id
+        if self.boundary is not UNSET:
+            out["boundary"] = self.boundary
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsSparseDraw:
+        return cls(
+            surface=data["surface"],
+            cell=float(data["cell"]),
+            least=data["least"],
+            layer_id=data["layerId"],
+            boundary=data.get("boundary", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            labels=data.get("labels", UNSET),
         )
 
 
@@ -107092,6 +107270,8 @@ __all__ = [
     "TerrainsCoverageDrawn",
     "TerrainsCovered",
     "TerrainsCreate",
+    "TerrainsDensity",
+    "TerrainsDensityRead",
     "TerrainsEdit",
     "TerrainsEditOperation",
     "TerrainsEditOperationName",
@@ -107103,6 +107283,7 @@ __all__ = [
     "TerrainsQuery",
     "TerrainsRepair",
     "TerrainsRepaired",
+    "TerrainsSparseDraw",
     "TerrainsWritten",
     "TextAlign",
     "TextAlignName",

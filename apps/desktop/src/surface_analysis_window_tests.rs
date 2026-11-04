@@ -206,7 +206,6 @@ fn coverage_case(name: &str) -> serde_json::Value {
 #[test]
 fn the_window_reads_a_surface_s_coverage_of_a_boundary() {
     let mut app = coverage_app();
-    let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
     let _ = app.update(Message::Run("terrain.analysis"));
     send(&mut app, W::Mode(Mode::Coverage));
     send(&mut app, W::Surface("t-10".into()));
@@ -287,5 +286,110 @@ fn coverage_screens() {
         send(&mut app, W::Layer("kapsam".into()));
         send(&mut app, W::Preview);
         shot(&mut app, "delikli");
+    }
+}
+
+/// The density fixture's case by its name.
+fn density_case(file: &str, name: &str) -> serde_json::Value {
+    let text = match file {
+        "density" => include_str!("../../../fixtures/commands/v1/road.terrains.density.json"),
+        _ => include_str!("../../../fixtures/commands/v1/road.terrains.sparse.json"),
+    };
+    let cases: serde_json::Value = serde_json::from_str(text).expect("cases");
+    cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case")["steps"][0].clone()
+}
+
+#[test]
+fn the_window_counts_a_surface_s_points_in_cells_and_draws_the_sparse_ones() {
+    let mut app = coverage_app();
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Density));
+    send(&mut app, W::Surface("t-10".into()));
+    send(&mut app, W::Preview);
+    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("hücre boyunu")));
+    let case = density_case("density", "Proje sınırında");
+    send(&mut app, W::Boundary(case["input"]["boundary"].as_str().map(str::to_owned)));
+    send(&mut app, W::Field(9, "1.5".into()));
+    send(&mut app, W::Field(10, "1".into()));
+    send(&mut app, W::Preview);
+    let Read::Density(d, pic) = read(&app) else { panic!("density") };
+    let want = &case["result"]["output"];
+    assert_eq!((d.cells, d.filled, d.sparse), (want["cells"].as_u64().unwrap() as u32, want["filled"].as_u64().unwrap() as u32, Some(want["sparse"].as_u64().unwrap() as u32)));
+    assert_eq!((pic.counts.iter().flatten().count(), pic.rings.len()), (d.cells as usize, 1));
+    // A share not met warns.
+    send(&mut app, W::Field(11, "0.9".into()));
+    send(&mut app, W::Preview);
+    assert!(app.surface_analysis_window.as_ref().expect("open").warnings.iter().any(|w| w.contains("istenen %90.0")));
+    // The sparse cells drawn: as many objects as the shared case writes, one undo step.
+    let case = density_case("sparse", "Seyrek yüzeyin noktasız hücreleri");
+    send(&mut app, W::Boundary(None));
+    send(&mut app, W::Field(9, "1".into()));
+    send(&mut app, W::Field(11, String::new()));
+    let count = |app: &App| app.document.as_ref().expect("a drawing").model.entities().count();
+    let n = count(&app);
+    send(&mut app, W::Layer("kapsam".into()));
+    send(&mut app, W::DrawSparse);
+    // The window draws with the area labels on; the case draws without them.
+    let rings = case["result"]["output"]["uids"].as_array().expect("uids").len();
+    let areas = case["result"]["output"]["areas"].as_u64().expect("areas") as usize;
+    assert_eq!(count(&app), n + rings + areas);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(count(&app), n);
+}
+
+/// Yoğunluk, the sparse surface in its boundary and the holed lattice, wide and narrow, light and dark, and the sparse
+/// areas drawn; `.run/gui-evidence/yol-y19-yogunluk-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib surface_analysis_window_tests::density_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn density_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = coverage_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("yol-y19-yogunluk-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Density));
+        send(&mut app, W::Surface("t-10".into()));
+        let case = density_case("density", "Yüzeyi aşan sınır");
+        send(&mut app, W::Boundary(case["input"]["boundary"].as_str().map(str::to_owned)));
+        send(&mut app, W::Field(9, "1.5".into()));
+        send(&mut app, W::Field(10, "1".into()));
+        send(&mut app, W::Field(11, "0.9".into()));
+        send(&mut app, W::Layer("kapsam".into()));
+        send(&mut app, W::Preview);
+        shot(&mut app, "seyrek");
+        send(&mut app, W::Surface("t-6".into()));
+        let case = density_case("density", "L biçimli sınır");
+        send(&mut app, W::Boundary(case["input"]["boundary"].as_str().map(str::to_owned)));
+        send(&mut app, W::Field(9, "2".into()));
+        send(&mut app, W::Field(10, "4".into()));
+        send(&mut app, W::Field(11, String::new()));
+        send(&mut app, W::Preview);
+        shot(&mut app, "teras");
+        send(&mut app, W::DrawSparse);
+        send(&mut app, W::Close);
+        shot(&mut app, "cizildi");
     }
 }

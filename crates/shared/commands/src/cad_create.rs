@@ -143,6 +143,8 @@ pub enum CreateOperation {
     /// `road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları
     /// çiz”.
     LowConfidence,
+    /// `road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.
+    Sparse,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
