@@ -263,3 +263,169 @@ pub(super) fn full_patterns_match_independent_samples(gpu: &mut Gpu) {
     gpu.styled = old;
     gpu.keep = keep;
 }
+
+/// Measures changed-camera frames over one immutable layer, rather than
+/// including texture allocation or a readback in every timed frame. Test
+/// builds retain CPU debug overhead; report the profile, never infer FPS.
+pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
+    use kentos_contracts::{Entity, LayerStyle, ProjectSettings, ProjectStyles};
+    use kentos_geometry_core::{Vec2, entity::Shape, store::Store};
+    use kentos_native_style::{
+        StylePalette, View,
+        batches::{DecodeOptions, decode},
+        library::StyleLibrary,
+        line_types::LineTypes,
+        program::{BuildOptions, ReadingUnit, build_layer},
+    };
+    use serde_json::{Value, json};
+    use std::time::Instant;
+    let resource: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/shape-resources.json"
+    ))
+    .unwrap();
+    let resources: ProjectStyles = serde_json::from_value(resource["styles"].clone()).unwrap();
+    let mut entities = Vec::<Entity>::new();
+    let mut store = Store::new();
+    for i in 0..800u32 {
+        let y = f64::from(i) * 0.01;
+        entities.push(
+            serde_json::from_value(json!({"kind":"line","id":i+1,"layerId":"a","attrs":{},
+            "a":{"x":0.,"y":y},"b":{"x":4.,"y":y}}))
+            .unwrap(),
+        );
+        store.put_many([(
+            f64::from(i + 1),
+            "a",
+            false,
+            Shape::Line {
+                a: Vec2::new(0., y),
+                b: Vec2::new(4., y),
+            },
+        )]);
+    }
+    let list: Vec<_> = entities.iter().collect();
+    let library = StyleLibrary::default();
+    let palette = StylePalette {
+        fg: "#ffffff".into(),
+        fg_dim: "#999999".into(),
+        ink: "#000000".into(),
+        paper: "#ffffff".into(),
+    };
+    let target = gpu.device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("CAD-ADV-11 timing"),
+        size: wgpu::Extent3d {
+            width: 1440,
+            height: 900,
+            depth_or_array_layers: 1,
+        },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: super::FORMAT,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        view_formats: &[],
+    });
+    let target = target.create_view(&Default::default());
+    let mut camera = Camera {
+        width: 1440.,
+        height: 900.,
+        center: Vec2::new(2., 5.),
+        scale: 80.,
+        ..Default::default()
+    };
+    let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
+    println!(
+        "CAD-ADV-11: profile={}, 800 lines × 4m, 1:50, 1440x900, 40 pan/zoom frames after 4 warmups; GPU completion included, no pixel readback",
+        if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        }
+    );
+    for (case, mode) in ["short", "long12", "text", "shape"].into_iter().enumerate() {
+        let started = Instant::now();
+        let elements = match mode {
+            "short" => json!([{"length":5.},{"length":-3.}]),
+            "long12" => json!(
+                (0..12)
+                    .map(|i| json!({"length":if i%2==0{1.}else{-1.}}))
+                    .collect::<Vec<_>>()
+            ),
+            "text" => {
+                json!([{"length":5.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"STANDARD","scale":0.7}},{"length":-2.}])
+            }
+            _ => {
+                json!([{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"fence.shx","scale":0.7}},{"length":-2.}])
+            }
+        };
+        let project:ProjectSettings=serde_json::from_value(json!({"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":50.,
+            "lineTypes":[{"name":"P","unit":"paper","elements":elements}]})).unwrap();
+        let types = LineTypes::with_resources(&project, &resources);
+        let style: LayerStyle = serde_json::from_value(
+            json!({"color":"#ffffff","lineWeight":0.25,"lineType":"continuous","linePattern":"P"}),
+        )
+        .unwrap();
+        let opts = BuildOptions {
+            origin: Vec2::new(0., 0.),
+            plot_scale: 50.,
+            screen: false,
+            hairlines: false,
+            clip: None,
+            library: &library,
+            layer_name: &|_| "A".into(),
+            view: View::default(),
+            frame: None,
+            reading_unit: ReadingUnit::METRE,
+            layer_styles: None,
+            line_types: Some(&types),
+        };
+        let (_, batches) = build_layer(&store, &style, &list, &opts).unwrap();
+        assert!(!batches.json.contains("lineTypeLoss"), "{mode}");
+        let layer = decode(
+            batches,
+            &DecodeOptions {
+                palette: &palette,
+                plot_scale: 50.,
+                library: &library,
+                view: Default::default(),
+                hold_weights: false,
+            },
+        )
+        .unwrap();
+        let build_ms = started.elapsed().as_secs_f64() * 1000.;
+        let n = layer.batches.len();
+        let bytes = (layer.data.len() + layer.low.len()) * std::mem::size_of::<f32>();
+        gpu.styled = Some(StyledScene {
+            layers: vec![Arc::new(StyledLayerPart {
+                id: 88_000 + case as u64,
+                layer,
+            })],
+            ..Default::default()
+        });
+        for samples in [1, 4] {
+            settings.samples = samples;
+            let mut times = Vec::new();
+            let mut cpus = Vec::new();
+            let mut cold = 0.;
+            for frame in 0..44 {
+                camera.center.x = 2. + f64::from(frame % 2) / 80.;
+                camera.scale = if frame % 4 < 2 { 80. } else { 81. };
+                let (total, cpu) = super::compose_timing::frame(gpu, &target, &camera, &settings);
+                if frame == 0 {
+                    cold = total;
+                }
+                if frame >= 4 {
+                    times.push(total);
+                    cpus.push(cpu);
+                }
+            }
+            times.sort_by(f64::total_cmp);
+            cpus.sort_by(f64::total_cmp);
+            println!(
+                "{mode}: samples={samples}, source_build_ms={build_ms:.3}, batches={n}, geometry_bytes={bytes}, first_frame_ms={cold:.3}, median_frame_ms={:.3}, p95_frame_ms={:.3}, median_cpu_submit_ms={:.3}",
+                times[20], times[37], cpus[20]
+            );
+        }
+    }
+    gpu.styled = None;
+}

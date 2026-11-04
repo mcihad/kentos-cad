@@ -331,9 +331,14 @@ pub struct Mark {
     rotation: f64,
     absolute: bool,
     upright: bool,
-    polygons: Vec<Vec<Vec<Vec2>>>,
+    polygons: Vec<MarkPolygon>,
     paths: Vec<Vec<Vec2>>,
     cost: usize,
+}
+#[derive(Clone, Debug)]
+struct MarkPolygon {
+    rings: Vec<Vec<Vec2>>,
+    indices: Vec<u32>,
 }
 #[derive(Clone, Debug)]
 pub struct Marks {
@@ -399,7 +404,17 @@ impl Marks {
                 if rings.is_empty() {
                     return Err("Çizgi tipi konturu boş.".into());
                 }
-                polygons.push(rings);
+                let points: Vec<_> = rings.iter().flatten().copied().collect();
+                let sizes: Vec<_> = rings.iter().map(Vec::len).collect();
+                let indices = kentos_geometry_core::triangulate::triangulate_many(
+                    &points,
+                    &sizes,
+                    &[rings.len()],
+                );
+                if indices.is_empty() {
+                    return Err("Çizgi tipi konturu üçgenlenemedi.".into());
+                }
+                polygons.push(MarkPolygon { rings, indices });
             }
             let mark = Mark {
                 at: number(m.get("at"))?,
@@ -581,6 +596,7 @@ impl Placement<'_> {
         }
         for polygon in &m.polygons {
             let rings: Vec<Vec<Vec2>> = polygon
+                .rings
                 .iter()
                 .map(|r| {
                     r.iter()
@@ -596,7 +612,7 @@ impl Placement<'_> {
                         .collect()
                 })
                 .collect();
-            sink.cad_mark(&paint, &rings);
+            sink.cad_mark_mesh(&paint, &rings, &polygon.indices);
         }
     }
 }
@@ -1026,6 +1042,91 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn frozen_mark_mesh_preserves_counters_visibility_tiles_and_contour_fallback() {
+        use super::super::batch::BatchSink;
+        let raw = serde_json::json!({"period":4.,"marks":[{"at":0.,"cap":1.,"height":1.,"x":0.,"y":0.,
+            "rotation":0.,"polygons":[[[[0.,0.],[4.,0.],[4.,4.],[0.,4.]],[[1.,1.],[1.,3.],[3.,3.],[3.,1.]]]]}]});
+        let m = Marks::read(&Json::parse(&raw.to_string()).unwrap())
+            .unwrap()
+            .unwrap();
+        let polygon = &m.marks[0].polygons[0];
+        assert_eq!(polygon.indices.len(), 24);
+        let paint = FillPaint::Solid {
+            color: "ink".into(),
+            opacity: 0.5,
+            level: 0.,
+        };
+        for origin in [Vec2::new(0., 0.), Vec2::new(1_000_000., 4_500_000.)] {
+            let rings: Vec<Vec<_>> = polygon
+                .rings
+                .iter()
+                .map(|r| {
+                    r.iter()
+                        .map(|p| Vec2::new(p.x + origin.x, p.y + origin.y))
+                        .collect()
+                })
+                .collect();
+            let mut contours = PrimitiveList::default();
+            contours.cad_mark_mesh(&paint, &rings, &polygon.indices);
+            let original = contours.json();
+            let mut direct = PrimitiveList::default();
+            direct.cad_mark(&paint, &rings);
+            assert_eq!(
+                original,
+                direct.json(),
+                "vector/PDF contour path stays unchanged"
+            );
+            for (hide_fills, hide_strokes) in
+                [(false, false), (true, false), (false, true), (true, true)]
+            {
+                for valid in [true, false] {
+                    let mut sink = BatchSink::new(origin);
+                    sink.hide(hide_fills, hide_strokes);
+                    sink.cad_mark_mesh(
+                        &paint,
+                        &rings,
+                        if valid {
+                            &polygon.indices
+                        } else {
+                            &[u32::MAX, 0, 1]
+                        },
+                    );
+                    // An ordinary fill still obeys its filter after the CAD mesh.
+                    sink.fill(&paint, &rings);
+                    let packed = sink.finish();
+                    let repeats =
+                        if hide_strokes { 0. } else { 1. } + if hide_fills { 0. } else { 1. };
+                    let mut area = 0.;
+                    for triangle in packed.data.chunks_exact(6) {
+                        let t: Vec<_> = triangle.iter().map(|v| f64::from(*v)).collect();
+                        area += ((t[2] - t[0]) * (t[5] - t[1]) - (t[3] - t[1]) * (t[4] - t[0]))
+                            .abs()
+                            * 0.5;
+                        let x = (t[0] + t[2] + t[4]) / 3.;
+                        let y = (t[1] + t[3] + t[5]) / 3.;
+                        assert!(
+                            !(x > 1. + 1e-6 && x < 3. - 1e-6 && y > 1. + 1e-6 && y < 3. - 1e-6),
+                            "counter filled"
+                        );
+                    }
+                    assert!(
+                        (area - 12. * repeats).abs() < 1e-6,
+                        "{origin:?} valid={valid}: {area} != {}",
+                        12. * repeats
+                    );
+                }
+            }
+        }
+        let invalid = serde_json::json!({"period":4.,"marks":[{"at":0.,"cap":1.,"height":1.,"x":0.,"y":0.,"rotation":0.,
+            "polygons":[[[[0.,0.],[1.,0.],[2.,0.]]]]}]});
+        assert!(
+            Marks::read(&Json::parse(&invalid.to_string()).unwrap())
+                .unwrap()
+                .is_err()
+        );
+    }
+
     #[test]
     fn aggregate_glyph_workload_is_reserved_atomically_across_paths() {
         use super::super::batch::BatchSink;

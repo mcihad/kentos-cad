@@ -508,6 +508,13 @@ fn remote_dash_phase_on_a_real_gpu() {
     dashes::remote_cumulative_phase_matches_local_reference(&mut Gpu::open());
 }
 
+/// CAD-ADV-11: actual prepared complex geometry, with GPU completion waited.
+#[test]
+#[ignore = "a real GPU measurement; run alone with --ignored --nocapture"]
+fn complex_linetype_timing() {
+    dashes::complex_linetype_timing(&mut Gpu::open());
+}
+
 /// Katman çizimi's cost in a frame (docs/adr/0226 §7, `gpu/compose_timing.rs`): a measurement, run
 /// alone and by hand (a device of its own).
 #[test]

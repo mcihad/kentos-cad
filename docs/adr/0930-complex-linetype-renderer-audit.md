@@ -947,3 +947,105 @@ Kanıtlar repo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında:
 `ellipse-sheet20-gui.png`, `ellipse-sheet100-gui.png`, `ellipse-both-gui.pdf`,
 `ellipse-pdf-dimensions.json`, `ellipse-reference.json` ve `ellipse-*.log`.
 Binary SHA-256: `3fb57382a767ccefe490444bc56932917d6428d9e1fc4555421d104665a9e182`.
+
+
+## 22. Blok dönüşümleri için toplu regresyon — 4 Kasım 2026
+
+Autodesk'in [çizgi tipi açıklaması](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-LT-MAC/files/GUID-D8C36A7E-F1AF-4A48-8CE9-E3101E0BC325.htm)
+pafta desen boyunu nesnenin büyütmesinden ayrı ele alır; [karmaşık çizgi tipi
+açıklaması](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-create-Complex-linetypes.html)
+metin, font ve çizgi ölçeğinin birlikte değerlendirilmesini ister. Bu
+regresyon KentOS'un mevcut kâğıt birimi davranışını korur; AutoCAD'in bütün
+blok içi drawing-unit ölçek politikalarının birebir kabulü sayılmaz.
+
+- `wide_block_paths::complex_patterns_follow_placed_geometry_in_mirrored_affine_nested_blocks`: üç ölçek
+  × üç tarif (12 öğe, HW, gömülü FENCE) × üç kaynak yol (daire, yay, bulge)
+  × iki iç içelik × iki aynalama × iki Y ölçeği × iki çizim hassasiyeti
+  = 432 karşılaştırma. Her bloğun gerçek derlenmiş JSON/f32 geometrisi,
+  aynı yerleştirilmiş root geometrinin derlemesiyle eşit olmalı.
+  Kaynak nesne değişmez, loss/NaN yok. Nonuniform dairenin elipse
+  dönüştüğü ayrıca doğrulanır. Bu, bağımsız bir affine geometri oracle'ı
+  değildir; blok ve root stil yürütmesinin tutarlılık kontrolüdür.
+- Native-style entegrasyon kümesinin tamamı 44 geçti, 3 mevcut ölçüm
+  ignored. Gerçek GUI'de 24 root nesne/6 blok tanımıyla uniform, aynalı,
+  affine ve iç içe affine örnekler açıldı; yazı yakınlaştırıldı, 1:50 ve
+  1:100 pafta/PDF denendi. Üretim koduna ek değişiklik gerekmedi.
+- Bağımsız PDF okuyucu 1:50'de 32, 1:100'de 14 SHX şekli buldu. Ayrı
+  matris çarpımı/tekil değer ve Legendre E hesabı, dört dairenin beklenen
+  9/9/7/7 ve 4/4/3/3 tekrar sayısıyla aynı sonucu verdi. Şeklin 1,4 mm
+  kol boyu azami hatası 0,00001987 / 0,00002790 mm; bitmap yok. Bu ölçüm
+  her glyph'in noktasal affine konumunun bağımsız karşılaştırılması değildir.
+
+GUI binary önceki §21 ile aynıdır. Kanıtlar aynı repo dışı dizinde
+`complex-affine-{model,text-zoom,sheet50,sheet100}-gui.png`,
+`complex-affine-both-gui.pdf`, `complex-affine-pdf-check.json`,
+`complex-affine-matrix.log` ve `complex-affine-style-regression.log`.
+
+
+## 23. Tekrar eden yazının üçgenlemesini yeniden kullan — 4 Kasım 2026
+
+Gerçek Metal GPU ölçümü, çizgi tekrarlarının kare çiziminden çok ilk
+katman hazırlanmasında pahalı olduğunu gösterdi. 800 adet 4 m çizgideki
+8.000 HW tekrarının aynı konturu her seferinde yeniden üçgenleniyordu.
+`Marks::parse` artık her sabit glyph polygonunun üçgen indekslerini bir
+kez hazırlar. Yerleşim yalnız mevcut f64 noktalarını taşır/döndürür;
+font, kontur noktaları ve düzleştirme toleransı değiştirilmez.
+
+`Sink::cad_mark_mesh` varsayılan olarak eski contour metoduna gider.
+BatchSink, solid ve projeksiyonsuz CAD markında hazır indeksleri tile
+koordinatlarıyla paketler; harita projeksiyonu/nonlinear sınır taşıması
+ve solid dışı paint eski yolu korur. Geçersiz indeks güvenli biçimde
+eski üçgenleyiciye döner. MarksOnly aynı geçidi geniş bantlara iletir.
+Görünürlük, effect/level/band, pafta rengi ve kaynak geometri sözleşmesi
+korunur. Yeni wire alanı, şema, TS dosyası veya bağımlılık yok.
+
+### Ölçümün sınırı
+
+`complex_linetype_timing` elle ve tek gerçek GPU ile çalıştırılan ignored
+ölçümdür; normal CI'da geçti sayılmaz. Bu oturumda Apple M5/Metal üzerinde
+**debug** profilinde gerçekten çalıştırıldı: 1440×900, 800 çizgi × 4 m,
+1:50, dört ısınma sonrası 40 pan/zoom karesi, 1× ve 4× örnekleme. Kaynak
+aynı scene id ile tutulur; süre GPU bitişine kadar bekler. Her karede
+pixel readback/texture allocation yok; kamera değişimi scene'i yeniden
+çizer. Bu, üretim/release FPS kabulü veya her makine için hız vaadi değildir.
+
+- Aynı örneğin tek ilk build ölçümü HW için 1591,432 ms → 293,955 ms
+  (yaklaşık 5,4×). Hazırlık dışındaki medyan tamamlanmış kare süreleri
+  yaklaşık 1,6–3,2 ms; 4× örneklemenin değişken cihaz zamanlaması ayrı
+  raporlanır. Source-build ölçümü tekrarlı bir istatistiksel benchmark
+  değildir; sayıları milisaniye kesinliğinde genellememek gerekir.
+- Kısa/12 öğeli/SHX kaynaklarında aynı ölçüm sırasıyla yaklaşık
+  2,3/1,3/10,2 ms. HW veri+low tamponu 82.214.400 bayt, SHX 806.400 bayt;
+  bu optimizasyon GPU geometri belleğini azaltmaz. Bellek toplam uygulama
+  RSS'si değildir. İlk frame/upload süreleri logda ayrıca var.
+- İlk 1000 çizgili HW denemesi, 2.000.000 kontur noktası katman sınırını
+  yaklaşık 917 çizgide buldu; test bunu başarılı çıktı saymadı. Kaynak
+  bütçesi artırılmadı ve bu başarısız deneme gizlenmedi. 800 çizgili ortak
+  örnek sınır içindeki karşılaştırmadır. Daha fazla tekrar için instancing/
+  bellek paylaşımı ayrı kalan iştir; GUI'yi sınırsız geometriye açmak çözüm
+  olarak uygulanmadı. Aynı limitte çıktı açık hata vermeyi sürdürür.
+
+### Regresyon
+
+51 çekirdek testi; 44 native-style entegrasyon testi (3 mevcut ignored);
+18 plot birim ve 70 entegrasyon testi (3 mevcut ignored) geçti. Yeni test,
+delikli glyph'in alanını 12 olarak bağımsız hesaplar, delik merkezine
+mürekkep gelmediğini kontrol eder. Büyük koordinat/tile, iki görünürlük
+filtresi ve hatalı indeks fallback'i de kapsanır. Contour tüketicisinin
+çıkışı eski doğrudan metoda bit bit eşittir. Boş üçgenleme açıkça reddedilir.
+Aynalı/affine blokların §22'deki 432 karşılaştırması yeni mesh yoluyla da
+geçti. Katmanın genel nokta sınırı için atomik rezervasyon testi korunur.
+
+Kanıtlar aynı repo dışı dizinde `complex-gpu-timing-limit-1000.log`,
+`complex-gpu-timing-debug.log`, `frozen-mesh-gpu-timing.log`,
+`frozen-mesh-{core-final,native-regression,plot-regression,clippy-final,build}.log`.
+
+Strict desktop Clippy ve build geçti. GUI binary SHA-256:
+`7c0fd418979ed2c99d731bfc247e94edd5a02a40956db318a2c3d4aed20e9e08`.
+Eski ve yeni binary'de aynı affine blok dosyası açılıp aynı mouse zoom'u
+uygulandı. İki gerçek 2880×1720 ekranın başlık/ribbon/pointer dışındaki
+`(0,374)–(2255,1518)` çizim alanı piksel piksel karşılaştırıldı: **0 değişen
+piksel**. Ekranlar `frozen-mesh-before-gui.png`, `frozen-mesh-after-gui.png`;
+rapor `frozen-mesh-gui-comparison.json`. Bu, bu sahnenin ekran eşitliğidir;
+bütün fontlar veya viewportlar için genelleme değildir. Ekranlar repoya
+eklenmedi. CAD-ADV-11'in açık kapsamı korunur.

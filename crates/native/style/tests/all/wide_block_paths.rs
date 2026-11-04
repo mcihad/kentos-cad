@@ -158,3 +158,111 @@ fn named_patterns_match_root_geometry_in_transformed_nested_blocks() {
       for plot in [false,true] {assert_eq!(build_pattern(&insert,&blocks,true,true,plot,Some(&pattern),100.),build_pattern(&root,&[],true,true,plot,Some(&pattern),100.),"mirror={mirror} plot={plot}");}
     }
 }
+
+#[test]
+fn complex_patterns_follow_placed_geometry_in_mirrored_affine_nested_blocks() {
+    let resource: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/shape-resources.json"
+    ))
+    .unwrap();
+    let resources: kentos_contracts::ProjectStyles =
+        serde_json::from_value(resource["styles"].clone()).unwrap();
+    for scale in [1., 20., 100.] {
+        for mode in ["long", "text", "shape"] {
+            let elements = match mode {
+                "long" => json!(
+                    (0..12)
+                        .map(|i| json!({"length":if i%2==0 {1.} else {-1.}}))
+                        .collect::<Vec<_>>()
+                ),
+                "text" => {
+                    json!([{"length":5.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"STANDARD","scale":0.7,"rotation":25.,"upright":true,"x":-0.2,"y":0.3}},{"length":-2.}])
+                }
+                _ => {
+                    json!([{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"fence.shx","scale":0.7,"rotation":25.,"upright":true,"x":-0.2,"y":0.3}},{"length":-2.}])
+                }
+            };
+            let settings:kentos_contracts::ProjectSettings=serde_json::from_value(json!({
+                "srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":scale,
+                "lineTypes":[{"name":"P","unit":"paper","elements":elements}]
+            })).unwrap();
+            let patterns =
+                kentos_native_style::line_types::LineTypes::with_resources(&settings, &resources);
+            assert_eq!(patterns.loss("P"), None);
+            for kind in ["circle", "arc", "path"] {
+                let radius = scale * 0.01;
+                let mut raw = match kind {
+                    "circle" => json!({"kind":"circle","c":{"x":0.,"y":0.},"r":radius}),
+                    "arc" => json!({"kind":"arc","c":{"x":0.,"y":0.},"r":radius,"a0":0.,"a1":2.6}),
+                    _ => {
+                        json!({"kind":"polyline","pts":[{"x":0.,"y":0.},{"x":radius,"y":0.},{"x":radius,"y":radius}],"bulges":[0.3,0.,0.]})
+                    }
+                };
+                let fields = json!({"id":1,"layerId":"a","attrs":{},"linePattern":"P","color":"#884422","transparency":0.35});
+                raw.as_object_mut()
+                    .unwrap()
+                    .extend(fields.as_object().unwrap().clone());
+                let path: Entity = serde_json::from_value(raw).unwrap();
+                let child:BlockDefinition=serde_json::from_value(json!({"id":"22222222-3333-4444-8555-666666666666","name":"Complex","base":{"x":0.,"y":0.},"entities":[path]})).unwrap();
+                for nested in [false, true] {
+                    let mut blocks = vec![Arc::new(child.clone())];
+                    let mut block = child.id;
+                    if nested {
+                        let parent:BlockDefinition=serde_json::from_value(json!({"id":"33333333-4444-4555-8666-777777777777","name":"Nested","base":{"x":0.,"y":0.},"entities":[
+                            {"kind":"insert","id":1,"layerId":"a","attrs":{},"block":block,"p":{"x":1.,"y":3.},"rotation":0.4,"scale":1.5,"yScale":0.75}
+                        ]})).unwrap();
+                        block = parent.id;
+                        blocks.push(Arc::new(parent));
+                    }
+                    for mirror in [false, true] {
+                        for y_scale in [2., 0.8] {
+                            let insert:Entity=serde_json::from_value(json!({"kind":"insert","id":1,"layerId":"a","attrs":{},"block":block,
+                            "p":{"x":10.,"y":20.},"rotation":0.7,"scale":2.,"yScale":y_scale,"mirror":mirror})).unwrap();
+                            let before = serde_json::to_value(&insert).unwrap();
+                            let placed = core_blocks(&blocks).expand(&shape(&insert));
+                            assert_eq!(placed.len(), 1);
+                            if kind == "circle" && (nested || y_scale != 2.) {
+                                assert!(matches!(
+                                    placed[0].shape,
+                                    kentos_geometry_core::entity::Shape::Ellipse { .. }
+                                ));
+                            }
+                            let root = entity_of(
+                                &edit_geometry(placed[0].shape.clone()).unwrap(),
+                                path.base().clone(),
+                            );
+                            for plot in [false, true] {
+                                let actual = build_pattern(
+                                    &insert,
+                                    &blocks,
+                                    true,
+                                    true,
+                                    plot,
+                                    Some(&patterns),
+                                    scale,
+                                );
+                                let expected = build_pattern(
+                                    &root,
+                                    &[],
+                                    true,
+                                    true,
+                                    plot,
+                                    Some(&patterns),
+                                    scale,
+                                );
+                                assert_eq!(
+                                    actual, expected,
+                                    "{scale}/{mode}/{kind}/nested={nested}/mirror={mirror}/y={y_scale}/plot={plot}"
+                                );
+                                assert!(!actual.0.contains("lineTypeLoss"), "{}", actual.0);
+                                assert!(!actual.1.is_empty());
+                                assert!(actual.1.iter().all(|v| v.is_finite()));
+                            }
+                            assert_eq!(serde_json::to_value(&insert).unwrap(), before);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

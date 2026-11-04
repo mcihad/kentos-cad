@@ -241,7 +241,7 @@ fn labels() -> MaskSource {
 
 /// One frame into `view` as the desktop draws its area (the kept picture's own targets, composed
 /// into the frame), waited for: milliseconds from preparing to the GPU's end, and to the submission.
-fn frame(
+pub(super) fn frame(
     gpu: &mut Gpu,
     view: &wgpu::TextureView,
     camera: &Camera,

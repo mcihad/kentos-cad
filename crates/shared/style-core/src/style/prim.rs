@@ -324,7 +324,14 @@ pub trait Sink {
     /// Reserve the complete path's CAD contour work before painting any of it.
     fn reserve_cad_points(&mut self, _points: usize) -> bool { true }
     /// A filled CAD line mark follows stroke visibility, not area-fill visibility.
-    fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) { self.fill(paint, rings); }
+    fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
+        self.fill(paint, rings);
+    }
+    /// Frozen CAD triangulation. Contour consumers keep the original rings;
+    /// batch consumers may reuse indices instead of clipping every copy again.
+    fn cad_mark_mesh(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>], _indices: &[u32]) {
+        self.cad_mark(paint, rings);
+    }
     /// An open SHX contour, distinct from its dashed carrier centreline.
     fn cad_shape(&mut self, style: &StrokeStyle, path: &[Vec2]) {
         self.stroke(style, path, false);

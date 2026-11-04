@@ -607,6 +607,34 @@ impl Sink for BatchSink {
         self.hide_fills = hidden;
     }
 
+    fn cad_mark_mesh(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>], indices: &[u32]) {
+        if self.hide_strokes {
+            return;
+        }
+        // A projection can densify/nonlinearly warp the boundary. Keep its
+        // existing mapped-ring triangulation, not the source mesh connectivity.
+        if self.map.is_some() || !matches!(paint, FillPaint::Solid { .. }) {
+            self.cad_mark(paint, rings);
+            return;
+        }
+        let points: Vec<_> = rings.iter().flatten().copied().collect();
+        if !indices.len().is_multiple_of(3) || indices.iter().any(|&i| i as usize >= points.len()) {
+            self.cad_mark(paint, rings);
+            return;
+        }
+        let hidden = self.hide_fills;
+        self.hide_fills = false;
+        let entry = rings.first().and_then(|outer| self.queue(paint, outer));
+        self.hide_fills = hidden;
+        if let Some(entry) = entry {
+            let e = &mut self.entries[entry];
+            for &i in indices {
+                let p = points[i as usize];
+                e.data.extend([p.x - e.base.x, p.y - e.base.y]);
+            }
+        }
+    }
+
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
         let at = match self.map {
             None => at,

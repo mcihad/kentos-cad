@@ -1751,6 +1751,18 @@ Gerçek GUI zoom/iki pafta ve iki sayfalı PDF kontrol edildi; 106/21 şeklin
 konum hatası 0,000016 mm altında, bitmap yok. Bu elips desteği, bütün blok
 dönüşümü/performance kabulünün bittiği anlamına gelmez. Ayrıntılar ADR 0930'da.
 
+**Blok matrisi ve tekrar hazırlığı (4 Kasım 2026):** Yazı/SHX/uzun tarif
+üç ölçekte, aynalı, farklı X/Y ölçekli ve iç içe bloklarda 432 root/blok
+karşılaştırmasını geçti. Gerçek model/zoom/iki pafta/PDF denendi; SHX kâğıt
+boyu bağımsız ölçüldü. Aynı yazının üçgenlemesi artık bir kez hazırlanır;
+kontur/hassasiyet değişmez. Apple M5/Metal debug ölçümünde 800 çizginin HW
+hazırlığı 1591 → 294 ms (tek örnekte yaklaşık 5,4×), gerçek çizim alanının
+önce/sonra görüntüsü 0 piksel fark. 51 çekirdek, 44 native-style, 18 plot
+birim ve 70 entegrasyon testi geçti; strict Clippy/build geçti. GPU belleği
+azalmadı, 1000 yoğun yazılı çizginin mevcut 2 milyon nokta sınırına takıldığı
+açıkça kaydedildi; sınır artırılmadı. Genel release performansı ve diğer açık
+kapsam tamamlandı sayılmaz. Kanıt ve ölçüm sınırları ADR 0930 §22–23'te.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
