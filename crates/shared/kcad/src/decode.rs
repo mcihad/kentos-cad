@@ -222,14 +222,21 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
             &format!("yük bir KentOS çizimi değil (format ≠ {DOCUMENT_FORMAT})"),
         )
     };
-    let version_error = |r: &Reader<'_>, v: &str| {
-        let known: Vec<String> = SCHEMAS.iter().map(u32::to_string).collect();
-        r.fail(
+    // A newer file is not a broken one: the words say which program wrote it, not "bozuk" (a reader that did not know
+    // a road template's pavement called the sample road project broken, docs/adr/0930 §2).
+    let version_error = |_: &Reader<'_>, v: &str| {
+        let newest = SCHEMAS.last().copied().unwrap_or_default();
+        let newer = v.parse::<u32>().is_ok_and(|n| n > newest);
+        KcadError::new(
             Code::SchemaVersion,
-            &format!(
-                "belge şeması sürümü {v} bu uygulamada okunamıyor (desteklenen: {}); KentOS'u güncelleyin",
-                known.join(", ")
-            ),
+            if newer {
+                format!(
+                    "Bu dosya KentOS'un daha yeni bir sürümüyle yazılmış (belge şeması {v}; bu sürüm en çok {newest}'ü okur). \
+                     KentOS'u güncelleyip yeniden açın."
+                )
+            } else {
+                format!("Belge şeması sürümü {v} bu uygulamada okunamıyor: bu bir KentOS sürümünün yazdığı şema değil.")
+            },
         )
     };
     let mut format_ok = false;
@@ -633,6 +640,11 @@ fn service_links(
 /// The settings; `has` says whether the schema has the drawing unit (11 and
 /// up), the second coordinate system (12 and up), the project's own
 /// systems and datum choices (13 and up) and the survey settings (14).
+/// Whether road settings carry schema 164's fields: a template's pavement or a volume's rule (docs/adr/0930 §2).
+pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
+    road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
+}
+
 fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
     let (mut drawing_unit, mut second_srid) = (None, None);
@@ -1254,6 +1266,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 let (v, at): (kentos_contracts::RoadSettings, usize) = objects::json_part(r, "yol ayarları")?;
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş yol ayarı yazılmaz"));
+                }
+                if !has.road_pavement && road_has_pavement(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "tip kesitin üstyapısı ve kübajın kuralı şema 164 ister"));
                 }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));

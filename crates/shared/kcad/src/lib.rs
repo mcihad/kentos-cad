@@ -755,11 +755,15 @@ pub const SCHEMA_WITH_LATTICE_ARRAYS: u32 = 161;
 pub const SCHEMA_WITH_ROAD_WORK: u32 = 162;
 /// Schema 163 (ADR 0914): opt-in frozen Unicode text layout; absent means legacy.
 pub const SCHEMA_WITH_TEXT_ENGINE: u32 = 163;
+/// Schema 164 (docs/adr/0930 §2): a road template's `pavement` and an earthwork volume's `rule`. A program that reads
+/// 162 or 163 says the file is newer (schema_version) instead of calling it broken: the road settings are one JSON
+/// part whose types refuse a field they do not know.
+pub const SCHEMA_WITH_ROAD_PAVEMENT: u32 = 164;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 161] = [
+pub const SCHEMAS: [u32; 162] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -921,6 +925,7 @@ pub const SCHEMAS: [u32; 161] = [
     SCHEMA_WITH_LATTICE_ARRAYS,
     SCHEMA_WITH_ROAD_WORK,
     SCHEMA_WITH_TEXT_ENGINE,
+    SCHEMA_WITH_ROAD_PAVEMENT,
 ];
 
 /// The file a drawing is saved as.

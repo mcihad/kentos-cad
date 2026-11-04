@@ -2404,6 +2404,10 @@ def document(d):
     if d["settings"].get("cadWork") == "road":
         # A road project's work (plan/road.md Y1.1).
         schema = max(schema, 162)
+    road = d["settings"].get("road") or {}
+    if any("pavement" in t for t in road.get("templates", [])) or any("rule" in v for v in road.get("volumes", [])):
+        # A road template's pavement or a volume's rule (docs/adr/0930 §2).
+        schema = max(schema, 164)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3274,7 +3278,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-164.kcad"] = container(root(cmap(parts), version=uint(164)))
+    files["schema-version-165.kcad"] = container(root(cmap(parts), version=uint(165)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5596,6 +5600,16 @@ def build():
     del bare["settings"]["road"]
     out["broken/road-work-in-schema-161.kcad"] = container(
         document(bare).replace(b"\x67version\x18\xa2", b"\x67version\x18\xa1"))
+    # Schema 164 (docs/adr/0930 §2): a template's pavement and a volume's rule; schema 163 refuses them as unknown.
+    pv = document(load("road-pavement.json"))
+    assert pv.count(b"\x67version\x18\xa4") == 1, "the pavement is schema 164"
+    out["road-pavement.kcad"] = container(pv)
+    out["broken/road-pavement-in-schema-163.kcad"] = container(pv.replace(b"\x67version\x18\xa4", b"\x67version\x18\xa3"))
+    ruled = load("road-work.json")
+    ruled["settings"]["road"]["volumes"][0]["rule"] = "roadGround"
+    rd2 = document(ruled)
+    assert rd2.count(b"\x67version\x18\xa4") == 1, "a volume's rule is schema 164"
+    out["broken/road-volume-rule-in-schema-163.kcad"] = container(rd2.replace(b"\x67version\x18\xa4", b"\x67version\x18\xa3"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

@@ -54,6 +54,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
     (`road_dialog::RoadDialog`, DESIGN.md §7.19). Solda gruplu form, sağda çizim, en çok dört özet ve parçalı seçimle tek
     tablo, alt çubukta tek birincil eylem vardır. Yalnız okuyan pencerede Önizle yoktur. Taşınanlar: Kırmızı kot
     önerisi, Kübaj, tip kesit düzenleyicisi. `Form::wide` eklendi.
+  - **KCAD şema 164:** üstyapı ve kural `SCHEMA_WITH_ROAD_PAVEMENT` ile yazılır. Yayımlanmış şemaya (162) alan
+    eklemek, eski programın örnek projeye “bozuk” demesine yol açtı. Yeni okuyucu daha yeni şemaya “daha yeni bir
+    sürümle yazılmış” der.
+  - **Örnek proje:** `samples/yol_ornegi.py` Yol komutlarıyla `samples/yol-ornegi.kcad`'i yazar.
   - **Ölçüm:** 19 çekirdek ve 26 komut durumu bağımsız kesirli referanstan; 17091 ortak durum geçer. Ana dalda kalan iki
     Python hatası düzeltildi ya da ayrıldı: propose'un katalog örneği düzeltildi; pafta font ön denetimi bu makinenin
     font ortamından düşer ve bu işle ilgisizdir.

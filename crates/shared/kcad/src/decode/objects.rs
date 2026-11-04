@@ -323,6 +323,8 @@ pub(super) struct Features {
     pub(super) cad_work: bool,
     /// Schema 159 (plan/road.md Y1.1): `cadWork` may be `road`.
     pub(super) road_work: bool,
+    /// Schema 164: a road template's pavement and a volume's rule (docs/adr/0930 §2).
+    pub(super) road_pavement: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -566,6 +568,7 @@ impl Features {
             table_constraints: schema >= crate::SCHEMA_WITH_TABLE_CONSTRAINTS,
             cad_work: schema >= crate::SCHEMA_WITH_CAD_WORK,
             road_work: schema >= crate::SCHEMA_WITH_ROAD_WORK,
+            road_pavement: schema >= crate::SCHEMA_WITH_ROAD_PAVEMENT,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,

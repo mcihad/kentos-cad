@@ -353,14 +353,12 @@ fn the_readers_errors_name_their_places() {
     let e = refused("broken/elevation-in-schema-3.kcad");
     assert_eq!(e.code, Code::UnknownField);
     assert!(e.message.contains("document/entities/0/polyline/zs"), "{e}");
-    // The newest schema this codec knows is 43 (a dimension's references, docs/adr/0249).
-    let e = refused("broken/schema-version-164.kcad");
+    // A schema newer than this codec's: the file is newer, not broken (docs/adr/0930 §2).
+    let e = refused("broken/schema-version-165.kcad");
     assert_eq!(e.code, Code::SchemaVersion);
-    assert!(
-        e.message
-            .contains("desteklenen: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16"),
-        "{e}"
-    );
+    let newest = kentos_kcad::SCHEMAS.last().copied().unwrap_or_default();
+    assert!(e.message.contains("daha yeni bir sürümüyle yazılmış") && e.message.contains(&format!("en çok {newest}")), "{e}");
+    assert!(!e.message.contains("bozuk"), "{e}");
 }
 
 #[test]

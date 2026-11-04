@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 164 (docs/adr/0930 §2): a road template's pavement or a volume's rule.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pavement) {
+        return crate::SCHEMA_WITH_ROAD_PAVEMENT;
+    }
     let new_text = |e: &Entity| matches!(e, Entity::Text(t)
         if t.paragraph.layout.as_ref().is_some_and(|l| l.engine.is_some()));
     if objs.iter().any(new_text) || doc.blocks.iter().any(|b| b.entities.iter().any(new_text)) {

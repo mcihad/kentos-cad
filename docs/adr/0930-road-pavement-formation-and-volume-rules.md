@@ -73,8 +73,15 @@ Retler:
 - `layers[]`: ad, kalınlık (0–2 m), isteğe bağlı malzeme kodu. En çok 12 tabaka, toplam en çok 5 m.
 - `edge`: `{kind: vertical}` ya da `{kind: slope, h}` (0 < h ≤ 100).
 
-Yol ayarlarının bütünü gibi `.kcad` şema 162'dedir (yol işi). Alan isteğe bağlıdır, üstyapısız tip kesitin dosyası
-değişmez.
+`.kcad` şema 164'tedir (`SCHEMA_WITH_ROAD_PAVEMENT`), kübajın `rule`'u da öyle. Üstyapısız ve kuralsız yol projesinin
+dosyası 162'de kalır, bayt bayt aynıdır.
+
+İlk denemede alanlar 162'ye konmuştu (Y2–Y25 alanları da orada). Sahibin elindeki ana daldan derlenmiş program örnek
+projeyi açamadı: “Dosya bozuk ya da KCAD 2 kurallarına uymuyor: … unknown field `pavement`”. 162 ana dalda yayımlanmış
+bir şemadır; ona yeni alan eklemek, onu okuyan programları kandırmaktır. Şema 164'le eski program “belge şeması sürümü
+164 bu uygulamada okunamıyor; KentOS'u güncelleyin” der. Yeni okuyucunun iletisi de değişti: “Bu dosya KentOS'un daha
+yeni bir sürümüyle yazılmış (belge şeması 165; bu sürüm en çok 164'ü okur).” Artık “bozuk” demez ve 160 sürüm numarası
+sıralamaz. **Kural:** yayımlanmış bir şemaya alan eklenmez, yeni şema açılır.
 
 **Komutlar.**
 
