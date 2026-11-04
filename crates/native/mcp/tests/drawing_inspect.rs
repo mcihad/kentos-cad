@@ -263,3 +263,42 @@ fn explicit_text_profile_edit_through_mcp_keeps_curve_and_undoes_once() {
         before["items"]
     );
 }
+
+#[test]
+fn unicode_readable_through_mcp_preserves_metadata_and_undoes_once() {
+    let mut server = Server::new();
+    let new = tool(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let made = tool(
+        &mut server,
+        "cad.entities.create",
+        json!({"drawing":drawing,"layerId":new["summary"]["activeLayer"],
+        "objects":[{"geometry":{"kind":"text","p":{"x":5000000.,"y":4400000.},"text":"Ög\u{301}\u{306}\u{323}ç — AV",
+            "height":0.3,"rotation":137.,"font":"arimo","oblique":24.,"mask":true,"layout":{"engine":"unicode-v1"}}}]}),
+    );
+    assert_eq!(made["status"], "completed", "{made}");
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let edited = tool(
+        &mut server,
+        "cad.shapes.edit",
+        json!({"drawing":drawing,"work":{"kind":"readable","ids":[before["items"][0]["uid"]]}}),
+    );
+    assert_eq!(edited["status"], "completed", "{edited}");
+    assert_eq!(edited["output"]["count"], 1);
+    let mut after = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    assert_eq!(after["items"][0]["entity"]["rotation"], 317.);
+    assert_ne!(
+        after["items"][0]["entity"]["p"],
+        before["items"][0]["entity"]["p"]
+    );
+    for key in ["p", "rotation"] {
+        after["items"][0]["entity"][key] = before["items"][0]["entity"][key].clone();
+    }
+    assert_eq!(after["items"][0]["entity"], before["items"][0]["entity"]);
+    assert_eq!(after["items"][0]["uid"], before["items"][0]["uid"]);
+    tool(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        tool(&mut server, "drawing.entities", json!({"drawing":drawing}))["items"],
+        before["items"]
+    );
+}

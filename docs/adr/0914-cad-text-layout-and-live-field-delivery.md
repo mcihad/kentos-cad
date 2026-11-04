@@ -391,6 +391,38 @@ akışını destekler. KentOS kararı mevcut düzenleyiciyi genişletmek ve
 kalıcı metrik değişikliğini önizleme/onaydan ayırmaktır; yeni bir arayüz
 veya gizli font yükseltme yolu açılmaz.
 
+## Okunur yap ve ölçülen kutunun korunması — 4 Kasım 2026
+
+[AutoCAD TORIENT](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-3A9CCCD9-7B1D-4C83-944C-2D66F5FF32DF.htm)
+yazıyı orta noktası çevresinde 180 derecelik adımlarla çevirir; nesnenin
+çizimdeki genel konumu korunur. KentOS'un mevcut `Okunur yap` kuralında
+Unicode profili de artık eski nominal em kutusu yerine ortak glyph
+planının ölçülen çerçevesinin ortası çevresinde döner. Bu çerçeve harfin
+gerçek taşmasını, fallback yüzünü ve eğiklik dönüşümünü içerir. Eski
+yerleşimin dönüşüm formülü değiştirilmez.
+
+- Beş ters açı, üç hiza, aksan/teknik sembol/RTL ve yalnız boşluk içeren
+  yazılar 5.000.000/4.400.000 koordinatında karşılaştırılır. Dönüşten sonra
+  karşılıklı köşeler iki nanometre içinde aynı yerde olmalıdır. İkinci
+  çağrı yeniden değişiklik üretmez; glyph kimlikleri korunur. Düzeltmeden
+  önce bu test, eğik aksanlı yazının kaydığını göstermiştir.
+- Tek satırın bütün hizaları arasında ve çok satırın düşey hizasında
+  glyph/alt çizgi dünya koordinatları değişmez. Paragrafın yatay hizası
+  değişince kısa satırların sağa/ortaya dizilmesi mevcut bilinçli davranıştır;
+  bütün harflerin aynı yerde kalması bu işlem için yanlış bir kabul olur.
+- `textReadable` ve `textRealign` JSON/WASM çağrılarındaki `width` kestirimi
+  yalnız eski profile aittir. Açık Unicode profilinde gerçek plan ölçülür;
+  istemci eski bir genişlik göndererek motoru devre dışı bırakamaz.
+- `cad.shapes.edit/readable` bütün seçimi yazmadan önce doğrular. Eksik
+  glyph veya eski/doğrulanamayan field varsa açıklamalı, atomik ret verir.
+  Alan önbelleği çevirmeden sonra kendiliğinden yenilenip önceden hesaplanan
+  kutuyu değiştiremez; kullanıcı önce açık alan yenilemesi yapmalıdır.
+  Bu koruma mevcut genel field takip mekanizmasını değiştirmez.
+- Native test, güncel alanı olan yazının yalnız konumu/yönünün değiştiğini,
+  field aralıkları, biçimi ve maskesinin korunduğunu; eski alanın ve bozuk
+  profilin validate/plan/execute aşamalarında Undo üretmediğini denetler.
+  Python ve MCP aynı mevcut komuta bağlanır; ikinci dönüşüm yolu eklenmez.
+
 ## MTEXT aktarımındaki veri kaybı
 
 Sayısal geometri paketinin önceki `kind=10` yazı kaydı `flow` alanını

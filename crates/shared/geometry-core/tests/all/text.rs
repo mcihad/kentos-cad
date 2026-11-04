@@ -97,6 +97,22 @@ fn hizayı_değiştir_keeps_the_text_where_it_is() {
     }
 }
 
+#[test]
+fn unicode_json_transforms_never_use_a_supplied_legacy_width() {
+    let text = json!({"p":{"x":5000000.,"y":4400000.},"text":"Ög\u{306}ç AV", "font":"arimo",
+        "height":0.3,"rotation":137.,"oblique":24.,"layout":{"engine":"unicode-v1"}});
+    let mut with_width = text.clone();
+    with_width["width"] = json!(1000.);
+    assert_eq!(
+        call("textReadable", json!([text])),
+        call("textReadable", json!([with_width]))
+    );
+    assert_eq!(
+        call("textRealign", json!([text, "topCenter"])),
+        call("textRealign", json!([with_width, "topCenter"]))
+    );
+}
+
 /// Two JSON values alike, numbers compared as float64, exactly.
 fn alike(a: &Value, b: &Value) -> bool {
     match (a, b) {

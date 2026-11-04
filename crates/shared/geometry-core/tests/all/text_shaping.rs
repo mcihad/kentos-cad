@@ -1564,3 +1564,155 @@ fn curved_profile_geometry_uses_atomic_groups_for_origin_direction_width_and_mas
     assert!((reversed.p.x-(t.p.x-100.)).abs()<1e-9);
     assert_eq!(reversed.rotation,0.);
 }
+
+#[test]
+fn unicode_readable_keeps_the_measured_frame_at_its_original_location() {
+    use kentos_geometry_core::{
+        Vec2,
+        entity::TextPlace,
+        text::{
+            Font, TextAlign,
+            paragraph::{Engine, Flow},
+        },
+    };
+    let flow = Flow {
+        engine: Some(Engine::UnicodeV1),
+        ..Default::default()
+    };
+    let font = Font::from_id("arimo");
+    for text in [
+        "Ög\u{301}\u{306}\u{323}ç — AV",
+        "مرحبا עברית\n⌀32 ≤ 5‰",
+        "   ",
+    ] {
+        for rotation in [91., 137., 180., 257., 270.] {
+            for align in [
+                None,
+                Some(TextAlign::TopCenter),
+                Some(TextAlign::BottomRight),
+            ] {
+                let mut t = TextPlace::line(
+                    Vec2::new(5_000_000., 4_400_000.),
+                    text,
+                    0.3,
+                    rotation,
+                    align,
+                    Some(0.8),
+                );
+                t.flow = Some(&flow);
+                t.lean = 0.45;
+                let before = t.outline(font);
+                let old = t.unicode_plan(font).unwrap();
+                if text == "Ög\u{301}\u{306}\u{323}ç — AV" && align.is_none() {
+                    // Independent C HarfBuzz + FontTools glyf bounds, Arimo
+                    // for Ö/ç—AV and Noto Sans for the complete g+marks
+                    // cluster (Arimo lacks U+0306). Both fonts' own UPMs.
+                    let expected = [-0.03105, -0.1248, 1.271990625, 0.345];
+                    for (actual, expected) in old.frame.unwrap().iter().zip(expected) {
+                        assert!((actual - expected).abs() < 1e-12);
+                    }
+                    assert!((old.width - 1.116740625).abs() < 1e-12);
+                }
+                let (p, rotation) = t.readable(font).unwrap();
+                t.p = p;
+                t.rotation = rotation;
+                let after = t.outline(font);
+                // A half turn swaps opposite corners, including the true glyph
+                // overhang and the sheared nominal frame; it must not drift.
+                for (i, a) in before.iter().enumerate() {
+                    let b = after[(i + 2) % 4];
+                    assert!(
+                        (a.x - b.x).abs() < 2e-9 && (a.y - b.y).abs() < 2e-9,
+                        "{text:?} angle {rotation} align {align:?}: {a:?} != {b:?}"
+                    );
+                }
+                let new = t.unicode_plan(font).unwrap();
+                assert_eq!(
+                    old.glyphs.iter().map(|g| &g.glyph).collect::<Vec<_>>(),
+                    new.glyphs.iter().map(|g| &g.glyph).collect::<Vec<_>>()
+                );
+                assert!(t.readable(font).is_none(), "the command is idempotent");
+            }
+        }
+    }
+}
+
+#[test]
+fn unicode_realign_keeps_every_glyph_and_rule_in_world_coordinates() {
+    use kentos_geometry_core::{
+        Vec2,
+        entity::TextPlace,
+        text::{
+            Font, TextAlign,
+            paragraph::{Engine, Flow},
+        },
+    };
+    let flow = Flow {
+        engine: Some(Engine::UnicodeV1),
+        left: 0.4,
+        ..Default::default()
+    };
+    let font = Font::from_id("arimo");
+    let aligns = [
+        None,
+        Some(TextAlign::TopCenter),
+        Some(TextAlign::BottomRight),
+        Some(TextAlign::MiddleLeft),
+    ];
+    for multiline in [false, true] {
+        for from in aligns {
+            for to in aligns {
+                // Horizontal paragraph alignment also justifies each shorter
+                // line: that intentional change is not a translation invariant.
+                if multiline && from.map_or(0., TextAlign::along) != to.map_or(0., TextAlign::along)
+                {
+                    continue;
+                }
+                let text = if multiline {
+                    "Ög\u{306}ç AV مرحبا עברית\n⌀32 ≤ 5‰"
+                } else {
+                    "Ög\u{306}ç AV مرحبا עברית"
+                };
+                let runs = [kentos_geometry_core::text::paragraph::Run {
+                    start: 0,
+                    end: 4,
+                    underline: true,
+                    ..Default::default()
+                }];
+                let mut t = TextPlace::line(
+                    Vec2::new(5_000_000., 4_400_000.),
+                    text,
+                    0.3,
+                    137.,
+                    from,
+                    Some(0.8),
+                );
+                t.flow = Some(&flow);
+                t.lean = 0.45;
+                t.runs = &runs;
+                if multiline {
+                    t.box_width = Some(2.5);
+                }
+                let old = t.unicode_plan(font).unwrap();
+                let anchor = t.p;
+                t.p = t.realigned(to, font);
+                t.align = to;
+                let new = t.unicode_plan(font).unwrap();
+                assert_eq!(old.glyphs.len(), new.glyphs.len());
+                for (a, b) in old.glyphs.iter().zip(&new.glyphs) {
+                    assert_eq!(a.glyph, b.glyph);
+                    assert_eq!(&a.transform[..4], &b.transform[..4]);
+                    assert!((anchor.x + a.transform[4] - t.p.x - b.transform[4]).abs() < 2e-9);
+                    assert!((anchor.y + a.transform[5] - t.p.y - b.transform[5]).abs() < 2e-9);
+                }
+                assert_eq!(old.rules.len(), new.rules.len());
+                for (a, b) in old.rules.iter().zip(&new.rules) {
+                    for (a, b) in a.corners.iter().zip(b.corners) {
+                        assert!((anchor.x + a[0] - t.p.x - b[0]).abs() < 2e-9);
+                        assert!((anchor.y + a[1] - t.p.y - b[1]).abs() < 2e-9);
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1519,6 +1519,16 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   önizleme, eksik glyph reddi ve tek Undo denendi. Bağımsız okuyucu yalnız
   motor bilgisinin değiştiğini ve Undo sonrası özgün byte'ları doğruladı.
   Yeni yazının varsayılanı veya toplu dönüşüm bu adımla değiştirilmedi.
+- Unicode `Okunur yap`, gerçek glyph/fallback/eğiklik çerçevesinin ortası
+  çevresinde döner; JSON'daki eski genişlik tahmini yeni profili geçersiz
+  kılamaz. Eski veya doğrulanamayan alan ve eksik glyph bütün dönüşümü
+  yazmadan reddeder. 47 çekirdek, 28 uygulama, dokuz MCP ve 11 Python
+  testi, sıkı masaüstü Clippy ve güncel derleme geçti. Gerçek GUI'de iki
+  yazı topluca çevrildi; kaydedilen konumlar bağımsız HarfBuzz/FontTools
+  çerçevesiyle iki nanometre içinde eşleşti, referans çizgileri değişmedi.
+  Tek GUI Undo sonrası dosya özgün byte'lara döndü. Eski alanlı seçimin
+  açıklamalı reddi de GUI'de denendi; ret sonrası kayıt özgün byte'larla aynı.
+  Ekranlar ve QA dosyaları repo dışında; madde genel kabulü hâlâ açık.
 - Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
   eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
 

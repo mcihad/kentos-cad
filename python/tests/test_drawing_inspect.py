@@ -15,6 +15,38 @@ def drawing(entities):
 
 
 class DrawingInspect(unittest.TestCase):
+    def test_unicode_readable_uses_the_shared_plan_and_preserves_metadata_in_one_undo(self):
+        doc = drawing([dict(kind='text', p=dict(x=5000000., y=4400000.), text='Ög\u0301\u0306\u0323ç — AV',
+                            height=.3, rotation=137., font='arimo', oblique=24., mask=True,
+                            layout=dict(engine='unicode-v1'))])
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        original = row.entity.to_json()
+        work = cad.ReadableShapeWork(ids=[row.uid])
+        plan = cad.shapes.edit.plan(doc, work=work)
+        self.assertEqual(doc.to_bytes(), before)
+        self.assertEqual(len(plan.changed), 1)
+        result = cad.shapes.edit(doc, work=work)
+        self.assertEqual(result.count, 1)
+        actual = next(iter(doc.entities())).entity.to_json()
+        self.assertEqual(actual['rotation'], 317.)
+        self.assertNotEqual(actual['p'], original['p'])
+        actual['p'], actual['rotation'] = original['p'], original['rotation']
+        self.assertEqual(actual, original)
+        self.assertEqual(doc.undo(), 'Okunur yap')
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_readable_refuses_stale_field_without_mutating_the_drawing(self):
+        doc = drawing([dict(kind='text', p=dict(x=0., y=0.), text='Eski', height=.3, rotation=180.,
+                            layout=dict(engine='unicode-v1'),
+                            fields=[dict(start=0, end=4, source=dict(kind='project', value='name'))])])
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        result = doc.call('cad.shapes.edit', dict(work=dict(kind='readable', ids=[row.uid])))
+        self.assertEqual(result.status, 'failed')
+        self.assertEqual(result.error.code, 'invalid_input')
+        self.assertEqual(doc.to_bytes(), before)
+
     def test_gap_threshold_and_job_are_read_only_and_equivalent(self):
         doc = drawing([
             dict(kind='line', a=dict(x=500000., y=4500000.), b=dict(x=500001., y=4500000.)),
