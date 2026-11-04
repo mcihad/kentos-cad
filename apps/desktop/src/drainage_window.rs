@@ -27,7 +27,7 @@ use kentos_native_application::{ExecutionContext, road_drainage, road_drainage_d
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -274,7 +274,7 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = Column::new().spacing(12).push(top).push(second);
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(12.0).push(top).push(second);
         match &w.preview {
             None => {
                 body = body.push(
@@ -284,8 +284,7 @@ impl App {
             }
             Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
             Some(Ok(q)) => {
-                let picture = container(iced::widget::canvas(Plan { q }).width(Fill).height(typography::scaled(320.0)))
-                    .style(style::container::field_box);
+                let picture = crate::picture::picture(iced::widget::canvas(Plan { q }).width(Fill).height(Fill), TITLE);
                 let mut side = Column::new().spacing(6).width(420);
                 if let Some(c) = &q.catchment {
                     let rows: Vec<(&str, String)> = vec![
@@ -330,7 +329,7 @@ impl App {
                 for wn in &w.warnings {
                     side = side.push(label::caption(wn.clone()).style(warn));
                 }
-                body = body.push(row![picture, side].spacing(12));
+                body = body.push_grow(row![picture, side].spacing(12).height(Fill), typography::scaled(320.0));
             }
         }
         let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();

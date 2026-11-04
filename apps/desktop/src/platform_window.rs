@@ -31,7 +31,7 @@ use kentos_native_application::{ExecutionContext, road_platforms_draw, road_plat
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -459,7 +459,7 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = Column::new().spacing(10).push(top).push(plane);
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(plane);
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
@@ -484,8 +484,7 @@ impl App {
                 if let Some(why) = &r.why {
                     body = body.push(label::caption(why.clone()).style(danger));
                 }
-                let picture = container(iced::widget::canvas(Plan { report: r }).width(Fill).height(typography::scaled(300.0)))
-                    .style(style::container::field_box);
+                let picture = crate::picture::picture(iced::widget::canvas(Plan { report: r }).width(Fill).height(Fill), TITLE);
                 let mut side = Column::new()
                     .spacing(8)
                     .width(360)
@@ -520,7 +519,7 @@ impl App {
                     label::caption("Taban kotu, aralıkta kazı ile dolgunun farkı toleransa inene dek aranır; Uygula yalnız alana yazar.")
                         .style(muted),
                 );
-                body = body.push(row![picture, side].spacing(12));
+                body = body.push_grow(row![picture, side].spacing(12).height(Fill), typography::scaled(300.0));
             }
             _ => {}
         }

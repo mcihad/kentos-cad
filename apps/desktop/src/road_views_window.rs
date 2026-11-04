@@ -21,7 +21,7 @@
 //! km's; the slider and the typed km (with the alignment's equations) move it anywhere, the section shown the nearest.
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
-use iced::widget::{Column, container, row, slider, space};
+use iced::widget::{container, row, slider, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
 use kentos_commands::{ProfileDef, SectionRow};
 use kentos_native_application::road_corridors::CorridorSections;
@@ -355,19 +355,21 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = Column::new().spacing(10).push(top);
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top);
         for why in &w.read.why {
             body = body.push(label::caption(why.clone()).style(danger));
         }
-        // The three views share what the window leaves: the plan and the profile 55 %, the section the rest.
+        // The three views share what the window leaves: the plan and the profile 55 %, the section the rest; resized
+        // or full screen the window's own height is shared the same way (docs/adr/0937 §2).
         let room = (self.window_size.height - typography::scaled(330.0)).clamp(260.0, 620.0);
         let (upper, lower) = (room * 0.55, room * 0.45);
         let shown = w.shown();
         let ex = w.exaggeration.trim().replace(',', ".").parse::<f64>().ok().filter(|v| *v > 0.0).unwrap_or(10.0);
         let km = km_text(w.km_of(w.station), 3);
-        let plan = iced::widget::canvas(Plan { line: &w.read.line, station: w.station, km, row: shown.map(|s| s.1) })
-            .width(typography::scaled(380.0))
-            .height(upper);
+        let plan = crate::picture::picture(
+            iced::widget::canvas(Plan { line: &w.read.line, station: w.station, km, row: shown.map(|s| s.1) }).width(Fill).height(Fill),
+            "Görünüşler — plan",
+        );
         let profile = iced::widget::canvas(profile_window::Chart::of(
             &w.read.ground,
             w.read.profile.as_ref(),
@@ -377,25 +379,25 @@ impl App {
         )
         .compact(upper < typography::scaled(300.0)))
         .width(Fill)
-        .height(upper);
+        .height(Fill);
+        let profile = crate::picture::picture(profile, "Görünüşler — boykesit");
         let section: Element<'_, Message> = match shown {
-            Some((_, r)) => iced::widget::canvas(crate::section_window::Chart { row: Some(r), sample: None, exaggeration: None, layers: None })
-                .width(Fill)
-                .height(lower)
-                .into(),
+            Some((_, r)) => crate::picture::picture(
+                iced::widget::canvas(crate::section_window::Chart { row: Some(r), sample: None, exaggeration: None, layers: None })
+                    .width(Fill)
+                    .height(Fill),
+                format!("Enkesit — km {}", r.km_text),
+            ),
             None => container(label::caption("Enkesit seçilmedi ya da kesiti yok.").style(muted))
                 .center(Fill)
-                .height(lower)
+                .style(style::container::field_box)
                 .into(),
         };
-        body = body.push(
-            row![
-                container(plan).style(style::container::field_box),
-                container(profile).style(style::container::field_box).width(Fill),
-            ]
-            .spacing(10),
+        body = body.push_grow(
+            row![container(plan).width(typography::scaled(380.0)).height(Fill), profile].spacing(10).height(Fill),
+            upper,
         );
-        body = body.push(container(section).style(style::container::field_box).width(Fill));
+        body = body.push_grow(section, lower);
         // The km: the steps, the slider, the typed km, the section shown.
         let n = w.read.rows.len();
         let k = shown.map(|s| s.0);

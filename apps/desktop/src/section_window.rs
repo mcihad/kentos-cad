@@ -1297,7 +1297,8 @@ impl App {
         let field = |hint: &'a str, value: &'a str, k: usize, width: f32| {
             kentos_ui::widget::text_field(hint, value).on_input(move |t| msg(Event::SetField(k, t))).width(width)
         };
-        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
+        // The section and its plan take what a resized or full screen window has over (docs/adr/0937 §2).
+        let mut col = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         col = col.push(
             row![
                 words::field("Ad", kentos_ui::widget::text_field("Takımın adı", &r.name).on_input(|t| msg(Event::Name(t))), None),
@@ -1356,24 +1357,23 @@ impl App {
         col = col.push(row![words::check(r.clip, CLIP, Some(msg(Event::Clip))), why].spacing(16).align_y(Center));
         let shown = w.preview.rows.get(w.at);
         let exaggeration = number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0);
-        col = col.push(
+        let name = shown.map_or_else(|| "Enkesit".to_owned(), |s| format!("Enkesit — km {}", s.km_text));
+        col = col.push_grow(
             row![
-                container(
-                    iced::widget::canvas(Chart { row: shown, sample: None, exaggeration, layers: None })
-                        .width(Fill)
-                        .height(typography::scaled(CHART_HEIGHT)),
-                )
-                .style(style::container::field_box)
-                .width(Fill),
-                container(
-                    iced::widget::canvas(Plan { rows: &w.preview.rows, at: w.at })
-                        .width(Fill)
-                        .height(typography::scaled(CHART_HEIGHT)),
-                )
-                .style(style::container::field_box)
-                .width(typography::scaled(260.0)),
+                crate::picture::picture(
+                    iced::widget::canvas(Chart { row: shown, sample: None, exaggeration, layers: None }).width(Fill).height(Fill),
+                    name,
+                ),
+                container(crate::picture::picture(
+                    iced::widget::canvas(Plan { rows: &w.preview.rows, at: w.at }).width(Fill).height(Fill),
+                    "Enkesit hatları",
+                ))
+                .width(typography::scaled(260.0))
+                .height(Fill),
             ]
-            .spacing(10),
+            .spacing(10)
+            .height(Fill),
+            typography::scaled(CHART_HEIGHT),
         );
         let n = w.preview.rows.len();
         let place = shown.map_or_else(|| "Kesit yok".to_owned(), |s| format!("km {} · {} / {n}", s.km_text, w.at + 1));
@@ -1414,7 +1414,7 @@ impl App {
                     .style(muted),
             );
         }
-        col.into()
+        container(col).padding(iced::Padding::default().right(14)).into()
     }
 
     pub(crate) fn section_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -1521,11 +1521,10 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
     let sample = built.as_ref().map(|(s, _)| (sample_ground_near(), s.clone()));
     let layers = built.as_ref().and_then(|(_, p)| p.as_ref()).and_then(|p| p.as_ref().ok()).map(|p| p.bottoms.clone());
     let exaggeration = number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0);
-    let picture = container(
-        iced::widget::canvas(Chart { row: None, sample, exaggeration, layers }).width(Fill).height(typography::scaled(170.0)),
-    )
-    .style(style::container::field_box)
-    .width(Fill);
+    let picture = crate::picture::picture(
+        iced::widget::canvas(Chart { row: None, sample, exaggeration, layers }).width(Fill).height(Fill),
+        format!("Tip kesit — {}", def.as_ref().map_or("", |d| d.name.as_str())),
+    );
     let summary: Element<'a, Message> = match (&built, &def) {
         (_, Err(e)) => label::caption(e.clone()).style(muted).into(),
         (Some((s, pav)), _) => {
@@ -1644,15 +1643,14 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
             .field("Taban (m)", end("0", &side.bottom, 4))
             .help("Boş taban: V hendek.");
     }
-    column![
-        picture,
-        summary,
-        row![container(form).width(typography::scaled(400.0)), container(right).width(Fill)].spacing(typography::scaled(20.0)),
-        label::caption("Değerler KGM'nin standardından ya da projeden yazılır; KentOS öntanımlı sayı vermez.").style(muted),
-    ]
-    .spacing(10)
-    .padding(iced::Padding::default().right(14))
-    .into()
+    // The picture takes what a resized or full screen window has over (docs/adr/0937 §2).
+    let col = kentos_ui::widget::grow::Grows::new()
+        .spacing(10.0)
+        .push_grow(picture, typography::scaled(170.0))
+        .push(summary)
+        .push(row![container(form).width(typography::scaled(400.0)), container(right).width(Fill)].spacing(typography::scaled(20.0)))
+        .push(label::caption("Değerler KGM'nin standardından ya da projeden yazılır; KentOS öntanımlı sayı vermez.").style(muted));
+    container(col).padding(iced::Padding::default().right(14)).into()
 }
 
 /// The core's pavement of a definition (the volumes' conversion, one place).
@@ -1760,22 +1758,48 @@ impl canvas::Program<Message> for Chart<'_> {
         let x = |o: f64| plot.x + ((o - o0) * sx) as f32;
         let y = |z: f64| plot.y + plot.height - (lift + (z - z0) * sy) as f32;
         let thin = |c: Color| Stroke::default().with_color(c).with_width(1.0);
-        let step = [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0].into_iter().find(|g| (z1 - z0) / g <= 6.0).unwrap_or(100.0);
         let (z0, z1) = (z0 - lift / sy, z1 + lift / sy);
-        let step = [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0].into_iter().find(|g| (z1 - z0) / g <= 6.0).unwrap_or(step);
+        // The grid from the pixels (docs/adr/0937 §3): heights at least 45 px apart, offsets 70 px. Zoomed in, the chart
+        // is laid out larger and finer lines come in; the labels stay on the part shown, on a backdrop where they move in.
+        let shown = crate::picture::Shown::of(bounds.size());
+        let left = shown.left(4.0);
+        let base = shown.bottom(plot.y + plot.height + 6.0, typography::caption());
+        let backdrop = |moved: bool| moved.then_some(t.field.scale_alpha(0.9));
+        let step = crate::picture::step(45.0 / sy);
+        let places = crate::picture::decimals(step);
         let mut z = (z0 / step).ceil() * step;
         while z <= z1 {
-            frame.stroke(&Path::line(Point::new(x(o0), y(z)), Point::new(x(o1), y(z))), thin(t.border));
-            word(&mut frame, comma(z, if step < 1.0 { 1 } else { 0 }), Point::new(4.0, y(z) - 7.0), t.muted, false);
+            if shown.has_y(y(z)) {
+                frame.stroke(&Path::line(Point::new(x(o0), y(z)), Point::new(x(o1), y(z))), thin(t.border));
+            }
             z += step;
         }
-        let ostep = road_sections_draw::offset_step(o1 - o0);
+        let ostep = crate::picture::step(70.0 / sx);
+        let oplaces = crate::picture::decimals(ostep);
         let mut o = (o0 / ostep).ceil() * ostep;
         while o <= o1 + 1e-9 {
-            frame.stroke(&Path::line(Point::new(x(o), plot.y), Point::new(x(o), plot.y + plot.height)), thin(t.border));
-            word(&mut frame, format!("{}", o + 0.0), Point::new(x(o), plot.y + plot.height + 6.0), t.muted, true);
+            if shown.has_x(x(o)) {
+                frame.stroke(&Path::line(Point::new(x(o), plot.y), Point::new(x(o), plot.y + plot.height)), thin(t.border));
+            }
             o += ostep;
         }
+        let labels = |frame: &mut canvas::Frame| {
+            let mut z = (z0 / step).ceil() * step;
+            while z <= z1 {
+                if shown.has_y(y(z)) {
+                    crate::picture::label(frame, comma(z, places), Point::new(left, y(z) - 7.0), t.muted, false, backdrop(left > 4.5));
+                }
+                z += step;
+            }
+            let mut o = (o0 / ostep).ceil() * ostep;
+            while o <= o1 + 1e-9 {
+                if shown.has_x(x(o)) {
+                    let words = if oplaces == 0 { format!("{}", o.round() + 0.0) } else { comma(o + 0.0, oplaces) };
+                    crate::picture::label(frame, words, Point::new(x(o), base), t.muted, true, backdrop(base < plot.y + plot.height + 5.5));
+                }
+                o += ostep;
+            }
+        };
         // The axis.
         if o0 <= 0.0 && o1 >= 0.0 {
             frame.stroke(
@@ -1846,6 +1870,8 @@ impl canvas::Program<Message> for Chart<'_> {
         if let Some(a) = self.row.and_then(|r| r.axis) {
             word(&mut frame, format!("Eksen {}", comma(a, 2)), Point::new(x(0.0) + 6.0, y(a) - 20.0), t.danger, false);
         }
+        // The axes' labels last, over the drawing where the view has moved in.
+        labels(&mut frame);
         vec![frame.into_geometry()]
     }
 }

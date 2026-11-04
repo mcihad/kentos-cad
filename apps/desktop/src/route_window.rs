@@ -16,7 +16,7 @@
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Column, container, row, space};
+use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{RouteAsk, RouteFound, RoutesDraw, RoutesFind, Vec2};
 use kentos_interaction::Level;
@@ -25,7 +25,7 @@ use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tree_view::Check;
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -231,7 +231,7 @@ impl App {
         let limits = row![field(6, "%", 110.0), field(7, "0", 120.0), field(8, "yok", 120.0)]
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = Column::new().spacing(10).push(top).push(limits).push(container(avoid).width(Fill));
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(limits).push(container(avoid).width(Fill));
         match (&w.preview.why, &w.preview.route) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
@@ -256,10 +256,7 @@ impl App {
                         })
                         .collect()
                 });
-                body = body.push(
-                    container(iced::widget::canvas(Plan { route: r, areas }).width(Fill).height(typography::scaled(220.0)))
-                        .style(style::container::field_box),
-                );
+                body = body.push_grow(crate::picture::picture(iced::widget::canvas(Plan { route: r, areas }).width(Fill).height(Fill), TITLE), typography::scaled(220.0));
             }
             _ => {}
         }

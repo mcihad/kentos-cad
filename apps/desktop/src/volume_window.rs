@@ -977,11 +977,19 @@ impl canvas::Program<Message> for Mass<'_> {
         let at = |s: f64, v: f64| {
             Point::new((left + (s - s0) / (s1 - s0).max(1e-9) * wd) as f32, (pad + (hi - v) / (hi - lo) * ht) as f32)
         };
-        for k in 0..=4 {
-            let v = lo + (hi - lo) * f64::from(k) / 4.0;
+        // Zoomed in a picture (docs/adr/0937 §3): round volumes at least 40 px apart, finer as the chart is laid out
+        // larger; their labels and the legend stay on the part shown.
+        let part = crate::picture::Shown::of(bounds.size());
+        let step = crate::picture::step(40.0 * (hi - lo) / ht.max(1.0));
+        let mut volumes = Vec::new();
+        let mut v = (lo / step).ceil() * step;
+        while v <= hi + 1e-9 {
             let a = at(s0, v);
-            frame.stroke(&Path::line(a, at(s1, v)), Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0));
-            caption(&mut frame, grouped(v, 0), Point::new(4.0, a.y - 7.0), t.muted);
+            if part.has_y(a.y) {
+                frame.stroke(&Path::line(a, at(s1, v)), Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0));
+                volumes.push(v);
+            }
+            v += step;
         }
         frame.stroke(&Path::line(at(s0, 0.0), at(s1, 0.0)), Stroke::default().with_color(t.muted).with_width(1.0));
         let green = Color::from_rgb8(0x16, 0xa3, 0x4a);
@@ -1002,10 +1010,20 @@ impl canvas::Program<Message> for Mass<'_> {
             let (a, b) = (at(g[0].max(s0), lo), at(g[1].min(s1), lo));
             frame.fill_rectangle(Point::new(a.x, a.y + 2.0), iced::Size::new((b.x - a.x).max(2.0), 4.0), orange);
         }
-        let mut x = left as f32 + 8.0;
+        let label_x = part.left(4.0);
+        for v in volumes {
+            let a = at(s0, v);
+            crate::picture::label(&mut frame, grouped(v, 0), Point::new(label_x, a.y - 7.0), t.muted, false, (label_x > 4.5).then_some(t.field.scale_alpha(0.9)));
+        }
+        // The legend at the bottom of the part shown, on its own ground where it moved up over the drawing.
+        let base = part.bottom(bounds.height - 18.0, 12.0);
+        let mut x = part.left(left as f32 + 8.0);
+        if base < bounds.height - 18.5 || x > left as f32 + 8.5 {
+            frame.fill(&Path::rectangle(Point::new(x - 6.0, base - 4.0), iced::Size::new(430.0, 22.0)), t.field.scale_alpha(0.9));
+        }
         for (words, color) in [("Σ kazı (gevşek)", t.danger), ("Σ dolgu (sıkışık)", t.accent), ("Kütle ordinatı", green)] {
-            frame.fill_rectangle(Point::new(x, bounds.height - 12.0), iced::Size::new(14.0, 3.0), color);
-            caption(&mut frame, words.into(), Point::new(x + 18.0, bounds.height - 18.0), t.text);
+            frame.fill_rectangle(Point::new(x, base + 6.0), iced::Size::new(14.0, 3.0), color);
+            caption(&mut frame, words.into(), Point::new(x + 18.0, base), t.text);
             x += 140.0;
         }
         vec![frame.into_geometry()]

@@ -100,8 +100,18 @@ pub struct Image {
 impl Image {
     /// PNG olarak kaydeder.
     pub fn save(&self, path: impl AsRef<Path>) -> io::Result<()> {
-        let file = BufWriter::new(File::create(path)?);
-        let mut encoder = png::Encoder::new(file, self.width, self.height);
+        self.encode(BufWriter::new(File::create(path)?))
+    }
+
+    /// PNG baytları (ör. resmi uygulama kaydedecekse, docs/adr/0937).
+    pub fn png(&self) -> io::Result<Vec<u8>> {
+        let mut bytes = Vec::new();
+        self.encode(&mut bytes)?;
+        Ok(bytes)
+    }
+
+    fn encode(&self, out: impl io::Write) -> io::Result<()> {
+        let mut encoder = png::Encoder::new(out, self.width, self.height);
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
 

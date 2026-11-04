@@ -669,7 +669,8 @@ impl App {
         let field = |hint: &'a str, k: usize, width: f32| {
             kentos_ui::widget::text_field(hint, &r.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
         };
-        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
+        // The picture takes what a resized or full screen window has over (docs/adr/0937 §2).
+        let mut col = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         col = col.push(
             row![
                 words::field("Ad", kentos_ui::widget::text_field("Koridorun adı", &r.name).on_input(|t| msg(Event::Name(t))), None),
@@ -698,11 +699,7 @@ impl App {
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom),
         );
-        col = col.push(
-            container(iced::widget::canvas(Plan { preview: &w.preview }).width(Fill).height(typography::scaled(190.0)))
-                .style(style::container::field_box)
-                .width(Fill),
-        );
+        col = col.push_grow(crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview }).width(Fill).height(Fill), "Koridor"), typography::scaled(190.0));
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
             (None, Some(rep)) => {
@@ -762,7 +759,7 @@ impl App {
             label::caption("Aralıklar ve bölgeler projeden yazılır; KentOS öntanımlı sayı vermez. Bölgeler kesişmez, aralarında boşluk kalabilir.")
                 .style(muted),
         );
-        col.into()
+        container(col).padding(iced::Padding::default().right(14)).into()
     }
 
     pub(crate) fn corridor_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

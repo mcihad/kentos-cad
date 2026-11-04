@@ -35,7 +35,7 @@ use kentos_native_application::{
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -491,13 +491,12 @@ impl App {
                 };
             }
         }
-        let mut body = Column::new().spacing(12).push(top);
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(12.0).push(top);
         match &w.preview {
             None => body = body.push(label::caption("Sınırlar ve değerler kullanıcının; KentOS değer vermez. Önizle yüzeyi okur, hiçbir şey yazmaz.").style(muted)),
             Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
             Some(Ok(read)) => {
-                let picture = container(iced::widget::canvas(Plan { read, measure: w.measure, least: w.least().ok().flatten() }).width(Fill).height(typography::scaled(360.0)))
-                    .style(style::container::field_box);
+                let picture = crate::picture::picture(iced::widget::canvas(Plan { read, measure: w.measure, least: w.least().ok().flatten() }).width(Fill).height(Fill), TITLE);
                 let mut side = Column::new().spacing(5).width(430);
                 let line = |k: String, v: String| row![label::caption(k).style(muted).width(150), label::body(v)].spacing(8);
                 match read {
@@ -604,7 +603,7 @@ impl App {
                 for wn in &w.warnings {
                     side = side.push(label::caption(wn.clone()).style(warn));
                 }
-                body = body.push(row![picture, scrollable(side).height(typography::scaled(360.0))].spacing(12));
+                body = body.push_grow(row![picture, scrollable(side).height(Fill)].spacing(12).height(Fill), typography::scaled(360.0));
             }
         }
         if let Some((_, read)) = &w.repair {

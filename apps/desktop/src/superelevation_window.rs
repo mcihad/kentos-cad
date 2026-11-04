@@ -894,13 +894,21 @@ impl canvas::Program<Message> for Chart<'_> {
             frame.fill_rectangle(Point::new(x(*a), plot.y), iced::Size::new(x(*b) - x(*a), bottom - plot.y), Color { a: 0.06, ..t.accent });
             word(&mut frame, pi.clone(), Point::new(0.5 * (x(*a) + x(*b)), plot.y + 2.0), t.muted, true);
         }
-        let mut v = -(top / step).floor() * step;
+        // Zoomed in a picture (docs/adr/0937 §3): the slopes' grid from the pixels (at least 36 px apart), finer as the
+        // chart is laid out larger; its labels and the critical stations' names stay on the part shown.
+        let part = crate::picture::Shown::of(bounds.size());
+        let grid = crate::picture::step(36.0 * 2.0 * top / f64::from(plot.height)).min(step);
+        let places = crate::picture::decimals(grid);
+        let left = part.left(4.0);
+        let mut slopes_said = Vec::new();
+        let mut v = -(top / grid).floor() * grid;
         while v <= top + 1e-9 {
-            let c = if v == 0.0 { t.muted } else { t.border };
-            frame.stroke(&Path::line(Point::new(plot.x, y(v)), Point::new(plot.x + plot.width, y(v))), thin(c));
-            let shown = if v < 0.0 { format!("−%{}", comma(-v, 0)) } else { format!("%{}", comma(v, 0)) };
-            word(&mut frame, shown, Point::new(4.0, y(v) - 7.0), t.muted, false);
-            v += step;
+            if part.has_y(y(v)) {
+                let c = if v.abs() < 1e-9 { t.muted } else { t.border };
+                frame.stroke(&Path::line(Point::new(plot.x, y(v)), Point::new(plot.x + plot.width, y(v))), thin(c));
+                slopes_said.push(v);
+            }
+            v += grid;
         }
         let mut last: Option<f32> = None;
         for c in &rep.critical {
@@ -920,7 +928,15 @@ impl canvas::Program<Message> for Chart<'_> {
             if !low {
                 last = Some(at);
             }
-            word(&mut frame, mark.into(), Point::new(at, bottom + 4.0 + if low { 13.0 } else { 0.0 }), t.muted, true);
+            let base = part.bottom(bottom + 4.0, 26.0);
+            crate::picture::label(
+                &mut frame,
+                mark.into(),
+                Point::new(at, base + if low { 13.0 } else { 0.0 }),
+                t.muted,
+                true,
+                (base < bottom + 3.5).then_some(t.field.scale_alpha(0.9)),
+            );
         }
         let side = |points: &[[f64; 2]], normal: f64| -> Vec<[f64; 2]> {
             let mut out = vec![[0.0, points.first().map_or(normal, |p| p[1])]];
@@ -956,6 +972,11 @@ impl canvas::Program<Message> for Chart<'_> {
                 });
                 frame.stroke(&line, Stroke::default().with_color(green).with_width(1.6));
             }
+        }
+        // The slopes' labels last, over the drawing where the view has moved in.
+        for v in slopes_said {
+            let words = if v < -1e-9 { format!("−%{}", comma(-v, places)) } else { format!("%{}", comma(v.abs(), places)) };
+            crate::picture::label(&mut frame, words, Point::new(left, y(v) - 7.0), t.muted, false, (left > 4.5).then_some(t.field.scale_alpha(0.9)));
         }
         vec![frame.into_geometry()]
     }

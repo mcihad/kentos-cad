@@ -201,6 +201,10 @@ pub struct Ground {
     pub(crate) length: f64,
     /// Round kms: station and km written.
     ticks: Vec<(f64, String)>,
+    /// The km at the start, and whether the km grows with the station (no equations): then the chart marks its own
+    /// kms, finer as it is zoomed in (docs/adr/0937 §3).
+    km0: f64,
+    plain: bool,
     points: Vec<ProfilePoint>,
     /// Why there is no terrain (no surface, it does not build).
     why: Option<String>,
@@ -251,6 +255,8 @@ pub(crate) fn ground_of(doc: &kentos_domain::Document, alignment: &str, surface:
     g.length = built.core.length;
     let step = tick_step(g.length);
     let (k0, k1) = (built.km(0.0), built.km(g.length));
+    g.km0 = k0;
+    g.plain = built.regions.len() <= 1 && (k1 - k0 - g.length).abs() < 1e-6;
     let mut k = (k0.min(k1) / step).ceil() * step;
     while k <= k0.max(k1) + 1e-9 {
         // Without equations the km grows from the start; with them the ticks are the stations' own.
@@ -960,7 +966,8 @@ impl App {
             move |i| msg(Event::Surface(if i == 0 { None } else { Some(sids[i - 1].clone()) })),
         );
         let ex = kentos_ui::widget::text_field("10", &w.exaggeration).on_input(|t| msg(Event::Exaggeration(t)));
-        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
+        // The chart takes what a resized or full screen window has over (docs/adr/0937 §2).
+        let mut col = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         col = col.push(
             row![
                 words::field("Ad", name, None),
@@ -984,10 +991,9 @@ impl App {
             on_station: None,
             compact: false,
         };
-        col = col.push(
-            container(canvas(chart).width(Fill).height(typography::scaled(CHART_HEIGHT)))
-                .style(style::container::field_box)
-                .width(Fill),
+        col = col.push_grow(
+            crate::picture::picture(canvas(chart).width(Fill).height(Fill), format!("Boykesit — {}", r.name)),
+            typography::scaled(CHART_HEIGHT),
         );
         // What it builds to, under the chart where it is seen at once.
         let (said, bad) = status(r, stale, &w.ground);
@@ -1050,7 +1056,7 @@ impl App {
             ]
             .spacing(8),
         );
-        col.into()
+        container(col).padding(iced::Padding::default().right(14)).into()
     }
 
     pub(crate) fn profile_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -1154,6 +1160,27 @@ impl<'a> Chart<'a> {
     pub(crate) fn compact(mut self, compact: bool) -> Self {
         self.compact = compact;
         self
+    }
+
+    /// The kms marked, only those near the part shown: where the km grows with the station, the chart's own at least
+    /// 90 px apart (finer as it is laid out larger, docs/adr/0937 §3); else the alignment's round kms.
+    fn ticks(&self, sx: f64, shown: &crate::picture::Shown, left: f32) -> Vec<(f64, String)> {
+        let g = self.ground;
+        let near = |s: f64| shown.has_x(left + (s * sx) as f32);
+        if !g.plain || g.length <= 0.0 || sx <= 0.0 {
+            return g.ticks.iter().filter(|(s, _)| near(*s)).cloned().collect();
+        }
+        let step = crate::picture::step(90.0 / sx).max(1.0);
+        let digits = crate::picture::decimals(step);
+        let from = (f64::from(shown.part.x - left - 60.0) / sx).max(0.0);
+        let to = (f64::from(shown.part.x + shown.part.width - left + 60.0) / sx).min(g.length);
+        let mut out = Vec::new();
+        let mut k = ((g.km0 + from) / step).ceil() * step;
+        while k <= g.km0 + to + 1e-9 {
+            out.push((k - g.km0, km_text(k, digits)));
+            k += step;
+        }
+        out
     }
 
     /// The bands' top in a chart `height` high.
@@ -1260,16 +1287,32 @@ impl canvas::Program<Message> for Chart<'_> {
                 ..Text::default()
             });
         };
-        // The elevation grid: a round step for about six lines.
-        let step = [0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0].into_iter().find(|s| (hi - lo) / s <= 7.0).unwrap_or(200.0);
+        // Zoomed in a picture (docs/adr/0937 §3): the grid from the pixels (heights at least 40 px apart, kms 90 px),
+        // finer as the chart is laid out larger; the elevations' labels and the bands stay on the part shown.
+        let shown = crate::picture::Shown::of(bounds.size());
+        let rows = if self.compact { 0.0 } else { BANDS.len() as f32 };
+        let bands_top = shown.bottom(bands_top, BAND * rows);
+        let bands_moved = bands_top < self.bands_top(bounds.height) - 0.5;
+        // A canvas writes all its words over all its fills: a backdrop cannot hide a word under it. So the words that
+        // would fall on the moved bands, or under the moved band names, are not written (docs/adr/0937 §3).
+        let names_x = shown.left(6.0);
+        let names_right = if names_x > 6.5 { names_x - 4.0 + LEFT - 8.0 } else { f32::NEG_INFINITY };
+        let above_bands = |top: f32| !bands_moved || top + 15.0 < bands_top;
+        let step = crate::picture::step(40.0 / sy);
+        let places = crate::picture::decimals(step);
+        let labels_x = shown.left(plot.x - 34.0);
+        let mut heights = Vec::new();
         let mut z = (lo / step).ceil() * step;
         while z <= hi {
-            frame.stroke(&Path::line(Point::new(plot.x, y(z)), Point::new(x(length), y(z))), thin(t.border));
-            word(&mut frame, comma(z, if step < 1.0 { 1 } else { 0 }), Point::new(plot.x - 34.0, y(z) - 7.0), t.muted, false);
+            if shown.has_y(y(z)) {
+                frame.stroke(&Path::line(Point::new(plot.x, y(z)), Point::new(x(length), y(z))), thin(t.border));
+                heights.push(z);
+            }
             z += step;
         }
-        for (s, _) in &self.ground.ticks {
-            frame.stroke(&Path::line(Point::new(x(*s), plot.y), Point::new(x(*s), bounds.height)), thin(t.border));
+        let ticks = self.ticks(sx, &shown, plot.x);
+        for (s, _) in &ticks {
+            frame.stroke(&Path::line(Point::new(x(*s), plot.y), Point::new(x(*s), bands_top + BAND * rows)), thin(t.border));
         }
         // The terrain, broken where it is off the surface.
         let terrain = Path::new(|b| {
@@ -1325,32 +1368,49 @@ impl canvas::Program<Message> for Chart<'_> {
                     VCurve::Circle { .. } => "R",
                     _ => "par.",
                 };
-                word(
-                    &mut frame,
-                    format!("{} {kind} K={}", c.pvi, comma(c.k.unwrap_or(0.0), 1)),
-                    Point::new(x(0.5 * (c.start[0] + c.end[0])), place_y),
-                    red,
-                    true,
-                );
+                if above_bands(place_y) {
+                    word(
+                        &mut frame,
+                        format!("{} {kind} K={}", c.pvi, comma(c.k.unwrap_or(0.0), 1)),
+                        Point::new(x(0.5 * (c.start[0] + c.end[0])), place_y),
+                        red,
+                        true,
+                    );
+                }
             }
         }
         for (i, p) in self.pvis.iter().enumerate() {
             let on = self.chosen == Some(i);
             let mark = Path::circle(Point::new(x(p.0), y(p.1)), if on { 5.0 } else { 3.5 });
             frame.stroke(&mark, Stroke::default().with_color(if on { t.accent } else { red }).with_width(1.5));
-            if let Some(name) = self.names.get(i) {
+            if let Some(name) = self.names.get(i).filter(|_| above_bands(y(p.1) - 16.0)) {
                 word(&mut frame, name.clone(), Point::new(x(p.0) + 6.0, y(p.1) - 16.0), t.muted, false);
             }
         }
-        // The bands.
+        // The elevations' labels over the drawing, above the bands.
+        for z in heights {
+            if y(z) < bands_top - 4.0 {
+                let moved = labels_x > plot.x - 33.5;
+                crate::picture::label(&mut frame, comma(z, places), Point::new(labels_x, y(z) - 7.0), t.muted, false, moved.then_some(t.field.scale_alpha(0.9)));
+            }
+        }
+        // The bands: moved up over the drawing on its own ground when the view is above them.
         let names: &[&str] = if self.compact { &[] } else { &BANDS };
+        if bands_moved && !names.is_empty() {
+            // Down to the part's bottom: the scrollbar's strip under the bands shows no drawing either.
+            let down = (shown.part.y + shown.part.height - bands_top).max(BAND * rows);
+            frame.fill(&Path::rectangle(Point::new(shown.part.x, bands_top), Size::new(shown.part.width, down)), t.field);
+        }
+        if names_x > 6.5 && !names.is_empty() {
+            frame.fill(&Path::rectangle(Point::new(names_x - 4.0, bands_top), Size::new(LEFT - 8.0, BAND * rows)), t.field);
+        }
         for (k, name) in names.iter().enumerate() {
             let top = bands_top + BAND * k as f32;
             frame.stroke(&Path::line(Point::new(0.0, top), Point::new(bounds.width, top)), thin(t.border));
-            word(&mut frame, (*name).to_owned(), Point::new(6.0, top + 3.0), if k == 3 { red } else { t.muted }, false);
+            word(&mut frame, (*name).to_owned(), Point::new(names_x, top + 3.0), if k == 3 { red } else { t.muted }, false);
         }
         let mut before: Option<f64> = None;
-        for (s, km) in self.ground.ticks.iter().filter(|_| !self.compact) {
+        for (s, km) in ticks.iter().filter(|_| !self.compact) {
             let cx = x(*s);
             let black = self.ground.at(*s);
             let design = self.vertical.as_ref().and_then(|v| v.at(*s)).map(|r| r.0);
@@ -1361,7 +1421,7 @@ impl canvas::Program<Message> for Chart<'_> {
                 design.map(|z| comma(z, 2)),
                 design.zip(black).map(|(r, b)| format!("{}{}", if r >= b { "+" } else { "" }, comma(r - b, 2))),
             ];
-            for (k, cell) in cells.into_iter().enumerate() {
+            for (k, cell) in cells.into_iter().enumerate().filter(|_| cx - 34.0 > names_right) {
                 if let Some(text) = cell {
                     let color = if k == 3 { red } else { t.text };
                     word(&mut frame, text, Point::new(cx, bands_top + BAND * k as f32 + 3.0), color, true);
@@ -1387,6 +1447,9 @@ impl canvas::Program<Message> for Chart<'_> {
             }
             let g = (z1 - z0) / (s1 - s0);
             frame.stroke(&Path::line(Point::new(x(s1), grade_top), Point::new(x(s1), grade_top + BAND)), thin(t.muted));
+            if x(0.5 * (s0 + s1)) - 48.0 <= names_right {
+                continue;
+            }
             word(
                 &mut frame,
                 format!("%{} L={}", comma(100.0 * g, 2), comma(s1 - s0, 1)),

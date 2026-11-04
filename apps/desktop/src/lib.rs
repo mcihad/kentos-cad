@@ -278,6 +278,7 @@ mod platform_water_window;
 mod haul_plan_window;
 mod sight_window;
 mod propose_window;
+mod picture;
 mod road_dialog;
 mod swept_window;
 mod surface_analysis_window;
@@ -333,6 +334,8 @@ mod road_exchange;
 mod alignment_window_tests;
 #[cfg(test)]
 mod profile_lengths_window_tests;
+#[cfg(test)]
+mod picture_tests;
 #[cfg(test)]
 mod profile_window_tests;
 #[cfg(test)]

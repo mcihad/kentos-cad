@@ -596,6 +596,14 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
   satırında yazar, pencerenin altında değil (Enkesit, Y29.3).
 - **Düğmeler alt çubukta:** pencerenin düğmeleri `Dialog::action`/`aside` ile verilir, gövdenin içine konmaz. Kutu
   büyütülünce ya da tam ekran yapılınca gövde (`scroll`) büyür, düğmeler alt kenarda kalır (ADR 0746 eki).
+- **Çizim alanı bir görüntüleyicidir** (ADR 0937): pencerenin çizimi `kentos_ui::widget::picture::Picture` içindedir
+  (masaüstünde `crate::picture::picture(çizim, ad)`; `RoadDialog::picture` kendiliğinden). Tekerlek imlecin altındaki
+  noktada yakınlaştırır, sürükleme ve Shift+tekerlek kaydırır, çift tık sığdırır; imleç çizimdeyken sağ üstte
+  `− %N + | ⤢ | ⤓` düğme grubu açılır, dışarıdayken yalnız yakınlık hapı kalır; ⤓ görüneni aydınlık temada iki kat
+  çözünürlükte PNG olarak kaydeder. Yakınlaştırma yeniden üretmedir: grafik ölçü adımını piksel sıklığından seçer
+  (`crate::picture::step`), eksen yazılarını görünen bölgeye sabitler (`crate::picture::Shown`).
+- **Büyüyen pencerede çizim büyür** (ADR 0937 §2): çizim gövdenin `Grows` sütununda `push_grow` ile durur; kutu
+  büyütülünce ya da tam ekran yapılınca kalan yerin hepsini alır, en az boyunun altına inmez.
 - **Alt pencere:** bir pencerenin işine yardım eden pencere (Dever → Genişletme önerisi) onun yerine açılır, kapatma
   düğmesi “Geri”dir. Birincil eylem sonucu üst pencerenin formuna yazar; kaydetmek üst pencerenin işidir.
   Yazdığı sonuç üst pencereyi kurulamaz bırakmaz: öneri sığmıyorsa sığdığı kadarı yazılır, sığmayan basmadan önce

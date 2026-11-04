@@ -14,6 +14,7 @@ use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::fit::Fit;
+use crate::widget::grow::Reach;
 use crate::widget::sizable;
 use crate::widget::{Severity, Tip, horizontal_divider, overlay, tip};
 
@@ -96,12 +97,17 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
     /// Kayan gövde: kutu içeriği kadar uzar; pencereye ya da
     /// [`max_height`](Dialog::max_height)'e sığmayınca bu parça kayar,
     /// başlık ve eylem düğmeleri görünür kalır. Çubuk gövdenin yanında durur.
+    /// Kutu büyütülünce ya da tam ekran yapılınca gövdedeki
+    /// [`Grows`](crate::widget::grow::Grows) sütunlarının çizimleri kalan yeri
+    /// alır ([`Reach`], docs/adr/0937 §2).
     pub fn scroll(mut self, content: impl Into<Element<'a, Message>>) -> Self {
         self.body.push((
-            scrollable(content)
-                .direction(style::field::body_scrollbar())
-                .height(Shrink)
-                .into(),
+            Reach::new(
+                scrollable(content)
+                    .direction(style::field::body_scrollbar())
+                    .height(Shrink),
+            )
+            .into(),
             true,
         ));
         self
@@ -112,10 +118,12 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
     /// Uygulama penceresi alçaksa kutu pencerede durur, gövde kayar.
     pub fn scroll_fill(mut self, content: impl Into<Element<'a, Message>>) -> Self {
         self.body.push((
-            scrollable(content)
-                .direction(style::field::body_scrollbar())
-                .height(Fill)
-                .into(),
+            Reach::new(
+                scrollable(content)
+                    .direction(style::field::body_scrollbar())
+                    .height(Fill),
+            )
+            .into(),
             true,
         ));
         self

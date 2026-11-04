@@ -460,7 +460,8 @@ impl App {
         let field = |hint: &'a str, k: usize, width: f32| {
             kentos_ui::widget::text_field(hint, &r.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
         };
-        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
+        // The picture takes what a resized or full screen window has over (docs/adr/0937 §2).
+        let mut col = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         col = col.push(
             row![
                 words::field("Ad", kentos_ui::widget::text_field("Brüknerin adı", &r.name).on_input(|t| msg(Event::Name(t))), None),
@@ -556,16 +557,12 @@ impl App {
                 for wn in &w.preview.warnings {
                     col = col.push(label::caption(wn.message.clone()).style(warn));
                 }
-                col = col.push(
-                    container(iced::widget::canvas(Diagram { preview: &w.preview }).width(Fill).height(typography::scaled(160.0)))
-                        .style(style::container::field_box)
-                        .width(Fill),
-                );
+                col = col.push_grow(crate::picture::picture(iced::widget::canvas(Diagram { preview: &w.preview }).width(Fill).height(Fill), "Brükner"), typography::scaled(160.0));
                 col = col.push(loops_table(rep));
             }
             _ => {}
         }
-        col.into()
+        container(col).padding(iced::Padding::default().right(14)).into()
     }
 
     pub(crate) fn haul_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -691,10 +688,19 @@ impl canvas::Program<Message> for Diagram<'_> {
             });
             frame.fill(&shape, color);
         }
-        for k in 0..=4 {
-            let v = lo + (hi - lo) * f64::from(k) / 4.0;
+        // Zoomed in a picture (docs/adr/0937 §3): round volumes at least 40 px apart, finer as the diagram is laid out
+        // larger, their labels on the part shown.
+        let part = crate::picture::Shown::of(bounds.size());
+        let step = crate::picture::step(40.0 * (hi - lo) / ht.max(1.0));
+        let label_x = part.left(4.0);
+        let mut v = (lo / step).ceil() * step;
+        while v <= hi + 1e-9 {
             let a = at(s0, v);
-            caption(&mut frame, grouped(v, 0), Point::new(4.0, a.y - 7.0), t.muted);
+            if part.has_y(a.y) {
+                frame.stroke(&Path::line(a, at(s1, v)), Stroke::default().with_color(Color { a: 0.3, ..t.border }).with_width(1.0));
+                crate::picture::label(&mut frame, grouped(v, 0), Point::new(label_x, a.y - 7.0), t.muted, false, (label_x > 4.5).then_some(t.field.scale_alpha(0.9)));
+            }
+            v += step;
         }
         frame.stroke(
             &Path::line(at(s0, rep.balance), at(s1, rep.balance)),

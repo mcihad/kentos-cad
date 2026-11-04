@@ -30,7 +30,7 @@ use kentos_native_application::{ExecutionContext, road_junctions_query, road_swe
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -327,7 +327,7 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = Column::new().spacing(12).push(vehicle);
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(12.0).push(vehicle);
         if w.trailer {
             body = body.push(
                 row![field("m", 4, 100.0), field("m", 5, 130.0), field("m", 6, 120.0), field("m", 7, 120.0), field("m", 8, 140.0)]
@@ -399,17 +399,12 @@ impl App {
             }
             Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
             Some(Ok(q)) => {
-                let picture = container(
-                    iced::widget::canvas(Plan {
+                let picture = crate::picture::picture(iced::widget::canvas(Plan {
                         q,
                         junction: w.junction_read.as_ref(),
                         obstacles: &w.obstacle_lines,
                         every: w.every().unwrap_or(10),
-                    })
-                        .width(Fill)
-                        .height(typography::scaled(340.0)),
-                )
-                .style(style::container::field_box);
+                    }).width(Fill).height(Fill), TITLE);
                 let mut side = Column::new().spacing(6).width(380);
                 let mut rows: Vec<(&str, String)> = vec![
                     ("Yolun boyu", format!("{:.2} m · {} örnek", q.length, q.samples)),
@@ -436,7 +431,7 @@ impl App {
                 for wn in &w.warnings {
                     side = side.push(label::caption(wn.clone()).style(warn));
                 }
-                body = body.push(row![picture, side].spacing(12));
+                body = body.push_grow(row![picture, side].spacing(12).height(Fill), typography::scaled(340.0));
             }
         }
         let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();

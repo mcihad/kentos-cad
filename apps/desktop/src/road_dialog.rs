@@ -25,15 +25,18 @@
 //! - **The result follows the form:** a window that only reads reads again when a value changes; there is no “Önizle”.
 //! - **Footer:** the status on the left; on the right Kapat and the one primary action (DESIGN.md §7.9: one amber
 //!   button per surface), disabled until there is something to write.
+//! - **The picture** zooms, pans and is saved as a PNG from its button group (picture.rs, docs/adr/0937); resized or
+//!   full screen, the window gives it the height the rest leaves, never less than its own height.
 
 use iced::widget::{Column, Row, column, container, row, space};
+use kentos_ui::widget::grow::Grows;
 use iced::{Element, Fill, Length};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Form;
 use kentos_ui::widget::Banner;
 use kentos_ui::widget::StatCard;
 use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::Message;
 use crate::exchange::words;
@@ -46,6 +49,8 @@ pub struct RoadDialog<'a> {
     title: &'a str,
     form: Form<'a, Message>,
     picture: Option<(Element<'a, Message>, f32)>,
+    /// The picture's name, the saved file's: the window's title unless given.
+    picture_name: Option<String>,
     legend: Option<String>,
     empty: Option<String>,
     figures: Vec<StatCard<'a, Message>>,
@@ -74,6 +79,7 @@ impl<'a> RoadDialog<'a> {
             title,
             form,
             picture: None,
+            picture_name: None,
             legend: None,
             empty: None,
             figures: Vec::new(),
@@ -92,9 +98,16 @@ impl<'a> RoadDialog<'a> {
         }
     }
 
-    /// What the window reads, drawn, `height` high at the 12 px body text.
+    /// What the window reads, drawn, at least `height` high at the 12 px body text; it zooms, pans, is saved and
+    /// grows with the window.
     pub fn picture(mut self, picture: impl Into<Element<'a, Message>>, height: f32) -> Self {
         self.picture = Some((picture.into(), height));
+        self
+    }
+
+    /// The picture's name, the saved file's (the chosen schedule's or section's): the window's title otherwise.
+    pub fn picture_name(mut self, name: impl Into<String>) -> Self {
+        self.picture_name = Some(name.into());
         self
     }
 
@@ -181,12 +194,11 @@ impl<'a> RoadDialog<'a> {
 
     pub fn view(self) -> Element<'a, Message> {
         let muted = |t: &iced::Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let mut result = Column::new().spacing(10).width(Fill);
+        let mut result = Grows::new().spacing(10.0).width(Fill);
         let has_result = !self.figures.is_empty() || self.detail.is_some();
         if let Some((picture, height)) = self.picture {
-            result = result.push(
-                container(picture).width(Fill).height(typography::scaled(height)).style(style::container::field_box),
-            );
+            let name = self.picture_name.unwrap_or_else(|| self.title.to_owned());
+            result = result.push_grow(crate::picture::picture(picture, name), typography::scaled(height));
             if let Some(legend) = self.legend {
                 result = result.push(label::caption(legend).style(muted));
             }

@@ -732,6 +732,10 @@ pub enum Message {
     PlatformWater(crate::platform_water_window::Event),
     /// An event of Taşıma planı (haul_plan_window.rs, plan/road.md Y23).
     HaulPlan(crate::haul_plan_window::Event),
+    /// Resim olarak kaydet from a window's picture (picture.rs, docs/adr/0937): where it goes is asked.
+    SavePicture(kentos_ui::widget::picture::Saved),
+    /// The picture written (its path and size), or why not; none when the file was not chosen.
+    PictureWritten(Option<Result<(std::path::PathBuf, u32, u32), String>>),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -2560,6 +2564,8 @@ impl App {
             Message::DesignCheck(event) => return self.design_check_event(event),
             Message::PlatformWater(event) => return self.platform_water_event(event),
             Message::HaulPlan(event) => return self.haul_plan_event(event),
+            Message::SavePicture(saved) => return self.save_picture(saved),
+            Message::PictureWritten(written) => self.picture_written(written),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),

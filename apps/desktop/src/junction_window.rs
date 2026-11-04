@@ -38,7 +38,7 @@ use kentos_native_application::{
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -533,7 +533,7 @@ impl App {
             });
             legs = legs.push(space::horizontal().width(14)).push(words::field("Denetim", container(on_check).width(160), None));
         }
-        let mut body = Column::new().spacing(10).push(top).push(legs);
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(legs);
         let profile = |i: usize| {
                 let on = w.legs[i].clone();
                 let mut ids: Vec<Option<String>> = vec![None];
@@ -650,10 +650,7 @@ impl App {
                 ];
                 let cleared = w.clearance.as_ref().filter(|_| !w.overlap_mode).and_then(|c| c.as_ref().ok()).map(|c| &c.0);
                 let overlapped = w.overlap.as_ref().and_then(|c| c.as_ref().ok()).map(|c| &c.0);
-                let picture = container(
-                    iced::widget::canvas(Crossing { report: r, edges, cleared, overlapped }).width(420).height(typography::scaled(220.0)),
-                )
-                .style(style::container::field_box);
+                let picture = crate::picture::picture(iced::widget::canvas(Crossing { report: r, edges, cleared, overlapped }).width(Fill).height(Fill), TITLE);
                 let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
                 let side = |s: &str| if s == "right" { "sağ" } else { "sol" };
                 let mut list = Column::new().spacing(2).width(Fill);
@@ -764,9 +761,11 @@ impl App {
                         }
                     }
                 }
-                body = body.push(
-                    row![picture, container(scrollable(list).width(Fill).height(typography::scaled(220.0))).width(Fill).padding([6, 8])]
-                        .spacing(12),
+                body = body.push_grow(
+                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(600.0)).padding([6, 8])]
+                        .spacing(12)
+                        .height(Fill),
+                    typography::scaled(220.0),
                 );
             }
             _ => {}

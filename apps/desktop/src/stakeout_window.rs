@@ -307,7 +307,7 @@ impl App {
         let field = |hint: &'static str, k: usize, width: f32| {
             kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
         };
-        let mut body = Column::new().spacing(10);
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         body = body.push(
             row![
                 words::field("Koridor", container(on_corridor).width(200), None),
@@ -337,9 +337,11 @@ impl App {
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                let plan = container(iced::widget::canvas(Plan { table: t }).width(300).height(typography::scaled(300.0)))
-                    .style(style::container::field_box);
-                body = body.push(row![plan, container(rows_table(t)).width(Fill)].spacing(12));
+                let plan = crate::picture::picture(iced::widget::canvas(Plan { table: t }).width(Fill).height(Fill), TITLE);
+                body = body.push_grow(
+                    row![container(plan).width(iced::Length::FillPortion(1)), container(rows_table(t)).width(iced::Length::FillPortion(2))].spacing(12).height(Fill),
+                    typography::scaled(300.0),
+                );
             }
             _ => {}
         }

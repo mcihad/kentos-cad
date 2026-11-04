@@ -22,7 +22,7 @@ use kentos_native_application::{ExecutionContext, road_alignments, road_sheets};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::{label, style};
+use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -269,7 +269,7 @@ impl App {
             .push(words::field("Bindirme (m)", field("0", 3, 90.0), None))
             .push(words::field("Baş km (m)", field("baştan", 4, 90.0), None))
             .push(words::field("Son km (m)", field("sona", 5, 90.0), None));
-        let mut body = Column::new().spacing(10).push(top.align_y(iced::alignment::Vertical::Bottom));
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top.align_y(iced::alignment::Vertical::Bottom));
         match (&w.preview.why, &w.preview.laid) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(l)) => {
@@ -285,10 +285,7 @@ impl App {
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                let picture = container(
-                    iced::widget::canvas(Plan { laid: l, line: &w.preview.line }).width(460).height(typography::scaled(300.0)),
-                )
-                .style(style::container::field_box);
+                let picture = crate::picture::picture(iced::widget::canvas(Plan { laid: l, line: &w.preview.line }).width(Fill).height(Fill), TITLE);
                 let mut list = Column::new().spacing(2);
                 list = list.push(
                     row![
@@ -310,9 +307,11 @@ impl App {
                         .spacing(6),
                     );
                 }
-                body = body.push(
-                    row![picture, container(scrollable(list).height(typography::scaled(300.0))).width(Fill).padding([6, 8])]
-                        .spacing(12),
+                body = body.push_grow(
+                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(560.0)).padding([6, 8])]
+                        .spacing(12)
+                        .height(Fill),
+                    typography::scaled(300.0),
                 );
             }
             _ => {}
