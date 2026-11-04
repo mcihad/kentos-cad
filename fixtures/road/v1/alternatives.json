@@ -1,0 +1,1121 @@
+{
+ "cases": [
+  {
+   "name": "Aynı aks",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": []
+   }
+  },
+  {
+   "name": "Kurp yarıçapı 300 → 400",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 400,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": [
+     {
+      "from": 291.1411841035003,
+      "to": 505.34705228715103,
+      "baseFrom": 291.1411756341711,
+      "baseTo": 506.15999696515024,
+      "largest": 2.6594893004566345,
+      "at": 398.2441181953268
+     }
+    ]
+   }
+  },
+  {
+   "name": "Klotoidler 50 → 80",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 80,
+      "spiralOut": 80
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": [
+     {
+      "from": 300.28602797400043,
+      "to": 496.7954421858746,
+      "baseFrom": 300.2860200040571,
+      "baseTo": 497.01515259526764,
+      "largest": 0.5560638802013678,
+      "at": 398.5407350799367
+     }
+    ]
+   }
+  },
+  {
+   "name": "PI 15 m yana kaymış",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 15,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.05,
+   "expected": {
+    "plan": [
+     {
+      "from": 1.334270503976874,
+      "to": 837.646950859475,
+      "baseFrom": 1.3333333333351773,
+      "baseTo": 842.8731014326087,
+      "largest": 12.519991922453206,
+      "at": 356.8565046011752
+     }
+    ]
+   }
+  },
+  {
+   "name": "Paralel 5 m, tolerans 1 m: baştan sona",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 5,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 5,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 1.0,
+   "expected": {
+    "plan": [
+     {
+      "from": 0.0,
+      "to": 1000.0,
+      "baseFrom": 0.0,
+      "baseTo": 1000.0,
+      "largest": 5.0,
+      "at": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "Paralel 5 m, tolerans 6 m: aynı",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 5,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 5,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 6.0,
+   "expected": {
+    "plan": []
+   }
+  },
+  {
+   "name": "Açıyla ayrılan aliyman",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 100,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.5,
+   "expected": {
+    "plan": [
+     {
+      "from": 5.0249378105619,
+      "to": 1004.987562112089,
+      "baseFrom": 5.000000000001448,
+      "baseTo": 1000.0,
+      "largest": 100.0,
+      "at": 1004.987562112089
+     }
+    ]
+   }
+  },
+  {
+   "name": "Uzayan aks: sonu tabanın ötesinde",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 600,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.2,
+   "expected": {
+    "plan": [
+     {
+      "from": 600.2000000000044,
+      "to": 1000.0,
+      "baseFrom": null,
+      "baseTo": null,
+      "largest": 400.0,
+      "at": 1000.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "Ters yönde aynı aks",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "br",
+      "x": 800,
+      "y": 200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1r",
+      "x": 400,
+      "y": 0,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "ar",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": []
+   }
+  },
+  {
+   "name": "Ortada sapıp geri dönen",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p",
+      "x": 300,
+      "y": 0,
+      "radius": 400,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "q",
+      "x": 450,
+      "y": 25,
+      "radius": 400,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "r",
+      "x": 600,
+      "y": 0,
+      "radius": 400,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.05,
+   "expected": {
+    "plan": [
+     {
+      "from": 273.2196090836886,
+      "to": 629.4030194841414,
+      "baseFrom": 273.21934555560904,
+      "baseTo": 626.7806544443919,
+      "largest": 19.482497980118687,
+      "at": 451.31131428391456
+     }
+    ]
+   }
+  },
+  {
+   "name": "Ötelenmiş koordinatlar",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 500000,
+      "y": 4400000,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 500400,
+      "y": 4400000,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 500800,
+      "y": 4400200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 500000,
+      "y": 4400000,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p1",
+      "x": 500400,
+      "y": 4400015,
+      "radius": 300,
+      "spiralIn": 50,
+      "spiralOut": 50
+     },
+     {
+      "id": "b",
+      "x": 500800,
+      "y": 4400200,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.05,
+   "expected": {
+    "plan": [
+     {
+      "from": 1.334270503976874,
+      "to": 837.646950859475,
+      "baseFrom": 1.333333333335179,
+      "baseTo": 842.8731014326087,
+      "largest": 12.519991922453206,
+      "at": 356.8565046011752
+     }
+    ]
+   }
+  },
+  {
+   "name": "Aynı kotlar",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 105
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 105
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": [],
+    "height": []
+   },
+   "height": 0.05
+  },
+  {
+   "name": "Kırmızı kot ortada 1 m yükseltilmiş",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 105
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 106
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": [],
+    "height": [
+     {
+      "from": 25.000000000007276,
+      "to": 974.9999999999927,
+      "baseFrom": 25.000000000007276,
+      "baseTo": 974.9999999999927,
+      "largest": 1.0,
+      "at": 500.0
+     }
+    ]
+   },
+   "height": 0.05
+  },
+  {
+   "name": "Düşey kurp 200 → 300 m",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 105,
+      "curve": {
+       "kind": "parabola",
+       "length": 200
+      }
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 105,
+      "curve": {
+       "kind": "parabola",
+       "length": 300
+      }
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": [],
+    "height": [
+     {
+      "from": 369.3649167310432,
+      "to": 630.6350832689714,
+      "baseFrom": 369.3649167310432,
+      "baseTo": 630.6350832689714,
+      "largest": 0.20000000000000284,
+      "at": 500.00002324825425
+     }
+    ]
+   },
+   "height": 0.01
+  },
+  {
+   "name": "Plan ayrılınca kot karşılaştırılmaz",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 105
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "p",
+      "x": 300,
+      "y": 0,
+      "radius": 400,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "q",
+      "x": 450,
+      "y": 25,
+      "radius": 400,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "r",
+      "x": 600,
+      "y": 0,
+      "radius": 400,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ],
+    "pvis": [
+     {
+      "id": "a",
+      "station": 0,
+      "elevation": 100
+     },
+     {
+      "id": "m",
+      "station": 500,
+      "elevation": 105.5
+     },
+     {
+      "id": "b",
+      "station": 1000,
+      "elevation": 102
+     }
+    ]
+   },
+   "tolerance": 0.05,
+   "expected": {
+    "plan": [
+     {
+      "from": 273.2196090836886,
+      "to": 629.4030194841414,
+      "baseFrom": 273.21934555560904,
+      "baseTo": 626.7806544443919,
+      "largest": 19.482497980118687,
+      "at": 451.31131428391456
+     }
+    ],
+    "height": [
+     {
+      "from": 50.00000000000317,
+      "to": 273.21960908368135,
+      "baseFrom": 50.000000000003176,
+      "baseTo": 273.21934555560176,
+      "largest": 0.27322224436447584,
+      "at": 273.21960908368135
+     },
+     {
+      "from": 629.4030194841487,
+      "to": 934.2642285930151,
+      "baseFrom": 626.7806544443991,
+      "baseTo": 931.641600025186,
+      "largest": 0.3548627902773518,
+      "at": 629.4030194841487
+     }
+    ]
+   },
+   "height": 0.05
+  }
+ ]
+}

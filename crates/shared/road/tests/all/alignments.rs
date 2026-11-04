@@ -20,7 +20,7 @@ fn near(a: f64, b: f64, tol: f64, what: &str) {
     assert!((a - b).abs() <= tol, "{what}: {a} against {b} ({:e})", (a - b).abs());
 }
 
-fn pis(v: &Value) -> Vec<PiInput> {
+pub fn pis(v: &Value) -> Vec<PiInput> {
     v.as_array()
         .expect("pis")
         .iter()
