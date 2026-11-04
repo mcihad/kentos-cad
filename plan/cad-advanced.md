@@ -1583,6 +1583,17 @@ doğru/yay/path/blok üzerinde kullan. 1:1/1:20/1:100 çıktılarda faz, sembol
 yönü ve kâğıt boyu karşılaştırılsın. Kaynak tanım round-trip'te korunsun;
 desteklenmeyen kaynak için açık bulgu üretilsin.
 
+**Başlangıç incelemesi (4 Kasım 2026):**
+
+- [ADR 0930](../docs/adr/0930-complex-linetype-renderer-audit.md) AutoCAD
+  kaynaklarını, mevcut sözleşmedeki 12 öğe sınırını ve rendererin dört
+  ayrı sekize kesme/periyot noktasını karşılaştırır. Yazı/şekil kaybı
+  ve görünür kaynaklara dayanan denetim gereği kaydedildi.
+- Gerçek GUI'de 12 öğeli çizgi deseni bağımsız tam desen geometrisiyle
+  yan yana açıldı; sekizde kesilme ve HW işaretlerinin yokluğu görüldü.
+  Ekran ve deney dosyaları repo dışında. Bu başlangıç hatası kanıtıdır;
+  düzeltme sonrası kabul veya maddenin tamamlanması değildir.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
