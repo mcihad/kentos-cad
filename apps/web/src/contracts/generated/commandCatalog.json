@@ -45175,6 +45175,310 @@
       ]
     },
     {
+      "id": "road.junctions.overlap",
+      "version": 1,
+      "title": "Kavşakta koridor örtüşmesi",
+      "summary": "Kavşağın iki koridorunun planda örtüştüğü yeri ve orada iki kez sayılan hacmi okur; hiçbir şey yazmaz. İki koridorun üst yüzeyi (şevleri dahil) dünya koordinatında cell aralıklı ızgaranın hücre ortalarında örneklenir (Civil 3D'nin grid volume yöntemi); iki yüzeyin de üstünde kalan hücre örtüşmedir. primary kavşağın alanı kendisinin sayılan kol; öbürü tali koridordur. Tali koridorun yüzeyi kendi arazisiyle karşılaştırılır: örtüşmedeki yarma ve dolgu, iki koridorun kübajı toplanınca iki kez sayılan hacimdir. Cevap: hücre sayısı, alan, yarma, dolgu, arazisiz hücreler, iki tasarım yüzeyinin farkının ortalaması ve en büyüğü yeriyle, her aksta örtüşmenin km aralığı (tali koridorun kırpılacağı yer). corridors kolların sırasıyla iki koridor (yoksa aksların tek koridorları); cell kullanıcınındır. Uyarılar: junction_stale, corridor_stale, junction_corridors_overlap. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_corridor, invalid_road_corridor, invalid_overlap.",
+      "aliases": [
+        "koridorortusme",
+        "kavsakhacim"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.junctions.overlap` v1 (docs/adr/0919): where a junction's two corridors overlap in plan and the\nvolume counted twice there, their top surfaces sampled at the centres of a `cell` grid (the user's). `corridors`\nare the legs' corridors in the legs' order (absent: each leg's alignment's only one); `primary` the leg whose\ncorridor owns the junction's area (0 or 1), the other's being the secondary. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction`, `unknown_corridor`, a\ncorridor's building refusals, `invalid_overlap` (not two corridors, a corridor not on its leg's alignment, a leg with\nno corridor or more than one, primary not 0 or 1, cell not positive, more than `MOST_OVERLAP_CELLS` cells, the\nsecondary corridor's surface not built). Warnings: `junction_stale`, `corridor_stale`, `junction_corridors_overlap`.",
+        "properties": {
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "corridors": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "junction": {
+            "type": "string"
+          },
+          "primary": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          }
+        },
+        "required": [
+          "junction",
+          "primary",
+          "cell"
+        ],
+        "title": "JunctionsOverlap",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.overlap` v1: the junction, the primary leg and both corridors, the cell, the overlap's\ncells and area, the secondary corridor's cut and fill against its own surface there (counted twice when both\ncorridors' volumes are summed) and its cells with no ground, the mean and the largest (with its place) difference\nof the two design surfaces, and the overlap's station range on the primary and the secondary alignment (absent\nwithout overlap).",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "junction": {
+            "type": "string"
+          },
+          "largest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JunctionOverlapAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meanDifference": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "primary": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "primaryCorridor": {
+            "type": "string"
+          },
+          "primaryRange": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "secondaryCorridor": {
+            "type": "string"
+          },
+          "secondaryRange": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "uncovered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "junction",
+          "primary",
+          "primaryCorridor",
+          "secondaryCorridor",
+          "cell",
+          "cells",
+          "area",
+          "cut",
+          "fill",
+          "uncovered"
+        ],
+        "title": "JunctionsOverlapped",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.overlap` v1: the junction, the primary leg and both corridors, the cell, the overlap's\ncells and area, the secondary corridor's cut and fill against its own surface there (counted twice when both\ncorridors' volumes are summed) and its cells with no ground, the mean and the largest (with its place) difference\nof the two design surfaces, and the overlap's station range on the primary and the secondary alignment (absent\nwithout overlap).",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "junction": {
+            "type": "string"
+          },
+          "largest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JunctionOverlapAt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meanDifference": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "primary": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "primaryCorridor": {
+            "type": "string"
+          },
+          "primaryRange": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "secondaryCorridor": {
+            "type": "string"
+          },
+          "secondaryRange": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "uncovered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "junction",
+          "primary",
+          "primaryCorridor",
+          "secondaryCorridor",
+          "cell",
+          "cells",
+          "area",
+          "cut",
+          "fill",
+          "uncovered"
+        ],
+        "title": "JunctionsOverlapped",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_junction",
+          "invalid_junction",
+          "unknown_corridor",
+          "invalid_road_corridor",
+          "invalid_overlap"
+        ],
+        "warnings": [
+          "junction_stale",
+          "corridor_stale",
+          "junction_corridors_overlap"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana yol koridoru kavşağın sahibi, 1 m ızgara",
+          "input": {
+            "cell": 1.0,
+            "junction": "j-1",
+            "primary": 0
+          }
+        }
+      ]
+    },
+    {
       "id": "road.project.query",
       "version": 1,
       "title": "Yol projesini sorgula",
@@ -82478,6 +82782,18 @@
       "meaning": "Bağlanan bir PVI'de eğim değişimi istenenden büyük."
     },
     {
+      "code": "invalid_overlap",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Koridor örtüşmesi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "junction_corridors_overlap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kavşağın koridorları örtüşüyor; tali koridorun oradaki hacmi iki kez sayılır."
+    },
+    {
       "code": "invalid_pay_book",
       "kind": "failed",
       "retryable": false,
@@ -117538,6 +117854,44 @@
         "name",
         "kind",
         "revision"
+      ],
+      "type": "object"
+    },
+    "JunctionOverlapAt": {
+      "description": "A place in the overlap: its centre and the primary and secondary corridors' elevations (and primary less secondary).",
+      "properties": {
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "primary": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "secondary": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "primary",
+        "secondary",
+        "difference"
       ],
       "type": "object"
     },

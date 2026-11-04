@@ -358,6 +358,7 @@ COMMANDS: dict[str, Any] = {
     "road.junctions.clearance": road.junctions.clearance,
     "road.junctions.draw": road.junctions.draw,
     "road.junctions.edit": road.junctions.edit,
+    "road.junctions.overlap": road.junctions.overlap,
     "road.junctions.query": road.junctions.query,
     "road.junctions.tie": road.junctions.tie,
     "road.pay.edit": road.pay.edit,

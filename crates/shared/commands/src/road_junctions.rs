@@ -428,3 +428,97 @@ pub struct JunctionsTied {
     pub changes: Vec<f64>,
     pub revision: String,
 }
+
+pub const ROAD_JUNCTIONS_OVERLAP: &str = "road.junctions.overlap";
+pub const ROAD_JUNCTIONS_OVERLAP_VERSION: u32 = 1;
+/// The most grid cells an overlap samples.
+pub const MOST_OVERLAP_CELLS: usize = 1_000_000;
+
+/// Input of `road.junctions.overlap` v1 (docs/adr/0919): where a junction's two corridors overlap in plan and the
+/// volume counted twice there, their top surfaces sampled at the centres of a `cell` grid (the user's). `corridors`
+/// are the legs' corridors in the legs' order (absent: each leg's alignment's only one); `primary` the leg whose
+/// corridor owns the junction's area (0 or 1), the other's being the secondary. Reads only.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction`, `unknown_corridor`, a
+/// corridor's building refusals, `invalid_overlap` (not two corridors, a corridor not on its leg's alignment, a leg with
+/// no corridor or more than one, primary not 0 or 1, cell not positive, more than `MOST_OVERLAP_CELLS` cells, the
+/// secondary corridor's surface not built). Warnings: `junction_stale`, `corridor_stale`, `junction_corridors_overlap`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionsOverlap {
+    pub junction: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub corridors: Option<Vec<String>>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub primary: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: f64,
+}
+
+/// A place in the overlap: its centre and the primary and secondary corridors' elevations (and primary less secondary).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionOverlapAt {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub primary: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub secondary: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub difference: f64,
+}
+
+/// Output of `road.junctions.overlap` v1: the junction, the primary leg and both corridors, the cell, the overlap's
+/// cells and area, the secondary corridor's cut and fill against its own surface there (counted twice when both
+/// corridors' volumes are summed) and its cells with no ground, the mean and the largest (with its place) difference
+/// of the two design surfaces, and the overlap's station range on the primary and the secondary alignment (absent
+/// without overlap).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionsOverlapped {
+    pub junction: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub primary: u32,
+    pub primary_corridor: String,
+    pub secondary_corridor: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub cells: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub uncovered: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub mean_difference: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub largest: Option<JunctionOverlapAt>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub primary_range: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub secondary_range: Option<[f64; 2]>,
+}

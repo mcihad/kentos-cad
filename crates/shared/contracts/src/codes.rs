@@ -814,6 +814,11 @@ codes! {
     INVALID_TIE = "invalid_tie", Failed, false, "Kavşak boykesit bağı geçerli değil; ileti nedenini söyler.";
     /// A warning: a tied PVI's grade change is larger than the one asked (docs/adr/0918 §3).
     JUNCTION_GRADE_CHANGE = "junction_grade_change", Warning, false, "Bağlanan bir PVI'de eğim değişimi istenenden büyük.";
+    /// A corridor overlap asked that is not right: not two corridors, a corridor off its leg, no primary leg, a cell not
+    /// positive, too many cells, the secondary corridor's surface not built (docs/adr/0919 §3).
+    INVALID_OVERLAP = "invalid_overlap", Failed, false, "Koridor örtüşmesi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the junction's corridors overlap; the secondary's volume there is counted twice (docs/adr/0919 §3).
+    JUNCTION_CORRIDORS_OVERLAP = "junction_corridors_overlap", Warning, false, "Kavşağın koridorları örtüşüyor; tali koridorun oradaki hacmi iki kez sayılır.";
     /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
     INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
     /// The project has no pay item book (docs/adr/0909 §4).

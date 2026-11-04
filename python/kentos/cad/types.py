@@ -38532,6 +38532,42 @@ class JunctionListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JunctionOverlapAt(_Model):
+    """A place in the overlap: its centre and the primary and secondary corridors' elevations (and primary less secondary).
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        primary: Unit: elevation.
+        secondary: Unit: elevation.
+        difference: Unit: m.
+    """
+    x: float
+    y: float
+    primary: float
+    secondary: float
+    difference: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["primary"] = float(self.primary)
+        out["secondary"] = float(self.secondary)
+        out["difference"] = float(self.difference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionOverlapAt:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            primary=float(data["primary"]),
+            secondary=float(data["secondary"]),
+            difference=float(data["difference"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class JunctionPlace(_Model):
     """A place: plan and, on a leg, its station.
     Attributes:
@@ -38934,6 +38970,121 @@ class JunctionsEdit(_Model):
             name=data.get("name", UNSET),
             radii=UNSET if "radii" not in data else None if data["radii"] is None else [float(e0) for e0 in data["radii"]],
             radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsOverlap(_Model):
+    """Input of `road.junctions.overlap` v1 (docs/adr/0919): where a junction's two corridors overlap in plan and the
+    volume counted twice there, their top surfaces sampled at the centres of a `cell` grid (the user's). `corridors`
+    are the legs' corridors in the legs' order (absent: each leg's alignment's only one); `primary` the leg whose
+    corridor owns the junction's area (0 or 1), the other's being the secondary. Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction`, `unknown_corridor`, a
+    corridor's building refusals, `invalid_overlap` (not two corridors, a corridor not on its leg's alignment, a leg with
+    no corridor or more than one, primary not 0 or 1, cell not positive, more than `MOST_OVERLAP_CELLS` cells, the
+    secondary corridor's surface not built). Warnings: `junction_stale`, `corridor_stale`, `junction_corridors_overlap`.
+    Attributes:
+        primary: Unit: index.
+        cell: Unit: m.
+    """
+    junction: str
+    primary: int
+    cell: float
+    corridors: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["primary"] = self.primary
+        out["cell"] = float(self.cell)
+        if self.corridors is not UNSET:
+            out["corridors"] = None if self.corridors is None else list(self.corridors)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsOverlap:
+        return cls(
+            junction=data["junction"],
+            primary=data["primary"],
+            cell=float(data["cell"]),
+            corridors=UNSET if "corridors" not in data else None if data["corridors"] is None else list(data["corridors"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsOverlapped(_Model):
+    """Output of `road.junctions.overlap` v1: the junction, the primary leg and both corridors, the cell, the overlap's
+    cells and area, the secondary corridor's cut and fill against its own surface there (counted twice when both
+    corridors' volumes are summed) and its cells with no ground, the mean and the largest (with its place) difference
+    of the two design surfaces, and the overlap's station range on the primary and the secondary alignment (absent
+    without overlap).
+    Attributes:
+        primary: Unit: index.
+        cell: Unit: m.
+        cells: Unit: count.
+        area: Unit: area.
+        cut: Unit: volume.
+        fill: Unit: volume.
+        uncovered: Unit: count.
+        mean_difference: Unit: m.
+        primary_range: Unit: m.
+        secondary_range: Unit: m.
+    """
+    junction: str
+    primary: int
+    primary_corridor: str
+    secondary_corridor: str
+    cell: float
+    cells: int
+    area: float
+    cut: float
+    fill: float
+    uncovered: int
+    largest: JunctionOverlapAt | None | Unset = UNSET
+    mean_difference: float | None | Unset = UNSET
+    primary_range: list[float] | None | Unset = UNSET
+    secondary_range: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["primary"] = self.primary
+        out["primaryCorridor"] = self.primary_corridor
+        out["secondaryCorridor"] = self.secondary_corridor
+        out["cell"] = float(self.cell)
+        out["cells"] = self.cells
+        out["area"] = float(self.area)
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["uncovered"] = self.uncovered
+        if self.largest is not UNSET:
+            out["largest"] = None if self.largest is None else self.largest.to_json()
+        if self.mean_difference is not UNSET:
+            out["meanDifference"] = None if self.mean_difference is None else float(self.mean_difference)
+        if self.primary_range is not UNSET:
+            out["primaryRange"] = None if self.primary_range is None else [float(e0) for e0 in self.primary_range]
+        if self.secondary_range is not UNSET:
+            out["secondaryRange"] = None if self.secondary_range is None else [float(e0) for e0 in self.secondary_range]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsOverlapped:
+        return cls(
+            junction=data["junction"],
+            primary=data["primary"],
+            primary_corridor=data["primaryCorridor"],
+            secondary_corridor=data["secondaryCorridor"],
+            cell=float(data["cell"]),
+            cells=data["cells"],
+            area=float(data["area"]),
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            uncovered=data["uncovered"],
+            largest=UNSET if "largest" not in data else None if data["largest"] is None else JunctionOverlapAt.from_json(data["largest"]),
+            mean_difference=UNSET if "meanDifference" not in data else None if data["meanDifference"] is None else float(data["meanDifference"]),
+            primary_range=UNSET if "primaryRange" not in data else None if data["primaryRange"] is None else [float(e0) for e0 in data["primaryRange"]],
+            secondary_range=UNSET if "secondaryRange" not in data else None if data["secondaryRange"] is None else [float(e0) for e0 in data["secondaryRange"]],
         )
 
 
@@ -104948,6 +105099,7 @@ __all__ = [
     "JunctionLeg",
     "JunctionLegDef",
     "JunctionListed",
+    "JunctionOverlapAt",
     "JunctionPlace",
     "JunctionReport",
     "JunctionReturn",
@@ -104959,6 +105111,8 @@ __all__ = [
     "JunctionsDraw",
     "JunctionsDrawn",
     "JunctionsEdit",
+    "JunctionsOverlap",
+    "JunctionsOverlapped",
     "JunctionsQueried",
     "JunctionsQuery",
     "JunctionsRoadWork",

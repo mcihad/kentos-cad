@@ -2089,6 +2089,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["junction_stale", "profile_stale", "superelevation_stale", "junction_grade_change"],
         targets: none,
     },
+    Entry {
+        id: "road.junctions.overlap",
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_junction",
+            "invalid_junction",
+            "unknown_corridor",
+            "invalid_road_corridor",
+            "invalid_overlap",
+        ]],
+        warnings: &["junction_stale", "corridor_stale", "junction_corridors_overlap"],
+        targets: none,
+    },
     // KentOS Yol's project tree (plan/road.md Y13, docs/adr/0911 §2).
     Entry {
         id: "road.project.query",

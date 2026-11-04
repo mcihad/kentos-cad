@@ -293,3 +293,80 @@ fn tie_screens() {
         shot(&mut app, "dever");
     }
 }
+
+/// `road.junctions.overlap`'s drawing: the junctions' drawing with corridors across the main junction.
+fn overlap_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.junctions.overlap.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+#[test]
+fn the_window_reads_the_corridors_overlap() {
+    let mut app = overlap_app();
+    let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
+    let _ = app.update(Message::Run("junction.editor"));
+    send(&mut app, W::OverlapMode(true));
+    let read = |app: &App| app.junction_window.as_ref().and_then(|w| w.overlap.clone()).expect("asked");
+    // The cell is the user's; the main alignment has three corridors.
+    assert!(read(&app).is_err_and(|why| why.contains("yazılmalı")));
+    send(&mut app, W::OverlapCell("1".into()));
+    assert!(read(&app).is_err_and(|why| why.contains("3 koridoru")));
+    send(&mut app, W::OverlapCorridor(0, Some("c-1".into())));
+    send(&mut app, W::OverlapCorridor(1, Some("c-5".into())));
+    let (o, warnings) = read(&app).expect("reads");
+    assert_eq!((o.cells, o.primary_corridor.as_str(), o.secondary_corridor.as_str()), (346, "c-1", "c-5"));
+    assert!(o.cut > 0.0 && warnings.iter().any(|w| w.code == "junction_corridors_overlap"));
+    send(&mut app, W::OverlapPrimary(1));
+    let (o, _) = read(&app).expect("reads");
+    assert_eq!(o.secondary_corridor, "c-1");
+    send(&mut app, W::OverlapMode(false));
+    assert!(app.junction_window.as_ref().expect("open").overlap.is_none());
+    send(&mut app, W::Close);
+    assert_eq!(app.document.as_ref().expect("a drawing").model.revision().to_string(), before);
+}
+
+/// The overlap of the main corridor and the junction's corridor, wide and narrow, light and dark;
+/// `.run/gui-evidence/yol-y17-koridor-ortusme-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib junction_window_tests::overlap_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn overlap_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = overlap_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("yol-y17-koridor-ortusme-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("junction.editor"));
+        send(&mut app, W::OverlapMode(true));
+        send(&mut app, W::OverlapCorridor(0, Some("c-1".into())));
+        send(&mut app, W::OverlapCorridor(1, Some("c-5".into())));
+        send(&mut app, W::OverlapCell("1".into()));
+        shot(&mut app, "ana-sahip");
+    }
+}

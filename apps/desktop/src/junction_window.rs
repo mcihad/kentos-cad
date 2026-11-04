@@ -7,7 +7,9 @@
 //! the least and the largest clearance and the one at the crossing, marked in plan. At grade, the secondary road's
 //! profile is tied to the primary road's crown as it is typed (`road.junctions.tie`, docs/adr/0918): which leg keeps
 //! its crown, the cross slopes (or the primary road's superelevation) and the largest grade change are the user's;
-//! Bağla writes it (one undo step “Kavşağa bağla”).
+//! Bağla writes it (one undo step “Kavşağa bağla”). Denetim switches to the corridors' overlap
+//! (`road.junctions.overlap`, docs/adr/0919): the two corridors, the leg owning the junction and the grid's cell are
+//! the user's; the overlap's area, the secondary corridor's volume counted twice there and the stations to clip.
 //!
 //! ```text
 //! ┌ Kavşak ─────────────────────────────────────────────────────────────────────────────────────┐
@@ -26,11 +28,12 @@ use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsClearance, JunctionsCleared, JunctionsDraw,
-    JunctionsEdit, JunctionsTie, JunctionsTied, RoadEditOperation,
+    JunctionsEdit, JunctionsOverlap, JunctionsOverlapped, JunctionsTie, JunctionsTied, RoadEditOperation,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
-    ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit, road_junctions_tie,
+    ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit, road_junctions_overlap,
+    road_junctions_tie,
 };
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
@@ -72,6 +75,12 @@ pub(crate) const TIE_FIELDS: [&str; 3] = ["Sol enine eğim (%)", "Sağ enine eğ
 /// The tie as last read.
 pub(crate) type Tied = Result<(JunctionsTied, Vec<CommandWarning>), String>;
 
+/// The overlap's grid cell field.
+pub(crate) const OVERLAP_CELL: &str = "Izgara aralığı (m)";
+
+/// The overlap as last read.
+pub(crate) type Overlapped = Result<(JunctionsOverlapped, Vec<CommandWarning>), String>;
+
 /// The clearance as last read.
 pub(crate) type Cleared = Result<(JunctionsCleared, Vec<CommandWarning>), String>;
 
@@ -100,6 +109,13 @@ pub struct Window {
     pub(crate) tie_super: Option<String>,
     pub(crate) tie_fields: [String; 3],
     pub(crate) tie: Option<Tied>,
+    /// Denetim on the corridors' overlap: its corridors (none: the leg's alignment's only one), the leg owning the
+    /// junction, the grid's cell.
+    pub(crate) overlap_mode: bool,
+    pub(crate) overlap_corridors: [Option<String>; 2],
+    pub(crate) overlap_primary: u32,
+    pub(crate) overlap_cell: String,
+    pub(crate) overlap: Option<Overlapped>,
 }
 
 #[derive(Debug, Clone)]
@@ -115,6 +131,10 @@ pub enum Event {
     TieSuper(Option<String>),
     TieField(usize, String),
     Tie,
+    OverlapMode(bool),
+    OverlapCorridor(usize, Option<String>),
+    OverlapPrimary(u32),
+    OverlapCell(String),
     Save,
     Draw,
     Remove,
@@ -225,6 +245,20 @@ impl Window {
     }
 }
 
+impl Window {
+    /// The overlap asked of the saved junction, or why not.
+    pub(crate) fn overlap_input(&self) -> Result<JunctionsOverlap, String> {
+        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince koridor örtüşmesi okunur.".to_owned())?;
+        let corridors = match &self.overlap_corridors {
+            [None, None] => None,
+            [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
+            _ => return Err("İki kolun koridorunu birlikte seçin.".into()),
+        };
+        let cell = number(&self.overlap_cell, OVERLAP_CELL)?.ok_or_else(|| format!("{OVERLAP_CELL} yazılmalı."))?;
+        Ok(JunctionsOverlap { junction, corridors, primary: self.overlap_primary, cell })
+    }
+}
+
 impl App {
     /// Kavşak: the window on the road project's first junction, or a new one on its first two alignments.
     pub(crate) fn open_junctions(&mut self) {
@@ -257,6 +291,11 @@ impl App {
             tie_super: None,
             tie_fields: Default::default(),
             tie: None,
+            overlap_mode: false,
+            overlap_corridors: [None, None],
+            overlap_primary: 0,
+            overlap_cell: String::new(),
+            overlap: None,
         }));
         self.dialog = Some(Dialog::Junctions);
         let _ = self.junction_event(Event::Choose(chosen));
@@ -276,6 +315,9 @@ impl App {
         let saved_at_grade = w.kind == JunctionKind::AtGrade
             && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::AtGrade));
         w.tie = saved_at_grade.then(|| w.tie_input().and_then(|q| road_junctions_tie::preview(&doc.model, &q)));
+        let saved = w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id));
+        w.overlap = (w.overlap_mode && saved)
+            .then(|| w.overlap_input().and_then(|q| road_junctions_overlap::preview(&doc.model, &q)));
     }
 
     pub(crate) fn junction_event(&mut self, event: Event) -> Task<Message> {
@@ -310,6 +352,7 @@ impl App {
                 w.fields = f;
                 w.clear_profiles = [None, None];
                 w.tie_super = None;
+                w.overlap_corridors = [None, None];
             }
             Event::Kind(k) => w.kind = k,
             Event::Leg(i, a) => w.legs[i.min(1)] = Some(a),
@@ -324,6 +367,10 @@ impl App {
             Event::TieSuper(d) => w.tie_super = d,
             Event::TieField(k, t) => w.tie_fields[k.min(2)] = t,
             Event::Tie => return self.tie_junction(),
+            Event::OverlapMode(on) => w.overlap_mode = on,
+            Event::OverlapCorridor(i, c) => w.overlap_corridors[i.min(1)] = c,
+            Event::OverlapPrimary(k) => w.overlap_primary = k.min(1),
+            Event::OverlapCell(t) => w.overlap_cell = t,
             Event::Save => return self.save_junction(),
             Event::Draw => return self.draw_junction(),
             Event::Remove => return self.remove_junction(),
@@ -478,6 +525,14 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
+        let mut legs = legs;
+        if w.chosen.is_some() {
+            let first = if at_grade { "Boykesit bağı" } else { "Düşey açıklık" };
+            let on_check = Select::new([first, "Koridor örtüşmesi"].map(Choice::new), Some(usize::from(w.overlap_mode)), |k| {
+                msg(Event::OverlapMode(k == 1))
+            });
+            legs = legs.push(space::horizontal().width(14)).push(words::field("Denetim", container(on_check).width(160), None));
+        }
         let mut body = Column::new().spacing(10).push(top).push(legs);
         let profile = |i: usize| {
                 let on = w.legs[i].clone();
@@ -490,7 +545,36 @@ impl App {
                 let at = ids.iter().position(|x| *x == w.clear_profiles[i]);
                 Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::ClearProfile(i, ids[k].clone())))
         };
-        if !at_grade {
+        if w.overlap_mode && w.chosen.is_some() {
+            let corridor = |i: usize| {
+                let on = w.legs[i].clone();
+                let mut ids: Vec<Option<String>> = vec![None];
+                let mut names = vec!["Aksın tek koridoru".to_owned()];
+                for c in model.map_or(&[][..], |m| m.road_corridors()).iter().filter(|c| Some(&c.alignment) == on.as_ref()) {
+                    ids.push(Some(c.id.clone()));
+                    names.push(c.name.clone());
+                }
+                let at = ids.iter().position(|x| *x == w.overlap_corridors[i]);
+                Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::OverlapCorridor(i, ids[k].clone())))
+            };
+            let owners = ["1. kolun koridoru", "2. kolun koridoru"];
+            let on_owner =
+                Select::new(owners.map(Choice::new), Some(w.overlap_primary as usize), |k| msg(Event::OverlapPrimary(k as u32)));
+            body = body.push(
+                row![
+                    words::field("1. kolun koridoru", container(corridor(0)).width(170), None),
+                    words::field("2. kolun koridoru", container(corridor(1)).width(170), None),
+                    words::field("Kavşağın sahibi", container(on_owner).width(170), None),
+                    words::field(
+                        OVERLAP_CELL,
+                        kentos_ui::widget::text_field("m", &w.overlap_cell).on_input(|t| msg(Event::OverlapCell(t))).width(120),
+                        None
+                    ),
+                ]
+                .spacing(10)
+                .align_y(iced::alignment::Vertical::Bottom),
+            );
+        } else if !at_grade {
             let clear = |k: usize, hint: &'static str| {
                 words::field(
                     CLEAR_FIELDS[k],
@@ -564,17 +648,24 @@ impl App {
                     [w.legs_edge(3), w.legs_edge(4)],
                     [w.legs_edge(5), w.legs_edge(6)],
                 ];
-                let cleared = w.clearance.as_ref().and_then(|c| c.as_ref().ok()).map(|c| &c.0);
+                let cleared = w.clearance.as_ref().filter(|_| !w.overlap_mode).and_then(|c| c.as_ref().ok()).map(|c| &c.0);
+                let overlapped = w.overlap.as_ref().and_then(|c| c.as_ref().ok()).map(|c| &c.0);
                 let picture = container(
-                    iced::widget::canvas(Crossing { report: r, edges, cleared }).width(420).height(typography::scaled(220.0)),
+                    iced::widget::canvas(Crossing { report: r, edges, cleared, overlapped }).width(420).height(typography::scaled(220.0)),
                 )
                 .style(style::container::field_box);
                 let head = |t: &'static str, wd: f32| label::caption(t).style(muted).width(wd);
                 let side = |s: &str| if s == "right" { "sağ" } else { "sol" };
-                let mut list = Column::new()
-                    .spacing(2)
-                    .push(row![head("Çeyrek", 80.0), head("R (m)", 60.0), head("Uzunluk", 70.0), head("1. kol km", 90.0), head("2. kol km", 90.0)].spacing(6));
-                for q in &r.returns {
+                let mut list = Column::new().spacing(2).width(Fill);
+                // The curb returns' table makes room for the overlap's reading.
+                let returns = if w.overlap_mode { &[][..] } else { &r.returns[..] };
+                if !w.overlap_mode {
+                    list = list.push(
+                        row![head("Çeyrek", 80.0), head("R (m)", 60.0), head("Uzunluk", 70.0), head("1. kol km", 90.0), head("2. kol km", 90.0)]
+                            .spacing(6),
+                    );
+                }
+                for q in returns {
                     list = list.push(
                         row![
                             label::caption(format!("{}–{}", side(&q.a), side(&q.b))).width(80),
@@ -586,10 +677,35 @@ impl App {
                         .spacing(6),
                     );
                 }
-                if r.returns.is_empty() {
+                if r.returns.is_empty() && !w.overlap_mode {
                     list = list.push(label::caption("Katlı kavşağın dönüş yayı yok.").style(muted));
                 }
-                if let Some(t) = &w.tie {
+                if let Some(o) = &w.overlap {
+                    list = list.push(space::vertical().height(8)).push(label::caption("Koridor örtüşmesi").style(muted));
+                    match o {
+                        Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
+                        Ok((o, warnings)) => {
+                            let line = |a: &str, b: String| row![label::caption(a.to_owned()).width(170), label::caption(b)].spacing(6);
+                            list = list
+                                .push(line("Örtüşen alan", format!("{:.1} m² ({} hücre)", o.area, o.cells)))
+                                .push(line("İki kez sayılan yarma", format!("{:.1} m³", o.cut)))
+                                .push(line("İki kez sayılan dolgu", format!("{:.1} m³", o.fill)));
+                            if let (Some(mean), Some(l)) = (o.mean_difference, &o.largest) {
+                                list = list.push(line("Yüzeylerin farkı", format!("ortalama {mean:.3} m, en çok {:+.3} m", l.difference)));
+                            }
+                            if let (Some(p), Some(q)) = (o.primary_range, o.secondary_range) {
+                                list = list
+                                    .push(line("Sahibin km aralığı", format!("{:.2} – {:.2}", p[0], p[1])))
+                                    .push(line("Talinin kırpılacak km'si", format!("{:.2} – {:.2}", q[0], q[1])));
+                            }
+                            if !warnings.is_empty() {
+                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                list = list.push(label::caption(all).style(warn).width(Fill));
+                            }
+                        }
+                    }
+                }
+                if let Some(t) = w.tie.as_ref().filter(|_| !w.overlap_mode) {
                     list = list.push(space::vertical().height(8)).push(label::caption("Boykesit bağı").style(muted));
                     match t {
                         Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
@@ -615,12 +731,12 @@ impl App {
                             list = list.push(label::caption(format!("Eğimler {grades} · {gone}")).style(muted));
                             if !warnings.is_empty() {
                                 let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
-                                list = list.push(label::caption(all).style(warn));
+                                list = list.push(label::caption(all).style(warn).width(Fill));
                             }
                         }
                     }
                 }
-                if let Some(c) = &w.clearance {
+                if let Some(c) = w.clearance.as_ref().filter(|_| !w.overlap_mode) {
                     list = list.push(space::vertical().height(8)).push(label::caption("Düşey açıklık").style(muted));
                     match c {
                         Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
@@ -643,13 +759,13 @@ impl App {
                                 .push(at("Kesişimde", &c.crossing, false));
                             if !warnings.is_empty() {
                                 let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
-                                list = list.push(label::caption(all).style(warn));
+                                list = list.push(label::caption(all).style(warn).width(Fill));
                             }
                         }
                     }
                 }
                 body = body.push(
-                    row![picture, container(scrollable(list).height(typography::scaled(220.0))).width(Fill).padding([6, 8])]
+                    row![picture, container(scrollable(list).width(Fill).height(typography::scaled(220.0))).width(Fill).padding([6, 8])]
                         .spacing(12),
                 );
             }
@@ -691,6 +807,7 @@ impl App {
             Control::Press(DRAW) => Some(msg(Event::Draw)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Press(TIE) => Some(msg(Event::Tie)),
+            Control::Fill(OVERLAP_CELL, t) => Some(msg(Event::OverlapCell(t.to_owned()))),
             Control::Fill(name, t) if TIE_FIELDS.contains(&name) => {
                 let k = TIE_FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::TieField(k, t.to_owned())))
@@ -720,6 +837,8 @@ struct Crossing<'a> {
     edges: [[f64; 2]; 2],
     /// The clearance read: its least (accent, danger when short) and largest (success) places marked.
     cleared: Option<&'a JunctionsCleared>,
+    /// The overlap read: its largest surface difference marked.
+    overlapped: Option<&'a JunctionsOverlapped>,
 }
 
 impl canvas::Program<Message> for Crossing<'_> {
@@ -783,6 +902,17 @@ impl canvas::Program<Message> for Crossing<'_> {
                     ..canvas::Text::default()
                 });
             }
+        }
+        if let Some(l) = self.overlapped.and_then(|o| o.largest.as_ref()) {
+            let p = at(l.x, l.y);
+            frame.stroke(&Path::circle(p, 6.0), Stroke::default().with_width(2.0).with_color(tk.warning));
+            frame.fill_text(canvas::Text {
+                content: format!("{:+.2}", l.difference),
+                position: Point::new(p.x + 8.0, p.y - 14.0),
+                color: tk.warning,
+                size: 12.0.into(),
+                ..canvas::Text::default()
+            });
         }
         vec![frame.into_geometry()]
     }

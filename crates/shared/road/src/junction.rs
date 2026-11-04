@@ -263,6 +263,127 @@ pub fn edge_stations(primary: Deck<'_>, secondary: &Alignment, around: f64, sine
     [find(-primary.left), find(primary.right)]
 }
 
+/// A triangle in 3D.
+pub type Triangle3 = [[f64; 3]; 3];
+
+/// Triangles found by plan place: buckets of a square grid over their box.
+pub struct Located<'a> {
+    triangles: &'a [Triangle3],
+    min: [f64; 2],
+    size: f64,
+    columns: usize,
+    rows: usize,
+    buckets: Vec<Vec<u32>>,
+}
+
+impl<'a> Located<'a> {
+    pub fn new(triangles: &'a [Triangle3]) -> Self {
+        let (mut min, mut max) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
+        for t in triangles {
+            for p in t {
+                min = [min[0].min(p[0]), min[1].min(p[1])];
+                max = [max[0].max(p[0]), max[1].max(p[1])];
+            }
+        }
+        let n = (triangles.len() as f64).sqrt().ceil().max(1.0);
+        let size = ((max[0] - min[0]).max(max[1] - min[1]) / n).max(1e-6);
+        let columns = (((max[0] - min[0]) / size).floor() as usize + 1).min(4096);
+        let rows = (((max[1] - min[1]) / size).floor() as usize + 1).min(4096);
+        let mut buckets = vec![Vec::new(); if triangles.is_empty() { 0 } else { columns * rows }];
+        let cell = |v: f64, lo: f64, k: usize| (((v - lo) / size).floor().max(0.0) as usize).min(k - 1);
+        for (i, t) in triangles.iter().enumerate() {
+            let (x0, x1) = (t[0][0].min(t[1][0]).min(t[2][0]), t[0][0].max(t[1][0]).max(t[2][0]));
+            let (y0, y1) = (t[0][1].min(t[1][1]).min(t[2][1]), t[0][1].max(t[1][1]).max(t[2][1]));
+            for r in cell(y0, min[1], rows)..=cell(y1, min[1], rows) {
+                for c in cell(x0, min[0], columns)..=cell(x1, min[0], columns) {
+                    buckets[r * columns + c].push(i as u32);
+                }
+            }
+        }
+        Located { triangles, min, size, columns, rows, buckets }
+    }
+
+    /// The plan box of the triangles, `[min, max]`; none without any.
+    pub fn bounds(&self) -> Option<[[f64; 2]; 2]> {
+        let mut out: Option<[[f64; 2]; 2]> = None;
+        for p in self.triangles.iter().flatten() {
+            let b = out.get_or_insert([[p[0], p[1]], [p[0], p[1]]]);
+            *b = [[b[0][0].min(p[0]), b[0][1].min(p[1])], [b[1][0].max(p[0]), b[1][1].max(p[1])]];
+        }
+        out
+    }
+
+    /// The elevation at `p`: the first triangle (in their order) holding it, planar there; none outside.
+    pub fn z(&self, p: [f64; 2]) -> Option<f64> {
+        if self.buckets.is_empty() {
+            return None;
+        }
+        let (c, r) = ((p[0] - self.min[0]) / self.size, (p[1] - self.min[1]) / self.size);
+        if c < 0.0 || r < 0.0 || c >= self.columns as f64 || r >= self.rows as f64 {
+            return None;
+        }
+        let mut found: Option<(u32, f64)> = None;
+        for &i in &self.buckets[r as usize * self.columns + c as usize] {
+            if found.is_some_and(|f| f.0 < i) {
+                continue;
+            }
+            let [a, b, q] = self.triangles[i as usize];
+            let d = (b[0] - a[0]) * (q[1] - a[1]) - (q[0] - a[0]) * (b[1] - a[1]);
+            if d.abs() < 1e-18 {
+                continue;
+            }
+            let u = ((b[0] - p[0]) * (q[1] - p[1]) - (q[0] - p[0]) * (b[1] - p[1])) / d;
+            let v = ((q[0] - p[0]) * (a[1] - p[1]) - (a[0] - p[0]) * (q[1] - p[1])) / d;
+            let w = 1.0 - u - v;
+            if u >= -1e-12 && v >= -1e-12 && w >= -1e-12 {
+                found = Some((i, u * a[2] + v * b[2] + w * q[2]));
+            }
+        }
+        found.map(|f| f.1)
+    }
+}
+
+/// A grid cell both surfaces cover: its centre and the two surfaces' elevations there.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SharedCell {
+    pub at: [f64; 2],
+    pub a: f64,
+    pub b: f64,
+}
+
+/// The grid of `cell` over the two surfaces' common box (docs/adr/0919 §2): cell centres at `(k + ½)·cell` in world
+/// coordinates, rows by y then x; how many columns and rows, and their first indices. None when the boxes do not meet.
+pub fn shared_grid(a: &Located<'_>, b: &Located<'_>, cell: f64) -> Option<([i64; 2], [usize; 2])> {
+    let (ba, bb) = (a.bounds()?, b.bounds()?);
+    let lo = [ba[0][0].max(bb[0][0]), ba[0][1].max(bb[0][1])];
+    let hi = [ba[1][0].min(bb[1][0]), ba[1][1].min(bb[1][1])];
+    if lo[0] > hi[0] || lo[1] > hi[1] {
+        return None;
+    }
+    let first = [(lo[0] / cell - 0.5).ceil() as i64, (lo[1] / cell - 0.5).ceil() as i64];
+    let last = [(hi[0] / cell - 0.5).floor() as i64, (hi[1] / cell - 0.5).floor() as i64];
+    if last[0] < first[0] || last[1] < first[1] {
+        return None;
+    }
+    Some((first, [(last[0] - first[0] + 1) as usize, (last[1] - first[1] + 1) as usize]))
+}
+
+/// The cells both surfaces cover, in the grid's order (docs/adr/0919 §2).
+pub fn shared_cells(a: &Located<'_>, b: &Located<'_>, cell: f64) -> Vec<SharedCell> {
+    let Some((first, size)) = shared_grid(a, b, cell) else { return Vec::new() };
+    let mut out = Vec::new();
+    for r in 0..size[1] {
+        let y = (first[1] + r as i64) as f64 * cell + 0.5 * cell;
+        for c in 0..size[0] {
+            let x = (first[0] + c as i64) as f64 * cell + 0.5 * cell;
+            if let (Some(za), Some(zb)) = (a.z([x, y]), b.z([x, y])) {
+                out.push(SharedCell { at: [x, y], a: za, b: zb });
+            }
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
