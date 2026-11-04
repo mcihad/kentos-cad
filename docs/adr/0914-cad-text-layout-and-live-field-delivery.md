@@ -282,6 +282,63 @@ uyarı kalktı ve aynı paftanın önizlemesi açıldı. Hata/retry durum testi 
 geçti; ekranlar ve belgeler repo dışında. Tabloların ortak Unicode glyph profiline
 geçişi ve blok içi alanların denetimi ayrıca açıktır.
 
+## İç içe blok yazısının gerçek kaynağı — 4 Kasım 2026
+
+Blok açılımındaki anonim yazının kalıcı nesne UUID'si yoktur. Yerleştirmenin
+UUID'si bulgunun sahibidir; kaynak kimlikleri gerçek belge nesneleridir.
+Çekirdek parçanın yalnız dahili köken kaydı, değişmez tanım kimliği ve o
+tanımdaki özgün parça sırasını taşır. Dinamik görünürlük filtrelediğinde bu
+sıra değişmez. İç içe açılım, dönüşüm ve XCLIP mevcut çizim yoluyla yapılır;
+font/field bilgisi render geometrisinden tahmin edilmez. Kaynak tanımdaki
+yazı, gerçek yerleştirilmiş şekliyle salt okunur değerlendirilir. Sahte UUID,
+geçici belgeye nesne ekleme ve açılışta otomatik alan yenileme yoktur.
+
+- `block_text_field_stale`, `block_text_field_broken` ve
+  `block_text_field_unverified` bağımsız yazıyla aynı sınırlı kaynak grafiğini
+  okur. Sahip kimliğinin kök yazı olmadığı açıkça ayrılır; mevcut yazı
+  döngüsü ve 512 kaynak sınırı korunur. Font kapsamı da gerçek parçadan okunur.
+- Denetim, blok kütüphanesini sorgu boyunca bir kez hazırlar. Yalnız yazı/alan
+  parçalarını en çok 64 parçalık geçici öbeklerde yerleştirir; ilgisiz
+  geometriler kopyalanmaz. Temiz parçalar dahil iş/iptal kontrol noktaları
+  vardır; iptal edilmiş sorgu kısmi sonucu tamamlanmış gibi döndürmez.
+  Kütüphanenin mevcut düzleştirme/dinamik önbellek hazırlığı ayrıca atomik
+  kalır; bu hazırlığın tümüne gerçek zamanlı iptal garantisi verilmez.
+- Normal denetim gizli katman kapılarını atlar; `includeHidden` bunları
+  kapsar. XCLIP ile gerçekten çizilmeyen parça yine dışarıda kalır.
+  PDF, hazırlanmış sahnenin gerçek parça listesini, viewport katman
+  geçersiz kılmalarını ve yazı anchor kırpmasını kullanır. Güncel
+  olmayan/doğrulanamayan görünür blok alanı PDF ve CPU önizlemesini engeller.
+- UI'da işaret, yerleştirilmiş yazının konumuna gelir; tanım adı ve özgün
+  parça sırası gösterilir. Kaynağa git yaşayan kaynaklara gider. Bağımsız
+  yazının yenilemesi blok yerleştirmeye uygulanmaz. Tanımın açık düzenlenmesi
+  istenir; patlatma veya tüm örnekleri habersiz değiştirme yapılmaz.
+- Mevcut dosya/blok komutları tanım içinde tabloyu yasaklar; bu kapsam
+  tabloyu bloğa koyma özelliği eklemez. Bellekte doğrulanmamış bir tablo
+  parçasına rastlanırsa hücre denetimi savunmacı olarak çalışır; bu durumun
+  birim/PDF testi, geçerli KCAD blok-tablosu desteği sayılmaz.
+
+Aynı okuma Python'da `cad.drawing.inspect(doc, checks=['annotations'],
+uids=[insert_uid])`; MCP'de `cad.drawing.inspect` için
+`{"drawing": drawing_id, "checks": ["annotations"], "uids": [insert_uid]}`
+girdisidir. İlk `uids` öğesi gerçek yerleştirmedir; `points` model
+koordinatındadır. Denetim kaydetme/Undo içeriğini değiştirmez. Yeni komut,
+kalıcı şema veya yeni kullanıcı ayarı yoktur. 25 uygulama denetimi, 14
+çekirdek birim + 12 blok entegrasyonu, dokuz kitap çıktı testi (bir dosya
+üretme testi ignored), yedi MCP ve yeniden derlenen bağlamayla sekiz
+Python testi geçti. İki çekirdek blok entegrasyonu ayrıca mevcut ignored
+kalır. Gerçek GUI'de içteki eski yazıya yakınlaşma, tanım/parça açıklaması
+ve baskı önizlemesinin standart hata şeridi doğrulandı. Bu işlemlerden sonra
+Farklı kaydet dosyası bağımsız KCAD okuyucusuyla aynı model ve aynı byte'ları
+verdi. Ham ekran/çizim belgeleri repo dışında tutulur.
+
+[Autodesk UPDATEFIELD](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-2B47D62E-19D0-4CA5-9AAC-1946132D2F62.htm)
+seçilen nesnelerin alanını açıkça güncelleyen işlemdir.
+[Blok/xref bağlamsal alan açıklaması](https://help.autodesk.com/cloudhelp/2022/ENU/AutoCAD-Core/files/GUID-D32A29E7-7B98-4ADB-BF32-5CC24DBCC8C3.htm)
+son önbellek ile yerleştirme bağlamının ayrılabildiğini belirtir. KentOS
+kararı, açılışı yenileme saymamak ve doğrulanmamış önbelleği teslimde
+sessizce güncel kabul etmemektir; AutoCAD'in bütün bağlamsal alan türlerinin
+uygulandığı iddia edilmez.
+
 ## MTEXT aktarımındaki veri kaybı
 
 Sayısal geometri paketinin önceki `kind=10` yazı kaydı `flow` alanını

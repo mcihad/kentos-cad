@@ -125,3 +125,31 @@ class DrawingInspect(unittest.TestCase):
         self.assertFalse(any(f.code.startswith('table_field_') for f in cad.drawing.inspect(doc, checks=['annotations']).findings))
         self.assertEqual(doc.undo(), 'Tabloyu güncelle')
         self.assertEqual(doc.to_bytes(), before)
+
+    def test_nested_block_field_reports_real_owner_and_survives_kcad_reopen(self):
+        raw = json.loads((ROOT / 'fixtures/commands/v1/cad.blocks.find.json').read_text())['setup']
+        outer = '01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4051'
+        inner = '01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4052'
+        raw['blocks'] = [
+            dict(id=outer, name='Dış blok', base=dict(x=0., y=0.), units='m', entities=[
+                dict(kind='insert', id=1, layerId='a', attrs={}, block=inner,
+                     p=dict(x=2., y=2.), scale=2., rotation=math.pi/2)]),
+            dict(id=inner, name='Alanlı iç', base=dict(x=0., y=0.), units='m', entities=[
+                dict(kind='text', id=1, layerId='a', attrs={}, p=dict(x=1., y=0.),
+                     height=.125, rotation=0., text='Eski', fields=[
+                         dict(start=0, end=4, source=dict(kind='project', value='name'))])])]
+        raw['entities'] = [dict(kind='insert', id=1, layerId='a', attrs={}, block=outer,
+                                p=dict(x=10., y=20.), scale=1., rotation=0.)]
+        doc = cad.Document.from_bytes(json.dumps(raw).encode())
+        before = doc.to_bytes()
+        owner = next(iter(doc.entities())).uid
+        result = cad.drawing.inspect(doc, checks=['annotations'], uids=[owner])
+        stale = next(f for f in result.findings if f.code == 'block_text_field_stale')
+        self.assertEqual(stale.uids, [owner])
+        self.assertIn('Alanlı iç', stale.message)
+        self.assertEqual(stale.points[0], cad.Vec2(x=12., y=24.))
+        self.assertEqual(doc.to_bytes(), before)
+        reopened = cad.Document.from_bytes(before)
+        again = cad.drawing.inspect(reopened, checks=['annotations'], uids=[owner])
+        self.assertEqual([f.to_json() for f in again.findings], [f.to_json() for f in result.findings])
+        self.assertEqual(reopened.to_bytes(), before)

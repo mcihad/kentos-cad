@@ -1501,6 +1501,15 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   standart uyarı şeridiyle görünür. Undo sonrası kayıt özgün byte'larla aynı.
   Blok içi alanlar ve tablo Unicode
   yerleşim geçişi bu kabulle tamamlandı sayılmaz.
+- İç içe/dinamik blok yazılarında gerçek tanım/parça kökeniyle alan denetimi
+  eklendi; anonim yazı için UUID uydurulmaz. Gizli katmanlar, XCLIP ve gerçek
+  viewport kırpması izlenir. Sorguda öbekli çalışma ve parça içi iptal var;
+  tanım hazırlığının mevcut atomik sınırı ADR'de açık. 25 uygulama, 14 çekirdek
+  birim + 12 blok entegrasyon testi, dokuz kitap çıktı testi (bir ayrı dosya
+  testi ignored), yedi MCP ve sekiz Python testi geçti. Gerçek GUI'de içteki
+  eski alanın konumuna gidildi ve baskı önizlemesinin açık hata verdiği görüldü.
+  Denetim/ret sonrası GUI kaydı özgün dosyayla byte düzeyinde aynıydı.
+  Tanımın toplu yenilenmesi veya Unicode geçişi bu kayıtla tamamlandı sayılmaz.
 - Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
   eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
 

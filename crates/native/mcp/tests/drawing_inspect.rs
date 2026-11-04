@@ -180,3 +180,49 @@ fn standalone_table_field_diagnosis_and_refresh_match_through_mcp_and_undo() {
     assert_eq!(undone["items"], before["items"]);
     std::fs::remove_file(path).unwrap();
 }
+
+#[test]
+fn nested_block_fields_through_mcp_keep_the_real_owner_and_placed_location() {
+    let mut setup: Value = serde_json::from_str::<Value>(include_str!(
+        "../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap()["setup"]
+        .clone();
+    let outer = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4051";
+    let inner = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4052";
+    setup["blocks"] = json!([
+        {"id":outer,"name":"Dış blok","base":{"x":0.,"y":0.},"units":"m","entities":[{"kind":"insert","id":1,"layerId":"a","attrs":{},"block":inner,"p":{"x":2.,"y":2.},"scale":2.,"rotation":std::f64::consts::FRAC_PI_2}]},
+        {"id":inner,"name":"Alanlı iç","base":{"x":0.,"y":0.},"units":"m","entities":[{"kind":"text","id":1,"layerId":"a","attrs":{},"p":{"x":1.,"y":0.},"height":0.125,"rotation":0.,"text":"Eski","fields":[{"start":0,"end":4,"source":{"kind":"project","value":"name"}}]}]}
+    ]);
+    setup["entities"] = json!([{"kind":"insert","id":1,"layerId":"a","attrs":{},"block":outer,"p":{"x":10.,"y":20.},"scale":1.,"rotation":0.}]);
+    let path = std::env::temp_dir().join(format!(
+        "kentos-block-fields-mcp-{}.json",
+        std::process::id()
+    ));
+    std::fs::write(&path, serde_json::to_vec(&setup).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = tool(&mut server, "drawing.open", json!({"path":path}));
+    let drawing = &opened["drawing"];
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let owner = &before["items"][0]["uid"];
+    let found = tool(
+        &mut server,
+        "cad.drawing.inspect",
+        json!({"drawing":drawing,"checks":["annotations"],"uids":[owner]}),
+    );
+    assert_eq!(found["status"], "completed", "{found}");
+    let stale = found["output"]["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|f| f["code"] == "block_text_field_stale")
+        .unwrap();
+    assert_eq!(stale["uids"], json!([owner]));
+    assert_eq!(stale["points"], json!([{"x":12.,"y":24.}]));
+    assert!(stale["message"].as_str().unwrap().contains("Alanlı iç"));
+    assert_eq!(
+        tool(&mut server, "drawing.entities", json!({"drawing":drawing})),
+        before
+    );
+    std::fs::remove_file(path).unwrap();
+}

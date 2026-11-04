@@ -12,8 +12,17 @@ use super::annotations::finding;
 const SOURCE_LIMIT: usize = 512;
 
 pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<InspectionFinding> {
+    inspect_text(doc, uid, text, true)
+}
+
+/// Anonymous block text is owned by an insert, not by a fabricated text UUID.
+pub(super) fn placed_findings(doc: &Document, owner: Uuid, text: &TextEntity) -> Vec<InspectionFinding> {
+    inspect_text(doc, owner, text, false)
+}
+
+fn inspect_text(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) -> Vec<InspectionFinding> {
     let mut out = Vec::new();
-    let mut sources: Vec<_> = text
+    let sources: Vec<_> = text
         .paragraph
         .fields
         .iter()
@@ -58,22 +67,35 @@ pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<Insp
             }
         }
     }
-    if text.paragraph.fields.is_empty() {
-        return out;
-    }
-    let mut pending = vec![uid];
+    out.extend(field_findings(doc, uid, text, owns_uid));
+    out
+}
+
+fn field_findings(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) -> Vec<InspectionFinding> {
+    let mut out = Vec::new();
+    if text.paragraph.fields.is_empty() { return out; }
+    let mut sources: Vec<_> = text.paragraph.fields.iter().filter_map(|f| f.source.object())
+        .map(|u| Uuid::from_bytes(u.0).to_string()).collect();
+    let reads = |text: &TextEntity| text.paragraph.fields.iter().filter_map(|f| match f.source {
+        FieldSource::Object { uid, value: ObjectValue::Text, .. } => Some(Uuid::from_bytes(uid.0)),
+        _ => None,
+    }).collect::<Vec<_>>();
+    let mut pending = reads(text);
     let mut seen = HashSet::new();
     let mut graph = HashMap::new();
     let mut texts = Vec::new();
+    if owns_uid {
+        seen.insert(uid);
+        graph.insert(uid, pending.clone());
+    }
     let mut stale = false;
     let mut broken = false;
-    let mut own_now = None;
     let mut capped = false;
     while let Some(source) = pending.pop() {
         if seen.contains(&source) {
             continue;
         }
-        if seen.len() >= SOURCE_LIMIT {
+        if seen.len() + usize::from(!owns_uid) >= SOURCE_LIMIT {
             capped = true;
             break;
         }
@@ -81,19 +103,7 @@ pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<Insp
         let Some(Entity::Text(t)) = doc.slot_of(source).and_then(|s| doc.get(s)) else {
             continue;
         };
-        let reads: Vec<_> = t
-            .paragraph
-            .fields
-            .iter()
-            .filter_map(|f| match f.source {
-                FieldSource::Object {
-                    uid,
-                    value: ObjectValue::Text,
-                    ..
-                } => Some(Uuid::from_bytes(uid.0)),
-                _ => None,
-            })
-            .collect();
+        let reads = reads(t);
         pending.extend(reads.iter().copied());
         graph.insert(source, reads);
         texts.push((source, t));
@@ -110,6 +120,10 @@ pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<Insp
         Some(Entity::Text(t)) => Some(t.text.clone()),
         _ => None,
     };
+    let own = doc.fields_written(text, if owns_uid && cyclic.contains(&uid) { &cyclic } else { &empty }, &letters);
+    stale |= own.text != text.text || own.paragraph.fields != text.paragraph.fields;
+    broken |= own.paragraph.fields.iter().any(|f| f.broken.is_some());
+    let own_now = Some(own.text);
     for (source, t) in texts {
         let now = doc.fields_written(
             t,
@@ -122,9 +136,6 @@ pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<Insp
         );
         stale |= now.text != t.text || now.paragraph.fields != t.paragraph.fields;
         broken |= now.paragraph.fields.iter().any(|f| f.broken.is_some());
-        if source == uid {
-            own_now = Some(now.text);
-        }
     }
     if capped {
         out.push(emit("text_field_unverified", InspectionSeverity::Error,
@@ -222,7 +233,7 @@ pub(super) fn table_findings(
             && inspected_sources.insert(source)
             && let Some(Entity::Text(text)) = doc.slot_of(source).and_then(|s| doc.get(s))
         {
-            for mut f in findings(doc, source, text)
+            for mut f in field_findings(doc, source, text, true)
                 .into_iter()
                 .filter(|f| f.code.starts_with("text_field_"))
             {

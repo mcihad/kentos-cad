@@ -608,6 +608,7 @@ fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> P
             ..PieceStroke::default()
         },
         attribute: None,
+        annotation_origin: None,
     }
 }
 

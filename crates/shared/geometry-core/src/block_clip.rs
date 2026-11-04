@@ -121,6 +121,7 @@ pub fn clipped(pieces: Vec<Piece>, ring: &[Vec2], inverted: bool, plot_frame: bo
             gates: Vec::new(),
             stroke: Default::default(),
             attribute: None,
+            annotation_origin: None,
         });
     }
     out
@@ -139,6 +140,7 @@ mod tests {
             gates: Vec::new(),
             stroke: Default::default(),
             attribute: None,
+            annotation_origin: None,
         }
     }
 

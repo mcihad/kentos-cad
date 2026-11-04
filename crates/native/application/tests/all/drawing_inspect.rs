@@ -477,3 +477,267 @@ fn table_field_checks_stale_text_source_graph_and_missing_source_without_mutatio
     assert!(found.iter().any(|f| f.code == "table_field_stale"));
     assert!(found.iter().any(|f| f.code == "table_field_broken"));
 }
+fn nested_field_block_drawing() -> kentos_commands::DocumentSnapshotV2 {
+    let mut snapshot = field_drawing(1);
+    let outer = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4011";
+    let inner = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4012";
+    snapshot.blocks = serde_json::from_value(json!([
+        {"id":outer,"name":"Dış","base":{"x":0.,"y":0.},"units":"m","entities":[
+            {"kind":"insert","id":7,"layerId":"a","attrs":{},"block":inner,"p":{"x":2.,"y":2.},"scale":2.,"rotation":1.5707963267948966}]},
+        {"id":inner,"name":"Alanlı iç","base":{"x":0.,"y":0.},"units":"m","entities":[
+            {"kind":"text","id":17,"layerId":"a","attrs":{},"p":{"x":1.,"y":0.},"height":0.125,"rotation":0.,"text":"Eski",
+             "fields":[{"start":0,"end":4,"source":{"kind":"project","value":"name"}}]}]}
+    ])).unwrap();
+    snapshot.entities[0] =
+        serde_json::from_value(json!({"kind":"insert","id":1,"layerId":"a","attrs":{},
+        "block":outer,"p":{"x":10.,"y":20.},"scale":1.,"rotation":0.}))
+        .unwrap();
+    snapshot
+}
+
+#[test]
+fn anonymous_nested_block_field_uses_real_owner_and_transformed_source_without_mutation() {
+    use kentos_commands::{Entity, InspectionGroup};
+    use kentos_domain::Slot;
+    let snapshot = nested_field_block_drawing();
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap());
+    let stale = found
+        .iter()
+        .find(|f| f.code == "block_text_field_stale")
+        .expect("anonymous text must be evaluated directly");
+    assert_eq!(stale.uids, [uid.to_string()]);
+    assert_eq!(stale.points, [kentos_commands::Vec2 { x: 12., y: 24. }]);
+    assert!(
+        stale.message.contains("Alanlı iç")
+            && stale.message.contains("Eski")
+            && stale.message.contains("Güncel proje")
+    );
+    let input = DrawingInspect {
+        checks: vec![InspectionGroup::Annotations],
+        ..Default::default()
+    };
+    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &input, || false)
+    else {
+        panic!()
+    };
+    assert!(output.findings.iter().any(|f| f == stale));
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+    let Entity::Text(original) = &doc.blocks()[1].entities[0] else {
+        panic!()
+    };
+    assert_eq!(original.text, "Eski");
+}
+
+#[test]
+fn hidden_or_clipped_block_field_is_not_reported_as_a_visible_error() {
+    use kentos_commands::{Entity, InspectionGroup};
+    use kentos_domain::Slot;
+    let mut snapshot = nested_field_block_drawing();
+    let mut hidden = snapshot.layers[0].clone();
+    hidden.id = "hidden".into();
+    hidden.name = "Gizli alanlar".into();
+    hidden.visible = false;
+    snapshot.layers.push(hidden);
+    let block = &mut snapshot.blocks[1];
+    let Entity::Text(text) = &mut block.entities[0] else {
+        panic!()
+    };
+    text.base.layer_id = "hidden".into();
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let uid = doc.uid(Slot(1)).unwrap();
+    assert!(
+        drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap()).is_empty()
+    );
+    let input = DrawingInspect {
+        checks: vec![InspectionGroup::Annotations],
+        include_hidden: true,
+        ..Default::default()
+    };
+    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &input, || false)
+    else {
+        panic!()
+    };
+    assert!(
+        output
+            .findings
+            .iter()
+            .any(|f| f.code == "block_text_field_stale")
+    );
+    let mut snapshot = nested_field_block_drawing();
+    let Entity::Insert(insert) = &mut snapshot.entities[0] else {
+        panic!()
+    };
+    insert.clipping=Some(serde_json::from_value(json!({"boundary":[{"x":100.,"y":100.},{"x":101.,"y":100.},{"x":101.,"y":101.},{"x":100.,"y":101.}]})).unwrap());
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let uid = doc.uid(Slot(1)).unwrap();
+    assert!(
+        drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap()).is_empty()
+    );
+}
+
+#[test]
+fn dynamic_block_visibility_preserves_original_annotation_ordinal() {
+    use kentos_commands::Entity;
+    use kentos_domain::Slot;
+    let mut snapshot = nested_field_block_drawing();
+    snapshot.blocks[1].entities.insert(0,serde_json::from_value(json!({"kind":"line","id":3,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":1.,"y":0.}})).unwrap());
+    snapshot.blocks[1].dynamic=Some(serde_json::from_value(json!({"parameters":[{"kind":"visibility","name":"Görünüş","states":[{"name":"Alan","hidden":[3]},{"name":"Sade","hidden":[17]}]}],"actions":[]})).unwrap());
+    let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap());
+    let stale = found
+        .iter()
+        .find(|f| f.code == "block_text_field_stale")
+        .unwrap();
+    assert!(
+        stale.message.contains("2. parça"),
+        "original ordinal survives filtering: {stale:?}"
+    );
+    let Entity::Insert(nested) = &mut snapshot.blocks[0].entities[0] else {
+        panic!()
+    };
+    nested.parameters = serde_json::from_value(json!({"Görünüş":"Sade"})).unwrap();
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let uid = doc.uid(Slot(1)).unwrap();
+    assert!(
+        drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap()).is_empty()
+    );
+}
+
+#[test]
+fn anonymous_block_field_checks_global_source_graph_with_real_source_uid() {
+    use kentos_commands::Entity;
+    use kentos_domain::Slot;
+    let mut snapshot = nested_field_block_drawing();
+    let sources = field_drawing(2);
+    snapshot.entities.push(sources.entities[1].clone());
+    snapshot.uids.push(sources.uids[1]);
+    let source = snapshot.uids[1];
+    let Entity::Text(leaf) = &mut snapshot.blocks[1].entities[0] else {
+        panic!()
+    };
+    leaf.paragraph.fields = serde_json::from_value(
+        json!([{"start":0,"end":4,"source":{"kind":"object","uid":source,"value":"text"}}]),
+    )
+    .unwrap();
+    set_field(&mut snapshot, 1, json!({"kind":"project","value":"name"}));
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap());
+    let stale = found
+        .iter()
+        .find(|f| f.code == "block_text_field_stale")
+        .expect("equal cache does not hide stale upstream text");
+    assert_eq!(stale.uids[0], uid.to_string());
+    assert!(
+        stale
+            .uids
+            .contains(&kentos_domain::Uuid::from_bytes(source.0).to_string())
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn invalid_in_memory_block_table_is_checked_defensively_without_mutation() {
+    use kentos_domain::Slot;
+    let mut snapshot = nested_field_block_drawing();
+    snapshot.blocks[1].entities[0] = field_table(json!({"kind":"project","value":"name"}));
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let found = drawing_inspect::annotations::findings(&doc, uid, doc.get(Slot(1)).unwrap());
+    let stale = found
+        .iter()
+        .find(|f| f.code == "block_table_field_stale")
+        .unwrap();
+    assert_eq!(stale.uids, [uid.to_string()]);
+    // Local table cell center, followed by inner scale/rotation/translation and root translation.
+    let local_x = 1. + 1.5 * 30_f64.to_radians().cos() + 0.125;
+    let local_y = 2. + 1.5 * 30_f64.to_radians().sin() - 0.25 * 30_f64.to_radians().cos();
+    assert!(
+        (stale.points[0].x - (12. - 2. * local_y)).abs() < 1e-12,
+        "{stale:?}"
+    );
+    assert!(
+        (stale.points[0].y - (22. + 2. * local_x)).abs() < 1e-12,
+        "{stale:?}"
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn block_inspection_checks_cancellation_inside_a_clean_single_insert() {
+    use kentos_commands::InspectionGroup;
+    let mut snapshot = nested_field_block_drawing();
+    snapshot.blocks[1].entities=(1..=1000).map(|id|serde_json::from_value(json!({"kind":"line","id":id,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":1.,"y":0.}})).unwrap()).collect();
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let mut ticks = 0;
+    let input = DrawingInspect {
+        checks: vec![InspectionGroup::Annotations],
+        ..Default::default()
+    };
+    let result = drawing_inspect::inspect(&doc, &input, || {
+        ticks += 1;
+        ticks > 100
+    });
+    assert!(matches!(result, CommandResult::Cancelled), "{result:?}");
+    assert_eq!(ticks, 101);
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+
+#[test]
+fn annotation_visitor_preserves_rendered_shapes_and_honours_early_stop() {
+    use kentos_commands::Entity;
+    use kentos_native_application::{blocks::core_blocks, geometry::shape};
+    let mut snapshot=nested_field_block_drawing();
+    // More than one visitor batch; each leaf retains its original definition ordinal.
+    let Entity::Text(first)=snapshot.blocks[1].entities[0].clone() else {panic!()};
+    snapshot.blocks[1].entities=(1..=130).map(|i| {
+        let mut t=first.clone();t.base.id=i;t.p.x=i as f64;Entity::Text(t)
+    }).collect();
+    let doc=Document::from_snapshot_v2(snapshot).unwrap();
+    let library=core_blocks(doc.blocks());
+    let insert=shape(doc.get(kentos_domain::Slot(1)).unwrap());
+    let all=library.expand(&insert);
+    let mut visited=Vec::new();
+    let complete:Result<bool,()>=library.try_visit_annotations(&insert,|piece|{visited.extend(piece);Ok(true)});
+    assert_eq!(complete,Ok(true));assert_eq!(visited,all);
+    let mut seen=0;
+    let complete:Result<bool,()>=library.try_visit_annotations(&insert,|piece| {
+        if piece.is_some() {seen+=1;} Ok(seen<3)
+    });
+    assert_eq!(complete,Ok(false));assert_eq!(seen,3);
+    let mut ticks=0;
+    let complete=library.try_visit_annotations(&insert,|_| {
+        ticks+=1;if ticks==7 {Err("cancelled")} else {Ok(true)}
+    });
+    assert_eq!(complete,Err("cancelled"));assert_eq!(ticks,7);
+}
+
+#[test]
+fn invalid_block_annotation_provenance_is_an_explicit_error() {
+    use kentos_commands::InspectionSeverity;
+    use kentos_domain::Slot;
+    use kentos_geometry_core::block::AnnotationOrigin;
+    let doc=Document::from_snapshot_v2(nested_field_block_drawing()).unwrap();
+    let uid=doc.uid(Slot(1)).unwrap();
+    let shape=kentos_native_application::geometry::shape(&doc.blocks()[1].entities[0]);
+    for origin in [
+        AnnotationOrigin {definition:"missing".into(),entity:0},
+        AnnotationOrigin {definition:doc.blocks()[1].id.to_text(),entity:99},
+    ] {
+        let found=drawing_inspect::annotations::piece_findings(&doc,uid,&origin,&shape);
+        assert_eq!(found.len(),1);
+        assert_eq!(found[0].code,"block_field_unverified");
+        assert_eq!(found[0].severity,InspectionSeverity::Error);
+        assert_eq!(found[0].uids,[uid.to_string()]);
+    }
+}

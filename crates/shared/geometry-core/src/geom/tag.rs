@@ -131,6 +131,7 @@ fn piece(shape: Shape) -> Piece {
         gates: Vec::new(),
         stroke: PieceStroke::default(),
         attribute: None,
+        annotation_origin: None,
     }
 }
 

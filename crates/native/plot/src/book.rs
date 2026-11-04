@@ -521,6 +521,9 @@ pub(crate) fn prepare_captured(
                     | "text_field_stale" | "text_field_unverified" | "map_text_unsupported"
                     | "text_layout_unsupported" | "table_field_stale" | "table_field_unverified"
                     | "table_field_source_stale" | "table_field_source_unverified"
+                    | "block_field_unverified" | "block_text_field_stale" | "block_text_field_unverified" | "block_text_layout_unsupported"
+                    | "block_table_field_stale" | "block_table_field_unverified"
+                    | "block_table_field_source_stale" | "block_table_field_source_unverified"
             )
         }) {
             return Err(PlotError::new(&f.code, &f.message));

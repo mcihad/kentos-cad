@@ -197,6 +197,14 @@ impl Underlay {
     }
 }
 
+/// Native field inspection's source in an immutable definition. Dynamic
+/// filtering keeps the original ordinal; rendering never reads field values.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AnnotationOrigin {
+    pub definition: String,
+    pub entity: usize,
+}
+
 /// One drawn piece of a block: a shape (never an insert), with the colour
 /// and line weight it draws with when it has its own (or inherits a nested
 /// insert's); `None` draws with the insert's, then its layer's. An
@@ -204,6 +212,7 @@ impl Underlay {
 /// else the text (the default).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Piece {
+    pub annotation_origin: Option<Arc<AnnotationOrigin>>,
     pub shape: Shape,
     pub color: Option<String>,
     pub line_weight: Option<f64>,
@@ -410,6 +419,71 @@ impl Blocks {
     /// the value the insert shows (an empty text when it shows none); none
     /// for an unknown block or a shape that is not an insert.
     pub fn expand(&self, insert: &Shape) -> Vec<Piece> {
+        self.expand_parts(insert)
+    }
+
+    /// Visit annotation leaves in bounded batches using the renderer's placement and clipping.
+    /// `None` is a work checkpoint, including for unrelated pieces. Returning false
+    /// stops normally; an error propagates cancellation without retaining a partial result.
+    pub fn try_visit_annotations<E>(
+        &self,
+        insert: &Shape,
+        mut visit: impl FnMut(Option<Piece>) -> Result<bool, E>,
+    ) -> Result<bool, E> {
+        if !visit(None)? {
+            return Ok(false);
+        }
+        let Some((flat, m, similar)) = self.placed(insert) else {
+            return Ok(true);
+        };
+        let (values, places) = insert_attrs(insert);
+        let clip = match insert {
+            Shape::Insert { clip: Some(c), .. } => {
+                Some((crate::block_clip::placed_ring(c, flat.base, &m), c.inverted))
+            }
+            _ => None,
+        };
+        let mut batch = Vec::with_capacity(64);
+        let flush = |batch: &mut Vec<Piece>,
+                     visit: &mut dyn FnMut(Option<Piece>) -> Result<bool, E>| {
+            let pieces = std::mem::take(batch);
+            let pieces = match &clip {
+                Some((ring, inverted)) => {
+                    crate::block_clip::clipped(pieces, ring, *inverted, false)
+                }
+                None => pieces,
+            };
+            for piece in pieces {
+                if !visit(Some(piece))? {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        };
+        for piece in &flat.pieces {
+            if !visit(None)? {
+                return Ok(false);
+            }
+            if piece.annotation_origin.is_none() {
+                continue;
+            }
+            batch.push(Piece {
+                shape: place(&attribute_piece(&flat, piece, values, places), &m, similar),
+                color: piece.color.clone(),
+                line_weight: piece.line_weight,
+                by_layer: piece.by_layer.clone(),
+                gates: piece.gates.clone(),
+                stroke: piece.stroke.clone(),
+                attribute: piece.attribute.clone(),
+                annotation_origin: piece.annotation_origin.clone(),
+            });
+            if batch.len() == 64 && !flush(&mut batch, &mut visit)? {
+                return Ok(false);
+            }
+        }
+        flush(&mut batch, &mut visit)
+    }
+    fn expand_parts(&self, insert: &Shape) -> Vec<Piece> {
         let Some((flat, m, similar)) = self.placed(insert) else {
             return Vec::new();
         };
@@ -427,6 +501,7 @@ impl Blocks {
                     gates: piece.gates.clone(),
                     stroke: piece.stroke.clone(),
                     attribute: piece.attribute.clone(),
+                    annotation_origin: piece.annotation_origin.clone(),
                 }
             })
             .collect();
@@ -686,7 +761,7 @@ impl Blocks {
                 let mut rest: Vec<(String, Json)> = e
                     .rest
                     .iter()
-                    .filter(|(k, _)| k != "id" && k != "uid")
+                    .filter(|(k, _)| k != "id" && k != "uid" && k != "_annotationIndex")
                     .cloned()
                     .collect();
                 let has = |rest: &[(String, Json)], k: &str| rest.iter().any(|(n, _)| n == k);
@@ -1163,6 +1238,7 @@ fn flat_of(
                         }),
                     },
                     attribute: None,
+                    annotation_origin: piece.annotation_origin.clone(),
                 });
             }
         } else {
@@ -1178,6 +1254,9 @@ fn flat_of(
                 by_layer: own_follows.into_iter().collect(),
                 stroke: own_stroke,
                 attribute: None,
+                annotation_origin: number_field(&e.rest, "_annotationIndex")
+                    .filter(|n| n.is_finite() && *n >= 0. && n.fract() == 0. && *n <= u32::MAX as f64)
+                    .map(|n| Arc::new(AnnotationOrigin { definition: id.to_owned(), entity: n as usize })),
             });
         }
     }
@@ -1192,6 +1271,7 @@ fn flat_of(
             gates: Vec::new(),
             stroke: PieceStroke::default(),
             attribute: (!a.constant).then(|| a.tag.clone()),
+            annotation_origin: None,
         });
     }
     if let Some(underlay) = &def.underlay {

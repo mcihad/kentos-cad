@@ -79,6 +79,9 @@ const UNLISTED: LayerFlags = LayerFlags {
 /// weight each draws with when it has its own (docs/adr/0144).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Expanded {
+    /// Sparse references only for text or pieces carrying live fields. Empty for the
+    /// common case; indices follow the actual dynamic/clipped piece list.
+    pub annotation_origins: Vec<(usize, Arc<crate::block::AnnotationOrigin>)>,
     pub shapes: Vec<Shape>,
     pub colors: Vec<Option<String>>,
     pub weights: Vec<Option<f64>>,
@@ -693,6 +696,7 @@ impl Store {
                         gates: Vec::new(),
                         stroke: Default::default(),
                         attribute: None,
+                        annotation_origin: None,
                     }]
                 }),
             // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2).
@@ -716,6 +720,7 @@ impl Store {
                         ..Default::default()
                     },
                     attribute: None,
+                    annotation_origin: None,
                 })
                 .collect(),
             _ => return (None, b),
@@ -742,6 +747,7 @@ impl Store {
                 gates: Vec::new(),
                 stroke: Default::default(),
                 attribute: None,
+                annotation_origin: None,
             })
             .collect()
     }
@@ -799,6 +805,9 @@ impl Store {
         let b = crate::block::pieces_bounds(b, &pieces, self.font);
         let mut x = Expanded::default();
         for piece in pieces {
+            if let Some(origin) = piece.annotation_origin {
+                x.annotation_origins.push((x.shapes.len(), origin));
+            }
             x.shapes.push(piece.shape);
             x.colors.push(piece.color);
             x.weights.push(piece.line_weight);

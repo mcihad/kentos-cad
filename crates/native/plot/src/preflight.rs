@@ -143,6 +143,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
             &m.layers,
             &m.layer_overrides,
         );
+        let shown_ids: std::collections::HashSet<_> = shown.iter().map(|l|l.id.as_str()).collect();
         for layer in &shown {
             if layer.service.is_some() {
                 out.push(finding(&m.item,"plot_provider_unsupported",format!("“{}” harita servisi bu çıktı hattında çizilemiyor; eksik pafta üretilmeyecek.",layer.name),"Servisi yerel, desteklenen bir altlığa dönüştürün veya bu viewportta baskıdan çıkarın.",Severity::Error));
@@ -176,6 +177,22 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                     {
                         out.push(finding(&m.item, &f.code, format!("{id}: {}", f.message), &f.repair,
                             match f.severity { kentos_commands::InspectionSeverity::Error => Severity::Error, kentos_commands::InspectionSeverity::Warning => Severity::Warning, kentos_commands::InspectionSeverity::Info => Severity::Info }));
+                    }
+                }
+                if matches!(e, Entity::Insert(_))
+                    && let Some(uid) = doc.uid(kentos_domain::Slot(id))
+                    && let Some(expanded) = spatial.store().get(f64::from(id)).and_then(|item|item.expanded.as_deref()) {
+                    for (piece, origin) in &expanded.annotation_origins {
+                        if !expanded.gates.get(*piece).is_none_or(|gates|gates.iter().all(|l|shown_ids.contains(l.as_str()))) {continue;}
+                        let Some(shape)=expanded.shapes.get(*piece) else {continue;};
+                        for f in kentos_native_application::drawing_inspect::annotations::piece_findings(doc,uid,origin,shape) {
+                            if !f.points.iter().any(|p|kentos_sheet::pdf::includes_text_anchor(m,[p.x,p.y])) {continue;}
+                            out.push(finding(&m.item,&f.code,format!("{id}: {}",f.message),&f.repair,match f.severity {
+                                kentos_commands::InspectionSeverity::Error=>Severity::Error,
+                                kentos_commands::InspectionSeverity::Warning=>Severity::Warning,
+                                kentos_commands::InspectionSeverity::Info=>Severity::Info,
+                            }));
+                        }
                     }
                 }
                 for fault in doc.audit_object(kentos_domain::Slot(id)) {

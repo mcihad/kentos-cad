@@ -348,7 +348,7 @@ impl App {
                 if !self.cad_inspection_current() { return Task::none(); }
                 let Some(f) = self.cad_inspection.selected.and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i)).cloned() else { return Task::none(); };
                 if f.group == InspectionGroup::Annotations {
-                    if f.code.starts_with("table_field_source_") || f.code == "table_field_unverified" || f.code.starts_with("text_font_") || matches!(f.code.as_str(),"text_field_unverified"|"text_layout_unsupported") { return Task::none(); }
+                    if f.code.starts_with("block_") || f.code.starts_with("table_field_source_") || f.code == "table_field_unverified" || f.code.starts_with("text_font_") || matches!(f.code.as_str(),"text_field_unverified"|"text_layout_unsupported") { return Task::none(); }
                     if f.code.starts_with("table_field_") {
                         if let Some(slot) = f.uids.first().and_then(|u| Uuid::parse_str(u).ok())
                             .and_then(|u| self.document.as_ref()?.model.slot_of(u)) {
@@ -507,6 +507,7 @@ impl App {
                         .on_press_maybe((current && finding.group == InspectionGroup::Annotations && finding.uids.len() > 1).then(|| msg(Event::Sources))),
                     button(label::body(if finding.group == InspectionGroup::Hatches { "Taramayı düzenle…" }
                         else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" }
+                        else if finding.code.starts_with("block_") { "Blok tanımını inceleyin" }
                         else if finding.code.starts_with("table_field_source_") { "Kaynak yazıyı inceleyin" }
                         else if finding.code.starts_with("table_field_") { "Tabloyu güncelle" }
                         else if finding.code.starts_with("text_field_") { "Alanları yenile" }
@@ -514,7 +515,7 @@ impl App {
                         else if finding.code == "text_layout_unsupported" { "Yazı biçimini inceleyin" }
                         else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
                         (current && finding.group != InspectionGroup::Boundaries && finding.code != "dimension_override"
-                            && !finding.code.starts_with("table_field_source_") && finding.code != "table_field_unverified"
+                            && !finding.code.starts_with("block_") && !finding.code.starts_with("table_field_source_") && finding.code != "table_field_unverified"
                             && !finding.code.starts_with("text_font_") && !matches!(finding.code.as_str(),"text_field_unverified"|"text_layout_unsupported"))
                             .then(|| msg(Event::Repair))
                     ).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
@@ -565,6 +566,7 @@ impl App {
 
 /// The scene keeps a short label; the panel contains the full explanation and repair advice.
 fn finding_title(code: &str) -> &'static str {
+    if let Some(leaf) = code.strip_prefix("block_") { return finding_title(leaf); }
     match code {
         "boundary_open_end" => "Açık uç",
         "boundary_gap" => "Sınırda açıklık",
@@ -585,6 +587,7 @@ fn finding_title(code: &str) -> &'static str {
         "table_field_stale" => "Tablo alanı güncel değil",
         "table_field_broken" => "Tablo alan kaynağı okunamıyor",
         "table_field_unverified" => "Tablo alanları doğrulanamadı",
+        "field_unverified" => "Blok alan kaynağı doğrulanamadı",
         "table_field_source_stale" => "Bağlı yazı alanı güncel değil",
         "table_field_source_broken" => "Bağlı yazı alan kaynağı okunamıyor",
         "table_field_source_unverified" => "Bağlı yazı alan zinciri doğrulanamadı",

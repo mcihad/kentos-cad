@@ -396,3 +396,66 @@ fn stale_standalone_table_field_blocks_pdf_until_explicit_refresh_and_undo_resto
         "table_field_stale"
     );
 }
+
+/// Anonymous definition fields have no root UUID; delivery must follow the actual visible leaf.
+/// The table branch is defensive: current file/block commands prohibit tables inside definitions.
+#[test]
+fn nested_block_fields_block_delivery_only_when_their_placed_leaf_is_visible() {
+    let scenario: Value = serde_json::from_str(SCENARIO).unwrap();
+    for kind in ["text", "table"] {
+        for mode in ["visible", "outside", "hidden", "clipped"] {
+            let mut doc = drawing(&scenario);
+            let layer = doc.layers().active().to_owned();
+            let outer = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4051";
+            let inner = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4052";
+            doc.add(serde_json::from_value(json!({"kind":"insert","id":0,"layerId":layer,"attrs":{},"block":outer,"p":{"x":0.,"y":0.5},"scale":1.,"rotation":0.})).unwrap()).unwrap();
+            let mut snapshot = doc.to_snapshot_v2();
+            let mut leaf = if kind == "text" {
+                json!({"kind":"text","id":17,"layerId":layer,"attrs":{},"p":{"x":0.,"y":0.},"height":0.125,"rotation":0.,"text":"Eski","fields":[{"start":0,"end":4,"source":{"kind":"project","value":"name"}}]})
+            } else {
+                json!({"kind":"table","id":17,"layerId":layer,"attrs":{},"p":{"x":0.,"y":0.},"height":0.125,"rotation":0.,"cells":[["Eski"]],"rows":[0.5],"columns":[2.],"fields":[{"row":0,"col":0,"source":{"kind":"project","value":"name"}}]})
+            };
+            if mode == "hidden" {
+                let mut hidden = snapshot.layers[0].clone();
+                hidden.id = "hidden".into();
+                hidden.name = "Gizli yazılar".into();
+                hidden.visible = false;
+                snapshot.layers.push(hidden);
+                leaf["layerId"] = json!("hidden");
+            }
+            snapshot.blocks=serde_json::from_value(json!([
+                {"id":outer,"name":"Dış blok","base":{"x":0.,"y":0.},"units":"m","entities":[{"kind":"insert","id":7,"layerId":layer,"attrs":{},"block":inner,"p":{"x":1.,"y":0.},"scale":1.,"rotation":0.}]},
+                {"id":inner,"name":"Alanlı iç","base":{"x":0.,"y":0.},"units":"m","entities":[leaf]}
+            ])).unwrap();
+            let Entity::Insert(insert) = snapshot.entities.last_mut().unwrap() else {
+                panic!()
+            };
+            if mode == "outside" {
+                insert.p.x = 100000.;
+            }
+            if mode == "clipped" {
+                insert.clipping=Some(serde_json::from_value(json!({"boundary":[{"x":100.,"y":100.},{"x":101.,"y":100.},{"x":101.,"y":101.},{"x":100.,"y":101.}]})).unwrap());
+            }
+            let doc = Document::from_snapshot_v2(snapshot).unwrap();
+            let before = doc.to_snapshot_v2();
+            let result = book_pdf(&doc, &[], "kabul", "2026-11-04");
+            let code = format!("block_{kind}_field_stale");
+            if mode == "visible" {
+                let error = result.expect_err(&code);
+                assert_eq!(error.code, code, "{kind}: {error:?}");
+                assert!(error.message.contains("Alanlı iç") && error.message.contains("Eski"));
+                assert_eq!(
+                    kentos_plot::preview::page(&doc, "kat-plani", "kabul", "2026-11-04", None, 96)
+                        .err()
+                        .unwrap()
+                        .code,
+                    code
+                );
+            } else {
+                let made = result.unwrap_or_else(|e| panic!("{kind}/{mode}: {e:?}"));
+                assert!(!made.findings.iter().any(|f| f.code == code));
+            }
+            assert_eq!(doc.to_snapshot_v2(), before);
+        }
+    }
+}

@@ -222,6 +222,7 @@ fn run(
         cut: false,
     };
     let mut edges = Vec::new();
+    let mut annotations = annotations::Context::default();
     for uid in ids {
         if !budget.tick(&mut stopped)? {
             break;
@@ -239,10 +240,11 @@ fn run(
             hatch(doc, uid, h, &mut out, limit, &mut budget, &mut stopped)?;
         }
         if check_group(input, InspectionGroup::Annotations) {
-            for finding in annotations::findings(doc, uid, e) {
-                if !budget.tick(&mut stopped)? { break; }
-                push(&mut out, finding, limit);
-            }
+            if !annotations.visit(doc,uid,e,input.include_hidden, |finding| {
+                if !budget.tick(&mut stopped)? {return Ok(false);}
+                if let Some(finding) = finding {push(&mut out,finding,limit);}
+                Ok(true)
+            })? {break;}
             if let Entity::Dimension(d) = e {
                 let read = crate::dimensions_query::read(&kentos_project::format::Format::of(doc.settings()), uid, d);
                 if read.measured.is_finite() { out.dimensions.push(read); }

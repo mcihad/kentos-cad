@@ -35,8 +35,119 @@ pub(super) fn finding(
     }
 }
 
-/// Bounded by a dimension's references or a leader's 64 arms. Callers retain result/work caps.
+/// A read-only convenience reader. Interactive queries use the cancellable context below.
 pub fn findings(doc: &Document, uid: Uuid, e: &Entity) -> Vec<InspectionFinding> {
+    let mut out = Vec::new();
+    let _: Result<bool, std::convert::Infallible> =
+        Context::default().visit(doc, uid, e, false, |f| {
+            out.extend(f);
+            Ok(true)
+        });
+    out
+}
+
+/// One immutable inspection reuses the definition library across all inserts.
+#[derive(Default)]
+pub(super) struct Context {
+    blocks: Option<kentos_geometry_core::block::Blocks>,
+}
+impl Context {
+    /// `None` lets the caller enforce its work/cancellation budget even on clean pieces.
+    pub fn visit<E>(
+        &mut self,
+        doc: &Document,
+        uid: Uuid,
+        e: &Entity,
+        include_hidden: bool,
+        mut visit: impl FnMut(Option<InspectionFinding>) -> Result<bool, E>,
+    ) -> Result<bool, E> {
+        if !visit(None)? {
+            return Ok(false);
+        }
+        for finding in own_findings(doc, uid, e) {
+            if !visit(Some(finding))? {
+                return Ok(false);
+            }
+        }
+        if matches!(e, Entity::Insert(_)) {
+            if !visit(None)? {
+                return Ok(false);
+            }
+            let blocks = self
+                .blocks
+                .get_or_insert_with(|| crate::blocks::core_blocks(doc.blocks()));
+            return blocks.try_visit_annotations(&crate::geometry::shape(e), |piece| {
+                let Some(piece) = piece else {
+                    return visit(None);
+                };
+                let Some(origin) = &piece.annotation_origin else {
+                    return Ok(true);
+                };
+                if !include_hidden
+                    && !piece
+                        .gates
+                        .iter()
+                        .all(|layer| doc.layers().is_visible(layer))
+                {
+                    return Ok(true);
+                }
+                for finding in piece_findings(doc, uid, origin, &piece.shape) {
+                    if !visit(Some(finding))? {
+                        return Ok(false);
+                    }
+                }
+                Ok(true)
+            });
+        }
+        Ok(true)
+    }
+}
+
+/// The renderer already resolved transforms, dynamic states and clipping.
+/// An insert owns the finding; its anonymous leaf never gets a fake UUID.
+pub fn piece_findings(
+    doc: &Document,
+    owner: Uuid,
+    origin: &kentos_geometry_core::block::AnnotationOrigin,
+    shape: &kentos_geometry_core::entity::Shape,
+) -> Vec<InspectionFinding> {
+    let invalid = || {
+        let b = kentos_geometry_core::entity::entity_bounds(shape);
+        finding(owner,&[],"block_field_unverified",InspectionSeverity::Error,
+            vec![Vec2{x:b.min_x+(b.max_x-b.min_x)*0.5,y:b.min_y+(b.max_y-b.min_y)*0.5}],
+            "Blok parçasının yazı/alan kaynağı doğrulanamadı; saklanan değer güncel kabul edilemez.".into(),
+            "Blok tanımını ve kaynağını inceleyin; doğrulanmadan çıktı teslim etmeyin.")
+    };
+    let Some(definition) =
+        kentos_commands::BlockId::parse(&origin.definition).and_then(|id| doc.block(id))
+    else {
+        return vec![invalid()];
+    };
+    let Some(original) = definition.entities.get(origin.entity) else {
+        return vec![invalid()];
+    };
+    let Some(placed) = crate::geometry::with_shape(original, shape.clone()) else {
+        return vec![invalid()];
+    };
+    let mut out = match &placed {
+        Entity::Text(t) => super::texts::placed_findings(doc, owner, t),
+        Entity::Table(t) => super::texts::table_findings(doc, owner, t),
+        _ => return vec![invalid()],
+    };
+    for f in &mut out {
+        f.code = format!("block_{}", f.code);
+        f.message = format!(
+            "“{}” bloğu · {}. parça · {}",
+            definition.name,
+            origin.entity + 1,
+            f.message
+        );
+        f.repair = "Blok tanımındaki yazıyı/hücreyi ve gerçek alan kaynaklarını inceleyin; tanımı açıkça düzenleyip yeniden denetleyin. Yerleştirme patlatılmaz veya sessizce değiştirilmez.".into();
+    }
+    out
+}
+
+fn own_findings(doc: &Document, uid: Uuid, e: &Entity) -> Vec<InspectionFinding> {
     let mut out = Vec::new();
     match e {
         Entity::Text(t) => out.extend(super::texts::findings(doc, uid, t)),

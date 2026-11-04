@@ -128,7 +128,16 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
                 underlay: kentos_formats::blocks::core_underlay(b),
                 id: b.id.to_text(),
                 base: kentos_geometry_core::Vec2::new(b.base.x, b.base.y),
-                entities: b.entities.iter().map(core_entity).collect(),
+                entities: b.entities.iter().enumerate().map(|(index, entity)| {
+                    let mut core = core_entity(entity);
+                    // Internal provenance only; the authoritative fields stay in
+                    // the immutable contract definition, never in render geometry.
+                    if matches!(entity, Entity::Text(_))
+                        || matches!(entity, Entity::Table(t) if !t.fields.is_empty()) {
+                        core.rest.push(("_annotationIndex".into(), Json::Num(index as f64)));
+                    }
+                    core
+                }).collect(),
                 attributes: b
                     .attributes
                     .iter()

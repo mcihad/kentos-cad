@@ -1900,6 +1900,7 @@ impl Spatial {
             gates: Vec::new(),
             stroke: Default::default(),
             attribute: None,
+            annotation_origin: None,
         })
     }
 
