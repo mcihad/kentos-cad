@@ -1,6 +1,6 @@
 # 0939 — Koridorun uyarlanır örneklenmesi: düşey kiriş yüksekliği ve ölçülerek sıklaştırma
 
-Tarih: 2026-11-04. Durum: kabul (Y33.1 çekirdek, Y33.2 komut ve kayıt; Y33.3 pencere). Kapsam ROAD-COR-08, ROAD-COR-09.
+Tarih: 2026-11-04. Durum: kabul (Y33.1 çekirdek, Y33.2 komut ve kayıt, Y33.3 pencere). Kapsam ROAD-COR-08, ROAD-COR-09.
 
 ## Sorun
 
@@ -164,6 +164,27 @@ aynı sonucu verir.
 - Kesitin kodlarının değiştiği 3 yer en kısa adımda bulundu.
 - Yan koridorda (50 m aliyman, kot 0,05 m) en büyük plan sapması 3,351 m'den 0,377 m'ye indi.
 
+### §5 Pencere (Y33.3)
+
+Koridor penceresinde örneklemenin altında ikinci bir satır var: Düşey kiriş, Plan sapması, Kot sapması, En kısa adım.
+
+- **Denetimi açmak:** en kısa adım yazılınca denetim istenmiş olur. Tolerans yazılıp en kısa adım boş bırakılırsa pencere
+  "Kesitleri denetlemek için en kısa adımı da yazın." der. Tolerans uydurulmaz.
+- **Plan çizimi:** her kesitin enine çizgisini en uzak iki noktası arasında çizer. Eski kesitler soluk, denetimin
+  eklediği kesitler mordur; sıklaştırmanın nerede olduğu bir bakışta görünür.
+- **Özet cümlesi:** ölçülen ara kesit sayısını, eklenen km'leri, plan ve kot sapmasının önce→sonra en büyüğünü ve bulunan
+  kesit değişimlerini söyler.
+- **Örnek projede:** mor çizgiler en çok şevin genişliğinin değiştiği yerlerde ve kurpta toplandı; düz ve şevi
+  değişmeyen kesimde yalnız bir tane var.
+
+Bekçiler:
+
+- `corridor_window_tests::the_window_checks_the_sampling_as_the_shared_case_does`: pencere ortak durumla aynı sayıları
+  bulur ve kaydeder.
+- `a_tolerance_without_the_least_step_says_what_to_type`.
+
+Resimler `.run/gui-evidence/yol-y33/` altındadır.
+
 ## Ortak durumlar
 
 `fixtures/road/v1/sampling.json`, `scripts/fixtures/road_sampling_cases.py` tarafından KentOS kodu olmadan yazılır.
@@ -186,5 +207,4 @@ Rust (`crates/shared/road/tests/all/sampling.rs`) 1e-9 ile aynısını bulur.
 
 ## Açık
 
-- Pencere (Y33.3).
 - Çember düşey kurbun sınırı için en dik yer, kurbun uçlarından okunur.

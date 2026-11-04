@@ -157,3 +157,100 @@ fn screens() {
     app.zoom_to_bounds(&kentos_commands::Bounds { min_x: 200.0, min_y: 20.0, max_x: 360.0, max_y: 130.0 });
     shot(&mut app, "sevli-plan-yakin");
 }
+
+/// The case corridor checked as `road.corridors.query`'s shared case does it (docs/adr/0939): typed in the window, the
+/// report's sampling is the reference's, and Kaydet writes the check.
+fn checked(app: &mut App) {
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(app, W::Choose(0));
+    send(app, W::Line(1));
+    send(app, W::RemoveRow);
+    send(app, W::Region(0, 0, "100".into()));
+    send(app, W::Region(0, 1, "260".into()));
+    for (k, v) in [(6, "0,05"), (7, "0,05"), (8, "0,5")] {
+        send(app, W::Field(k, v.into()));
+    }
+}
+
+#[test]
+fn the_window_checks_the_sampling_as_the_shared_case_does() {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.corridors.query.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Denetim: plan ve kot birlikte, sık aralıkta").expect("the case");
+    let want = &case["steps"][0]["result"]["output"]["corridors"][0]["sampling"];
+    let mut app = app();
+    checked(&mut app);
+    let w = app.corridor_window.as_ref().expect("open");
+    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
+    let got = rep.sampling.as_ref().expect("checked");
+    assert_eq!((got.measured, got.added, got.changes), (
+        want["measured"].as_u64().unwrap() as u32,
+        want["added"].as_u64().unwrap() as u32,
+        want["changes"].as_u64().unwrap() as u32,
+    ));
+    let close = |a: f64, b: &serde_json::Value| (a - b.as_f64().unwrap()).abs() < 1e-6;
+    assert!(close(got.before.plan, &want["before"]["plan"]) && close(got.after.height, &want["after"]["height"]), "{got:?}");
+    assert!(rep.stations.iter().any(|s| s.why == "refine"));
+    send(&mut app, W::Save);
+    let r = model(&mut app).road_corridors()[0].refine.clone().expect("saved");
+    assert_eq!((r.plan, r.height, r.least), (Some(0.05), Some(0.05), 0.5));
+}
+
+#[test]
+fn a_tolerance_without_the_least_step_says_what_to_type() {
+    let mut app = app();
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Field(7, "0,05".into()));
+    let w = app.corridor_window.as_ref().expect("open");
+    assert_eq!(w.preview.why.as_deref(), Some("Kesitleri denetlemek için en kısa adımı da yazın."));
+}
+
+/// Y33.3 (docs/adr/0939): the check typed in the window, its stations added in purple on the plan, wide and narrow,
+/// light and dark, full screen; `.run/gui-evidence/yol-y33/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib corridor_window_tests::screens_sampling -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_sampling() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    use kentos_ui::widget::sizable::sizes;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y33");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name, full) in [
+        ("light", Size::new(1440.0, 900.0), "acik", false),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar", false),
+        ("light", Size::new(1920.0, 1080.0), "tam-ekran", true),
+    ] {
+        for step in ["once", "denetim"] {
+            if full {
+                sizes::set(crate::corridor_window::TITLE, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+            } else {
+                sizes::forget(crate::corridor_window::TITLE);
+            }
+            let mut app = app();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("corridor"));
+            checked(&mut app);
+            if step == "once" {
+                send(&mut app, W::Field(8, String::new()));
+                send(&mut app, W::Field(6, String::new()));
+                send(&mut app, W::Field(7, String::new()));
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("y33-{step}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+    sizes::forget(crate::corridor_window::TITLE);
+}

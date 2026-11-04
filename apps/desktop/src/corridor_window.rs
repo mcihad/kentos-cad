@@ -9,6 +9,7 @@
 //! ┌ Koridor ────────────────────────────────────────────────────────────────────────────────────┐
 //! │ Koridorlar          │ Ad [Ana koridor] Aks [▾] Boykesit [▾] Yüzey [▾] Dever [▾]              │
 //! │ ● Ana koridor       │ Sol [30] Sağ [30] Aliyman [25] Kurp [10] Sapma [ ] ☑ profil ☐ kritik  │
+//! │                     │ Düşey kiriş [ ] Plan sapması [0,05] Kot sapması [0,05] En kısa adım [0,5] │
 //! │ [Yeni koridor]      │ ┌───────────────────────────────────────────────────────────────────┐ │
 //! │                     │ │  plan: top surface, feature lines, stretches not solved            │ │
 //! │                     │ └───────────────────────────────────────────────────────────────────┘ │
@@ -21,6 +22,8 @@
 //! The window edits a copy of the corridors; Kaydet writes what changed through `road.corridors.edit` (removes, then
 //! sets), each one undo step, and closes. Aksa yeniden bağla rebinds a saved, stale one; Şevli plan çiz draws a saved
 //! corridor's slope plan (`road.corridors.draw`). The intervals and the regions are the user's: nothing is filled in.
+//! The sampling check (docs/adr/0939) is asked by writing its least step: the plan draws each section across, the
+//! ones the check added in purple, and a sentence says what was measured and the largest strays before and after.
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
@@ -898,6 +901,30 @@ impl canvas::Program<Message> for Plan<'_> {
             });
             frame.stroke(&line, Stroke::default().with_color(color).with_width(width));
         }
+        // The sections across, each from its farthest point on one side to the other's: the stations the check added
+        // stronger (docs/adr/0939), the others faint, so where the corridor was densified shows at a glance.
+        let mut across: std::collections::BTreeMap<u64, Vec<[f64; 2]>> = std::collections::BTreeMap::new();
+        for f in &rep.features {
+            for p in &f.points {
+                across.entry(p[0].to_bits()).or_default().push([p[1], p[2]]);
+            }
+        }
+        let refined: std::collections::BTreeSet<u64> =
+            rep.stations.iter().filter(|s| s.why == "refine").map(|s| s.station.to_bits()).collect();
+        for (key, pts) in &across {
+            let mut far = (0.0, pts[0], pts[0]);
+            for (i, a) in pts.iter().enumerate() {
+                for b in &pts[i + 1..] {
+                    let d = (a[0] - b[0]).hypot(a[1] - b[1]);
+                    if d > far.0 {
+                        far = (d, *a, *b);
+                    }
+                }
+            }
+            let (color, width) = if refined.contains(key) { (REFINED, 1.2) } else { (Color { a: 0.35, ..t.muted }, 0.6) };
+            let line = Path::line(at(far.1[0], far.1[1]), at(far.2[0], far.2[1]));
+            frame.stroke(&line, Stroke::default().with_color(color).with_width(width));
+        }
         // The stretches not solved, over the axis.
         let orange = Color::from_rgb8(0xea, 0x58, 0x0c);
         if let Some(axis) = rep.features.iter().find(|f| f.code == "axis") {
@@ -913,16 +940,23 @@ impl canvas::Program<Message> for Plan<'_> {
     }
 }
 
+/// The colour of the sections the sampling check added (docs/adr/0939).
+const REFINED: Color = Color::from_rgb8(0x7c, 0x3a, 0xed);
+
 /// The sampling check in words (docs/adr/0939): what was measured and added, the largest strays before and after.
 fn sampling_words(sm: &kentos_commands::CorridorSampling) -> String {
-    let m = |v: f64| format!("{} m", comma(v, 3));
-    let stray = |s: &kentos_commands::CorridorStray| format!("plan {} · kot {}", m(s.plan), m(s.height));
-    let changes = if sm.changes > 0 { format!(" · {} kesit değişimi en kısa adımda bulundu", sm.changes) } else { String::new() };
+    let m = |v: f64| comma(v, 3);
+    let changes = match sm.changes {
+        0 => String::new(),
+        n => format!(" Kesitin değiştiği {n} yer en kısa adımda bulundu."),
+    };
     format!(
-        "Denetim: {} ara kesit ölçüldü, {} km eklendi · en büyük sapma önce {} → sonra {}{changes}",
+        "Örnekleme denetimi: {} ara kesit ölçüldü, {} km eklendi (planda mor). En büyük sapma: plan {} → {} m, kot {} → {} m.{changes}",
         sm.measured,
         sm.added,
-        stray(&sm.before),
-        stray(&sm.after)
+        m(sm.before.plan),
+        m(sm.after.plan),
+        m(sm.before.height),
+        m(sm.after.height),
     )
 }
