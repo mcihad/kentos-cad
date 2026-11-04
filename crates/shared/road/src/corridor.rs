@@ -32,6 +32,10 @@ pub enum Why {
     Curve,
     /// A multiple of the tangent interval.
     Interval,
+    /// A division of a vertical curve by its chord height (docs/adr/0939 §1).
+    Vertical,
+    /// A station added where the section between two stations strays from their straight join (docs/adr/0939 §2).
+    Refine,
 }
 
 /// A sampled station and why.
@@ -394,6 +398,21 @@ pub fn strip(a: &[[f64; 3]], b: &[[f64; 3]]) -> Vec<[usize; 3]> {
 }
 
 /// The feature lines, the top surface and the stretches not solved of a corridor's regions.
+/// A cross's coded points (x, y, z) as its feature lines take them: the axis, then each side's points outward; none
+/// where the cross has no section.
+pub fn coded_points(t: &Template, cross: &Cross) -> Option<Vec<(String, [f64; 3])>> {
+    let sec = cross.section.as_ref()?;
+    let at = place(&cross.line, 0.0);
+    let mut out = vec![("axis".to_owned(), [at[0], at[1], sec.axis])];
+    for (side, b, right) in [(&t.left, &sec.left, false), (&t.right, &sec.right, true)] {
+        for (code, o, z) in coded(side, b, right) {
+            let xy = place(&cross.line, o);
+            out.push((code, [xy[0], xy[1], z]));
+        }
+    }
+    Some(out)
+}
+
 pub fn assemble(regions: &[RegionCrosses]) -> Built {
     let mut built = Built::default();
     for (ri, region) in regions.iter().enumerate() {
@@ -403,17 +422,8 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
         let mut open: Vec<Feature> = Vec::new();
         for cross in &region.crosses {
             let s = cross.line.station;
-            let mut here: Vec<(String, [f64; 4])> = Vec::new();
-            if let Some(sec) = &cross.section {
-                let at = place(&cross.line, 0.0);
-                here.push(("axis".into(), [s, at[0], at[1], sec.axis]));
-                for (side, b, right) in [(&t.left, &sec.left, false), (&t.right, &sec.right, true)] {
-                    for (code, o, z) in coded(side, b, right) {
-                        let xy = place(&cross.line, o);
-                        here.push((code, [s, xy[0], xy[1], z]));
-                    }
-                }
-            }
+            let mut here: Vec<(String, [f64; 4])> =
+                coded_points(t, cross).unwrap_or_default().into_iter().map(|(c, p)| (c, [s, p[0], p[1], p[2]])).collect();
             let mut next = Vec::new();
             for f in open.drain(..) {
                 match here.iter().position(|h| h.0 == f.code) {

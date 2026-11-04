@@ -1,0 +1,3959 @@
+{
+ "verticals": [
+  {
+   "tolerance": 0.05,
+   "bend": 0.0004,
+   "expected": 31.622776601683793
+  },
+  {
+   "tolerance": 0.1,
+   "bend": 0.0004,
+   "expected": 44.721359549995796
+  },
+  {
+   "tolerance": 0.01,
+   "bend": 0.0003333333333333333,
+   "expected": 15.491933384829668
+  },
+  {
+   "tolerance": 0.05,
+   "bend": 0.0,
+   "expected": null
+  },
+  {
+   "tolerance": 0.02,
+   "bend": -0.001,
+   "expected": 12.649110640673518
+  }
+ ],
+ "divisions": [
+  {
+   "name": "Tepe parabolü L 120, A %6: 0,05 m",
+   "pieces": [
+    {
+     "kind": "grade",
+     "s0": 0,
+     "s1": 100,
+     "z0": 100.0,
+     "g": 0.01
+    },
+    {
+     "kind": "parabola",
+     "s0": 100,
+     "s1": 220,
+     "z0": 100.0,
+     "g0": 0.02,
+     "r": -0.0005
+    },
+    {
+     "kind": "grade",
+     "s0": 220,
+     "s1": 400,
+     "z0": 100.0,
+     "g": 0.01
+    }
+   ],
+   "tolerance": 0.05,
+   "region": [
+    0,
+    400
+   ],
+   "expected": [
+    124.0,
+    148.0,
+    172.0,
+    196.0
+   ]
+  },
+  {
+   "name": "Aynı kurp, 0,01 m",
+   "pieces": [
+    {
+     "kind": "parabola",
+     "s0": 100,
+     "s1": 220,
+     "z0": 100.0,
+     "g0": 0.02,
+     "r": -0.0005
+    }
+   ],
+   "tolerance": 0.01,
+   "region": [
+    0,
+    400
+   ],
+   "expected": [
+    112.0,
+    124.0,
+    136.0,
+    148.0,
+    160.0,
+    172.0,
+    184.0,
+    196.0,
+    208.0
+   ]
+  },
+  {
+   "name": "Bölge kurbun ortasında biter",
+   "pieces": [
+    {
+     "kind": "parabola",
+     "s0": 100,
+     "s1": 220,
+     "z0": 100.0,
+     "g0": 0.02,
+     "r": -0.0005
+    }
+   ],
+   "tolerance": 0.01,
+   "region": [
+    0,
+    160
+   ],
+   "expected": [
+    112.0,
+    124.0,
+    136.0,
+    148.0
+   ]
+  },
+  {
+   "name": "Çok yassı kurp: tek adım yeter",
+   "pieces": [
+    {
+     "kind": "parabola",
+     "s0": 0,
+     "s1": 50,
+     "z0": 100.0,
+     "g0": 0.02,
+     "r": 1e-05
+    }
+   ],
+   "tolerance": 0.05,
+   "region": [
+    0,
+    50
+   ],
+   "expected": []
+  },
+  {
+   "name": "Asimetrik: iki kol kendi eğriliğiyle",
+   "pieces": [
+    {
+     "kind": "parabola",
+     "s0": 100,
+     "s1": 160,
+     "z0": 100.0,
+     "g0": 0.02,
+     "r": 0.0008
+    },
+    {
+     "kind": "parabola",
+     "s0": 160,
+     "s1": 260,
+     "z0": 100.0,
+     "g0": 0.02,
+     "r": 0.000288
+    }
+   ],
+   "tolerance": 0.02,
+   "region": [
+    0,
+    300
+   ],
+   "expected": [
+    112.0,
+    124.0,
+    136.0,
+    148.0,
+    180.0,
+    200.0,
+    220.0,
+    240.0
+   ]
+  },
+  {
+   "name": "Çember R 3000, çukur",
+   "pieces": [
+    {
+     "kind": "circle",
+     "s0": 200,
+     "s1": 290,
+     "sc": 245,
+     "zc": 3100.0,
+     "radius": 3000.0,
+     "sag": true
+    }
+   ],
+   "tolerance": 0.02,
+   "region": [
+    0,
+    400
+   ],
+   "expected": [
+    218.0,
+    236.0,
+    254.0,
+    272.0
+   ]
+  },
+  {
+   "name": "Çember R 1500, tepe",
+   "pieces": [
+    {
+     "kind": "circle",
+     "s0": 50,
+     "s1": 110,
+     "sc": 80,
+     "zc": -1400.0,
+     "radius": 1500.0,
+     "sag": false
+    }
+   ],
+   "tolerance": 0.01,
+   "region": [
+    0,
+    400
+   ],
+   "expected": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ]
+  },
+  {
+   "name": "Yalnız eğimler: bölme yok",
+   "pieces": [
+    {
+     "kind": "grade",
+     "s0": 0,
+     "s1": 100,
+     "z0": 100.0,
+     "g": 0.01
+    },
+    {
+     "kind": "grade",
+     "s0": 100,
+     "s1": 300,
+     "z0": 100.0,
+     "g": 0.01
+    }
+   ],
+   "tolerance": 0.01,
+   "region": [
+    0,
+    300
+   ],
+   "expected": []
+  }
+ ],
+ "strays": [
+  {
+   "name": "Doğruda düz yol: sapma yok",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ]
+   },
+   "at": [
+    0.0,
+    10.0,
+    20.0
+   ],
+   "expected": {
+    "plan": 0.0,
+    "planCode": null,
+    "height": 0.0,
+    "heightCode": null,
+    "changed": false
+   }
+  },
+  {
+   "name": "Parabolde kot sapması c·h²/8",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.0004
+   },
+   "at": [
+    0.0,
+    25.0,
+    50.0
+   ],
+   "expected": {
+    "plan": 0.0,
+    "planCode": null,
+    "height": 0.125,
+    "heightCode": "axis",
+    "changed": false
+   }
+  },
+  {
+   "name": "Çemberde dış kenarın kirişten uzaklığı",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "radius": 120.0
+   },
+   "at": [
+    0.0,
+    15.0,
+    30.0
+   ],
+   "expected": {
+    "plan": 0.9830939291045364,
+    "planCode": "right",
+    "height": 0.0,
+    "heightCode": null,
+    "changed": false
+   }
+  },
+  {
+   "name": "Kesitsiz orta: değişti",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "none": [
+     [
+      9.0,
+      11.0
+     ]
+    ]
+   },
+   "at": [
+    0.0,
+    10.0,
+    20.0
+   ],
+   "expected": {
+    "plan": 0.0,
+    "planCode": null,
+    "height": 0.0,
+    "heightCode": null,
+    "changed": true
+   }
+  },
+  {
+   "name": "Üçü de kesitsiz: değişmedi",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "none": [
+     [
+      -1.0,
+      30.0
+     ]
+    ]
+   },
+   "at": [
+    0.0,
+    10.0,
+    20.0
+   ],
+   "expected": {
+    "plan": 0.0,
+    "planCode": null,
+    "height": 0.0,
+    "heightCode": null,
+    "changed": false
+   }
+  },
+  {
+   "name": "Hendek ortada başlıyor: değişti",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "ditch",
+      "offset": 8.0,
+      "dz": -0.8,
+      "from": 7.0
+     }
+    ]
+   },
+   "at": [
+    0.0,
+    10.0,
+    20.0
+   ],
+   "expected": {
+    "plan": 0.0,
+    "planCode": null,
+    "height": 0.0,
+    "heightCode": null,
+    "changed": true
+   }
+  },
+  {
+   "name": "Ortanın izdüşümü kirişin dışında: uca kırpılır",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     }
+    ],
+    "radius": 4.0
+   },
+   "at": [
+    0.0,
+    6.0,
+    12.0
+   ],
+   "expected": {
+    "plan": 3.7170511933291888,
+    "planCode": "axis",
+    "height": 0.0,
+    "heightCode": null,
+    "changed": false
+   }
+  }
+ ],
+ "cases": [
+  {
+   "name": "Doğruda düz yol: hiçbir şey eklenmez",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ]
+   },
+   "stations": [
+    0.0,
+    25.0,
+    50.0
+   ],
+   "tolerance": {
+    "plan": 0.02,
+    "height": 0.02,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Parabol: c·h²/8 toleransın altına inene dek",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.0004
+   },
+   "stations": [
+    0.0,
+    50.0,
+    100.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.02,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     12.5,
+     25.0,
+     37.5,
+     62.5,
+     75.0,
+     87.5
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 50.0,
+      "to": 100.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 12.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 12.5,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 37.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.5,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 50.0,
+      "to": 62.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 62.5,
+      "to": 75.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 75.0,
+      "to": 87.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 87.5,
+      "to": 100.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0078125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Parabol: tolerans yalnız planda, kot denetlenmez",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.0004
+   },
+   "stations": [
+    0.0,
+    50.0,
+    100.0
+   ],
+   "tolerance": {
+    "plan": 0.02,
+    "height": null,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 50.0,
+      "to": 100.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 50.0,
+      "to": 100.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.125,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Çember R 120: dış kenarın sapması",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "radius": 120.0
+   },
+   "stations": [
+    0.0,
+    25.0,
+    50.0
+   ],
+   "tolerance": {
+    "plan": 0.05,
+    "height": null,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     6.25,
+     12.5,
+     18.75,
+     31.25,
+     37.5,
+     43.75
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.6829758512830948,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 25.0,
+      "to": 50.0,
+      "plan": 0.6829758512830996,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 6.25,
+      "plan": 0.04272219488958093,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 6.25,
+      "to": 12.5,
+      "plan": 0.042722194889574745,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 12.5,
+      "to": 18.75,
+      "plan": 0.04272219488956711,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 18.75,
+      "to": 25.0,
+      "plan": 0.0427221948895756,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 31.25,
+      "plan": 0.04272219488957316,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 31.25,
+      "to": 37.5,
+      "plan": 0.04272219488957172,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.5,
+      "to": 43.75,
+      "plan": 0.04272219488957249,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 43.75,
+      "to": 50.0,
+      "plan": 0.042722194889567654,
+      "planCode": "right",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Çember R 120: eksen yalnız",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     }
+    ],
+    "radius": 120.0
+   },
+   "stations": [
+    0.0,
+    25.0,
+    50.0
+   ],
+   "tolerance": {
+    "plan": 0.05,
+    "height": null,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     6.25,
+     12.5,
+     18.75,
+     31.25,
+     37.5,
+     43.75
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.6504531916981859,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 25.0,
+      "to": 50.0,
+      "plan": 0.6504531916981883,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 6.25,
+      "plan": 0.04068780465674372,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 6.25,
+      "to": 12.5,
+      "plan": 0.04068780465673837,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 12.5,
+      "to": 18.75,
+      "plan": 0.040687804656731226,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 18.75,
+      "to": 25.0,
+      "plan": 0.04068780465673848,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 31.25,
+      "plan": 0.04068780465673627,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 31.25,
+      "to": 37.5,
+      "plan": 0.040687804656732364,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.5,
+      "to": 43.75,
+      "plan": 0.04068780465673536,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 43.75,
+      "to": 50.0,
+      "plan": 0.04068780465673114,
+      "planCode": "axis",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Çember R 30, dar kurp",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "c1l",
+      "offset": -3.5,
+      "dz": -0.07
+     },
+     {
+      "code": "c1r",
+      "offset": 3.5,
+      "dz": -0.07
+     }
+    ],
+    "radius": 30.0
+   },
+   "stations": [
+    0.0,
+    20.0,
+    40.0
+   ],
+   "tolerance": {
+    "plan": 0.01,
+    "height": 0.01,
+    "least": 0.25
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     1.25,
+     2.5,
+     3.75,
+     5.0,
+     6.25,
+     7.5,
+     8.75,
+     10.0,
+     11.25,
+     12.5,
+     13.75,
+     15.0,
+     16.25,
+     17.5,
+     18.75,
+     21.25,
+     22.5,
+     23.75,
+     25.0,
+     26.25,
+     27.5,
+     28.75,
+     30.0,
+     31.25,
+     32.5,
+     33.75,
+     35.0,
+     36.25,
+     37.5,
+     38.75
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 20.0,
+      "plan": 1.8439422984562888,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 20.0,
+      "to": 40.0,
+      "plan": 1.8439422984562877,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 1.25,
+      "plan": 0.007269702334344019,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 1.25,
+      "to": 2.5,
+      "plan": 0.007269702334342273,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 2.5,
+      "to": 3.75,
+      "plan": 0.007269702334343714,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 3.75,
+      "to": 5.0,
+      "plan": 0.007269702334341842,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 5.0,
+      "to": 6.25,
+      "plan": 0.007269702334343816,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 6.25,
+      "to": 7.5,
+      "plan": 0.007269702334344034,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 7.5,
+      "to": 8.75,
+      "plan": 0.0072697023343431325,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 8.75,
+      "to": 10.0,
+      "plan": 0.007269702334343708,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 10.0,
+      "to": 11.25,
+      "plan": 0.0072697023343410785,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 11.25,
+      "to": 12.5,
+      "plan": 0.007269702334344397,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 12.5,
+      "to": 13.75,
+      "plan": 0.007269702334342559,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 13.75,
+      "to": 15.0,
+      "plan": 0.007269702334343118,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 15.0,
+      "to": 16.25,
+      "plan": 0.007269702334341215,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 16.25,
+      "to": 17.5,
+      "plan": 0.0072697023343404514,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 17.5,
+      "to": 18.75,
+      "plan": 0.0072697023343400256,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 18.75,
+      "to": 20.0,
+      "plan": 0.007269702334339882,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.0,
+      "to": 21.25,
+      "plan": 0.007269702334340306,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 21.25,
+      "to": 22.5,
+      "plan": 0.007269702334344693,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 22.5,
+      "to": 23.75,
+      "plan": 0.007269702334347456,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 23.75,
+      "to": 25.0,
+      "plan": 0.007269702334339354,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 26.25,
+      "plan": 0.0072697023343425175,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 26.25,
+      "to": 27.5,
+      "plan": 0.007269702334345282,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 27.5,
+      "to": 28.75,
+      "plan": 0.007269702334343295,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 28.75,
+      "to": 30.0,
+      "plan": 0.007269702334339911,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 30.0,
+      "to": 31.25,
+      "plan": 0.007269702334340819,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 31.25,
+      "to": 32.5,
+      "plan": 0.007269702334340812,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 32.5,
+      "to": 33.75,
+      "plan": 0.007269702334340286,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 33.75,
+      "to": 35.0,
+      "plan": 0.007269702334346316,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 35.0,
+      "to": 36.25,
+      "plan": 0.007269702334343192,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 36.25,
+      "to": 37.5,
+      "plan": 0.0072697023343382934,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.5,
+      "to": 38.75,
+      "plan": 0.007269702334339307,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 38.75,
+      "to": 40.0,
+      "plan": 0.007269702334337639,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Dalgalı arazi λ 30: şev ucu",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "daylight",
+      "offset": 14.0
+     }
+    ],
+    "amplitude": 0.6,
+    "wave": 30.0
+   },
+   "stations": [
+    0.0,
+    25.0,
+    50.0,
+    75.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.05,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     3.125,
+     6.25,
+     9.375,
+     12.5,
+     18.75,
+     21.875,
+     31.25,
+     34.375,
+     37.5,
+     40.625,
+     43.75,
+     53.125,
+     56.25,
+     62.5,
+     65.625,
+     68.75,
+     71.875
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.5598076211353344,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 25.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 1.1196152422706547,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 50.0,
+      "to": 75.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.5598076211353344,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 3.125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.010235250479283309,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 3.125,
+      "to": 6.25,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.026475590792202297,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 6.25,
+      "to": 9.375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.031773746303059625,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 9.375,
+      "to": 12.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.023940024733988707,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 12.5,
+      "to": 18.75,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.016183680976055825,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 18.75,
+      "to": 21.875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.028558152151504146,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 21.875,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.03123008869445698,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 31.25,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.04744815181447848,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 31.25,
+      "to": 34.375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.017690424193645526,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 34.375,
+      "to": 37.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.03015207560969202,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.5,
+      "to": 40.625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.03015207560969202,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 40.625,
+      "to": 43.75,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.017690424193645526,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 43.75,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.04744815181447848,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 50.0,
+      "to": 53.125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.03123008869445698,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 53.125,
+      "to": 56.25,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.028558152151504146,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 56.25,
+      "to": 62.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.016183680976055825,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 62.5,
+      "to": 65.625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.023940024733988707,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 65.625,
+      "to": 68.75,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.031773746303059625,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 68.75,
+      "to": 71.875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.026475590792188086,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 71.875,
+      "to": 75.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.010235250479283309,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Dalgalı arazi: en kısa adım 2 m'de kalır",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "amplitude": 0.6,
+    "wave": 7.0
+   },
+   "stations": [
+    0.0,
+    20.0,
+    40.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.01,
+    "least": 2.0
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     2.5,
+     5.0,
+     7.5,
+     10.0,
+     12.5,
+     15.0,
+     22.5,
+     25.0,
+     27.5,
+     30.0
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 20.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.4948796882109434,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 20.0,
+      "to": 40.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 1.1119845657040486,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 15.0,
+      "to": 20.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 30.0,
+      "to": 40.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": [
+     {
+      "from": 0.0,
+      "to": 5.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.761577263135365,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false,
+      "why": "least"
+     },
+     {
+      "from": 5.0,
+      "to": 10.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.4226434953898064,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false,
+      "why": "least"
+     },
+     {
+      "from": 10.0,
+      "to": 15.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.9496713137847621,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false,
+      "why": "least"
+     },
+     {
+      "from": 20.0,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.9496713137847621,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false,
+      "why": "least"
+     },
+     {
+      "from": 25.0,
+      "to": 30.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.4226434953898064,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false,
+      "why": "least"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Hendek 37,2'de başlıyor: değişim en kısa adımda bulunur",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "ditch",
+      "offset": 8.0,
+      "dz": -0.8,
+      "from": 37.2
+     }
+    ]
+   },
+   "stations": [
+    0.0,
+    25.0,
+    50.0
+   ],
+   "tolerance": {
+    "plan": 0.05,
+    "height": 0.05,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     31.25,
+     34.375,
+     35.9375,
+     36.71875,
+     37.5
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": true,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.0,
+      "to": 31.25,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 31.25,
+      "to": 34.375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 34.375,
+      "to": 35.9375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.5,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": [
+     {
+      "from": 35.9375,
+      "to": 37.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": true,
+      "within": false,
+      "why": "least"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Kesitsiz aralık 12–14: sınırları bulunur",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "none": [
+     [
+      12.0,
+      14.0
+     ]
+    ]
+   },
+   "stations": [
+    0.0,
+    25.0
+   ],
+   "tolerance": {
+    "plan": 0.05,
+    "height": 0.05,
+    "least": 0.25
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     6.25,
+     9.375,
+     10.9375,
+     11.71875,
+     12.109375,
+     12.5,
+     13.28125,
+     13.671875,
+     14.0625,
+     15.625,
+     18.75
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": true,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 6.25,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 6.25,
+      "to": 9.375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 9.375,
+      "to": 10.9375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 10.9375,
+      "to": 11.71875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 12.5,
+      "to": 13.28125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 14.0625,
+      "to": 15.625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 15.625,
+      "to": 18.75,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 18.75,
+      "to": 25.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": [
+     {
+      "from": 11.71875,
+      "to": 12.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": true,
+      "within": false,
+      "why": "least"
+     },
+     {
+      "from": 13.28125,
+      "to": 14.0625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": true,
+      "within": false,
+      "why": "least"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Bütçe 5 orta: kalanlar bütçeden",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.002
+   },
+   "stations": [
+    0.0,
+    50.0,
+    100.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.001,
+    "least": 0.1
+   },
+   "budget": 5,
+   "expected": {
+    "added": [
+     1.5625,
+     3.125,
+     6.25,
+     12.5,
+     25.0
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.625,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [],
+    "left": [
+     {
+      "from": 0.0,
+      "to": 1.5625,
+      "why": "budget"
+     },
+     {
+      "from": 1.5625,
+      "to": 3.125,
+      "why": "budget"
+     },
+     {
+      "from": 3.125,
+      "to": 6.25,
+      "why": "budget"
+     },
+     {
+      "from": 6.25,
+      "to": 12.5,
+      "why": "budget"
+     },
+     {
+      "from": 12.5,
+      "to": 25.0,
+      "why": "budget"
+     },
+     {
+      "from": 25.0,
+      "to": 50.0,
+      "why": "budget"
+     },
+     {
+      "from": 50.0,
+      "to": 100.0,
+      "why": "budget"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Bütçe 0: hiçbir şey ölçülmez",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.002
+   },
+   "stations": [
+    0.0,
+    50.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.001,
+    "least": 0.1
+   },
+   "budget": 0,
+   "expected": {
+    "added": [],
+    "before": [],
+    "after": [],
+    "left": [
+     {
+      "from": 0.0,
+      "to": 50.0,
+      "why": "budget"
+     }
+    ]
+   }
+  },
+  {
+   "name": "İki en kısa adımdan kısa aralık ölçülmez",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.002
+   },
+   "stations": [
+    0.0,
+    0.9,
+    50.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.001,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     2.434375,
+     3.96875,
+     5.503125000000001,
+     7.0375000000000005,
+     8.571875,
+     10.106250000000001,
+     11.640625,
+     13.175,
+     14.709375,
+     16.24375,
+     17.778125,
+     19.3125,
+     20.846875,
+     22.38125,
+     23.915625,
+     25.45,
+     26.984375,
+     28.518749999999997,
+     30.053124999999998,
+     31.5875,
+     33.121875,
+     34.65625,
+     36.190625,
+     37.725,
+     39.259375000000006,
+     40.79375,
+     42.328125,
+     43.8625,
+     45.396874999999994,
+     46.93125,
+     48.465625
+    ],
+    "before": [
+     {
+      "from": 0.9,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.6027025000000066,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.9,
+      "to": 2.434375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 2.434375,
+      "to": 3.96875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 3.96875,
+      "to": 5.503125000000001,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 5.503125000000001,
+      "to": 7.0375000000000005,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 7.0375000000000005,
+      "to": 8.571875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 8.571875,
+      "to": 10.106250000000001,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 10.106250000000001,
+      "to": 11.640625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 11.640625,
+      "to": 13.175,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 13.175,
+      "to": 14.709375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 14.709375,
+      "to": 16.24375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 16.24375,
+      "to": 17.778125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 17.778125,
+      "to": 19.3125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 19.3125,
+      "to": 20.846875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.846875,
+      "to": 22.38125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 22.38125,
+      "to": 23.915625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 23.915625,
+      "to": 25.45,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 25.45,
+      "to": 26.984375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 26.984375,
+      "to": 28.518749999999997,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 28.518749999999997,
+      "to": 30.053124999999998,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 30.053124999999998,
+      "to": 31.5875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 31.5875,
+      "to": 33.121875,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 33.121875,
+      "to": 34.65625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 34.65625,
+      "to": 36.190625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 36.190625,
+      "to": 37.725,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.725,
+      "to": 39.259375000000006,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 39.259375000000006,
+      "to": 40.79375,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 40.79375,
+      "to": 42.328125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 42.328125,
+      "to": 43.8625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 43.8625,
+      "to": 45.396874999999994,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 45.396874999999994,
+      "to": 46.93125,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 46.93125,
+      "to": 48.465625,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601494424,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 48.465625,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0005885766601636533,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Toleranssız: yalnız biçim değişimi böler",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "ditch",
+      "offset": 8.0,
+      "to": 31.0
+     }
+    ],
+    "bend": 0.002
+   },
+   "stations": [
+    0.0,
+    40.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": null,
+    "least": 1.0
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     20.0,
+     30.0,
+     31.25,
+     32.5,
+     35.0
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 40.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.3999999999999915,
+      "heightCode": "axis",
+      "changed": true,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 20.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.10000000000000853,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.0,
+      "to": 30.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.025000000000005684,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 32.5,
+      "to": 35.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0015625000000056843,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 35.0,
+      "to": 40.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.006249999999994316,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": [
+     {
+      "from": 30.0,
+      "to": 32.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0015625000000056843,
+      "heightCode": "axis",
+      "changed": true,
+      "within": false,
+      "why": "least"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Eğim ve parabol birlikte: eğim doğruyla birleşir",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "grade": 0.04,
+    "bend": -0.0006
+   },
+   "stations": [
+    0.0,
+    40.0,
+    80.0,
+    120.0
+   ],
+   "tolerance": {
+    "plan": 0.01,
+    "height": 0.03,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     10.0,
+     20.0,
+     30.0,
+     50.0,
+     60.0,
+     100.0,
+     110.0
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 40.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.11999999999999034,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 40.0,
+      "to": 80.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.12000000000001876,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 80.0,
+      "to": 120.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.12000000000000455,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 10.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.00750000000000739,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 10.0,
+      "to": 20.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.007499999999993179,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.0,
+      "to": 30.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.007499999999993179,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 30.0,
+      "to": 40.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.007499999999993179,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 40.0,
+      "to": 50.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.007499999999993179,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 50.0,
+      "to": 60.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.00750000000000739,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 60.0,
+      "to": 80.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.029999999999986926,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 80.0,
+      "to": 100.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.029999999999986926,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 100.0,
+      "to": 110.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.007499999999993179,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 110.0,
+      "to": 120.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.007499999999993179,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Kurp ve tümsek birlikte",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "daylight",
+      "offset": 15.0,
+      "dz": -2.0
+     }
+    ],
+    "radius": 200.0,
+    "amplitude": 0.3,
+    "wave": 40.0
+   },
+   "stations": [
+    0.0,
+    30.0,
+    60.0,
+    90.0
+   ],
+   "tolerance": {
+    "plan": 0.05,
+    "height": 0.05,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     7.5,
+     15.0,
+     22.5,
+     37.5,
+     45.0,
+     52.5,
+     67.5,
+     75.0,
+     82.5
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 30.0,
+      "plan": 0.6044041058754155,
+      "planCode": "daylight",
+      "height": 0.36213203435596597,
+      "heightCode": "left",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 30.0,
+      "to": 60.0,
+      "plan": 0.6044041058754145,
+      "planCode": "daylight",
+      "height": 0.36213203435596597,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 60.0,
+      "to": 90.0,
+      "plan": 0.6044041058754086,
+      "planCode": "daylight",
+      "height": 0.36213203435596597,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 7.5,
+      "plan": 0.037791861547094206,
+      "planCode": "daylight",
+      "height": 0.028089140029180726,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 7.5,
+      "to": 15.0,
+      "plan": 0.03779186154708449,
+      "planCode": "daylight",
+      "height": 0.04958763706629554,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 15.0,
+      "to": 22.5,
+      "plan": 0.0377918615470837,
+      "planCode": "daylight",
+      "height": 0.009863594281625865,
+      "heightCode": "left",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 22.5,
+      "to": 30.0,
+      "plan": 0.03779186154709105,
+      "planCode": "daylight",
+      "height": 0.042038368836003315,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 30.0,
+      "to": 37.5,
+      "plan": 0.037791861547085165,
+      "planCode": "daylight",
+      "height": 0.042038368836003315,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 37.5,
+      "to": 45.0,
+      "plan": 0.03779186154709197,
+      "planCode": "daylight",
+      "height": 0.009863594281625865,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 45.0,
+      "to": 52.5,
+      "plan": 0.03779186154710129,
+      "planCode": "daylight",
+      "height": 0.04958763706629554,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 52.5,
+      "to": 60.0,
+      "plan": 0.03779186154710721,
+      "planCode": "daylight",
+      "height": 0.028089140029180726,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 60.0,
+      "to": 67.5,
+      "plan": 0.03779186154708897,
+      "planCode": "daylight",
+      "height": 0.028089140029180726,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 67.5,
+      "to": 75.0,
+      "plan": 0.03779186154709546,
+      "planCode": "daylight",
+      "height": 0.04958763706629554,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 75.0,
+      "to": 82.5,
+      "plan": 0.03779186154707815,
+      "planCode": "daylight",
+      "height": 0.009863594281625865,
+      "heightCode": "right",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 82.5,
+      "to": 90.0,
+      "plan": 0.037791861547089495,
+      "planCode": "daylight",
+      "height": 0.042038368836003315,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Eşit olmayan aralıklar",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.001
+   },
+   "stations": [
+    0.0,
+    7.0,
+    33.0,
+    34.0,
+    80.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.02,
+    "least": 0.25
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     13.5,
+     20.0,
+     26.5,
+     45.5,
+     57.0,
+     68.5
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 7.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0061249999999972715,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 7.0,
+      "to": 33.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.08450000000000557,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 33.0,
+      "to": 34.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.00012499999999704414,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 34.0,
+      "to": 80.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.2645000000000124,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 7.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0061249999999972715,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 7.0,
+      "to": 13.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.005281250000010118,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 13.5,
+      "to": 20.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.005281250000010118,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.0,
+      "to": 26.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.005281250000010118,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 26.5,
+      "to": 33.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.005281249999995907,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 33.0,
+      "to": 34.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.00012499999999704414,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 34.0,
+      "to": 45.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.016531249999999886,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 45.5,
+      "to": 57.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.016531249999999886,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 57.0,
+      "to": 68.5,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.016531249999985675,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 68.5,
+      "to": 80.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.016531250000014097,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Ters kurp gibi: sol çember, sağ yanda iki kod",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "c1l",
+      "offset": -3.5,
+      "dz": -0.07
+     },
+     {
+      "code": "c1r",
+      "offset": 3.5,
+      "dz": -0.07
+     },
+     {
+      "code": "toe",
+      "offset": 11.0,
+      "dz": -1.5,
+      "from": 0.0,
+      "to": 18.0
+     }
+    ],
+    "radius": 60.0
+   },
+   "stations": [
+    0.0,
+    15.0,
+    30.0
+   ],
+   "tolerance": {
+    "plan": 0.02,
+    "height": 0.02,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     1.875,
+     3.75,
+     5.625,
+     7.5,
+     9.375,
+     11.25,
+     13.125,
+     16.875,
+     17.8125,
+     18.75,
+     20.625,
+     22.5,
+     24.375,
+     26.25,
+     28.125
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 15.0,
+      "plan": 0.5539656267176337,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": false
+     },
+     {
+      "from": 15.0,
+      "to": 30.0,
+      "plan": 0.4954481309376047,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": true,
+      "within": false
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 1.875,
+      "plan": 0.008666815858523295,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 1.875,
+      "to": 3.75,
+      "plan": 0.008666815858528574,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 3.75,
+      "to": 5.625,
+      "plan": 0.008666815858529837,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 5.625,
+      "to": 7.5,
+      "plan": 0.00866681585853059,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 7.5,
+      "to": 9.375,
+      "plan": 0.00866681585853051,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 9.375,
+      "to": 11.25,
+      "plan": 0.00866681585853176,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 11.25,
+      "to": 13.125,
+      "plan": 0.008666815858524949,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 13.125,
+      "to": 15.0,
+      "plan": 0.008666815858527075,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 15.0,
+      "to": 16.875,
+      "plan": 0.008666815858528111,
+      "planCode": "toe",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 18.75,
+      "to": 20.625,
+      "plan": 0.007751307141078221,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.625,
+      "to": 22.5,
+      "plan": 0.007751307141081558,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 22.5,
+      "to": 24.375,
+      "plan": 0.0077513071410712535,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 24.375,
+      "to": 26.25,
+      "plan": 0.007751307141074259,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 26.25,
+      "to": 28.125,
+      "plan": 0.007751307141077663,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 28.125,
+      "to": 30.0,
+      "plan": 0.007751307141074324,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": [
+     {
+      "from": 16.875,
+      "to": 18.75,
+      "plan": 0.007751307141077856,
+      "planCode": "c1r",
+      "height": 0.0,
+      "heightCode": null,
+      "changed": true,
+      "within": false,
+      "why": "least"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Aralık tam iki en kısa adım: bir kez ölçülür",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "bend": 0.01
+   },
+   "stations": [
+    0.0,
+    1.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.0001,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [
+     0.5
+    ],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 1.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0012499999999988631,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false
+     }
+    ],
+    "after": [],
+    "left": [
+     {
+      "from": 0.0,
+      "to": 1.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0012499999999988631,
+      "heightCode": "axis",
+      "changed": false,
+      "within": false,
+      "why": "least"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Gevşek tolerans: ilk ortalar yeter",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "radius": 300.0,
+    "bend": 0.0002
+   },
+   "stations": [
+    0.0,
+    20.0,
+    40.0,
+    60.0
+   ],
+   "tolerance": {
+    "plan": 0.5,
+    "height": 0.5,
+    "least": 0.5
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 20.0,
+      "plan": 0.16998425984224647,
+      "planCode": "right",
+      "height": 0.010000000000005116,
+      "heightCode": "left",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.0,
+      "to": 40.0,
+      "plan": 0.16998425984224216,
+      "planCode": "right",
+      "height": 0.010000000000005116,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 40.0,
+      "to": 60.0,
+      "plan": 0.16998425984222848,
+      "planCode": "right",
+      "height": 0.010000000000005116,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 20.0,
+      "plan": 0.16998425984224647,
+      "planCode": "right",
+      "height": 0.010000000000005116,
+      "heightCode": "left",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 20.0,
+      "to": 40.0,
+      "plan": 0.16998425984224216,
+      "planCode": "right",
+      "height": 0.010000000000005116,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     },
+     {
+      "from": 40.0,
+      "to": 60.0,
+      "plan": 0.16998425984222848,
+      "planCode": "right",
+      "height": 0.010000000000005116,
+      "heightCode": "axis",
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  },
+  {
+   "name": "Dar dalga uçlarda ve ortada sıfır: ölçülen orta onu görmez (sınır)",
+   "family": {
+    "points": [
+     {
+      "code": "axis",
+      "offset": 0.0
+     },
+     {
+      "code": "left",
+      "offset": -6.0,
+      "dz": -0.15
+     },
+     {
+      "code": "right",
+      "offset": 6.0,
+      "dz": -0.15
+     }
+    ],
+    "amplitude": 0.05,
+    "wave": 3.0
+   },
+   "stations": [
+    0.0,
+    12.0
+   ],
+   "tolerance": {
+    "plan": null,
+    "height": 0.001,
+    "least": 0.75
+   },
+   "budget": 1000,
+   "expected": {
+    "added": [],
+    "before": [
+     {
+      "from": 0.0,
+      "to": 12.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "after": [
+     {
+      "from": 0.0,
+      "to": 12.0,
+      "plan": 0.0,
+      "planCode": null,
+      "height": 0.0,
+      "heightCode": null,
+      "changed": false,
+      "within": true
+     }
+    ],
+    "left": []
+   }
+  }
+ ]
+}

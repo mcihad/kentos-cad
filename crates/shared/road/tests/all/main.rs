@@ -22,6 +22,7 @@ mod haul_fleet;
 mod volume;
 mod surfaces;
 mod sources;
+mod sampling;
 mod superelevation;
 mod superelevation_physics;
 mod swept;

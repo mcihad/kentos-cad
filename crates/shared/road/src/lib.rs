@@ -10,6 +10,8 @@
 //!   to the terrain (docs/adr/0903).
 //! - [`corridor`]: an alignment's regions with their templates, the stations they are sampled at, the feature lines
 //!   and the top surface the sections make, and where they are not solved (docs/adr/0905).
+//! - [`sampling`]: how far the straight join of two sections strays from the section between them, the vertical
+//!   curve's chord height step and the stations added until the join is within tolerances (docs/adr/0939).
 //! - [`superelevation`]: the cross slope of each side along an alignment from its curves or from rows, and the
 //!   curves' widening (docs/adr/0904).
 //! - [`volume`]: earthwork volumes, by sections (average end area, prismoidal) and between two surfaces (the
@@ -29,6 +31,7 @@
 pub mod alignment;
 pub mod cloud_ground;
 pub mod corridor;
+pub mod sampling;
 pub mod culvert;
 pub mod grading;
 pub mod cutout;
