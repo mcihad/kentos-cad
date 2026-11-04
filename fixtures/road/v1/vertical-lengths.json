@@ -1,0 +1,233 @@
+{
+ "stopping": [
+  {
+   "speed": 50,
+   "time": 2.5,
+   "decel": 3.4,
+   "grade": 0,
+   "distance": 63.09005083514887
+  },
+  {
+   "speed": 80,
+   "time": 2.5,
+   "decel": 3.4,
+   "grade": 0,
+   "distance": 128.1771968046478
+  },
+  {
+   "speed": 100,
+   "time": 2.5,
+   "decel": 3.4,
+   "grade": 0,
+   "distance": 182.91575889615106
+  },
+  {
+   "speed": 120,
+   "time": 2.5,
+   "decel": 3.4,
+   "grade": 0,
+   "distance": 246.73202614379085
+  },
+  {
+   "speed": 60,
+   "time": 2.0,
+   "decel": 3.4,
+   "grade": 0,
+   "distance": 74.18300653594771
+  },
+  {
+   "speed": 80,
+   "time": 2.5,
+   "decel": 3.4,
+   "grade": 0.04,
+   "distance": 120.66532903845828
+  },
+  {
+   "speed": 80,
+   "time": 2.5,
+   "decel": 3.4,
+   "grade": -0.06,
+   "distance": 143.37512179091883
+  },
+  {
+   "speed": 100,
+   "time": 1.5,
+   "decel": 4.5,
+   "grade": 0,
+   "distance": 127.400548696845
+  },
+  {
+   "speed": 40,
+   "time": 2.5,
+   "decel": 3.4,
+   "grade": -0.3,
+   "distance": 162.5544615732132
+  }
+ ],
+ "crest": [
+  {
+   "a": 4,
+   "sight": 130,
+   "eye": 1.08,
+   "object": 0.6,
+   "length": 95.50155281000757
+  },
+  {
+   "a": 8,
+   "sight": 130,
+   "eye": 1.08,
+   "object": 0.6,
+   "length": 205.47306419836093
+  },
+  {
+   "a": 2,
+   "sight": 130,
+   "eye": 1.08,
+   "object": 0.6,
+   "length": 0.0
+  },
+  {
+   "a": 1,
+   "sight": 185,
+   "eye": 1.08,
+   "object": 0.6,
+   "length": 0.0
+  },
+  {
+   "a": 6,
+   "sight": 185,
+   "eye": 1.08,
+   "object": 0.6,
+   "length": 312.08501281903415
+  },
+  {
+   "a": 5,
+   "sight": 500,
+   "eye": 1.08,
+   "object": 1.08,
+   "length": 1446.7592592592591
+  },
+  {
+   "a": 10,
+   "sight": 65,
+   "eye": 1.08,
+   "object": 0.6,
+   "length": 64.20062112400302
+  },
+  {
+   "a": 3,
+   "sight": 250,
+   "eye": 1.08,
+   "object": 0.15,
+   "length": 460.6914760016429
+  },
+  {
+   "a": 0.5,
+   "sight": 130,
+   "eye": 1.08,
+   "object": 0.6,
+   "length": 0.0
+  },
+  {
+   "a": 12,
+   "sight": 85,
+   "eye": 1.05,
+   "object": 0.6,
+   "length": 133.90164934370364
+  }
+ ],
+ "headlight": [
+  {
+   "a": 4,
+   "sight": 130,
+   "height": 0.6,
+   "beam": 1.0,
+   "length": 116.5420779665857
+  },
+  {
+   "a": 8,
+   "sight": 85,
+   "height": 0.6,
+   "beam": 1.0,
+   "length": 138.69688629271025
+  },
+  {
+   "a": 2,
+   "sight": 185,
+   "height": 0.6,
+   "beam": 1.0,
+   "length": 0.0
+  },
+  {
+   "a": 1,
+   "sight": 65,
+   "height": 0.6,
+   "beam": 1.0,
+   "length": 0.0
+  },
+  {
+   "a": 6,
+   "sight": 250,
+   "height": 0.75,
+   "beam": 1.0,
+   "length": 366.6573548565869
+  },
+  {
+   "a": 3,
+   "sight": 130,
+   "height": 0.6,
+   "beam": 0.5,
+   "length": 146.15223431855688
+  },
+  {
+   "a": 10,
+   "sight": 50,
+   "height": 0.6,
+   "beam": 1.0,
+   "length": 84.8750463152105
+  }
+ ],
+ "comfort": [
+  {
+   "a": 4,
+   "speed": 80,
+   "accel": 0.3,
+   "length": 65.84362139917695
+  },
+  {
+   "a": 8,
+   "speed": 100,
+   "accel": 0.3,
+   "length": 205.76131687242798
+  },
+  {
+   "a": 2,
+   "speed": 120,
+   "accel": 0.25,
+   "length": 88.88888888888889
+  },
+  {
+   "a": 6,
+   "speed": 50,
+   "accel": 0.5,
+   "length": 23.14814814814815
+  }
+ ],
+ "bisector": [
+  {
+   "a": 4,
+   "external": 0.5,
+   "length": 100.0
+  },
+  {
+   "a": 8,
+   "external": 1.2,
+   "length": 120.0
+  },
+  {
+   "a": 2.5,
+   "external": 0.25,
+   "length": 80.0
+  }
+ ]
+}

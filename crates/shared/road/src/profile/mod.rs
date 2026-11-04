@@ -4,6 +4,7 @@
 pub mod checks;
 pub mod propose;
 pub mod sight;
+pub mod lengths;
 pub mod terrain;
 pub mod trace;
 pub mod vertical;
