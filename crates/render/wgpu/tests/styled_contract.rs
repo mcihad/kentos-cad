@@ -1,7 +1,7 @@
 //! The styled drawing's shared WGSL and its layout contract
 //! (`shaders/wgsl/styled.layout.json`, version 10, docs/STYLE.md §6,
 //! docs/adr/0090): naga, the compiler wgpu runs, parses and validates the
-//! shared module, which the desktop builds as it is (two bind groups: the
+//! shared module and the native long-pattern extension (two bind groups: the
 //! frame with the atlas, then the style; Iced's device takes two); the
 //! uniforms, entry points, pipelines and vertex layouts the desktop builds are
 //! the contract's. The browser side is `scripts/wgsl/browser-check.mjs`.
@@ -113,13 +113,16 @@ fn validate(source: &str) -> naga::Module {
 }
 
 #[test]
-fn the_shared_module_validates_and_the_desktop_builds_it_as_it_is() {
+fn the_shared_and_native_modules_validate_without_changing_browser_bindings() {
     let c = contract();
     assert_eq!(
         (c.format.as_str(), c.version, c.module.as_str()),
         ("kentos.wgsl-layout", 10, "styled")
     );
-    assert_eq!(shader::source(), shader::shared_source());
+    let native = validate(&shader::source());
+    assert_eq!(binding(&native, "dashPage"), Some(naga::ResourceBinding { group: 1, binding: 1 }));
+    assert!(native.global_variables.iter().all(|(_,g)|g.binding.as_ref().is_none_or(|b|b.group<2)));
+    assert!(!shader::shared_source().contains("dashPage"));
     let module = validate(&shader::shared_source());
     for p in &c.pipelines {
         for (name, stage) in [

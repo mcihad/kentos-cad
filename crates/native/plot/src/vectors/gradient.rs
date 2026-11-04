@@ -132,6 +132,7 @@ pub(super) fn bands(t: &[f64], g: &Gradient, bx: f64, by: f64) -> Vec<Shape> {
             color: fill.0.clone(),
             width: SEAM_MM,
             dash: Vec::new(),
+            dash_offset: None,
             cap: LineCap::Butt,
             join: LineJoin::Miter,
         })

@@ -92,6 +92,7 @@ fn twenty_ink_profiles_apply_to_paper_and_map_without_touching_the_source() {
                         color: "#000000".into(),
                         width: 0.25,
                         dash: vec![],
+                        dash_offset: None,
                         cap: LineCap::Round,
                         join: LineJoin::Round,
                     }),

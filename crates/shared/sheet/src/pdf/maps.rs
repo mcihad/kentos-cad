@@ -240,7 +240,7 @@ fn mm(v: f64) -> f64 {
 
 fn stroke_style(page: &mut Page<'_>, s: &MapStroke) {
     let dash: Vec<f64> = s.dash.iter().map(|d| mm(*d)).collect();
-    page.line_style(mm(s.width), &dash, s.cap, s.join);
+    page.line_style_phase(mm(s.width), &dash, mm(s.dash_offset.unwrap_or(0.0)), s.cap, s.join);
 }
 
 fn text(

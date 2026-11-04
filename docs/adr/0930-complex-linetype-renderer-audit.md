@@ -138,3 +138,101 @@ repo dışında `linetype-guard-pdf-failure-visible-gui.png`,
 olumlu çıktı `linetype-supported-guard-gui.pdf`, yukarıdaki deney dizininde.
 
 CAD-ADV-11 açık; ortak tam desen/GPU buffer ve yazı/şekil uygulaması sürüyor.
+
+## İkinci uygulama: tam çizgi/boşluk listesi
+
+`dashes_of`, batch decode, uniform toplamı, CPU coverage ve hatch'in uzak
+origin periyodu artık sekizde kesmez. `uniform::normalized_dashes` tek
+normalizasyon noktasıdır: tek sayılı liste tam iki kez yinelenir. Kısa
+desenler eski sekiz uniform slotunu ve shader fonksiyonunu kullanmayı
+sürdürür. Uzun desenler katman yüklenirken FP32 olarak aynı tarifin
+tamamından hazırlanır; periyot/ink share ve origin fazı önce Float64
+hesaplanır. PDF stroke listesinin tamamı korunur, hatch vektörleştirmesi
+de aynı tam normalizasyonu kullanır.
+
+Native GPU, group 1 binding 1'de read-only storage sayfaları kullanır;
+stroke/hatch'in boş `flags.zw` alanları offset/count taşır. Aynı FP32
+tarif aynı slotu paylaşır, 256 KiB dolunca yeni sayfa açılır. Sayfa seçimi
+batch'tedir; bellek muhasebesine bu veri de katılır. Kamera hareketi yeni
+dash geometrisi veya yeni tarif yüklemesi istemez; mevcut katman/id
+önbelleği korunur. Özel sembolün 4096'yı aşan ham listesi derlemede açık
+hata ile reddedilir, kesilip başarılı sayılmaz. Bu sınır performans
+benchmark'ının veya bütün kötü niyetli iş yükü kabulünün yerine geçmez.
+
+[WGSL storage address space](https://www.w3.org/TR/WGSL/#storage-address-space)
+ve [WebGPU limitleri](https://www.w3.org/TR/webgpu/#dom-supported-limits-maxstoragebufferspershaderstage)
+bu bağlama türünün dayanağıdır. Uygulamada ayrıca mevcut wgpu 27.0.1 ve
+Iced 0.14 compositor kodu kontrol edildi: native default/downlevel
+profilleri sırasıyla 8/4 storage binding ve iki group sağlar. Web ürününün
+ADR 0228 kapsamındaki duraklaması korunur: ortak browser v10 kaynak ve
+bağlamaları değiştirilmedi; Rust `shader::source()` yalnız native ekini
+birleştirir. Naga hem ortak hem native modülü doğrular.
+
+**Doğrulama:** gerçek Apple M5/Metal testinde 12 ve 16 öğeli tarif, 9
+öğenin 18 olarak tam yinelenmesi; stroke ve hatch; pozitif/negatif faz;
+0,5/1/2/8 px/m ölçeklerinde bağımsız aralık hesabıyla GPU ve CPU örnekleri
+karşılaştırıldı. Her ölçek/nesne için görünür iç örnek şartı var. Aynı
+kare ikinci kez aynı görüntü ve aynı resident bellek hesabını verdi;
+bu sayaç tek başına upload ölçümü diye sunulmaz. Genel gerçek GPU
+regresyonu da geçti: örnek çizim, AA, pan hassasiyeti, tarama, kalınlık,
+kompozisyon/maske ve 3D sahne. Style 36 birim + batches 2; plot 18 birim
+ve 64 entegrasyonun ardından yeni 1:1/1:20/1:100 tam vektör reçetesi testi
+ve altı çizgi tipi entegrasyonu geçti. MCP sorgu testleri 2, yeniden
+derlenmiş Python üzerinden text/unused/long alt durumları geçti.
+
+Gerçek GUI binary SHA-256:
+`e40258e257ec46b09e0b26f8bf45cd8ace80814b2c50349c13679d26f02bb68d`.
+Başlangıç dosyası tekrar açıldı; beyaz LONG12 deseni mavi bağımsız tam
+geometriyle artık eşleşti, küçük fare zoom adımlarıyla iki kez
+karşılaştırıldı. 1:50 paftada CPU önizleme ve PDF kaydı denendi. Poppler
+ile PDF sayfası ve 300 dpi detay ayrıca görüntülendi; içerik akışındaki
+dash operatöründe bütün 12 değer bulundu. GUI farklı kaydet sonucu
+bağımsız KCAD kaynakla **bayt bayt aynı**. Çizgi tipleri yöneticisinin
+tam önizlemesi ve yeni sınır açıklaması da gerçek pencerede doğrulandı.
+
+Kanıtlar aynı repo dışı dizinde: `long-pattern-model-after-gui.png`,
+`long-pattern-zoom-gui.png`, `long-pattern-deeper-zoom-gui.png`,
+`long-pattern-preview-gui.png`, `long-pattern-manager-gui.png`,
+`long-pattern-pdf-detail.png`; GUI çıktısı `long-pattern-full12-gui.pdf`,
+kayıt `line-types-long-roundtrip-gui.kcad`.
+
+**Açık sınırlar:** adlandırılmış KCAD/LIN tanımı halen en fazla 12 kaynak
+öğesi kabul eder; kaynak üst sınırı/sürüm yükseltmesi henüz yapılmadı.
+16 öğeli ilk deney doğrudan native batch tarifidir; aşağıdaki ek GUI
+deneyi KCAD içindeki özel stil tarifini de kullanır. Yazı/şekil çizimi,
+nonuniform/mirror blok, yay/kapalı path/köşe matrisi, tam viewport
+kırpması ve büyük iş yükü ölçümleri açık. Bu nedenle CAD-ADV-11 bitmedi.
+
+### PDF başlangıç fazı ve ek GUI kabulü
+
+İncelemede `stroke_paths`ın mevcut `dash_offset` değerini kullanmadığı
+doğrulandı ve aynı çalışma içinde düzeltildi. `MapStroke.dashOffset`
+isteğe bağlı, kâğıt mm cinsinden bir alandır; eski girdide yoksa 0,
+eski sıfır fazlı serileştirme değişmez. Rust→TS bağlaması yeniden üretildi;
+bu mekanik sözleşme eşlemesidir, web ürününe özellik eklenmedi.
+
+PDF kalem önbelleği artık deseni **ve fazı** birlikte tutar; save/restore
+ikisini birlikte geri getirir. Tam (tek sayılıysa iki tekrar) periyot ve
+pozitif/negatif faz Float64 hesaplanıp PDF'ye gitmeden pozitif eşdeğerine
+katlanır. Böylece [PDF 1.7'nin negatif faz belirsizliği](https://pdfa.org/pdf-differences-github-repository-is-now-public/)
+görüntüleyiciye bırakılmaz. Anlam, [Adobe ISO 32000-1 §8.4.3.6](https://developer.adobe.com/document-services/docs/assets/35e4369068f86065372c18787171a17e/PDF_ISO_32000-1.pdf)
+ile aynıdır: faz, desen başlangıcından tüketilmiş mesafedir.
+
+Önbellek/restore birim testi ve gerçek native PDF akışında 0/+1,25/−1,25 mm
+fazı denetleyen entegrasyon testi geçti. Yedi çizgi tipi entegrasyonu ve
+ortak sheet PDF testleri (13 geçti, 1 ignored), strict desktop Clippy ve
+derleme de geçti. Mevcut PDF golden özeti değişmedi.
+
+Ek gerçek GUI binary SHA-256:
+`c4f9af84d09ae6db7d415f5693afd0ec399698c61bdd9e200403eebaaab64e54`.
+Bağımsız KCAD yazarıyla **özel stil** içinde ham 12/+1,25 mm ve ham
+16/−1,25 mm desenleri, ayrı hesaplanmış mavi referans doğrularıyla
+hazırlandı. Uygulamada gerçekten açılıp karşılaştırıldı ve 1:50 PDF
+kaydedildi. Poppler tam sayfa ve 300 dpi detayda aynı hizalamayı verdi;
+bağımsız pypdf kontrolü 12/16 değer ve sırasıyla 1,25/42,75 mm pozitif
+PDF fazını doğruladı (ikinci periyot 44 mm).
+
+Kanıtlar repo dışında `line-types-phase.kcad`, `make-phase-fixture.py`,
+`long-pattern-phase-model-gui.png`, `long-pattern-phase-sheet-gui.png`,
+`long-pattern-phase-gui.pdf`, `long-pattern-phase-detail.png`.
+Bu deney adlandırılmış `settings.lineTypes`ın 12 öğe sınırını yükseltmez.

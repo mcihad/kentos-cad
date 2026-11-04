@@ -11,7 +11,7 @@ use kentos_commands::{
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, line_types_edit};
-use kentos_native_style::line_types::{MAX_DASHES, dashes_of};
+use kentos_native_style::line_types::dashes_of;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Dialog as Frame2, Elided};
 use kentos_ui::{label, style};
@@ -355,15 +355,15 @@ impl App {
         }
         for t in &types {
             let dashes = dashes_of(t, plot, unit);
-            let (dash, lossy) = dashes.map_or((Vec::new(), false), |d| (d.dash, d.lossy));
+            let dash = dashes.map_or_else(Vec::new, |d| d.dash);
             let unit_words = match t.unit {
                 PatternUnit::Paper => "kâğıtta",
                 PatternUnit::Drawing => "çizimde",
             };
-            let note = match (lossy, t.elements.iter().any(|e| e.is_complex())) {
-                (_, true) => "yazı ve şekil: boşluk",
-                (true, false) => "ilk dört çizgi ve boşluk çizilir",
-                _ => "",
+            let note = if t.elements.iter().any(|e| e.is_complex()) {
+                "yazı/şekil desteklenmiyor; çıktı engellenir"
+            } else {
+                ""
             };
             let meta = [unit_words, t.source.as_deref().unwrap_or(""), note]
                 .iter()
@@ -430,10 +430,7 @@ impl App {
             .push(words::field(
                 "Projenin çizgi tipleri",
                 table,
-                Some(format!(
-                    "Bir ekranın desenini en çok {} çizgi ve boşluk (dört çift) çizer; pafta ve PDF de aynısını çizer.",
-                    MAX_DASHES
-                )),
+                Some("Çizgi ve boşluk deseninin tamamı ekranda, paftada ve PDF'de kullanılır. Desteklenmeyen yazı/şekil işaretleri çıktı ön denetiminde bildirilir.".into()),
             ))
             .push(actions)
             .push(words::field(

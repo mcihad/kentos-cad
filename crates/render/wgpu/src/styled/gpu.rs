@@ -398,7 +398,19 @@ impl StyledGpu {
         });
         let style_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("kentos.styled.style"),
-            entries: &[uniform(STYLE_BYTES as u64, true)],
+            entries: &[
+                uniform(STYLE_BYTES as u64, true),
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: wgpu::BufferSize::new(4),
+                    },
+                    count: None,
+                },
+            ],
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("kentos.styled"),
@@ -545,6 +557,7 @@ impl StyledGpu {
     /// A layer's buffers.
     fn upload(&self, device: &wgpu::Device, part: &Arc<StyledLayerPart>) -> GpuLayer {
         let layer = &part.layer;
+        let mut patterns = super::dashes::DashPages::default();
         let mut batches = Vec::with_capacity(layer.batches.len());
         let mut blocks: Vec<u8> = Vec::with_capacity(layer.batches.len() * self.align as usize);
         for (i, b) in layer.batches.iter().enumerate() {
@@ -573,7 +586,13 @@ impl StyledGpu {
                     false,
                 ),
             };
-            let block = self.block(b);
+            let mut block = self.block(b);
+            let (pattern_page, pattern_offset, pattern_count) =
+                patterns.insert(&super::uniform::batch_dashes(b));
+            if pattern_count > 0 {
+                block.u[2] = pattern_offset;
+                block.u[3] = pattern_count;
+            }
             let offset = (i as u64 * self.align) as u32;
             blocks.extend_from_slice(&block.bytes());
             blocks.resize((i + 1) * self.align as usize, 0);
@@ -632,6 +651,7 @@ impl StyledGpu {
                 count: (range.len() / floats) as u32,
                 instanced,
                 block,
+                pattern_page,
                 offset,
                 visible: false,
                 placed: None,
@@ -665,18 +685,28 @@ impl StyledGpu {
             contents: &blocks,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
-        let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("kentos.styled.styles"),
-            layout: &self.style_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                    buffer: &styles,
-                    offset: 0,
-                    size: wgpu::BufferSize::new(STYLE_BYTES as u64),
-                }),
-            }],
-        });
+        let pattern_bytes: usize = patterns.pages.iter().map(|p|p.len()*4).sum();
+        let bind = patterns.pages.iter().map(|values| {
+            let pattern = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("kentos.styled.long-patterns"),
+                contents: bytemuck::cast_slice(values),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+            device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("kentos.styled.styles"),
+                layout: &self.style_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &styles, offset: 0,
+                            size: wgpu::BufferSize::new(STYLE_BYTES as u64),
+                        }),
+                    },
+                    wgpu::BindGroupEntry { binding: 1, resource: pattern.as_entire_binding() },
+                ],
+            })
+        }).collect();
         GpuLayer {
             id: part.id,
             source: part.clone(),
@@ -685,7 +715,7 @@ impl StyledGpu {
             styles,
             bind,
             batches,
-            bytes: (layer.data.len() * 8 + blocks.len()) as u64,
+            bytes: (layer.data.len() * 8 + blocks.len() + pattern_bytes) as u64,
         }
     }
 
@@ -1270,7 +1300,7 @@ impl StyledGpu {
                     current = Some(Pipe::Raster);
                 }
                 pass.set_bind_group(0, &binds.linear, &[]);
-                pass.set_bind_group(1, &layer.bind, &[b.offset]);
+                pass.set_bind_group(1, &layer.bind[b.pattern_page], &[b.offset]);
                 pass.set_vertex_buffer(0, quads.slice(..));
                 pass.draw(b.quads.clone(), 0..1);
                 pass.set_bind_group(0, frame_bind, &[]);
@@ -1295,7 +1325,7 @@ impl StyledGpu {
                     current = Some(Pipe::Cloud);
                 }
                 pass.set_bind_group(0, bind, &[]);
-                pass.set_bind_group(1, &layer.bind, &[b.offset]);
+                pass.set_bind_group(1, &layer.bind[b.pattern_page], &[b.offset]);
                 pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
                 // The cloud's plan is drawn with the area shader's precise variant: its low parts too.
                 if let Some(low) = &layer.low {
@@ -1326,7 +1356,7 @@ impl StyledGpu {
                     },
                     &[],
                 );
-                pass.set_bind_group(1, &layer.bind, &[b.offset]);
+                pass.set_bind_group(1, &layer.bind[b.pattern_page], &[b.offset]);
                 pass.set_vertex_buffer(0, quads.slice(..));
                 pass.draw(b.quads.clone(), 0..1);
                 pass.set_bind_group(0, frame_bind, &[]);
@@ -1357,7 +1387,7 @@ impl StyledGpu {
             if let Some(bind) = picture {
                 pass.set_bind_group(0, bind, &[]);
             }
-            pass.set_bind_group(1, &layer.bind, &[b.offset]);
+            pass.set_bind_group(1, &layer.bind[b.pattern_page], &[b.offset]);
             pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
             if let Some(low) = &layer.low {
                 pass.set_vertex_buffer(1, low.slice(b.bytes.clone()));
@@ -1483,6 +1513,7 @@ struct GpuBatch {
     count: u32,
     instanced: bool,
     block: StyleBlock,
+    pattern_page: usize,
     /// Its block's offset in the layer's uniform buffer.
     offset: u32,
     visible: bool,
@@ -1497,7 +1528,7 @@ pub struct GpuLayer {
     vertex: Option<wgpu::Buffer>,
     low: Option<wgpu::Buffer>,
     styles: wgpu::Buffer,
-    bind: wgpu::BindGroup,
+    bind: Vec<wgpu::BindGroup>,
     batches: Vec<GpuBatch>,
     bytes: u64,
 }

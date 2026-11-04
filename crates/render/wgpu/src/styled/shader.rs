@@ -46,9 +46,12 @@ pub fn shared_source() -> String {
     out
 }
 
-/// The module the desktop builds: the shared source.
+/// Native long-pattern extension, preserving the paused browser's v10 source
+/// and its bindings. Short recipes still call the original inline function.
 pub fn source() -> String {
-    shared_source()
+    let mut source = shared_source().replacen("fn dashCover(", "fn inlineDashCover(", 1);
+    source.push_str(include_str!("dashes.wgsl"));
+    source
 }
 
 #[cfg(test)]

@@ -2,22 +2,19 @@
 //! millimetres, as the simple look's built-in types are, so a line's width keeps its unit. A paper pattern's lengths
 //! are millimetres already; a drawing pattern's (the project's unit) go to paper by the drawing's scale. Every dash,
 //! a built-in type's too, is times the project's line type scale (LTSCALE); the object's own scale is its
-//! [`crate::simple::Stroke`]'s. A pattern's text and shape take no length and draw nothing (§4); a pattern of more
-//! than eight dashes and gaps draws its first eight, as every renderer reads the same eight (§5).
+//! [`crate::simple::Stroke`]'s. All dash/gap values are retained. Text/shape marks are still unsupported
+//! and carry an explicit loss finding through compiled primitives (ADR 0930).
 
 use std::collections::HashMap;
 
 use kentos_contracts::{LineTypeDef, PatternUnit, ProjectSettings};
 use serde_json::{Value, json};
 
-/// The most dashes and gaps a renderer draws (the styled pipeline's `dash0`, `dash1`).
-pub const MAX_DASHES: usize = 8;
-
 /// A pattern as the engine draws it: its dashes and gaps, millimetres on paper, a dash first.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Dashes {
     pub dash: Vec<f64>,
-    /// Whether it lost dashes past [`MAX_DASHES`], or a text or a shape it does not draw.
+    /// Whether it loses a text or shape it cannot yet draw.
     pub lossy: bool,
 }
 
@@ -58,10 +55,6 @@ pub fn dashes_of(def: &LineTypeDef, plot_scale: f64, project_unit: (f64, f64)) -
     // A pattern ending on a dash runs into its first one: a gap of 0 closes the period.
     if out.len() % 2 == 1 {
         out.push(0.0);
-    }
-    if out.len() > MAX_DASHES {
-        out.truncate(MAX_DASHES);
-        lossy = true;
     }
     Some(Dashes { dash: out, lossy })
 }
@@ -238,6 +231,6 @@ mod tests {
             (1.0, 1.0),
         )
         .unwrap();
-        assert_eq!((long.dash.len(), long.lossy), (MAX_DASHES, true));
+        assert_eq!((long.dash.len(), long.lossy), (10, false));
     }
 }

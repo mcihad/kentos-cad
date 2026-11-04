@@ -81,23 +81,34 @@ impl StyleBlock {
     }
 }
 
-/// Dash values for the shader: an odd pattern is repeated to become even (as
-/// in SVG), cut to eight, with the total and the share that is ink (`dashValues`).
+/// The complete normalized on/off recipe. Odd SVG patterns repeat twice;
+/// this is shared by native GPU, CPU, phase folding and vector output.
+pub fn normalized_dashes(dash: &[f64]) -> std::borrow::Cow<'_, [f64]> {
+    if dash.len() % 2 == 1 {
+        std::borrow::Cow::Owned(dash.iter().chain(dash).copied().collect())
+    } else {
+        std::borrow::Cow::Borrowed(dash)
+    }
+}
+
+/// The complete recipe selected by a batch, not just its inline eight slots.
+pub fn batch_dashes(b: &StyledBatch) -> std::borrow::Cow<'_, [f64]> {
+    let dash = match &b.kind {
+        BatchKind::Stroke { dash, .. }
+        | BatchKind::Fill { paint: FillPaintBatch::Hatch { dash, .. } } => dash.as_deref(),
+        _ => None,
+    };
+    normalized_dashes(dash.unwrap_or_default())
+}
+
+/// Inline short-pattern slots, with the FULL Float64 period/ink share.
+/// Longer recipes live in the native GPU's read-only pattern pages.
 pub fn dash_values(dash: Option<&[f64]>) -> ([f64; 8], f64, f64) {
     let mut d = [0.0; 8];
-    let Some(dash) = dash.filter(|d| !d.is_empty()) else {
-        return (d, 0.0, 1.0);
-    };
-    let even: Vec<f64> = if dash.len() % 2 == 1 {
-        dash.iter().chain(dash).copied().collect()
-    } else {
-        dash.to_vec()
-    };
-    for (slot, v) in d.iter_mut().zip(even.iter()) {
-        *slot = *v;
-    }
-    let total: f64 = d.iter().sum();
-    let on: f64 = d.iter().step_by(2).sum();
+    let even = normalized_dashes(dash.unwrap_or_default());
+    for (slot, v) in d.iter_mut().zip(even.iter()) { *slot = *v; }
+    let total: f64 = even.iter().sum();
+    let on: f64 = even.iter().step_by(2).sum();
     (d, total, if total > 0.0 { on / total } else { 1.0 })
 }
 
@@ -322,5 +333,17 @@ mod tests {
     fn a_block_is_the_contract_s_size() {
         assert_eq!(StyleBlock::default().bytes().len(), STYLE_BYTES);
         assert_eq!(std::mem::size_of::<StyledFrameUniform>(), 48);
+    }
+
+    #[test]
+    fn a_long_odd_recipe_uses_every_value_for_its_period_and_ink_share() {
+        let source = [2.,3.,4.,5.,6.,7.,8.,9.,23.];
+        let (inline,period,share)=dash_values(Some(&source));
+        assert_eq!(inline,[2.,3.,4.,5.,6.,7.,8.,9.]);
+        assert_eq!(period,134.);
+        assert_eq!(share,0.5);
+        let full=normalized_dashes(&source);
+        assert_eq!(full.len(),18);
+        assert_eq!(&full[9..],&source);
     }
 }

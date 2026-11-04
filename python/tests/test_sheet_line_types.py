@@ -12,15 +12,20 @@ ROOT = Path(__file__).resolve().parents[2]
 class SheetLineTypes(unittest.TestCase):
     def test_preflight_names_source_and_preserves_document_and_output_directory(self):
         fx = json.loads((ROOT / 'fixtures/commands/v1/file.preflight.sheets.json').read_text())
-        for used in [True, False]:
-            with self.subTest(used=used), tempfile.TemporaryDirectory(prefix='kentos-linetype-') as folder:
+        for mode in ["text", "unused", "long"]:
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory(prefix='kentos-linetype-') as folder:
                 raw = copy.deepcopy(fx['model'])
                 raw['settings']['lineTypes'] = [dict(name='HW', unit='paper', elements=[
                     dict(length=2.), dict(length=-1.),
                     dict(length=0., text=dict(text='HW', style='STANDARD', scale=.1)),
                     dict(length=-1.),
                 ])]
-                if used:
+                if mode == "long":
+                    raw['settings']['lineTypes'][0]['elements'] = [
+                        dict(length=(i // 2 + 1) * (1 if i % 2 == 0 else -1))
+                        for i in range(12)
+                    ]
+                if mode != "unused":
                     raw['entities'][0]['linePattern'] = 'HW'
                 doc = cad.Document.from_bytes(json.dumps(raw).encode())
                 wrapper = cad.command('cad.sheets.edit')
@@ -33,10 +38,12 @@ class SheetLineTypes(unittest.TestCase):
                 reports = [query.run(doc, request, op=op).unwrap() for op in ['plan', 'execute']]
                 for report in reports:
                     issues = [i for i in report.issues if i.code == 'linetype_unsupported']
-                    self.assertEqual(bool(issues), used)
-                    if used:
+                    self.assertEqual(bool(issues), mode == "text")
+                    if mode == "text":
                         self.assertFalse(report.ready)
                         self.assertTrue(all(i.error and 'HW' in i.message for i in issues))
+                    if mode == "long":
+                        self.assertTrue(report.ready)
                 self.assertEqual(reports[0].to_json(), reports[1].to_json())
                 self.assertEqual(doc.to_bytes(), before)
                 self.assertEqual(list(Path(folder).iterdir()), [])

@@ -456,6 +456,7 @@ pub fn map_vector(m: &MapPrim) -> Option<kentos_sheet::pdf::MapContent> {
         color: color.into(),
         width,
         dash: Vec::new(),
+        dash_offset: None,
         cap: LineCap::Round,
         join: LineJoin::Round,
     };

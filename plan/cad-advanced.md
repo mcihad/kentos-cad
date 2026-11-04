@@ -1610,6 +1610,25 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
   döndürülmüş viewportun tam kırpma denetimi de açık; ilk koruma batch
   sınır kutusunu kullanır. Maddenin tamamlandı işareti değiştirilmedi.
 
+**Tam çizgi/boşluk yürütmesi (4 Kasım 2026):**
+
+- Native GPU'da uzun tarifler paylaşılan storage sayfalarından okunur;
+  kısa desenlerin mevcut uniform yolu korunur. CPU, hatch vektörleştirme
+  ve uzak-origin periyodu tam listeyi kullanır. Ekran/PDF sekiz öğede
+  kesilmez. Gerçek GPU'da 12/16 ve normalize 18 öğeli örnekler bağımsız
+  mesafe hesabıyla karşılaştırıldı; genel GPU regresyonu geçti.
+- Gerçek GUI'de 12 öğeli kaynak bağımsız referansla zoom yapılarak,
+  1:50 CPU önizleme ve PDF ile karşılaştırıldı. Bağımsız Poppler çıktısı
+  ve PDF operatörleri doğrulandı; GUI KCAD kaydı kaynakla bayt bayt aynı.
+  1:1/1:20/1:100 vektör tarifleri ayrıca otomatik test edildi.
+- PDF stroke başlangıç fazı da eklendi; aynı desenin faz değişimi ve
+  PDF save/restore önbelleği kapsandı. Gerçek GUI'de özel stil içindeki
+  12/+1,25 mm ve 16/−1,25 mm desenlerin PDF'leri bağımsız referansla
+  karşılaştırıldı; PDF operatörlerinde faz ve tam liste doğrulandı.
+- Kaynak KCAD/LIN'in adlandırılmış 12 öğe sınırını sürümlü genişletme,
+  yazı/şekil ve kalan geometri/viewport/performance matrisi açık.
+  Detay ve kanıt kapsamı ADR 0930'da; maddenin tamamlandı işareti kapalı.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

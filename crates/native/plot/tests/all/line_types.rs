@@ -79,7 +79,7 @@ fn named_pattern_loss_follows_actual_visibility_and_overrides() {
             let (doc, book) = document(raw, page);
             let before = doc.to_snapshot_v2();
             let found = losses(&doc, &book);
-            let blocked = kind != "short" && matches!(mode, "own" | "layer");
+            let blocked = !matches!(kind, "short" | "long") && matches!(mode, "own" | "layer");
             assert_eq!(!found.is_empty(), blocked, "{kind}/{mode}: {found:?}");
             let pdf = book::book_pdf(&doc, &[], "Test", "2026-11-04");
             if blocked {
@@ -203,17 +203,108 @@ fn block_own_and_inherited_patterns_are_checked_only_for_visible_leaves() {
 }
 
 #[test]
-fn long_dash_custom_symbol_refuses_even_without_a_named_pattern() {
+fn long_dash_custom_symbol_is_supported_without_a_named_pattern() {
     let (mut raw, page) = source();
     raw["entities"][0]["symbol"] = json!("line-long");
     raw["styles"]["items"] = json!([{"id":"line-long","kind":"symbol","name":"Long","symbol":{"type":"line","layers":[{"id":"stroke","type":"simpleLine","color":"#111111","width":0.25,"dash":[1.,1.,2.,1.,3.,1.,4.,1.,5.,1.]}]}}]);
     let (doc, book) = document(raw, page);
-    assert!(!losses(&doc, &book).is_empty());
-    assert_eq!(
-        book::book_pdf(&doc, &[], "Test", "2026-11-04")
-            .err()
-            .unwrap()
-            .code,
-        "linetype_unsupported"
-    );
+    assert!(losses(&doc, &book).is_empty());
+    book::book_pdf(&doc, &[], "Test", "2026-11-04").unwrap();
+}
+
+#[test]
+fn every_named_dash_reaches_vector_pdf_content_at_each_paper_scale() {
+    for scale in [1., 20., 100.] {
+        let (mut raw, mut page) = source();
+        let lengths: [f64; 12] = [1., -1., 2., -1., 3., -1., 4., -1., 5., -1., 6., -1.];
+        raw["settings"]["lineTypes"] = json!([{"name":"FULL12","unit":"paper",
+            "elements":lengths.iter().map(|l|json!({"length":l})).collect::<Vec<_>>() }]);
+        raw["entities"][0]["linePattern"] = json!("FULL12");
+        page["sheets"][0]["items"][0]["kind"]["view"]["scale"] = json!(scale as u32);
+        let (doc, book) = document(raw, page);
+        let before = doc.to_snapshot_v2();
+        let render = book::base_inputs(&doc, "Test", "2026-11-04");
+        let list = display::display_list(&book, "ground", &render).unwrap();
+        let map = list
+            .prims
+            .iter()
+            .find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None })
+            .unwrap();
+        let mut spatial = Spatial::new();
+        spatial.reload(&doc);
+        let library = book::library_of(&doc);
+        let c = map.view.center.unwrap();
+        let src = MapSource {
+            doc: &doc,
+            store: spatial.store(),
+            library: &library,
+            origin: kentos_geometry_core::Vec2::new(c.x, c.y),
+            map: None,
+            level: None,
+            phase: None,
+            hidden: &[],
+            pens: &[],
+            mono: false,
+            options: &[],
+        };
+        let kentos_sheet::pdf::MapContent::Vector(v) = kentos_plot::maps::vector_content(
+            &src,
+            &map.layers,
+            &map.layer_overrides,
+            scale,
+            map.extent.unwrap(),
+            &[],
+        )
+        .unwrap() else {
+            panic!("vector output expected")
+        };
+        let dashes: Vec<_> = v
+            .layers
+            .iter()
+            .flat_map(|l| &l.paths)
+            .filter_map(|p| p.stroke.as_ref())
+            .filter(|s| !s.dash.is_empty())
+            .collect();
+        assert_eq!(dashes.len(), 1);
+        assert_eq!(dashes[0].dash.len(), 12);
+        for (actual, expected) in dashes[0].dash.iter().zip(lengths) {
+            assert!(
+                (actual - expected.abs()).abs() < 1e-9,
+                "scale {scale}: {actual} vs {expected}"
+            );
+        }
+        book::book_pdf(&doc, &[], "Test", "2026-11-04").unwrap();
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+}
+
+#[test]
+fn long_custom_stroke_phase_reaches_the_actual_pdf_content_stream() {
+    // A hand-summed 27 mm recipe; phase is consumed distance, as on screen.
+    let dash = [1., 1., 2., 1., 3., 1., 4., 1., 5., 1., 6., 1.];
+    for phase in [0., 1.25, -1.25] {
+        let (mut raw, page) = source();
+        raw["entities"][0]["symbol"] = json!("phase");
+        raw["styles"]["items"] = json!([{"id":"phase","kind":"symbol","name":"Phase",
+            "symbol":{"type":"line","layers":[{"id":"l","type":"simpleLine",
+                "unit":"mm","width":0.25,"color":"#111111","dash":dash,"dashOffset":phase}]}}]);
+        let (doc, _book) = document(raw, page);
+        let pdf = book::book_pdf(&doc, &[], "Test", "2026-11-04").unwrap();
+        let streams = crate::files::pdf_streams(&pdf.bytes);
+        let lines: Vec<_> = streams
+            .iter()
+            .filter_map(|s| std::str::from_utf8(s).ok())
+            .flat_map(str::lines)
+            .filter(|l| l.ends_with(" d") && l.starts_with('[') && !l.starts_with("[]"))
+            .collect();
+        assert_eq!(lines.len(), 1, "{lines:?}");
+        let (lengths, rest) = lines[0].split_once(']').unwrap();
+        assert_eq!(lengths[1..].split_whitespace().count(), 12);
+        let written: f64 = rest.split_whitespace().next().unwrap().parse().unwrap();
+        let want = if phase < 0. { 25.75 } else { phase } * 72. / 25.4;
+        assert!(
+            (written - want).abs() < 0.00002,
+            "phase {phase}: {written} vs {want}"
+        );
+    }
 }

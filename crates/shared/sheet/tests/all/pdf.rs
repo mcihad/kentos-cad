@@ -585,6 +585,7 @@ fn an_atlas_sheet_is_a_page_for_each_object_with_its_own_maps() {
                 color: "#000000".into(),
                 width: 0.25,
                 dash: Vec::new(),
+                dash_offset: None,
                 cap: LineCap::Round,
                 join: LineJoin::Round,
             }),

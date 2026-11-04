@@ -345,7 +345,7 @@ pub(crate) fn line_type_check_needed(
         match v {
             serde_json::Value::Object(m) => m.get("lineTypeLoss").is_some()
                 || m.get("dash").and_then(serde_json::Value::as_array)
-                    .is_some_and(|d| d.len() * if d.len()%2==1 {2} else {1} > 8)
+                    .is_some_and(|d| d.len() > 4096)
                 || m.values().any(long_dash),
             serde_json::Value::Array(a) => a.iter().any(long_dash),
             _ => false,
@@ -665,6 +665,7 @@ pub fn collect_vector_profile(
                                 color: t.color.clone(),
                                 width: PX_MM,
                                 dash: Vec::new(),
+                                dash_offset: None,
                                 cap: kentos_sheet::LineCap::Butt,
                                 join: kentos_sheet::LineJoin::Miter,
                             }),
