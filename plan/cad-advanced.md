@@ -1403,7 +1403,7 @@ kutuyla değil gerçek parça uçlarıyla doğrulanmıştır.
   düşer; alan/uzunluk uydurulmaz. Gizli katmanları kapsayan mevcut
   Tümünü göster kuralı değiştirilmedi. Ham GUI/PDF kanıtları repo dışında.
 
-### CAD-ADV-10 — Yazı ve field üretimini ekran ile çıktıda aynı hale getir [ ]
+### CAD-ADV-10 — Yazı ve field üretimini ekran ile çıktıda aynı hale getir [x]
 
 **Öncelik:** P1. **Kod:** [C17], [C18], [C16].
 **Dayanak:** Unicode karakter kümeleri ve HarfBuzz şekillendirme ayrımı;
@@ -1431,7 +1431,7 @@ sütun ve field içeren metin dosyasını aç/düzenle/yansıt/yazdır. Ekran,
 ölçülen kutu ve PDF satır sonları karşılaştırılsın. Eksik font ve kaynak
 silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
 
-**Çalışma kaydı — devam ediyor (4 Kasım 2026):**
+**Çalışma kaydı — yerel 2D CAD kabulü tamamlandı (4 Kasım 2026):**
 
 - [ADR 0914](../docs/adr/0914-cad-text-layout-and-live-field-delivery.md)
   mevcut dört metin yolunu ve eski yerleşimi koruma koşullarını karşılaştırır.
@@ -1536,8 +1536,25 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   Undo dosyası özgün byte'larla aynı. Tam çekirdek 973, uygulama 459,
   interaction 72, MCP 10, Python 12 testi; sıkı Clippy ve derleme geçti.
   31 çekirdek ve 37 uygulama testi kendi ayrı/ignored koşullarında kaldı.
-- Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
-  eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
+- Son kabulde Türkçe/aksan/teknik sembol/RTL/sütun/kesir/eğri ve field
+  içeren yedi yazı gerçek GUI'de açıldı, düzenlendi, aynalandı ve PDF'ye
+  basıldı. Beş font/64 CID konturu özgün fontlarla eşleşti; CPU/PDF
+  mürekkep sınırı en çok 1 px farklıydı. Preview'da Arapça, İbranice ve
+  Türkçe sözcük araması; PDFium'da dört sözcüğün tam geri dönüşü doğrulandı.
+- Toplu değişim grapheme sınırını ve önerilen Unicode planını yazmadan
+  denetler. Uyumsuz profil/biçim birleştirmesi sessiz dönüşmez. Sekmeli
+  satırları ayırma gerçek baseline'ı korur. GUI'de ayır/birleştir/bul-değiştir,
+  açıklamalı ret ve tek Undo denendi; bağımsız okuyucuda ret/Undo kayıtları
+  özgün byte'larla aynıydı. Son başarı bildirimi gerçek ekranda tekrar denendi.
+- Son dilimde 50 çekirdek metin, 468 uygulama (37 ayrı/ignored), 72 interaction,
+  18 plot birim, dokuz kitap testi (bir ayrı dosya testi ignored), ayrıca
+  GUI kaydından CPU/PDF üretme testi; 11 MCP ve 13 Python testi geçti.
+  Sıkı Clippy ve güncel derleme temiz. Ekranlar repo dışında tutuldu.
+- Güncel destek matrisi ve sınırlar ADR 0914'te açık: eski metin otomatik
+  değişmez; ligatür içi parçalı boya ve kapsam dışı glyph açıklamalı
+  reddedilir. Üretilen etiketler/tablo legacy yolları değerlendirilip korunur.
+  Bütün okuyucularda karışık paragraf kopya sırası, PDF/UA/A ve ertelenmiş
+  web kabulü iddia edilmez. **CAD-ADV-10 bu açık yerel destek sözleşmesiyle tamamlandı.**
 
 ### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [ ]
 

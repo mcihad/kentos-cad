@@ -196,3 +196,14 @@ fn unicode_profile_queries_refuse_unsupported_text_instead_of_returning_error_ma
         assert!(error.contains("U+1F6F8"),"{name}: {error}");
     }
 }
+
+#[test]
+fn editing_ranges_keep_extended_graphemes_whole() {
+    use kentos_geometry_core::text::edit::whole_graphemes;
+    assert!(whole_graphemes("Ög\u{306}ç", &[(1, 3)]));
+    assert!(!whole_graphemes("Ög\u{306}ç", &[(1, 2)]));
+    assert!(!whole_graphemes("👨‍👩‍👧‍👦", &[(0, 1)]));
+    assert!(whole_graphemes("👨‍👩‍👧‍👦", &[(0, 7)]));
+    assert!(!whole_graphemes("🇹🇷", &[(0, 1)]));
+    assert!(!whole_graphemes("x", &[(0, 2)]));
+}

@@ -261,7 +261,7 @@ pub struct PdfGlyph {
     /// Index in the frozen unicode-v1 face manifest, not a system font index.
     pub font: u16,
     pub glyph: u16,
-    /// Logical cluster text, empty on subsequent glyphs of the same cluster.
+    /// Logical cluster text on its advancing body, empty on the other glyphs.
     pub text: String,
     /// Normalized font em to paper millimetres, relative to the text anchor.
     pub matrix: [f64; 6],

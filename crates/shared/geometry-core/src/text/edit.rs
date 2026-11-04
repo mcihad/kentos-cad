@@ -3,6 +3,22 @@
 //! (the web through WASM); fixtures/text/v1 holds them to the independent
 //! reference (scripts/fixtures/text_cases.py).
 
+/// Scalar-indexed edits may replace complete visible characters, never detach
+/// a combining mark or part of a ZWJ sequence. Search itself remains scalar
+/// indexed; callers decide whether a partial match may be written.
+pub fn whole_graphemes(text: &str, ranges: &[(usize, usize)]) -> bool {
+    use unicode_segmentation::UnicodeSegmentation;
+    let mut scalar = 0;
+    let mut boundaries = vec![0];
+    for cluster in text.graphemes(true) {
+        scalar += cluster.chars().count();
+        boundaries.push(scalar);
+    }
+    ranges.iter().all(|(a, b)| {
+        a <= b && boundaries.binary_search(a).is_ok() && boundaries.binary_search(b).is_ok()
+    })
+}
+
 /// The text with the number it ends with one more (Artır): the ASCII digits
 /// at its end as a decimal number, one more, as many digits as they were at
 /// least (`A-009` → `A-010`, `99` → `100`); none for a text that does not end

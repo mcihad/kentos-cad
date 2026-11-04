@@ -16,7 +16,7 @@ use kentos_commands::{
 use kentos_domain::text_fields::replace_letters;
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::jsmath::{PI, cos, sin};
-use kentos_geometry_core::text::edit::find_all;
+use kentos_geometry_core::text::edit::{find_all, whole_graphemes};
 use kentos_geometry_core::text::paragraph::{PITCH, rise};
 
 use crate::ExecutionContext;
@@ -76,6 +76,17 @@ fn texts(doc: &Document, uids: &[String]) -> Result<Vec<(Slot, Uuid, TextEntity)
     Ok(out)
 }
 
+/// Positional edits must measure the same current content they will write.
+/// An explicit find/replace or renumber may repair content; an orientation,
+/// height, join or split is not permission to refresh stale fields silently.
+fn geometry_texts(doc: &Document, uids: &[String]) -> Result<Vec<(Slot, Uuid, TextEntity)>, Stop> {
+    let list = texts(doc, uids)?;
+    for (_, uid, t) in &list {
+        crate::shape_edits::text_orientation_ready(doc, &uid.to_string(), t, "edit.uids")?;
+    }
+    Ok(list)
+}
+
 /// `n` with at least `digits` digits, zeros before, a minus before them.
 pub fn number_text(n: i64, digits: usize) -> String {
     let body = format!("{:0digits$}", n.unsigned_abs());
@@ -109,28 +120,32 @@ fn up_dir(t: &TextEntity) -> (f64, f64) {
     (-sin(r), cos(r))
 }
 
-/// `t`'s paragraphs: each one's first letter, the one past its last, and the line it starts at (its paragraphs'
-/// lines laid out in its box; without one, its line breaks).
-fn paragraphs(doc: &Document, t: &TextEntity) -> Vec<(usize, usize, usize)> {
+/// Paragraph scalar ranges and their physical baseline offset below the first
+/// row. Tab-separated pieces share one row; they are never counted as rows.
+fn paragraphs(doc: &Document, t: &TextEntity) -> Vec<(usize, usize, f64)> {
     let letters: Vec<char> = t.text.chars().collect();
     let mut out = Vec::new();
     let mut start = 0;
     for (i, c) in letters.iter().enumerate() {
         if *c == '\n' {
-            out.push((start, i, 0));
+            out.push((start, i, 0.));
             start = i + 1;
         }
     }
-    out.push((start, letters.len(), 0));
+    out.push((start, letters.len(), 0.));
     if t.paragraph.box_width.is_some() {
         // The first laid out line of each paragraph, by the core's wrapping.
-        let lines = crate::geometry::text_lines(doc, t);
+        let layout = crate::geometry::text_layout(doc, t);
         for p in &mut out {
-            p.2 = lines.iter().position(|(s, _)| *s >= p.0).unwrap_or(0);
+            p.2 = layout
+                .lines
+                .iter()
+                .find(|l| l.start >= p.0)
+                .map_or(0., |l| l.y);
         }
     } else {
         for (k, p) in out.iter_mut().enumerate() {
-            p.2 = k;
+            p.2 = k as f64 * PITCH * t.height * t.paragraph.line_spacing.unwrap_or(1.0);
         }
     }
     out
@@ -139,7 +154,7 @@ fn paragraphs(doc: &Document, t: &TextEntity) -> Vec<(usize, usize, usize)> {
 /// How many lines `t` is laid out in.
 fn line_count(doc: &Document, t: &TextEntity) -> usize {
     if t.paragraph.box_width.is_some() {
-        crate::geometry::text_lines(doc, t).len().max(1)
+        crate::geometry::text_layout(doc, t).depth.max(1)
     } else {
         t.text.split('\n').count()
     }
@@ -230,11 +245,17 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
     match &input.edit {
         TextEdit::Height { uids, height } => {
             if !height.is_finite() || *height <= 0.0 {
-                return Err(fail(codes::INVALID_HEIGHT, "Yazı yüksekliği sonlu ve sıfırdan büyük olmalı.".into(), "edit.height"));
+                return Err(fail(
+                    codes::INVALID_HEIGHT,
+                    "Yazı yüksekliği sonlu ve sıfırdan büyük olmalı.".into(),
+                    "edit.height",
+                ));
             }
-            for (slot, uid, mut text) in texts(doc, uids)? {
+            for (slot, uid, mut text) in geometry_texts(doc, uids)? {
                 text.height = *height;
-                if text.face.text_style.is_some() && !text.face.overrides.iter().any(|s| s == "height") {
+                if text.face.text_style.is_some()
+                    && !text.face.overrides.iter().any(|s| s == "height")
+                {
                     text.face.overrides.push("height".into());
                 }
                 c.changed.push((slot, uid, text));
@@ -285,6 +306,11 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
                     locked += 1;
                     continue;
                 }
+                if !whole_graphemes(&t.text, &hits) {
+                    return Err(fail(codes::INVALID_INPUT,
+                        "Aranan bölüm birleşik bir karakterin içinde kalıyor. Aksanıyla birlikte bütün karakteri arayın; seçimde hiçbir yazı değiştirilmedi.".into(),
+                        "edit.find"));
+                }
                 open += 1;
                 let mut next = t.clone();
                 for (s, e) in hits.iter().rev() {
@@ -323,7 +349,7 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
             c.replaced = Some(count);
         }
         TextEdit::Fit { uids, curve } => {
-            let list = texts(doc, uids)?;
+            let list = geometry_texts(doc, uids)?;
             let e = object_of(doc, curve, "edit.curve")?;
             if !crate::text_curves::CURVE_KINDS.contains(&e.kind()) {
                 return Err(fail(
@@ -346,7 +372,7 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
             )?;
         }
         TextEdit::Turn { uids, edge, at } => {
-            let list = texts(doc, uids)?;
+            let list = geometry_texts(doc, uids)?;
             let e = object_of(doc, edge, "edit.edge")?;
             checks::point(*at, "Tıklanan yerin", "edit.at")?;
             let no_edge = || {
@@ -377,7 +403,7 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
             )?;
         }
         TextEdit::Straighten { uids } => {
-            let list = texts(doc, uids)?;
+            let list = geometry_texts(doc, uids)?;
             let font = crate::geometry::drawing_font(doc.settings().drawing_font);
             on_curves(
                 &mut c,
@@ -437,7 +463,7 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
             }
         }
         TextEdit::Combine { uids } => {
-            let mut list = texts(doc, uids)?;
+            let mut list = geometry_texts(doc, uids)?;
             if list.len() < 2 {
                 return Err(fail(
                     codes::TOO_FEW_OBJECTS,
@@ -453,6 +479,26 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
                     .then(a.2.p.x.total_cmp(&b.2.p.x))
             });
             let (slot, uid, first) = list[0].clone();
+            if list.iter().any(|(_, _, t)| unicode(t))
+                && list.iter().any(|(_, _, t)| {
+                    t.face != first.face
+                        || t.height != first.height
+                        || t.width_factor != first.width_factor
+                        || t.base.color != first.base.color
+                        || t.base.look.transparency != first.base.look.transparency
+                        || t.rotation != first.rotation
+                        || t.mask != first.mask
+                        || t.paragraph.box_width != first.paragraph.box_width
+                        || t.paragraph.line_spacing != first.paragraph.line_spacing
+                        || t.paragraph.layout != first.paragraph.layout
+                        || t.path.is_some()
+                        || t.annotative.is_some()
+                })
+            {
+                return Err(fail(codes::INVALID_INPUT,
+                    "Bu yazılar farklı yerleşim, font veya paragraf biçimlerine sahip. Birleştirmeden önce aynı biçimi açıkça uygulayın; yazılar ilk nesnenin biçimine sessizce dönüştürülmedi.".into(),
+                    "edit.uids"));
+            }
             let mut next = first.clone();
             let lines = line_count(doc, &first);
             let (vx, vy) = up_dir(&first);
@@ -491,6 +537,7 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
         }
         TextEdit::Split { uid } => {
             let (slot, u, t) = text_at(doc, uid, "edit.uid", true)?;
+            crate::shape_edits::text_orientation_ready(doc, uid, &t, "edit.uid")?;
             let why = if t.path.is_some() {
                 Some("eğri boyunca yazı")
             } else if t
@@ -516,14 +563,13 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
             }
             let lines = line_count(doc, &t);
             let (vx, vy) = up_dir(&t);
-            let pitch = PITCH * t.height * t.paragraph.line_spacing.unwrap_or(1.0);
             let top = over(&t, lines);
             for (a, b, line) in paragraphs(doc, &t) {
                 if b == a || t.text.chars().skip(a).take(b - a).all(char::is_whitespace) {
                     continue;
                 }
                 let mut piece = slice(&t, a, b);
-                let d = top - line as f64 * pitch;
+                let d = top - line;
                 piece.p = Vec2 {
                     x: t.p.x + d * vx,
                     y: t.p.y + d * vy,
@@ -542,10 +588,39 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
             *t = written(doc, *u, t);
         }
         broken_warnings(t, &mut c.warnings);
+        profile_ready(doc, t)?;
+    }
+    for t in &c.added {
+        profile_ready(doc, t)?;
     }
     c.changed
         .retain(|(slot, _, t)| doc.get(*slot) != Some(&Entity::Text(t.clone())));
     Ok(c)
+}
+
+fn unicode(t: &TextEntity) -> bool {
+    let s = crate::geometry::shape(&Entity::Text(t.clone()));
+    kentos_geometry_core::entity::TextPlace::of(&s).is_some_and(|p| p.is_unicode())
+}
+
+/// Check the proposed result before any write, including replaced/numbered
+/// content and combined rich runs. The old profile is never upgraded here.
+pub(crate) fn profile_ready(doc: &Document, t: &TextEntity) -> Result<(), Stop> {
+    let s = crate::geometry::shape(&Entity::Text(t.clone()));
+    if let Some(p) = kentos_geometry_core::entity::TextPlace::of(&s).filter(|p| p.is_unicode()) {
+        p.unicode_plan(crate::geometry::drawing_font(doc.settings().drawing_font))
+            .map_err(|why| {
+                fail(
+                    codes::INVALID_INPUT,
+                    format!(
+                        "Yazı işleminin sonucu desteklenmiyor: {} Hiçbir yazı değiştirilmedi.",
+                        why.message(&t.text)
+                    ),
+                    "edit",
+                )
+            })?;
+    }
+    Ok(())
 }
 
 /// Runs in order with touching runs of one format joined.

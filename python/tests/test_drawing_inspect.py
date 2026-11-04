@@ -15,6 +15,25 @@ def drawing(entities):
 
 
 class DrawingInspect(unittest.TestCase):
+    def test_unicode_bulk_replace_preserves_profile_preview_and_one_undo(self):
+        doc = drawing([dict(kind='text', p=dict(x=0., y=0.), text='Ög\u0306ç — AV', height=.3, rotation=0.,
+                            layout=dict(engine='unicode-v1'))])
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        bad = doc.call('cad.texts.edit', dict(edit=dict(kind='replace', uids=[row.uid], find='g', **{'with':'h'})))
+        self.assertEqual(bad.status, 'failed')
+        self.assertEqual(doc.to_bytes(), before)
+        edit = cad.ReplaceTextEdit(uids=[row.uid], find='Ög\u0306ç', with_='İstanbul', match_case=True)
+        plan = cad.texts.edit.plan(doc, edit=edit)
+        self.assertEqual(doc.to_bytes(), before)
+        cad.texts.edit(doc, edit=edit)
+        actual = next(iter(doc.entities())).entity.to_json()
+        self.assertEqual(actual, plan.texts[0].to_json())
+        self.assertEqual(actual['text'], 'İstanbul — AV')
+        self.assertEqual(actual['layout']['engine'], 'unicode-v1')
+        self.assertEqual(doc.undo(), 'Bul ve değiştir')
+        self.assertEqual(doc.to_bytes(), before)
+
     def test_unicode_mirror_inherits_project_font_and_matches_its_read_only_plan(self):
         raw = json.loads((ROOT / 'fixtures/commands/v1/cad.blocks.find.json').read_text())['setup']
         raw['settings']['drawingFont'] = 'overpass'

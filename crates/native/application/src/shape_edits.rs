@@ -471,7 +471,7 @@ pub(crate) fn text_orientation_ready(
         {
             return Err(refuse(
                 codes::INVALID_INPUT,
-                "Yazının yönünü değiştirmeden önce alanlarını açıkça yenileyip denetleyin. Eski veya doğrulanamayan alan, dönüşüm sırasında değiştirilmedi.",
+                "İşlemden önce yazının alanlarını açıkça yenileyip denetleyin. Eski veya doğrulanamayan alan, işlem sırasında değiştirilmedi.",
                 path,
             ));
         }

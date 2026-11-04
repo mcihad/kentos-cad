@@ -5357,7 +5357,7 @@ pub fn catalog() -> CommandCatalog {
                       fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; \
                       turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; \
                       almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. \
-                      combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. Birleşik karakterin içindeki replace eşleşmesi invalid_input ile bütün işlemi reddeder; aksanıyla birlikte bütün karakter aranmalıdır. Unicode profilli sonuç ortak glyph planıyla yazmadan doğrulanır. Unicode içeren combine farklı yerleşim/font/paragraf biçimlerini sessizce dönüştürmez; önce biçimler açıkça eşitlenmelidir. Konum/boy düzenlemesinden önce eski veya doğrulanamayan field açıkça yenilenmelidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,

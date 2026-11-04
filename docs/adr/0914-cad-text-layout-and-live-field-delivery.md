@@ -1,6 +1,10 @@
 # 0914 — CAD yazısının yerleşimi ve canlı alanların teslim doğruluğu
 
-Tarih: 4 Kasım 2026. Kapsam: CAD-ADV-10. Durum: uygulama ve kabul çalışması sürüyor; plan maddesi henüz tamamlanmadı.
+Tarih: 4 Kasım 2026. Kapsam: CAD-ADV-10. Durum: yerel 2D CAD kabulü tamamlandı. Destek sınırları aşağıdaki güncel matriste tanımlıdır.
+
+İlk bölümler uygulama sırasındaki tarihsel inceleme kayıtlarıdır; o bölümlerdeki
+“henüz” ifadeleri son durum değildir. Son durum için güncel destek matrisi ve
+“Son kabul” bölümünü okuyun.
 
 ## Araştırma ve mevcut yolların karşılaştırılması
 
@@ -500,15 +504,142 @@ Tam Unicode yerleşimine geçiş, eski dosyaların otomatik yeniden akıtılmas�
 
 Eski advance profili ile yeni şekillendirilmiş profil kalıcı olarak ayırt edilmeli; profil değiştirme açık bir işlem ve tek geri alma adımı olmalı. Sadece PDF'ye Rustybuzz eklemek model kutularını düzeltmez. Sadece model ölçümünü değiştirmek ise eski MTEXT satır sonlarını ve alan metinlerinin yerleşimini değiştirir. Bu nedenle bu ilk düzeltmeler metrik tablosunu, eski dosyanın fontunu veya satır kırma kuralını değiştirmez.
 
-## Destek/kabul matrisi — henüz tamamlanmayanlar açık
+## Güncel destek matrisi — yerel 2D CAD
 
-| İçerik | Düzenleme | Model/çıktı eşdeğerliği kabulü |
-| --- | --- | --- |
-| Türkçe Latin harfleri | Mevcut scalar dönüşümü korunuyor | Tek satır, MTEXT, aynalama, kâğıt boyu ve satır sonları karşılaştırılacak |
-| Birleşik aksan / ZWJ / bayrak | Küme bütünlüğü testleri; geri/ileri silme | Shaping ve ölçülen kutu ortaklaştırılmadan tam kabul yok |
-| Teknik semboller | Simge menüsü korunuyor | Paketli font kapsamı ve fallback ölçümü doğrulanacak; sistem fontu görünüşü kanıt değildir |
-| Karışık LTR/RTL | Mantıksal metin korunuyor | Ortak bidi/shaping/glyph yerleşimi ve aranabilir PDF kanıtı gerekiyor |
-| Girinti/tab/sütun/kesir | Mevcut veri ve düzenleyici korunuyor | Yeni profile geçişte satır/range ve yerleşim regresyonları gerekiyor |
-| Field | Kaynak/önbellek ve hata ayrımı; açık yenileme | Güncel olmayan değer PDF teslimini engeller; gerçek arayüzde yenileme/tek geri alma ve baskı denetimi doğrulandı |
+Aşağıdaki matris eski hazırlık kayıtlarından daha yenidir. Destek açık
+`unicode-v1` profili içindir; “bütün Unicode yazıları” veya eski metinleri
+kendiliğinden yeniden akıtma sözü değildir.
 
-Gerçek GUI, PDF ve otomatik testlerin kabul kaydı plan maddesinin altında tutulacak. Ham ekran/PDF/deneme çizimleri repo dışındadır. Henüz çalıştırılmamış bir kontrol bu belgede tamamlanmış sayılmaz.
+| Yol/içerik | Davranış ve kabul sınırı |
+| --- | --- |
+| Türkçe, birleşik aksan, teknik semboller | Paketli gerçek glyph ve kontrollü fallback; aynı plan model/viewport, hit-test kutusu, CPU önizleme ve PDF'de kullanılır. Bağımsız font/contour ve raster karşılaştırmaları yukarıda. |
+| Arapça ve İbranice karışık metin | Paragraf bidi çözümü, gerçek satır seviyeleri, bağlamsal shaping ve mantıksal kaynak aralıkları korunur. RTL sözcük araması ve bütün paragrafın kopya sırası ayrı kabul edilir; okuyucunun geometrik sıra tahmini kaynak metnin sırası yerine geçmez. |
+| Girinti, sekme, statik sütun, kesir/tolerans, üst/alt simge | Ortak fiziksel akış, kesir çubuğu ve gerçek ink kutusu; düzenleme ve kâğıt boyu GUI/PDF ile denendi. Scalar aralıklar dosyada değişmez. |
+| Eğri boyunca metin | Grapheme/ligatür/kesir grubu bütün olarak eğriye taşınır. Düz metnin merkez düzeltmesi eğriyi yeniden yorumlamaz. Eğride kopyalama/seçim, okuyucunun geometrik tahminine de bağlıdır. |
+| Renk/alt çizgi | Glyph kümesinin tamamında destekli. Ligatürün yalnız bazı bileşenlerine ayrı boya/kırpma desteklenmez; açık `MixedClusterPaint` hatası, editörde onay koruması ve çıktı reddi vardır. Ligatürü bozarak yeni ölçü üretilmez. |
+| Paketli fontta bulunmayan küme, ör. CJK/emoji | Sessiz `?`, işletim sistemi fontu veya rastgele metrik yok. Profil işlemi/teslim açıklamalı ret verir. Font bulunması ile layout desteği ayrı denetlenir. |
+| Kök/blok yazısı | Açık profil kaydedilir; miras fontu blok açılımı/denetim/çıktıda aynı. Tanım/parça kökeni korunur; alanın kaynağı, eski önbelleği ve doğrulanamaması ayrıdır. |
+| Kök tablo ve bağlı kaynak yazılar | Hücre alanları açık yenilenebilir, tek Undo; kaynak zinciri de denetlenir. Tablo hücreleri henüz açık Unicode metin profili taşımaz; eski metrik/karakter yolu korunur. |
+| Blok tanımındaki alan | Kaynak/önbellek tanım/parça kökeniyle görünür; eski veya doğrulanamayan değer teslimi engeller. Otomatik patlatma/anonim kimlik üretme yok. Tanımın toplu alan yenilemesi bu sözleşmede yoktur. |
+| Kılavuz, ölçü, üretilen etiketler ve pafta metni | Mevcut yerleşim/ölçek davranışı korunur; Unicode Text profiline gizlice geçirilmez. Desteklenmeyen gerçek çıktı karakteri ön denetimde açık hata olur. Bu yolların yeni profile toplu dönüşümü teslim edilmiş sayılmaz. |
+| Eski dosya/yazı | `engine` yokluğu eski profildir; aç/kaydet, font mirası ve inceleme yerleşimi değiştirmez. Kullanıcı editörde açık önizleyip tek Undo ile profil seçebilir. |
+| Web | ADR0228 uyarınca ürün arayüzü ertelenmiştir. Paylaşılan saf çekirdek/kalıcı veri sözleşmesi korunur; masaüstü kabulü web kabulü diye sunulmaz. |
+
+## Toplu metin işlemlerinin korumaları — 4 Kasım 2026
+
+[UAX #29](https://unicode.org/reports/tr29/tr29-49.html) görünür karakterin
+scalar'dan farklı olabildiğini açıklar.
+[AutoCAD TXT2MTXT](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-1E68C8B2-520F-4084-BD20-51DC4A32A7E5.htm)
+birleştirme/biçim ayarını açık bir işlem olarak sunar. KentOS'ta bu
+inceleme üç somut açığı gösterdi:
+
+1. `replace` scalar eşleşmesi `g` + aksanın yalnız `g` parçasını
+   değiştirip aksanı geride bırakabiliyordu. Yazılacak eşleşmeler extended
+   grapheme sınırında değilse bütün işlem açıklamalı `invalid_input` olur.
+   Arama sonucu/kayıtlı run aralıkları scalar kalır; gizli normalizasyon yok.
+2. Sekmeli paragrafın tab parçaları satır sanılıyordu. Ayırma artık ortak
+   layout'un fiziksel derinliğini ve gerçek baseline ofsetini kullanır;
+   aynı satırdaki ikinci hücre satır sayısını artırmaz. Döndürülmüş,
+   alt hizalı üç satır bağımsız sayısal konumlarla sınanır.
+3. Unicode ile eski profil veya farklı font/paragraf biçimleri
+   birleştirilirken ikinci yazının biçimi sessizce ilkine dönüşebiliyordu.
+   Unicode içeren uyumsuz seçim reddedilir; önce biçim açıkça eşitlenir.
+   Uyumlu seçimde run ve alan aralıkları taşınır, tek Undo korunur.
+
+Önerilen bütün Unicode sonuçlar yazmadan önce ortak planla doğrulanır.
+Buna numaralama, font/biçim kopyası, wildcard bul/değiştir ve property/stil
+komut yolu da dahildir. Eski veya doğrulanamayan alanı olan yazının konum,
+boy, birleştirme ve ayırması önce açık alan yenilemesi ister. Denetim ve
+plan belgeye yazmaz; toplu ret önceki sağlam hedefi de değiştirmez.
+Yeni dokuz native testi, 50 çekirdek metin testi ve tam native takımın
+468 testi geçti (37 ayrı/ignored); MCP 11, yeniden derlenen Python bağlamasıyla
+13 sözleşme testi de geçti. GUI kabulü aşağıda kaydedildi.
+
+## PDF'nin aranabilir karakter kutusu — 4 Kasım 2026
+
+Gerçek Preview aramasında `العربية` bulunamadı. İnceleme, dondurulmuş
+Noto Sans Arabic'in bazı kaynak harflerini sıfır advance'lı ayrı nokta
+glyph'inden önce ürettiğini gösterdi. İlk çizilen glyph'e Unicode anlamı
+vermek karakterin seçilebilir kutusunu noktanın konumuna bağlıyordu.
+
+Artık kümenin Unicode metni advance'ı en büyük gövde glyph'ine aittir;
+diğer glyph'ler boş continuation taşır. Tümü sıfır advance ise ilk glyph
+korunur. Harf sırası, GID, kontur, dönüşüm matrisi ve boya değişmez;
+`ActualText` yine mantıksal kaynak metnidir. Deneyde yalnız bu eşleme
+değişince Preview aynı sözcüğü buldu. C HarfBuzz 15'in bağımsız yedi gövde
+GID'siyle birim regresyon geçti. Ardından üretim derlemesinden gerçek GUI
+PDF'si üretildi ve aynı sözcük Preview'da bulundu; değiştirilmiş deney
+dosyası bu son kabulün yerine kullanılmadı.
+
+PDF Association'ın [mantıksal içerik sırası açıklaması](https://pdfa.org/techniques-for-accessible-pdf/order-of-marked-content-sequences-within-a-tag-correctly-set/UA1_Tpdf-G4_02/)
+ve [ActualText rehberi](https://pdfa.org/download-area/publications/Tagged-PDF-Best-Practice-Guide.pdf)
+görsel sıra ile mantıksal kaynağı ayırır. PDFium ve PDFKit sürümlerinin
+karışık paragrafta çıkarım/kopyalama sırası farklı olabilir. Kaynak ters
+çevrilerek belli bir okuyucuya uydurulmaz; PDF/UA, PDF/A veya her okuyucuda
+tam paragraf kopyası uygunluğu iddia edilmez.
+
+## Son kabul — 4 Kasım 2026
+
+CAD-ADV-10'un yerel 2D CAD kapsamı aşağıdaki kanıtlarla tamamlandı. Açık
+Unicode profili, korunan legacy davranışı ve açıklamalı ret verilen içerik
+birlikte teslim edilir. Matrisin dışında kalan içerik için sessiz başarı
+veya başka font motoruna kaçış yoktur.
+
+- Gerçek uygulamada yedi Unicode yazılı dosya açıldı: Türkçe/birleşik aksan,
+  teknik sembol, Arapça/İbranice/Latin karışık yön, güncel proje field'ı,
+  kesir/tolerans, sekme/iki sütun ve eğri boyunca yazı. Aksanlı görünür
+  karakter tek Backspace ile silindi; yalnız bu metin değişti. Tek GUI
+  Undo ve kayıt özgün KCAD byte'larını geri verdi.
+- Aynı yedi yazı arayüzden kaynaklar kaldırılarak okunur biçimde aynalandı.
+  Kayıt bağımsız KCAD okuyucusuyla açıldı: profil, metin, run/field, font,
+  boy ve genişlik faktörü korundu. Önceki bağımsız referans çerçeveli
+  aynalama kabulü merkez/köşe ölçüsünü 4 nm içinde doğruladı. Yeni karma
+  dosyada da tek GUI Undo sonrası kayıt özgün byte'larla aynıydı.
+- Aynalanmış kayıttan arayüzde 1:50 pafta ve baskı önizlemesi açıldı,
+  PDF kaydedildi. Bağımsız FontTools/pypdf denetiminde beş fontun 64 CID
+  konturu paketli özgün yüzlerle eşleşti. Mantıksal `ActualText` yedi
+  kaynak metni korudu; kesir/toleransın kaynak işaretçileri görünür
+  kesir/boşluk karşılıklarıyla açıkça karşılaştırıldı.
+- Gerçek Preview aramasında `العربية`, `עברית` ve `İstanbul` ayrı ayrı
+  bir eşleşme verdi. Bağımsız PDFium araması bu üç sözcüğü ve `Türkçe`yi
+  tam kaynak sözcükle geri verdi. Karışık paragrafın bütününü kopyalarken
+  okuyucuların run sırası tahmini hâlâ farklı olabilir. Bu sınırlama
+  destek matrisinde kalır; sözcük araması bütün okuyucularda tam paragraf
+  kopyası, PDF/UA veya PDF/A uygunluğu diye adlandırılmaz.
+- GUI'de kaydedilen aynı dosyanın 144 dpi CPU önizlemesi ve bağımsız
+  Poppler rasteri karşılaştırıldı: sınırlar en çok 1 px farklı;
+  1 px komşuluğunda eşleşmeyen CPU mürekkebi 0/6776, PDF mürekkebi
+  6/7114. Aranabilir karakter sahipliği düzeltmesinin öncesi/sonrası
+  gerçek GUI PDF rasterleri byte düzeyinde aynıydı; boya geometrisi değişmedi.
+- Gerçek GUI'de üç sekmeli paragraf satırlara ayrıldı. Önceki sürümde
+  kaydığı görülen satırlar artık bağımsız referans baseline'larında:
+  yeni üst noktalar `(4, 1.36)`, `(4, .86)`, `(4, .36)`. Uyumlu iki metin
+  birleştirildi; yalnız beklenen yeni paragraf oluştu. Her iki işlemde
+  tek Undo sonrası dosya özgün byte'larla aynıydı.
+- Gerçek Bul ve değiştir penceresinde yalnız `g` arayarak aksanı ayırma
+  girişimi açıklamalı standart KentOS Banner ile reddedildi. Ret sonrası
+  kayıt aynı byte'lar; bütün `Öğç` → `İstanbul` değişiminde yalnız metin
+  değişti, Unicode profili korundu, tek Undo aynı byte'ları geri verdi.
+  Son derlemede başarılı işlem yalnız başarı bilgisini gösterir; sonuçlar
+  tüketildi diye ayrıca “eşleşme yok” uyarısı göstermez. Bu son görünüm
+  de gerçek pencerede yeniden doğrulandı.
+- Son doğrulamalar: 50 çekirdek metin, tam uygulama 468 (37 ayrı/ignored),
+  interaction 72, plot birim 18, kitap 9 (bir ayrı dosya testi ignored),
+  ayrıca GUI kaydından çıktı üreten ignored test açıkça çalıştırıldı;
+  MCP 11 ve Python 13 geçti. Sıkı masaüstü Clippy, masaüstü derlemesi,
+  üretilmiş SDK/katalog kontrolü ve diff kontrolü temiz. Derlemede mevcut
+  ts-rs `deny_unknown_fields` uyarıları sürer; bunlar Clippy ihlali değildir.
+
+Ekranlar, geçici KCAD/PDF'ler, bağımsız okuyucu/raster raporları ve loglar
+repo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında tutulur. Son GUI
+ikili özeti: `bc4339425cf8f280bbcc502d6b39d00e3fb3caa09a57075aa23f7841c0fcca45`.
+PDF kabulü aynı çıktı kodunu içeren önceki derlemede yapıldı; son derlemenin
+tek ilave değişikliği bul/değiştir penceresindeki gereksiz boş sonuç uyarısıdır.
+
+Tablo/kılavuz/üretilen etiketlerin yeni profile toplu geçişi, blok tanımı
+alanlarının toplu yenilemesi, ligatür bileşenlerine ayrı boya ve paketli
+fontların dışında kalan yazı sistemleri teslim edilmiş gibi işaretlenmez.
+Bunların mevcut davranışları, denetimleri ve açık ret sınırları matriste
+yer alır. CAD-ADV-10'un motorları değerlendirme ve açık destek sözleşmesi
+koşulu bunları otomatik dönüştürme yetkisi vermez. Web ürün çalışması
+ADR0228 kapsamında ertelenmiş durumdadır.
