@@ -1,11 +1,12 @@
-//! Taşıma planı (plan/road.md Y23, docs/adr/0924 §3, `haul.plan`): a mass haul diagram's earthwork moved at the least
-//! haul moment, its borrow and waste sites taking up to their volume. Önizle runs `road.hauls.plan` (nothing written):
+//! Taşıma planı (plan/road.md Y23 and Y24, docs/adr/0924 §3 and 0925, `haul.plan`): a mass haul diagram's earthwork moved
+//! at the least haul moment or the least cost (the diagram's free haul and prices), its borrow and waste sites taking up
+//! to their volume. Önizle runs `road.hauls.plan` (nothing written):
 //! the flow along the road (above the line forward, below it back), the sites marked where they stand; beside, the
 //! totals, the moment and its average, each site's use against its capacity, and why a plan does not close.
 //!
 //! ```text
 //! ┌ Taşıma planı ───────────────────────────────────────────────────────────────────────────────────┐
-//! │ Brükner [Yan Brükner ▾]                                                                          │
+//! │ Brükner [Yan Brükner ▾]  Amaç [En küçük moment | En düşük maliyet]                               │
 //! │ ┌ the flow along the road, sites ┐  Yarma fazlası · Dolgu fazlası · Moment · Alanlar             │
 //! │ └────────────────────────────────┘                                                               │
 //! │                                                                         [Önizle] [Kapat]         │
@@ -15,10 +16,11 @@
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_commands::{HaulPlanned, HaulSiteKind, HaulsPlan};
+use kentos_commands::{HaulObjective, HaulPlanned, HaulSiteKind, HaulsPlan};
 use kentos_native_application::road_hauls_plan;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
+use kentos_ui::widget::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::{label, style};
 
@@ -30,10 +32,30 @@ use crate::traces::Control;
 pub const TITLE: &str = "Taşıma planı";
 const PREVIEW: &str = "Önizle";
 const CLOSE: &str = "Kapat";
+pub(crate) const MOMENT: &str = "En küçük moment";
+pub(crate) const COST: &str = "En düşük maliyet";
+
+/// What the plan makes least, as the window shows it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Aim {
+    #[default]
+    Moment,
+    Cost,
+}
+
+impl std::fmt::Display for Aim {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Aim::Moment => MOMENT,
+            Aim::Cost => COST,
+        })
+    }
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct Window {
     pub(crate) haul: Option<String>,
+    pub(crate) aim: Aim,
     pub(crate) preview: Option<Result<HaulPlanned, String>>,
     pub(crate) warnings: Vec<String>,
 }
@@ -41,6 +63,7 @@ pub struct Window {
 #[derive(Debug, Clone)]
 pub enum Event {
     Haul(String),
+    Aim(Aim),
     Preview,
     Close,
 }
@@ -93,10 +116,14 @@ impl App {
         let Some(w) = self.haul_plan_window.as_mut() else { return Task::none() };
         match event {
             Event::Haul(h) => w.haul = Some(h),
+            Event::Aim(a) => w.aim = a,
             Event::Preview => {
                 let Some(doc) = &self.document else { return Task::none() };
                 let read = match w.haul.clone() {
-                    Some(haul) => road_hauls_plan::preview(&doc.model, &HaulsPlan { haul }),
+                    Some(haul) => {
+                        let objective = Some(if w.aim == Aim::Cost { HaulObjective::Cost } else { HaulObjective::Moment });
+                        road_hauls_plan::preview(&doc.model, &HaulsPlan { haul, objective })
+                    }
                     None => Err("Bir Brükner seçin.".to_owned()),
                 };
                 match read {
@@ -136,12 +163,15 @@ impl App {
         let ids: Vec<String> = list.iter().map(|c| c.0.clone()).collect();
         let at = w.haul.as_ref().and_then(|c| ids.iter().position(|i| i == c));
         let pick = container(Select::new(list.iter().map(|c| Choice::new(c.1.clone())), at, move |i| msg(Event::Haul(ids[i].clone())))).width(220);
-        let mut body = Column::new().spacing(12).push(row![words::field("Brükner", pick, None)]);
+        let aim = Segmented::new([Aim::Moment, Aim::Cost], w.aim, |a| msg(Event::Aim(a)));
+        let mut body = Column::new()
+            .spacing(12)
+            .push(row![words::field("Brükner", pick, None), words::field("Amaç", aim, None)].spacing(10).align_y(iced::alignment::Vertical::Bottom));
         match &w.preview {
             None => {
                 body = body.push(
                     label::caption(
-                        "Her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır. Plan en küçük taşıma momentidir.",
+                        "Her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır. En küçük moment taşıma uzaklığını, en düşük maliyet Brüknerin serbest taşımasını ve fiyatlarını okur.",
                     )
                     .style(muted),
                 );
@@ -150,7 +180,7 @@ impl App {
             Some(Ok(r)) => {
                 let picture = container(iced::widget::canvas(Flow { read: r }).width(Fill).height(typography::scaled(360.0))).style(style::container::field_box);
                 let line = |k: String, v: String| row![label::caption(k).style(muted).width(150), label::body(v)].spacing(8);
-                let mut side = Column::new().spacing(5).width(400);
+                let mut side = Column::new().spacing(5).width(400).padding(iced::Padding { right: 14.0, ..iced::Padding::ZERO });
                 side = side.push(line("Durum".into(), if r.feasible { "Plan kurulur".into() } else { "Plan kurulamaz".into() }));
                 side = side.push(line("Yarma fazlası".into(), format!("{} m³", grouped(r.cut, 1))));
                 side = side.push(line("Dolgu fazlası".into(), format!("{} m³", grouped(r.fill, 1))));
@@ -159,6 +189,18 @@ impl App {
                     side = side.push(line("Taşıma momenti".into(), format!("{} m³·m", grouped(r.moment, 0))));
                     if let Some(a) = r.average {
                         side = side.push(line("Ortalama uzaklık".into(), format!("{} m", grouped(a, 1))));
+                    }
+                    if let Some(c) = &r.cost {
+                        let money = |v: f64| format!("{} {}", grouped(v, 2), c.currency);
+                        side = side.push(line("Serbest taşıma".into(), format!("{} m", grouped(r.free.unwrap_or(0.0), 1))));
+                        if let Some(e) = c.economic {
+                            side = side.push(line("Ekonomik taşıma sınırı".into(), format!("{} m", grouped(e, 1))));
+                        }
+                        side = side.push(line("Fazla taşıma momenti".into(), format!("{} m³·m", grouped(c.over_moment, 0))));
+                        side = side.push(line("Fazla taşıma".into(), money(c.overhaul)));
+                        side = side.push(line("Döküm".into(), money(c.waste)));
+                        side = side.push(line("Ödünç".into(), money(c.borrow)));
+                        side = side.push(line("Toplam maliyet".into(), money(c.total)));
                     }
                 } else {
                     if r.shortage > 0.0 {
@@ -198,6 +240,8 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
+            Control::Press(MOMENT) => Some(msg(Event::Aim(Aim::Moment))),
+            Control::Press(COST) => Some(msg(Event::Aim(Aim::Cost))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

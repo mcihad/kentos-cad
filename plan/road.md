@@ -384,7 +384,7 @@ Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve eng
 - [ ] **ROAD-HAUL-06:** Haul network bağlantısı yalnız plan çizgilerinin ekranda kesişmesi sayılmasın; gerçek source/destination/topology gereksinimleri denetlensin.
 - [~] **ROAD-HAUL-07:** Min-cost-flow veya seçilen optimizer feasibility/optimality gap ve solver version ile raporlansın; heuristic optimum diye sunulmasın. (Y23, ADR 0924: tam en küçük maliyetli akış, kurulamazlık eksik dolgu ve artan yarmayla; algoritmanın adı ve sürümü cevapta açık.)
 - [ ] **ROAD-HAUL-08:** Borrow/waste kapasite ve iş takvimi değişince etkilenen taşıma planı stale olsun.
-- [ ] **ROAD-HAUL-09:** Kısıtlı kapasite, one-way taşıma, malzeme dönüşüm verimi ve yeniden işleme cost'u alternatif analizde olsun.
+- [~] **ROAD-HAUL-09:** Kısıtlı kapasite, one-way taşıma, malzeme dönüşüm verimi ve yeniden işleme cost'u alternatif analizde olsun. (Y23–Y24, ADR 0924, 0925: alanların kapasitesi, en küçük moment ya da en düşük maliyet planı; tek yön, dönüşüm verimi ve yeniden işleme açık.)
 - [ ] **ROAD-HAUL-10:** Maliyet/karbon/truck trip hesabı katsayı, taşıt payload ve varsayımlarını görünür tutsun; otomatik mevzuat/şantiye onayı üretmesin.
 - [ ] **ROAD-HAUL-11:** Brükner grafiği, plan ağı, station tables ve 3D materyal bölgeleri aynı HaulPlan'ı kullansın.
 - [ ] **ROAD-HAUL-12:** CSV/XLSX/report çıktısı approved quantity/haul revisions ve aktarım birimlerini taşısın.
@@ -614,6 +614,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y21 | Tasarım denetimi | ROAD-ALIGN-11, 15; ROAD-PROFILE-13 | Aks ve boykesit kullanıcının kurallarıyla: yarıçap, kurp ve klotoid boyu, ters ve kırık sırtlı kurplar, eğimler, K |
 | Y22 | Platform suyu | ROAD-DEVER-09 | Koridor platformunun yatık yerleri, sıfır enine eğim ve kenarlardaki alçak noktalar |
 | Y23 | Taşıma planı | ROAD-HAUL-02, 07 | Brüknerin hacmi en küçük taşıma momentiyle, ödünç ve döküm alanları kapasiteleriyle |
+| Y24 | Ekonomik taşıma | ROAD-HAUL-09, 10 | Serbest taşıma ve fiyatlarla en düşük maliyetli plan, ekonomik taşıma sınırı |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 
@@ -676,6 +677,8 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 **Y22'nin aşamaları ve durumu** ([ADR 0923](../docs/adr/0923-road-platform-water.md); araştırma 4 Kasım 2026: dever geçişinin yatık yeri ve en küçük bileşke eğim, Civil 3D'nin ve OpenRoads'un koridor yüzeyinde eğim analizi; Netcad'in çevrimiçi belgesi yok): Y22.1: çekirdekte platform suyu (üçgenin en dik eğimi, aralıklar, enine eğimin sıfırı, alçak noktalar). Y22.2: `road.corridors.water` (21 ortak durum, Python, MCP). Y22.3: Koridor › Platform suyu penceresi (resimler `.run/gui-evidence/yol-y22-su-*`). Y22 bitti; platformda suyun yolu, ızgara aralığı ve ters enine eğim açık.
 
 **Y23'ün aşamaları ve durumu** ([ADR 0924](../docs/adr/0924-road-haul-plan.md); araştırma 4 Kasım 2026: Civil 3D'nin dengeleme seçenekleri, Trimble'ın alan kapasiteli kütle taşıması, Softree Optimal'in eniyilemesi; OpenRoads ve Netcad'in çevrimiçi eniyileme belgesi yok): Y23.1: çekirdekte taşıma planı (ardışık en kısa yollarla en küçük maliyetli akış). Y23.2: `road.hauls.plan` (26 ortak durum HiGHS doğrusal programıyla, Python, MCP). Y23.3: Koridor › Brükner › Taşıma planı penceresi (resimler `.run/gui-evidence/yol-y23-tasima-*`). Y23 bitti; serbest taşımalı ve fiyatlı maliyet amacı, taşıma yolu ağı, malzeme türleri ve takvim açık.
+
+**Y24'ün aşamaları ve durumu** ([ADR 0925](../docs/adr/0925-road-economic-haul-plan.md); araştırma 4 Kasım 2026: Civil 3D'nin serbest ve fazla taşıması, ekonomik taşıma sınırı (ders kitaplarının LEH'i), Trimble ve Softree'nin maliyet eniyilemesi; Netcad'in çevrimiçi belgesi yok): Y24.1: çekirdekte fiyatlı plan (ulaştırma ağı, maliyet sonra moment). Y24.2: `road.hauls.plan`'ın `objective`'i (14 yeni ortak durum iki aşamalı HiGHS ve kesirlerle). Y24.3: Taşıma planı penceresinde Amaç ve maliyet satırları (resimler `.run/gui-evidence/yol-y23-tasima-ekonomik-*`, `-serbest-*`). Y24 bitti; yan döküm, büyük kübajda başarım, taşıma yolu ve takvim açık.
 
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 

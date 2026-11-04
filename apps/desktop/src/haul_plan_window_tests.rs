@@ -56,7 +56,22 @@ fn an_unclosed_plan_says_why() {
     assert!(w.warnings.iter().any(|x| x.contains("karşılanmayan dolgu")));
 }
 
-/// Taşıma planı, wide and narrow, light and dark; `.run/gui-evidence/yol-y23-tasima-*`:
+#[test]
+fn the_window_reads_an_economic_plan() {
+    const NAME: &str = "Ekonomik: dolgu fazlası, ödünç ve döküm";
+    let mut app = plan_app(Some(NAME));
+    let _ = app.update(Message::Run("haul.plan"));
+    send(&mut app, W::Haul("h-3".into()));
+    send(&mut app, W::Aim(crate::haul_plan_window::Aim::Cost));
+    send(&mut app, W::Preview);
+    let w = app.haul_plan_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    let want = &case(NAME)["steps"][0]["result"]["output"];
+    let c = r.cost.as_ref().expect("a cost");
+    assert!((c.total - want["cost"]["total"].as_f64().expect("a total")).abs() < 1e-3);
+}
+
+/// Taşıma planı, wide and narrow, light and dark; `.run/gui-evidence/yol-y23-tasima-*` (the economic plan, Y24, too):
 ///
 /// ```text
 /// cargo test -p kentos-desktop --lib haul_plan_window_tests::screens -- --ignored --nocapture
@@ -73,10 +88,12 @@ fn screens() {
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
-        for (case_name, haul, file) in [
-            ("Yan Brükner: ödünç alanı dolguları besler", "h-2", "odunc"),
-            ("Dolgu fazlası: ödünç ve döküm birlikte", "h-3", "dolgu"),
-            ("Dolgu fazlası: ödünç yetmez", "h-3", "yetmez"),
+        for (case_name, haul, file, cost) in [
+            ("Yan Brükner: ödünç alanı dolguları besler", "h-2", "odunc", false),
+            ("Dolgu fazlası: ödünç ve döküm birlikte", "h-3", "dolgu", false),
+            ("Dolgu fazlası: ödünç yetmez", "h-3", "yetmez", false),
+            ("Ekonomik: dolgu fazlası, ödünç ve döküm", "h-3", "ekonomik", true),
+            ("Ekonomik: serbest taşımalı yan Brükner", "h-2", "serbest", true),
         ] {
             let mut app = plan_app(Some(case_name));
             let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
@@ -88,6 +105,9 @@ fn screens() {
             let _ = app.update(Message::RibbonTab("corridor"));
             let _ = app.update(Message::Run("haul.plan"));
             send(&mut app, W::Haul(haul.into()));
+            if cost {
+                send(&mut app, W::Aim(crate::haul_plan_window::Aim::Cost));
+            }
             send(&mut app, W::Preview);
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("yol-y23-tasima-{file}-{name}.png"));

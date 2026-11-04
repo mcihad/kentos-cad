@@ -8,6 +8,12 @@ capacity; the least haul moment. A site's use is then checked unique (its least 
 moment), snapped to 0 or its capacity where it lies there, the one left balancing the totals; the segments' flows
 follow exactly (in fractions) from what each place gives or takes.
 
+The economic plan (docs/adr/0925) is a transportation programme: each cut to each fill, each cut to each waste site and
+each borrow site to each fill an arc, its cost the overhaul's price on the distance beyond the free haul and the site's
+price; HiGHS makes the cost least, then the moment among plans of that cost. The sites' uses are checked unique; the
+arcs HiGHS uses are then solved again exactly in fractions (the cut and fill rows, the sites at a bound) and the cost,
+the moment and the moment beyond the free haul read from them.
+
     uv run --no-project --python 3.11 --with triangle --with numpy --with mpmath --with pyproj --with scipy \\
         python3 scripts/fixtures/road_haul_plan_cases.py [--check]
 """
@@ -134,6 +140,157 @@ def solve(points, sites):
             "moved": cut + borrowed}
 
 
+def gauss(rows, rhs, n):
+    """The one solution of rows · x = rhs in fractions (rows a list of {column: value}); fails where there is none or
+    more than one."""
+    a = [[Fraction(r.get(k, 0)) for k in range(n)] + [Fraction(b)] for r, b in zip(rows, rhs)]
+    pivots, r = [], 0
+    for c in range(n):
+        p = next((i for i in range(r, len(a)) if a[i][c] != 0), None)
+        if p is None:
+            continue
+        a[r], a[p] = a[p], a[r]
+        piv = a[r][c]
+        a[r] = [v / piv for v in a[r]]
+        for i in range(len(a)):
+            if i != r and a[i][c] != 0:
+                f = a[i][c]
+                a[i] = [v - f * w for v, w in zip(a[i], a[r])]
+        pivots.append(c)
+        r += 1
+    assert len(pivots) == n, f"the arcs used are not fixed by the rows: {len(pivots)} of {n}"
+    for i in range(r, len(a)):
+        assert abs(a[i][n]) < Fraction(1, 10**6), f"the rows disagree by {float(a[i][n])}"
+    return [a[i][n] for i in range(n)]
+
+
+def solve_priced(points, sites, prices):
+    places = []
+    for a, b in zip(points, points[1:]):
+        net = b[1] - a[1]
+        if net != 0.0 and b[0] > a[0]:
+            places.append((0.5 * (a[0] + b[0]), net))
+    cut = sum(q[1] for q in places if q[1] > 0.0)
+    fill = sum(-q[1] for q in places if q[1] < 0.0)
+    gives = sum(x["volume"] for x in sites if x["kind"] == "borrow")
+    takes = sum(x["volume"] for x in sites if x["kind"] == "waste")
+    tiny = 1e-9 * max(cut + fill + gives + takes, 1.0)
+    shortage = max(fill - cut - gives, 0.0)
+    surplus = max(cut - fill - takes, 0.0)
+    base = {"cut": cut, "fill": fill, "shortage": 0.0, "surplus": 0.0}
+    if shortage > tiny or surplus > tiny:
+        return {**base, "feasible": False, "used": [0.0] * len(sites), "segments": [], "moment": 0.0, "moved": 0.0,
+                "shortage": shortage, "surplus": surplus}
+    F, o = prices["free"], prices["overhaul"]
+    src = [(q[0], q[1], None) for q in places if q[1] > 0] + [(x["station"], x["volume"], j) for j, x in enumerate(sites) if x["kind"] == "borrow"]
+    snk = [(q[0], -q[1], None) for q in places if q[1] < 0] + [(x["station"], x["volume"], j) for j, x in enumerate(sites) if x["kind"] == "waste"]
+    arcs = [(i, j) for i, a in enumerate(src) for j, b in enumerate(snk) if not (a[2] is not None and b[2] is not None)]
+    dist = [abs(snk[j][0] - src[i][0]) for i, j in arcs]
+    cost = np.array([o * max(0.0, d - F) + (prices["borrow"] if src[i][2] is not None else 0.0)
+                     + (prices["waste"] if snk[j][2] is not None else 0.0) for (i, j), d in zip(arcs, dist)])
+    na = len(arcs)
+    eq, eqb, ub, ubb = [], [], [], []
+    for i, a in enumerate(src):
+        row = np.zeros(na)
+        for k, (ii, _) in enumerate(arcs):
+            if ii == i:
+                row[k] = 1.0
+        (ub if a[2] is not None else eq).append(row)
+        (ubb if a[2] is not None else eqb).append(a[1])
+    for j, b in enumerate(snk):
+        row = np.zeros(na)
+        for k, (_, jj) in enumerate(arcs):
+            if jj == j:
+                row[k] = 1.0
+        (ub if b[2] is not None else eq).append(row)
+        (ubb if b[2] is not None else eqb).append(b[1])
+    kw = {"A_eq": np.array(eq), "b_eq": np.array(eqb), "bounds": [(0, None)] * na, "method": "highs"}
+    if ub:
+        kw["A_ub"], kw["b_ub"] = np.array(ub), np.array(ubb)
+    first = linprog(cost, **kw)
+    assert first.status == 0, first.message
+    # The plans of the least cost: the arcs whose reduced cost is 0 (HiGHS's marginals of the lower bounds); among
+    # them the least moment, a vertex of that face.
+    reduced = first.lower.marginals
+    keep = [(0, None) if reduced[k] <= 1e-9 * max(1.0, abs(cost[k])) else (0, 0) for k in range(na)]
+    kw2 = {**kw, "bounds": keep}
+    d = np.array(dist)
+    second = linprog(d, **kw2)
+    assert second.status == 0, second.message
+    assert abs(float(cost @ second.x) - first.fun) < 1e-6 * max(1.0, abs(first.fun))
+    kw3 = dict(kw2)
+    kw3["A_ub"] = np.vstack([kw2["A_ub"], d]) if ub else np.array([d])
+    kw3["b_ub"] = np.concatenate([kw2["b_ub"], [second.fun * (1 + 1e-9) + 1e-6]]) if ub else np.array([second.fun * (1 + 1e-9) + 1e-6])
+    side = {}
+    for j, x in enumerate(sites):
+        c = np.zeros(na)
+        for k, (i, jj) in enumerate(arcs):
+            if (x["kind"] == "borrow" and src[i][2] == j) or (x["kind"] == "waste" and snk[jj][2] == j):
+                c[k] = 1.0
+        lo = linprog(c, **kw3)
+        hi = linprog(-c, **kw3)
+        assert lo.status == 0 and hi.status == 0
+        assert -hi.fun - lo.fun < 1e-3, f"site {j}'s use is not unique: {lo.fun} – {-hi.fun}"
+        side[j] = (c, lo.fun)
+    scale = max(cut + fill + gives + takes, 1.0)
+    support = [k for k in range(na) if second.x[k] > 1e-9 * scale]
+    col = {k: n for n, k in enumerate(support)}
+    rows, rhs = [], []
+    for i, a in enumerate(src):
+        if a[2] is None:
+            rows.append({col[k]: 1 for k in support if arcs[k][0] == i})
+            rhs.append(Fraction(a[1]))
+    for j, b in enumerate(snk):
+        if b[2] is None:
+            rows.append({col[k]: 1 for k in support if arcs[k][1] == j})
+            rhs.append(Fraction(b[1]))
+    for j, x in enumerate(sites):
+        c, u = side[j]
+        mine = {col[k]: 1 for k in support if c[k] == 1.0}
+        if abs(u) < 1e-9 * scale:
+            assert not mine
+        elif abs(u - x["volume"]) < 1e-9 * scale:
+            rows.append(mine)
+            rhs.append(Fraction(x["volume"]))
+    flows = gauss(rows, rhs, len(support))
+    assert all(f >= -Fraction(1, 10**6) for f in flows)
+    used = [Fraction(0)] * len(sites)
+    moment = over = Fraction(0)
+    total = Fraction(0)
+    for n, k in enumerate(support):
+        i, j = arcs[k]
+        f = flows[n]
+        dd = Fraction(dist[k])
+        moment += f * dd
+        beyond = max(Fraction(0), dd - Fraction(F))
+        over += f * beyond
+        if src[i][2] is not None:
+            used[src[i][2]] += f
+        if snk[j][2] is not None:
+            used[snk[j][2]] += f
+    stations = sorted({q[0] for q in places} | {x["station"] for x in sites})
+    at = {x: k for k, x in enumerate(stations)}
+    give = [Fraction(0)] * len(stations)
+    for x, v in places:
+        give[at[x]] += Fraction(v)
+    for x, u in zip(sites, used):
+        give[at[x["station"]]] += u if x["kind"] == "borrow" else -u
+    flow, segments = Fraction(0), []
+    for k in range(len(stations) - 1):
+        flow += give[k]
+        segments.append({"from": stations[k], "to": stations[k + 1], "flow": float(flow)})
+    wasted = sum((u for x, u in zip(sites, used) if x["kind"] == "waste"), Fraction(0))
+    borrowed = sum((u for x, u in zip(sites, used) if x["kind"] == "borrow"), Fraction(0))
+    overhaul = Fraction(o) * over
+    waste = Fraction(prices["waste"]) * wasted
+    borrow = Fraction(prices["borrow"]) * borrowed
+    total = overhaul + waste + borrow
+    assert abs(float(total) - first.fun) < 1e-6 * max(1.0, abs(first.fun)), (float(total), first.fun)
+    return {**base, "feasible": True, "used": [float(u) for u in used], "segments": segments, "moment": float(moment),
+            "moved": cut + float(borrowed), "over": float(over), "overhaul": float(overhaul), "waste": float(waste),
+            "borrow": float(borrow), "total": float(total)}
+
+
 def answer(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
     name = inp["haul"]
     h = next((x for x in hauls if x["id"] == name), None) or next(
@@ -156,7 +313,26 @@ def answer(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
             raise hc.Refused("invalid_haul", f"“{site['name']}” alanı kübajın km'leri dışında: kübaj "
                                              f"{ccmd.km_text(c['alignment'], first)} – {ccmd.km_text(c['alignment'], last)} arası.",
                              f"sites[{j}]")
-    p = solve(curve, sites)
+    objective = inp.get("objective", "moment")
+    priced = None
+    if objective == "cost":
+        c = h.get("cost")
+        if c is None:
+            raise hc.Refused("invalid_haul", f"“{h['name']}” Brüknerinin fiyatları yok; ekonomik plan fazla taşıma birim fiyatı ister.",
+                             "objective")
+        if not c.get("overhaul"):
+            raise hc.Refused("invalid_haul", f"“{h['name']}” Brüknerinin fazla taşıma birim fiyatı yok ya da 0; ekonomik plan onu ister.",
+                             "objective")
+        for kind, key, words in (("waste", "waste", "döküm alanı var ama döküm birim fiyatı yok"),
+                                 ("borrow", "borrow", "ödünç alanı var ama ödünç birim fiyatı yok")):
+            if key not in c and any(x["kind"] == kind for x in sites):
+                raise hc.Refused("invalid_haul", f"“{h['name']}” Brüknerinin {words}.", "objective")
+        prices = {"free": h.get("free", 0.0), "overhaul": c["overhaul"] / 1000, "waste": c.get("waste", 0.0),
+                  "borrow": c.get("borrow", 0.0)}
+        p = solve_priced(curve, sites, prices)
+        priced = (c, prices)
+    else:
+        p = solve(curve, sites)
     if not p["feasible"]:
         warnings.append({"code": "haul_plan_infeasible", "path": "haul",
                          "message": f"“{h['name']}” taşıma planı her şeyi yerleştiremiyor: karşılanmayan dolgu "
@@ -169,6 +345,17 @@ def answer(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
            "segments": p["segments"], "shortage": p["shortage"], "surplus": p["surplus"]}
     if p["feasible"] and p["moved"] > 0:
         out["average"] = p["moment"] / p["moved"]
+    out["objective"] = objective
+    if priced is not None:
+        c, prices = priced
+        if "free" in h:
+            out["free"] = h["free"]
+        if p["feasible"]:
+            cost = {"currency": c["currency"], "overMoment": p["over"], "overhaul": p["overhaul"], "waste": p["waste"],
+                    "borrow": p["borrow"], "total": p["total"]}
+            if "waste" in c or "borrow" in c:
+                cost["economic"] = prices["free"] + (prices["waste"] + prices["borrow"]) / prices["overhaul"]
+            out["cost"] = cost
     return out, warnings
 
 
@@ -234,6 +421,40 @@ def cases():
     hauls = [{**H1, "sites": [site("Döküm", "waste", 600.0, big)]}, H2, H3]
     q("Plan cevabı verir", {"haul": "h-1"}, hauls, op="plan")
     q("Doğrulama uyarıları verir", {"haul": "h-2"}, hauls, op="validate")
+    # The economic plan (docs/adr/0925).
+    P = {"currency": "TL", "overhaul": 800.0, "waste": 40.0, "borrow": 60.0}
+    def cost_case(name, haul, hauls, inp=None):
+        q(name, {"haul": haul, "objective": "cost", **(inp or {})}, hauls)
+    cost_case("Ekonomik: sonda döküm alanı, serbest taşıma 150 m", "h-1",
+              [{**H1, "cost": P, "sites": [site("Döküm", "waste", 600.0, big)]}, H2, H3])
+    cost_case("Ekonomik: iki döküm alanı", "h-1",
+              [{**H1, "cost": P, "sites": [site("D1", "waste", 40.0, 10000.0), site("D2", "waste", 590.0, 25000.0)]}, H2, H3])
+    cost_case("Ekonomik: pahalı fazla taşıma dökümü öne çeker", "h-1",
+              [{**H1, "cost": {**P, "overhaul": 5000.0}, "sites": [site("D1", "waste", 40.0, 10000.0),
+                                                                  site("D2", "waste", 590.0, 25000.0)]}, H2, H3])
+    cost_case("Ekonomik: yan Brükner, ödünç ve döküm", "h-2",
+              [H1, {**H2, "cost": P, "sites": [site("Ödünç", "borrow", 50.0, 2000.0), site("Döküm 1", "waste", 400.0, 20000.0)]}, H3])
+    cost_case("Ekonomik: serbest taşımalı yan Brükner", "Yan Brükner",
+              [H1, {**H2, "free": 100.0, "cost": P, "sites": [site("Ödünç", "borrow", 50.0, 2000.0),
+                                                                site("Döküm 1", "waste", 400.0, 20000.0)]}, H3])
+    cost_case("Ekonomik: dolgu fazlası, iki ödünç", "h-3",
+              [H1, H2, {**H3, "free": 100.0, "cost": P, "sites": [site("Ö1", "borrow", 160.0, 3000.0),
+                                                                  site("Ö2", "borrow", 420.0, 18000.0)]}])
+    cost_case("Ekonomik: dolgu fazlası, ödünç ve döküm", "h-3",
+              [H1, H2, {**H3, "cost": P, "sites": [site("Ödünç", "borrow", 380.0, 16000.0), site("Döküm", "waste", 30.0, 1000.0)]}])
+    cost_case("Ekonomik: yalnız ödünç fiyatı", "h-3",
+              [H1, H2, {**H3, "free": 50.0, "cost": {"currency": "EUR", "overhaul": 2.0, "borrow": 4.5},
+                        "sites": [site("Ödünç", "borrow", 600.0, 20000.0)]}])
+    cost_case("Ekonomik: plan kurulamaz", "h-1", [{**H1, "cost": P}, H2, H3])
+    q("Amaç açıkça moment", {"haul": "h-1", "objective": "moment"},
+      [{**H1, "cost": P, "sites": [site("Döküm", "waste", 600.0, big)]}, H2, H3])
+    cost_case("Ekonomik: fiyat yok", "h-1", [{**H1, "sites": [site("Döküm", "waste", 600.0, big)]}, H2, H3])
+    cost_case("Ekonomik: fazla taşıma fiyatı yok", "h-1",
+              [{**H1, "cost": {"currency": "TL", "waste": 40.0}, "sites": [site("Döküm", "waste", 600.0, big)]}, H2, H3])
+    cost_case("Ekonomik: döküm fiyatı yok", "h-1",
+              [{**H1, "cost": {"currency": "TL", "overhaul": 800.0}, "sites": [site("Döküm", "waste", 600.0, big)]}, H2, H3])
+    cost_case("Ekonomik: ödünç fiyatı yok", "h-3",
+              [H1, H2, {**H3, "cost": {"currency": "TL", "overhaul": 800.0}, "sites": [site("Ödünç", "borrow", 400.0, 20000.0)]}])
     # Refusals.
     q("Yol projesi değil", {"haul": "h-1"}, [H1, H2, H3], setup_=hc.setup(work="map"), result=hc.NOT_ROAD)
     q("Olmayan Brükner", {"haul": "yok"}, [H1, H2, H3])

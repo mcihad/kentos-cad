@@ -2,10 +2,12 @@
 //! moved at the least haul moment, its borrow and waste sites taking up to their capacity (`kentos_road::haul_plan`).
 //! Reads only. The shared cases are `fixtures/commands/v1/road.hauls.plan.json`.
 
-use kentos_commands::{CommandResult, CommandWarning, HaulPlanSite, HaulPlanned, HaulSegment, HaulSiteKind, HaulsPlan};
+use kentos_commands::{
+    CommandResult, CommandWarning, HaulObjective, HaulPlanCost, HaulPlanSite, HaulPlanned, HaulSegment, HaulSiteKind, HaulsPlan,
+};
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
-use kentos_road::haul_plan::{PlanSite, plan as solve};
+use kentos_road::haul_plan::{PlanSite, Prices, plan as solve, plan_priced};
 
 use crate::ExecutionContext;
 use crate::checks::Stop;
@@ -52,7 +54,43 @@ pub(crate) fn answer(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, 
         .iter()
         .map(|s| PlanSite { station: s.station, capacity: s.volume, borrow: s.kind == HaulSiteKind::Borrow })
         .collect();
-    let p = solve(&curve, &sites);
+    let objective = input.objective.unwrap_or(HaulObjective::Moment);
+    let (p, priced) = match objective {
+        HaulObjective::Moment => (solve(&curve, &sites), None),
+        HaulObjective::Cost => {
+            let c = def.cost.as_ref().ok_or_else(|| {
+                fail(codes::INVALID_HAUL, format!("“{}” Brüknerinin fiyatları yok; ekonomik plan fazla taşıma birim fiyatı ister.", def.name), "objective")
+            })?;
+            let overhaul = c.overhaul.filter(|o| *o > 0.0).ok_or_else(|| {
+                fail(codes::INVALID_HAUL, format!("“{}” Brüknerinin fazla taşıma birim fiyatı yok ya da 0; ekonomik plan onu ister.", def.name), "objective")
+            })?;
+            for (kind, price, words) in
+                [(HaulSiteKind::Waste, c.waste, "döküm alanı var ama döküm birim fiyatı yok"), (HaulSiteKind::Borrow, c.borrow, "ödünç alanı var ama ödünç birim fiyatı yok")]
+            {
+                if price.is_none() && def.sites.iter().any(|s| s.kind == kind) {
+                    return Err(fail(codes::INVALID_HAUL, format!("“{}” Brüknerinin {words}.", def.name), "objective"));
+                }
+            }
+            let prices = Prices {
+                free: def.free.unwrap_or(0.0),
+                overhaul: overhaul / 1000.0,
+                waste: c.waste.unwrap_or(0.0),
+                borrow: c.borrow.unwrap_or(0.0),
+            };
+            let costed = plan_priced(&curve, &sites, prices);
+            let economic = (c.waste.is_some() || c.borrow.is_some()).then(|| prices.free + (prices.waste + prices.borrow) / prices.overhaul);
+            let cost = costed.plan.feasible.then(|| HaulPlanCost {
+                currency: c.currency.clone(),
+                over_moment: costed.over_moment,
+                overhaul: costed.overhaul,
+                waste: costed.waste,
+                borrow: costed.borrow,
+                total: costed.total,
+                economic,
+            });
+            (costed.plan, Some((def.free, cost)))
+        }
+    };
     if !p.feasible {
         warnings.push(CommandWarning {
             code: codes::HAUL_PLAN_INFEASIBLE.into(),
@@ -81,6 +119,9 @@ pub(crate) fn answer(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, 
             segments: p.segments.iter().map(|&(from, to, flow)| HaulSegment { from, to, flow }).collect(),
             shortage: p.shortage,
             surplus: p.surplus,
+            objective,
+            free: priced.as_ref().and_then(|x| x.0),
+            cost: priced.and_then(|x| x.1),
         },
         warnings,
     ))

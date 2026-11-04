@@ -2572,6 +2572,20 @@ HatchWayName = Literal["object", "lines"]
 """The names of :class:`HatchWay`, for a plain string."""
 
 
+class HaulObjective(_StrEnum):
+    """What a haul plan makes least (docs/adr/0925).
+
+    - ``moment``: The haul moment (m³·m).
+    - ``cost``: The cost: the overhaul beyond the free haul, the waste and the borrow at the diagram's prices.
+    """
+    MOMENT = "moment"
+    COST = "cost"
+
+
+HaulObjectiveName = Literal["moment", "cost"]
+"""The names of :class:`HaulObjective`, for a plain string."""
+
+
 class HaulSiteKind(_StrEnum):
     """A site's kind: material brought in (borrow, ödünç) or taken away (waste, döküm)."""
     BORROW = "borrow"
@@ -35980,6 +35994,53 @@ class HaulLoop(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulPlanCost(_Model):
+    """An economic haul plan's cost (docs/adr/0925): the currency, the moment beyond the free haul (m³·m), the overhaul,
+    the waste and the borrow priced, and their total.
+    Attributes:
+        over_moment: Unit: volume-m.
+        overhaul: Unit: money.
+        waste: Unit: money.
+        borrow: Unit: money.
+        total: Unit: money.
+        economic: The limit of economic haul (m): the free haul and the waste and borrow prices (those given) over the overhaul's
+            per metre; beyond it wasting the cut and borrowing the fill costs less than hauling. None where neither price
+            is given. Unit: m.
+    """
+    currency: str
+    over_moment: float
+    overhaul: float
+    waste: float
+    borrow: float
+    total: float
+    economic: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["currency"] = self.currency
+        out["overMoment"] = float(self.over_moment)
+        out["overhaul"] = float(self.overhaul)
+        out["waste"] = float(self.waste)
+        out["borrow"] = float(self.borrow)
+        out["total"] = float(self.total)
+        if self.economic is not UNSET:
+            out["economic"] = None if self.economic is None else float(self.economic)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulPlanCost:
+        return cls(
+            currency=data["currency"],
+            over_moment=float(data["overMoment"]),
+            overhaul=float(data["overhaul"]),
+            waste=float(data["waste"]),
+            borrow=float(data["borrow"]),
+            total=float(data["total"]),
+            economic=UNSET if "economic" not in data else None if data["economic"] is None else float(data["economic"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulPlanSite(_Model):
     """A site in a haul plan: its name, kind, station, capacity and the volume the plan gives or takes there.
     Attributes:
@@ -36027,6 +36088,8 @@ class HaulPlanned(_Model):
         shortage: Unit: volume.
         surplus: Unit: volume.
         average: Unit: m.
+        cost: The cost, for the cost objective.
+        free: The free haul the cost read (m); none for the moment, or where the diagram has none. Unit: m.
     """
     haul: str
     feasible: bool
@@ -36038,7 +36101,10 @@ class HaulPlanned(_Model):
     segments: list[HaulSegment]
     shortage: float
     surplus: float
+    objective: HaulObjective | HaulObjectiveName
     average: float | None | Unset = UNSET
+    cost: HaulPlanCost | None | Unset = UNSET
+    free: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36052,8 +36118,13 @@ class HaulPlanned(_Model):
         out["segments"] = [e0.to_json() for e0 in self.segments]
         out["shortage"] = float(self.shortage)
         out["surplus"] = float(self.surplus)
+        out["objective"] = _enum_out(self.objective)
         if self.average is not UNSET:
             out["average"] = None if self.average is None else float(self.average)
+        if self.cost is not UNSET:
+            out["cost"] = None if self.cost is None else self.cost.to_json()
+        if self.free is not UNSET:
+            out["free"] = None if self.free is None else float(self.free)
         return out
 
     @classmethod
@@ -36069,7 +36140,10 @@ class HaulPlanned(_Model):
             segments=[HaulSegment.from_json(e0) for e0 in data["segments"]],
             shortage=float(data["shortage"]),
             surplus=float(data["surplus"]),
+            objective=_enum_in(HaulObjective, data["objective"]),
             average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
+            cost=UNSET if "cost" not in data else None if data["cost"] is None else HaulPlanCost.from_json(data["cost"]),
+            free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
         )
 
 
@@ -36300,18 +36374,25 @@ class HaulsPlan(_Model):
     Refusals, in this order: `not_a_road_project`, `unknown_haul`, `invalid_haul` (the volume does not
     compute or has no stretch, a site off its stations). Warnings: `haul_plan_infeasible`, `corridor_stale`,
     `volume_gap`.
+    Attributes:
+        objective: What the plan makes least (docs/adr/0925): the haul moment (absent), or the cost with the diagram's free haul
+            and prices, and among plans of that cost the moment.
     """
     haul: str
+    objective: HaulObjective | HaulObjectiveName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["haul"] = self.haul
+        if self.objective is not UNSET:
+            out["objective"] = None if self.objective is None else _enum_out(self.objective)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> HaulsPlan:
         return cls(
             haul=data["haul"],
+            objective=UNSET if "objective" not in data else None if data["objective"] is None else _enum_in(HaulObjective, data["objective"]),
         )
 
 
@@ -106190,6 +106271,9 @@ __all__ = [
     "HaulDef",
     "HaulListed",
     "HaulLoop",
+    "HaulObjective",
+    "HaulObjectiveName",
+    "HaulPlanCost",
     "HaulPlanSite",
     "HaulPlanned",
     "HaulReport",

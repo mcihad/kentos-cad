@@ -40193,7 +40193,7 @@
       "id": "road.hauls.plan",
       "version": 1,
       "title": "Taşıma planı",
-      "summary": "Bir Brüknerin kübajındaki toprağı en küçük taşıma momentiyle (m³·m) taşır; hiçbir şey yazmaz. Her aralığın net hacmi (yarmanın dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul.",
+      "summary": "Bir Brüknerin kübajındaki toprağı en küçük taşıma momentiyle (m³·m) taşır; hiçbir şey yazmaz. Her aralığın net hacmi (yarmanın dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik taşıma sınırı. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).",
       "aliases": [
         "tasimaplani",
         "enkisatasima"
@@ -40215,6 +40215,17 @@
         "properties": {
           "haul": {
             "type": "string"
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulObjective"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the plan makes least (docs/adr/0925): the haul moment (absent), or the cost with the diagram's free haul\nand prices, and among plans of that cost the moment."
           }
         },
         "required": [
@@ -40235,6 +40246,17 @@
             ],
             "x-unit": "m"
           },
+          "cost": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulPlanCost"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The cost, for the cost objective."
+          },
           "cut": {
             "format": "double",
             "type": "number",
@@ -40248,6 +40270,15 @@
             "type": "number",
             "x-unit": "volume"
           },
+          "free": {
+            "description": "The free haul the cost read (m); none for the moment, or where the diagram has none.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
           "haul": {
             "type": "string"
           },
@@ -40260,6 +40291,9 @@
             "format": "double",
             "type": "number",
             "x-unit": "volume"
+          },
+          "objective": {
+            "$ref": "#/$defs/HaulObjective"
           },
           "segments": {
             "items": {
@@ -40294,7 +40328,8 @@
           "sites",
           "segments",
           "shortage",
-          "surplus"
+          "surplus",
+          "objective"
         ],
         "title": "HaulPlanned",
         "type": "object"
@@ -40311,6 +40346,17 @@
             ],
             "x-unit": "m"
           },
+          "cost": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulPlanCost"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The cost, for the cost objective."
+          },
           "cut": {
             "format": "double",
             "type": "number",
@@ -40324,6 +40370,15 @@
             "type": "number",
             "x-unit": "volume"
           },
+          "free": {
+            "description": "The free haul the cost read (m); none for the moment, or where the diagram has none.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
           "haul": {
             "type": "string"
           },
@@ -40336,6 +40391,9 @@
             "format": "double",
             "type": "number",
             "x-unit": "volume"
+          },
+          "objective": {
+            "$ref": "#/$defs/HaulObjective"
           },
           "segments": {
             "items": {
@@ -40370,7 +40428,8 @@
           "sites",
           "segments",
           "shortage",
-          "surplus"
+          "surplus",
+          "objective"
         ],
         "title": "HaulPlanned",
         "type": "object"
@@ -117758,6 +117817,72 @@
         "overVolume",
         "overMoment",
         "unbalanced"
+      ],
+      "type": "object"
+    },
+    "HaulObjective": {
+      "description": "What a haul plan makes least (docs/adr/0925).",
+      "oneOf": [
+        {
+          "const": "moment",
+          "description": "The haul moment (m³·m).",
+          "type": "string"
+        },
+        {
+          "const": "cost",
+          "description": "The cost: the overhaul beyond the free haul, the waste and the borrow at the diagram's prices.",
+          "type": "string"
+        }
+      ]
+    },
+    "HaulPlanCost": {
+      "description": "An economic haul plan's cost (docs/adr/0925): the currency, the moment beyond the free haul (m³·m), the overhaul,\nthe waste and the borrow priced, and their total.",
+      "properties": {
+        "borrow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "money"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "economic": {
+          "description": "The limit of economic haul (m): the free haul and the waste and borrow prices (those given) over the overhaul's\nper metre; beyond it wasting the cut and borrowing the fill costs less than hauling. None where neither price\nis given.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "overMoment": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume-m"
+        },
+        "overhaul": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "money"
+        },
+        "total": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "money"
+        },
+        "waste": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "money"
+        }
+      },
+      "required": [
+        "currency",
+        "overMoment",
+        "overhaul",
+        "waste",
+        "borrow",
+        "total"
       ],
       "type": "object"
     },

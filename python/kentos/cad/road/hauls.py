@@ -12,6 +12,8 @@ from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  #
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
     HaulCostDef,
+    HaulObjective,
+    HaulObjectiveName,
     HaulPlanned,
     HaulSiteDef,
     HaulsEdit,
@@ -225,8 +227,12 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
     yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir.
     Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık,
     alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan
-    dolgu ve yerleşmeyen yarma. Uyarılar: haul_plan_infeasible, corridor_stale,
-    volume_gap. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul.
+    dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her
+    yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim
+    fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette
+    en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik
+    taşıma sınırı. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler:
+    not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).
     """
     __slots__ = ()
     id = "road.hauls.plan"
@@ -243,6 +249,7 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         /,
         *,
         haul: str,
+        objective: HaulObjective | HaulObjectiveName | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> HaulPlanned:
@@ -255,12 +262,18 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap:
         yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık,
         alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan
-        dolgu ve yerleşmeyen yarma. Uyarılar: haul_plan_infeasible, corridor_stale,
-        volume_gap. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul.
+        dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her
+        yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim
+        fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette
+        en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik
+        taşıma sınırı. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler:
+        not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).
 
         Args:
             doc: The drawing it works on.
             haul:
+            objective: What the plan makes least (docs/adr/0925): the haul moment (absent), or the cost with the diagram's free haul
+                and prices, and among plans of that cost the moment.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -275,6 +288,7 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         """
         return self.execute_input(doc, HaulsPlan(
             haul=haul,
+            objective=objective,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -283,12 +297,14 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         /,
         *,
         haul: str,
+        objective: HaulObjective | HaulObjectiveName | None | Unset = UNSET,
     ) -> HaulPlanned:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, HaulsPlan(
             haul=haul,
+            objective=objective,
         ))
 
     def validate(
@@ -297,12 +313,14 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         /,
         *,
         haul: str,
+        objective: HaulObjective | HaulObjectiveName | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, HaulsPlan(
             haul=haul,
+            objective=objective,
         ))
 
     def answer(
@@ -311,6 +329,7 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         /,
         *,
         haul: str,
+        objective: HaulObjective | HaulObjectiveName | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -322,6 +341,7 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         """
         return self.answer_input(doc, HaulsPlan(
             haul=haul,
+            objective=objective,
         ), op=op, request_id=request_id, expected=expected)
 
 

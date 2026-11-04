@@ -3336,7 +3336,7 @@
       "title": "Taşıma planı…",
       "short": "Taşıma planı",
       "icon": "haulPlan",
-      "description": "Bir Brüknerin hacmini en küçük taşıma momentiyle dağıtır, hiçbir şey yazmaz: her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır. Yol boyunca ileri ve geri taşınan hacim, alanların kullanımı, taşıma momenti ve ortalama uzaklık; alanlar yetmezse karşılanmayan dolgu ve yerleşmeyen yarma.",
+      "description": "Bir Brüknerin hacmini en küçük taşıma momentiyle ya da Brüknerin serbest taşıması ve fiyatlarıyla en düşük maliyetle dağıtır, hiçbir şey yazmaz: her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır. Yol boyunca ileri ve geri taşınan hacim, alanların kullanımı, taşıma momenti ve ortalama uzaklık, maliyette ekonomik taşıma sınırı ve kalemler; alanlar yetmezse karşılanmayan dolgu ve yerleşmeyen yarma.",
       "aliases": [
         "TASIMAPLANI",
         "TAŞIMAPLANI",

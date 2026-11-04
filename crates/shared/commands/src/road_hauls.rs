@@ -259,6 +259,52 @@ pub const ROAD_HAULS_PLAN_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct HaulsPlan {
     pub haul: String,
+    /// What the plan makes least (docs/adr/0925): the haul moment (absent), or the cost with the diagram's free haul
+    /// and prices, and among plans of that cost the moment.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub objective: Option<HaulObjective>,
+}
+
+/// What a haul plan makes least (docs/adr/0925).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HaulObjective {
+    /// The haul moment (m³·m).
+    Moment,
+    /// The cost: the overhaul beyond the free haul, the waste and the borrow at the diagram's prices.
+    Cost,
+}
+
+/// An economic haul plan's cost (docs/adr/0925): the currency, the moment beyond the free haul (m³·m), the overhaul,
+/// the waste and the borrow priced, and their total.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulPlanCost {
+    pub currency: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
+    pub over_moment: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub overhaul: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub waste: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub borrow: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub total: f64,
+    /// The limit of economic haul (m): the free haul and the waste and borrow prices (those given) over the overhaul's
+    /// per metre; beyond it wasting the cut and borrowing the fill costs less than hauling. None where neither price
+    /// is given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub economic: Option<f64>,
 }
 
 /// A site in a haul plan: its name, kind, station, capacity and the volume the plan gives or takes there.
@@ -323,4 +369,14 @@ pub struct HaulPlanned {
     pub shortage: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub surplus: f64,
+    pub objective: HaulObjective,
+    /// The free haul the cost read (m); none for the moment, or where the diagram has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub free: Option<f64>,
+    /// The cost, for the cost objective.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cost: Option<HaulPlanCost>,
 }
