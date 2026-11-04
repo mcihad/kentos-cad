@@ -1733,6 +1733,15 @@ geometri/kimlik/pafta korunmasını doğruladı. Komut validate/plan/execute,
 düşük düzey kayıt, iki adın takası ve eşzamanlı değişikliği koruyan Undo testleri
 geçti. Kalan ana kabul nedeniyle 11. madde `[~]` kalır.
 
+**Etki açıklaması ve API doğrulaması (4 Kasım 2026):** `cad.styles.impact`
+notları, doğrudan yazı nesnesi sayısından ayrı olarak bağımlı çizgi tipi
+adlarını açıklar; stil penceresi aynı açıklamayı gösterir. Güncel Python
+SDK'sı yeniden derlendi; 3 testte korunan stil, rename/KCAD döngüsü,
+salt okunur plan, DXF/DWG yan kaynakları ve önceki 6 çıktı alt durumu geçti.
+Gerçek MCP server testinde de SHX ekleme, kaynak bulgusunun çözülmesi,
+stil etkisi/ret/rename ve iki CAD aktarımı doğrulandı. GUI/Python/MCP
+kanıtları ADR 0930'da; ana maddenin açık kabulü değişmedi.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

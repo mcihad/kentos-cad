@@ -883,8 +883,17 @@ impl App {
             .width(Fill)
             .push(form)
             .push(words::field("Önizleme", preview, None));
-        if w.chosen.as_deref().is_some_and(|id| w.protected(id)) {
-            main=main.push(words::text_line(Line::Info,"Bu yazı stili çizgi tiplerinde kullanılıyor. Adı değiştirildiğinde bağlar korunur; silmek için önce çizgi tiplerindeki bağlarını değiştirin."));
+        if let Some(id) = w.chosen.as_deref().filter(|id| w.protected(id)) {
+            let note = kentos_native_application::styles_impact::text_style_dependency_note(
+                &doc.model, id,
+            )
+            .unwrap_or_default();
+            main = main.push(words::text_line(
+                Line::Info,
+                format!(
+                    "{note} Ad değişikliği bağları korur. Silmek için önce bu bağları kaldırın."
+                ),
+            ));
         }
         let mut body = Column::new().spacing(12);
         let problem = w.problem();

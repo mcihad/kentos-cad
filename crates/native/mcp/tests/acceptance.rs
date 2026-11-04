@@ -1249,6 +1249,9 @@ fn agent_can_attach_portable_shx_and_clear_only_the_resolved_resource_finding() 
     std::fs::create_dir_all(&root).unwrap();
     let mut model = fx["model"].clone();
     model["settings"]["lineTypes"] = json!([{"name":"FENCE","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"FENCE.SHX"}},{"length":-2.}]}]);
+    let style = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0100";
+    model["settings"]["textStyles"] = json!([{"id":style,"name":"UtilityText","font":"barlow"}]);
+    model["settings"]["lineTypes"].as_array_mut().unwrap().push(json!({"name":"GAS","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"text":{"text":"GAS","style":"utilitytext"}},{"length":-2.}]}));
     model["entities"][0]["linePattern"] = json!("FENCE");
     let source = root.join("source.kcad");
     let bytes = serde_json::to_vec(&model).unwrap();
@@ -1300,5 +1303,76 @@ fn agent_can_attach_portable_shx_and_clear_only_the_resolved_resource_finding() 
     );
     assert_eq!(std::fs::read(&source).unwrap(), bytes);
     assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
+    let impact = call(
+        &mut server,
+        "cad.styles.impact",
+        json!({"drawing":drawing,"target":"textStyle","id":style,"op":"plan"}),
+    );
+    assert_eq!(impact["output"]["follow"], 0);
+    assert!(
+        impact["output"]["notes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|n| n
+                .as_str()
+                .is_some_and(|s| s.contains("1 çizgi tipi") && s.contains("GAS")))
+    );
+    let refused = tool_result(
+        &mut server,
+        "cad.styles.edit",
+        json!({"drawing":drawing,"kind":"text","operation":"remove","style":style}),
+    );
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"], "style_in_use",
+        "{refused}"
+    );
+    let renamed = call(
+        &mut server,
+        "cad.styles.edit",
+        json!({"drawing":drawing,"kind":"text","operation":"rename","style":style,"name":"Utility Renamed"}),
+    );
+    assert_eq!(renamed["status"], "completed", "{renamed}");
+    let impact = call(
+        &mut server,
+        "cad.styles.impact",
+        json!({"drawing":drawing,"target":"textStyle","id":style,"op":"plan"}),
+    );
+    assert_eq!(impact["output"]["name"], "Utility Renamed");
+    assert!(
+        impact["output"]["notes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|n| n.as_str().is_some_and(|s| s.contains("GAS")))
+    );
+    for suffix in ["dxf", "dwg"] {
+        let path = root.join(format!("scene.{suffix}"));
+        let command = format!("file.export.{suffix}");
+        let count = std::fs::read_dir(&root).unwrap().count();
+        let planned = call(
+            &mut server,
+            &command,
+            json!({"drawing":drawing,"path":path,"op":"plan"}),
+        );
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert_eq!(
+            planned["output"]["report"]["shapeResources"][0]["available"],
+            true
+        );
+        assert_eq!(std::fs::read_dir(&root).unwrap().count(), count);
+        let done = call(
+            &mut server,
+            &command,
+            json!({"drawing":drawing,"path":path}),
+        );
+        assert_eq!(done["status"], "completed", "{done}");
+        assert!(path.is_file());
+        assert_eq!(
+            std::fs::read(root.join("fence.shx")).unwrap(),
+            kentos_commands::shape_resource::read(&resource["styles"]["items"][0]).unwrap()
+        );
+    }
+    assert_eq!(std::fs::read(&source).unwrap(), bytes);
     std::fs::remove_dir_all(root).unwrap();
 }

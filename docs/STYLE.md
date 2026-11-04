@@ -359,3 +359,31 @@ command.run(doc, request).unwrap()
 MCP'de `cad.library.edit` aynı `operation` ve `item` alanlarını, ayrıca açık
 çizimin `drawing` kimliğini alır. Şekil dosyasının varlığı, başlığı, özeti ve
 şekil programı hataları ortak komut/renderer tarafından denetlenir.
+
+
+### Çizgi tipinin kullandığı yazı stilleri ve CAD teslimi
+
+`cad.styles.impact` içindeki `follow`, doğrudan bağlı nesnelerin sayısıdır.
+Yalnız bir çizgi tipi tanımının kullandığı stil de canlı kaynaktır; `notes`
+bu desenlerin sayısını ve adlarını açıklar. GUI'deki kullanım ve silme
+koruması aynı domain hesabını kullanır. Ad değiştirmek stil id'sini korur
+ve çizgi tipi metin bağlarını birlikte günceller; Undo/Redo da bağı korur.
+Bağ varken `cad.styles.edit` silme işlemi `style_in_use` ile yazmadan reddedilir.
+Purge bu kaynağı kullanılmıyor saymaz.
+
+```python
+query = cad.command("cad.styles.impact")
+request = query.input_type.from_json({"target": "textStyle", "id": style_id})
+impact = query.run(doc, request, op="plan").unwrap()
+for note in impact.notes:
+    print(note)
+```
+
+Gömülü SHX kullanan `file.export.dxf` ve `file.export.dwg`, doğrulanmış
+şekil dosyasını CAD dosyasının yanına yazar. `plan` yalnız
+`output.report.shapeResources` içinde dosya/yol/boy/SHA-256 ve `reused`
+bilgilerini verir. Aynı baytlı dosya tekrar kullanılır; farklı içerik veya
+symlink, çizimin overwrite izni olsa da değiştirilmez. Böyle bir çakışmada
+çıktıyı başka klasöre aktarın. SHX kaynağı projeye eklenmemişse kaynak kaybı
+raporlanır; dosya sisteminde kendiliğinden aranmaz. Bu teslim otomatik SHX
+kaynak ithali veya genel SHX yazı fontu desteği anlamına gelmez.

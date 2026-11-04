@@ -102,6 +102,23 @@ fn linetype_only_text_style_is_used_protected_renamed_and_undoable() {
     let mut doc = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
     let original = doc.to_snapshot_v2();
     assert_eq!(style_tables::usage(&doc, true)[used], 2);
+    let impact: kentos_commands::StylesImpact =
+        serde_json::from_value(json!({"target":"textStyle","id":used})).unwrap();
+    let CommandResult::Completed { output, .. } =
+        kentos_native_application::styles_impact::plan(&ExecutionContext::new(&mut doc), &impact)
+    else {
+        panic!("impact refused")
+    };
+    assert_eq!(output.follow, 0);
+    assert!(
+        output
+            .notes
+            .iter()
+            .any(|n| n.contains("2 çizgi tipi") && n.contains("P, Q")),
+        "{:?}",
+        output.notes
+    );
+    assert_eq!(doc.to_snapshot_v2(), original);
     assert!(!doc.unused_styles().0.contains(&used.to_owned()));
     assert!(doc.unused_styles().0.contains(&unused.to_owned()));
     let input = |op: &str, name: Option<&str>| -> StylesEdit {

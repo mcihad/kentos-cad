@@ -868,3 +868,41 @@ Kanıtlar önceki repo dışı `/tmp` dizininde `linetype-style-usage-before-gui
 Yeni sözleşme, TypeScript dosyası veya ekran görüntüsü repoya eklenmedi.
 `cad.styles.impact`'ın dolaylı çizgi tipi kullanıcılarını ayrıntılı etki
 raporuna katması bu koruma diliminin dışında; ana CAD-ADV-11 `[~]` kalır.
+
+
+## 20. Dolaylı kullanım açıklaması; Python/MCP doğrulaması — 4 Kasım 2026
+
+`Document::line_type_text_style_users` tanım adlarını belge sırasıyla ve
+her tanımı bir kez döndürür. Kullanım sayacı, purge ve etki açıklaması aynı
+ad çözümlemesini kullanır. `cad.styles.impact` sayısal `follow` alanını doğrudan
+nesne sayısı olarak korur; bağımlı tanımları mevcut `notes` alanında açıklar.
+İlk cümle bu durumda doğrudan yazı nesnesi saydığını söyler. Açıklama en çok
+12 adı ve daha fazla varsa kalan sayıyı gösterir; metin/protokol boyutu
+bütün tanım adlarıyla sınırsız büyümez. Yazı stilleri penceresindeki mevcut
+KentOS bilgi bileşeni aynı yardımcıdan WATER/GAS adlarını gösterir. Yeni
+parametre, sözleşme alanı veya TypeScript dosyası yok.
+
+- İki native application testi, strict desktop Clippy ve build geçti.
+  Stil etkisinin 0 doğrudan nesneye rağmen P/Q iki tanımı açıklaması ve
+  sorgunun belgeyi değiştirmemesi test edildi.
+- Gerçek GUI'de WATER/GAS açıklaması ve silme koruması kontrol edildi;
+  bilgi satırı düğmelerin/önizlemenin üzerine taşmadı. Kanıt:
+  `linetype-style-dependencies-gui.png`. Binary SHA-256:
+  `e91c8447eaf5072ce5d57dc810560d4c7d5feec3c22a33996e34f4c707e88fad`.
+- Güncel Python bağlaması `maturin develop` ile yeniden derlendi. Mevcut
+  `test_sheet_line_types.py` 3 testi geçti: kaynak ekleme/KCAD/.kstil döngüsü
+  ve güvenli silme; DXF ve DWG'yi salt okunur plandan sonra yan SHX ile
+  yazma; stil koruması/rename/yeniden açılmış dosyada doğru etki notu;
+  önceki altı preflight durumu. Plan dosya yazmaz, çizim baytları değişmez.
+- Gerçek MCP `Server` testinde drawing.open → cad.library.edit → preflight
+  akışına dolaylı stil sorgusu, `style_in_use` reddi, rename ve DXF/DWG
+  plan/execute eklendi. İki CAD kaydında yan SHX gömülü kaynakla eşit,
+  kaynak KCAD dosyası aynı kaldı. Test geçti; sadece native ortak işlevin
+  MCP'ye otomatik eşdeğer olduğu varsayılmadı.
+- Kanıt günlükleri repo dışındaki aynı dizinde `linetype-style-impact-*.log`,
+  `cad11-python-rebuild.log`, `cad11-python-final.log` ve `cad11-mcp-final.log`.
+  El kitabındaki API örnekleri `docs/STYLE.md` altında güncellendi.
+
+Bu etki notu doğrudan/özyinelemeli bütün entity sayılarını yeniden tanımlamaz;
+planın dolaylı kaynakların tam nesne etki grafiği ile ilgili ileri kapsamı
+ayrıdır. CAD-ADV-11'in kalan geometri/performance kabulü tamamlanmadı.

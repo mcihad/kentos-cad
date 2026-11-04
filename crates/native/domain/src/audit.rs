@@ -217,25 +217,34 @@ impl Document {
     /// Named linetype definitions are live resources even without a TEXT entity.
     /// Names resolve exactly as the CAD renderer does: ASCII case insensitive.
     pub fn line_type_text_style_usage(&self) -> HashMap<String, usize> {
-        let mut out = HashMap::new();
-        for style in &self.settings().text_styles {
-            let count = self
-                .settings()
-                .line_types
-                .iter()
-                .filter(|pattern| {
-                    pattern.elements.iter().any(|e| {
-                        e.text
-                            .as_ref()
-                            .is_some_and(|t| t.style.eq_ignore_ascii_case(&style.name))
-                    })
+        self.settings()
+            .text_styles
+            .iter()
+            .filter_map(|style| {
+                let count = self.line_type_text_style_users(&style.id).len();
+                (count > 0).then_some((style.id.clone(), count))
+            })
+            .collect()
+    }
+
+    /// Definition names in document order, each once regardless of how many
+    /// text elements in that definition use the style.
+    pub fn line_type_text_style_users(&self, id: &str) -> Vec<String> {
+        let Some(style) = self.settings().text_styles.iter().find(|s| s.id == id) else {
+            return Vec::new();
+        };
+        self.settings()
+            .line_types
+            .iter()
+            .filter(|pattern| {
+                pattern.elements.iter().any(|e| {
+                    e.text
+                        .as_ref()
+                        .is_some_and(|t| t.style.eq_ignore_ascii_case(&style.name))
                 })
-                .count();
-            if count > 0 {
-                out.insert(style.id.clone(), count);
-            }
-        }
-        out
+            })
+            .map(|p| p.name.clone())
+            .collect()
     }
 
     pub fn unused_styles(&self) -> (Vec<String>, Vec<String>) {

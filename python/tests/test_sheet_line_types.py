@@ -1,4 +1,5 @@
 """CAD-ADV-11: typed agents see the same visible pattern loss without output or mutation."""
+import base64
 import copy
 import json
 import tempfile
@@ -32,6 +33,51 @@ class SheetLineTypes(unittest.TestCase):
         refused=library.run(restored,library.input_type.from_json(dict(operation='remove',id='shx:fence.shx')))
         self.assertFalse(refused.ok)
         self.assertEqual(restored.to_bytes(),saved)
+
+        with tempfile.TemporaryDirectory(prefix='kentos-shx-export-') as folder:
+            root = Path(folder)
+            expected = base64.b64decode(resource['data'].split(',', 1)[1])
+            for suffix in ['dxf', 'dwg']:
+                export = cad.command('file.export.' + suffix)
+                request = export.input_type.from_json(dict(path=str(root / ('scene.' + suffix))))
+                files_before = sorted(p.name for p in root.iterdir())
+                planned = export.run(restored, request, op='plan').unwrap()
+                self.assertEqual(sorted(p.name for p in root.iterdir()), files_before)
+                self.assertTrue(planned.report['shapeResources'][0]['available'])
+                export.run(restored, request).unwrap()
+                self.assertEqual((root / 'fence.shx').read_bytes(), expected)
+                self.assertTrue((root / ('scene.' + suffix)).is_file())
+                self.assertEqual(restored.to_bytes(), saved)
+
+    def test_linetype_style_dependency_is_visible_protected_and_rename_survives_reopen(self):
+        fx = json.loads((ROOT / 'fixtures/commands/v1/file.preflight.sheets.json').read_text())
+        raw = copy.deepcopy(fx['model'])
+        style_id = '0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0100'
+        raw['settings']['textStyles'] = [dict(id=style_id, name='UtilityText', font='barlow')]
+        raw['settings']['lineTypes'] = [dict(name='WATER', unit='paper', elements=[
+            dict(length=5.), dict(length=-1.),
+            dict(length=0., text=dict(text='HW', style='utilitytext')),
+            dict(length=-2.),
+        ])]
+        doc = cad.Document.from_bytes(json.dumps(raw).encode())
+        edit = cad.command('cad.styles.edit')
+        remove = edit.input_type.from_json(dict(kind='text', operation='remove', style=style_id))
+        before = doc.to_bytes()
+        self.assertFalse(edit.run(doc, remove, op='plan').ok)
+        self.assertFalse(edit.run(doc, remove).ok)
+        self.assertEqual(doc.to_bytes(), before)
+        rename = edit.input_type.from_json(dict(kind='text', operation='rename', style=style_id, name='Utility Renamed'))
+        edit.run(doc, rename, op='plan').unwrap()
+        self.assertEqual(doc.to_bytes(), before)
+        edit.run(doc, rename).unwrap()
+        reopened = cad.Document.from_bytes(doc.to_bytes())
+        query = cad.command('cad.styles.impact')
+        request = query.input_type.from_json(dict(target='textStyle', id=style_id))
+        saved = reopened.to_bytes()
+        result = query.run(reopened, request, op='plan').unwrap()
+        self.assertEqual(result.name, 'Utility Renamed')
+        self.assertTrue(any('1 çizgi tipi' in note and 'WATER' in note for note in result.notes))
+        self.assertEqual(reopened.to_bytes(), saved)
 
     def test_preflight_names_source_and_preserves_document_and_output_directory(self):
         fx = json.loads((ROOT / 'fixtures/commands/v1/file.preflight.sheets.json').read_text())
