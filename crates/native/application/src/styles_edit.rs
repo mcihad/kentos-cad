@@ -209,6 +209,11 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
         (Table::Dimension(t), Op::Remove) => t.retain(|s| s.id != id),
         (_, Op::Export | Op::Import) => {}
     }
+    if let Table::Text(next) = &table
+        && let Some(problem) = style_tables::text_styles_change_problem(doc, next)
+    {
+        return Err(fail("style_in_use", problem, "style"));
+    }
     if let Some(problem) = table.problem() {
         let at = match input.operation {
             Op::Create | Op::Update => path,

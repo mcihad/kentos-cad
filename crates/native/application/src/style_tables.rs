@@ -30,9 +30,13 @@ pub struct Saved {
 /// How many texts (or dimensions) follow each style, by its id.
 pub fn usage(doc: &Document, text: bool) -> HashMap<String, usize> {
     let mut out = HashMap::new();
-    for e in doc.entities() {
+    for e in doc
+        .entities()
+        .chain(doc.blocks().iter().flat_map(|b| &b.entities))
+    {
         let id = match e {
             Entity::Text(t) if text => t.face.text_style.as_ref(),
+            Entity::Table(t) if text => t.face.text_style.as_ref(),
             Entity::Dimension(d) if !text => d.look.dim_style.as_ref(),
             _ => None,
         };
@@ -40,7 +44,20 @@ pub fn usage(doc: &Document, text: bool) -> HashMap<String, usize> {
             *out.entry(id.clone()).or_insert(0) += 1;
         }
     }
+    if text {
+        for (id, count) in doc.line_type_text_style_usage() {
+            *out.entry(id).or_insert(0) += count;
+        }
+    }
     out
+}
+
+/// A line type cannot preserve its font/metrics after its style is removed.
+/// Renaming is supported: saving rewrites names together with the style table.
+pub fn text_styles_change_problem(doc: &Document, next: &[TextStyleDef]) -> Option<String> {
+    let usage = doc.line_type_text_style_usage();
+    doc.settings().text_styles.iter().find(|s|usage.contains_key(&s.id)&&!next.iter().any(|n|n.id==s.id))
+        .map(|s|format!("“{}” yazı stili çizgi tiplerinde kullanılıyor; silmeden önce çizgi tiplerindeki yazı stili bağlarını değiştirin.",s.name))
 }
 
 /// Writes the objects as one step named after `operation`; those on locked
@@ -192,12 +209,31 @@ pub fn save_wall_styles(doc: &mut Document, next: Vec<kentos_commands::WallStyle
 
 /// Saves the text styles: the table, then the texts that follow them (Yazı stili).
 pub fn save_text_styles(doc: &mut Document, next: Vec<TextStyleDef>) -> Saved {
+    if let Some(problem) = text_styles_change_problem(doc, &next) {
+        return Saved {
+            said: vec![problem],
+            ..Saved::default()
+        };
+    }
     let mut settings = doc.settings().clone();
     let before: HashMap<String, TextStyleDef> = settings
         .text_styles
         .iter()
         .map(|s| (s.id.clone(), s.clone()))
         .collect();
+    for pattern in &mut settings.line_types {
+        for element in &mut pattern.elements {
+            if let Some(text) = &mut element.text
+                && let Some(old) = before
+                    .values()
+                    .find(|s| s.name.eq_ignore_ascii_case(&text.style))
+                && let Some(now) = next.iter().find(|s| s.id == old.id)
+                && now.name != old.name
+            {
+                text.style.clone_from(&now.name);
+            }
+        }
+    }
     settings.text_styles = next;
     doc.set_settings(settings);
     let after: HashMap<String, TextStyleDef> = doc

@@ -820,3 +820,51 @@ Bu sınırlı düzeltme elips, nonuniform/affine blok, özel offset/effect,
 vektör dash'ının eğrilerdeki bütün faz hesabı bu işaret yerleştiricisiyle
 karıştırılmaz. Noktalı geniş bant ve genel performans/viewport matrisi
 ayrıca açıktır; CAD-ADV-11 `[~]` kalır.
+
+
+## 19. Çizgi tipinin yazı stilini koruma — 4 Kasım 2026
+
+Kodda `Document::unused_styles` yalnız nesne/blok TEXT/TABLE/DIMENSION
+bağlarını, GUI `style_tables::usage` ise yalnız kök TEXT/DIMENSION nesnelerini
+sayıyordu. Bu yüzden WATER/GAS'ın ortak UtilityText stili GUI'de 0 görünüyordu
+ve temizlenebiliyordu. Autodesk'in tanım bağımlılığı ilkesiyle karşılaştırıldı:
+[Purge edilemeyen tanımlar](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-MAC-Core/files/GUID-2472D7B1-D5A4-4D30-9CEF-9ABAB573ED37.htm).
+
+- Domain'deki ortak kullanım hesabı, rendererin ad çözme kuralıyla (ASCII
+  case insensitive) çizgi tipi tanımlarının yazı stillerini sayar. Nesnesiz
+  ancak tanım içinde referanslı kaynak da kullanımdadır. Audit/purge bunu
+  kullanır. GUI sayacı ayrıca blok parçaları ve tablo metni bağlarını içerir.
+- Ortak kayıt ve `cad.styles.edit` validate/plan/execute, bağlı stilin
+  silinmesini `style_in_use` ile yazmadan reddeder. Standart KentOS GUI
+  düğmesi pasiftir ve nedenini mevcut bilgi bileşeni açıklar. Bağımsız
+  metinlerin stili silindiğinde görünüşü koruyan eski davranış korunur.
+- Stil id'si korunarak ad değiştiğinde LTYPE metin bağları aynı kayıtta yeni
+  adı alır. GUI'nin bu kaydı `with_style_tables` içinde yapması Undo/Redo'ya
+  aynı bağımlılığı taşır. Geri alma desenin diğer alanlarını geri yazmaz;
+  sonradan değiştirilmiş dash uzunluğu korunur.
+- Text table'da geçerli bir ad takası ara ad çakışmasından dolayı
+  reddedilmez: uygun değişikliklerin son tablosu birlikte doğrulanır;
+  eşzamanlı değişiklik bunu geçersiz kılarsa önceki çatışma koruması kullanılır.
+  Tarihçe zaten uygulanmış işlemi kaydederken yeniden uygulayabildiğinden
+  yalnız gerçekten uygulanan ad değişiklikleri bağları değiştirir. Yeni test
+  ilk uygulamada çift ad takasını yakaladı; son hâlde düzeltildi. Diğer stil
+  tablolarının uygulama politikası değiştirilmedi.
+
+Doğrulama: iki yeni native application testi ve beş mevcut domain style-table
+testi geçti. Yeni testler salt okunur plan/doğrulama, güvenli ret, kayıp
+üretmeyen rename, düşük düzey koruma, purge, Undo/Redo, ad takası, ayrı desen
+uzunluğu değişimi ve eşzamanlı stil düzenlemesi/çakışan adı kapsar. Strict
+desktop Clippy ve build geçti. Gerçek GUI'de önce 0, sonra 2 kullanım görüldü;
+yeniden adlandırma, farklı kaydetme, geri/ileri alma denendi. Bağımsız KCAD
+okuyucu iki entity, UUID'ler ve paftaların aynı olduğunu; stil id'si korunurken
+iki LTYPE bağının Utility Renamed olduğunu doğruladı.
+
+Kanıtlar önceki repo dışı `/tmp` dizininde `linetype-style-usage-before-gui.png`,
+`linetype-style-usage-after-gui.png`, `linetype-style-renamed-gui.png`,
+`linetype-style-undo-gui.png`, `linetype-style-redo-gui.png`,
+`linetype-style-save-check.json`, `style-dependency-renamed-gui.kcad` ve
+`linetype-style-refs-*.log` altındadır. Binary SHA-256:
+`2cec7ff38762670e3d6380e8bafb858ac4cd7d42d839566e28aaf6c094be485d`.
+Yeni sözleşme, TypeScript dosyası veya ekran görüntüsü repoya eklenmedi.
+`cad.styles.impact`'ın dolaylı çizgi tipi kullanıcılarını ayrıntılı etki
+raporuna katması bu koruma diliminin dışında; ana CAD-ADV-11 `[~]` kalır.

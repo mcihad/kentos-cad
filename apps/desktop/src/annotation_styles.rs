@@ -101,6 +101,7 @@ pub struct Window {
     typed: HashMap<&'static str, String>,
     /// How many objects follow each style, as when the window opened.
     usage: HashMap<String, usize>,
+    line_type_usage: HashMap<String, usize>,
     /// Sil asked about the style with this id (objects follow it).
     asking: Option<String>,
 }
@@ -200,6 +201,10 @@ impl Window {
                 .map(|s| (s.id.clone(), s.name.clone()))
                 .collect(),
         }
+    }
+
+    fn protected(&self, id: &str) -> bool {
+        self.kind == Kind::Text && self.line_type_usage.get(id).copied().unwrap_or(0) > 0
     }
 
     fn problem(&self) -> Option<String> {
@@ -324,6 +329,7 @@ impl App {
             chosen,
             typed: HashMap::new(),
             usage,
+            line_type_usage: doc.model.line_type_text_style_usage(),
             asking: None,
         };
         w.fill();
@@ -494,8 +500,16 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
+        if w.kind == Kind::Text
+            && let Some(problem) = style_tables::text_styles_change_problem(&doc.model, &w.text)
+        {
+            self.warn(problem);
+            return;
+        }
         let saved = match w.kind {
-            Kind::Text => style_tables::save_text_styles(&mut doc.model, w.text.clone()),
+            Kind::Text => doc.model.with_style_tables("Yazı stili", |model| {
+                style_tables::save_text_styles(model, w.text.clone())
+            }),
             Kind::Dimension => {
                 style_tables::save_dimension_styles(&mut doc.model, w.dimension.clone())
             }
@@ -633,6 +647,9 @@ impl App {
             }
             Event::Remove => {
                 if let Some(id) = w.chosen.clone() {
+                    if w.protected(&id) {
+                        return Task::none();
+                    }
                     if w.usage.get(&id).copied().unwrap_or(0) > 0 {
                         w.asking = Some(id);
                     } else {
@@ -645,6 +662,9 @@ impl App {
             }
             Event::RemoveConfirmed => {
                 if let Some(id) = w.asking.take() {
+                    if w.protected(&id) {
+                        return Task::none();
+                    }
                     w.text.retain(|s| s.id != id);
                     w.dimension.retain(|s| s.id != id);
                     w.chosen = None;
@@ -794,7 +814,13 @@ impl App {
             .push(
                 row![
                     words::secondary(NEW, Some(msg(Event::New))),
-                    words::secondary(REMOVE, w.chosen.as_ref().map(|_| msg(Event::Remove))),
+                    words::secondary(
+                        REMOVE,
+                        w.chosen
+                            .as_ref()
+                            .filter(|id| !w.protected(id))
+                            .map(|_| msg(Event::Remove))
+                    ),
                 ]
                 .spacing(8),
             );
@@ -852,11 +878,14 @@ impl App {
         )
         .style(style::container::field_box)
         .width(Fill);
-        let main = Column::new()
+        let mut main = Column::new()
             .spacing(12)
             .width(Fill)
             .push(form)
             .push(words::field("Önizleme", preview, None));
+        if w.chosen.as_deref().is_some_and(|id| w.protected(id)) {
+            main=main.push(words::text_line(Line::Info,"Bu yazı stili çizgi tiplerinde kullanılıyor. Adı değiştirildiğinde bağlar korunur; silmek için önce çizgi tiplerindeki bağlarını değiştirin."));
+        }
         let mut body = Column::new().spacing(12);
         let problem = w.problem();
         if let Some(p) = &problem {

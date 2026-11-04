@@ -1725,6 +1725,14 @@ GUI zoom/iki pafta/PDF denendi; bağımsız okuyucuyla 1:20'de 91, 1:100'de 18
 çok parçalı path, özel offset/effect ve genel performans kabulü bu dilimin
 dışında; taşıyıcı dash fazının bütün eğrilerde analitik olduğu iddia edilmez.
 
+**Yazı stili bağımlılığı (4 Kasım 2026):** Yalnız çizgi tiplerinin kullandığı
+yazı stili artık kullanılmıyor sayılmaz ve purge/silme ile kaybolmaz. Kullanım
+sayacı ve silme açıklaması gerçek GUI'de doğrulandı. Ad değiştirme iki çizgi
+tipinin bağını ve görünüşünü korudu; GUI Undo/Redo ve bağımsız KCAD okuması
+geometri/kimlik/pafta korunmasını doğruladı. Komut validate/plan/execute,
+düşük düzey kayıt, iki adın takası ve eşzamanlı değişikliği koruyan Undo testleri
+geçti. Kalan ana kabul nedeniyle 11. madde `[~]` kalır.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

@@ -13,7 +13,7 @@
 //!
 //! A style is used when an object of the drawing or of a block definition names it.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use kentos_contracts::Entity;
 
@@ -214,6 +214,30 @@ impl Document {
 
     /// The project's text and dimension styles nothing names (an object of the drawing or of a block definition),
     /// by their ids, in the tables' order.
+    /// Named linetype definitions are live resources even without a TEXT entity.
+    /// Names resolve exactly as the CAD renderer does: ASCII case insensitive.
+    pub fn line_type_text_style_usage(&self) -> HashMap<String, usize> {
+        let mut out = HashMap::new();
+        for style in &self.settings().text_styles {
+            let count = self
+                .settings()
+                .line_types
+                .iter()
+                .filter(|pattern| {
+                    pattern.elements.iter().any(|e| {
+                        e.text
+                            .as_ref()
+                            .is_some_and(|t| t.style.eq_ignore_ascii_case(&style.name))
+                    })
+                })
+                .count();
+            if count > 0 {
+                out.insert(style.id.clone(), count);
+            }
+        }
+        out
+    }
+
     pub fn unused_styles(&self) -> (Vec<String>, Vec<String>) {
         let mut text: HashSet<&str> = HashSet::new();
         let mut dims: HashSet<&str> = HashSet::new();
@@ -227,10 +251,11 @@ impl Document {
             }
         }
         let s = self.settings();
+        let line_types = self.line_type_text_style_usage();
         (
             s.text_styles
                 .iter()
-                .filter(|t| !text.contains(t.id.as_str()))
+                .filter(|t| !text.contains(t.id.as_str()) && !line_types.contains_key(&t.id))
                 .map(|t| t.id.clone())
                 .collect(),
             s.dimension_styles
