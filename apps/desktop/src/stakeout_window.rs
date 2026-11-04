@@ -374,13 +374,13 @@ impl App {
             line = line.push(words::field("İlk no", send_field("1", 0, 80.0), None));
             line = line.push(words::field("İş adı", send_field("koridorun adı", 1, 140.0), None));
         }
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             line.push(words::primary(SEND, w.preview.table.as_ref().map(|_| msg(Event::Send))))
                 .push(container(label::caption(what).style(muted)).width(Fill))
                 .push(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .align_y(iced::alignment::Vertical::Bottom),
-        );
-        Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
+                .align_y(iced::alignment::Vertical::Bottom);
+        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
     }
 
     pub(crate) fn stakeout_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

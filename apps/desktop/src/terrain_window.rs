@@ -593,9 +593,7 @@ impl App {
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
             None => container(label::caption("Bir yüzey seçin ya da yeni bir yüzey oluşturun.")).padding(12).into(),
-            Some(r) => scrollable(self.terrain_editor(r, report_of(&r.def.id), r.saved(&w.kept)))
-                .height(typography::scaled(360.0))
-                .into(),
+            Some(r) => self.terrain_editor(r, report_of(&r.def.id), r.saved(&w.kept)),
         };
         let can_accept = chosen.is_some_and(|r| {
             r.saved(&w.kept)
@@ -627,10 +625,10 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let body = column![
-            row![container(left).width(230), container(right).width(Fill)].spacing(16),
-            contours,
-            row![
+        // The editor scrolls with the body (resized or full screen it grows); the drawing row stays above the footer.
+        let body = row![container(left).width(230), container(right).width(Fill)].spacing(16);
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer = row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(ACCEPT, can_accept.then(|| msg(Event::Accept))),
                 space::horizontal().width(Fill),
@@ -638,10 +636,8 @@ impl App {
                 words::primary(SAVE, Some(msg(Event::Save))),
             ]
             .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(760.0).modal(msg(Event::Cancel))
+            .align_y(Center);
+        Frame::new(TITLE).scroll(body).push(contours).footer(footer).width(760.0).modal(msg(Event::Cancel))
     }
 
     fn terrain_editor<'a>(&'a self, r: &'a Row, report: Option<&'a TerrainReport>, saved: bool) -> Element<'a, Message> {

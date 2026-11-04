@@ -596,7 +596,7 @@ impl App {
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
             None => container(label::caption("Bir koridor seçin ya da yeni bir koridor oluşturun.")).padding(12).into(),
-            Some(r) => scrollable(self.corridor_editor(w, r, stale_of(r))).height(typography::scaled(330.0)).into(),
+            Some(r) => self.corridor_editor(w, r, stale_of(r)),
         };
         let saved = chosen.is_some_and(|r| r.def().ok().is_some_and(|d| w.kept.contains(&d)));
         let layers = self.relation_layers();
@@ -614,10 +614,10 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let body = column![
-            row![container(left).width(220), container(right).width(Fill)].spacing(16),
-            draw,
-            row![
+        // The editor scrolls with the body (resized or full screen it grows); the drawing row stays above the footer.
+        let body = row![container(left).width(220), container(right).width(Fill)].spacing(16);
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer = row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind))),
                 space::horizontal().width(Fill),
@@ -625,10 +625,8 @@ impl App {
                 words::primary(SAVE, Some(msg(Event::Save))),
             ]
             .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(1120.0).modal(msg(Event::Cancel))
+            .align_y(Center);
+        Frame::new(TITLE).scroll(body).push(draw).footer(footer).width(1120.0).modal(msg(Event::Cancel))
     }
 
     fn corridor_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message> {

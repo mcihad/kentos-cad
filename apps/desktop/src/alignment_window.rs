@@ -780,7 +780,7 @@ impl App {
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
             None => container(label::caption("Bir aks seçin ya da yeni bir aks oluşturun.")).padding(12).into(),
-            Some(r) => scrollable(self.alignment_editor(w, r)).height(typography::scaled(420.0)).into(),
+            Some(r) => self.alignment_editor(w, r),
         };
         let saved = chosen.is_some_and(|r| w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)));
         let ids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
@@ -798,10 +798,10 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let body = column![
-            row![container(left).width(230), container(right).width(Fill)].spacing(16),
-            km,
-            row![
+        // The editor scrolls with the body (resized or full screen it grows); the drawing row stays above the footer.
+        let body = row![container(left).width(230), container(right).width(Fill)].spacing(16);
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer = row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(
                     REVERSE,
@@ -812,10 +812,8 @@ impl App {
                 words::primary(SAVE, Some(msg(Event::Save))),
             ]
             .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(900.0).modal(msg(Event::Cancel))
+            .align_y(Center);
+        Frame::new(TITLE).scroll(body).push(km).footer(footer).width(900.0).modal(msg(Event::Cancel))
     }
 
     fn alignment_editor<'a>(&'a self, w: &'a Window, r: &'a Row) -> Element<'a, Message> {

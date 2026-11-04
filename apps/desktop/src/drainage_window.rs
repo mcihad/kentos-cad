@@ -342,7 +342,8 @@ impl App {
         )
         .placeholder("Katman");
         let ready = matches!(&w.preview, Some(Ok(q)) if q.catchment.is_some() || !q.ponds.is_empty());
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             row![
                 space::horizontal().width(Fill),
                 label::caption("Katman").style(muted),
@@ -352,9 +353,8 @@ impl App {
                 words::secondary(CLOSE, Some(msg(Event::Close))),
             ]
             .spacing(8)
-            .align_y(iced::alignment::Vertical::Center),
-        );
-        Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
+            .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
     }
 
     pub(crate) fn drainage_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

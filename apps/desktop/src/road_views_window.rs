@@ -429,7 +429,8 @@ impl App {
             .spacing(8)
             .align_y(iced::alignment::Vertical::Bottom),
         );
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             row![
                 label::caption(said),
                 space::horizontal().width(Fill),
@@ -437,9 +438,8 @@ impl App {
                 words::secondary(CLOSE, Some(msg(Event::Close))),
             ]
             .spacing(10)
-            .align_y(iced::alignment::Vertical::Center),
-        );
-        Frame::new(TITLE).push(body).width(1080.0).modal(msg(Event::Close))
+            .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
     }
 
     pub(crate) fn road_views_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

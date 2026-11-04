@@ -397,7 +397,8 @@ impl App {
             }
         }
         let ready = matches!(w.preview, Some(Ok(_)));
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             row![
                 words::secondary(PREVIEW, Some(msg(Event::Preview))),
                 space::horizontal().width(Fill),
@@ -405,9 +406,8 @@ impl App {
                 words::primary(APPLY, ready.then(|| msg(Event::Apply))),
             ]
             .spacing(8)
-            .align_y(iced::alignment::Vertical::Center),
-        );
-        Frame::new(TITLE).push(body).width(1100.0).modal(msg(Event::Close))
+            .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE).scroll(body).footer(footer).width(1100.0).modal(msg(Event::Close))
     }
 
     pub(crate) fn terrain_cloud_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

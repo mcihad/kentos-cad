@@ -106,8 +106,17 @@ footer olsun."
   Gövdenin içine konan düğme satırı alt çubuk olmaz. Ölçüm (1920×1080, tam ekran): Enkesit'in düğmeleri ilk görüntüde
   pencerenin ortasında (y ≈ 560) asılıydı; alt çubuğa taşınınca alt kenardan 30 px yukarıdalar (iç pay 18 px).
   Genişletme önerisi ve Dever de aynıdır.
-- 4 Kasım'da düğmeleri gövdede olan 105 pencere sayıldı. Yol pencereleri ortak düzene (RoadDialog) taşındıkça alt
-  çubuğa geçer. Öbürleri dokunuldukça taşınır.
+- `Dialog::footer(satır)`: pencerenin kendi düğme satırı (arasında katman seçicisi olan) alt çubuk olur, `aside`/`action`
+  gibi davranır.
+- 4 Kasım'da düğmeleri gövdede olan 105 pencere sayıldı. 21 Yol penceresinin düğme satırı alt çubuğa taşındı:
+  Enkesit, Boykesit, Güzergâh, Koridor, Brükner, Arazi yüzeyleri, Otokorkuluk, Menfez, İstinat duvarı, Platform,
+  Araç izi, Drenaj, Yüzey analizi, Aplikasyon, Güzergâh arama, Kavşak, Görünüşler, Paftalar, Nokta bulutu, Hakediş,
+  aks ve boykesit uydurma.
+  - Düzenleyicisi sabit yükseklikli kendi kaydırma alanında olanlar (Enkesit 360, Boykesit 440, Güzergâh 420,
+    Koridor 330, Brükner ve Arazi 360 px) artık gövdeyle birlikte kayar. Böylece tam ekranda büyürler; normal boyda da
+    Boykesit'in PVI tablosu iç kaydırma olmadan görünür.
+  - Çizim satırları (Çizime, Km yazısı, Eş yükselti) gövdeden çıkıp alt çubuğun hemen üstüne alındı.
+  - Öbür 84 pencere dokunuldukça taşınır.
 
 Bekçi: `widget::fit::tests::a_kept_box_fills_loose_limits_and_its_footer_goes_down`.
 

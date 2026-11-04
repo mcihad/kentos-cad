@@ -317,7 +317,8 @@ impl App {
             }
             _ => {}
         }
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             row![
                 label::caption("Boykesit görünümleri, takım ve paftalar tek geri alma adımı.").style(muted),
                 space::horizontal().width(Fill),
@@ -325,9 +326,8 @@ impl App {
                 words::primary(MAKE, w.preview.laid.as_ref().map(|_| msg(Event::Make))),
             ]
             .spacing(8)
-            .align_y(iced::alignment::Vertical::Center),
-        );
-        Frame::new(TITLE).push(body).width(1080.0).modal(msg(Event::Close))
+            .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
     }
 
     pub(crate) fn road_sheets_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

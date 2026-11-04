@@ -667,13 +667,13 @@ impl App {
                 .push(words::secondary(RESTORE, left.then(|| msg(Event::RestoreAll))))
                 .push(words::secondary(APPLY, ready.then(|| msg(Event::Apply))));
         }
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             bottom
                 .push(space::horizontal().width(Fill))
                 .push(words::secondary(PREVIEW, Some(msg(Event::Preview))))
-                .push(words::secondary(CLOSE, Some(msg(Event::Close)))),
-        );
-        Frame::new(TITLE).push(body).width(1180.0).modal(msg(Event::Close))
+                .push(words::secondary(CLOSE, Some(msg(Event::Close))));
+        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
     }
 
     pub(crate) fn surface_analysis_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

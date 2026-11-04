@@ -784,13 +784,13 @@ impl App {
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
             None => container(label::caption("Bir boykesit seçin ya da yeni bir boykesit oluşturun.")).padding(12).into(),
-            Some(r) => scrollable(self.road_profile_editor(w, r, stale_of(r))).height(typography::scaled(440.0)).into(),
+            Some(r) => self.road_profile_editor(w, r, stale_of(r)),
         };
         let saved = chosen.is_some_and(|r| w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)));
-        let body = column![
-            row![container(left).width(220), container(right).width(Fill)].spacing(16),
-            self.profile_draw_row(w, saved),
-            row![
+        // The editor scrolls with the body (resized or full screen it grows); the drawing row stays above the footer.
+        let body = row![container(left).width(220), container(right).width(Fill)].spacing(16);
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer = row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind))),
                 space::horizontal().width(Fill),
@@ -798,10 +798,8 @@ impl App {
                 words::primary(SAVE, Some(msg(Event::Save))),
             ]
             .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(1080.0).modal(msg(Event::Cancel))
+            .align_y(Center);
+        Frame::new(TITLE).scroll(body).push(self.profile_draw_row(w, saved)).footer(footer).width(1080.0).modal(msg(Event::Cancel))
     }
 
     fn profile_draw_row<'a>(&'a self, w: &'a Window, saved: bool) -> Element<'a, Message> {

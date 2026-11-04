@@ -420,7 +420,8 @@ impl App {
         )
         .placeholder("Katman");
         let saved = w.chosen.is_some();
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             row![
                 words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
                 space::horizontal().width(Fill),
@@ -432,9 +433,8 @@ impl App {
                 words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
             ]
             .spacing(8)
-            .align_y(iced::alignment::Vertical::Center),
-        );
-        Frame::new(TITLE).push(body).width(1060.0).modal(msg(Event::Close))
+            .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE).scroll(body).footer(footer).width(1060.0).modal(msg(Event::Close))
     }
 
     pub(crate) fn guardrail_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

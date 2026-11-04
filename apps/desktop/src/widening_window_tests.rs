@@ -166,4 +166,12 @@ fn screens_full_screen() {
     let _ = app.update(Message::Superelevations(D::Cancel));
     let _ = app.update(Message::Run("section.editor"));
     shot(&mut app, "enkesit");
+    let _ = app.update(Message::Sections(crate::section_window::Event::Cancel));
+    // The other road windows whose buttons moved to the footer.
+    for (key, run, file) in [("Boykesit", "profile.new", "boykesit"), ("Güzergâh", "alignment.new", "guzergah"), ("Otokorkuluk", "guardrail.editor", "otokorkuluk")] {
+        sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+        let _ = app.update(Message::Run(run));
+        shot(&mut app, file);
+        let _ = app.update(Message::CapturedEscape);
+    }
 }

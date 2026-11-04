@@ -430,21 +430,20 @@ impl App {
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
             None => container(label::caption("Bir Brükner seçin ya da yeni bir Brükner oluşturun.")).padding(12).into(),
-            Some(r) => scrollable(self.haul_editor(w, r, &volumes)).height(typography::scaled(360.0)).into(),
+            Some(r) => self.haul_editor(w, r, &volumes),
         };
-        let body = column![
-            row![container(left).width(220), container(right).width(Fill)].spacing(16),
-            row![
+        // The editor scrolls with the body: resized or full screen it grows.
+        let body = row![container(left).width(220), container(right).width(Fill)].spacing(16);
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer = row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 space::horizontal().width(Fill),
                 words::secondary(CANCEL, Some(msg(Event::Cancel))),
                 words::primary(SAVE, Some(msg(Event::Save))),
             ]
             .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(1120.0).modal(msg(Event::Cancel))
+            .align_y(Center);
+        Frame::new(TITLE).scroll(body).footer(footer).width(1120.0).modal(msg(Event::Cancel))
     }
 
     fn haul_editor<'a>(&'a self, w: &'a Window, r: &'a Row, volumes: &[(String, String)]) -> Element<'a, Message> {

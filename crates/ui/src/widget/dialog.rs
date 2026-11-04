@@ -26,6 +26,8 @@ pub struct Dialog<'a, Message> {
     /// Düğme çubuğunun solunda, öbürlerinden ayrı duran eylemler.
     aside: Vec<Element<'a, Message>>,
     actions: Vec<Element<'a, Message>>,
+    /// A footer row of the window's own (buttons with a layer select between them), in place of `aside`/`action`.
+    footer: Option<Element<'a, Message>>,
     width: f32,
     max_height: Option<f32>,
     /// The key its size is kept by (docs/adr/0746); none: its title. `None` after `fixed`: not sized.
@@ -44,6 +46,7 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
             body: Vec::new(),
             aside: Vec::new(),
             actions: Vec::new(),
+            footer: None,
             width: 500.0,
             max_height: None,
             key: None,
@@ -124,6 +127,13 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
     /// pencerede durur, bu parça kısalır, eylem düğmeleri görünür kalır.
     pub fn fill(mut self, content: impl Into<Element<'a, Message>>) -> Self {
         self.body.push((content.into(), true));
+        self
+    }
+
+    /// The window's own button row as its footer (ADR 0746 eki): resized or full screen it sits on the bottom edge,
+    /// as `aside`/`action` do. For a row the standard bar cannot hold (a layer select among the buttons).
+    pub fn footer(mut self, row: impl Into<Element<'a, Message>>) -> Self {
+        self.footer = Some(row.into());
         self
     }
 
@@ -221,11 +231,13 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
             };
         }
 
-        let has_footer = !dialog.actions.is_empty() || !dialog.aside.is_empty();
+        let has_footer = !dialog.actions.is_empty() || !dialog.aside.is_empty() || dialog.footer.is_some();
         // A kept size (resized or full screen): the box takes all its height, the body's scrolling part grows and
         // the buttons sit on the bottom edge (a footer), not under the content.
         content = content.fill(kept).footer(has_footer);
-        if has_footer {
+        if let Some(row) = dialog.footer {
+            content = content.push(row);
+        } else if has_footer {
             let mut actions = iced::widget::Row::new().spacing(6);
 
             for action in dialog.aside {
