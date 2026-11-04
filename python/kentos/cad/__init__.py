@@ -3191,6 +3191,8 @@ __all__ = [
     "TerrainsCompared",
     "TerrainsContoured",
     "TerrainsContours",
+    "TerrainsCoverage",
+    "TerrainsCovered",
     "TerrainsCreate",
     "TerrainsEdit",
     "TerrainsEditOperation",

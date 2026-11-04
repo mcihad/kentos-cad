@@ -532,3 +532,71 @@ pub struct TerrainsRepaired {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
     pub revision: String,
 }
+
+pub const ROAD_TERRAINS_COVERAGE: &str = "road.terrains.coverage";
+pub const ROAD_TERRAINS_COVERAGE_VERSION: u32 = 1;
+
+/// Input of `road.terrains.coverage` v1 (docs/adr/0920): how much of a project boundary a terrain surface covers. The
+/// boundary is the drawing's closed object `boundary` (a closed polyline or an area, straight edges, its holes counting
+/// out); absent, the surface itself. Triangles with a plan edge longer than `longest` (the user's) are estimated, not
+/// measured: they span too wide a gap between shots. Reads only.
+///
+/// Refusals, in this order: `invalid_coverage` (longest not positive), `not_a_road_project`, `unknown_terrain`,
+/// `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary that is not a closed polyline or area of
+/// one part with straight edges and three corners at least). Warnings: `terrain_no_data` (the boundary is not wholly
+/// covered).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsCoverage {
+    pub surface: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub boundary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub longest: Option<f64>,
+}
+
+/// Output of `road.terrains.coverage` v1: areas in plan. The surface's whole area; with a boundary, the boundary's,
+/// the surface inside it, the no-data rest and the surface outside, and the share covered (0–1); the estimated part of
+/// what is inside (with `longest`), its share of it and its triangles; the longest plan edge of a triangle inside.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsCovered {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub surface_area: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub boundary_area: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub covered: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub no_data: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub outside: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub share: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub estimated: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub estimated_share: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub estimated_triangles: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub longest_edge: f64,
+}

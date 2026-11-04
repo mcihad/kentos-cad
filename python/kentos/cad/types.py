@@ -79213,6 +79213,107 @@ class TerrainsContours(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainsCoverage(_Model):
+    """Input of `road.terrains.coverage` v1 (docs/adr/0920): how much of a project boundary a terrain surface covers. The
+    boundary is the drawing's closed object `boundary` (a closed polyline or an area, straight edges, its holes counting
+    out); absent, the surface itself. Triangles with a plan edge longer than `longest` (the user's) are estimated, not
+    measured: they span too wide a gap between shots. Reads only.
+
+    Refusals, in this order: `invalid_coverage` (longest not positive), `not_a_road_project`, `unknown_terrain`,
+    `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary that is not a closed polyline or area of
+    one part with straight edges and three corners at least). Warnings: `terrain_no_data` (the boundary is not wholly
+    covered).
+    Attributes:
+        longest: Unit: m.
+    """
+    surface: str
+    boundary: str | None | Unset = UNSET
+    longest: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        if self.boundary is not UNSET:
+            out["boundary"] = self.boundary
+        if self.longest is not UNSET:
+            out["longest"] = None if self.longest is None else float(self.longest)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCoverage:
+        return cls(
+            surface=data["surface"],
+            boundary=data.get("boundary", UNSET),
+            longest=UNSET if "longest" not in data else None if data["longest"] is None else float(data["longest"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsCovered(_Model):
+    """Output of `road.terrains.coverage` v1: areas in plan. The surface's whole area; with a boundary, the boundary's,
+    the surface inside it, the no-data rest and the surface outside, and the share covered (0–1); the estimated part of
+    what is inside (with `longest`), its share of it and its triangles; the longest plan edge of a triangle inside.
+    Attributes:
+        surface_area: Unit: area.
+        covered: Unit: area.
+        estimated: Unit: area.
+        estimated_share: Unit: 1.
+        estimated_triangles: Unit: count.
+        longest_edge: Unit: m.
+        boundary_area: Unit: area.
+        no_data: Unit: area.
+        outside: Unit: area.
+        share: Unit: 1.
+    """
+    surface: str
+    surface_area: float
+    covered: float
+    estimated: float
+    estimated_share: float
+    estimated_triangles: int
+    longest_edge: float
+    boundary_area: float | None | Unset = UNSET
+    no_data: float | None | Unset = UNSET
+    outside: float | None | Unset = UNSET
+    share: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["surfaceArea"] = float(self.surface_area)
+        out["covered"] = float(self.covered)
+        out["estimated"] = float(self.estimated)
+        out["estimatedShare"] = float(self.estimated_share)
+        out["estimatedTriangles"] = self.estimated_triangles
+        out["longestEdge"] = float(self.longest_edge)
+        if self.boundary_area is not UNSET:
+            out["boundaryArea"] = None if self.boundary_area is None else float(self.boundary_area)
+        if self.no_data is not UNSET:
+            out["noData"] = None if self.no_data is None else float(self.no_data)
+        if self.outside is not UNSET:
+            out["outside"] = None if self.outside is None else float(self.outside)
+        if self.share is not UNSET:
+            out["share"] = None if self.share is None else float(self.share)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCovered:
+        return cls(
+            surface=data["surface"],
+            surface_area=float(data["surfaceArea"]),
+            covered=float(data["covered"]),
+            estimated=float(data["estimated"]),
+            estimated_share=float(data["estimatedShare"]),
+            estimated_triangles=data["estimatedTriangles"],
+            longest_edge=float(data["longestEdge"]),
+            boundary_area=UNSET if "boundaryArea" not in data else None if data["boundaryArea"] is None else float(data["boundaryArea"]),
+            no_data=UNSET if "noData" not in data else None if data["noData"] is None else float(data["noData"]),
+            outside=UNSET if "outside" not in data else None if data["outside"] is None else float(data["outside"]),
+            share=UNSET if "share" not in data else None if data["share"] is None else float(data["share"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsCreate(_Model):
     """Input of `road.terrains.create` v1: a new surface's definition; its id when not given is the first free of `t-1`,
     `t-2` …
@@ -106901,6 +107002,8 @@ __all__ = [
     "TerrainsCompared",
     "TerrainsContoured",
     "TerrainsContours",
+    "TerrainsCoverage",
+    "TerrainsCovered",
     "TerrainsCreate",
     "TerrainsEdit",
     "TerrainsEditOperation",

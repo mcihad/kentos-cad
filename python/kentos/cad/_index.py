@@ -392,6 +392,7 @@ COMMANDS: dict[str, Any] = {
     "road.terrains.cloud": road.terrains.cloud,
     "road.terrains.compare": road.terrains.compare,
     "road.terrains.contours": road.terrains.contours,
+    "road.terrains.coverage": road.terrains.coverage,
     "road.terrains.create": road.terrains.create,
     "road.terrains.edit": road.terrains.edit,
     "road.terrains.quality": road.terrains.quality,

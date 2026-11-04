@@ -4,7 +4,9 @@
 //! a second surface over the first, cut, fill and net and the difference's ranges (`road.terrains.compare`). Kalite: near
 //! pairs, spikes, coverage gaps and check points by class (`road.terrains.quality`); the spikes found can be left out
 //! of the surface, the difference said first and written in one undo step, or everything left out taken back
-//! (`road.terrains.repair`, Y18.7). The breaks and limits are the user's; KentOS fills in none.
+//! (`road.terrains.repair`, Y18.7). Kapsam: how much of a project boundary the surface covers, the no-data rest and the
+//! part estimated across too wide gaps (`road.terrains.coverage`, Y19.1), the triangles drawn measured or estimated.
+//! The breaks and limits are the user's; KentOS fills in none.
 //!
 //! ```text
 //! ┌ Yüzey analizi ──────────────────────────────────────────────────────────────────────────────────┐
@@ -21,11 +23,12 @@ use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     TerrainBands, TerrainCheckpointsAsk, TerrainSpikesAsk, TerrainsAnalysed, TerrainsAnalysis, TerrainsCompare,
-    TerrainsCompared, TerrainsQuality, TerrainsQualityRead, TerrainsRepair, TerrainsRepaired,
+    TerrainsCompared, TerrainsCoverage, TerrainsCovered, TerrainsQuality, TerrainsQualityRead, TerrainsRepair, TerrainsRepaired,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
-    ExecutionContext, road_terrains_analysis, road_terrains_compare, road_terrains_quality, road_terrains_repair,
+    ExecutionContext, road_terrains_analysis, road_terrains_compare, road_terrains_coverage, road_terrains_quality,
+    road_terrains_repair,
 };
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
@@ -53,9 +56,9 @@ pub(crate) const FIELDS: [&str; 9] = [
     "Sivri sınırı (m)",
     "Boşluk kenarı (m)",
     "Sınıf alanı",
-    "",
+    "En uzun kenar (m)",
 ];
-const MODES: [&str; 3] = ["Analiz", "Fark", "Kalite"];
+const MODES: [&str; 4] = ["Analiz", "Fark", "Kalite", "Kapsam"];
 const MEASURES: [&str; 3] = ["Kot (m)", "Eğim (%)", "Bakı (°)"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -63,6 +66,7 @@ pub enum Mode {
     Analysis,
     Compare,
     Quality,
+    Coverage,
 }
 
 /// What was read last.
@@ -71,6 +75,7 @@ pub(crate) enum Read {
     Analysis(TerrainsAnalysed),
     Compare(TerrainsCompared),
     Quality(TerrainsQualityRead),
+    Coverage(TerrainsCovered, road_terrains_coverage::CoveragePicture),
 }
 
 #[derive(Debug, Clone)]
@@ -81,6 +86,8 @@ pub struct Window {
     pub(crate) measure: usize,
     pub(crate) roughness: bool,
     pub(crate) checks: Option<String>,
+    /// Kapsam's boundary: a closed object's uid; none, the surface itself.
+    pub(crate) boundary: Option<String>,
     pub(crate) fields: [String; 9],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
@@ -96,6 +103,7 @@ pub enum Event {
     Measure(usize),
     Roughness(bool),
     Checks(Option<String>),
+    Boundary(Option<String>),
     Field(usize, String),
     Preview,
     LeaveSpikes,
@@ -156,6 +164,10 @@ impl Window {
         })
     }
 
+    pub(crate) fn coverage(&self) -> Result<TerrainsCoverage, String> {
+        Ok(TerrainsCoverage { surface: self.surface()?, boundary: self.boundary.clone(), longest: number(&self.fields[8], FIELDS[8])? })
+    }
+
     pub(crate) fn quality(&self) -> Result<TerrainsQuality, String> {
         let (radius, limit) = (number(&self.fields[4], FIELDS[4])?, number(&self.fields[5], FIELDS[5])?);
         let spikes = match (radius, limit) {
@@ -208,6 +220,7 @@ impl App {
             measure: 1,
             roughness: false,
             checks: None,
+            boundary: None,
             fields: Default::default(),
             preview: None,
             warnings: Vec::new(),
@@ -223,6 +236,10 @@ impl App {
             Mode::Analysis => w.analysis().and_then(|q| road_terrains_analysis::preview(&doc.model, &q)).map(|(r, x)| (Read::Analysis(r), x)),
             Mode::Compare => w.compare().and_then(|q| road_terrains_compare::preview(&doc.model, &q)).map(|(r, x)| (Read::Compare(r), x)),
             Mode::Quality => w.quality().and_then(|q| road_terrains_quality::preview(&doc.model, &q)).map(|(r, x)| (Read::Quality(r), x)),
+            Mode::Coverage => w.coverage().and_then(|q| {
+                let (r, x) = road_terrains_coverage::preview(&doc.model, &q)?;
+                Ok((Read::Coverage(r, road_terrains_coverage::picture(&doc.model, &q)?), x))
+            }),
         };
         match read {
             Ok((r, warnings)) => {
@@ -245,6 +262,7 @@ impl App {
             Event::Measure(m) => w.measure = m.min(2),
             Event::Roughness(on) => w.roughness = on,
             Event::Checks(l) => w.checks = l,
+            Event::Boundary(b) => w.boundary = b,
             Event::Field(k, t) => w.fields[k.min(8)] = t,
             Event::Preview => {
                 w.repair = None;
@@ -326,9 +344,10 @@ impl App {
             Mode::Analysis => 0,
             Mode::Compare => 1,
             Mode::Quality => 2,
+            Mode::Coverage => 3,
         };
         let mode = container(Select::new(MODES.iter().map(|m| Choice::new(*m)), Some(mode_at), |i| {
-            msg(Event::Mode([Mode::Analysis, Mode::Compare, Mode::Quality][i]))
+            msg(Event::Mode([Mode::Analysis, Mode::Compare, Mode::Quality, Mode::Coverage][i]))
         }))
         .width(110);
         let mut top = row![words::field("Kip", mode, None), words::field("Yüzey", pick_surface(&w.surface, Event::Surface), None)]
@@ -363,6 +382,27 @@ impl App {
                     .push(field("yok", 6, 110.0))
                     .push(words::field("Kontrol katmanı", checks, None))
                     .push(field("ör. Sınıf", 7, 100.0));
+            }
+            Mode::Coverage => {
+                // The drawing's closed straight-edged objects, by their layer and number.
+                let mut ids: Vec<Option<String>> = vec![None];
+                let mut names = vec!["Yüzeyin kendisi".to_owned()];
+                let layer_names = self.relation_layers();
+                if let Some(m) = model {
+                    for (uid, e) in m.entities_with_uids() {
+                        if ids.len() > 200 {
+                            break;
+                        }
+                        if road_terrains_coverage::boundary_region(m, &uid.to_string()).is_some() {
+                            let layer = layer_names.iter().find(|l| l.0 == e.base().layer_id).map_or("", |l| l.1.as_str());
+                            names.push(format!("{} · {} #{}", crate::view::kind_name(e.kind()), layer, e.base().id));
+                            ids.push(Some(uid.to_string()));
+                        }
+                    }
+                }
+                let at = ids.iter().position(|b| *b == w.boundary);
+                let boundary = container(Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::Boundary(ids[i].clone())))).width(240);
+                top = top.push(words::field("Proje sınırı", boundary, None)).push(field("yok", 8, 130.0));
             }
         }
         let mut body = Column::new().spacing(12).push(top);
@@ -438,6 +478,22 @@ impl App {
                             }
                             side = side.push(label::caption("Kontrol noktaları (nokta − yüzey, m)").style(muted)).push(t);
                         }
+                    }
+                    Read::Coverage(c, _) => {
+                        side = side.push(line("Yüzeyin alanı".into(), format!("{:.2} m²", c.surface_area)));
+                        if let (Some(b), Some(gap), Some(out)) = (c.boundary_area, c.no_data, c.outside) {
+                            side = side
+                                .push(line("Sınırın alanı".into(), format!("{b:.2} m²")))
+                                .push(line("Örtülen".into(), format!("{:.2} m² · %{:.1}", c.covered, 100.0 * c.share.unwrap_or(0.0))))
+                                .push(line("Verisiz".into(), format!("{gap:.2} m²")))
+                                .push(line("Sınırın dışında".into(), format!("{out:.2} m²")));
+                        }
+                        side = side
+                            .push(line(
+                                "Tahmin edilen".into(),
+                                format!("{:.2} m² · %{:.1} · {} üçgen", c.estimated, 100.0 * c.estimated_share, c.estimated_triangles),
+                            ))
+                            .push(line("En uzun kenar".into(), format!("{:.2} m", c.longest_edge)));
                     }
                 }
                 for wn in &w.warnings {
@@ -603,6 +659,36 @@ impl canvas::Program<Message> for Plan<'_> {
                     text(&mut frame, format!("{:+.2} … {:+.2} m", b.from, b.to), Point::new(10.0, y + h / 2.0 - 7.0));
                     text(&mut frame, format!("{:.1} m²", b.area), Point::new(146.0 + w, y + h / 2.0 - 7.0));
                 }
+            }
+            Read::Coverage(_, pic) => {
+                let pts: Vec<[f64; 2]> =
+                    pic.triangles.iter().flat_map(|t| t.0).chain(pic.rings.iter().flatten().copied()).collect();
+                let Some(fit) = Fit::of(&pts, bounds) else {
+                    text(&mut frame, "Gösterilecek üçgen yok.".into(), Point::new(10.0, 10.0));
+                    return vec![frame.into_geometry()];
+                };
+                for (t, estimated) in &pic.triangles {
+                    let shape = Path::new(|p| {
+                        p.move_to(fit.at(t[0]));
+                        p.line_to(fit.at(t[1]));
+                        p.line_to(fit.at(t[2]));
+                        p.close();
+                    });
+                    let color = if *estimated { tk.warning } else { tk.success };
+                    frame.fill(&shape, Color { a: 0.35, ..color });
+                    frame.stroke(&shape, Stroke::default().with_width(0.6).with_color(Color { a: 0.6, ..color }));
+                }
+                for ring in &pic.rings {
+                    let shape = Path::new(|p| {
+                        p.move_to(fit.at(ring[0]));
+                        for q in &ring[1..] {
+                            p.line_to(fit.at(*q));
+                        }
+                        p.close();
+                    });
+                    frame.stroke(&shape, Stroke::default().with_width(2.0).with_color(tk.accent));
+                }
+                text(&mut frame, "Yeşil ölçülen, turuncu tahmin edilen; çizgi proje sınırı".into(), Point::new(10.0, 6.0));
             }
             Read::Quality(q) => {
                 let mut pts: Vec<[f64; 2]> = q.spikes.iter().map(|s| [s.at[0], s.at[1]]).collect();

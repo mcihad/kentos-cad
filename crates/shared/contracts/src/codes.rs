@@ -854,6 +854,11 @@ codes! {
     REPAIR_BREAKLINE = "repair_breakline", Failed, false, "Kırık hattın köşesi dışarıda bırakılmaz.";
     /// No point record of the surface is at a place to leave out (docs/adr/0916 §6).
     REPAIR_NOT_A_POINT = "repair_not_a_point", Failed, false, "Bu yerde yüzeyin bir nokta kaydı yok.";
+    /// A coverage asked that is not right: a limit not positive, a boundary that is not one closed straight-edged ring
+    /// (docs/adr/0920 §3).
+    INVALID_COVERAGE = "invalid_coverage", Failed, false, "Yüzey kapsamı sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the surface does not wholly cover the boundary; the rest has no data (docs/adr/0920 §3).
+    TERRAIN_NO_DATA = "terrain_no_data", Warning, false, "Yüzey sınırın tamamını örtmüyor; kalan yerde veri yok.";
     INVALID_SWEPT = "invalid_swept", Failed, false, "Araç izi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a vehicle's body meets an obstacle somewhere on its path (docs/adr/0915 §2).
     SWEPT_TOUCHES = "swept_touches", Warning, false, "Aracın gövdesi yolunun bir yerinde bir engele değiyor.";

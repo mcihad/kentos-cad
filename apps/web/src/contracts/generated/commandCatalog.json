@@ -42273,6 +42273,243 @@
       ]
     },
     {
+      "id": "road.terrains.coverage",
+      "version": 1,
+      "title": "Yüzeyin kapsamı",
+      "summary": "Bir arazi yüzeyinin proje sınırını ne kadar örttüğünü okur; hiçbir şey yazmaz. Sınır (boundary) çizimin kapalı nesnesidir: düz kenarlı, tek parçalı kapalı çoklu çizgi ya da alan; alanın delikleri sayılmaz; yoksa yüzeyin kendisi. Her üçgen sınırın halkalarıyla kesin kırpılır. Planda kenarı longest'tan uzun üçgen ölçülmemiş, tahmin edilmiş sayılır: noktalar arasında çok geniş boşluğu geçer (Civil 3D'nin en büyük üçgen boyu); longest kullanıcınındır. Cevap: yüzeyin alanı; sınırla sınırın alanı, örtülen, verisiz kalan, dışarıdaki, örtülen payı; örtülenin tahmin edilen kısmı, payı ve üçgen sayısı; içerideki en uzun kenar. Uyarılar: terrain_no_data. Retler: invalid_coverage, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found.",
+      "aliases": [
+        "yuzeykapsam",
+        "verisizalan"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.coverage` v1 (docs/adr/0920): how much of a project boundary a terrain surface covers. The\nboundary is the drawing's closed object `boundary` (a closed polyline or an area, straight edges, its holes counting\nout); absent, the surface itself. Triangles with a plan edge longer than `longest` (the user's) are estimated, not\nmeasured: they span too wide a gap between shots. Reads only.\n\nRefusals, in this order: `invalid_coverage` (longest not positive), `not_a_road_project`, `unknown_terrain`,\n`terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary that is not a closed polyline or area of\none part with straight edges and three corners at least). Warnings: `terrain_no_data` (the boundary is not wholly\ncovered).",
+        "properties": {
+          "boundary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "longest": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface"
+        ],
+        "title": "TerrainsCoverage",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.coverage` v1: areas in plan. The surface's whole area; with a boundary, the boundary's,\nthe surface inside it, the no-data rest and the surface outside, and the share covered (0–1); the estimated part of\nwhat is inside (with `longest`), its share of it and its triangles; the longest plan edge of a triangle inside.",
+        "properties": {
+          "boundaryArea": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "estimated": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "estimatedShare": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "estimatedTriangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "longestEdge": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "noData": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "outside": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "share": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "surfaceArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "surface",
+          "surfaceArea",
+          "covered",
+          "estimated",
+          "estimatedShare",
+          "estimatedTriangles",
+          "longestEdge"
+        ],
+        "title": "TerrainsCovered",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.coverage` v1: areas in plan. The surface's whole area; with a boundary, the boundary's,\nthe surface inside it, the no-data rest and the surface outside, and the share covered (0–1); the estimated part of\nwhat is inside (with `longest`), its share of it and its triangles; the longest plan edge of a triangle inside.",
+        "properties": {
+          "boundaryArea": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "estimated": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "estimatedShare": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "estimatedTriangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "longestEdge": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "noData": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "outside": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "share": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "surfaceArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "surface",
+          "surfaceArea",
+          "covered",
+          "estimated",
+          "estimatedShare",
+          "estimatedTriangles",
+          "longestEdge"
+        ],
+        "title": "TerrainsCovered",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_coverage",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "entity_not_found"
+        ],
+        "warnings": [
+          "terrain_no_data"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Proje sınırında, 20 m'den uzun üçgen tahmin",
+          "input": {
+            "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124",
+            "longest": 20.0,
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
@@ -82888,6 +83125,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu yerde yüzeyin bir nokta kaydı yok."
+    },
+    {
+      "code": "invalid_coverage",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yüzey kapsamı sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "terrain_no_data",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yüzey sınırın tamamını örtmüyor; kalan yerde veri yok."
     },
     {
       "code": "invalid_swept",
