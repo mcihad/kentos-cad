@@ -18,6 +18,7 @@ mod verticals;
 mod vertical_lengths;
 mod grading;
 mod haul;
+mod haul_fleet;
 mod volume;
 mod surfaces;
 mod sources;
