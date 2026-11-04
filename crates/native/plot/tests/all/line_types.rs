@@ -47,6 +47,42 @@ fn losses(doc: &Document, b: &SheetBook) -> Vec<kentos_sheet::preflight::Finding
         .filter(|f| f.code == "linetype_unsupported")
         .collect()
 }
+
+#[test]
+fn attached_shapes_print_from_embedded_bytes_and_missing_glyphs_block_the_complete_output() {
+    let resource: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/shape-resources.json"
+    ))
+    .unwrap();
+    for scale in [1u32, 20, 100] {
+        for wide in [false, true] {
+            for glyph in ["FENCE", "1", "absent"] {
+                let (mut raw, mut page) = source();
+                raw["settings"]["lineTypes"] = json!([{"name":"P","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":glyph,"file":"FENCE.SHX","scale":1.}},{"length":-2.}]}]);
+                raw["styles"]["items"] = resource["styles"]["items"].clone();
+                if wide {
+                    raw["entities"][0] = json!({"kind":"polyline","id":1,"layerId":raw["entities"][0]["layerId"],"attrs":{},"pts":[{"x":0.,"y":0.},{"x":0.1,"y":0.}],"widths":[[0.001,0.003],[0.,0.]]});
+                }
+                raw["entities"][0]["linePattern"] = json!("P");
+                page["sheets"][0]["items"][0]["kind"]["view"]["scale"] = json!(scale);
+                page["sheets"][0]["items"][0]["kind"]["view"]["center"] = json!({"x":0.05,"y":0.});
+                let (doc, book) = document(raw, page);
+                let before = doc.to_snapshot_v2();
+                assert_eq!(
+                    !losses(&doc, &book).is_empty(),
+                    glyph == "absent",
+                    "scale={scale}, wide={wide}, glyph={glyph}"
+                );
+                assert_eq!(
+                    book::book_pdf(&doc, &[], "Test", "2026-11-04").is_err(),
+                    glyph == "absent",
+                    "scale={scale}, wide={wide}, glyph={glyph}"
+                );
+                assert_eq!(doc.to_snapshot_v2(), before);
+            }
+        }
+    }
+}
 #[test]
 fn named_pattern_loss_follows_actual_visibility_and_overrides() {
     for kind in ["text", "unavailable", "shape", "long", "missing", "short"] {

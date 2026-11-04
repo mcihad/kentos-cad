@@ -140,6 +140,7 @@ pub(super) fn prepare(
     def: &LineTypeDef,
     settings: &ProjectSettings,
     plot_scale: f64,
+    resources: &kentos_contracts::ProjectStyles,
 ) -> Result<Option<Value>, String> {
     if !def.elements.iter().any(|e| e.is_complex()) {
         return Ok(None);
@@ -156,10 +157,39 @@ pub(super) fn prepare(
     let mut marks = Vec::new();
     for e in &def.elements {
         if let Some(shape) = &e.shape {
-            return Err(format!(
-                "“{}” SHX şekli için “{}” kaynağı çizilemiyor.",
-                shape.name, shape.file
-            ));
+            let file = kentos_contracts::shape_resource::source_name(&shape.file);
+            let id = kentos_contracts::shape_resource::id(file);
+            let mut items = resources.items.iter().filter(|i| {
+                kentos_contracts::shape_resource::is_resource(i)
+                    && i["id"].as_str() == Some(id.as_str())
+            });
+            let item = items.next().ok_or_else(|| {
+                format!(
+                    "“{}” SHX şekli için “{}” kaynağı projeye eklenmemiş.",
+                    shape.name, shape.file
+                )
+            })?;
+            if items.next().is_some() {
+                return Err(format!("“{file}” SHX kaynağı yinelenmiş."));
+            }
+            let bytes = kentos_contracts::shape_resource::read(item)?;
+            let paths = kentos_geometry_core::text::shx::ShapeFile::read(&bytes)
+                .and_then(|f| f.draw(&shape.name))
+                .map_err(|e| format!("“{}” SHX şekli (“{file}”): {e}", shape.name))?;
+            if paths.is_empty() {
+                return Err(format!(
+                    "“{}” SHX şeklinin çizilebilir konturu yok.",
+                    shape.name
+                ));
+            }
+            let paths: Vec<Vec<[f64; 2]>> = paths
+                .into_iter()
+                .map(|p| p.into_iter().map(|p| [p.x, p.y]).collect())
+                .collect();
+            let p = &shape.place;
+            marks.push(json!({"at":at,"cap":0.,"height":paper(p.scale),"x":paper(p.x),"y":paper(p.y),
+                "rotation":p.rotation,"absolute":p.absolute,"upright":p.upright,"polygons":[],"paths":paths}));
+            continue;
         }
         let Some(text) = &e.text else {
             at += paper(e.length.abs());
@@ -252,6 +282,43 @@ mod tests {
         line_types::LineTypes,
         simple::{Stroke, line_symbol_of},
     };
+    #[test]
+    fn attached_shape_keeps_vector_units_offsets_and_all_scale_factors() {
+        let resource: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/kcad/v2/shape-resources.json"
+        ))
+        .unwrap();
+        let resources: kentos_contracts::ProjectStyles =
+            serde_json::from_value(resource["styles"].clone()).unwrap();
+        let mut settings:ProjectSettings=serde_json::from_value(json!({"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":50.,"drawingUnit":"mm","lineTypeScale":2.,
+            "lineTypes":[{"name":"P","unit":"drawing","elements":[{"length":100.},{"length":-25.},
+                {"length":0.,"shape":{"name":"FENCE","file":"C:\\CAD\\FENCE.SHX","scale":5.,"x":2.,"y":-3.,"rotation":45.}},{"length":-25.}]}]})).unwrap();
+        for scale in [1., 20., 100.] {
+            let types = LineTypes::at_scale_with_resources(&settings, &resources, scale);
+            assert_eq!(types.loss("P"), None);
+            let raw = types.apply(Some("P"), json!({"type":"simpleLine"}));
+            let m = &raw["cadMarks"]["marks"][0];
+            assert_eq!(m["cap"], 0.);
+            assert!((m["height"].as_f64().unwrap() - 10. / scale).abs() < 1e-12);
+            assert!((m["x"].as_f64().unwrap() - 4. / scale).abs() < 1e-12);
+            assert!((m["y"].as_f64().unwrap() + 6. / scale).abs() < 1e-12);
+            assert_eq!(
+                m["paths"],
+                json!([[[0., -1.], [0., 1.]], [[-1., 0.], [1., 0.]]])
+            );
+        }
+        settings.line_types[0].elements[2]
+            .shape
+            .as_mut()
+            .unwrap()
+            .name = "absent".into();
+        assert!(
+            LineTypes::with_resources(&settings, &resources)
+                .loss("P")
+                .unwrap()
+                .contains("absent")
+        );
+    }
     #[test]
     fn fixed_height_and_glyph_counters_survive_units_viewports_and_both_scale_factors() {
         let settings:ProjectSettings=serde_json::from_value(json!({"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","workspace":"cad","drawingUnit":"mm","plotScale":50.,"lineTypeScale":2.,

@@ -3,7 +3,7 @@
  "version": 1,
  "note": ".kstil stil dosyası (style/file.ts): okuma (neyin neden reddedildiği; kabul edilen dosyada SVG çizimleri temizlenmiş öğeler; sürüm 2 nesne şablonlarını getirir, şablon kendi kurallarıyla denetlenir, ADR 0176), sembol denetimi ve sözleri, SVG temizliği (XML başlığı, DOCTYPE, betik, olay işleyicisi, foreignObject, dışarıya bağlantı ve dış url() kalkar; iç bağlantı ve data:image kalır), dışa aktarmanın aldıkları (sembollerin kullandığı varlıklar, şablonların çizdiği semboller, hangi kaynaktan olursa olsun; her öğe bir kez; kaynak alanı yazılmaz; şablonlu dosya sürüm 2, öbürü 1), içe aktarmanın her çakışma kipinde yaptıkları (varlıklar, sonra semboller, sonra şablonlar; değiştir yalnız aynı kaynakta, başka kaynakta ya da sistemde atlar; kopya yeni kimlik alır, semboller yeni varlık kimliğine, şablonlar yeni sembol kimliğine döner; kategoriler eklenir) ve yeni SVG çiziminin boyu (viewBox, yoksa width/height, yoksa 100). Yeni kimlikler rastgeledir: {new:eski} ile yazılıdır, önekleri prefixes’tedir. exported zamanı karşılaştırılmaz. Yanıtlar web’indir ve kaydedilirken okunmuştur.",
  "styleFormat": "kentos-style",
- "styleVersion": 2,
+ "styleVersion": 3,
  "parse": [
   {
    "id": "not-json",
@@ -25,10 +25,10 @@
   },
   {
    "id": "newer",
-   "text": "{\"format\":\"kentos-style\",\"version\":3,\"items\":[]}",
+   "text": "{\"format\":\"kentos-style\",\"version\":4,\"items\":[]}",
    "expect": {
     "issues": [
-     "Dosya daha yeni bir KentOS sürümüyle yazılmış (sürüm 3); güncelleyip yeniden deneyin."
+     "Dosya daha yeni bir KentOS sürümüyle yazılmış (sürüm 4); güncelleyip yeniden deneyin."
     ]
    }
   },

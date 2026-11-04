@@ -339,6 +339,20 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let layers = required(r, layers, "layers")?;
     let origin = required(r, origin, "origin")?;
     let styles = required(r, styles, "styles")?;
+    if schema < crate::SCHEMA_WITH_SHAPE_RESOURCES
+        && styles
+            .items
+            .iter()
+            .any(kentos_contracts::shape_resource::is_resource)
+    {
+        return Err(r.fail(
+            Code::UnknownField,
+            "SHX kaynakları belge şeması 164 gerektirir",
+        ));
+    }
+    if let Err(error) = kentos_contracts::shape_resource::check_items(&styles.items) {
+        return Err(r.fail(Code::BadValue, &error));
+    }
     let (entities, uids) = required(r, entities, "entities")?;
     let settings = required(r, settings_, "settings")?;
     let active_layer = required(r, active_layer, "activeLayer")?;

@@ -338,8 +338,11 @@ pub(crate) fn line_type_losses(
 pub(crate) fn line_type_check_needed(
     doc: &kentos_domain::Document, map: &kentos_sheet::display::MapPrim, library: &StyleLibrary,
 ) -> bool {
-    let types = kentos_native_style::line_types::LineTypes::of(doc.settings());
-    if types.needs_preflight() { return true; }
+    let types =
+        kentos_native_style::line_types::LineTypes::with_resources(doc.settings(), doc.styles());
+    if types.needs_preflight() {
+        return true;
+    }
     // Geometric-width dashes are split before filling and can reject an
     // excessive/dotted recipe. Inspect their actual emitted diagnostics too.
     let wide = |e: &kentos_contracts::Entity| matches!(e,
@@ -444,10 +447,13 @@ fn built_layers_profile_unchecked(
         },
         view_colors: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.settings()),
-        line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::at_scale(
-            doc.settings(),
-            scale,
-        )),
+        line_types: std::sync::Arc::new(
+            kentos_native_style::line_types::LineTypes::at_scale_with_resources(
+                doc.settings(),
+                doc.styles(),
+                scale,
+            ),
+        ),
         phasing: std::sync::Arc::new(phasing),
     };
     let clip = Bounds {

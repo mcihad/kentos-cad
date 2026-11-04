@@ -1694,6 +1694,16 @@ adı seçimde açıkça gösterilir. Konturlar açılışta/düzenlemede hazırl
 Gerçek LIN yükleme, farklı kaydetme ve yeniden açma testiyle doğrulandı;
 kanıtlar ADR 0930'da. Bu dilim SHX çizimini tamamlamaz.
 
+**SHX şekillerinin ilk çizim dilimi (4 Kasım 2026):** Klasik SHX 1.0/1.1
+kaynakları açık seçimle projeye gömülür; ortak GPU/CPU/PDF hattında gerçek
+stroke şekilleri çizilir. Kaynak/özet/yürütme hataları çıktı engelidir.
+Aynı ekleme Python/MCP komutuyla yapılır; kullanılan kaynak silinemez.
+Gerçek GUI'de ekleme, zoom, 1:20/1:100 pafta, iki sayfalı vektör PDF,
+KCAD kaydı ve harici dosya olmadan yeniden açma doğrulandı. Testler ve
+ölçülmüş PDF sonuçları ADR 0930'da. Unicode/Big Font ve genel SHX metin
+fontları, harici teslim paketi ve kalan geometri/performance kabulü açık;
+maddenin durumu `[~]` olarak korunur.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

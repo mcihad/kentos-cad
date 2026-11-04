@@ -629,3 +629,80 @@ korunur; yeni Python/MCP komutu eklenmez.
   repo dışı kanıt klasöründe. Dar pencere için gerçek köşe sürükleme
   denemesi araçta `windowNotFoundAtPosition` verdi; dar pencere kabulü
   yapılmış sayılmaz.
+
+## Gömülü SHX şekillerinin ilk çizim dilimi — 4 Kasım 2026
+
+- `geometry-core/text/shx.rs`, AutoCAD-86 shapes 1.0/1.1 dizinini ve
+  şekil programlarını sınırlandırarak okur. Vektör, kalem, kümülatif ölçek,
+  dört konumlu yığın, alt şekil, XY dizisi, oktant/kesirli yay, bulge ve
+  yatay kullanımda tam komut atlama desteklenir. Geometri açık stroke
+  yollarıdır; harf gibi doldurulmaz ve font yüksekliğine normalize edilmez.
+- [Autodesk Special Codes Reference](https://help.autodesk.com/cloudhelp/2025/ENU/AutoCAD-Customization/files/GUID-06832147-16BE-4A66-A6D0-3ADF98DC8228.htm)
+  yürütme davranışının dayanağıdır. Özellikle alt şekil kalem durumunu
+  devralır; konum yığını dört öğedir; ölçek alt şekilden sonra korunur.
+  [ezdxf'nin SHX okuyucusu](https://github.com/mozman/ezdxf/blob/master/src/ezdxf/fonts/shapefile.py)
+  ikili kayıt yerleşimi için karşılaştırıldı. Onun alt şekil kalemini yeniden
+  indiren davranışı aktarılmadı; Autodesk kuralına ayrı test yazıldı.
+- Dosya 4 MiB, dizin 16 384 şekil, çağrı derinliği 32, yürütme 100 000
+  adım, dondurulmuş şekil 32 768 noktayla sınırlı. Döngü, yığın hatası,
+  sıfır ölçek, yarım kayıt, yinelenmiş kimlik/ad, eksik alt şekil ve ayrılmış
+  opcode eksik geometri yerine hata verir. Yay düzleştirmede azami kaynak
+  sehim toleransı 0,0001 vektör birimidir. Mevcut path/katman işaret
+  bütçeleri SHX noktalarına da uygulanır; sınır aşımı çıktı engelidir.
+- `contracts::shape_resource`, özgün baytları kanonik base64 ve SHA-256 ile
+  kitaplık varlığı olarak tanımlar. Dosya adı başına tek kimlik vardır;
+  kaynak yolu disk/ağ erişimi vermez. `.kstil` yalnız SHX ile 3, KCAD yalnız
+  SHX ile şema 164 olur. Eski dosyaların baytları korunur; sürüm düşürülmüş
+  SHX dosyası ve bozuk özet hem Rust hem bağımsız Python okuyucuda reddedilir.
+- Desktop model/pafta ve native PDF, proje kaynaklarını aynı `LineTypes`
+  hazırlığına geçirir. R/A/U ve X/Y mevcut ortak yerleştiricidir; SHX pivotu
+  özgün orijindir. Taşıyıcının dash deseni şekil konturuna uygulanmaz.
+  Geniş polyline'ın `MarksOnly` geçidi de açık SHX stroke'larını geçirir.
+- **SHX ekle…** mevcut KentOS düğmesi ve dosya seçicisini kullanır; yazma
+  ortak `cad.library.edit` create/update komutudur. Python/MCP aynı öğeyi
+  kullanır; `.kstil` dışa/içe alma baytları korur. Kullanılan kaynak komutta
+  ve stil yöneticisinde silinemez; aynı dosya adı projede çoğaltılmaz.
+  Python örneği `docs/STYLE.md` içindedir. Yeni TypeScript dosyası yok.
+
+Doğrulama:
+
+- SHX okuyucusunun 7 testinde her dosya kesintisi, alt şekil kalem/ölçek
+  devri, negatif oktant, tam daire, iki bulge yönü ve Autodesk'in 55°–95°
+  kesirli yay örneği sınandı. Ortak style-core 45 testi geçti.
+- KCAD 6 birim + 235 entegrasyon, native style 40 birim + 43 entegrasyon
+  + iki ayrı ikişer test; plot 18 birim ve 69 entegrasyon kontrolü geçti.
+  Plot'un yeni testindeki başlangıç fixture ölçeği float yerine u32 olacak
+  şekilde düzeltildi ve test yeniden geçti. Önceki iki style-core golden
+  uyuşmazlığına dokunulmadı; bütün workspace temiz denmedi.
+- Kaynak ekleme/plan/dışa alma/içe alma/korunan silme komut testi, gerçek
+  MCP `drawing.open → cad.library.edit → file.preflight.sheets` akışı ve
+  yeniden derlenmiş Python SDK'sının iki testi geçti. Python testlerinden
+  biri 6 alt durumlu önceki çıktı regresyonudur; diğeri SHX/KCAD döngüsüdür.
+- Bağımsız fixture yazıcı/okuyucu `--check`: 1545 dosyada tutarlı sonuç.
+  Yeni SHX kabulü, 163'e düşürülmüş belge, bozuk özet ve yinelenen kaynak
+  örnekleri ayrı ve elle tanımlanmıştır.
+- Gerçek uygulamada 128 nesneli çizim açıldı; **SHX ekle…** ile kaynağın
+  seçilmesi üç kaynak uyarısını giderdi. Düz/45°/daire ve geniş taşıyıcı,
+  bağımsız mavi geometrilerle karşılaştırıldı; zoom, farklı kaydetme,
+  1:20/1:100 paftalar ve iki sayfalı GUI PDF'si denendi. Mavi referanslar
+  modelde 1:50 için elle yerleştirilmiştir; diğer paftalarda kâğıt desenine
+  sabit ölçü referansı oldukları iddia edilmez.
+- GUI PDF'sinde 1:20'de 37, 1:100'de 7 özgün daire ölçüldü: boyları 2 mm
+  (azami sınır kutusu farkı 0,000103 mm), tekrar 8 mm; görüntü kaynağı yok.
+  Poppler çıktısı ayrıca görsel incelendi. GUI KCAD kaydında 128 geometri,
+  kimlikler, ayarlar ve paftalar değişmedi; gömülü SHX baytları kaynakla aynı.
+  Harici SHX dosyası başka ada alındıktan sonra uygulama kapatılıp KCAD
+  yeniden açıldı; şekiller geldi. Bozuk SHX ekleme gerçek dosya seçiciden
+  denendi; hata gösterildi, mevcut önizlemeler ve temiz belge durumu korundu.
+  `shx-invalid-source-gui.png` bunu kaydeder. Test binary SHA-256:
+  `6c1199f702fc8e34a2a84f3f5edf2e3aec5001f8b6ef0374aab29046f908c486`.
+- Kanıtlar repo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında:
+  `shx-after-gui.png`, `shx-zoom-gui.png`, `shx-sheet20-gui.png`,
+  `shx-sheet100-gui.png`, `shx-reopened-without-file-gui.png`,
+  `shx-both-gui.pdf`, `shx-pdf-dimensions.json`, `shx-save-check.json` ve
+  ilgili `shx-*.log` dosyaları. Ekranlar repoya eklenmez.
+
+**Açık kapsam:** Unicode/Big Font SHX, genel SHX yazı fontları, DXF/DWG
+paketinde harici SHX kaynağını taşıma, 12 öğelik kalıcı tarif sınırının
+sürümlü genişletilmesi, analitik metin/şekil-yay fazı, tam affine/blok ve
+viewport/performance kabulü henüz tamamlanmadı. CAD-ADV-11 `[~]` kalır.

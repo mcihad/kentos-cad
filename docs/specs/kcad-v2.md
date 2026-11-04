@@ -1924,3 +1924,24 @@ sözleşmesidir. Kanonik CBOR alan sırası: `dx`, `dy`, `cols`, `kind`, `rows`,
 `rowAngle`, `columnAngle`. 160 ve altında lattice, diğer kind üzerinde açı
 alanları ve geçersiz eksenler `bad_value` ile reddedilir. Bağımsız altın dosya
 `arrays-lattice.kcad`; dört bozuk dosya her iki okuyucuyla denetlenir.
+
+### Şema 164 — gömülü SHX şekil kaynakları
+
+Yalnız `styles.items` içinde `kind: "asset", format: "shx"` varsa yazılır.
+Kaynak öğesinde `file` yol içermeyen, UTF-8'de en çok 255 baytlık `.shx`
+dosya adı; `id` ise `shx:` ve dosya adının küçük harfli biçimidir.
+`data`, `data:application/x-autocad-shx;base64,` önekinden sonra RFC 4648
+kanonik dolgulu base64; `sha256`, çözülen özgün baytların 64 küçük hex
+karakterli özetidir. Bir kaynak en çok 4 MiB'dir; aynı kimlik yinelenemez.
+`name` ve `path` mevcut kitaplık alanlarıdır. Görüntü boyutu eklenmez:
+bu bir görüntü değil, yürütülecek çizim kaynağıdır.
+
+İlk destek AutoCAD-86 shapes 1.0/1.1 içindir; başka başlık reddedilir.
+Dosya adı otomatik disk/ağ erişimi vermez. İçe alınan çizgi tipindeki kaynak
+yolunun yalnız dosya adı eşleştirilir. Kullanıcı kaynağı açıkça seçer veya
+`cad.library.edit` ile gömer. Renderer istenen şekil programını ayrıca
+sınırlı yürütür; çizilemeyen kaynak/şekil çıktı ön denetiminde hata olur.
+SHX olmadan eski şema ve baytlar korunur. 163 veya daha eski şemada bu
+öğe `unknown_field`; bozuk veri/özet ve yinelenen kaynak `bad_value` olur.
+Bağımsız örnekler `shape-resources.json/.kcad` ve
+`broken/shape-resources-in-schema-163.kcad` dosyalarıdır.

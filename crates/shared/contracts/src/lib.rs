@@ -143,6 +143,7 @@ pub mod viewmark;
 pub mod settings;
 pub mod processing_job;
 pub mod server_jobs;
+pub mod shape_resource;
 pub mod sheets;
 pub mod style;
 pub mod subref;

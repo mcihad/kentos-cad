@@ -2352,6 +2352,8 @@ def document(d):
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
     assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    if any(i.get("kind")=="asset" and i.get("format")=="shx" for i in d["styles"]["items"]):
+        schema=max(schema,164)
     texts = d["entities"] + [e for b in d.get("blocks", []) for e in b["entities"]]
     if any(e.get("kind") == "text" and e.get("layout", {}).get("engine") for e in texts):
         schema = max(schema, 163)
@@ -3274,7 +3276,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-164.kcad"] = container(root(cmap(parts), version=uint(164)))
+    files["schema-version-165.kcad"] = container(root(cmap(parts), version=uint(165)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4742,6 +4744,15 @@ def build():
         out[name + ".kcad"] = container(profile)
         out["broken/" + name + "-in-schema-162.kcad"] = container(
             profile.replace(b"\x67version\x18\xa3", b"\x67version\x18\xa2"))
+    shapes = document(load("shape-resources.json"))
+    out["shape-resources.kcad"]=container(shapes)
+    bad_shape=copy.deepcopy(load("shape-resources.json"))
+    bad_shape["styles"]["items"][0]["sha256"]="0"*64
+    out["broken/shape-resource-hash.kcad"]=container(document(bad_shape))
+    duplicate_shape=copy.deepcopy(load("shape-resources.json"))
+    duplicate_shape["styles"]["items"]*=2
+    out["broken/shape-resource-duplicate.kcad"]=container(document(duplicate_shape))
+    out["broken/shape-resources-in-schema-163.kcad"]=container(shapes.replace(b"\x67version\x18\xa4",b"\x67version\x18\xa3"))
     unicode_text = document(load("text-engine.json"))
     assert unicode_text.count(b"\x67version\x18\xa3") == 1
     out["text-engine.kcad"] = container(unicode_text)

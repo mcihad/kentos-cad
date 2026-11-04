@@ -390,6 +390,9 @@ impl<'d> Encoder<'d> {
         }
         self.key("styles");
         self.at(Seg::Name("styles"), |e| {
+            if let Err(error) = kentos_contracts::shape_resource::check_items(&doc.styles.items) {
+                return Err(e.fail(Code::BadValue, &error));
+            }
             e.open(2, true)?;
             e.key("items");
             e.at(Seg::Name("items"), |e| e.opaque_list(&doc.styles.items))?;
@@ -2107,6 +2110,14 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    if doc
+        .styles
+        .items
+        .iter()
+        .any(kentos_contracts::shape_resource::is_resource)
+    {
+        return crate::SCHEMA_WITH_SHAPE_RESOURCES;
+    }
     let new_text = |e: &Entity| matches!(e, Entity::Text(t)
         if t.paragraph.layout.as_ref().is_some_and(|l| l.engine.is_some()));
     if objs.iter().any(new_text) || doc.blocks.iter().any(|b| b.entities.iter().any(new_text)) {

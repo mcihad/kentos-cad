@@ -19,6 +19,7 @@ pub struct Mark {
     absolute: bool,
     upright: bool,
     polygons: Vec<Vec<Vec<Vec2>>>,
+    paths: Vec<Vec<Vec2>>,
     cost: usize,
 }
 #[derive(Clone, Debug)]
@@ -97,9 +98,38 @@ impl Marks {
                 absolute: matches!(m.get("absolute"), Json::Bool(true)),
                 upright: matches!(m.get("upright"), Json::Bool(true)),
                 polygons,
+                paths: if matches!(m.get("paths"), Json::Null) {
+                    Vec::new()
+                } else {
+                    let mut paths = Vec::new();
+                    for path in array(m.get("paths"))? {
+                        let mut points = Vec::new();
+                        for p in array(path)? {
+                            let pair = array(p)?;
+                            if pair.len() != 2 {
+                                return Err("SHX şekil noktası geçersiz.".into());
+                            }
+                            points.push(Vec2::new(number(&pair[0])?, number(&pair[1])?));
+                            cost += 1;
+                            if cost > 32_768 {
+                                return Err("Çizgi tipi kaynak konturu sınırı aşıldı.".into());
+                            }
+                        }
+                        if points.len() < 2 {
+                            return Err("SHX şekil yolunda en az iki nokta gerekli.".into());
+                        }
+                        paths.push(points);
+                    }
+                    paths
+                },
                 cost: cost - before,
             };
-            if mark.cap <= 0. || mark.height <= 0. || mark.at < 0. || mark.at > period {
+            if mark.cap < 0.
+                || (mark.cap == 0. && mark.paths.is_empty())
+                || mark.height <= 0.
+                || mark.at < 0.
+                || mark.at > period
+            {
                 return Err("Çizgi tipi işaretinin boyu veya fazı geçersiz.".into());
             }
             marks.push(mark);
@@ -223,6 +253,23 @@ impl Placement<'_> {
             opacity: style.opacity,
             level: style.level,
         };
+        if !m.paths.is_empty() {
+            let mut plain = style.clone();
+            plain.dash = None;
+            plain.dash_offset = 0.;
+            for path in &m.paths {
+                let points: Vec<_> = path
+                    .iter()
+                    .map(|p| {
+                        Vec2::new(
+                            origin.x + height * (c * p.x - s * p.y),
+                            origin.y + height * (s * p.x + c * p.y),
+                        )
+                    })
+                    .collect();
+                sink.cad_shape(&plain, &points);
+            }
+        }
         for polygon in &m.polygons {
             let rings: Vec<Vec<Vec2>> = polygon
                 .iter()
@@ -256,6 +303,54 @@ mod tests {
         Marks::read(&Json::parse(&s.to_string()).unwrap())
             .unwrap()
             .unwrap()
+    }
+    #[test]
+    fn shape_contours_remain_open_unfilled_and_rotate_about_the_source_origin() {
+        use super::super::prim::PrimUnit;
+        let raw = serde_json::json!({"period":4.,"marks":[{"at":0.,"cap":0.,"height":2.,"x":0.5,"y":0.,
+            "rotation":90.,"polygons":[],"paths":[[[0.,-1.],[0.,1.]]]}]});
+        let marks = Marks::read(&Json::parse(&raw.to_string()).unwrap())
+            .unwrap()
+            .unwrap();
+        let aspects = HashMap::new();
+        let env = env(&aspects);
+        let placed = marks
+            .placements(
+                &[Vec2::new(0., 0.), Vec2::new(1., 0.)],
+                false,
+                0.,
+                Unit::M,
+                &env,
+            )
+            .unwrap();
+        assert_eq!(placed.len(), 1);
+        assert_eq!(placed[0].cost(), 2);
+        let style = StrokeStyle {
+            color: "#123456".into(),
+            opacity: 0.5,
+            width: 0.2,
+            unit: PrimUnit::World,
+            dash: Some(vec![1., 1.]),
+            dash_offset: 1.,
+            line_type_loss: None,
+            cap: "round".into(),
+            join: "miter".into(),
+            blur: 0.,
+            level: 3.,
+            ground: false,
+        };
+        let mut sink = PrimitiveList::default();
+        placed[0].paint(&style, Unit::M, &env, &mut sink);
+        let out: serde_json::Value = serde_json::from_str(&sink.json()).unwrap();
+        assert_eq!(out["strokes"].as_array().unwrap().len(), 1);
+        assert!(out["fills"].as_array().unwrap().is_empty());
+        let stroke = &out["strokes"][0];
+        assert_eq!(stroke["closed"], false);
+        assert!(stroke["style"]["dash"].is_null());
+        assert_eq!(stroke["style"]["color"], "#123456");
+        assert_eq!(stroke["style"]["width"], 0.2);
+        assert!((stroke["path"][0]["x"].as_f64().unwrap() - 2.5).abs() < 1e-12);
+        assert!((stroke["path"][1]["x"].as_f64().unwrap() + 1.5).abs() < 1e-12);
     }
     fn env<'a>(aspects: &'a HashMap<String, f64>) -> Env<'a> {
         Env {

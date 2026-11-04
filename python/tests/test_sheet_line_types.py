@@ -10,6 +10,29 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class SheetLineTypes(unittest.TestCase):
+    def test_shx_attachment_uses_the_public_library_command_and_travels_with_kcad(self):
+        fx=json.loads((ROOT/'fixtures/commands/v1/file.preflight.sheets.json').read_text())
+        resource=json.loads((ROOT/'fixtures/kcad/v2/shape-resources.json').read_text())['styles']['items'][0]
+        raw=copy.deepcopy(fx['model'])
+        raw['settings']['lineTypes']=[dict(name='FENCE',unit='paper',elements=[dict(length=5.),dict(length=-1.),dict(length=0.,shape=dict(name='FENCE',file='FENCE.SHX')),dict(length=-2.)])]
+        raw['entities'][0]['linePattern']='FENCE'
+        doc=cad.Document.from_bytes(json.dumps(raw).encode())
+        library=cad.command('cad.library.edit')
+        request=library.input_type.from_json(dict(operation='create',item=resource))
+        before=doc.to_bytes()
+        library.run(doc,request,op='plan').unwrap()
+        self.assertEqual(doc.to_bytes(),before)
+        library.run(doc,request).unwrap()
+        saved=doc.to_bytes()
+        restored=cad.Document.from_bytes(saved)
+        exported=library.run(restored,library.input_type.from_json(dict(operation='export',ids=['shx:fence.shx']))).unwrap()
+        package=json.loads(exported.kstil)
+        self.assertEqual(package['version'],3)
+        self.assertEqual(package['items'],[resource])
+        refused=library.run(restored,library.input_type.from_json(dict(operation='remove',id='shx:fence.shx')))
+        self.assertFalse(refused.ok)
+        self.assertEqual(restored.to_bytes(),saved)
+
     def test_preflight_names_source_and_preserves_document_and_output_directory(self):
         fx = json.loads((ROOT / 'fixtures/commands/v1/file.preflight.sheets.json').read_text())
         for mode in ["text", "unavailable", "unused", "long", "wide", "wide_dense"]:

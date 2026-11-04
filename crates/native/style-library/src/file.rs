@@ -17,11 +17,16 @@ use crate::object_template::template_issues;
 
 pub const STYLE_FORMAT: &str = "kentos-style";
 /// The newest version this reads.
-pub const STYLE_VERSION: u32 = 2;
+pub const STYLE_VERSION: u32 = 3;
 
 /// The version a file with these items is written as: 2 with a template in it, else 1 (`styleVersionOf`).
 pub fn style_version_of(items: &[Value]) -> u32 {
     if items
+        .iter()
+        .any(kentos_contracts::shape_resource::is_resource)
+    {
+        3
+    } else if items
         .iter()
         .any(|i| i.get("kind").and_then(Value::as_str) == Some("template"))
     {
@@ -735,6 +740,16 @@ pub fn validate_item(it: &Value, i: usize) -> Vec<String> {
             g("symbol").unwrap_or(&Value::Null),
             &format!("{w} ({})", js_str(g("name"))),
         )),
+        Some("asset") if kentos_contracts::shape_resource::is_resource(it) => {
+            match kentos_contracts::shape_resource::read(it) {
+                Ok(bytes) => {
+                    if let Err(error) = kentos_geometry_core::text::shx::ShapeFile::read(&bytes) {
+                        issues.push(format!("{w}: {error}"));
+                    }
+                }
+                Err(error) => issues.push(format!("{w}: {error}")),
+            }
+        }
         Some("asset") => {
             let format = js_str(g("format"));
             // A raster's file may be a GeoTIFF too (docs/adr/0204 §2), or a NetCDF (docs/adr/0243 §6).
@@ -864,6 +879,16 @@ pub fn parse_style_file(text: &str) -> Result<StyleFile, Vec<String>> {
         .enumerate()
         .flat_map(|(i, it)| validate_item(it, i))
         .collect();
+    if version < 3.
+        && items
+            .iter()
+            .any(kentos_contracts::shape_resource::is_resource)
+    {
+        issues.push("SHX kaynakları .kstil sürüm 3 gerektirir.".into());
+    }
+    if let Err(error) = kentos_contracts::shape_resource::check_items(items) {
+        issues.push(error);
+    }
     issues.extend(validate_categories(data.get("categories")));
     if !issues.is_empty() {
         return Err(issues);

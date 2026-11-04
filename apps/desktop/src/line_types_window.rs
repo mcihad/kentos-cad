@@ -62,8 +62,11 @@ impl Preview {
         f64::from(width) / sample
     }
 }
-fn previews(settings: &kentos_commands::ProjectSettings) -> HashMap<String, Preview> {
-    let compiled = LineTypes::of(settings);
+fn previews(
+    settings: &kentos_commands::ProjectSettings,
+    resources: &kentos_commands::ProjectStyles,
+) -> HashMap<String, Preview> {
+    let compiled = LineTypes::with_resources(settings, resources);
     let unit = settings
         .drawing_unit
         .unwrap_or(kentos_commands::DrawingUnit::M)
@@ -85,6 +88,8 @@ pub enum Event {
     Choose(String),
     Load,
     Loaded(Option<(String, String)>),
+    LoadShape,
+    ShapeLoaded(Result<Option<(String, Vec<u8>)>, String>),
     Export,
     Exported(Option<std::path::PathBuf>),
     Remove,
@@ -109,7 +114,7 @@ impl App {
             chosen: None,
             scale: crate::properties::rows::plain_number(scale),
             said: None,
-            previews: previews(doc.model.settings()),
+            previews: previews(doc.model.settings(), doc.model.styles()),
         });
         self.dialog = Some(Dialog::LineTypes);
     }
@@ -139,7 +144,7 @@ impl App {
             _ => return None,
         };
         if let Some(w) = self.line_types_window.as_mut() {
-            w.previews = previews(doc.model.settings());
+            w.previews = previews(doc.model.settings(), doc.model.styles());
         }
         Some(done)
     }
@@ -170,6 +175,76 @@ impl App {
                     },
                     |read| msg(Event::Loaded(read)),
                 );
+            }
+            Event::LoadShape => {
+                return Task::perform(
+                    async move {
+                        let Some(file) = rfd::AsyncFileDialog::new()
+                            .set_title("SHX şekil kaynağını projeye ekle")
+                            .add_filter("SHX şekilleri", &["shx", "SHX"])
+                            .pick_file()
+                            .await
+                        else {
+                            return Ok(None);
+                        };
+                        use std::io::Read;
+                        let mut bytes = Vec::new();
+                        std::fs::File::open(file.path())
+                            .map_err(|e| e.to_string())?
+                            .take(kentos_commands::shape_resource::MAX_BYTES as u64 + 1)
+                            .read_to_end(&mut bytes)
+                            .map_err(|e| e.to_string())?;
+                        if bytes.len() > kentos_commands::shape_resource::MAX_BYTES {
+                            return Err("SHX kaynağı 4 MiB sınırını aşıyor.".into());
+                        }
+                        Ok(Some((file.file_name(), bytes)))
+                    },
+                    |result| msg(Event::ShapeLoaded(result)),
+                );
+            }
+            Event::ShapeLoaded(Ok(None)) => {}
+            Event::ShapeLoaded(result) => {
+                let result = (|| -> Result<String, String> {
+                    let Some((file, bytes)) = result? else {
+                        return Ok(String::new());
+                    };
+                    let item = kentos_commands::shape_resource::item(&file, &bytes)?;
+                    let doc = self.document.as_mut().ok_or("Açık çizim yok.")?;
+                    let id = kentos_commands::shape_resource::id(&file);
+                    let exists = doc
+                        .model
+                        .styles()
+                        .items
+                        .iter()
+                        .any(|i| i["id"].as_str() == Some(id.as_str()));
+                    let input = serde_json::from_value(
+                        json!({"operation":if exists {"update"} else {"create"},
+                        "id":id,"item":item,"patch":item}),
+                    )
+                    .map_err(|e| e.to_string())?;
+                    match kentos_native_application::library_edit::execute(
+                        &mut ExecutionContext::new(&mut doc.model),
+                        input,
+                    ) {
+                        CommandResult::Completed { .. } => {}
+                        CommandResult::Failed { error }
+                        | CommandResult::Conflict { error }
+                        | CommandResult::NeedsInput { error } => return Err(error.message),
+                        _ => return Err("SHX kaynağı eklenemedi.".into()),
+                    }
+                    if let Some(w) = self.line_types_window.as_mut() {
+                        w.previews = previews(doc.model.settings(), doc.model.styles());
+                    }
+                    Ok(format!(
+                        "“{file}” projeye eklendi. Kaynak çizimle birlikte saklanır."
+                    ))
+                })();
+                if let Some(w) = self.line_types_window.as_mut() {
+                    w.said = Some(match result {
+                        Ok(s) => (Kind::Ok, s),
+                        Err(s) => (Kind::Warn, s),
+                    });
+                }
             }
             Event::Loaded(None) | Event::Exported(None) => {}
             Event::Loaded(Some((name, text))) => {
@@ -400,6 +475,7 @@ impl App {
             .width(Fill);
         let actions = row![
             words::secondary(LOAD, Some(msg(Event::Load))),
+            words::secondary("SHX ekle…", Some(msg(Event::LoadShape))),
             words::secondary(EXPORT, (!types.is_empty()).then(|| msg(Event::Export))),
             words::secondary(REMOVE, w.chosen.is_some().then(|| msg(Event::Remove))),
             // What a change of the chosen type would reach (docs/adr/0314 §4).
@@ -549,7 +625,7 @@ mod preview_tests {
                 {"name":"SHX","unit":"paper","elements":[{"length":5.},{"length":-4.},{"length":0.,"shape":{"name":"FENCE","file":"missing.shx"}},{"length":-4.}]}
             ]
         })).unwrap();
-        let got = previews(&settings);
+        let got = previews(&settings, &Default::default());
         let text = &got["HW"];
         assert!(text.loss.is_none());
         assert_eq!(text.period, 13.);

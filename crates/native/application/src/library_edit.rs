@@ -121,7 +121,18 @@ fn uses(doc: &Document, lib: &StyleLibrary, id: &str) -> (usize, usize, usize) {
                     }))
         })
         .count();
-    (objects, layers(doc.layers().nodes(), id), items)
+    let shape_uses = lib
+        .get(id)
+        .filter(|(item, _)| kentos_commands::shape_resource::is_resource(item.value()))
+        .and_then(|(item, _)| item.value()["file"].as_str())
+        .map_or(0, |file| {
+            kentos_commands::shape_resource::uses(&doc.settings().line_types, file)
+        });
+    (
+        objects,
+        layers(doc.layers().nodes(), id),
+        items + shape_uses,
+    )
 }
 
 /// The input's own checks, in the contract's order (before the revision).

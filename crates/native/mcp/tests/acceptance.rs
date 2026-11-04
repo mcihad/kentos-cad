@@ -1234,3 +1234,71 @@ fn sheet_preflight_agent_reports_visible_linetype_loss_without_writing_or_mutati
     assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn agent_can_attach_portable_shx_and_clear_only_the_resolved_resource_finding() {
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/file.preflight.sheets.json"
+    ))
+    .unwrap();
+    let resource: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/kcad/v2/shape-resources.json"
+    ))
+    .unwrap();
+    let root = std::env::temp_dir().join(format!("kentos-mcp-shx-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    let mut model = fx["model"].clone();
+    model["settings"]["lineTypes"] = json!([{"name":"FENCE","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"FENCE.SHX"}},{"length":-2.}]}]);
+    model["entities"][0]["linePattern"] = json!("FENCE");
+    let source = root.join("source.kcad");
+    let bytes = serde_json::to_vec(&model).unwrap();
+    std::fs::write(&source, &bytes).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let ops = fx["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"op":"addSheet","sheet":s}))
+        .collect::<Vec<_>>();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
+    let before = call(
+        &mut server,
+        "file.preflight.sheets",
+        json!({"drawing":drawing}),
+    );
+    assert!(
+        before["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["code"] == "linetype_unsupported")
+    );
+    let attached = call(
+        &mut server,
+        "cad.library.edit",
+        json!({"drawing":drawing,"operation":"create","item":resource["styles"]["items"][0]}),
+    );
+    assert_eq!(attached["status"], "completed", "{attached}");
+    let after = call(
+        &mut server,
+        "file.preflight.sheets",
+        json!({"drawing":drawing}),
+    );
+    assert!(
+        !after["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["code"] == "linetype_unsupported"),
+        "{after}"
+    );
+    assert_eq!(std::fs::read(&source).unwrap(), bytes);
+    assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
+    std::fs::remove_dir_all(root).unwrap();
+}

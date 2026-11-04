@@ -321,10 +321,13 @@ impl SheetMaps {
             .map(|l| kentos_plot::layers::level_looks(&doc.model, l))
             .unwrap_or_default();
         let look = crate::style::scene::Look {
-            line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::at_scale(
-                doc.model.settings(),
-                scale,
-            )),
+            line_types: std::sync::Arc::new(
+                kentos_native_style::line_types::LineTypes::at_scale_with_resources(
+                    doc.model.settings(),
+                    doc.model.styles(),
+                    scale,
+                ),
+            ),
             palette: crate::sheet_pdf::paper_style(),
             symbol_scale: scale.max(1e-6),
             screen: false,

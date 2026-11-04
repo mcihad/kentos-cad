@@ -3295,6 +3295,7 @@ name = "kentos-style-library"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-geometry-core",
  "kentos-style-core",
  "serde_json",
 ]

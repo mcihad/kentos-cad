@@ -9,7 +9,7 @@ mod text;
 
 use std::collections::HashMap;
 
-use kentos_contracts::{LineTypeDef, PatternUnit, ProjectSettings};
+use kentos_contracts::{LineTypeDef, PatternUnit, ProjectSettings, ProjectStyles};
 use serde_json::{Value, json};
 
 /// A pattern as the engine draws it: its dashes and gaps, millimetres on paper, a dash first.
@@ -94,6 +94,18 @@ impl LineTypes {
     /// actually be compiled. Paper recipes stay in paper mm; drawing recipes
     /// must come back to the same metres at every viewport denominator.
     pub fn at_scale(settings: &ProjectSettings, plot_scale: f64) -> Self {
+        Self::at_scale_with_resources(settings, &ProjectStyles::default(), plot_scale)
+    }
+
+    pub fn with_resources(settings: &ProjectSettings, styles: &ProjectStyles) -> Self {
+        Self::at_scale_with_resources(settings, styles, settings.plot_scale)
+    }
+
+    pub fn at_scale_with_resources(
+        settings: &ProjectSettings,
+        styles: &ProjectStyles,
+        plot_scale: f64,
+    ) -> Self {
         let plot_scale = plot_scale.max(1e-6);
         let unit = settings
             .drawing_unit
@@ -102,7 +114,7 @@ impl LineTypes {
         let mut losses = HashMap::new();
         let mut marks = HashMap::new();
         for def in &settings.line_types {
-            match text::prepare(def, settings, plot_scale) {
+            match text::prepare(def, settings, plot_scale, styles) {
                 Ok(Some(prepared)) => { marks.insert(def.name.to_lowercase(), prepared); }
                 Ok(None) => {},
                 Err(error) => { losses.insert(def.name.to_lowercase(), format!("“{}”: {error}", def.name)); }

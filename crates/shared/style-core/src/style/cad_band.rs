@@ -194,6 +194,9 @@ fn split(
 /// suppress only its centre stroke, since the bands supply geometric ink.
 struct MarksOnly<'a>(&'a mut dyn Sink);
 impl Sink for MarksOnly<'_> {
+    fn cad_shape(&mut self, s: &StrokeStyle, p: &[Vec2]) {
+        self.0.cad_shape(s, p);
+    }
     fn stroke(&mut self, s: &StrokeStyle, p: &[Vec2], c: bool) {
         if s.line_type_loss.is_some() {
             self.0.stroke(s, p, c);

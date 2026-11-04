@@ -325,6 +325,10 @@ pub trait Sink {
     fn reserve_cad_points(&mut self, _points: usize) -> bool { true }
     /// A filled CAD line mark follows stroke visibility, not area-fill visibility.
     fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) { self.fill(paint, rings); }
+    /// An open SHX contour, distinct from its dashed carrier centreline.
+    fn cad_shape(&mut self, style: &StrokeStyle, path: &[Vec2]) {
+        self.stroke(style, path, false);
+    }
     /// `angle`: radians, the direction the marker faces (0 = east).
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64);
     /// The primitives that follow belong to the effect group of a symbol

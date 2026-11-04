@@ -9,6 +9,7 @@ pub mod face;
 pub mod fonts;
 pub mod font_data;
 pub mod shaping;
+pub mod shx;
 pub mod natural;
 pub mod paragraph;
 #[rustfmt::skip]
