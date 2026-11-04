@@ -6,6 +6,7 @@ mod cloud_ground;
 mod corridor;
 mod cutout;
 mod drainage;
+mod pavements;
 mod profiles;
 mod quality;
 mod sections;

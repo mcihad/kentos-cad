@@ -1,0 +1,1376 @@
+{
+ "cases": [
+  {
+   "name": "Düz arazide dolgu, dik kenar",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 102.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.08,
+     0.2,
+     0.25
+    ],
+    "edge": null
+   },
+   "layers": [
+    0.45,
+    0.72,
+    1.8,
+    2.25
+   ],
+   "below": 0.0,
+   "above": 5.22,
+   "road": {
+    "cut": 0.0,
+    "fill": 22.738134375
+   },
+   "formation": {
+    "cut": 0.0,
+    "fill": 17.518134375
+   }
+  },
+  {
+   "name": "Düz arazide dolgu, kenar dolgu şevinde",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 102.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.08,
+     0.2,
+     0.25
+    ],
+    "edge": 1.5
+   },
+   "layers": [
+    0.45398936170212767,
+    0.7429787234042553,
+    1.946808510638298,
+    2.613031914893617
+   ],
+   "below": 0.0,
+   "above": 5.756808510638298,
+   "road": {
+    "cut": 0.0,
+    "fill": 22.738134375
+   },
+   "formation": {
+    "cut": 0.0,
+    "fill": 16.9813258643617
+   }
+  },
+  {
+   "name": "Düz arazide yarma, dik kenar: üstyapı zeminin altında",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 97.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": null
+   },
+   "layers": [
+    2.25,
+    4.5
+   ],
+   "below": 6.75,
+   "above": 0.0,
+   "road": {
+    "cut": 37.30250625,
+    "fill": 0.0
+   },
+   "formation": {
+    "cut": 44.05250625,
+    "fill": 0.0
+   }
+  },
+  {
+   "name": "Düz arazide yarma, şevli kenar",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 97.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": 1.0
+   },
+   "layers": [
+    2.3151041666666665,
+    5.020833333333333
+   ],
+   "below": 7.3359375,
+   "above": 0.0,
+   "road": {
+    "cut": 37.30250625,
+    "fill": 0.0
+   },
+   "formation": {
+    "cut": 44.63844375,
+    "fill": 0.0
+   }
+  },
+  {
+   "name": "Hendekli yarma, kenar hendekten yatık: hendek keser",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 97.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": 3.0
+   },
+   "layers": [
+    2.385869565217391,
+    5.664244071146245
+   ],
+   "below": 8.050113636363637,
+   "above": 0.0,
+   "road": {
+    "cut": 58.162006250000005,
+    "fill": 0.0
+   },
+   "formation": {
+    "cut": 66.21211988636364,
+    "fill": 0.0
+   }
+  },
+  {
+   "name": "Hendekli yarma, kenar hendekten dik",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 97.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": 1.0
+   },
+   "layers": [
+    2.3151041666666665,
+    5.020833333333333
+   ],
+   "below": 7.3359375,
+   "above": 0.0,
+   "road": {
+    "cut": 58.162006250000005,
+    "fill": 0.0
+   },
+   "formation": {
+    "cut": 65.49794375,
+    "fill": 0.0
+   }
+  },
+  {
+   "name": "Yamaç: arazi üstyapıyı kesiyor",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 108,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 92,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.08,
+     0.2,
+     0.25
+    ],
+    "edge": 1.5
+   },
+   "layers": [
+    0.45398936170212767,
+    0.7429787234042553,
+    1.946808510638298,
+    2.613031914893617
+   ],
+   "below": 3.8395471124620064,
+   "above": 1.9172613981762918,
+   "road": {
+    "cut": 9.08141015625,
+    "fill": 2.4037566964285713
+   },
+   "formation": {
+    "cut": 12.920957268712007,
+    "fill": 0.4864952982522796
+   }
+  },
+  {
+   "name": "Arazi üstyapının içinde, dik kenar",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.3,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100.2,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 99.9,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.08,
+     0.2,
+     0.25
+    ],
+    "edge": null
+   },
+   "layers": [
+    0.45,
+    0.72,
+    1.8,
+    2.25
+   ],
+   "below": 3.491250000000064,
+   "above": 1.728749999999936,
+   "road": {
+    "cut": 0.0,
+    "fill": 1.7517221340791758
+   },
+   "formation": {
+    "cut": 3.491250000000064,
+    "fill": 0.022972134079239728
+   }
+  },
+  {
+   "name": "Ters eğimli şerit (dever gibi)",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": 4.0
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -30,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": 30,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": 2.0
+   },
+   "layers": [
+    1.8440887193898032,
+    4.252709755118427
+   ],
+   "below": 0.0,
+   "above": 6.09679847450823,
+   "road": {
+    "cut": 0.0,
+    "fill": 8.5294
+   },
+   "formation": {
+    "cut": 0.0,
+    "fill": 2.4326015254917706
+   }
+  },
+  {
+   "name": "Boşluklu arazi",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 102.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 6,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 10,
+     "z": 95,
+     "gap": true
+    },
+    {
+     "offset": 40,
+     "z": 95,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": 1.5
+   },
+   "layers": [
+    2.3497340425531914,
+    5.297872340425532
+   ],
+   "below": 0.0,
+   "above": 7.647606382978723,
+   "road": {
+    "cut": 0.0,
+    "fill": 29.875217708333334
+   },
+   "formation": {
+    "cut": 0.0,
+    "fill": 22.22761132535461
+   }
+  },
+  {
+   "name": "Asimetrik tip kesit",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.0,
+       "slope": -2.0
+      }
+     ],
+     "cut": 2.0,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.5,
+       "slope": -5
+      }
+     ],
+     "cut": 0.5,
+     "fill": 3.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -50,
+     "z": 101.5,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 50,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.08,
+     0.2,
+     0.25
+    ],
+    "edge": 2.0
+   },
+   "layers": [
+    0.5803819444444445,
+    0.9505434323947574,
+    2.444601806239737,
+    3.1729397577996714
+   ],
+   "below": 7.148466940878611,
+   "above": 0.0,
+   "road": {
+    "cut": 6.238267651888342,
+    "fill": 0.0
+   },
+   "formation": {
+    "cut": 13.386734592766953,
+    "fill": 0.0
+   }
+  },
+  {
+   "name": "Büyük kotlar",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 1251.37,
+   "ground": [
+    {
+     "offset": -30,
+     "z": 1252.9,
+     "gap": false
+    },
+    {
+     "offset": -5,
+     "z": 1251.0,
+     "gap": false
+    },
+    {
+     "offset": 5,
+     "z": 1250.6,
+     "gap": false
+    },
+    {
+     "offset": 30,
+     "z": 1249.2,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.08,
+     0.2,
+     0.25
+    ],
+    "edge": 1.5
+   },
+   "layers": [
+    0.45398936170212767,
+    0.7429787234042553,
+    1.9392677063134685,
+    2.524381523484506
+   ],
+   "below": 0.8374169707491892,
+   "above": 4.823200344155168,
+   "road": {
+    "cut": 0.0,
+    "fill": 4.968683120313283
+   },
+   "formation": {
+    "cut": 0.8374169707491892,
+    "fill": 0.145482776158115
+   }
+  },
+  {
+   "name": "Tek tabaka",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.3
+    ],
+    "edge": null
+   },
+   "layers": [
+    2.6999999999999997
+   ],
+   "below": 0.0,
+   "above": 2.6999999999999997,
+   "road": {
+    "cut": 0.0,
+    "fill": 9.620634375
+   },
+   "formation": {
+    "cut": 0.0,
+    "fill": 6.920634375
+   }
+  },
+  {
+   "name": "Bitkisel toprak sıyrılmış zeminde (Formasyon–Bitkisel Toprak)",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.1,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.08,
+     0.2,
+     0.25
+    ],
+    "edge": 1.5
+   },
+   "strip": 0.25,
+   "layers": [
+    0.45227608333333374,
+    0.7244000000000009,
+    1.8110000000000024,
+    2.263750000000003
+   ],
+   "below": 2.6109427500000555,
+   "above": 2.640483333333284,
+   "road": {
+    "cut": 0.0,
+    "fill": 2.6417437499999514
+   },
+   "formation": {
+    "cut": 2.6109427500000555,
+    "fill": 0.0012604166666671877
+   }
+  },
+  {
+   "name": "Tabakasız: geçersiz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [],
+    "edge": null
+   },
+   "error": {
+    "layer": null
+   }
+  },
+  {
+   "name": "Sıfır kalınlık: geçersiz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.05,
+     0.0
+    ],
+    "edge": null
+   },
+   "error": {
+    "layer": 1
+   }
+  },
+  {
+   "name": "Kenar şevi sıfır: geçersiz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": 0.0
+   },
+   "error": {
+    "edge": false
+   }
+  },
+  {
+   "name": "Kenar şevi banketten yatık: tabakalar onu hiç kesmez",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": 30.0
+   },
+   "error": {
+    "edge": false
+   }
+  },
+  {
+   "name": "Bileşensiz yan: üstyapı kurulmaz",
+   "template": {
+    "left": {
+     "components": [],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -4
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 101.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "pavement": {
+    "layers": [
+     0.25,
+     0.5
+    ],
+    "edge": null
+   },
+   "error": {
+    "noPlatform": false
+   }
+  }
+ ]
+}
