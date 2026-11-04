@@ -438,8 +438,9 @@ fn built_layers_profile_unchecked(
         },
         view_colors: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.settings()),
-        line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
+        line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::at_scale(
             doc.settings(),
+            scale,
         )),
         phasing: std::sync::Arc::new(phasing),
     };

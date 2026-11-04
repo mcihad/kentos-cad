@@ -32,6 +32,8 @@ use crate::app::{App, Message};
 use crate::document::Document;
 use crate::viewport::{Canvas, palette};
 
+mod dashes;
+
 /// The Pafta tab's id in the ribbon (the web's `SHEET_TAB_ID`).
 pub const SHEET_TAB: &str = "sheet";
 /// The curves of a map's content: chords within 5 cm on the ground (a quarter
@@ -319,8 +321,9 @@ impl SheetMaps {
             .map(|l| kentos_plot::layers::level_looks(&doc.model, l))
             .unwrap_or_default();
         let look = crate::style::scene::Look {
-            line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
+            line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::at_scale(
                 doc.model.settings(),
+                scale,
             )),
             palette: crate::sheet_pdf::paper_style(),
             symbol_scale: scale.max(1e-6),
@@ -450,6 +453,33 @@ fn clip_runs(pts: &[Point], bounds: iced::Rectangle) -> Vec<Vec<Point>> {
     runs
 }
 
+/// Prepare the whole map before painting: an excessive/dense/dotted recipe
+/// falls back as a whole to the existing CPU painter, without double compositing.
+fn stroke_runs(
+    r: &MapRequest<'_>, paths: &[kentos_sheet::pdf::MapPath], px_mm: f64,
+) -> Option<Vec<Vec<Vec<Point>>>> {
+    paths.iter().map(|p| {
+        let Some(stroke) = &p.stroke else { return Some(Vec::new()); };
+        let dash: Vec<f64> = stroke.dash.iter().map(|v| v * px_mm).collect();
+        let phase = stroke.dash_offset.unwrap_or(0.) * px_mm;
+        let mut out = Vec::new();
+        for ring in std::iter::once(&p.points).chain(p.holes.iter().filter(|_| p.closed)) {
+            let camera = r.transform();
+            let mut points: Vec<Vec2> = ring.iter().map(|q| {
+                let p = camera.point(*q); Vec2::new(p[0],p[1])
+            }).collect();
+            if p.closed && let Some(first) = points.first().copied() { points.push(first); }
+            if dash.is_empty() {
+                let points: Vec<Point> = points.iter().map(|p|Point::new(p.x as f32,p.y as f32)).collect();
+                out.extend(clip_runs(&points,r.bounds()));
+            } else {
+                out.extend(dashes::runs(&points,r.bounds(),&dash,phase)?);
+            }
+        }
+        Some(out)
+    }).collect()
+}
+
 /// The core's map paths on a canvas, as its PDF writer draws them and cut to the map's box as
 /// the PDF's clip cuts them (a turned frame's canvas cannot cut to its turned box): areas filled
 /// (even-odd with holes), lines at their paper width (`px_mm` pixels a paper mm, at least
@@ -458,13 +488,14 @@ fn draw_paths(
     frame: &mut Frame,
     r: &MapRequest<'_>,
     paths: &[kentos_sheet::pdf::MapPath],
+    strokes: &[Vec<Vec<Point>>],
     px_mm: f32,
     thinnest: f32,
 ) {
-    use iced::widget::canvas::{Fill, LineCap, LineDash, LineJoin, Stroke, Style, fill};
+    use iced::widget::canvas::{Fill, LineCap, LineJoin, Stroke, Style, fill};
     let bounds = r.bounds();
     let px = |pts: &[[f64; 2]]| -> Vec<Point> { pts.iter().map(|q| r.to_px(q[0], q[1])).collect() };
-    for p in paths {
+    for (p, lines) in paths.iter().zip(strokes) {
         if p.points.len() < 2 {
             continue;
         }
@@ -503,36 +534,17 @@ fn draw_paths(
         if let Some(s) = &p.stroke
             && let Some(c) = hex_color(&s.color)
         {
-            let mut lines: Vec<Vec<Point>> = Vec::new();
-            let mut add = |ring: Vec<Point>, closed: bool| {
-                let mut pts = ring;
-                if closed && let Some(first) = pts.first().copied() {
-                    pts.push(first);
-                }
-                lines.extend(clip_runs(&pts, bounds));
-            };
-            add(outer, p.closed);
-            if p.closed {
-                for h in &p.holes {
-                    add(px(h), true);
-                }
-            }
             if lines.is_empty() {
                 continue;
             }
             let path = Path::new(|b| {
-                for run in &lines {
+                for run in lines {
                     b.move_to(run[0]);
                     for q in &run[1..] {
                         b.line_to(*q);
                     }
                 }
             });
-            let dash: Vec<f32> = s
-                .dash
-                .iter()
-                .map(|d| (*d as f32 * px_mm).max(0.5))
-                .collect();
             frame.stroke(
                 &path,
                 Stroke {
@@ -548,10 +560,7 @@ fn draw_paths(
                         kentos_sheet::style::LineJoin::Miter => LineJoin::Miter,
                         kentos_sheet::style::LineJoin::Bevel => LineJoin::Bevel,
                     },
-                    line_dash: LineDash {
-                        segments: &dash,
-                        offset: 0,
-                    },
+                    line_dash: Default::default(),
                 },
             );
         }
@@ -854,7 +863,7 @@ impl SheetPainter<'_> {
         };
         // Pixels a paper mm; a line never thinner than the screen shows (a printed one as it is).
         let px_mm = kentos_sheet::projection::Scale::for_rendering(s)
-            .paper_pixels_per_mm(r.pixels_per_metre) as f32;
+            .paper_pixels_per_mm(r.pixels_per_metre);
         let thinnest = if r.export { 0.25 } else { 0.6 };
         let mut drawn = Vec::new();
         for (id, _, layer) in &at.layers {
@@ -868,8 +877,12 @@ impl SheetPainter<'_> {
             }
             drawn.push(paths);
         }
-        for paths in &drawn {
-            draw_paths(frame, r, paths, px_mm, thinnest);
+        let strokes: Option<Vec<_>> = drawn.iter().map(|paths| stroke_runs(r, paths, px_mm)).collect();
+        let Some(strokes) = strokes else {
+            return self.paint_picture(r, frame, &at, only, s);
+        };
+        for (paths, strokes) in drawn.iter().zip(&strokes) {
+            draw_paths(frame, r, paths, strokes, px_mm as f32, thinnest);
         }
         true
     }
@@ -2024,6 +2037,76 @@ mod tests {
 
     use super::*;
     use crate::files_testing::app_with_drawing;
+
+    #[test]
+    fn paper_style_cache_preserves_drawing_pattern_lengths_at_each_viewport_scale() {
+        use kentos_native_style::batches::BatchKind;
+        for unit in ["drawing", "paper"] {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!(
+                "../../../fixtures/sheet/v1/native-preflight.json"
+            )).unwrap();
+            let mut raw = fixture["model"].clone();
+            raw["settings"]["lineTypes"] = serde_json::json!([{
+                "name":"P", "unit":unit,
+                "elements":[{"length":100.},{"length":-50.}]
+            }]);
+            raw["entities"][0]["linePattern"] = serde_json::json!("P");
+            let doc = Document::new(serde_json::from_value(raw).unwrap(), None).unwrap();
+            let before = doc.model.to_snapshot_v2();
+            let spatial = Spatial::of(&doc.model);
+            let library = kentos_plot::book::library_of(&doc.model);
+            let maps = SheetMaps::default();
+            let layers: MapLayers =
+                serde_json::from_value(serde_json::json!({"type":"all"})).unwrap();
+            let mut previous = None;
+            for scale in [1., 20., 100.] {
+                let view = serde_json::from_value(serde_json::json!({"scale":scale,"rotation":0}))
+                    .unwrap();
+                let build = || {
+                    maps.styled_at(
+                        &doc,
+                        spatial.store(),
+                        &library,
+                        &view,
+                        (&layers, &[]),
+                        None,
+                        (None, &[], &[], false, &[]),
+                    )
+                };
+                let styled = build();
+                assert!(Rc::ptr_eq(&styled, &build()), "same view reuses its build");
+                if let Some(old) = previous.as_ref() {
+                    assert!(
+                        !Rc::ptr_eq(old, &styled),
+                        "different scales have separate builds"
+                    );
+                }
+                let dashes: Vec<_> = styled
+                    .layers
+                    .iter()
+                    .flat_map(|(_, _, l)| &l.batches)
+                    .filter_map(|b| match &b.kind {
+                        BatchKind::Stroke { dash: Some(d), .. } => Some(d),
+                        _ => None,
+                    })
+                    .collect();
+                assert_eq!(dashes.len(), 1, "{unit}/{scale}");
+                let factor = if unit == "drawing" {
+                    0.001
+                } else {
+                    scale / 1000.
+                };
+                for (&actual, expected) in dashes[0].iter().zip([100. * factor, 50. * factor]) {
+                    assert!(
+                        (actual - expected).abs() < 1e-10,
+                        "{unit}/{scale}: {actual} != {expected}"
+                    );
+                }
+                previous = Some(styled);
+            }
+            assert_eq!(doc.model.to_snapshot_v2(), before);
+        }
+    }
 
     #[test]
     fn paper_at_the_project_scale_never_reuses_a_more_detailed_model_camera_index() {

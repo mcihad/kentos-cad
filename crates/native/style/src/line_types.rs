@@ -83,6 +83,14 @@ impl Default for LineTypes {
 impl LineTypes {
     /// The settings' line types at the drawing's scale and in its unit.
     pub fn of(settings: &ProjectSettings) -> Self {
+        Self::at_scale(settings, settings.plot_scale)
+    }
+
+    /// Resolve drawing-unit lengths against the scale where symbols will
+    /// actually be compiled. Paper recipes stay in paper mm; drawing recipes
+    /// must come back to the same metres at every viewport denominator.
+    pub fn at_scale(settings: &ProjectSettings, plot_scale: f64) -> Self {
+        let plot_scale = plot_scale.max(1e-6);
         let unit = settings
             .drawing_unit
             .unwrap_or(kentos_contracts::DrawingUnit::M)
@@ -90,7 +98,7 @@ impl LineTypes {
         Self {
             losses: settings.line_types.iter().filter_map(|t| {
                 let complex = t.elements.iter().any(|e| e.is_complex());
-                let long = dashes_of(t, settings.plot_scale, unit).is_some_and(|d| d.lossy);
+                let long = dashes_of(t, plot_scale, unit).is_some_and(|d| d.lossy);
                 (complex || long).then(|| (t.name.to_lowercase(), format!(
                     "“{}” çizgi tipinin {} mevcut çizim hattında eksiksiz üretilemiyor.",
                     t.name, if complex { "yazı/şekil işaretleri" } else { "uzun çizgi/boşluk deseni" }
@@ -102,7 +110,7 @@ impl LineTypes {
                 .map(|t| {
                     (
                         t.name.to_lowercase(),
-                        dashes_of(t, settings.plot_scale, unit),
+                        dashes_of(t, plot_scale, unit),
                     )
                 })
                 .collect(),
@@ -129,9 +137,8 @@ impl LineTypes {
     pub fn loss(&self, name: &str) -> Option<String> {
         let key = name.to_lowercase();
         self.losses.get(&key).cloned().or_else(|| {
-            (!self.by_name.contains_key(&key)).then(|| format!(
-                "“{name}” çizgi tipinin kaynak tanımı projede yok."
-            ))
+            (!self.by_name.contains_key(&key))
+                .then(|| format!("“{name}” çizgi tipinin kaynak tanımı projede yok."))
         })
     }
 

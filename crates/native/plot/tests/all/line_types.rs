@@ -213,68 +213,91 @@ fn long_dash_custom_symbol_is_supported_without_a_named_pattern() {
 }
 
 #[test]
-fn every_named_dash_reaches_vector_pdf_content_at_each_paper_scale() {
-    for scale in [1., 20., 100.] {
-        let (mut raw, mut page) = source();
-        let lengths: [f64; 12] = [1., -1., 2., -1., 3., -1., 4., -1., 5., -1., 6., -1.];
-        raw["settings"]["lineTypes"] = json!([{"name":"FULL12","unit":"paper",
+fn named_patterns_keep_either_paper_size_or_drawing_length_across_viewports() {
+    for (drawing_unit, metres) in [("mm", 0.001), ("cm", 0.01), ("m", 1.), ("ft", 0.3048)] {
+        for pattern_unit in ["paper", "drawing"] {
+            for (global, own) in [(1., 1.), (2., 3.)] {
+                for scale in [1., 20., 100.] {
+                    let (mut raw, mut page) = source();
+                    let lengths: [f64; 12] = [1., -1., 2., -1., 3., -1., 4., -1., 5., -1., 6., -1.];
+                    raw["settings"]["drawingUnit"] = json!(drawing_unit);
+                    if global != 1. {
+                        raw["settings"]["lineTypeScale"] = json!(global);
+                    }
+                    if own != 1. {
+                        raw["entities"][0]["lineTypeScale"] = json!(own);
+                    }
+                    raw["settings"]["lineTypes"] = json!([{"name":"FULL12","unit":pattern_unit,
             "elements":lengths.iter().map(|l|json!({"length":l})).collect::<Vec<_>>() }]);
-        raw["entities"][0]["linePattern"] = json!("FULL12");
-        page["sheets"][0]["items"][0]["kind"]["view"]["scale"] = json!(scale as u32);
-        let (doc, book) = document(raw, page);
-        let before = doc.to_snapshot_v2();
-        let render = book::base_inputs(&doc, "Test", "2026-11-04");
-        let list = display::display_list(&book, "ground", &render).unwrap();
-        let map = list
-            .prims
-            .iter()
-            .find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None })
-            .unwrap();
-        let mut spatial = Spatial::new();
-        spatial.reload(&doc);
-        let library = book::library_of(&doc);
-        let c = map.view.center.unwrap();
-        let src = MapSource {
-            doc: &doc,
-            store: spatial.store(),
-            library: &library,
-            origin: kentos_geometry_core::Vec2::new(c.x, c.y),
-            map: None,
-            level: None,
-            phase: None,
-            hidden: &[],
-            pens: &[],
-            mono: false,
-            options: &[],
-        };
-        let kentos_sheet::pdf::MapContent::Vector(v) = kentos_plot::maps::vector_content(
-            &src,
-            &map.layers,
-            &map.layer_overrides,
-            scale,
-            map.extent.unwrap(),
-            &[],
-        )
-        .unwrap() else {
-            panic!("vector output expected")
-        };
-        let dashes: Vec<_> = v
-            .layers
-            .iter()
-            .flat_map(|l| &l.paths)
-            .filter_map(|p| p.stroke.as_ref())
-            .filter(|s| !s.dash.is_empty())
-            .collect();
-        assert_eq!(dashes.len(), 1);
-        assert_eq!(dashes[0].dash.len(), 12);
-        for (actual, expected) in dashes[0].dash.iter().zip(lengths) {
-            assert!(
-                (actual - expected.abs()).abs() < 1e-9,
-                "scale {scale}: {actual} vs {expected}"
-            );
+                    raw["entities"][0]["linePattern"] = json!("FULL12");
+                    page["sheets"][0]["items"][0]["kind"]["view"]["scale"] = json!(scale as u32);
+                    let (doc, book) = document(raw, page);
+                    let before = doc.to_snapshot_v2();
+                    let render = book::base_inputs(&doc, "Test", "2026-11-04");
+                    let list = display::display_list(&book, "ground", &render).unwrap();
+                    let map = list
+                        .prims
+                        .iter()
+                        .find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None })
+                        .unwrap();
+                    let mut spatial = Spatial::new();
+                    spatial.reload(&doc);
+                    let library = book::library_of(&doc);
+                    let c = map.view.center.unwrap();
+                    let src = MapSource {
+                        doc: &doc,
+                        store: spatial.store(),
+                        library: &library,
+                        origin: kentos_geometry_core::Vec2::new(c.x, c.y),
+                        map: None,
+                        level: None,
+                        phase: None,
+                        hidden: &[],
+                        pens: &[],
+                        mono: false,
+                        options: &[],
+                    };
+                    let kentos_sheet::pdf::MapContent::Vector(v) =
+                        kentos_plot::maps::vector_content(
+                            &src,
+                            &map.layers,
+                            &map.layer_overrides,
+                            scale,
+                            map.extent.unwrap(),
+                            &[],
+                        )
+                        .unwrap()
+                    else {
+                        panic!("vector output expected")
+                    };
+                    let dashes: Vec<_> = v
+                        .layers
+                        .iter()
+                        .flat_map(|l| &l.paths)
+                        .filter_map(|p| p.stroke.as_ref())
+                        .filter(|s| !s.dash.is_empty())
+                        .collect();
+                    assert_eq!(dashes.len(), 1);
+                    assert_eq!(dashes[0].dash.len(), 12);
+                    for (actual, expected) in dashes[0].dash.iter().zip(lengths) {
+                        let expected = expected.abs()
+                            * global
+                            * own
+                            * if pattern_unit == "paper" {
+                                1.
+                            } else {
+                                metres * 1000. / scale
+                            };
+                        assert!(
+                            (actual - expected).abs() < 1e-9,
+                            "scale {scale}: {actual} vs {expected}"
+                        );
+                    }
+                    book::book_pdf(&doc, &[], "Test", "2026-11-04").unwrap();
+                    assert_eq!(doc.to_snapshot_v2(), before);
+                }
+            }
         }
-        book::book_pdf(&doc, &[], "Test", "2026-11-04").unwrap();
-        assert_eq!(doc.to_snapshot_v2(), before);
     }
 }
 

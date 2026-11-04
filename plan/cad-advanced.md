@@ -1556,7 +1556,7 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   Bütün okuyucularda karışık paragraf kopya sırası, PDF/UA/A ve ertelenmiş
   web kabulü iddia edilmez. **CAD-ADV-10 bu açık yerel destek sözleşmesiyle tamamlandı.**
 
-### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [ ]
+### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [~]
 
 **Öncelik:** P1; yanlış teslimi önleyen uyarılar P0. **Kod:** [C19], [C31].
 **Dayanak:** AutoCAD özel çizgi tiplerinde font, metin yönü, ölçek ve
@@ -1628,6 +1628,20 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
 - Kaynak KCAD/LIN'in adlandırılmış 12 öğe sınırını sürümlü genişletme,
   yazı/şekil ve kalan geometri/viewport/performance matrisi açık.
   Detay ve kanıt kapsamı ADR 0930'da; maddenin tamamlandı işareti kapalı.
+
+**Viewport birimi ve pafta ekranı (4 Kasım 2026):**
+
+- Çizim birimindeki desenin proje ölçeği yerine gerçek viewport ölçeğinde
+  çözülmesi sağlandı. mm/cm/m/ft, kâğıt/çizim deseni, global/nesne
+  çarpanı ve 1:1/1:20/1:100 için 48 durumlu çıktı matrisi geçti.
+  Asıl masaüstü stil önbelleği ve salt okunur belge davranışı ayrıca sınandı.
+- Gerçek arayüzde bulunan son yarım çizgi kaybı ve pafta ekranında fazın
+  sıfırlanması düzeltildi. Kırpılan başlangıç, köşe ve kapalı dikiş devamı
+  Float64 hesapla korunur; yoğun/noktalı tarif mevcut CPU yolunu kullanır.
+- Gerçek 1:20/1:100 paftalar, iki sayfalı GUI PDF'si ve pozitif/negatif
+  fazlı 12/16 öğeli stil örnekleri bağımsız mavi referanslarla karşılaştırıldı.
+  Test ve kapsam ayrıntıları ADR 0930'da. Bu ilerlemeyi göstermek için
+  ana durum `[~]`; yazı/şekil ve kalan kabul tamamlanmadan `[x]` yapılmayacak.
 
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 

@@ -273,3 +273,60 @@ uzun tarif hedefi özel KentOS stilinde gerçek GUI/PDF ile sınandı.
 Adlandırılmış yerel tanım ayrıca genişletilecekse KCAD sürümü, eski
 okuyucunun açık reddi ve AutoCAD uyumlu LIN/DWG/DXF teslim politikası
 birlikte tanımlanmalı; bu incelemede dosya şeması değiştirilmedi.
+
+
+## Viewport birimi ve gerçek pafta ekranı düzeltmesi (4 Kasım 2026)
+
+48 durumlu bağımsız çıktı testi, proje ölçeği 1:50 iken `drawing` deseninin
+1:1 viewporta 50 kat küçük gitmesini önce kırmızı testle doğruladı.
+`LineTypes::at_scale` artık çizim birimini **derlemenin gerçek viewport
+ölçeğinde** kâğıt mm'ye çevirir. Native PDF/CPU ve masaüstü `SheetMaps`
+aynı yolu kullanır; model görünüşünün kamera zoom'u bu ayarı değiştirmez.
+Kâğıt desenleri yine sabit kâğıt mm'dir. mm/cm/m/ft × paper/drawing ×
+1 ve 6 global/nesne çarpanı × 1:1/1:20/1:100 matrisi geçti. Masaüstünün
+asıl stil önbelleğinde iki desen birimi, üç viewport ölçeği, aynı ölçeğin
+önbellek tekrar kullanımı ve belgenin değişmemesi de ayrıca sınandı.
+
+Gerçek GUI karşılaştırmasında ikinci bir hata bulundu: Iced 0.14
+`iced_wgpu::geometry::dashed` yalnız desen sınırlarında ilerlediğinden
+son yarım çizgiyi atlıyordu; bizim pafta `draw_paths` çağrısı da mesafe
+fazını 0'a indiriyordu. Model GPU'su ve doğru PDF bu pafta ekranı
+hatasının kanıtı değildi. **Önceki faz kabulü, pafta ekranının bütün faz
+ve son parça davranışının tamamlandığı anlamında okunmamalı.**
+
+Pafta artık tam mesafe fazıyla görünür çizgi parçalarını hazırlar. Kırpılan
+başlangıcın tüketilmiş mesafesi korunur; düz çizginin son yarım deseni,
+polyline köşesindeki devam ve kapalı halkanın dikiş birleşimi kaybolmaz.
+Hesap, ortak Float64 kamera ve ortak Float64 kırpma ile yürür; yalnız
+son, görünür noktalar Iced Float32'ye çevrilir. Bir milyar piksel uzaktaki
+kesirli başlangıç için faz testi de vardır. Görünmeyen periyotlar tek
+aritmetik adımla atlanır. Noktalı, dört pikselden sık veya 100.000 görünür
+parçayı aşan tarif bütün haritayla mevcut CPU yoluna geçer; kısmi vektör
+çizimi veya iki kez saydamlık birleştirmesi yapılmaz. Bu sınır bir hız
+ölçümü değildir; büyük pafta performans matrisi ayrıca açıktır.
+
+Doğrulama: plot 18 birim + 66 entegrasyon testi geçti (3 ignored);
+masaüstü pafta 18 test geçti (7 isteğe bağlı GUI senaryosu ignored).
+Strict masaüstü Clippy ve masaüstü derleme geçti. 48 durum yukarıdaki
+entegrasyon testlerinden birinin iç matrisidir, 48 ayrı test diye sayılmaz.
+
+Gerçek fare/klavye kabulü, binary SHA-256
+`ed02fdb2d5476b4c1299f7d43149a3bd02c212580f68f78c2c163fd20bd90319`:
+
+- Bağımsız KCAD yazarıyla 100/50/200/50/300/50 mm çizim deseni ve ayrı
+  mavi referans doğruları oluşturulup 1:20 ve 1:100 paftalarda açıldı.
+  Ölçek, zoom ve son yarım çizgi karşılaştırıldı.
+- Gerçek GUI'den iki sayfalı PDF kaydedildi. pypdf'de her sayfanın altı
+  dash değeri bağımsız dünya uzunluğu/viewport hesabına eşitti; Poppler
+  tam sayfa çıktısı da incelendi.
+- 12/+1,25 mm ve 16/−1,25 mm özel stil örnekleri 1:50 paftada yakından,
+  1:20'de pafta çerçevesi içinde kırpılarak mavi referansla karşılaştırıldı.
+  Başlangıç fazı ve son parça artık pafta ekranında da uyuşuyor.
+
+Kanıtlar repo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında:
+`pattern-unit-before-gui.png`, `pattern-unit-20-final-gui.png`,
+`pattern-unit-100-final-gui.png`, `pattern-unit-both-gui.pdf`,
+`pattern-phase-sheet-detail-final-gui.png`,
+`pattern-phase-20-clipped-final-gui.png`, test günlükleri ve bağımsız
+`make-unit-fixture.py`. Yazı/SHX işaretleri ve önceki açık matris bu
+çalışmayla tamamlanmış sayılmadı.
