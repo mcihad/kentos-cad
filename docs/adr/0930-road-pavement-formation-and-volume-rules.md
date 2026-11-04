@@ -105,13 +105,28 @@ değişmez.
 
 ### §3 Masaüstü (Y26.3)
 
-**Dikkat (ölçüldü):** Python durum testi, katalogdaki `road.profiles.propose` örneğinin görüş mesafesi girdisini (`eye`)
-taşıdığını yakaladı (Y25'ten kalma). Örnek, önerinin kendi alanlarıyla düzeltildi.
-
-- Tip kesit penceresinde Üstyapı bölümü: tabaka tablosu (ad, kalınlık, malzeme), Kenar (Dik | Şevli, h). Pencere
-  Y26.0'ın ortak düzenindedir.
-- Enkesit görünüşünde tabakalar ince çizgiyle, formasyon kalın kesikliyle çizilir.
-- Kübaj penceresinde Kübaj kuralı seçimi ve tabaka hacimleri.
+- **Enkesit › tip kesit:** düzenleyici iki gruplu sütundur (DESIGN.md §7.19).
+  - Solda Tip kesit (ad, yan, aynalı) ve Üstyapı (iki yanda aynı) durur.
+  - Üstyapı bölümünde Üstyapı var, Kenar: Dik | Şevli, Kenar şevi (y/d) ve tabaka tablosu (Tabaka, Kalınlık (m),
+    Malzeme kodu; Tabaka ekle, Tabakayı sil, toplam kalınlık) bulunur.
+  - Sağda yanın bileşenleri ve uç koşulu durur.
+  - Örnek kesit ±16 m'dedir (±40 m'de tabakalar okunmuyordu). Tabakalar koyudan açığa bantlar, formasyon vurgu renginde
+    kesikli çizgidir.
+  - Altındaki satır üstyapının alanını ve formasyondan yarmayı ve dolguyu söyler.
+  - Çizime satırı ve Aksa yeniden bağla yalnız kesit takımında görünür.
+- **Enkesit › kesit takımı ve bölünmüş görünüş:** kesitin üstyapısı `road.sections.query`'nin satırından aynı biçimde
+  çizilir.
+- **Kübaj:** pencere ortak düzene taşındı.
+  - Solda hesap listesi ve form durur: Tanım (Ad, Koridor, Yöntem, Kural), Kabarma ve sıkışma, Sıyırma ve diş kazısı.
+  - Sağda kütle diyagramı ve altında kural yazar. Dört özet vardır: Kazı, Dolgu, Düzeltilmiş fark ve Üstyapı (yoksa
+    Bitkisel toprak). Altında notlar (onay, uyarılar), Cetvel | Tabakalar seçimi ve çıktı satırı (biçim, Cetveli yaz…)
+    gelir.
+  - Alt çubukta Sil, Onayla, Onayı kaldır, Vazgeç ve tek birincil Kaydet bulunur.
+- `Form::wide` (KentOS UI): birkaç sütunlu tablo etiket sütunu dahil bütün genişliği alır. `row`, içeriği etiket
+  sütununun sağına koyuyor ve tabloyu sıkıştırıyordu.
+- Testler: `section_window_tests::the_template_takes_a_pavement_and_the_sections_show_it` ve
+  `volume_window_tests::the_window_measures_by_a_rule_and_shows_the_layers`. Resimler
+  `.run/gui-evidence/yol-y26/y26-3-*`'tedir (geniş açık, dar koyu).
 
 ### §4 Pencere düzeni (Y26.0)
 

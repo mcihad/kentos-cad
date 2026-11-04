@@ -54,8 +54,16 @@ pub struct RoadDialog<'a> {
     status: Option<String>,
     primary: Option<(&'a str, Option<Message>)>,
     others: Vec<(&'a str, Option<Message>)>,
+    /// Quiet actions at the footer's start (Sil, Onayla …), DESIGN.md §7.9.
+    ghosts: Vec<(&'a str, Option<Message>)>,
     close: Message,
+    close_caption: &'a str,
     width: f32,
+    form_width: f32,
+    /// Shown above the form (a list of what the window edits).
+    head: Option<Element<'a, Message>>,
+    /// Shown under the result (the window's output row).
+    tail: Option<Element<'a, Message>>,
 }
 
 // `status`, `secondary` and `width` are the other road windows' as they move onto this layout (docs/adr/0930 §4).
@@ -74,8 +82,13 @@ impl<'a> RoadDialog<'a> {
             status: None,
             primary: None,
             others: Vec::new(),
+            ghosts: Vec::new(),
             close,
+            close_caption: "Kapat",
             width: 1120.0,
+            form_width: FORM,
+            head: None,
+            tail: None,
         }
     }
 
@@ -136,6 +149,36 @@ impl<'a> RoadDialog<'a> {
         self
     }
 
+    /// The form column's width at the 12 px body text (a table of several columns needs more than 300).
+    pub fn form_width(mut self, width: f32) -> Self {
+        self.form_width = width;
+        self
+    }
+
+    /// The close button's words: Vazgeç for a window that saves its own copy.
+    pub fn close_caption(mut self, caption: &'a str) -> Self {
+        self.close_caption = caption;
+        self
+    }
+
+    /// A quiet action at the footer's start.
+    pub fn ghost(mut self, caption: &'a str, on: Option<Message>) -> Self {
+        self.ghosts.push((caption, on));
+        self
+    }
+
+    /// Something over the form (the list of what the window edits).
+    pub fn head(mut self, head: impl Into<Element<'a, Message>>) -> Self {
+        self.head = Some(head.into());
+        self
+    }
+
+    /// Something under the result (an output row: a format and a write button).
+    pub fn tail(mut self, tail: impl Into<Element<'a, Message>>) -> Self {
+        self.tail = Some(tail.into());
+        self
+    }
+
     pub fn view(self) -> Element<'a, Message> {
         let muted = |t: &iced::Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let mut result = Column::new().spacing(10).width(Fill);
@@ -164,17 +207,27 @@ impl<'a> RoadDialog<'a> {
         if let Some(detail) = self.detail {
             result = result.push(detail);
         }
-        let form = container(self.form).width(typography::scaled(FORM));
-        let body = row![form, result].spacing(typography::scaled(20.0));
+        if let Some(tail) = self.tail {
+            result = result.push(tail);
+        }
+        let mut left = Column::new().spacing(12).width(typography::scaled(self.form_width));
+        if let Some(head) = self.head {
+            left = left.push(head);
+        }
+        left = left.push(self.form);
+        let body = row![left, result].spacing(typography::scaled(20.0));
 
         let mut frame = Frame::new(self.title).scroll(body).width(self.width).on_close(self.close.clone());
+        for (caption, on) in self.ghosts {
+            frame = frame.aside(words::ghost(caption, on));
+        }
         if let Some(status) = self.status {
             frame = frame.aside(label::caption(status).style(muted));
         }
         for (caption, on) in self.others {
             frame = frame.action(words::secondary(caption, on));
         }
-        frame = frame.action(words::secondary("Kapat", Some(self.close.clone())));
+        frame = frame.action(words::secondary(self.close_caption, Some(self.close.clone())));
         if let Some((caption, on)) = self.primary {
             frame = frame.action(words::primary(caption, on));
         }

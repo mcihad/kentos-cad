@@ -228,3 +228,91 @@ fn screens() {
         }
     }
 }
+
+/// Üstyapı (docs/adr/0930 §3): four layers typed on a template, its edge on the fill slope; Kaydet writes them with
+/// `road.templates.edit` and the set's sections carry the pavement.
+fn paved(app: &mut App) {
+    let _ = app.update(Message::Run("section.editor"));
+    send(app, W::Choose(Chosen::Template(0)));
+    send(app, W::Pavement);
+    for (j, (name, t, m)) in [("Aşınma", "0,05", "KGM-a"), ("Binder", "0,08", ""), ("Plentmiks temel", "0,20", ""), ("Alttemel", "0,25", "")]
+        .into_iter()
+        .enumerate()
+    {
+        if j > 0 {
+            send(app, W::AddLayer);
+        }
+        send(app, W::Layer(j, 0, name.into()));
+        send(app, W::Layer(j, 1, t.into()));
+        send(app, W::Layer(j, 2, m.into()));
+    }
+    send(app, W::PavementSloped(true));
+    send(app, W::PavementSlope("1,5".into()));
+}
+
+#[test]
+fn the_template_takes_a_pavement_and_the_sections_show_it() {
+    let mut app = app(true);
+    paved(&mut app);
+    send(&mut app, W::Save);
+    let t = model(&mut app).road_templates()[0].clone();
+    let p = t.pavement.expect("written");
+    assert_eq!(p.layers.len(), 4);
+    assert_eq!(p.layers[0].material.as_deref(), Some("KGM-a"));
+    assert_eq!(p.edge, kentos_commands::PavementEdge::Slope { h: 1.5 });
+    let made = kentos_native_application::road_sections::made_sections(model(&mut app));
+    let rows = made[0].1.as_ref().expect("sections");
+    let r = rows.iter().find(|r| r.pavement.is_some()).expect("a section with its pavement");
+    let pv = r.pavement.as_ref().expect("pavement");
+    assert_eq!(pv.layers.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), ["Aşınma", "Binder", "Plentmiks temel", "Alttemel"]);
+    assert!(pv.formation_cut >= r.cut.unwrap_or(0.0) && pv.formation_fill <= r.fill.unwrap_or(0.0));
+    // Taken off again: removePavement.
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Template(0)));
+    send(&mut app, W::Pavement);
+    send(&mut app, W::Save);
+    assert!(model(&mut app).road_templates()[0].pavement.is_none());
+}
+
+/// Üstyapı in the template editor and on the sections, wide and narrow, light and dark; `.run/gui-evidence/yol-y26-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib section_window_tests::screens_pavement -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_pavement() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app(true);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y26-3-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        paved(&mut app);
+        shot(&mut app, "tip-kesit-ustyapi");
+        send(&mut app, W::Save);
+        let _ = app.update(Message::Run("section.editor"));
+        send(&mut app, W::Choose(Chosen::Set(0)));
+        send(&mut app, W::Next);
+        send(&mut app, W::Next);
+        shot(&mut app, "enkesit-ustyapi");
+        send(&mut app, W::Cancel);
+    }
+}

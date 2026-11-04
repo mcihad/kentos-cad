@@ -223,3 +223,94 @@ fn screens() {
         send(&mut app, W::Cancel);
     }
 }
+
+/// The corridors' templates given a pavement through `road.templates.edit` (docs/adr/0930 §2).
+fn paved(app: &mut App) {
+    use kentos_commands::{PavementDef, PavementEdge, PavementLayerDef, RoadEditOperation, TemplatesEdit};
+    let layer = |name: &str, thickness: f64| PavementLayerDef { name: name.into(), thickness, material: None };
+    for (id, pavement) in [
+        (
+            "tk-1",
+            PavementDef {
+                layers: vec![layer("Aşınma", 0.05), layer("Binder", 0.08), layer("Plentmiks temel", 0.2), layer("Alttemel", 0.25)],
+                edge: PavementEdge::Slope { h: 1.5 },
+            },
+        ),
+        ("tk-2", PavementDef { layers: vec![layer("Beton", 0.25), layer("Alttemel", 0.3)], edge: PavementEdge::Vertical }),
+    ] {
+        let edit = TemplatesEdit {
+            operation: RoadEditOperation::Set,
+            template: Some(id.into()),
+            name: None,
+            left: None,
+            right: None,
+            mirror: false,
+            pavement: Some(pavement),
+            remove_pavement: false,
+            expected_revision: None,
+        };
+        let r = kentos_native_application::road_templates_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(model(app)),
+            edit,
+        );
+        assert!(matches!(r, kentos_commands::CommandResult::Completed { .. }), "{r:?}");
+    }
+}
+
+#[test]
+fn the_window_measures_by_a_rule_and_shows_the_layers() {
+    let mut app = app();
+    paved(&mut app);
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let road = app.volume_window.as_ref().and_then(|w| w.preview.report.clone()).expect("computes");
+    assert_eq!(road.layers.len(), 5, "{:?}", road.layers);
+    send(&mut app, W::Rule(Some(kentos_commands::VolumeRule::FormationGround)));
+    let formation = app.volume_window.as_ref().and_then(|w| w.preview.report.clone()).expect("computes");
+    // From the formation: more cut, less fill, the same layers.
+    assert!(formation.cut > road.cut && formation.fill < road.fill, "{} {} / {} {}", formation.cut, formation.fill, road.cut, road.fill);
+    send(&mut app, W::Save);
+    assert_eq!(model(&mut app).road_volumes()[0].rule, Some(kentos_commands::VolumeRule::FormationGround));
+}
+
+/// The Kübaj window on its tidy layout (DESIGN.md §7.19) with a rule and the pavement layers; `.run/gui-evidence/yol-y26/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib volume_window_tests::screens_rules -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_rules() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app();
+        paved(&mut app);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y26-3-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        shot(&mut app, "kubaj-yol-zemin");
+        send(&mut app, W::Rule(Some(kentos_commands::VolumeRule::FormationGround)));
+        send(&mut app, W::View(crate::volume_window::Shown::Layers));
+        shot(&mut app, "kubaj-formasyon-tabakalar");
+        send(&mut app, W::Cancel);
+    }
+}

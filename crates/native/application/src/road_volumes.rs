@@ -93,7 +93,7 @@ struct Work {
 }
 
 /// The core's pavement of a template's definition.
-pub(crate) fn core_pavement(def: &kentos_commands::PavementDef) -> Pavement {
+pub fn core_pavement(def: &kentos_commands::PavementDef) -> Pavement {
     Pavement {
         layers: def.layers.iter().map(|l| l.thickness).collect(),
         edge: match def.edge {

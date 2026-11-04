@@ -32,11 +32,12 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_volumes, road_volumes_approve, road_volumes_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided};
+use kentos_ui::widget::Elided;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog::{self, RoadDialog};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -54,6 +55,36 @@ const ADD_STRIP: &str = "Sıyırma ekle";
 const REMOVE_STRIP: &str = "Sıyırmayı sil";
 const DIAGRAM: &str = "Kütle diyagramı";
 const SHEET: &str = "Cetvel";
+const LAYERS: &str = "Tabakalar";
+pub(crate) const RULE: &str = "Kural";
+
+/// The rules a volume offers (docs/adr/0930 §2): none (as before the rule) and Netpro's four.
+const RULES: [(Option<kentos_commands::VolumeRule>, &str); 5] = [
+    (None, "Kuralsız (sıyırma varsa bitkisel toprağa göre)"),
+    (Some(kentos_commands::VolumeRule::RoadGround), "Yol–Zemin"),
+    (Some(kentos_commands::VolumeRule::FormationGround), "Formasyon–Zemin"),
+    (Some(kentos_commands::VolumeRule::RoadTopsoil), "Yol–Bitkisel Toprak"),
+    (Some(kentos_commands::VolumeRule::FormationTopsoil), "Formasyon–Bitkisel Toprak"),
+];
+
+/// What the window shows under its figures.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Shown {
+    #[default]
+    Diagram,
+    Sheet,
+    Layers,
+}
+
+impl std::fmt::Display for Shown {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Shown::Diagram => DIAGRAM,
+            Shown::Sheet => SHEET,
+            Shown::Layers => LAYERS,
+        })
+    }
+}
 
 const METHODS: [(VolumeMethod, &str); 3] = [
     (VolumeMethod::EndArea, "Ortalama alan"),
@@ -199,6 +230,8 @@ pub struct Window {
     format: WorkbookFormat,
     /// The sheet shown in place of the mass diagram.
     pub(crate) sheet: bool,
+    /// The list shown: the mass diagram, the sheet or the pavement layers.
+    pub(crate) shown: Shown,
 }
 
 #[derive(Debug, Clone)]
@@ -209,6 +242,10 @@ pub enum Event {
     Name(String),
     Corridor(String),
     Method(VolumeMethod),
+    /// The volume's rule (docs/adr/0930 §2).
+    Rule(Option<kentos_commands::VolumeRule>),
+    /// The list under the figures.
+    View(Shown),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
     Factor(usize, usize, String),
     /// A strip row's from (0), to (1) or depth (2).
@@ -260,6 +297,7 @@ impl App {
             preview: Preview::default(),
             format: WorkbookFormat::Xlsx,
             sheet: false,
+            shown: Shown::Sheet,
         }));
         self.dialog = Some(Dialog::Volumes);
         self.refresh_volume();
@@ -408,7 +446,19 @@ impl App {
             }
             Event::Format(f) => w.format = f,
             Event::Approve(on) => return self.approve_volume(on),
-            Event::Show(sheet) => w.sheet = sheet,
+            Event::Show(sheet) => {
+                w.sheet = sheet;
+                w.shown = if sheet { Shown::Sheet } else { Shown::Diagram };
+            }
+            Event::View(v) => {
+                w.shown = v;
+                w.sheet = v == Shown::Sheet;
+            }
+            Event::Rule(r) => {
+                if let Some(row) = chosen_row(w) {
+                    row.rule = r;
+                }
+            }
             Event::Write => return self.write_volume_sheet(),
             Event::Cancel => {
                 self.volume_window = None;
@@ -532,11 +582,13 @@ impl App {
     }
 
     pub(crate) fn road_volume_view(&self) -> Element<'_, Message> {
+        use kentos_ui::widget::{Banner, Form};
         let Some(w) = &self.volume_window else {
             return iced::widget::text("").into();
         };
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let corridors = self.volume_corridors();
+        // The volumes, over the form.
         let mut list = Column::new().spacing(1).padding(2);
         for (i, r) in w.rows.iter().enumerate() {
             let on = corridors.iter().find(|c| Some(&c.0) == r.corridor.as_ref()).map_or_else(String::new, |c| c.1.clone());
@@ -557,50 +609,95 @@ impl App {
         if w.rows.is_empty() {
             list = list.push(label::caption("Kübaj yok. Yeni kübaj ile bir koridorun hacmini hesaplayın.").style(muted));
         }
-        let left = column![
-            label::strong("Kübaj hesapları"),
-            container(scrollable(list).height(typography::scaled(300.0))).style(style::container::field_box).width(Fill),
-            words::secondary(NEW, Some(msg(Event::New))),
+        let head = column![
+            row![label::strong("Kübaj hesapları"), space::horizontal().width(Fill), words::secondary(NEW, Some(msg(Event::New)))]
+                .align_y(Center),
+            container(scrollable(list).height(typography::scaled(96.0))).style(style::container::field_box).width(Fill),
         ]
-        .spacing(8);
+        .spacing(6);
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
-        let right: Element<'_, Message> = match chosen {
-            None => container(label::caption("Bir kübaj seçin ya da yeni bir kübaj oluşturun.")).padding(12).into(),
-            Some(r) => scrollable(self.volume_editor(w, r, &corridors)).height(typography::scaled(360.0)).into(),
-        };
         let saved = chosen.is_some_and(|r| r.def().is_ok_and(|d| w.kept.contains(&d)));
         let approved = chosen.is_some_and(|r| r.approved.is_some());
-        let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS.iter().map(|c| c.format).collect();
-        let format = Select::new(
-            crate::table_write::FORMATS.iter().map(|c| Choice::new(c.label.to_owned())),
-            formats.iter().position(|f| *f == w.format),
-            move |i| msg(Event::Format(formats[i])),
-        );
-        let body = column![
-            row![container(left).width(220), container(right).width(Fill)].spacing(16),
-            row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                words::secondary(APPROVE, (saved && !approved).then(|| msg(Event::Approve(true)))),
-                words::ghost(REVOKE, approved.then(|| msg(Event::Approve(false)))),
-                space::horizontal().width(16),
-                words::field("Biçim", container(format).width(240), None),
-                words::secondary(WRITE, w.preview.report.as_ref().map(|_| msg(Event::Write))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Bottom),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(1120.0).modal(msg(Event::Cancel))
+        let form = match chosen {
+            None => Form::new().row(label::caption("Bir kübaj seçin ya da yeni bir kübaj oluşturun.").style(muted)),
+            Some(r) => self.volume_form(w, r, &corridors),
+        };
+        let mut d = RoadDialog::new(TITLE, form, msg(Event::Cancel))
+            .head(head)
+            .form_width(400.0)
+            .width(1180.0)
+            .close_caption(CANCEL)
+            .ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove)))
+            .ghost(APPROVE, (saved && !approved).then(|| msg(Event::Approve(true))))
+            .ghost(REVOKE, approved.then(|| msg(Event::Approve(false))));
+        if chosen.is_some() {
+            d = d.picture(iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(Fill), 190.0);
+            match (&w.preview.why, &w.preview.report) {
+                (Some(e), _) => d = d.note(Banner::error(e.clone())),
+                (None, Some(rep)) => {
+                    d = d
+                        .legend(rule_words(rep))
+                        .figure("Kazı", format!("{} m³", grouped(rep.cut, 1)))
+                        .figure("Dolgu", format!("{} m³", grouped(rep.fill, 1)))
+                        .figure("Düzeltilmiş fark", format!("{} m³", grouped(rep.factored_cut - rep.factored_fill, 1)))
+                        .figure(
+                            if rep.layers.is_empty() { "Bitkisel toprak" } else { "Üstyapı" },
+                            if rep.layers.is_empty() {
+                                rep.strip.map_or_else(|| "—".into(), |v| format!("{} m³", grouped(v, 1)))
+                            } else {
+                                format!("{} m³", grouped(rep.layers.iter().map(|l| l.volume).sum(), 1))
+                            },
+                        );
+                    if let Some(a) = rep.approval.as_ref() {
+                        let note = a.approved.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
+                        d = d.note(if a.changed {
+                            Banner::warning(format!(
+                                "Onaylı ({}{note}) hâline göre kazı {} m³, dolgu {} m³; {} aralık değişti.",
+                                a.approved.at,
+                                signed(a.cut_change),
+                                signed(a.fill_change),
+                                a.rows.len()
+                            ))
+                        } else {
+                            Banner::info(format!("Onaylı: {}{note}; bugün de aynı hacmi veriyor. Değiştirmek için önce onayı kaldırın.", a.approved.at))
+                        });
+                    }
+                    for wn in &w.preview.warnings {
+                        d = d.note(Banner::warning(wn.message.clone()));
+                    }
+                    let list: Element<'_, Message> = match w.shown {
+                        Shown::Layers => layers_table(rep),
+                        _ => sheet_table(rep),
+                    };
+                    let options: Vec<Shown> = if rep.layers.is_empty() { vec![Shown::Sheet] } else { vec![Shown::Sheet, Shown::Layers] };
+                    let now = if w.shown == Shown::Layers && !rep.layers.is_empty() { Shown::Layers } else { Shown::Sheet };
+                    d = d.detail(road_dialog::detail_choice(options, now, |v| msg(Event::View(v)), list));
+                }
+                _ => {}
+            }
+            let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS.iter().map(|c| c.format).collect();
+            let format = Select::new(
+                crate::table_write::FORMATS.iter().map(|c| Choice::new(c.label.to_owned())),
+                formats.iter().position(|f| *f == w.format),
+                move |i| msg(Event::Format(formats[i])),
+            );
+            d = d.tail(
+                row![
+                    label::caption("Kübaj cetveli").style(muted),
+                    container(format).width(240),
+                    words::secondary(WRITE, w.preview.report.as_ref().map(|_| msg(Event::Write))),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            );
+        }
+        d.primary(SAVE, Some(msg(Event::Save))).view()
     }
 
-    fn volume_editor<'a>(&'a self, w: &'a Window, r: &'a Row, corridors: &[(String, String)]) -> Element<'a, Message> {
+    /// The chosen volume's definition as a grouped form (DESIGN.md §7.19).
+    fn volume_form<'a>(&'a self, w: &'a Window, r: &'a Row, corridors: &[(String, String)]) -> kentos_ui::widget::Form<'a, Message> {
+        use kentos_ui::widget::Form;
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        let good = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).success) };
         let ids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
         let on_corridor = Select::new(
             corridors.iter().map(|c| Choice::new(c.1.clone())),
@@ -613,47 +710,20 @@ impl App {
             METHODS.iter().position(|m| m.0 == r.method),
             |i| msg(Event::Method(METHODS[i].0)),
         );
-        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
-        col = col.push(
-            row![
-                words::field("Ad", kentos_ui::widget::text_field("Kübajın adı", &r.name).on_input(|t| msg(Event::Name(t))), None),
-                words::field("Koridor", container(on_corridor).width(220), None),
-                words::field("Yöntem", container(on_method).width(180), None),
-            ]
-            .spacing(10),
-        );
-        // The approval, at the top: when, and how today's figures differ; an approved definition does not change.
-        if let Some(a) = w.preview.report.as_ref().and_then(|rep| rep.approval.as_ref()) {
-            let note = a.approved.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
-            col = col.push(if a.changed {
-                label::caption(format!(
-                    "Onaylı ({}{note}) hâline göre: kazı {} m³, dolgu {} m³, düzeltilmiş kazı {} m³, düzeltilmiş dolgu {} m³; {} aralık değişti.",
-                    a.approved.at,
-                    signed(a.cut_change),
-                    signed(a.fill_change),
-                    signed(a.factored_cut_change),
-                    signed(a.factored_fill_change),
-                    a.rows.len()
-                ))
-                .style(warn)
-            } else {
-                label::caption(format!("Onaylı: {}{note}; bugün de aynı hacmi veriyor. Değiştirmek için önce onayı kaldırın.", a.approved.at))
-                    .style(good)
-            });
-        }
-        let widths = [80.0, 80.0, 80.0, 80.0];
-        let mut table = Column::new().spacing(3);
-        table = table.push(
-            ["Baş (m)", "Son (m)", "Kabarma", "Sıkışma"]
-                .iter()
-                .zip(widths)
-                .fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
-        );
+        let on_rule = Select::new(RULES.iter().map(|m| Choice::new(m.1.to_owned())), RULES.iter().position(|m| m.0 == r.rule), |i| {
+            msg(Event::Rule(RULES[i].0))
+        });
+        let sections = r.method != VolumeMethod::Surfaces;
+        let head = |words: &[&'a str], widths: &[f32]| {
+            words.iter().zip(widths).fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(*wd)))
+        };
+        let widths = [70.0, 70.0, 70.0, 70.0];
+        let mut factors = Column::new().spacing(3).push(head(&["Baş (m)", "Son (m)", "Kabarma", "Sıkışma"], &widths));
         for (j, f) in r.factors.iter().enumerate() {
             let cell = |k: usize, hint: &'a str| {
                 kentos_ui::widget::text_field(hint, &f[k]).on_input(move |v| msg(Event::Factor(j, k, v))).width(widths[k])
             };
-            table = table.push(
+            factors = factors.push(
                 row![
                     cell(0, "0"),
                     cell(1, ""),
@@ -668,27 +738,8 @@ impl App {
                 .align_y(Center),
             );
         }
-        col = col.push(
-            row![
-                words::field("Kabarma ve sıkışma (km aralığı)", table, None),
-                column![
-                    words::secondary(ADD, Some(msg(Event::Add))),
-                    words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow))),
-                    label::caption("Katsayılar zemin raporundan yazılır;\nKentOS öntanımlı sayı vermez.").style(muted),
-                ]
-                .spacing(6),
-            ]
-            .spacing(16),
-        );
-        let sections = r.method != VolumeMethod::Surfaces;
-        let swidths = [80.0, 80.0, 90.0];
-        let mut strips = Column::new().spacing(3);
-        strips = strips.push(
-            ["Baş (m)", "Son (m)", "Kalınlık (m)"]
-                .iter()
-                .zip(swidths)
-                .fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(wd))),
-        );
+        let swidths = [70.0, 70.0, 80.0];
+        let mut strips = Column::new().spacing(3).push(head(&["Baş (m)", "Son (m)", "Kalınlık (m)"], &swidths));
         for (j, f) in r.strip.iter().enumerate() {
             let cell = |k: usize, hint: &'a str| {
                 kentos_ui::widget::text_field(hint, &f[k]).on_input(move |v| msg(Event::Strip(j, k, v))).width(swidths[k])
@@ -707,72 +758,40 @@ impl App {
                 .align_y(Center),
             );
         }
-        let bench_field = |k: usize, hint: &'a str| {
-            kentos_ui::widget::text_field(hint, &r.bench[k]).on_input(move |v| msg(Event::Bench(k, v))).width(80)
-        };
-        col = col.push(
-            row![
-                words::field("Sıyırma: bitkisel toprak (km aralığı)", strips, None),
-                column![
-                    words::secondary(ADD_STRIP, sections.then(|| msg(Event::AddStrip))),
-                    words::ghost(REMOVE_STRIP, w.strip_line.map(|_| msg(Event::RemoveStrip))),
-                ]
-                .spacing(6),
-                column![
-                    label::caption("Diş kazısı").style(muted),
+        let bench_field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &r.bench[k]).on_input(move |v| msg(Event::Bench(k, v)));
+        let mut form = Form::new()
+            .label_width(110.0)
+            .section("Tanım")
+            .field("Ad", kentos_ui::widget::text_field("Kübajın adı", &r.name).on_input(|t| msg(Event::Name(t))))
+            .field("Koridor", on_corridor)
+            .field("Yöntem", on_method)
+            .field(RULE, on_rule)
+            .help("NETPRO'nun adlarıyla: Yol ya da Formasyon, Zemin ya da Bitkisel Toprak. Formasyon üstyapı ister.")
+            .section("Kabarma ve sıkışma")
+            .wide(factors)
+            .wide(
+                row![words::secondary(ADD, Some(msg(Event::Add))), words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow)))]
+                    .spacing(8),
+            )
+            .help("Katsayılar zemin raporundan yazılır; KentOS öntanımlı sayı vermez.");
+        if sections {
+            form = form
+                .section("Sıyırma ve diş kazısı")
+                .wide(strips)
+                .wide(
                     row![
-                        words::field("Eğim (%)", bench_field(0, ""), None),
-                        words::field("Basamak (m)", bench_field(1, ""), None),
+                        words::secondary(ADD_STRIP, Some(msg(Event::AddStrip))),
+                        words::ghost(REMOVE_STRIP, w.strip_line.map(|_| msg(Event::RemoveStrip))),
                     ]
-                    .spacing(6),
-                    label::caption(if sections {
-                        "Arazinin enine eğimi bu yüzdeden dikken\ndolgunun altında basamak kazılır."
-                    } else {
-                        "Sıyırma ve diş kazısı yalnız\nkesit yöntemleriyle hesaplanır."
-                    })
-                    .style(muted),
-                ]
-                .spacing(4),
-            ]
-            .spacing(16),
-        );
-        let tab = |words: &'static str, on: bool| {
-            iced::widget::button(label::caption(words)).on_press(msg(Event::Show(on))).padding([3, 10]).style(style::button::row(w.sheet == on))
-        };
-        col = col.push(row![tab(DIAGRAM, false), tab(SHEET, true)].spacing(2));
-        let shown: Element<'a, Message> = match (&w.preview.report, w.sheet) {
-            (Some(rep), true) => sheet_table(rep),
-            _ => iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(typography::scaled(170.0)).into(),
-        };
-        col = col.push(container(shown).style(style::container::field_box).width(Fill));
-        match (&w.preview.why, &w.preview.report) {
-            (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
-            (None, Some(rep)) => {
-                let mut sum = format!(
-                    "Kazı {} m³ · dolgu {} m³ · düzeltilmiş kazı {} m³ · düzeltilmiş dolgu {} m³ · fark {} m³",
-                    grouped(rep.cut, 1),
-                    grouped(rep.fill, 1),
-                    grouped(rep.factored_cut, 1),
-                    grouped(rep.factored_fill, 1),
-                    grouped(rep.factored_cut - rep.factored_fill, 1),
-                );
-                if let Some(v) = rep.strip {
-                    sum.push_str(&format!(" · bitkisel toprak {} m³", grouped(v, 1)));
-                }
-                if let Some(v) = rep.bench {
-                    sum.push_str(&format!(" · diş kazısı {} m³", grouped(v, 1)));
-                }
-                if let (Some(c), Some(f)) = (rep.cut_area, rep.fill_area) {
-                    sum.push_str(&format!(" · plan alanı yarma {} m², dolgu {} m²", grouped(c, 0), grouped(f, 0)));
-                }
-                col = col.push(label::caption(sum));
-                for wn in &w.preview.warnings {
-                    col = col.push(label::caption(wn.message.clone()).style(warn));
-                }
-            }
-            _ => {}
+                    .spacing(8),
+                )
+                .field("Diş eğimi (%)", bench_field(0, ""))
+                .field("Basamak (m)", bench_field(1, ""))
+                .help("Arazinin enine eğimi bu yüzdeden dikken dolgunun altında basamak kazılır.");
+        } else {
+            form = form.row(label::caption("Sıyırma ve diş kazısı yalnız kesit yöntemleriyle hesaplanır.").style(muted));
         }
-        col.into()
+        form
     }
 
     pub(crate) fn volume_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -793,6 +812,7 @@ impl App {
             Control::Press(REMOVE_STRIP) => Some(msg(Event::RemoveStrip)),
             Control::Press(DIAGRAM) => Some(msg(Event::Show(false))),
             Control::Press(SHEET) => Some(msg(Event::Show(true))),
+            Control::Press(LAYERS) => Some(msg(Event::View(Shown::Layers))),
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => match METHODS.iter().find(|m| m.1 == words) {
@@ -809,6 +829,28 @@ impl App {
 /// The road project's volumes as saved.
 fn doc_volumes(app: &App) -> Vec<VolumeDef> {
     app.document.as_ref().map_or_else(Vec::new, |d| d.model.road_volumes().to_vec())
+}
+
+/// The line under the mass diagram (the diagram has its own legend): the rule the volume measures by.
+fn rule_words(rep: &VolumeReport) -> String {
+    let rule = match rep.rule {
+        Some(r) => r.words().to_owned(),
+        None if rep.strip.is_some() => "Yol–Bitkisel Toprak (kuralsız)".to_owned(),
+        None => "Yol–Zemin (kuralsız)".to_owned(),
+    };
+    format!("Kural: {rule}")
+}
+
+/// The pavement layers' volumes (docs/adr/0930 §2): each layer's name, material and volume in all.
+fn layers_table(rep: &VolumeReport) -> Element<'_, Message> {
+    road_dialog::table(
+        vec![road_dialog::col("Tabaka", 200.0), road_dialog::col("Malzeme kodu", 140.0), road_dialog::num("Hacim (m³)", 120.0)],
+        rep.layers
+            .iter()
+            .map(|l| vec![l.name.clone(), l.material.clone().unwrap_or_default(), grouped(l.volume, 2)])
+            .collect(),
+        "Tip kesitlerde üstyapı yok",
+    )
 }
 
 /// The sheet's rows as the window shows them: km, cut and fill, the factors, the running totals and the mass ordinate.

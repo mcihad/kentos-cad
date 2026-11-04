@@ -43,6 +43,21 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kendiliğinden yeniden üret) ve Görünüşler (plan, boykesit ve enkesit tek km'de). Standart profili (KGM) sahibin
   kaynağını bekler, değer uydurulmaz. Resimler snapshot'la; gerçek pencerede elle kabul açık.
 
+- **KentOS Yol: üstyapı, formasyon, kübaj kuralları ve Yol pencerelerinin düzeni (4 Kasım 2026; [ADR 0930](docs/adr/0930-road-pavement-formation-and-volume-rules.md), plan/road.md Y26, dal `road-03-ustyapi`).**
+  - **Üstyapı:** tip kesitin `pavement`'ıdır: tabakalar yukarıdan aşağı, bitmiş yüze paralel; kenar dik ya da şevli
+    (Civil 3D'nin şeridi ve ShoulderExtendAll'u). Bitmiş çizginin üstüne ve kesitin izinin dışına taşmaz.
+    `kentos_road::section::pavement` tabaka alanlarını ve formasyonu kesin integralle hesaplar.
+  - **Kübaj kuralları:** `rule` NETPRO'nun adlarını taşır (Yol–Zemin, Formasyon–Zemin, Yol–Bitkisel Toprak,
+    Formasyon–Bitkisel Toprak). Kural yoksa davranış öncekidir. Formasyondan kazı yolun kazısı + zeminin altındaki
+    üstyapıdır, dolgu yolun dolgusu − üstündekidir. Cetvel tabaka hacimlerini taşır; uyarı kodu `pavement_unbuilt`'tir.
+  - **Pencere düzeni:** sahibin “dialog formları çok karmaşık” sözü üzerine Yol pencereleri tek iskelettedir
+    (`road_dialog::RoadDialog`, DESIGN.md §7.19). Solda gruplu form, sağda çizim, en çok dört özet ve parçalı seçimle tek
+    tablo, alt çubukta tek birincil eylem vardır. Yalnız okuyan pencerede Önizle yoktur. Taşınanlar: Kırmızı kot
+    önerisi, Kübaj, tip kesit düzenleyicisi. `Form::wide` eklendi.
+  - **Ölçüm:** 19 çekirdek ve 26 komut durumu bağımsız kesirli referanstan; 17091 ortak durum geçer. Ana dalda kalan iki
+    Python hatası düzeltildi ya da ayrıldı: propose'un katalog örneği düzeltildi; pafta font ön denetimi bu makinenin
+    font ortamından düşer ve bu işle ilgisizdir.
+
 - **Oda modülleri ve kontrollü tekrar kullanımı (31 Ekim 2026; [ADR 0775](docs/adr/0775-room-modules-and-controlled-reuse.md), ADV-05 [~]).**
   Tek kattaki düz duvarlı oda (duvar, açıklık, mahal, donatı, ölçü, etiket, yazı) modül olur: tanım `settings.arch.modules`'ta
   kendi çerçevesinde (`.kcad` şema 142 opt-in, `FORMATS_VERSION` 102), örnek ayrı kimlik eşlemesiyle sıradan mimari nesneler;

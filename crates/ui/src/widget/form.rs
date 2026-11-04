@@ -54,6 +54,8 @@ enum Line<'a, Message> {
         error: Option<Fragment<'a>>,
     },
     Full(Element<'a, Message>),
+    /// The whole width, the label column included: a table of several columns.
+    Wide(Element<'a, Message>),
 }
 
 impl<'a, Message: 'a> Default for Form<'a, Message> {
@@ -102,6 +104,12 @@ impl<'a, Message: 'a> Form<'a, Message> {
     /// Etiket sütununa hizalı, adsız satır (ör. onay kutusu, düğmeler).
     pub fn row(mut self, content: impl Into<Element<'a, Message>>) -> Self {
         self.rows.push(Line::Full(content.into()));
+        self
+    }
+
+    /// Etiket sütunu dahil bütün genişlikte satır: birkaç sütunlu bir tablo (bileşenler, tabakalar, katsayılar).
+    pub fn wide(mut self, content: impl Into<Element<'a, Message>>) -> Self {
+        self.rows.push(Line::Wide(content.into()));
         self
     }
 
@@ -213,6 +221,7 @@ impl<'a, Message: 'a> From<Form<'a, Message>> for Element<'a, Message> {
                 ]
                 .spacing(12)
                 .into(),
+                Line::Wide(content) => container(content).width(Fill).into(),
             };
 
             column = column.push(line);

@@ -58,6 +58,10 @@ const REMOVE_PART: &str = "Bileşeni sil";
 const PREVIOUS: &str = "◀";
 const NEXT: &str = "▶";
 const DRAW: &str = "Çizime yaz";
+pub(crate) const PAVEMENT: &str = "Üstyapı var";
+pub(crate) const ADD_LAYER: &str = "Tabaka ekle";
+const REMOVE_LAYER: &str = "Tabakayı sil";
+pub(crate) const EDGE_SLOPE: &str = "Kenar şevi (y/d)";
 const SHEETS: &str = "Paftalara diz";
 const KINDS: [&str; 2] = ["Şerit", "Banket"];
 const METHODS: [&str; 3] = ["Aralık", "Km'ler", "Çizgiler"];
@@ -155,6 +159,60 @@ impl SideRow {
     }
 }
 
+/// A template's pavement as typed (docs/adr/0930 §3): its layers (name, thickness, material code) from the top down and
+/// its edge, vertical or a slope.
+#[derive(Debug, Clone, Default)]
+pub struct PavementRow {
+    pub(crate) on: bool,
+    pub(crate) layers: Vec<[String; 3]>,
+    pub(crate) sloped: bool,
+    pub(crate) h: String,
+}
+
+impl PavementRow {
+    fn of(p: Option<&kentos_commands::PavementDef>) -> Self {
+        let Some(p) = p else { return Self::default() };
+        let (sloped, h) = match p.edge {
+            kentos_commands::PavementEdge::Vertical => (false, String::new()),
+            kentos_commands::PavementEdge::Slope { h } => (true, trimmed(h)),
+        };
+        Self {
+            on: true,
+            layers: p.layers.iter().map(|l| [l.name.clone(), trimmed(l.thickness), l.material.clone().unwrap_or_default()]).collect(),
+            sloped,
+            h,
+        }
+    }
+
+    fn def(&self) -> Result<Option<kentos_commands::PavementDef>, String> {
+        if !self.on {
+            return Ok(None);
+        }
+        let mut layers = Vec::new();
+        for (i, l) in self.layers.iter().enumerate() {
+            let name = l[0].trim();
+            if name.is_empty() {
+                return Err(format!("Üstyapının {}. tabakasına bir ad verin (aşınma, binder, temel …).", i + 1));
+            }
+            let material = l[2].trim();
+            layers.push(kentos_commands::PavementLayerDef {
+                name: name.to_owned(),
+                thickness: need(&l[1], &format!("{}. tabakanın kalınlığı", i + 1))?,
+                material: (!material.is_empty()).then(|| material.to_owned()),
+            });
+        }
+        if layers.is_empty() {
+            return Err("Üstyapının en az bir tabakası olmalı: Tabaka ekle ile ekleyin.".into());
+        }
+        let edge = if self.sloped {
+            kentos_commands::PavementEdge::Slope { h: need(&self.h, "üstyapı kenarının şevi")? }
+        } else {
+            kentos_commands::PavementEdge::Vertical
+        };
+        Ok(Some(kentos_commands::PavementDef { layers, edge }))
+    }
+}
+
 /// A template as typed.
 #[derive(Debug, Clone, Default)]
 pub struct TemplateRow {
@@ -165,8 +223,8 @@ pub struct TemplateRow {
     right: SideRow,
     /// The right side mirrors the left.
     mirror: bool,
-    /// The pavement, kept as it is (docs/adr/0930 §3).
-    pavement: Option<kentos_commands::PavementDef>,
+    /// The pavement as typed (docs/adr/0930 §3).
+    pub(crate) pavement: PavementRow,
 }
 
 impl TemplateRow {
@@ -178,7 +236,7 @@ impl TemplateRow {
             left: SideRow::of(&t.left),
             right: t.right.as_ref().map_or_else(|| SideRow::of(&t.left), SideRow::of),
             mirror: t.right.is_none(),
-            pavement: t.pavement.clone(),
+            pavement: PavementRow::of(t.pavement.as_ref()),
         }
     }
 
@@ -189,7 +247,7 @@ impl TemplateRow {
             revision: self.revision,
             left: self.left.def("Sol")?,
             right: if self.mirror { None } else { Some(self.right.def("Sağ")?) },
-            pavement: self.pavement.clone(),
+            pavement: self.pavement.def()?,
         })
     }
 }
@@ -353,6 +411,15 @@ pub enum Event {
     /// The side's end: 0 cut, 1 fill, 2 the ditch's fore slope, 3 its depth, 4 its bottom.
     End(usize, String),
     Ditch,
+    /// The template's pavement on or off (docs/adr/0930 §3).
+    Pavement,
+    /// The pavement's edge: a slope (true) or vertical.
+    PavementSloped(bool),
+    PavementSlope(String),
+    /// A layer's field: 0 name, 1 thickness, 2 material.
+    Layer(usize, usize, String),
+    AddLayer,
+    RemoveLayer,
     DrawLayer(String),
     Place(String),
     Columns(String),
@@ -563,7 +630,7 @@ impl App {
                     left: side.clone(),
                     right: side,
                     mirror: true,
-                    pavement: None,
+                    pavement: PavementRow::default(),
                 });
                 w.chosen = Some(Chosen::Template(w.templates.len() - 1));
                 w.right = false;
@@ -717,6 +784,40 @@ impl App {
             Event::Ditch => {
                 if let Some(s) = w.side_mut() {
                     s.ditch = !s.ditch;
+                }
+            }
+            Event::Pavement => {
+                if let Some(t) = w.template_mut() {
+                    t.pavement.on = !t.pavement.on;
+                    if t.pavement.on && t.pavement.layers.is_empty() {
+                        // Empty rows to fill in: KentOS gives no thickness of its own.
+                        t.pavement.layers.push(Default::default());
+                    }
+                }
+            }
+            Event::PavementSloped(on) => {
+                if let Some(t) = w.template_mut() {
+                    t.pavement.sloped = on;
+                }
+            }
+            Event::PavementSlope(v) => {
+                if let Some(t) = w.template_mut() {
+                    t.pavement.h = v;
+                }
+            }
+            Event::Layer(j, k, v) => {
+                if let Some(l) = w.template_mut().and_then(|t| t.pavement.layers.get_mut(j)) {
+                    l[k.min(2)] = v;
+                }
+            }
+            Event::AddLayer => {
+                if let Some(t) = w.template_mut() {
+                    t.pavement.layers.push(Default::default());
+                }
+            }
+            Event::RemoveLayer => {
+                if let Some(t) = w.template_mut() {
+                    t.pavement.layers.pop();
                 }
             }
             Event::DrawLayer(id) => {
@@ -1063,7 +1164,8 @@ impl App {
                 scrollable(self.section_set_editor(w, &w.sets[i], stale_of(&w.sets[i]))).height(typography::scaled(360.0)).into()
             }
             Some(Chosen::Template(i)) if i < w.templates.len() => {
-                scrollable(section_template_editor(w, &w.templates[i])).height(typography::scaled(360.0)).into()
+                // Taller than a set's: the template and its pavement read without scrolling on a 900 px screen.
+                scrollable(section_template_editor(w, &w.templates[i])).height(typography::scaled(540.0)).into()
             }
             _ => container(label::caption("Bir kesit takımı ya da tip kesit seçin ya da yeni birini oluşturun.")).padding(12).into(),
         };
@@ -1072,9 +1174,12 @@ impl App {
             _ => false,
         };
         let stale = matches!(w.chosen, Some(Chosen::Set(i)) if w.sets.get(i).is_some_and(stale_of));
+        // The drawing row and the rebind are a set's: a template has neither (DESIGN.md §7.19, fewer dead controls).
+        let on_set = matches!(w.chosen, Some(Chosen::Set(_)));
+        let draw_row: Element<'_, Message> = if on_set { self.section_draw_row(w, saved_set) } else { space::vertical().height(0).into() };
         let body = column![
             row![container(left).width(220), container(right).width(Fill)].spacing(16),
-            self.section_draw_row(w, saved_set),
+            draw_row,
             row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
                 words::secondary(REBIND, (saved_set && stale).then(|| msg(Event::Rebind))),
@@ -1192,7 +1297,7 @@ impl App {
         let exaggeration = number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0);
         col = col.push(
             container(
-                iced::widget::canvas(Chart { row: shown, sample: None, exaggeration })
+                iced::widget::canvas(Chart { row: shown, sample: None, exaggeration, layers: None })
                     .width(Fill)
                     .height(typography::scaled(CHART_HEIGHT)),
             )
@@ -1258,6 +1363,14 @@ impl App {
             Control::Press(NEXT) => Some(msg(Event::Next)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),
             Control::Press(SHEETS) => Some(msg(Event::Sheets)),
+            Control::Press(PAVEMENT) => Some(msg(Event::Pavement)),
+            Control::Press(ADD_LAYER) => Some(msg(Event::AddLayer)),
+            Control::Press(REMOVE_LAYER) => Some(msg(Event::RemoveLayer)),
+            Control::Press("Sol yan") => Some(msg(Event::Side(false))),
+            Control::Press("Sağ yan") => Some(msg(Event::Side(true))),
+            Control::Press("Dik") => Some(msg(Event::PavementSloped(false))),
+            Control::Press("Şevli") => Some(msg(Event::PavementSloped(true))),
+            Control::Fill(EDGE_SLOPE, text) => Some(msg(Event::PavementSlope(text.to_owned()))),
             Control::Press(words) => {
                 if let Some(i) = w.sets.iter().position(|r| r.name == words) {
                     Some(msg(Event::Choose(Chosen::Set(i))))
@@ -1277,65 +1390,154 @@ impl App {
     }
 }
 
-/// A sloping ground for a template's look: from 6 m over the axis on the left to 6 m under it on the right, 40 m out.
-fn sample_ground() -> Vec<GroundPoint> {
-    [(-40.0, 106.0), (-12.0, 101.5), (0.0, 100.0), (14.0, 98.0), (40.0, 94.0)]
+/// A sloping ground for a template's look, 16 m either side of the axis (from 40 m before docs/adr/0930 §3: the layers
+/// were not readable): over the axis on the left, under it on the right.
+fn sample_ground_near() -> Vec<GroundPoint> {
+    [(-16.0, 101.5 + 4.5 / 28.0 * 4.0), (-12.0, 101.5), (0.0, 100.0), (14.0, 98.0), (16.0, 98.0 - 4.0 / 26.0 * 2.0)]
         .into_iter()
         .map(|(offset, z)| GroundPoint { offset, z: Some(z), gap: false, crossing: false })
         .collect()
 }
 
+
+/// Which side the template editor shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SideChoice {
+    Left,
+    Right,
+}
+
+impl std::fmt::Display for SideChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if *self == SideChoice::Left { "Sol yan" } else { "Sağ yan" })
+    }
+}
+
+/// How the pavement ends at the hinge.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EdgeChoice {
+    Vertical,
+    Slope,
+}
+
+impl std::fmt::Display for EdgeChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if *self == EdgeChoice::Vertical { "Dik" } else { "Şevli" })
+    }
+}
+
+/// The template editor (docs/adr/0930 §3, DESIGN.md §7.19): the template on a sample ground over two grouped columns:
+/// the template and its end condition on the left; the side's components and the pavement on the right.
 fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a, Message> {
+    use kentos_ui::widget::{Form, Segmented};
     let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-    let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
     let editing_right = w.right && !t.mirror;
     let side = if editing_right { &t.right } else { &t.left };
-    col = col.push(
-        row![
-            words::field("Ad", kentos_ui::widget::text_field("Tip kesitin adı", &t.name).on_input(|v| msg(Event::Name(v))), None),
-            words::secondary("Sol yan", (editing_right).then(|| msg(Event::Side(false)))),
-            words::secondary("Sağ yan", (!editing_right && !t.mirror).then(|| msg(Event::Side(true)))),
-            words::check(t.mirror, "Sağ yan solun aynısı", Some(msg(Event::Mirror))),
-        ]
-        .spacing(10)
-        .align_y(iced::alignment::Vertical::Bottom),
-    );
-    // The look on a sloping ground: a cut on the left, a fill on the right.
-    let built = t.def().ok().and_then(|d| {
-        let core = road_sections::core_template(&d);
-        tpl::build(&core, 100.0, &sample_ground()).ok()
+    // The look on a sloping ground: a cut on the left, a fill on the right; the pavement under it.
+    let def = t.def();
+    let built = def.as_ref().ok().and_then(|d| {
+        let core = road_sections::core_template(d);
+        let sec = tpl::build(&core, 100.0, &sample_ground_near()).ok()?;
+        let pav = d.pavement.as_ref().map(|p| {
+            kentos_road::section::pavement::build(&core, &sec, &road_volumes_core_pavement(p), &sample_ground_near())
+        });
+        Some((sec, pav))
     });
-    let sample = built.as_ref().map(|s| (sample_ground(), s.clone()));
+    let sample = built.as_ref().map(|(s, _)| (sample_ground_near(), s.clone()));
+    let layers = built.as_ref().and_then(|(_, p)| p.as_ref()).and_then(|p| p.as_ref().ok()).map(|p| p.bottoms.clone());
     let exaggeration = number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0);
-    col = col.push(
-        container(
-            iced::widget::canvas(Chart { row: None, sample, exaggeration })
-                .width(Fill)
-                .height(typography::scaled(180.0)),
-        )
-        .style(style::container::field_box)
-        .width(Fill),
-    );
-    match (&built, t.def()) {
-        (_, Err(e)) => col = col.push(label::caption(e).style(muted)),
-        (Some(s), _) => {
-            col = col.push(label::caption(format!(
+    let picture = container(
+        iced::widget::canvas(Chart { row: None, sample, exaggeration, layers }).width(Fill).height(typography::scaled(170.0)),
+    )
+    .style(style::container::field_box)
+    .width(Fill);
+    let summary: Element<'a, Message> = match (&built, &def) {
+        (_, Err(e)) => label::caption(e.clone()).style(muted).into(),
+        (Some((s, pav)), _) => {
+            let mut words = format!(
                 "Örnek arazide: sol {} · sağ {} · yarma {} m² · dolgu {} m²",
                 kind_words(s.left.kind),
                 kind_words(s.right.kind),
                 comma(s.cut, 2),
                 comma(s.fill, 2)
-            )))
+            );
+            match pav {
+                Some(Ok(p)) => words.push_str(&format!(
+                    " · üstyapı {} m² · formasyondan yarma {} m², dolgu {} m²",
+                    comma(p.area(), 3),
+                    comma(s.cut + p.below, 2),
+                    comma(s.fill - p.above, 2)
+                )),
+                Some(Err(_)) => words.push_str(" · üstyapı kurulmuyor: kenar şevi banketten yatık"),
+                None => {}
+            }
+            label::caption(words).into()
         }
-        (None, Ok(_)) => col = col.push(label::caption("Tip kesitin değerleri kurallara uymuyor.").style(muted)),
+        (None, Ok(_)) => label::caption("Tip kesitin değerleri kurallara uymuyor.").style(muted).into(),
+    };
+
+    // Left: the template and its pavement (both sides alike).
+    let end = |hint: &'a str, value: &'a str, k: usize| kentos_ui::widget::text_field(hint, value).on_input(move |v| msg(Event::End(k, v)));
+    let shown = if editing_right { SideChoice::Right } else { SideChoice::Left };
+    let sides = Segmented::new_with([SideChoice::Left, SideChoice::Right], shown, |c| msg(Event::Side(c == SideChoice::Right)), |c| {
+        c == SideChoice::Left || !t.mirror
+    });
+    let head = |words: [&'a str; 3], widths: [f32; 3]| {
+        words.iter().zip(widths).fold(row![].spacing(4), |r, (h, wd)| r.push(label::caption(*h).style(muted).width(wd)))
+    };
+    let pv = &t.pavement;
+    let mut form = Form::new()
+        .label_width(110.0)
+        .section("Tip kesit")
+        .field("Ad", kentos_ui::widget::text_field("Tip kesitin adı", &t.name).on_input(|v| msg(Event::Name(v))))
+        .field("Yan", sides)
+        .row(words::check(t.mirror, "Sağ yan solun aynısı", Some(msg(Event::Mirror))))
+        .section("Üstyapı (iki yanda aynı)")
+        .row(words::check(pv.on, PAVEMENT, Some(msg(Event::Pavement))));
+    if pv.on {
+        let edge = Segmented::new(
+            [EdgeChoice::Vertical, EdgeChoice::Slope],
+            if pv.sloped { EdgeChoice::Slope } else { EdgeChoice::Vertical },
+            |c| msg(Event::PavementSloped(c == EdgeChoice::Slope)),
+        );
+        form = form.field("Kenar", edge);
+        if pv.sloped {
+            form = form
+                .field(EDGE_SLOPE, kentos_ui::widget::text_field("1,5", &pv.h).on_input(|v| msg(Event::PavementSlope(v))))
+                .help("Dolgu şevi verilirse kenar dolgunun yüzü olur.");
+        }
+        let lw = [170.0, 90.0, 120.0];
+        let mut table = Column::new().spacing(3).push(head(["Tabaka", "Kalınlık (m)", "Malzeme kodu"], lw));
+        for (j, l) in pv.layers.iter().enumerate() {
+            table = table.push(
+                row![
+                    kentos_ui::widget::text_field("Aşınma", &l[0]).on_input(move |v| msg(Event::Layer(j, 0, v))).width(lw[0]),
+                    kentos_ui::widget::text_field("0,05", &l[1]).on_input(move |v| msg(Event::Layer(j, 1, v))).width(lw[1]),
+                    kentos_ui::widget::text_field("isteğe bağlı", &l[2]).on_input(move |v| msg(Event::Layer(j, 2, v))).width(lw[2]),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+        }
+        let total: f64 = pv.layers.iter().filter_map(|l| number(&l[1]).ok().flatten()).sum();
+        form = form.wide(table).wide(
+            row![
+                words::secondary(ADD_LAYER, Some(msg(Event::AddLayer))),
+                words::ghost(REMOVE_LAYER, (pv.layers.len() > 1).then(|| msg(Event::RemoveLayer))),
+                space::horizontal().width(Fill),
+                label::caption(format!("Toplam {} m", comma(total, 2))).style(muted),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
     }
-    let head = ["Bileşen", "Genişlik (m)", "Enine eğim (%)"];
-    let widths = [140.0, 120.0, 120.0];
-    let mut table = Column::new().spacing(3);
-    table = table.push(head.iter().zip(widths).fold(row![].spacing(4), |r, (h, wd)| r.push(label::caption(*h).style(muted).width(wd))));
+
+    // Right: the side's components and its end condition.
+    let widths = [140.0, 100.0, 100.0];
+    let mut parts = Column::new().spacing(3).push(head(["Bileşen", "Genişlik (m)", "Enine eğim (%)"], widths));
     for (j, p) in side.parts.iter().enumerate() {
         let kind = Select::new(KINDS.iter().map(|k| Choice::new((*k).to_owned())), Some(p.kind), move |k| msg(Event::PartKind(j, k)));
-        table = table.push(
+        parts = parts.push(
             row![
                 container(kind).width(widths[0]),
                 kentos_ui::widget::text_field("3,5", &p.width).on_input(move |v| msg(Event::Part(j, 0, v))).width(widths[1]),
@@ -1345,34 +1547,42 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
             .align_y(Center),
         );
     }
-    let title = if editing_right { "Sağ yanın bileşenleri (eksenden dışa)" } else { "Sol yanın bileşenleri (eksenden dışa)" };
-    col = col.push(words::field(title, table, None)).push(
-        row![
-            words::secondary(ADD, Some(msg(Event::Add))),
-            words::ghost(REMOVE_PART, (!side.parts.is_empty()).then(|| msg(Event::RemovePart))),
-        ]
-        .spacing(8),
-    );
-    let end = |hint: &'a str, value: &'a str, k: usize| {
-        kentos_ui::widget::text_field(hint, value).on_input(move |v| msg(Event::End(k, v))).width(80)
-    };
-    let mut ends = row![
-        words::field("Yarma şevi (y/d)", end("1", &side.cut, 0), None),
-        words::field("Dolgu şevi (y/d)", end("1,5", &side.fill, 1), None),
-        words::check(side.ditch, "Yarmada hendek", Some(msg(Event::Ditch))),
+    let mut right = Form::new()
+        .label_width(110.0)
+        .section(if editing_right { "Sağ yanın bileşenleri (eksenden dışa)" } else { "Sol yanın bileşenleri (eksenden dışa)" })
+        .wide(parts)
+        .wide(
+            row![
+                words::secondary(ADD, Some(msg(Event::Add))),
+                words::ghost(REMOVE_PART, (!side.parts.is_empty()).then(|| msg(Event::RemovePart))),
+            ]
+            .spacing(8),
+        )
+        .section(if editing_right { "Sağ yanın uç koşulu" } else { "Sol yanın uç koşulu" })
+        .field("Yarma şevi (y/d)", end("1", &side.cut, 0))
+        .field("Dolgu şevi (y/d)", end("1,5", &side.fill, 1))
+        .row(words::check(side.ditch, "Yarmada hendek", Some(msg(Event::Ditch))));
+    if side.ditch {
+        right = right
+            .field("İç şev (y/d)", end("2", &side.fore, 2))
+            .field("Derinlik (m)", end("0,5", &side.depth, 3))
+            .field("Taban (m)", end("0", &side.bottom, 4))
+            .help("Boş taban: V hendek.");
+    }
+    column![
+        picture,
+        summary,
+        row![container(form).width(typography::scaled(400.0)), container(right).width(Fill)].spacing(typography::scaled(20.0)),
+        label::caption("Değerler KGM'nin standardından ya da projeden yazılır; KentOS öntanımlı sayı vermez.").style(muted),
     ]
     .spacing(10)
-    .align_y(iced::alignment::Vertical::Bottom);
-    if side.ditch {
-        ends = ends
-            .push(words::field("İç şev (y/d)", end("2", &side.fore, 2), None))
-            .push(words::field("Derinlik (m)", end("0,5", &side.depth, 3), None))
-            .push(words::field("Taban (m)", end("0", &side.bottom, 4), None));
-    }
-    col = col.push(ends).push(
-        label::caption("Değerler KGM'nin standardından ya da projeden yazılır; KentOS öntanımlı sayı vermez.").style(muted),
-    );
-    col.into()
+    .padding(iced::Padding::default().right(14))
+    .into()
+}
+
+/// The core's pavement of a definition (the volumes' conversion, one place).
+fn road_volumes_core_pavement(p: &kentos_commands::PavementDef) -> kentos_road::section::pavement::Pavement {
+    kentos_native_application::road_volumes::core_pavement(p)
 }
 
 /// The alignments (id, name), the profiles (id, name, alignment) and the surfaces (id, name) the lists offer.
@@ -1392,6 +1602,22 @@ fn kind_words(k: Kind) -> &'static str {
 /// The chart's height.
 const CHART_HEIGHT: f32 = 230.0;
 
+/// The part of a line (offsets increasing) between offsets `a` and `b`, its ends on it.
+fn clip_line(line: &[[f64; 2]], a: f64, b: f64) -> Vec<[f64; 2]> {
+    let at = |o: f64| {
+        let i = line.partition_point(|p| p[0] < o).clamp(1, line.len().max(2) - 1);
+        let (p, q) = (line[i - 1], line[i]);
+        if q[0] == p[0] { [o, q[1]] } else { [o, p[1] + (q[1] - p[1]) * (o - p[0]) / (q[0] - p[0])] }
+    };
+    if line.len() < 2 {
+        return Vec::new();
+    }
+    let mut out = vec![at(a)];
+    out.extend(line.iter().copied().filter(|p| p[0] > a && p[0] < b));
+    out.push(at(b));
+    out
+}
+
 /// A section drawn: the terrain, the platform and slopes, the daylight points, the axis and the grids.
 /// A section drawn (the split views draw one too, road_views_window.rs).
 pub(crate) struct Chart<'a> {
@@ -1400,6 +1626,8 @@ pub(crate) struct Chart<'a> {
     pub(crate) sample: Option<(Vec<GroundPoint>, tpl::Section)>,
     /// The vertical exaggeration; none fills the height.
     pub(crate) exaggeration: Option<f64>,
+    /// The pavement's layer bottoms on the sample (the last the formation); a row draws its own.
+    pub(crate) layers: Option<Vec<Vec<[f64; 2]>>>,
 }
 
 impl canvas::Program<Message> for Chart<'_> {
@@ -1494,6 +1722,40 @@ impl canvas::Program<Message> for Chart<'_> {
             }
         });
         frame.stroke(&terrain, Stroke::default().with_color(t.text).with_width(1.4));
+        // The pavement (docs/adr/0930 §3): each layer a band between the line above it (the finish grade for the first)
+        // and its bottom, toned from dark to light; the formation dashed.
+        let bottoms: Option<&Vec<Vec<[f64; 2]>>> = self.row.and_then(|r| r.pavement.as_ref()).map(|p| &p.bottoms).or(self.layers.as_ref());
+        if let Some(bottoms) = bottoms {
+            let n = bottoms.len().max(1) as f32;
+            let mut above: Vec<[f64; 2]> = Vec::new();
+            for (k, b) in bottoms.iter().enumerate() {
+                let (Some(first), Some(last)) = (b.first(), b.last()) else { continue };
+                let top = if k == 0 { clip_line(&design, first[0], last[0]) } else { above.clone() };
+                let band = Path::new(|p| {
+                    for (i, q) in top.iter().enumerate() {
+                        let at = Point::new(x(q[0]), y(q[1]));
+                        if i == 0 { p.move_to(at) } else { p.line_to(at) }
+                    }
+                    for q in b.iter().rev() {
+                        p.line_to(Point::new(x(q[0]), y(q[1])));
+                    }
+                    p.close();
+                });
+                let tone = 0.55 - 0.4 * (k as f32) / n;
+                frame.fill(&band, Color { a: tone, ..t.muted });
+                frame.stroke(&band, thin(Color { a: 0.8, ..t.muted }));
+                above = b.clone();
+            }
+            if let Some(f) = bottoms.last() {
+                let formation = Path::new(|p| {
+                    for (i, q) in f.iter().enumerate() {
+                        let at = Point::new(x(q[0]), y(q[1]));
+                        if i == 0 { p.move_to(at) } else { p.line_to(at) }
+                    }
+                });
+                frame.stroke(&formation, Stroke { line_dash: LineDash { segments: &[6.0, 3.0], offset: 0 }, ..Stroke::default().with_color(t.accent).with_width(1.8) });
+            }
+        }
         if design.len() > 1 {
             let line = Path::new(|b| {
                 for (i, p) in design.iter().enumerate() {

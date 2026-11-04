@@ -379,7 +379,7 @@ impl App {
         .width(Fill)
         .height(upper);
         let section: Element<'_, Message> = match shown {
-            Some((_, r)) => iced::widget::canvas(crate::section_window::Chart { row: Some(r), sample: None, exaggeration: None })
+            Some((_, r)) => iced::widget::canvas(crate::section_window::Chart { row: Some(r), sample: None, exaggeration: None, layers: None })
                 .width(Fill)
                 .height(lower)
                 .into(),

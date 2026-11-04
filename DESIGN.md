@@ -582,6 +582,12 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
   Sonuç yokken yerinde tek soluk cümle durur.
 - **Alt çubuk.** Solda durum yazar, sağda Kapat ve tek birincil eylem durur (yazan iş: “Yeni boykesit olarak yaz”).
   Yazılacak bir şey yoksa birincil eylem kapalıdır.
+- **Tablo formda:** birkaç sütunlu girdi tablosu (bileşenler, tabakalar, katsayılar) `Form::wide` ile etiket sütunu
+  dahil bütün genişliği alır; etiketin sağına sıkıştırılmaz.
+- **Ölü denetim gösterilmez:** seçili şeye uymayan satır gizlenir. Örnek: Enkesit'te Çizime satırı ve Aksa yeniden bağla
+  yalnız kesit takımında görünür.
+- Taşınan pencereler: Kırmızı kot önerisi (Y26.0), Kübaj (Y26.3), Enkesit'in tip kesit düzenleyicisi (Y26.3). Öbürleri
+  sırayla taşınır.
 - Ölçüm (Kırmızı kot önerisi, 1440 × 900):
   - Önce: dört ayar tek satırdaydı. Sonuçlar 20 anahtar–değer satırlık tek sütundu. Üç eşit düğme vardı, birincil
     yoktu.
