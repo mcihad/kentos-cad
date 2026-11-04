@@ -1170,6 +1170,11 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<VolumeRule>,
+    /// The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
+    /// `A + κ·Q`; the average end area method only.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub curve: bool,
 }
 
 /// An earthwork volume's rule (docs/adr/0930 §2): the road's top (Yol) or the formation (Formasyon) against the ground
@@ -2768,6 +2773,9 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
         }
         let sections = v.method != VolumeMethod::Surfaces;
+        if v.curve && v.method != VolumeMethod::EndArea {
+            return fail(at("curve"), "kurp düzeltmesi yalnız ortalama alan yönteminde olur");
+        }
         if !sections && (!v.strip.is_empty() || v.bench.is_some()) {
             return fail(at("method"), "sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır");
         }

@@ -2415,6 +2415,9 @@ def document(d):
            for s in road.get("sections", [])):
         # A sample line set's clip, breaks method or curve step (docs/adr/0933 §3).
         schema = max(schema, 166)
+    if any(v.get("curve") for v in road.get("volumes", [])):
+        # An earthwork volume's curve correction (docs/adr/0934 §2).
+        schema = max(schema, 167)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3285,7 +3288,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-167.kcad"] = container(root(cmap(parts), version=uint(167)))
+    files["schema-version-168.kcad"] = container(root(cmap(parts), version=uint(168)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5635,6 +5638,12 @@ def build():
     assert bd.count(b"\x67version\x18\xa6") == 1, "the breaks are schema 166"
     out["road-section-breaks.kcad"] = container(bd)
     out["broken/road-section-breaks-in-schema-165.kcad"] = container(bd.replace(b"\x67version\x18\xa6", b"\x67version\x18\xa5"))
+    # Schema 167 (docs/adr/0934 §2): an earthwork volume corrected on a curve; schema 166 refuses it as unknown.
+    curved = load("road-volume-curve.json")
+    cd = document(curved)
+    assert cd.count(b"\x67version\x18\xa7") == 1, "the curve correction is schema 167"
+    out["road-volume-curve.kcad"] = container(cd)
+    out["broken/road-volume-curve-in-schema-166.kcad"] = container(cd.replace(b"\x67version\x18\xa7", b"\x67version\x18\xa6"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

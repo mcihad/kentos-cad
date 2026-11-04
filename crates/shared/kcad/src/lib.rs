@@ -763,11 +763,13 @@ pub const SCHEMA_WITH_ROAD_PAVEMENT: u32 = 164;
 pub const SCHEMA_WITH_ROAD_PIVOT: u32 = 165;
 /// Schema 166 (docs/adr/0933 §3): a sample line set's `clip`, its `breaks` station method and a range's `curve` step.
 pub const SCHEMA_WITH_SECTION_BREAKS: u32 = 166;
+/// Schema 167 (docs/adr/0934 §2): an earthwork volume's `curve`, the correction on a curve by the sections' moments.
+pub const SCHEMA_WITH_VOLUME_CURVE: u32 = 167;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 164] = [
+pub const SCHEMAS: [u32; 165] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -932,6 +934,7 @@ pub const SCHEMAS: [u32; 164] = [
     SCHEMA_WITH_ROAD_PAVEMENT,
     SCHEMA_WITH_ROAD_PIVOT,
     SCHEMA_WITH_SECTION_BREAKS,
+    SCHEMA_WITH_VOLUME_CURVE,
 ];
 
 /// The file a drawing is saved as.

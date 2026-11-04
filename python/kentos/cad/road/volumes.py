@@ -179,15 +179,16 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
     """``road.volumes.edit`` v1. Kübaj hesabını düzenle: Yol projesinin kübaj hesabını
     (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun
     (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama
-    alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ +
-    A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda
-    üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın
-    istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir;
-    artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı
-    katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı
-    (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel
-    toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu
-    yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik ×
+    alan L·(A₀ + A₁)/2 (curve ile kurpta kesitlerin momentleriyle etkin alan A + κQ,
+    Pappus; yalnız endArea), prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ +
+    4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler
+    planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to
+    aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını
+    verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS
+    öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak
+    kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre,
+    bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi
+    bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik ×
     yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule
     kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround
     Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil
@@ -219,6 +220,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
+        curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
@@ -231,34 +233,36 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
     ) -> VolumesWritten:
         """Kübaj hesabını düzenle: Yol projesinin kübaj hesabını (volume: kimliği ya da adı;
         yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem
-        (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal
-        iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst
-        yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu
-        ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut)
-        ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar,
-        çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde
-        strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin
-        kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş
-        kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height:
-        basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya
-        katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla):
-        roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel
-        Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip
-        ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister;
-        rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her
-        kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden
-        bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya
-        da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez
-        (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj
-        silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume,
-        volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision,
-        revision_conflict.
+        (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 (curve ile
+        kurpta kesitlerin momentleriyle etkin alan A + κQ, Pappus; yalnız endArea),
+        prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces
+        koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur).
+        Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının
+        kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen
+        satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit
+        yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir:
+        kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı
+        kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun
+        altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı
+        ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun
+        adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil
+        Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı
+        kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde
+        üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin.
+        Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora
+        bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın
+        kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj
+        değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir
+        Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project,
+        unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume,
+        invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
             operation:
             bench: The fill's foundation benched; null takes it off.
             corridor:
+            curve: The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.
             expected_revision:
             factors:
             method:
@@ -282,6 +286,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             operation=operation,
             bench=bench,
             corridor=corridor,
+            curve=curve,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
@@ -299,6 +304,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
+        curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
@@ -314,6 +320,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             operation=operation,
             bench=bench,
             corridor=corridor,
+            curve=curve,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
@@ -331,6 +338,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
+        curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
@@ -346,6 +354,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             operation=operation,
             bench=bench,
             corridor=corridor,
+            curve=curve,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
@@ -363,6 +372,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
+        curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         factors: Sequence[VolumeFactorDef] | None | Unset = UNSET,
         method: VolumeMethod | VolumeMethodName | None | Unset = UNSET,
@@ -383,6 +393,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             operation=operation,
             bench=bench,
             corridor=corridor,
+            curve=curve,
             expected_revision=expected_revision,
             factors=_opt(factors, lambda x: list(x)),
             method=method,
@@ -399,19 +410,21 @@ edit = _RoadVolumesEdit()
 
 class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQueried]):
     """``road.volumes.query`` v1. Kübajı sorgula: Yol projesinin kübaj hesaplarını bugün
-    hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık
-    iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok),
-    aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun
-    birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş;
-    surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi
-    olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı
-    hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı
-    varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla);
-    hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval):
-    onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan
-    aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered,
-    volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume,
-    invalid_volume.
+    hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Kurp düzeltmeli hesapta kazı
+    ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit
+    yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın
+    satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen
+    aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş
+    kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve
+    düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği
+    alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş
+    kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin
+    üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka
+    sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay
+    (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da
+    kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt,
+    volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project,
+    unknown_volume, invalid_volume.
     """
     __slots__ = ()
     id = "road.volumes.query"
@@ -432,18 +445,20 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
         expected: Expected | None = None,
     ) -> VolumesQueried:
         """Kübajı sorgula: Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini
-        verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler,
-        kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları,
-        kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı
-        (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu
-        plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş
-        kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural
-        (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad,
-        malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile
-        yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların
-        farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale,
-        volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed.
-        Retler: not_a_road_project, unknown_volume, invalid_volume.
+        verir; hiçbir şey yazmaz. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş
+        olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan
+        aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki
+        kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın
+        ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli
+        toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces
+        yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan
+        aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri
+        (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka
+        hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa
+        nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar,
+        bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar:
+        corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored,
+        volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.
 
         Args:
             doc: The drawing it works on.

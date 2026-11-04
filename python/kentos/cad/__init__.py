@@ -3455,6 +3455,7 @@ __all__ = [
     "VolumeApprovalDef",
     "VolumeApprovalReport",
     "VolumeBenchDef",
+    "VolumeCurve",
     "VolumeDef",
     "VolumeFactorDef",
     "VolumeLayer",

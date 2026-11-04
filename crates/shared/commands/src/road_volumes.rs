@@ -66,6 +66,10 @@ pub struct VolumesEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<VolumeRule>,
+    /// The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curve: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -74,6 +78,22 @@ pub struct VolumesEdit {
 
 /// A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none
 /// where a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the
+/// The curve correction's effect on a volume (docs/adr/0934): the corrected less the plain cut and fill (m³), and the
+/// stretches left plain because a section reaches past its curve's centre.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeCurve {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub plain: u32,
+}
+
 /// running totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -192,6 +212,11 @@ pub struct VolumeReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
+    /// With the curve correction (docs/adr/0934): how much it changed the cut and the fill (m³; the cut and fill above
+    /// are the corrected ones).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curve: Option<VolumeCurve>,
 }
 
 /// A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0930 §2).

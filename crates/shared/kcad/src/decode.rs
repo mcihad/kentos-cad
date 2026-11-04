@@ -663,6 +663,11 @@ pub(crate) fn road_has_section_breaks(road: &kentos_contracts::RoadSettings) -> 
     })
 }
 
+/// Whether road settings carry schema 167's field: an earthwork volume's curve correction (docs/adr/0934 §2).
+pub(crate) fn road_has_volume_curve(road: &kentos_contracts::RoadSettings) -> bool {
+    road.volumes.iter().any(|v| v.curve)
+}
+
 fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
     let (mut drawing_unit, mut second_srid) = (None, None);
@@ -1290,6 +1295,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_pivot && road_has_pivot(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 165 ister"));
+                }
+                if !has.volume_curve && road_has_volume_curve(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "kübajın kurp düzeltmesi şema 167 ister"));
                 }
                 if !has.section_breaks && road_has_section_breaks(&v) {
                     return Err(r.fail_at(

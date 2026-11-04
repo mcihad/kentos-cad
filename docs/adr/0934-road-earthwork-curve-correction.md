@@ -1,6 +1,6 @@
 # 0934 — KentOS Yol: kurpta kübaj düzeltmesi (Pappus)
 
-Tarih: 2026-11-04. plan/road.md Y30 (ROAD-VOL-03). Durum: Y30.1 kabul; Y30.2–Y30.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y30 (ROAD-VOL-03). Durum: Y30.1–Y30.2 kabul; Y30.3 bu belgeyle ilerler.
 
 ## Dayanak
 
@@ -34,6 +34,42 @@ Tarih: 2026-11-04. plan/road.md Y30 (ROAD-VOL-03). Durum: Y30.1 kabul; Y30.2–Y
   yerde bölünür. Sıyırma kalınlığı alanlarla aynı biçimde uygulanır.
 - **`volume::effective`, `end_areas_curved`:** kesit kurbun merkezini geçiyorsa (`1 + κ·o ≤ 0`) etkin alan yoktur ve
   aralık sayılmaz. Bu, Y29'daki kesişen kolların hacimdeki karşılığıdır: o kesit kendisiyle örtüşür.
+
+### §2 Kübaj (Y30.2, KCAD şema 167)
+
+- **`VolumeDef.curve`:** yalnız `endArea` ile olur (Civil 3D gibi). Prizmoidal ve yüzeyler yönteminde kural reddeder.
+  Kayıtta 167. şemadadır.
+- **Hesap:** her kesitte yolun kazı ve dolgusunun ağırlık merkezi alınır (moment/alan). Eğrilik aksın o km'sindedir:
+  eklemde sonraki eleman sayılır. Uzanım kesitin en dış noktalarıdır.
+  - Kural ya da üstyapı kazıyı veya dolguyu değiştirirse (formasyon) düzeltme aynı ağırlık merkeziyle ölçeklenir:
+    `A(1 + κe)`.
+  - Sıyırma, diş kazısı ve tabaka hacimleri düzeltilmez.
+- **Merkezi geçen kesit:** o aralık düz ortalama alanla sayılır ve `volume_curve_past_centre` uyarısı verilir. Uygulama
+  kuralı çekirdeğin `volume::effective`'inden alır.
+- **Rapor:** kazı ve dolgu düzeltilmiş değerlerdir. `curve` düzeltmenin etkisini (Δ kazı, Δ dolgu) ve düz kalan aralık
+  sayısını verir. Kurp düzeltmesi kapalıyken çıktı bayt bayt eskisidir.
+- **Ortak durumlar:** 7 yeni durum vardır (düzenleme 4, sorgu 3). Referans momentleri §1'in çokgen yöntemiyle, eğriliği
+  bağımsız aks referansından alır.
+
+**Ölçüm 1 — gerçeği bilinen deney.** R 60 m'lik 90° sola kurp, arazi kurbun merkezine göre dönel:
+z = 100 + 0,2·(r − 60). Dış yan yarma, iç yan dolgudur ve daire boyunca her kesit aynıdır. Kesin hacim Pappus'tan:
+kazı 173,80, dolgu 132,49 m³. Daire kısmının (km 140–234,25) KentOS hacimleri ve gerçeğe göre hataları:
+
+| Kurpta örnekleme | Ortalama alan | Ortalama alan + kurp | Yüzey bindirme |
+|---|---|---|---|
+| 10 m | kazı −%3,8, dolgu +%4,1 | kazı +%0,3, dolgu −%0,5 | kazı −%6,2, dolgu +%6,7 |
+| 5 m | kazı −%3,8, dolgu +%4,1 | kazı +%0,3, dolgu −%0,6 | kazı −%1,3, dolgu +%1,3 |
+| 2 m | kazı −%3,7, dolgu +%4,0 | kazı +%0,5, dolgu −%0,7 | kazı +%0,3, dolgu −%0,5 |
+
+- Düz ortalama alanın hatası bir **sapmadır**: sıklaştırma onu gidermez.
+- Yüzey bindirme sıklaştırdıkça gerçeğe yaklaşır, çünkü kesitleri planda bağlar ve kurbu kendiliğinden içerir.
+- Kurp düzeltmesi 10 m'de bile yüzey bindirmenin 2 m'de vardığı yere varır. Ortak kalıntı (+%0,3), dönel arazinin
+  2,5 m'lik üçgen ağla yaklaşıklığından gelir.
+
+**Ölçüm 2 — örnek proje** (samples/yol-ornegi.kcad, R 300 m, kesitler aşağı yukarı simetrik): kurp düzeltmesi kazıyı
++5,6 m³ (%0,04) değiştirir. Yöntemlerin birbirinden farkı (ortalama alan, prizmoidal ve yüzeyler arasında %0,2–0,4)
+bundan büyüktür. ODOT'un "aks iki yana kıvrılıyorsa ya da kesit simetrikse düzeltme gerekmeyebilir" sözü burada
+doğrulanır. Etki, ağırlık merkezinin ötelemesinin yarıçapa oranıdır (κe).
 
 ## Doğrulama
 

@@ -73,10 +73,11 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
                 && input.strip.is_none()
                 && input.bench.is_none()
                 && input.rule.is_none()
+                && input.curve.is_none()
             {
                 return Err(fail(
                     codes::INVALID_VOLUME,
-                    "Değiştirilecek bir şey yok: name, method, factors, strip, bench ya da rule verin.".into(),
+                    "Değiştirilecek bir şey yok: name, method, factors, strip, bench, rule ya da curve verin.".into(),
                     "",
                 ));
             }
@@ -98,6 +99,9 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
             }
             if let Some(b) = &input.bench {
                 d.bench = b.clone();
+            }
+            if let Some(c) = input.curve {
+                d.curve = c;
             }
             if d != *old {
                 d.revision = old.revision.saturating_add(1);
@@ -130,6 +134,7 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
                 bench: input.bench.clone().flatten(),
                 approved: None,
                 rule: input.rule,
+                curve: input.curve.unwrap_or(false),
             });
             Some(id)
         }

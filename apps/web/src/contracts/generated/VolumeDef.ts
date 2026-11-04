@@ -26,4 +26,9 @@ approved?: VolumeApprovalDef,
  * Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
  * ground, stripped when it strips (as before the rule).
  */
-rule?: VolumeRule, };
+rule?: VolumeRule, 
+/**
+ * The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
+ * `A + κ·Q`; the average end area method only.
+ */
+curve?: boolean, };

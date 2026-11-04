@@ -30,4 +30,8 @@ bench?: VolumeBenchDef | null,
 /**
  * Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
  */
-rule?: VolumeRule, expectedRevision?: string, };
+rule?: VolumeRule, 
+/**
+ * The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.
+ */
+curve?: boolean, expectedRevision?: string, };

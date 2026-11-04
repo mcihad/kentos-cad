@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 167 (docs/adr/0934 §2): an earthwork volume's curve correction.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_curve) {
+        return crate::SCHEMA_WITH_VOLUME_CURVE;
+    }
     // Schema 166 (docs/adr/0933 §3): a sample line set's clip, breaks method or curve step.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_section_breaks) {
         return crate::SCHEMA_WITH_SECTION_BREAKS;

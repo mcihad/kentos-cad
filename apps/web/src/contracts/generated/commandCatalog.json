@@ -40440,7 +40440,7 @@
       "id": "road.volumes.edit",
       "version": 1,
       "title": "Kübaj hesabını düzenle",
-      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2, prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 (curve ile kurpta kesitlerin momentleriyle etkin alan A + κQ, Pappus; yalnız endArea), prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
       "aliases": [
         "kubaj",
         "kübaj"
@@ -40474,6 +40474,13 @@
           "corridor": {
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "curve": {
+            "description": "The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.",
+            "type": [
+              "boolean",
               "null"
             ]
           },
@@ -40646,7 +40653,7 @@
       "id": "road.volumes.query",
       "version": 1,
       "title": "Kübajı sorgula",
-      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
+      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
       "aliases": [
         "kubajsor",
         "kübajsor"
@@ -40722,6 +40729,7 @@
           "pavement_unbuilt",
           "volume_uncovered",
           "volume_unfactored",
+          "volume_curve_past_centre",
           "volume_changed"
         ]
       },
@@ -85263,6 +85271,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kesit takımının kolları kurbun iç yanında kesişiyor; kesitler aynı araziyi iki kez sayar."
+    },
+    {
+      "code": "volume_curve_past_centre",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kübajın bir kesiti kurbun merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı."
     },
     {
       "code": "section_open",
@@ -169650,6 +169664,33 @@
       ],
       "type": "object"
     },
+    "VolumeCurve": {
+      "description": "A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none\nwhere a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the\nThe curve correction's effect on a volume (docs/adr/0934): the corrected less the plain cut and fill (m³), and the\nstretches left plain because a section reaches past its curve's centre.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "plain": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "cut",
+        "fill",
+        "plain"
+      ],
+      "type": "object"
+    },
     "VolumeDef": {
       "additionalProperties": false,
       "description": "An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.",
@@ -169678,6 +169719,10 @@
         },
         "corridor": {
           "type": "string"
+        },
+        "curve": {
+          "description": "The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area\n`A + κ·Q`; the average end area method only.",
+          "type": "boolean"
         },
         "factors": {
           "items": {
@@ -169869,6 +169914,17 @@
         "corridor": {
           "type": "string"
         },
+        "curve": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeCurve"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "With the curve correction (docs/adr/0934): how much it changed the cut and the fill (m³; the cut and fill above\nare the corrected ones)."
+        },
         "cut": {
           "format": "double",
           "type": "number",
@@ -170001,7 +170057,7 @@
       "type": "object"
     },
     "VolumeRow": {
-      "description": "A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none\nwhere a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the\nrunning totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.",
+      "description": "running totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.",
       "properties": {
         "bench": {
           "description": "The benches cut over it (m³), where the volume benches.",

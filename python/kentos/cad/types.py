@@ -84946,11 +84946,44 @@ class VolumeBenchDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeCurve(_Model):
+    """A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none
+    where a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the
+    The curve correction's effect on a volume (docs/adr/0934): the corrected less the plain cut and fill (m³), and the
+    stretches left plain because a section reaches past its curve's centre.
+    Attributes:
+        cut: Unit: volume.
+        fill: Unit: volume.
+        plain: Unit: count.
+    """
+    cut: float
+    fill: float
+    plain: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["plain"] = self.plain
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeCurve:
+        return cls(
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            plain=data["plain"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeDef(_Model):
     """An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
     Attributes:
         approved: Its figures as approved; an approved volume's definition does not change.
         bench: The fill's foundation benched (a section method's).
+        curve: The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
+            `A + κ·Q`; the average end area method only.
         revision: Unit: version.
         rule: Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
             ground, stripped when it strips (as before the rule).
@@ -84962,6 +84995,7 @@ class VolumeDef(_Model):
     method: VolumeMethod | VolumeMethodName
     approved: VolumeApprovalDef | None | Unset = UNSET
     bench: VolumeBenchDef | None | Unset = UNSET
+    curve: bool | Unset = UNSET
     factors: list[VolumeFactorDef] | Unset = UNSET
     revision: int | Unset = UNSET
     rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
@@ -84977,6 +85011,8 @@ class VolumeDef(_Model):
             out["approved"] = None if self.approved is None else self.approved.to_json()
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else self.bench.to_json()
+        if self.curve is not UNSET:
+            out["curve"] = self.curve
         if self.factors is not UNSET:
             out["factors"] = [e0.to_json() for e0 in self.factors]
         if self.revision is not UNSET:
@@ -84996,6 +85032,7 @@ class VolumeDef(_Model):
             method=_enum_in(VolumeMethod, data["method"]),
             approved=UNSET if "approved" not in data else None if data["approved"] is None else VolumeApprovalDef.from_json(data["approved"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
+            curve=data.get("curve", UNSET),
             factors=[VolumeFactorDef.from_json(e0) for e0 in data["factors"]] if "factors" in data else UNSET,
             revision=data.get("revision", UNSET),
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
@@ -85114,6 +85151,8 @@ class VolumeReport(_Model):
         gaps: Unit: m.
         approval: The approval against today's figures, where approved.
         bench: The benches cut in all (m³), where the volume benches. Unit: volume.
+        curve: With the curve correction (docs/adr/0934): how much it changed the cut and the fill (m³; the cut and fill above
+            are the corrected ones).
         cut_area: Unit: area.
         fill_area: Unit: area.
         layers: The pavement layers its templates have, by name in the order met, with their volumes in all (m³). Empty without a
@@ -85136,6 +85175,7 @@ class VolumeReport(_Model):
     gaps: list[list[float]]
     approval: VolumeApprovalReport | None | Unset = UNSET
     bench: float | None | Unset = UNSET
+    curve: VolumeCurve | None | Unset = UNSET
     cut_area: float | None | Unset = UNSET
     fill_area: float | None | Unset = UNSET
     layers: list[VolumeLayer] | Unset = UNSET
@@ -85162,6 +85202,8 @@ class VolumeReport(_Model):
             out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else float(self.bench)
+        if self.curve is not UNSET:
+            out["curve"] = None if self.curve is None else self.curve.to_json()
         if self.cut_area is not UNSET:
             out["cutArea"] = None if self.cut_area is None else float(self.cut_area)
         if self.fill_area is not UNSET:
@@ -85195,6 +85237,7 @@ class VolumeReport(_Model):
             gaps=[[float(e1) for e1 in e0] for e0 in data["gaps"]],
             approval=UNSET if "approval" not in data else None if data["approval"] is None else VolumeApprovalReport.from_json(data["approval"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
+            curve=UNSET if "curve" not in data else None if data["curve"] is None else VolumeCurve.from_json(data["curve"]),
             cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
             fill_area=UNSET if "fillArea" not in data else None if data["fillArea"] is None else float(data["fillArea"]),
             layers=[VolumeLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
@@ -85207,9 +85250,7 @@ class VolumeReport(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class VolumeRow(_Model):
-    """A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none
-    where a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the
-    running totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.
+    """running totals of the factored cut, the factored fill and their difference (the mass ordinate) to its end.
     Attributes:
         from_: Unit: m.
         to: Unit: m.
@@ -85411,12 +85452,14 @@ class VolumesEdit(_Model):
     between surfaces or on a template without a pavement), `invalid_revision`, `revision_conflict`.
     Attributes:
         bench: The fill's foundation benched; null takes it off.
+        curve: The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.
         rule: Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
         strip: The topsoil stripped by stations; an empty list takes it off.
     """
     operation: RoadEditOperation | RoadEditOperationName
     bench: VolumeBenchDef | None | Unset = UNSET
     corridor: str | None | Unset = UNSET
+    curve: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     factors: list[VolumeFactorDef] | None | Unset = UNSET
     method: VolumeMethod | VolumeMethodName | None | Unset = UNSET
@@ -85432,6 +85475,8 @@ class VolumesEdit(_Model):
             out["bench"] = None if self.bench is None else self.bench.to_json()
         if self.corridor is not UNSET:
             out["corridor"] = self.corridor
+        if self.curve is not UNSET:
+            out["curve"] = self.curve
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.factors is not UNSET:
@@ -85454,6 +85499,7 @@ class VolumesEdit(_Model):
             operation=_enum_in(RoadEditOperation, data["operation"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
             corridor=data.get("corridor", UNSET),
+            curve=data.get("curve", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             factors=UNSET if "factors" not in data else None if data["factors"] is None else [VolumeFactorDef.from_json(e0) for e0 in data["factors"]],
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(VolumeMethod, data["method"]),
@@ -109639,6 +109685,7 @@ __all__ = [
     "VolumeApprovalDef",
     "VolumeApprovalReport",
     "VolumeBenchDef",
+    "VolumeCurve",
     "VolumeDef",
     "VolumeFactorDef",
     "VolumeLayer",

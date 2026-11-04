@@ -76,6 +76,8 @@ struct Raw {
     from: f64,
     to: f64,
     volumes: Option<(f64, f64)>,
+    /// The volumes without the curve correction, where it applied (docs/adr/0934).
+    plain: Option<(f64, f64)>,
     extra: Option<(f64, f64)>,
     /// Each report layer's volume over the stretch (docs/adr/0930 §2); empty without a pavement.
     layers: Vec<Option<f64>>,
@@ -90,6 +92,26 @@ struct Work {
     strip: f64,
     bench: f64,
     layers: Vec<Option<f64>>,
+    /// For the curve correction (docs/adr/0934): the road's cut and fill centroids' offsets (right positive; 0 without
+    /// area), the curvature there and the section's farthest offsets left and right.
+    centroid: (f64, f64),
+    curvature: f64,
+    reach: (f64, f64),
+}
+
+impl Work {
+    /// The cut and fill as they sweep along the curve, `A(1 + κ·e)`; none where the section reaches past the centre.
+    fn curved(&self) -> Option<(f64, f64)> {
+        // The core's rule (kentos_road::volume::effective, tested against Pappus): the moment Q = e·A.
+        let section = kentos_road::volume::CurvedSection {
+            station: 0.0,
+            areas: Some((self.cut, self.fill)),
+            moments: (self.cut * self.centroid.0, self.fill * self.centroid.1),
+            curvature: self.curvature,
+            reach: self.reach,
+        };
+        kentos_road::volume::effective(&section).flatten()
+    }
 }
 
 /// The core's pavement of a template's definition.
@@ -164,7 +186,9 @@ pub(crate) fn compute_on(
     }
     let (mut layer_list, layer_at) = layers_of(&pavements);
     let paved = !layer_list.is_empty();
-    let worked = !def.strip.is_empty() || bench.is_some() || paved || def.rule.is_some();
+    let curved = def.curve && def.method == VolumeMethod::EndArea;
+    let worked = !def.strip.is_empty() || bench.is_some() || paved || def.rule.is_some() || curved;
+    let mut past = 0u32;
     let unbuilt: std::cell::RefCell<Vec<f64>> = std::cell::RefCell::new(Vec::new());
     match def.method {
         // With stripping, benching, a pavement or a rule, each section's earthwork as the rule reads it.
@@ -178,7 +202,23 @@ pub(crate) fn compute_on(
                     let used = if topsoil { depth } else { 0.0 };
                     let e = tpl::earthwork(&sec, &terrain, used, bench);
                     let strip = if used == depth { e.strip } else { tpl::earthwork(&sec, &terrain, depth, None).strip };
-                    let mut w = Work { cut: e.cut, fill: e.fill, strip, bench: e.bench, layers: vec![None; layer_list.len()] };
+                    let (qc, qf) = if curved { tpl::moments(&sec, &terrain, used) } else { (0.0, 0.0) };
+                    let centroid = (if e.cut > 0.0 { qc / e.cut } else { 0.0 }, if e.fill > 0.0 { qf / e.fill } else { 0.0 });
+                    let curvature = if curved { made.sampler.alignment.core.at(s).map_or(0.0, |p| p.curvature) } else { 0.0 };
+                    let reach = (
+                        sec.left.points.last().map_or(0.0, |p| p[0]),
+                        sec.right.points.last().map_or(0.0, |p| p[0]),
+                    );
+                    let mut w = Work {
+                        cut: e.cut,
+                        fill: e.fill,
+                        strip,
+                        bench: e.bench,
+                        layers: vec![None; layer_list.len()],
+                        centroid,
+                        curvature,
+                        reach,
+                    };
                     if let Some(p) = &pavement {
                         let lowered: Vec<_> =
                             terrain.iter().map(|g| kentos_road::section::GroundPoint { z: g.z.map(|z| z - used), ..*g }).collect();
@@ -209,15 +249,32 @@ pub(crate) fn compute_on(
                         (Some(_), Some(_)) => work(s0).zip(work(s1)),
                         _ => None,
                     };
+                    let mut plain = None;
                     let both: Option<Work> = ends.and_then(|(a, b)| match def.method {
                         VolumeMethod::EndArea => {
                             let avg = |x: f64, y: f64| l * (x + y) / 2.0;
+                            // On a curve the effective areas (docs/adr/0934); a section past the centre keeps the
+                            // stretch plain, and says so.
+                            let (cut, fill) = match (curved, a.curved(), b.curved()) {
+                                (true, Some(x), Some(y)) => {
+                                    plain = Some((avg(a.cut, b.cut), avg(a.fill, b.fill)));
+                                    (avg(x.0, y.0), avg(x.1, y.1))
+                                }
+                                (true, _, _) => {
+                                    past += 1;
+                                    (avg(a.cut, b.cut), avg(a.fill, b.fill))
+                                }
+                                _ => (avg(a.cut, b.cut), avg(a.fill, b.fill)),
+                            };
                             Some(Work {
-                                cut: avg(a.cut, b.cut),
-                                fill: avg(a.fill, b.fill),
+                                cut,
+                                fill,
                                 strip: avg(a.strip, b.strip),
                                 bench: avg(a.bench, b.bench),
                                 layers: a.layers.iter().zip(&b.layers).map(|(x, y)| x.zip(*y).map(|(x, y)| avg(x, y))).collect(),
+                                centroid: (0.0, 0.0),
+                                curvature: 0.0,
+                                reach: (0.0, 0.0),
                             })
                         }
                         _ => work((s0 + s1) / 2.0).map(|m| {
@@ -227,6 +284,9 @@ pub(crate) fn compute_on(
                                 fill: p(a.fill, m.fill, b.fill),
                                 strip: p(a.strip, m.strip, b.strip),
                                 bench: p(a.bench, m.bench, b.bench),
+                                centroid: (0.0, 0.0),
+                                curvature: 0.0,
+                                reach: (0.0, 0.0),
                                 layers: (0..a.layers.len())
                                     .map(|k| match (a.layers[k], m.layers[k], b.layers[k]) {
                                         (Some(x), Some(y), Some(z)) => Some(p(x, y, z)),
@@ -240,6 +300,7 @@ pub(crate) fn compute_on(
                         from: s0,
                         to: s1,
                         volumes: both.as_ref().map(|v| (v.cut, v.fill)),
+                        plain,
                         extra: both.as_ref().map(|v| (v.strip, v.bench)),
                         layers: if paved { both.map_or_else(|| vec![None; layer_list.len()], |v| v.layers) } else { Vec::new() },
                     });
@@ -262,7 +323,7 @@ pub(crate) fn compute_on(
                         },
                         _ => None,
                     };
-                    raws.push(Raw { from: s0, to: s1, volumes, extra: None, layers: Vec::new() });
+                    raws.push(Raw { from: s0, to: s1, volumes, plain: None, extra: None, layers: Vec::new() });
                 }
             }
         }
@@ -291,7 +352,7 @@ pub(crate) fn compute_on(
                         uncovered += v.uncovered;
                         (v.cut, v.fill)
                     });
-                    raws.push(Raw { from: s0, to: s1, volumes, extra: None, layers: Vec::new() });
+                    raws.push(Raw { from: s0, to: s1, volumes, plain: None, extra: None, layers: Vec::new() });
                 }
             }
         }
@@ -376,6 +437,15 @@ pub(crate) fn compute_on(
             ),
         ));
     }
+    if past > 0 {
+        warnings.push(warning(
+            codes::VOLUME_CURVE_PAST_CENTRE,
+            format!(
+                "“{}” kübajında {past} aralığın bir kesiti kurbun merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı. Kesit genişliğini kurbun yarıçapından küçük tutun.",
+                def.name
+            ),
+        ));
+    }
     if def.method == VolumeMethod::Surfaces && uncovered > 1e-6 {
         warnings.push(warning(
             codes::VOLUME_UNCOVERED,
@@ -414,6 +484,15 @@ pub(crate) fn compute_on(
         layers: layer_list,
         approval: None,
         problem: None,
+        curve: curved.then(|| {
+            let delta = |k: usize| {
+                raws.iter()
+                    .filter_map(|r| r.volumes.zip(r.plain))
+                    .map(|(v, p)| if k == 0 { v.0 - p.0 } else { v.1 - p.1 })
+                    .sum::<f64>()
+            };
+            kentos_commands::VolumeCurve { cut: delta(0), fill: delta(1), plain: past }
+        }),
     };
     let mut report = report;
     if let Some(a) = &def.approved {
@@ -516,6 +595,7 @@ pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
         layers: Vec::new(),
         approval: None,
         problem: Some(why),
+        curve: None,
     }
 }
 

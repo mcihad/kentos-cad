@@ -691,6 +691,9 @@ codes! {
     SECTION_SURFACE_GONE = "section_surface_gone", Warning, false, "Kesit takımının yüzeyi projede yok ya da kurulamıyor; arazi kesiti verilmedi.";
     /// A warning: a sample line set's lines meet on a curve's inside and it does not clip them (docs/adr/0933 §1).
     SECTION_LINES_CROSS = "section_lines_cross", Warning, false, "Kesit takımının kolları kurbun iç yanında kesişiyor; kesitler aynı araziyi iki kez sayar.";
+    /// A warning: a section of a curve-corrected volume reaches past its curve's centre; its stretches are plain
+    /// (docs/adr/0934 §2).
+    VOLUME_CURVE_PAST_CENTRE = "volume_curve_past_centre", Warning, false, "Kübajın bir kesiti kurbun merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı.";
     /// A warning: a side's slope meets the terrain nowhere on the swath (docs/adr/0903 §4).
     SECTION_OPEN = "section_open", Warning, false, "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin.";
     /// No superelevation schedule of the id or name.

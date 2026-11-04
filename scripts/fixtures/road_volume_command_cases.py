@@ -19,7 +19,9 @@ from fractions import Fraction as F
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_alignment_cases as aref  # noqa: E402
 import road_corridor_cases as cref  # noqa: E402
+import road_curve_volume_cases as crv  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_pavement_cases as pvref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
@@ -152,6 +154,10 @@ def earthwork(c, r, s, v, names=()):
     ground = [{"offset": F(g["offset"]), "z": None if g.get("z") is None else F(g["z"]) - used, "gap": g["gap"]}
               for g in row["ground"]]
     cut, fill = tref.areas(design, ground)
+    # The road's cut and fill centroids (docs/adr/0934): the regions as polygons, their shoelace moments.
+    regions = crv.polygons(design, ground)
+    moment = {k: sum((crv.shoelace(p)[1] for p in regions[k]), F(0)) for k in ("cut", "fill")}
+    centroid = (float(moment["cut"] / cut) if cut else 0.0, float(moment["fill"] / fill) if fill else 0.0)
     t = [(g["offset"], g["z"], g["gap"]) for g in ground]
     lo, hi = design[0][0], design[-1][0]
     stops = sorted({p[0] for p in design} | {g["offset"] for g in ground if lo <= g["offset"] <= hi})
@@ -195,10 +201,28 @@ def earthwork(c, r, s, v, names=()):
                 layers[names.index(l["name"])] = l["area"]
             if formation:
                 cut, fill = F(pv["formationCut"]), F(pv["formationFill"])
-    out = {"cut": float(cut), "fill": float(fill), "strip": float(depth * covered), "bench": 0.0, "layers": layers}
+    out = {"cut": float(cut), "fill": float(fill), "strip": float(depth * covered), "bench": 0.0, "layers": layers,
+           "centroid": centroid, "reach": (float(design[0][0]), float(design[-1][0])), "curvature": curvature(c, s)}
     if bench is not None:
         out["bench"] = float(benched * F(bench["height"]) / 2)
     return out
+
+
+def curvature(c, s):
+    """The alignment's curvature at station s (left turns positive), the later element at a join."""
+    import mpmath as mp
+    els = pcmd.ALIGNED[c["alignment"]].els
+    e, _ = aref.place_at(els, mp.mpf(s))
+    return float(e.curvature(mp.mpf(s) - e.station))
+
+
+def curved(e):
+    """A section's cut and fill swept along its curve, A(1 + κe); None past the centre (docs/adr/0934)."""
+    k = e["curvature"]
+    inside = e["reach"][0] if k > 0 else e["reach"][1]
+    if k != 0 and 1 + k * inside <= 0:
+        return None
+    return e["cut"] * (1 + k * e["centroid"][0]), e["fill"] * (1 + k * e["centroid"][1])
 
 
 def bbox(t):
@@ -251,14 +275,16 @@ def compute(v, corridors=CORRIDORS):
                 materials[l["name"]] = l.get("material")
     paved = bool(names)
     unbuilt = set()
-    worked = bool(v.get("strip")) or v.get("bench") is not None or paved or v.get("rule") is not None
+    curve = bool(v.get("curve")) and method == "endArea"
+    worked = bool(v.get("strip")) or v.get("bench") is not None or paved or v.get("rule") is not None or curve
+    past = 0
     for ri, reg in enumerate(regs):
         region = c["regions"][ri]
         for x, y in zip(reg["crosses"], reg["crosses"][1:]):
             s0, s1 = x["station"], y["station"]
             length = s1 - s0
             a, b = x["section"], y["section"]
-            vol = extra = None
+            vol = extra = plain = None
             lay = [None] * len(names) if paved else []
             if a is not None and b is not None and worked:
                 def ew(at):
@@ -276,6 +302,13 @@ def compute(v, corridors=CORRIDORS):
                     keys = ("cut", "fill", "strip", "bench")
                     if method == "endArea":
                         q = {k: length * (ea[k] + eb[k]) / 2 for k in keys}
+                        if curve:
+                            xa, xb = curved(ea), curved(eb)
+                            if xa is not None and xb is not None:
+                                plain = (q["cut"], q["fill"])
+                                q["cut"], q["fill"] = length * (xa[0] + xb[0]) / 2, length * (xa[1] + xb[1]) / 2
+                            else:
+                                past += 1
                         q["layers"] = [None if x is None or y is None else length * (x + y) / 2
                                        for x, y in zip(ea["layers"], eb["layers"])]
                     else:
@@ -305,13 +338,13 @@ def compute(v, corridors=CORRIDORS):
                         areas["fill"] += r["fillArea"]
                         areas["uncovered"] += r["uncovered"]
                         vol = (r["cut"], r["fill"])
-            raws.append((s0, s1, vol, extra, lay))
+            raws.append((s0, s1, vol, extra, lay, plain))
     text = lambda s: ccmd.km_text(c["alignment"], s)  # noqa: E731
     cut = fill = fcut = ffill = strip = benched = 0.0
     unfactored = 0
     rows = []
     totals = [0.0] * len(names)
-    for s0, s1, vol, extra, lay in raws:
+    for s0, s1, vol, extra, lay, _ in raws:
         cf, ff = factors_at(v, (s0 + s1) / 2)
         row = {"from": s0, "to": s1, "fromText": text(s0), "toText": text(s1)}
         if vol is not None:
@@ -339,7 +372,7 @@ def compute(v, corridors=CORRIDORS):
             row["fillFactor"] = ff
         row.update({"totalCut": fcut, "totalFill": ffill, "mass": fcut - ffill})
         rows.append(row)
-    gaps = sorted([list(g) for g in cr["gaps"]] + [[s0, s1] for s0, s1, vol, _, _ in raws if vol is None], key=lambda g: g[0])
+    gaps = sorted([list(g) for g in cr["gaps"]] + [[s0, s1] for s0, s1, vol, _, _, _ in raws if vol is None], key=lambda g: g[0])
     joined = []
     for g in gaps:
         if joined and g[0] <= joined[-1][1] + 1e-9:
@@ -356,6 +389,10 @@ def compute(v, corridors=CORRIDORS):
         more = f" ve {len(at) - 8} kesit daha" if len(at) > 8 else ""
         warnings.append(warn("pavement_unbuilt", f"“{v['name']}” kübajında şu kesitlerde üstyapı kurulamadı (kenar şevi "
                                                  f"son bileşenden yatık ya da bileşensiz yan): {words}{more}."))
+    if past:
+        warnings.append(warn("volume_curve_past_centre", f"“{v['name']}” kübajında {past} aralığın bir kesiti kurbun "
+                                                         "merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı. Kesit "
+                                                         "genişliğini kurbun yarıçapından küçük tutun."))
     if method == "surfaces" and areas["uncovered"] > 1e-6:
         warnings.append(warn("volume_uncovered", f"“{v['name']}” kübajında tasarım yüzeyinin {areas['uncovered']:.3f} m²'sini "
                                                  "arazi örtmüyor; o alanın hacmi yok."))
@@ -376,6 +413,10 @@ def compute(v, corridors=CORRIDORS):
     if names:
         report["layers"] = [{"name": n, **({"material": materials[n]} if materials[n] else {}), "volume": tot}
                             for n, tot in zip(names, totals)]
+    if curve:
+        dc = sum(vol[0] - p[0] for _, _, vol, _, _, p in raws if vol is not None and p is not None)
+        df = sum(vol[1] - p[1] for _, _, vol, _, _, p in raws if vol is not None and p is not None)
+        report["curve"] = {"cut": dc, "fill": df, "plain": past}
     if v.get("approved"):
         approval = compare(v["approved"], report)
         if approval["changed"]:
@@ -554,7 +595,7 @@ def edit_cases():
        failed("invalid_volume", "“Ana kübaj” kübaj hesabının koridoru değiştirilmez; başka koridor için yeni bir kübaj "
                                 "hesabı yazın.", "corridor"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "volume": "v-1"},
-       failed("invalid_volume", "Değiştirilecek bir şey yok: name, method, factors, strip, bench ya da rule verin."))
+       failed("invalid_volume", "Değiştirilecek bir şey yok: name, method, factors, strip, bench, rule ya da curve verin."))
     no("Yeni kübajın yöntemi yok", {k: val for k, val in base.items() if k != "method"},
        failed("invalid_volume", "Yeni kübaj hesabı için name, corridor ve method verilmeli.", "method"))
     no("Aynı ad", {**base, "name": "YAN kübaj"}, rulefail("bu adda başka bir kübaj hesabı var", "name"))
@@ -597,6 +638,14 @@ def edit_cases():
        failed("volume_in_use", "“Ana kübaj” kübajını şu Brüknerler kullanıyor: Ana Brükner; önce onları silin.", "volume"), used)
     no("Geçersiz beklenen sürüm", {"operation": "remove", "volume": "v-2", "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "remove", "volume": "v-2", "expectedRevision": "41"}, CONFLICT)
+    # Docs/adr/0934: the curve correction, the average end area method only.
+    ok("Kurp düzeltmesi açılır", {"operation": "set", "volume": "v-1", "curve": True},
+       put(0, {**V1, "curve": True, "revision": 2}), "v-1")
+    ok("Kurp düzeltmeli yeni kübaj", {**base, "curve": True}, START + [new("v-3", curve=True)], "v-3")
+    no("Prizmoidalde kurp düzeltmesi yok", {**base, "method": "prismoidal", "curve": True},
+       rulefail("kurp düzeltmesi yalnız ortalama alan yönteminde olur", "curve"))
+    no("Yüzeyler arasında kurp düzeltmesi yok", {"operation": "set", "volume": "v-2", "curve": True},
+       rulefail("kurp düzeltmesi yalnız ortalama alan yönteminde olur", "curve"))
     return file("road.volumes.edit", "Kübaj hesabını düzenle", setup(), cases)
 
 
@@ -699,6 +748,11 @@ def query_cases():
     no("Kurulamayan yüzeyle yüzeyler arası", {"volume": "v-2"},
        failed("invalid_volume", "“Yan koridor” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.", "corridor"),
        START, [ccmd.C1, {**ccmd.C2, "surface": "t-2"}])
+    # Docs/adr/0934: the curve correction on the main corridor's curve; with the topsoil stripped; the factors apply.
+    q("Kurp düzeltmesi: momentlerle etkin alan", {"volume": "v-1"}, [{**V1, "curve": True}, V2])
+    q("Kurp düzeltmesi, sıyırmayla", {"volume": "v-1"},
+      [{**V1, "curve": True, "strip": [{"from": 0.0, "to": 600.0, "depth": 0.3}], "rule": "roadTopsoil"}, V2])
+    q("Kurp düzeltmesi, diş kazısıyla", {"volume": "v-1"}, [{**V1, "curve": True, "bench": {"slope": 12.0, "height": 0.5}}, V2])
     return file("road.volumes.query", "Kübajı sorgula", setup(), cases)
 
 

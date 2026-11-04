@@ -1891,7 +1891,15 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.volumes.query",
         refusals: &[&["not_a_road_project", "unknown_volume", "invalid_volume"]],
-        warnings: &["corridor_stale", "volume_gap", "pavement_unbuilt", "volume_uncovered", "volume_unfactored", "volume_changed"],
+        warnings: &[
+            "corridor_stale",
+            "volume_gap",
+            "pavement_unbuilt",
+            "volume_uncovered",
+            "volume_unfactored",
+            "volume_curve_past_centre",
+            "volume_changed",
+        ],
         targets: none,
     },
     // KentOS Yol's mass haul diagrams (plan/road.md Y9, docs/adr/0907).
