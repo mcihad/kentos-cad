@@ -172,6 +172,26 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
             continue;
         };
         let plot = n.plot != Some(false);
+        // A named pattern takes precedence over the built-in fallback in the
+        // renderer. The v1 standard describes only built-in types, so it
+        // cannot decide which named definition is equivalent or replace it.
+        if let Some(pattern) = n.style.line_pattern.as_deref() {
+            issue(
+                StandardIssueKind::LayerLineType,
+                &n.name,
+                Some(&n.id),
+                Some(l.line_type.name().to_owned()),
+                Some(pattern.to_owned()),
+                0,
+                false,
+                format!(
+                    "“{}” katmanı “{}” adlı özel çizgi tipini kullanıyor; standart {} istiyor. Çizgi tipini açıkça seçin; standart bu tanımı otomatik değiştirmez.",
+                    n.name,
+                    pattern,
+                    l.line_type.label()
+                ),
+            );
+        }
         let differences = [
             (
                 StandardIssueKind::LayerColor,

@@ -1763,7 +1763,7 @@ azalmadı, 1000 yoğun yazılı çizginin mevcut 2 milyon nokta sınırına tak�
 açıkça kaydedildi; sınır artırılmadı. Genel release performansı ve diğer açık
 kapsam tamamlandı sayılmaz. Kanıt ve ölçüm sınırları ADR 0930 §22–23'te.
 
-### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
+### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
 **Dayanak:** AutoCAD adlandırılmış kaynak denetimi ve proje araç
@@ -1792,6 +1792,15 @@ paletlerinin kapsamı. [R08], [R06]
 farklı blok ve çizgi tipini dene. Önizleme ile sonuç aynı olsun, nesne
 override'ı ve iki viewportun farklı stilleri korunabilsin. Yeni/yeniden
 açılmış projelerde aynı profil tarifi aynı üretim davranışını versin.
+
+**Özel çizgi tipi denetimi (5 Kasım 2026):** Adlandırılmış katman çizgi tipi,
+standart yalnız yerleşik çizgi tipini tarif ediyorsa artık sessizce uygun
+sayılmaz. Denetim tanım adını ve beklenen yerleşik tipi gösterir; eşlemesi
+bilinmediği için otomatik düzeltilebilir sayılmaz ve uygulama kaynak tanımı
+korur. Komut testi kontrolün salt okunur olduğunu ve uygulama sonrası
+bulgunun kaldığını doğrular. Gerçek çizim standardı penceresinde P_SHX bulgusu
+ve açıklaması görüldü; ekran görüntüsü repo dışında. Sürümlü paket ve diğer
+kabul koşulları açık olduğundan madde `[~]` kalır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

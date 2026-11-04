@@ -87,3 +87,45 @@ fn timing() {
     );
     assert!(output.changed);
 }
+
+#[test]
+fn named_layer_pattern_is_reported_and_preserved_by_standard_application() {
+    let raw = json!({"format":"kentos.document","version":1,"name":"Standart","settings":{"srid":0,
+        "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100},
+        "origin":{"x":0,"y":0},"layers":[{"id":"a","name":"A-DUVAR","type":"layer","visible":true,
+        "locked":false,"expanded":true,"style":{"color":"ink","lineType":"continuous","lineWeight":0.5,"linePattern":"WATER"},"children":[]}],
+        "activeLayer":"a","entities":[],"styles":{"items":[],"categories":[]}});
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let before = doc.to_snapshot_v2();
+    let findings = standards::issues(&doc, &standard);
+    let issue = findings
+        .iter()
+        .find(|i| i.layer.as_deref() == Some("a") && i.found.as_deref() == Some("WATER"))
+        .unwrap();
+    assert_eq!(
+        issue.kind,
+        kentos_commands::StandardIssueKind::LayerLineType
+    );
+    assert!(!issue.fixable);
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let input = StandardsApply {
+        name: Some("mimari-ofis".into()),
+        restyle: true,
+        ..Default::default()
+    };
+    assert!(matches!(
+        standards::execute_apply(&mut ExecutionContext::new(&mut doc), input),
+        CommandResult::Completed { .. }
+    ));
+    assert_eq!(
+        doc.layers().get("a").unwrap().style.line_pattern.as_deref(),
+        Some("WATER")
+    );
+    assert!(
+        standards::issues(&doc, &standard)
+            .iter()
+            .any(|i| i.found.as_deref() == Some("WATER") && !i.fixable)
+    );
+}
