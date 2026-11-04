@@ -13,6 +13,8 @@ use kentos_geometry_core::{
     geom::{
         arc,
         bulge::{BulgeArc, bulge_arc, bulge_at},
+        ellipse::{EllipseGeom, ellipse_derivative, ellipse_point, ellipse_sweep, major_length},
+        quadrature::integrate,
     },
 };
 
@@ -21,6 +23,106 @@ use kentos_geometry_core::{
 pub(super) struct Route {
     edges: Vec<Edge>,
     total: f64,
+    ellipse: Option<EllipseRoute>,
+}
+
+/// Integrate normalized speed so large model axes cannot overflow quadrature.
+/// Eight cached intervals bound each inverse solve; Newton stays bracketed and
+/// returns an explicit error if its arc-distance residual does not converge.
+struct EllipseRoute {
+    total: f64,
+    geom: EllipseGeom,
+    radius: f64,
+    knots: Vec<(f64, f64)>,
+}
+impl EllipseRoute {
+    fn new(geom: EllipseGeom) -> Result<Self, String> {
+        let radius = major_length(&geom);
+        let sweep = ellipse_sweep(&geom);
+        if !radius.is_finite()
+            || radius <= 0.
+            || !geom.c.x.is_finite()
+            || !geom.c.y.is_finite()
+            || !geom.ratio.is_finite()
+            || geom.ratio <= 0.
+            || geom.ratio > 1.
+            || !geom.t0.is_finite()
+            || !sweep.is_finite()
+            || sweep <= 0.
+            || geom.t0 + sweep <= geom.t0
+        {
+            return Err("Çizgi tipi elips yolu geçersiz.".into());
+        }
+        let mut route = Self {
+            total: 0.,
+            geom,
+            radius,
+            knots: vec![(geom.t0, 0.)],
+        };
+        let mut length = 0.;
+        for i in 0..8 {
+            let a = geom.t0 + sweep * i as f64 / 8.;
+            let b = geom.t0 + sweep * (i + 1) as f64 / 8.;
+            length += route.run(a, b);
+            route.knots.push((b, length));
+        }
+        if !length.is_finite() || !(length * radius).is_finite() || length <= 0. {
+            return Err("Çizgi tipi elips uzunluğu geçersiz.".into());
+        }
+        route.total = length * radius;
+        Ok(route)
+    }
+    fn speed(&self, t: f64) -> f64 {
+        js_hypot(sin(t), self.geom.ratio * cos(t))
+    }
+    fn run(&self, a: f64, b: f64) -> f64 {
+        if a == b {
+            0.
+        } else {
+            integrate(&|t| self.speed(t), a, b, 1e-14)
+        }
+    }
+    fn sample(&self, distance: f64, tolerance: f64) -> Result<(Vec2, f64), String> {
+        let wanted = distance / self.radius;
+        let edge = self
+            .knots
+            .windows(2)
+            .find(|k| wanted <= k[1].1)
+            .ok_or("Elips işareti yolun dışında.")?;
+        let ((start, base), (end, finish)) = (edge[0], edge[1]);
+        let target = (wanted - base).clamp(0., finish - base);
+        let mut lo = start;
+        let mut hi = end;
+        let mut t = start + (end - start) * target / (finish - base);
+        let tolerance = tolerance / self.radius;
+        for _ in 0..64 {
+            let residual = self.run(start, t) - target;
+            if residual.abs() <= tolerance {
+                let at = ellipse_point(&self.geom, t);
+                let d = ellipse_derivative(&self.geom, t);
+                if at.x.is_finite() && at.y.is_finite() && d.x.is_finite() && d.y.is_finite() {
+                    return Ok((at, atan2(d.y, d.x)));
+                }
+                break;
+            }
+            if residual > 0. {
+                hi = t;
+            } else {
+                lo = t;
+            }
+            let speed = self.speed(t);
+            let next = t - residual / speed;
+            t = if next.is_finite() && next > lo && next < hi {
+                next
+            } else {
+                (lo + hi) * 0.5
+            };
+        }
+        Err(
+            "Elips üzerindeki çizgi tipi işaretinin konumu doğrulanamadı; eksik çıktı üretilmedi."
+                .into(),
+        )
+    }
 }
 struct Edge {
     a: Vec2,
@@ -90,6 +192,7 @@ impl Route {
         let mut route = Self {
             edges: Vec::new(),
             total: 0.,
+            ellipse: None,
         };
         for i in 0..if closed {
             pts.len()
@@ -122,11 +225,34 @@ impl Route {
             }
             Shape::Arc { c, r, a0, a1 } => (*c, *r, *a0, arc::sweep(*a0, *a1)),
             Shape::Circle { c, r } => (*c, *r, 0., std::f64::consts::TAU),
+            Shape::Ellipse {
+                c,
+                major,
+                ratio,
+                t0,
+                t1,
+            } => {
+                return Some(
+                    EllipseRoute::new(EllipseGeom {
+                        c: *c,
+                        major: *major,
+                        ratio: *ratio,
+                        t0: *t0,
+                        t1: *t1,
+                    })
+                    .map(|ellipse| Self {
+                        total: ellipse.total,
+                        edges: Vec::new(),
+                        ellipse: Some(ellipse),
+                    }),
+                );
+            }
             _ => return None,
         };
         let mut route = Self {
             edges: Vec::new(),
             total: 0.,
+            ellipse: None,
         };
         let point = |a: f64| Vec2::new(c.x + r * cos(a), c.y + r * sin(a));
         Some(
@@ -384,15 +510,19 @@ impl Marks {
                 if total - distance <= period * 1e-10 {
                     break;
                 }
-                while segment + 1 < route.edges.len()
-                    && route.edges[segment].start + route.edges[segment].length <= distance
-                {
-                    segment += 1;
-                }
-                let Some(edge) = route.edges.get(segment) else {
-                    break;
+                let (at, tangent) = if let Some(ellipse) = &route.ellipse {
+                    ellipse.sample(distance, period * 1e-11)?
+                } else {
+                    while segment + 1 < route.edges.len()
+                        && route.edges[segment].start + route.edges[segment].length <= distance
+                    {
+                        segment += 1;
+                    }
+                    let Some(edge) = route.edges.get(segment) else {
+                        break;
+                    };
+                    edge.sample(distance)
                 };
-                let (at, tangent) = edge.sample(distance);
                 placed.push(Placement {
                     mark: m,
                     at,
@@ -482,6 +612,149 @@ mod tests {
         Marks::read(&Json::parse(&s.to_string()).unwrap())
             .unwrap()
             .unwrap()
+    }
+    #[test]
+    fn ellipse_arc_distance_matches_independent_50_digit_elliptic_integrals() {
+        // mpmath 1.3.0 Legendre E, 50 decimal digits; NIST DLMF 19.30.
+        // The implementation uses normalized adaptive Gauss quadrature instead.
+        let cases = [
+            (
+                0.5,
+                0.0,
+                std::f64::consts::TAU,
+                4.844224110273838,
+                vec![
+                    (
+                        0.6,
+                        0.5996527729281464,
+                        0.4001301513006689,
+                        0.9277291812335188,
+                    ),
+                    (
+                        1.4,
+                        -0.1886584527989604,
+                        0.49102138145591545,
+                        1.7605922154095321,
+                    ),
+                    (
+                        2.2,
+                        -0.9161435650074582,
+                        0.20042515329632737,
+                        2.729147858930695,
+                    ),
+                    (
+                        3.0,
+                        -0.6202885168850302,
+                        -0.3921868673925,
+                        4.043278499771425,
+                    ),
+                    (
+                        3.8,
+                        0.16663605360504063,
+                        -0.49300923562316207,
+                        4.879806012374701,
+                    ),
+                    (
+                        4.6,
+                        0.9011903450343653,
+                        -0.21671176826423239,
+                        5.8348970802208004,
+                    ),
+                ],
+            ),
+            (
+                0.01,
+                5.4,
+                1.6,
+                0.6119369060417719,
+                vec![
+                    (0.0, 0.6346928759426343, -0.007727644875559873, 5.4),
+                    (
+                        0.12,
+                        0.7546871498047105,
+                        -0.006560848313439676,
+                        5.567566124900263,
+                    ),
+                    (
+                        0.4,
+                        0.9657975741647686,
+                        0.0025929721505918305,
+                        6.545479765801798,
+                    ),
+                    (
+                        0.55,
+                        0.8158341423400449,
+                        0.005782859605699272,
+                        6.899811464010851,
+                    ),
+                ],
+            ),
+        ];
+        for (ratio, t0, sweep, length, points) in cases {
+            for c in [Vec2::new(0., 0.), Vec2::new(1_000_000., 4_500_000.)] {
+                let metric = EllipseRoute::new(EllipseGeom {
+                    c,
+                    major: Vec2::new(0.6, 0.8),
+                    ratio,
+                    t0,
+                    t1: t0 + sweep,
+                })
+                .unwrap();
+                assert_eq!(metric.knots.len(), 9);
+                assert!((metric.knots.last().unwrap().1 - length).abs() < 1e-12);
+                for &(distance, x, y, t) in &points {
+                    let (at, direction) = metric.sample(distance, 1e-12).unwrap();
+                    let want = Vec2::new(c.x + 0.6 * x - 0.8 * y, c.y + 0.8 * x + 0.6 * y);
+                    assert!(
+                        js_hypot(at.x - want.x, at.y - want.y) < 1e-8,
+                        "ratio={ratio}: {at:?} vs {want:?}"
+                    );
+                    let dx = -0.6 * sin(t) - 0.8 * ratio * cos(t);
+                    let dy = -0.8 * sin(t) + 0.6 * ratio * cos(t);
+                    let angle = atan2(dy, dx);
+                    assert!((sin(direction) - sin(angle)).abs() < 1e-10);
+                    assert!((cos(direction) - cos(angle)).abs() < 1e-10);
+                }
+            }
+        }
+        for ratio in [0., -0.5, f64::NAN, 1.1] {
+            assert!(
+                EllipseRoute::new(EllipseGeom {
+                    c: Vec2::new(0., 0.),
+                    major: Vec2::new(1., 0.),
+                    ratio,
+                    t0: 0.,
+                    t1: 0.
+                })
+                .is_err()
+            );
+        }
+    }
+    #[test]
+    fn ellipse_marks_keep_full_distance_and_bound_dense_inverse_sampling() {
+        let aspects = HashMap::new();
+        let env = env(&aspects);
+        let mut m = marks(0., false, false);
+        let started = std::time::Instant::now();
+        for ratio in [1., 0.5, 0.001] {
+            let shape = Shape::Ellipse {
+                c: Vec2::new(0., 0.),
+                major: Vec2::new(1., 0.),
+                ratio,
+                t0: 0.,
+                t1: 0.,
+            };
+            let route = Route::of(&shape).unwrap().unwrap();
+            m.period = route.total / 1000.;
+            m.marks[0].at = 0.;
+            let placed = m.placements_on(&route, 0., Unit::M, &env).unwrap();
+            assert_eq!(placed.len(), 1000);
+            assert!((placed[0].at.x - 1.).abs() < 1e-12);
+            assert!((placed[0].at.y).abs() < 1e-12);
+            m.period = route.total / 2001.;
+            assert!(m.placements_on(&route, 0., Unit::M, &env).is_err());
+        }
+        eprintln!("3000 bounded ellipse marks: {:?}", started.elapsed());
     }
     #[test]
     fn analytic_arc_anchors_and_tangents_ignore_tessellation_for_both_directions() {

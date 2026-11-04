@@ -1742,6 +1742,15 @@ Gerçek MCP server testinde de SHX ekleme, kaynak bulgusunun çözülmesi,
 stil etkisi/ret/rename ve iki CAD aktarımı doğrulandı. GUI/Python/MCP
 kanıtları ADR 0930'da; ana maddenin açık kabulü değişmedi.
 
+**Elips işaret mesafesi (4 Kasım 2026):** Mevcut sayısal integral ve
+braketli ters çözüm, elipste yazı/SHX konumunu gerçek yay mesafesine bağlar.
+Basıklık, döndürülmüş eksen, sıfır açısını geçen yay ve büyük koordinatlar
+bağımsız 50 basamaklı eliptik integral referansıyla karşılaştırıldı. On birim
+testi, üç ölçekte altı yolun 18 vektör/PDF senaryosu ve strict Clippy geçti.
+Gerçek GUI zoom/iki pafta ve iki sayfalı PDF kontrol edildi; 106/21 şeklin
+konum hatası 0,000016 mm altında, bitmap yok. Bu elips desteği, bütün blok
+dönüşümü/performance kabulünün bittiği anlamına gelmez. Ayrıntılar ADR 0930'da.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

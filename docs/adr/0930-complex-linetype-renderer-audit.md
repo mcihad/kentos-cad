@@ -906,3 +906,44 @@ parametre, sözleşme alanı veya TypeScript dosyası yok.
 Bu etki notu doğrudan/özyinelemeli bütün entity sayılarını yeniden tanımlamaz;
 planın dolaylı kaynakların tam nesne etki grafiği ile ilgili ileri kapsamı
 ayrıdır. CAD-ADV-11'in kalan geometri/performance kabulü tamamlanmadı.
+
+
+## 21. Elips üzerinde gerçek yay mesafesi — 4 Kasım 2026
+
+Elipsin yazı/SHX yerleşimi çizim kirişlerinden ayrıldı. Mevcut geometry-core
+Gauss–Legendre integrali, büyük eksen boyundan bağımsız normalize hız üzerinde
+kullanılır. Sekiz aralıkta biriken uzunluk önbelleğe alınır; işaret parametresi
+braketli Newton/bisection ile, en çok 64 adımda çözülür. Konum artık elips
+parametresine eşit artış verilerek değil gerçek yay mesafesinden bulunur.
+Yön gerçek türevden alınır. Taşıyıcının çizim geometrisi değiştirilmez.
+
+- Bağımsız referans NIST DLMF [19.30](https://dlmf.nist.gov/19.30)'daki
+  eliptik integral ilişkisinin mpmath 1.3.0 Legendre E ile 50 ondalık basamakta
+  hesaplanmasıdır. Üretim algoritması bu kütüphaneyi kullanmaz. Oran 0.5 tam
+  elips ve 0.01, sıfır açısını geçen eliptik yay; döndürülmüş eksen ve milyon
+  metre koordinatları ayrı ayrı karşılaştırılır. Geçersiz oran reddedilir.
+- İş yükü sınırı yerleşimden önce korunur; çözülemeyen parametre açık hata
+  verir, kısmi şekil başarılı çıktı sayılmaz. Üç farklı basıklıkta 1000'er
+  işaret ve 2001 işaret reddi test edildi. Debug süre bir mikro ölçümdür;
+  genel sahne FPS veya büyük çizim performansının kabul kanıtı değildir.
+- On cad_marks birim testi ve 1:1/1:20/1:100'de altı yol türünü kapsayan
+  18 gerçek vektör/PDF senaryosu geçti. Strict style-core/plot Clippy geçti.
+  Önceki 1e-8 periyot ters çözüm toleransı, katı çıktı referansı için
+  1e-11'e indirildi; testin doğruluk eşiği gevşetilmedi.
+
+Bu dilim elips geometri desteğidir; aynalı/nonuniform blok dönüşümlerinin
+bütün kombinasyonlarını veya taşıyıcının dash fazını tamamlandı saymaz.
+Gerçek GUI'de önceki ve yeni binary ile aynı 96 nesneli KCAD açıldı; model
+zoom, 1:20 ve 1:100 pafta denendi. Ekrandaki mavi çaprazlar yalnız modelin
+1:50 ölçeği için bağımsız referanstır, paftada çakışma beklenmez. Gerçek
+Yazdır → Hepsi → Kaydet ile üretilen iki sayfalı PDF pypdf ile ölçüldü:
+1:20'de 106 şekil/212 stroke, 1:100'de 21 şekil/42 stroke; en büyük konum
+hatası 0,00001520 / 0,00001421 mm, 2 mm kol boyu hatası
+0,00002551 / 0,00001985 mm. Bitmap kaynağı yok. İlk sayfa Poppler ile
+ayrıca görsel kontrol edildi. Bu sayılar altı örneğin toplamıdır.
+
+Kanıtlar repo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında:
+`ellipse-before-gui.png`, `ellipse-after-gui.png`, `ellipse-zoom-gui.png`,
+`ellipse-sheet20-gui.png`, `ellipse-sheet100-gui.png`, `ellipse-both-gui.pdf`,
+`ellipse-pdf-dimensions.json`, `ellipse-reference.json` ve `ellipse-*.log`.
+Binary SHA-256: `3fb57382a767ccefe490444bc56932917d6428d9e1fc4555421d104665a9e182`.

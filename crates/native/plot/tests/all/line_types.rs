@@ -416,7 +416,7 @@ fn curved_shx_anchors_use_exact_arc_distance_in_actual_vector_and_pdf_output() {
     ))
     .unwrap();
     for scale in [1u32, 20, 100] {
-        for kind in ["arc", "circle", "ccw", "cw", "wide"] {
+        for kind in ["arc", "circle", "ccw", "cw", "wide", "ellipse"] {
             let (mut raw, mut page) = source();
             let r = scale as f64 * 0.01;
             raw["settings"]["lineTypes"] = json!([{"name":"P","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"fence.shx"}},{"length":-2.}]}]);
@@ -426,6 +426,9 @@ fn curved_shx_anchors_use_exact_arc_distance_in_actual_vector_and_pdf_output() {
                     json!({"kind":"arc","c":{"x":0.,"y":0.},"r":r,"a0":0.,"a1":std::f64::consts::PI})
                 }
                 "circle" => json!({"kind":"circle","c":{"x":0.,"y":0.},"r":r}),
+                "ellipse" => {
+                    json!({"kind":"ellipse","c":{"x":0.,"y":0.},"major":{"x":r,"y":0.},"ratio":0.5,"t0":0.,"t1":0.})
+                }
                 _ => {
                     json!({"kind":"polyline","pts":[{"x":r,"y":0.},{"x":-r,"y":0.}],"bulges":[if kind=="cw"{-1.}else{1.}]})
                 }
@@ -487,12 +490,32 @@ fn curved_shx_anchors_use_exact_arc_distance_in_actual_vector_and_pdf_output() {
                 .collect();
             assert_eq!(
                 marks.len(),
-                if kind == "circle" { 16 } else { 8 },
+                if kind == "circle" {
+                    16
+                } else if kind == "ellipse" {
+                    12
+                } else {
+                    8
+                },
                 "{scale}/{kind}"
             );
             for (n, mark) in marks.iter().enumerate() {
                 let angle = (if kind == "cw" { -1. } else { 1. }) * (0.6 + (n / 2) as f64 * 0.8);
-                let center = [r * angle.cos(), r * angle.sin()];
+                let center = if kind == "ellipse" {
+                    // Independent mpmath Legendre E inverse at s/r=.6+.8*n.
+                    let points = [
+                        [0.5996527729281464, 0.4001301513006689],
+                        [-0.1886584527989604, 0.49102138145591545],
+                        [-0.9161435650074582, 0.20042515329632737],
+                        [-0.6202885168850302, -0.3921868673925],
+                        [0.16663605360504063, -0.49300923562316207],
+                        [0.9011903450343653, -0.21671176826423239],
+                    ];
+                    let p = points[n / 2];
+                    [r * p[0], r * p[1]]
+                } else {
+                    [r * angle.cos(), r * angle.sin()]
+                };
                 for axis in 0..2 {
                     let actual = (mark.points[0][axis] + mark.points[1][axis]) * 0.5;
                     assert!(
