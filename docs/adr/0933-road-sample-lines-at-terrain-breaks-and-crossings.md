@@ -1,6 +1,6 @@
 # 0933 — KentOS Yol: arazi kırıklarında kesit ve kesişen kesit kolları
 
-Tarih: 2026-11-04. plan/road.md Y29 (ROAD-SEC-13). Durum: Y29.1–Y29.2 kabul; Y29.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y29 (ROAD-SEC-13). Durum: Y29.1–Y29.3 kabul.
 
 ## Dayanak
 
@@ -90,6 +90,24 @@ arazinin kırığını garanti etmez. Bu ayrım pencerede ve yardımda söylenir
 gelir, seyreltme ve kırpma §1'in referansından. Ölçüm (örnek çizim, p1 sola döner, R 150 m, sol kol 180 m, her 20 m):
 23 çift kesişir. Kırpılınca daire kısmında sol kollar tam 150,0 m'de, klotoidlerde 153,7 ile 177,4 m arasında biter,
 düzlükteki kollar 180 m kalır. Kırıklarla 0–600 m aralığında 0,1 m tolerans ve en çok 20 m aralıkla 32 kesit çıkar.
+
+### §4 Enkesit penceresi (Y29.3)
+
+- **Km yöntemleri:** Aralık, Km'ler, Çizgiler, **Arazi kırıkları**. Aralıkta **Kurpta (m)** alanı vardır. Arazi
+  kırıklarında Baş, Son, **Tolerans (m)**, **En çok (m)** ve Kurp noktaları ve PVI'ler alanları vardır.
+- Kol genişlikleri ve yöntem bir satırdadır, yöntemin kendi alanları sonraki satırdadır. Tek satırda 1100 px'te yöntem
+  seçicisi sıkışıp görünmez oluyordu.
+- **Kesişen kolları kırp** onayının yanında nedeni yazar: kesişme varsa uyarının kendisi, yoksa yöntemin kısa açıklaması.
+  Arazi kırıklarının açıklaması, eksen kırığının yan arazinin kırığını garanti etmediğini de söyler. Uyarı ilk sürümde
+  grafiğin altındaydı ve kaydırmadan görünmüyordu.
+- **Plan:** kesit grafiğinin yanında takımın kesit hatları plandan çizilir. Gösterilen kesit kalın çizilir; başka bir
+  hatla kesişenler tehlike renginde çizilir. Kırpan takımda hatlar buluşmada biter ve kırmızı hat kalmaz.
+- Kaydet `clip`'i yazar. İlk sürümde pencerenin isteği `clip`'i taşımıyordu; bunu pencere testi yakaladı.
+- Ölçüm (örnek çizim): Ana takım 0–600 m'de 0,1 m toleransla ve en çok 20 m aralıkla 32 kırıkta kesit verir. Kurp
+  noktaları ve PVI'lerle 39'dur. Sol kol 180 m iken, her 20 m'de ve kurp noktalarında 37 çift kesişir; kırpınca sol kol
+  daire kısmında 150 m'de biter.
+
+Bekçi: `section_window_tests::breaks_and_crossing_arms_are_typed_said_and_clipped`.
 
 ## Doğrulama
 

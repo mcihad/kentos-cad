@@ -591,6 +591,8 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 - Taşınan pencereler: Kırmızı kot önerisi (Y26.0), Kübaj ve Enkesit'in tip kesit düzenleyicisi (Y26.3), Görüş mesafesi,
   Platform suyu, Taşıma planı ve Tasarım denetimi (Y26.4), Dever (Y27.3), Genişletme önerisi (Y28.3). Öbürleri sırayla
   taşınır.
+- **Uyarı kendi denetiminin yanında:** bir onay kutusunun nedeni (Kesişen kolları kırp → kaç çift kesişiyor) onun
+  satırında yazar, pencerenin altında değil (Enkesit, Y29.3).
 - **Alt pencere:** bir pencerenin işine yardım eden pencere (Dever → Genişletme önerisi) onun yerine açılır, kapatma
   düğmesi “Geri”dir. Birincil eylem sonucu üst pencerenin formuna yazar; kaydetmek üst pencerenin işidir.
 - **Açıklama çizimin altındadır:** renklerin ne demek olduğunu çizimin içine yazmak, çizimi sola ve üste sıkıştırıyordu.

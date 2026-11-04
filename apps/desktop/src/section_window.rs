@@ -64,7 +64,9 @@ const REMOVE_LAYER: &str = "Tabakayı sil";
 pub(crate) const EDGE_SLOPE: &str = "Kenar şevi (y/d)";
 const SHEETS: &str = "Paftalara diz";
 const KINDS: [&str; 2] = ["Şerit", "Banket"];
-const METHODS: [&str; 3] = ["Aralık", "Km'ler", "Çizgiler"];
+const METHODS: [&str; 4] = ["Aralık", "Km'ler", "Çizgiler", "Arazi kırıkları"];
+/// Kesişen kolları kırp (docs/adr/0933 §3).
+pub(crate) const CLIP: &str = "Kesişen kolları kırp";
 
 fn comma(v: f64, digits: usize) -> String {
     format!("{v:.digits$}").replace('.', ",")
@@ -383,6 +385,8 @@ pub struct Preview {
     pub(crate) why: Option<String>,
     /// The sides open on the swath, as the query's warning says them.
     pub(crate) open: Option<String>,
+    /// The lines meeting on a curve's inside, as the query's warning says them (docs/adr/0933 §3).
+    pub(crate) crossing: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -425,6 +429,8 @@ pub enum Event {
     SetField(usize, String),
     Method(usize),
     Geometry,
+    /// Kesişen kolları kırp on or off (docs/adr/0933 §3).
+    Clip,
     Previous,
     Next,
     Exaggeration(String),
@@ -567,6 +573,7 @@ impl App {
                             rows,
                             why: warnings.iter().find(|w| w.code == "section_surface_gone").map(|w| w.message.clone()),
                             open: warnings.iter().find(|w| w.code == "section_open").map(|w| w.message.clone()),
+                            crossing: warnings.iter().find(|w| w.code == "section_lines_cross").map(|w| w.message.clone()),
                         },
                     },
                 }
@@ -734,6 +741,9 @@ impl App {
                         2 => r.from = t,
                         3 => r.to = t,
                         4 => r.every = t,
+                        6 => r.curve = t,
+                        7 => r.tolerance = t,
+                        8 => r.most = t,
                         _ => r.stations = t,
                     }
                 }
@@ -750,6 +760,11 @@ impl App {
             Event::Geometry => {
                 if let Some(r) = w.set_mut() {
                     r.geometry = !r.geometry;
+                }
+            }
+            Event::Clip => {
+                if let Some(r) = w.set_mut() {
+                    r.clip = !r.clip;
                 }
             }
             Event::Previous => {
@@ -1102,6 +1117,7 @@ impl App {
                 left: Some(d.left),
                 right: Some(d.right),
                 stations: Some(d.stations.clone()),
+                clip: Some(d.clip),
                 ..blank(RoadEditOperation::Set, &d.id)
             };
             if !self.section_write(|cx| road_sections_edit::execute(cx, edit)) {
@@ -1304,34 +1320,67 @@ impl App {
             Some(r.method),
             |m| msg(Event::Method(m)),
         );
-        let mut stations = row![
-            words::field("Sol (m)", field("25", &r.left, 0, 70.0), None),
-            words::field("Sağ (m)", field("25", &r.right, 1, 70.0), None),
-            words::field("Dever", container(on_superelevation).width(150), None),
-            words::field("Km", method, None),
-        ]
-        .spacing(10)
-        .align_y(iced::alignment::Vertical::Bottom);
+        // The swath and the method on one row, the method's own fields on the next: at 1100 px one row squeezed the
+        // method's select to nothing.
+        col = col.push(
+            row![
+                words::field("Sol (m)", field("25", &r.left, 0, 70.0), None),
+                words::field("Sağ (m)", field("25", &r.right, 1, 70.0), None),
+                words::field("Dever", container(on_superelevation).width(150), None),
+                words::field("Km", container(method).width(170), None),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom),
+        );
+        let mut stations = row![].spacing(10).align_y(iced::alignment::Vertical::Bottom);
         stations = match r.method {
             0 => stations
                 .push(words::field("Baş (m)", field("0", &r.from, 2, 80.0), None))
                 .push(words::field("Son (m)", field("", &r.to, 3, 80.0), None))
                 .push(words::field("Her (m)", field("20", &r.every, 4, 60.0), None))
+                .push(words::field("Kurpta (m)", field("yok", &r.curve, 6, 60.0), None))
+                .push(words::check(r.geometry, "Kurp noktaları ve PVI'ler", Some(msg(Event::Geometry)))),
+            3 => stations
+                .push(words::field("Baş (m)", field("0", &r.from, 2, 80.0), None))
+                .push(words::field("Son (m)", field("", &r.to, 3, 80.0), None))
+                .push(words::field("Tolerans (m)", field("0,1", &r.tolerance, 7, 70.0), None))
+                .push(words::field("En çok (m)", field("yok", &r.most, 8, 60.0), None))
                 .push(words::check(r.geometry, "Kurp noktaları ve PVI'ler", Some(msg(Event::Geometry)))),
             1 => stations.push(words::field("Km'ler (m; ile)", field("100; 150", &r.stations, 5, 300.0), None)),
             _ => stations.push(label::caption(format!("{} çizginin aksı kestiği yerler", r.uids.len())).style(muted)),
         };
         col = col.push(stations);
+        let hint = match r.method {
+            0 => "Kurpta: kurpta ve klotoidde bu aralıkla da kesit alınır.",
+            3 => "Aksın yüzeyin üçgen kenarlarını kestiği kırıklar; iki kesit arasında doğrusal okunan eksen arazisi en çok tolerans kadar şaşar. Yan arazinin kırıklarını garanti etmez.",
+            _ => "",
+        };
+        // Why to clip, next to the box: the crossing said under the charts was below the fold.
+        let why: Element<'_, Message> = match &w.preview.crossing {
+            Some(c) => label::caption(c.clone()).style(|t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) }).into(),
+            None => label::caption(hint).style(muted).into(),
+        };
+        col = col.push(row![words::check(r.clip, CLIP, Some(msg(Event::Clip))), why].spacing(16).align_y(Center));
         let shown = w.preview.rows.get(w.at);
         let exaggeration = number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0);
         col = col.push(
-            container(
-                iced::widget::canvas(Chart { row: shown, sample: None, exaggeration, layers: None })
-                    .width(Fill)
-                    .height(typography::scaled(CHART_HEIGHT)),
-            )
-            .style(style::container::field_box)
-            .width(Fill),
+            row![
+                container(
+                    iced::widget::canvas(Chart { row: shown, sample: None, exaggeration, layers: None })
+                        .width(Fill)
+                        .height(typography::scaled(CHART_HEIGHT)),
+                )
+                .style(style::container::field_box)
+                .width(Fill),
+                container(
+                    iced::widget::canvas(Plan { rows: &w.preview.rows, at: w.at })
+                        .width(Fill)
+                        .height(typography::scaled(CHART_HEIGHT)),
+                )
+                .style(style::container::field_box)
+                .width(typography::scaled(260.0)),
+            ]
+            .spacing(10),
         );
         let n = w.preview.rows.len();
         let place = shown.map_or_else(|| "Kesit yok".to_owned(), |s| format!("km {} · {} / {n}", s.km_text, w.at + 1));
@@ -1381,6 +1430,7 @@ impl App {
         };
         Ok(match control {
             Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(CLIP) => Some(msg(Event::Clip)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW_SET) => Some(msg(Event::NewSet)),
             Control::Press(NEW_TEMPLATE) => Some(msg(Event::NewTemplate)),
@@ -1412,6 +1462,9 @@ impl App {
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Sol (m)", text) => Some(msg(Event::SetField(0, text.to_owned()))),
             Control::Fill("Sağ (m)", text) => Some(msg(Event::SetField(1, text.to_owned()))),
+            Control::Fill("Kurpta (m)", text) => Some(msg(Event::SetField(6, text.to_owned()))),
+            Control::Fill("Tolerans (m)", text) => Some(msg(Event::SetField(7, text.to_owned()))),
+            Control::Fill("En çok (m)", text) => Some(msg(Event::SetField(8, text.to_owned()))),
             Control::Fill("Düşey abartma", text) => Some(msg(Event::Exaggeration(text.to_owned()))),
             Control::Fill("Yer (Y; X)", text) => Some(msg(Event::Place(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
@@ -1799,6 +1852,62 @@ impl canvas::Program<Message> for Chart<'_> {
         }
         if let Some(a) = self.row.and_then(|r| r.axis) {
             word(&mut frame, format!("Eksen {}", comma(a, 2)), Point::new(x(0.0) + 6.0, y(a) - 20.0), t.danger, false);
+        }
+        vec![frame.into_geometry()]
+    }
+}
+
+/// The set's sample lines in plan (docs/adr/0933 §3): every line from its left end to its right, the one shown thick,
+/// the ones meeting another (on a curve's inside, lines wider than the radius) in the danger colour; a set that clips
+/// draws its lines ending where they meet, so none is red.
+struct Plan<'a> {
+    rows: &'a [SectionRow],
+    at: usize,
+}
+
+/// Whether two segments cross (not at an end shared by both).
+fn segments_cross(a: [[f64; 2]; 2], b: [[f64; 2]; 2]) -> bool {
+    let o = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+    let (d1, d2) = (o(b[0], b[1], a[0]), o(b[0], b[1], a[1]));
+    let (d3, d4) = (o(a[0], a[1], b[0]), o(a[0], a[1], b[1]));
+    let tiny = 1e-9 * (1.0 + a[0][0].abs().max(a[0][1].abs()));
+    d1.abs() > tiny && d2.abs() > tiny && d3.abs() > tiny && d4.abs() > tiny && (d1 > 0.0) != (d2 > 0.0) && (d3 > 0.0) != (d4 > 0.0)
+}
+
+impl canvas::Program<Message> for Plan<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let t = Tokens::of(theme);
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        if self.rows.is_empty() {
+            return vec![frame.into_geometry()];
+        }
+        let pts = self.rows.iter().flat_map(|r| r.ends);
+        let (mut lo, mut hi) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
+        for p in pts {
+            lo = [lo[0].min(p[0]), lo[1].min(p[1])];
+            hi = [hi[0].max(p[0]), hi[1].max(p[1])];
+        }
+        let pad = 10.0f32;
+        let span = (hi[0] - lo[0]).max(hi[1] - lo[1]).max(1e-6);
+        let scale = f64::from((bounds.width - 2.0 * pad).min(bounds.height - 2.0 * pad)) / span;
+        let (cx, cy) = (0.5 * (lo[0] + hi[0]), 0.5 * (lo[1] + hi[1]));
+        let at = |p: [f64; 2]| {
+            Point::new(
+                bounds.width / 2.0 + ((p[0] - cx) * scale) as f32,
+                bounds.height / 2.0 - ((p[1] - cy) * scale) as f32,
+            )
+        };
+        let meets: Vec<bool> = (0..self.rows.len())
+            .map(|i| {
+                (0..self.rows.len()).any(|j| j != i && segments_cross(self.rows[i].ends, self.rows[j].ends))
+            })
+            .collect();
+        for (i, r) in self.rows.iter().enumerate() {
+            let color = if meets[i] { t.danger } else if i == self.at { t.accent } else { t.muted };
+            let width = if i == self.at { 2.0 } else { 1.0 };
+            frame.stroke(&Path::line(at(r.ends[0]), at(r.ends[1])), Stroke::default().with_color(color).with_width(width));
         }
         vec![frame.into_geometry()]
     }

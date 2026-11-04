@@ -316,3 +316,96 @@ fn screens_pavement() {
         send(&mut app, W::Cancel);
     }
 }
+
+/// Y29.3 (docs/adr/0933 §3): a set at the terrain's breaks, then the main set's left arms widened past the curve's
+/// radius: the window says the lines meet, Kesişen kolları kırp ends them where they meet, Kaydet writes the clip.
+#[test]
+fn breaks_and_crossing_arms_are_typed_said_and_clipped() {
+    let mut app = app(true);
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    send(&mut app, W::Method(3));
+    send(&mut app, W::SetField(2, "0".into()));
+    send(&mut app, W::SetField(3, "600".into()));
+    send(&mut app, W::SetField(7, "0,1".into()));
+    send(&mut app, W::SetField(8, "20".into()));
+    let w = app.section_window.as_ref().expect("open");
+    assert!(w.preview.why.is_none(), "{:?}", w.preview.why);
+    // The case drawing's 0–600 m breaks within 0,1 m, at most 20 m apart (32, the query's case), and the set keeps
+    // its Kurp noktaları ve PVI'ler: 7 more.
+    assert_eq!(w.preview.rows.len(), 39);
+    // Back to a range over the curve, the left arms 180 m: the lines meet on the inside (R 150 m).
+    send(&mut app, W::Method(0));
+    send(&mut app, W::SetField(2, "200".into()));
+    send(&mut app, W::SetField(3, "420".into()));
+    send(&mut app, W::SetField(4, "20".into()));
+    send(&mut app, W::SetField(0, "180".into()));
+    let w = app.section_window.as_ref().unwrap();
+    let said = w.preview.crossing.clone().expect("said");
+    // Every 20 m and, with Kurp noktaları ve PVI'ler, the curve's points: 37 pairs (23 without them, the query's case).
+    assert!(said.contains("37 çift"), "{said}");
+    send(&mut app, W::Clip);
+    let w = app.section_window.as_ref().unwrap();
+    assert!(w.preview.crossing.is_none());
+    // The right arms stay 25 m; on the circle the left ones end at the centre, R 150 m out.
+    let lengths: Vec<f64> = w.preview.rows.iter().map(|r| (r.ends[0][0] - r.ends[1][0]).hypot(r.ends[0][1] - r.ends[1][1])).collect();
+    assert!(lengths.iter().all(|l| *l <= 205.0 + 1e-6), "{lengths:?}");
+    assert!(lengths.iter().any(|l| (l - 175.0).abs() < 1e-6), "150 + 25 on the circle: {lengths:?}");
+    send(&mut app, W::Save);
+    let doc = model(&mut app);
+    assert!(doc.road_sections()[0].clip);
+}
+
+/// The Y29.3 pictures, `.run/gui-evidence/yol-y26/y29-3-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib section_window_tests::screens_breaks -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_breaks() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app(true);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y29-3-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("section.editor"));
+        send(&mut app, W::Choose(Chosen::Set(0)));
+        send(&mut app, W::Method(3));
+        send(&mut app, W::SetField(2, "0".into()));
+        send(&mut app, W::SetField(3, "600".into()));
+        send(&mut app, W::SetField(7, "0,1".into()));
+        send(&mut app, W::SetField(8, "20".into()));
+        shot(&mut app, "kiriklar");
+        send(&mut app, W::Method(0));
+        send(&mut app, W::SetField(2, "200".into()));
+        send(&mut app, W::SetField(3, "420".into()));
+        send(&mut app, W::SetField(4, "20".into()));
+        send(&mut app, W::SetField(0, "180".into()));
+        for _ in 0..4 {
+            send(&mut app, W::Next);
+        }
+        shot(&mut app, "kesisen-kollar");
+        send(&mut app, W::Clip);
+        shot(&mut app, "kirpilan-kollar");
+        send(&mut app, W::Cancel);
+    }
+}
