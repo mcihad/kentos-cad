@@ -7308,6 +7308,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_WATER.into(),
+            version: crate::ROAD_CORRIDORS_WATER_VERSION,
+            title: "Platform suyu".into(),
+            summary: "Bir koridorun platformunda suyu okur; hiçbir şey yazmaz. Üst yüzeyin şerit ve banket üçgenlerinden eğimi least'ten (oran, kullanıcının; KentOS değer vermez) yatık olanlar: boy eğimi ve enine eğimin suyu bıraktığı yerler, dever geçişinin yatık yeri; km aralıkları, plan alanları ve en küçük eğimleriyle. Her yanın ilk şeridinin enine eğiminin sıfırdan geçtiği km'ler (eksen ile c1 noktası arasında, km'ler arasında doğrusal). Platform kenarlarında (eksen ve bileşenlerin kenarları) iki komşusundan alçak noktalar: suyun toplandığı, ızgara isteyen yerler. Üçgenin eğimi düzleminin en dik eğimidir. \
+                      Uyarılar: corridor_flat ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_corridor, invalid_platform_water."
+                .into(),
+            aliases: vec!["platformsuyu".into(), "yatikyer".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsWater>(),
+            output: schema::<crate::CorridorsWatered>(),
+            plan: Some(schema::<crate::CorridorsWatered>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Platformda %0,5'ten yatık yerler".into(),
+                input: json!({ "corridor": "c-2", "least": 0.005 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_DRAW.into(),
             version: crate::ROAD_CORRIDORS_DRAW_VERSION,
             title: "Şevli plan çiz".into(),
@@ -14356,6 +14381,9 @@ mod tests {
                     crate::ROAD_CORRIDORS_DRAW => {
                         serde_json::from_value::<crate::CorridorsDraw>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CORRIDORS_WATER => {
+                        serde_json::from_value::<crate::CorridorsWater>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_EDIT => {
                         serde_json::from_value::<crate::VolumesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15172,6 +15200,9 @@ mod tests {
                         }
                         crate::ROAD_CORRIDORS_DRAW => {
                             serde_json::from_value::<crate::CorridorsDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_WATER => {
+                            serde_json::from_value::<crate::CorridorsWatered>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_VOLUMES_EDIT => {
                             serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())

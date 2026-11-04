@@ -20970,6 +20970,77 @@ class CorridorsQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CorridorsWater(_Model):
+    """Input of `road.corridors.water` v1 (docs/adr/0923; ROAD-DEVER-09): water on a corridor's platform as built now: its
+    lane and shoulder triangles flatter than `least` (rise over run, the user's; where the grade and the crossfall
+    leave water standing), the stations where a side's first lane's crossfall passes through zero, and the low points
+    along the platform's edges (the axis and the components' edges). Reads only.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_platform_water` (least not above 0),
+    and the corridor's when it no longer builds. Warnings: `corridor_flat` and the corridor's own (stale, unsolved,
+    folded …).
+    Attributes:
+        least: Unit: 1.
+    """
+    corridor: str
+    least: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["least"] = float(self.least)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorsWater:
+        return cls(
+            corridor=data["corridor"],
+            least=float(data["least"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorsWatered(_Model):
+    """Output of `road.corridors.water` v1: the corridor's id, the least asked, the flat triangles' count and plan area, the
+    flat stretches, the zero crossfall stations and the low points.
+    Attributes:
+        least: Unit: 1.
+        flat_triangles: Unit: count.
+        flat_area: Unit: area.
+    """
+    corridor: str
+    least: float
+    flat_triangles: int
+    flat_area: float
+    flats: list[PlatformFlat]
+    zeros: list[CrossfallZero]
+    lows: list[PlatformLow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["least"] = float(self.least)
+        out["flatTriangles"] = self.flat_triangles
+        out["flatArea"] = float(self.flat_area)
+        out["flats"] = [e0.to_json() for e0 in self.flats]
+        out["zeros"] = [e0.to_json() for e0 in self.zeros]
+        out["lows"] = [e0.to_json() for e0 in self.lows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorsWatered:
+        return cls(
+            corridor=data["corridor"],
+            least=float(data["least"]),
+            flat_triangles=data["flatTriangles"],
+            flat_area=float(data["flatArea"]),
+            flats=[PlatformFlat.from_json(e0) for e0 in data["flats"]],
+            zeros=[CrossfallZero.from_json(e0) for e0 in data["zeros"]],
+            lows=[PlatformLow.from_json(e0) for e0 in data["lows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CorridorsWritten(_Model):
     """Output of `road.corridors.edit` v1.
     Attributes:
@@ -20993,6 +21064,33 @@ class CorridorsWritten(_Model):
             corridors=[CorridorListed.from_json(e0) for e0 in data["corridors"]],
             revision=data["revision"],
             corridor=UNSET if "corridor" not in data else None if data["corridor"] is None else CorridorReport.from_json(data["corridor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrossfallZero(_Model):
+    """A station where a side's first lane's crossfall is zero.
+    Attributes:
+        region: Unit: index.
+        station: Unit: m.
+    """
+    region: int
+    right: bool
+    station: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region
+        out["right"] = self.right
+        out["station"] = float(self.station)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrossfallZero:
+        return cls(
+            region=data["region"],
+            right=data["right"],
+            station=float(data["station"]),
         )
 
 
@@ -55176,6 +55274,43 @@ class PlatformDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PlatformFlat(_Model):
+    """A stretch of flat platform: its region, its first and last station, the plan area flatter than the least and the
+    least slope found (rise over run).
+    Attributes:
+        region: Unit: index.
+        from_: Unit: m.
+        to: Unit: m.
+        area: Unit: area.
+        least: Unit: 1.
+    """
+    region: int
+    from_: float
+    to: float
+    area: float
+    least: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["area"] = float(self.area)
+        out["least"] = float(self.least)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformFlat:
+        return cls(
+            region=data["region"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            area=float(data["area"]),
+            least=float(data["least"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PlatformListed(_Model):
     """A pad in the project's list.
     Attributes:
@@ -55201,6 +55336,45 @@ class PlatformListed(_Model):
             name=data["name"],
             surface=data["surface"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlatformLow(_Model):
+    """A low point on a platform edge: its feature code, region, station and place.
+    Attributes:
+        region: Unit: index.
+        station: Unit: m.
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: m.
+    """
+    code: str
+    region: int
+    station: float
+    x: float
+    y: float
+    z: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["region"] = self.region
+        out["station"] = float(self.station)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlatformLow:
+        return cls(
+            code=data["code"],
+            region=data["region"],
+            station=float(data["station"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
         )
 
 
@@ -105235,6 +105409,8 @@ __all__ = [
     "CorridorsEdit",
     "CorridorsQueried",
     "CorridorsQuery",
+    "CorridorsWater",
+    "CorridorsWatered",
     "CorridorsWritten",
     "CountExplodeDensity",
     "CreateBlockChange",
@@ -105246,6 +105422,7 @@ __all__ = [
     "CreateOperationName",
     "CreateRelationsOp",
     "CreateSpaceSeparatorOperation",
+    "CrossfallZero",
     "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
@@ -106802,7 +106979,9 @@ __all__ = [
     "PlatformBalanceAsk",
     "PlatformBalanced",
     "PlatformDef",
+    "PlatformFlat",
     "PlatformListed",
+    "PlatformLow",
     "PlatformReport",
     "PlatformSide",
     "PlatformSideName",

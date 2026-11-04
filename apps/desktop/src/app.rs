@@ -320,6 +320,8 @@ pub enum Dialog {
     Sight,
     /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21); the window is `App::design_check_window`.
     DesignCheck,
+    /// Platform suyu (platform_water_window.rs, plan/road.md Y22); the window is `App::platform_water_window`.
+    PlatformWater,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4); the window is `App::pay_window`.
     Pay,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1); the window is `App::route_window`.
@@ -719,6 +721,8 @@ pub enum Message {
     Sight(crate::sight_window::Event),
     /// An event of Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
     DesignCheck(crate::design_check_window::Event),
+    /// An event of Platform suyu (platform_water_window.rs, plan/road.md Y22).
+    PlatformWater(crate::platform_water_window::Event),
     /// An event of Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     Pay(crate::pay_window::Event),
     /// An event of Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1335,6 +1339,8 @@ pub struct App {
     pub(crate) sight_window: Option<Box<crate::sight_window::Window>>,
     /// Tasarım denetimi (design_check_window.rs, plan/road.md Y21).
     pub(crate) design_check_window: Option<Box<crate::design_check_window::Window>>,
+    /// Platform suyu (platform_water_window.rs, plan/road.md Y22).
+    pub(crate) platform_water_window: Option<Box<crate::platform_water_window::Window>>,
     /// Poz metrajı (pay_window.rs, plan/road.md Y11.4).
     pub(crate) pay_window: Option<Box<crate::pay_window::Window>>,
     /// Ön güzergâh (route_window.rs, plan/road.md Y12.1).
@@ -1787,6 +1793,7 @@ impl App {
             surface_analysis_window: None,
             sight_window: None,
             design_check_window: None,
+            platform_water_window: None,
             pay_window: None,
             route_window: None,
             junction_window: None,
@@ -2532,6 +2539,7 @@ impl App {
             Message::SurfaceAnalysis(event) => return self.surface_analysis_event(event),
             Message::Sight(event) => return self.sight_event(event),
             Message::DesignCheck(event) => return self.design_check_event(event),
+            Message::PlatformWater(event) => return self.platform_water_event(event),
             Message::Pay(event) => return self.pay_event(event),
             Message::Route(event) => return self.route_event(event),
             Message::Junctions(event) => return self.junction_event(event),
@@ -3595,6 +3603,7 @@ impl App {
             "terrain.analysis" => self.open_surface_analysis(),
             "profile.sight" => self.open_sight(),
             "alignment.check" => self.open_design_check(),
+            "corridor.water" => self.open_platform_water(),
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),

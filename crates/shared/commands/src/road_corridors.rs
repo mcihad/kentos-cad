@@ -308,3 +308,99 @@ pub struct CorridorsDrawn {
     pub uids: Vec<String>,
     pub revision: String,
 }
+
+pub const ROAD_CORRIDORS_WATER: &str = "road.corridors.water";
+pub const ROAD_CORRIDORS_WATER_VERSION: u32 = 1;
+
+/// Input of `road.corridors.water` v1 (docs/adr/0923; ROAD-DEVER-09): water on a corridor's platform as built now: its
+/// lane and shoulder triangles flatter than `least` (rise over run, the user's; where the grade and the crossfall
+/// leave water standing), the stations where a side's first lane's crossfall passes through zero, and the low points
+/// along the platform's edges (the axis and the components' edges). Reads only.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_platform_water` (least not above 0),
+/// and the corridor's when it no longer builds. Warnings: `corridor_flat` and the corridor's own (stale, unsolved,
+/// folded …).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorsWater {
+    pub corridor: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub least: f64,
+}
+
+/// A stretch of flat platform: its region, its first and last station, the plan area flatter than the least and the
+/// least slope found (rise over run).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PlatformFlat {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub least: f64,
+}
+
+/// A station where a side's first lane's crossfall is zero.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CrossfallZero {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    pub right: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+}
+
+/// A low point on a platform edge: its feature code, region, station and place.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PlatformLow {
+    pub code: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub z: f64,
+}
+
+/// Output of `road.corridors.water` v1: the corridor's id, the least asked, the flat triangles' count and plan area, the
+/// flat stretches, the zero crossfall stations and the low points.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorsWatered {
+    pub corridor: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub least: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub flat_triangles: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub flat_area: f64,
+    pub flats: Vec<PlatformFlat>,
+    pub zeros: Vec<CrossfallZero>,
+    pub lows: Vec<PlatformLow>,
+}

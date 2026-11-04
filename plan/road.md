@@ -283,7 +283,7 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-DEVER-06:** Aynı station'da width/crossfall/height modifier çakışması priority/merge ile çözülsün; sessiz son satır kazanmasın.
 - [ ] **ROAD-DEVER-07:** Pivot reference değişimi, widening target ve median split durumları corridor sampling event listesine eklensin.
 - [ ] **ROAD-DEVER-08:** Grade/crossfall kaynakları oran biriminde canonical olsun; UI yüzde gösterimi açık çevrilsin.
-- [ ] **ROAD-DEVER-09:** Drainage için reverse crossfall, zero-slope pockets ve low-point warnings ortak corridor modelinden üret.
+- [~] **ROAD-DEVER-09:** Drainage için reverse crossfall, zero-slope pockets ve low-point warnings ortak corridor modelinden üret. (Y22, ADR 0923: koridorun üst yüzeyinden yatık yerler kullanıcının en küçük eğimiyle, enine eğimin sıfırı ve platform kenarlarının alçak noktaları; ters enine eğim açık.)
 - [ ] **ROAD-DEVER-10:** Dever profile editor, tables, curves ve 3D section sweep aynı kaynak schedule'ı gösterip değiştirir.
 - [ ] **ROAD-DEVER-11:** Limit kontrolünün sonucu standard ID/version, checked parameters ve override actor/reason taşısın.
 - [ ] **ROAD-DEVER-12:** Çok kısa ters kurp/transition overlap ve station-equation sınırları bağımsız kabul korpusunda olsun.
@@ -612,6 +612,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y19 | Veri güveni | ROAD-SURVEY-08; ROAD-UX-07 | Proje sınırında yüzeyin kapsamı, verisiz ve tahmin edilen yerler |
 | Y20 | Görüş mesafesi | ROAD-PROFILE-08 | Boykesitte göz ve nesne yüksekliğiyle ileri ve geri görüş, gerekenden kısa aralıklar |
 | Y21 | Tasarım denetimi | ROAD-ALIGN-11, 15; ROAD-PROFILE-13 | Aks ve boykesit kullanıcının kurallarıyla: yarıçap, kurp ve klotoid boyu, ters ve kırık sırtlı kurplar, eğimler, K |
+| Y22 | Platform suyu | ROAD-DEVER-09 | Koridor platformunun yatık yerleri, sıfır enine eğim ve kenarlardaki alçak noktalar |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 
@@ -670,6 +671,8 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 **Y20'nin aşamaları ve durumu** ([ADR 0921](../docs/adr/0921-road-profile-sight-distance.md); araştırma 4 Kasım 2026: Civil 3D'nin Sight Distance Check sihirbazı ve tepe kurbunda duruş görüşü, WisDOT'un Check Profile Sight Distance'ı, OpenRoads'un Sight Visibility'si; Netcad'in çevrimiçi belgesi yok): Y20.1: çekirdekte görüş (doğruya en büyük yükselme parça parça kesin, adımla ilerleme ve 1 mm'ye ikiye bölme). Y20.2: `road.profiles.sight` (27 ortak durum, Python, MCP). Y20.3: Güzergâh › Boykesit › Görüş mesafesi penceresi (resimler `.run/gui-evidence/yol-y20-gorus-*`). Y20 bitti; yatay ve 3B görüş, far görüşü ve geçiş görüşü açık.
 
 **Y21'in aşamaları ve durumu** ([ADR 0922](../docs/adr/0922-road-design-checks.md); araştırma 4 Kasım 2026: Civil 3D'nin çizgi, kurp, klotoid ve teğet kesişimi denetimleri, OpenRoads'un sivil geometri tasarım standartları, Bentley Civil Designer'ın ters, kırık sırtlı ve birleşik kurp çiftleri; Netcad'in çevrimiçi belgesi yok): Y21.1: çekirdekte aksın ve boykesitin denetimi. Y21.2: `road.alignments.check` ve `road.profiles.check` (21 + 21 ortak durum, Python, MCP). Y21.3: Güzergâh › Tasarım denetimi penceresi (resimler `.run/gui-evidence/yol-y21-denetim-*`). Y21 bitti; hıza bağlı kurallar ve projede saklanan kural kümesi açık.
+
+**Y22'nin aşamaları ve durumu** ([ADR 0923](../docs/adr/0923-road-platform-water.md); araştırma 4 Kasım 2026: dever geçişinin yatık yeri ve en küçük bileşke eğim, Civil 3D'nin ve OpenRoads'un koridor yüzeyinde eğim analizi; Netcad'in çevrimiçi belgesi yok): Y22.1: çekirdekte platform suyu (üçgenin en dik eğimi, aralıklar, enine eğimin sıfırı, alçak noktalar). Y22.2: `road.corridors.water` (21 ortak durum, Python, MCP). Y22.3: Koridor › Platform suyu penceresi (resimler `.run/gui-evidence/yol-y22-su-*`). Y22 bitti; platformda suyun yolu, ızgara aralığı ve ters enine eğim açık.
 
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 

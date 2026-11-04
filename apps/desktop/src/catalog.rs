@@ -637,6 +637,8 @@ pub const PORTED: &[&str] = &[
     "profile.sight",
     // plan/road.md Y21: Tasarım denetimi (design_check_window.rs).
     "alignment.check",
+    // plan/road.md Y22: Platform suyu (platform_water_window.rs).
+    "corridor.water",
     // plan/road.md Y11.4: Poz metrajı (pay_window.rs).
     "payItems.editor",
     // plan/road.md Y12.1: Ön güzergâh (route_window.rs).

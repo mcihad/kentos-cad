@@ -39068,6 +39068,177 @@
       ]
     },
     {
+      "id": "road.corridors.water",
+      "version": 1,
+      "title": "Platform suyu",
+      "summary": "Bir koridorun platformunda suyu okur; hiçbir şey yazmaz. Üst yüzeyin şerit ve banket üçgenlerinden eğimi least'ten (oran, kullanıcının; KentOS değer vermez) yatık olanlar: boy eğimi ve enine eğimin suyu bıraktığı yerler, dever geçişinin yatık yeri; km aralıkları, plan alanları ve en küçük eğimleriyle. Her yanın ilk şeridinin enine eğiminin sıfırdan geçtiği km'ler (eksen ile c1 noktası arasında, km'ler arasında doğrusal). Platform kenarlarında (eksen ve bileşenlerin kenarları) iki komşusundan alçak noktalar: suyun toplandığı, ızgara isteyen yerler. Üçgenin eğimi düzleminin en dik eğimidir. Uyarılar: corridor_flat ve koridorun kendi uyarıları. Retler: not_a_road_project, unknown_corridor, invalid_platform_water.",
+      "aliases": [
+        "platformsuyu",
+        "yatikyer"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.corridors.water` v1 (docs/adr/0923; ROAD-DEVER-09): water on a corridor's platform as built now: its\nlane and shoulder triangles flatter than `least` (rise over run, the user's; where the grade and the crossfall\nleave water standing), the stations where a side's first lane's crossfall passes through zero, and the low points\nalong the platform's edges (the axis and the components' edges). Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_platform_water` (least not above 0),\nand the corridor's when it no longer builds. Warnings: `corridor_flat` and the corridor's own (stale, unsolved,\nfolded …).",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "least": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          }
+        },
+        "required": [
+          "corridor",
+          "least"
+        ],
+        "title": "CorridorsWater",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.water` v1: the corridor's id, the least asked, the flat triangles' count and plan area, the\nflat stretches, the zero crossfall stations and the low points.",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "flatArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "flatTriangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "flats": {
+            "items": {
+              "$ref": "#/$defs/PlatformFlat"
+            },
+            "type": "array"
+          },
+          "least": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "lows": {
+            "items": {
+              "$ref": "#/$defs/PlatformLow"
+            },
+            "type": "array"
+          },
+          "zeros": {
+            "items": {
+              "$ref": "#/$defs/CrossfallZero"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "corridor",
+          "least",
+          "flatTriangles",
+          "flatArea",
+          "flats",
+          "zeros",
+          "lows"
+        ],
+        "title": "CorridorsWatered",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.water` v1: the corridor's id, the least asked, the flat triangles' count and plan area, the\nflat stretches, the zero crossfall stations and the low points.",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "flatArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "flatTriangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "flats": {
+            "items": {
+              "$ref": "#/$defs/PlatformFlat"
+            },
+            "type": "array"
+          },
+          "least": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "lows": {
+            "items": {
+              "$ref": "#/$defs/PlatformLow"
+            },
+            "type": "array"
+          },
+          "zeros": {
+            "items": {
+              "$ref": "#/$defs/CrossfallZero"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "corridor",
+          "least",
+          "flatTriangles",
+          "flatArea",
+          "flats",
+          "zeros",
+          "lows"
+        ],
+        "title": "CorridorsWatered",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "invalid_platform_water"
+        ],
+        "warnings": [
+          "corridor_flat",
+          "corridor_stale",
+          "corridor_unsolved",
+          "corridor_folded"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Platformda %0,5'ten yatık yerler",
+          "input": {
+            "corridor": "c-2",
+            "least": 0.005
+          }
+        }
+      ]
+    },
+    {
       "id": "road.corridors.draw",
       "version": 1,
       "title": "Şevli plan çiz",
@@ -83933,6 +84104,18 @@
       "meaning": "Bu kimlikte ya da adda koridor yok."
     },
     {
+      "code": "invalid_platform_water",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Platform suyu sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "corridor_flat",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Platformun bir yeri istenen en küçük eğimden yatık; su orada durur."
+    },
+    {
       "code": "invalid_road_corridor",
       "kind": "failed",
       "retryable": false,
@@ -101880,6 +102063,31 @@
           "type": "string"
         }
       ]
+    },
+    "CrossfallZero": {
+      "description": "A station where a side's first lane's crossfall is zero.",
+      "properties": {
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "right": {
+          "type": "boolean"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "region",
+        "right",
+        "station"
+      ],
+      "type": "object"
     },
     "CrsBase": {
       "description": "A local system's base: a projected system of the registry by its EPSG\ncode (`srid`), or a transverse Mercator the project defines\n(`definition`); exactly one.",
@@ -141941,6 +142149,45 @@
       ],
       "type": "object"
     },
+    "PlatformFlat": {
+      "description": "A stretch of flat platform: its region, its first and last station, the plan area flatter than the least and the\nleast slope found (rise over run).",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "least": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "region",
+        "from",
+        "to",
+        "area",
+        "least"
+      ],
+      "type": "object"
+    },
     "PlatformListed": {
       "description": "A pad in the project's list.",
       "properties": {
@@ -141965,6 +142212,49 @@
         "name",
         "surface",
         "revision"
+      ],
+      "type": "object"
+    },
+    "PlatformLow": {
+      "description": "A low point on a platform edge: its feature code, region, station and place.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "code",
+        "region",
+        "station",
+        "x",
+        "y",
+        "z"
       ],
       "type": "object"
     },

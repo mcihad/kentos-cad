@@ -429,6 +429,7 @@
     "terrain.analysis",
     "profile.sight",
     "alignment.check",
+    "corridor.water",
     "payItems.editor",
     "route.finder",
     "junction.editor",

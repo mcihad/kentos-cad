@@ -689,6 +689,10 @@ codes! {
     SUPERELEVATION_STALE = "superelevation_stale", Warning, false, "Dever çizelgesinin aksı değişti; km'leri denetleyip aksa yeniden bağlayın.";
     /// No corridor of the id or name.
     UNKNOWN_CORRIDOR = "unknown_corridor", Failed, false, "Bu kimlikte ya da adda koridor yok.";
+    /// A platform water check asked that is not right: a least slope not above 0 (docs/adr/0923 §2).
+    INVALID_PLATFORM_WATER = "invalid_platform_water", Failed, false, "Platform suyu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: somewhere the platform is flatter than the least slope asked; water stands there (docs/adr/0923 §2).
+    CORRIDOR_FLAT = "corridor_flat", Warning, false, "Platformun bir yeri istenen en küçük eğimden yatık; su orada durur.";
     /// A corridor's definition, its regions or its sampling (docs/adr/0905 §1–§2).
     INVALID_ROAD_CORRIDOR = "invalid_road_corridor", Failed, false, "Koridorun tanımı, bölgeleri ya da km örneklemesi geçerli değil; ileti nedenini ve yerini söyler.";
     /// A warning: the corridor's alignment changed since it was made or rebound.

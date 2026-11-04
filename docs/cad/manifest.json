@@ -1781,6 +1781,22 @@
    "tests": 0
   },
   {
+   "id": "corridor.water",
+   "kind": "command",
+   "title": "Platform suyu…",
+   "level": "semantic",
+   "via": [
+    "road.corridors.water"
+   ],
+   "operation": null,
+   "python": "Connection: road.corridors.water",
+   "mcp": "road.corridors.water",
+   "note": "Önizle road.corridors.water ile okur; hiçbir şey yazmaz (plan/road.md Y22, ADR 0923 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "crs.points",
    "kind": "command",
    "title": "Nokta listesi içe aktar…",

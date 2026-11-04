@@ -1832,6 +1832,12 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    Entry {
+        id: "road.corridors.water",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_platform_water"]],
+        warnings: &["corridor_flat", "corridor_stale", "corridor_unsolved", "corridor_folded"],
+        targets: none,
+    },
     // KentOS Yol's earthwork volumes (plan/road.md Y8, docs/adr/0906).
     Entry {
         id: "road.volumes.edit",
