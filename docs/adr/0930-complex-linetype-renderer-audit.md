@@ -330,3 +330,57 @@ Kanıtlar repo dışında `/tmp/kentos-cad-adv08-09-2026-11-03/` altında:
 `pattern-phase-20-clipped-final-gui.png`, test günlükleri ve bağımsız
 `make-unit-fixture.py`. Yazı/SHX işaretleri ve önceki açık matris bu
 çalışmayla tamamlanmış sayılmadı.
+
+
+## Uzak kümülatif path fazı (4 Kasım 2026)
+
+İkinci gerçek GPU incelemesi, yakındaki bir path parçasının `s0` birikmiş
+mesafesi çok büyükken Float32'nin kesirli fazı kaybettiğini kanıtladı.
+Bağımsız .75 m periyot / 1.000.000.000,125 m başlangıç deneyinde Apple M5
+Metal testi önce başarısızdı. Native CPU/export `StyledLayer::values` zaten
+hi+lo toplamını kullanıyordu; GPU vertex girişi yalnız yüksek `mt.x`i
+çarpıyordu. Çok büyük pozitif/negatif `dash_offset` da uniforma Float32
+olarak gitmeden önce katlanmalıydı; ek kırmızı test bunu kapsadı.
+
+Native GPU upload kopyasında **world-unit stroke** mesafesi, kaynak hi+lo
+Float64 toplamından tam periyoda katlanır. Kaynak `StyledLayer`, belgenin
+geometrisi ve PDF'nin tam mesafesi değiştirilmez. Ekran-piksel birimindeki
+strokelerin mesafesine aynı metre modülü uygulanmaz. Kaynak fazı bir
+periyottan küçük ve low stream hazırsa yeni kopya ayrılmaz; gereken
+kopya yalnız katmanın upload'ında hazırlanır, kamera hareketinde değil.
+Çizgi ve hatch'in kaynak `dash_offset`i de tam normalize periyotla Float64
+katlanıp uniforma yazılır. Tek sayılı tarifin ikinci tekrarı hesaba katılır.
+
+Doğrulama:
+
+- Upload testi world/Px/alan ayrımını, diğer koordinatların ve kaynak
+  high/low dizilerin değişmemesini, küçük fazda ödünç buffer yolunu sınar.
+- Gerçek GPU/CPU testi uzak birikmiş mesafe ve 0 / büyük pozitif / büyük
+  negatif kaynak fazını bağımsız yerel mesafe hesabıyla karşılaştırır.
+  Apple M5 Metal'de geçti. Tam gerçek GPU regresyonu 5 geçti, 2 ölçüm
+  testi ignored; render birim testleri 19 geçti.
+- Native style 37 birim + 41 entegrasyon testi geçti (3 ignored).
+  Strict masaüstü Clippy ve yeni derleme geçti. Native plot regresyonu da
+  yeniden çalıştırıldı: 18 birim + 66 entegrasyon geçti (3 ignored).
+- Önceki viewport düzeltmesinden sonra Python SDK yeniden derlendi;
+  `test_sheet_line_types.py` içindeki tek testin üç alt durumu geçti.
+
+Gerçek GUI için bağımsız KCAD yazarı 100 uzak yatay kenar ve sonra yerel
+bir son parça oluşturdu. Decimal ile hesaplanan birikmiş mesafe
+**1.005.000.999,625 m**, .75 m periyottaki faz **.625 m**. Geometrinin
+koordinatları ±5.000.000 m içinde; büyük değer path'in toplam mesafesidir.
+Kaynak polyline ve ayrı mavi referans 6,5 × 3 m adlı görünümde açıldı.
+Önceki binary'de kaynak çizgi görünmüyordu; yeni binary'de 21 çizgi
+parçasının sınırları mavi referanstan en fazla 1 piksel farklı. Fareyle
+zoom tekrarında da karşılaştırıldı.
+
+Yeni gerçek GUI binary SHA-256:
+`935a2dc8aaf396cb7f1461373c108d62f735196d77f5ad7cd9d67cb4636bc413`.
+Repo dışı kanıtlar: `make-remote-phase-fixture.py`,
+`line-types-remote-phase.kcad`, `remote-phase-before-gui.png`,
+`remote-phase-after-gui.png`, `remote-phase-zoom-after-gui.png` ve
+`remote-phase-*.log` (aynı `/tmp/kentos-cad-adv08-09-2026-11-03/` dizini).
+
+Bu düzeltme, tek bir çok uzun GPU segmentinin yerel interpolasyonuna veya
+ekran-piksel birimindeki desenin dünya-mesafe fazına genel çözüm iddiası
+olmaz. Yazı/SHX işaretleri, affine blok ve önceki açık kabul matrisi sürüyor.

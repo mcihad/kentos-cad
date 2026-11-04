@@ -657,23 +657,18 @@ impl StyledGpu {
                 placed: None,
             });
         }
-        let vertex = (!layer.data.is_empty()).then(|| {
+        let (uploaded, lows) = super::dashes::upload_values(layer);
+        let vertex = (!uploaded.is_empty()).then(|| {
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("kentos.styled.data"),
-                contents: bytemuck::cast_slice(&layer.data),
+                contents: bytemuck::cast_slice(&uploaded),
                 usage: wgpu::BufferUsages::VERTEX,
             })
         });
         let low = vertex.as_ref().map(|_| {
-            let values: std::borrow::Cow<'_, [f32]> = if layer.low.len() == layer.data.len() {
-                std::borrow::Cow::Borrowed(&layer.low)
-            } else {
-                std::borrow::Cow::Owned((0..layer.data.len())
-                    .map(|i| layer.low.get(i).copied().unwrap_or(0.0)).collect())
-            };
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("kentos.styled.low"),
-                contents: bytemuck::cast_slice(&values),
+                contents: bytemuck::cast_slice(&lows),
                 usage: wgpu::BufferUsages::VERTEX,
             })
         });

@@ -499,6 +499,15 @@ fn long_patterns_on_a_real_gpu() {
     dashes::full_patterns_match_independent_samples(&mut Gpu::open());
 }
 
+#[test]
+fn remote_dash_phase_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; skipped is not acceptance");
+        return;
+    }
+    dashes::remote_cumulative_phase_matches_local_reference(&mut Gpu::open());
+}
+
 /// Katman çizimi's cost in a frame (docs/adr/0226 §7, `gpu/compose_timing.rs`): a measurement, run
 /// alone and by hand (a device of its own).
 #[test]

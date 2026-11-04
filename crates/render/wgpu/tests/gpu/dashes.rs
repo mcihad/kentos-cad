@@ -20,6 +20,100 @@ fn expected(values: &[f64], at: f64) -> (bool, f64) {
     panic!("point belongs to one interval");
 }
 
+/// Coordinates are nearby, but a later segment of a long path has a remote
+/// cumulative distance. Its low part must survive phase evaluation too.
+pub(super) fn remote_cumulative_phase_matches_local_reference(gpu: &mut Gpu) {
+    let (w, h) = (512usize, 64usize);
+    let recipe = vec![0.125, 0.0625, 0.25, 0.0625, 0.1875, 0.0625]; // exact binary period .75
+    let source = 1_000_000_000.125f64;
+    let hi = source as f32;
+    let low = (source - f64::from(hi)) as f32;
+    for (case, offset) in [0., 1_000_000_000.25, -1_000_000_000.25]
+        .into_iter()
+        .enumerate()
+    {
+        let batch = StyledBatch {
+            range: 0..6,
+            kind: BatchKind::Stroke {
+                color: [1.; 4],
+                width: 0.03,
+                unit: Unit::World,
+                dash: Some(recipe.clone()),
+                dash_offset: offset,
+                cap: Cap::Butt,
+                blur: 0.,
+            },
+            level: 0.,
+            key: 0,
+            bounds: [-3., -0.02, 3., 0.02],
+            origin: [0.; 2],
+            reach: 0.02,
+            reach_unit: Unit::World,
+            min_scale: None,
+            max_scale: None,
+            group: 0,
+            effect: None,
+            weight_cap: 0.,
+            line_type_loss: None,
+        };
+        let layer = StyledLayer {
+            data: vec![-3., 0., 3., 0., hi, 0.],
+            low: vec![0., 0., 0., 0., low, 0.],
+            batches: vec![batch],
+            ..Default::default()
+        };
+        let zoom = 100.;
+        let cpu = kentos_native_style::cpu::paint(
+            w as u32,
+            h as u32,
+            &kentos_native_style::cpu::CpuView {
+                m: [zoom, 0., 0., -zoom],
+                t: [w as f64 / 2., h as f64 / 2.],
+                px_per_m: zoom,
+                dpr: 1.,
+                scale: 50.,
+            },
+            &[&layer],
+            &kentos_native_style::picture::NoImages,
+        )
+        .unwrap();
+        gpu.styled = Some(StyledScene {
+            layers: vec![Arc::new(StyledLayerPart {
+                id: 9191 + case as u64,
+                layer,
+            })],
+            ..Default::default()
+        });
+        let camera = Camera {
+            width: w as f64,
+            height: h as f64,
+            scale: zoom,
+            ..Default::default()
+        };
+        let image = gpu.draw(
+            &[],
+            &camera,
+            &RenderSettings::new(Rgba8::rgb(0, 0, 0)),
+            w as u32,
+            h as u32,
+        );
+        let mut checked = 0;
+        for x in 2..w - 2 {
+            let along = (x as f64 + 0.5 - w as f64 / 2.) / zoom + 3.;
+            // Independent bounded phase; no billion-metre term reaches f32.
+            let (ink, edge) = expected(&recipe, 0.375 + offset.rem_euclid(0.75) + along);
+            if edge * zoom < 1.5 {
+                continue;
+            }
+            let p = ((h / 2) * w + x) * 4;
+            assert_eq!(cpu[p + 3] > 128, ink, "CPU remote phase x={x}");
+            assert_eq!(image[p] > 128, ink, "GPU remote phase x={x}");
+            checked += 1;
+        }
+        assert!(checked > 100);
+    }
+}
+
 pub(super) fn full_patterns_match_independent_samples(gpu: &mut Gpu) {
     let old = gpu.styled.take();
     let keep = gpu.keep;

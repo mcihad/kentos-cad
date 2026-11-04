@@ -112,6 +112,14 @@ pub fn dash_values(dash: Option<&[f64]>) -> ([f64; 8], f64, f64) {
     (d, total, if total > 0.0 { on / total } else { 1.0 })
 }
 
+/// Bound a source phase before Float32 uniform packing. The complete period
+/// includes the second repetition of an odd recipe.
+fn dash_phase(phase: f64, period: f64) -> f64 {
+    if period > 0. && period.is_finite() && phase.is_finite() {
+        phase.rem_euclid(period)
+    } else {phase}
+}
+
 /// A pattern's per-cell random shift and whether neighbour cells must be
 /// looked at: the shape, its offset or its shift reach past half a cell (`patternReach`).
 pub fn pattern_reach(
@@ -159,7 +167,10 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
             s.set(0, color);
             let (d, total, on) = dash_values(dash.as_deref());
             s.set(8, &d);
-            s.set(20, &[*width, total, on, *dash_offset]);
+            // A large/negative source phase is equivalent modulo its full
+            // period. Fold before f32; doing it in the shader loses fractions.
+            let phase = dash_phase(*dash_offset,total);
+            s.set(20, &[*width, total, on, phase]);
             s.set(24, &[*blur, 0.0, 0.0, 0.0]);
             let cap = match cap {
                 Cap::Butt => 0,
@@ -187,7 +198,7 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
                 // A family's stagger (docs/adr/0186 §3).
                 s.set(16, &[*stagger, 0.0, 0.0, 0.0]);
                 s.set(20, &[angle.cos(), angle.sin(), *spacing, *width]);
-                s.set(24, &[*offset, total, on, *dash_offset]);
+                s.set(24, &[*offset, total, on, dash_phase(*dash_offset,total)]);
                 s.u[0] = unit(*u);
             }
             // A raster (docs/adr/0204 §5): b.z = opacity; its quads carry the rest.
@@ -316,6 +327,17 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn remote_positive_negative_phase_uses_the_complete_period_before_f32() {
+        assert_eq!(dash_phase(1_000_000_000.25,0.75),0.5);
+        assert_eq!(dash_phase(-1_000_000_000.25,0.75),0.25);
+        let (_,period,_)=dash_values(Some(&[0.125,0.25,0.375]));
+        assert_eq!(period,1.5);
+        assert_eq!(dash_phase(1_000_000_000.25,period),1.25);
+        assert_eq!(dash_phase(-1_000_000_000.25,period),0.25);
+        assert_eq!(dash_phase(7.,0.),7.);
+    }
 
     #[test]
     fn dashes_are_made_even_and_summed() {

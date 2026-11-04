@@ -1643,6 +1643,17 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
   Test ve kapsam ayrıntıları ADR 0930'da. Bu ilerlemeyi göstermek için
   ana durum `[~]`; yazı/şekil ve kalan kabul tamamlanmadan `[x]` yapılmayacak.
 
+**Uzak path fazı (4 Kasım 2026):**
+
+- Büyük birikmiş path mesafesinin kesirli fazı GPU upload'ında Float64
+  korunup tam periyoda katlanır; kaynak geometri/mesafe değişmez.
+  Büyük pozitif/negatif başlangıç fazı da Float32 uniformdan önce çözülür.
+- Apple M5 gerçek GPU testi hatayı önce yakaladı, düzeltme sonrası CPU ve
+  bağımsız mesafe referansıyla geçti. Gerçek uygulamada birikmiş mesafesi
+  1.005.000.999,625 m olan path'in yakındaki parçası mavi referansla
+  zoom yapılarak karşılaştırıldı; sınır farkı en fazla 1 piksel.
+  Kapsam ve kalan hassasiyet sınırları ADR 0930'da; ana madde `[~]`.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
