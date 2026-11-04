@@ -7340,6 +7340,39 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_SUPERELEVATIONS_WIDEN.into(),
+            version: crate::ROAD_SUPERELEVATIONS_WIDEN_VERSION,
+            title: "Genişletme öner".into(),
+            summary: "Bir dever çizelgesinin aksındaki her kurp için tasarım taşıtına göre kaplama genişletmesi önerir; hiçbir şey yazmaz. AASHTO: W_c = N(U + C) + (N − 1)·F_A + Z, genişletme W_c − W_n. N ve W_n tip kesitin şerit sayısı ve teğetteki şerit genişliğidir. U = u + R − √(R² − ΣLᵢ²): taşıtın kararlı durum izi, ΣLᵢ² = L₁² − k² + L₂² (mafsal ötelemesi eksi). F_A = √(R² + A(2L + A)) − R ön çıkıntının genişliğidir, Z = 0,1·V/√R. method: standard (öntanımlı) ya da simple (N(U + C)). Taşıt road.swept.query'ninkidir; track lastiklerin dıştan dışa iz genişliğidir, yoksa taşıtın genişliği alınır. clearance (C, şerit başına), speed, step (yukarı yuvarlama) ve least (bunun altı yazılmaz) standardındır, KentOS sayı vermez. drive: taşıt her kurpta aks üzerinde sürülür (tractrix) ve ulaştığı en büyük iz söylenir; kararlı duruma varmayan kısa kurpta formülün altında kalır. Cevap: şerit sayısı, teğet genişliği, her kurbun U, F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki genişletmesi ve sürüşü; kararlı dönülemeyen kurplar. \
+                      Uyarılar: widening_unturnable, superelevation_stale. Retler: invalid_widening, not_a_road_project, unknown_superelevation, unknown_road_template."
+                .into(),
+            aliases: vec!["genisletme".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SuperelevationsWiden>(),
+            output: schema::<crate::SuperelevationsWidened>(),
+            plan: Some(schema::<crate::SuperelevationsWidened>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "WB-19 boyutlarında çekici ve römork, 7,2 m'de C 0,9 m, 80 km/sa, 0,1 m'ye yuvarla".into(),
+                input: json!({
+                    "superelevation": "Ana aks deveri",
+                    "template": "Tip 1",
+                    "vehicle": { "wheelbase": 6.6, "front": 1.2, "rear": 0.0, "width": 2.59, "trailer": { "kingpin": -0.8, "wheelbase": 12.5, "front": 0.9, "rear": 1.0, "width": 2.59 } },
+                    "clearance": 0.9,
+                    "speed": 80.0,
+                    "step": 0.1,
+                    "drive": true
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_EDIT.into(),
             version: crate::ROAD_CORRIDORS_EDIT_VERSION,
             title: "Koridoru düzenle".into(),
@@ -14464,6 +14497,9 @@ mod tests {
                     crate::ROAD_SUPERELEVATIONS_CHECK => {
                         serde_json::from_value::<crate::SuperelevationsCheck>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_SUPERELEVATIONS_WIDEN => {
+                        serde_json::from_value::<crate::SuperelevationsWiden>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_CORRIDORS_EDIT => {
                         serde_json::from_value::<crate::CorridorsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15291,6 +15327,10 @@ mod tests {
                         }
                         crate::ROAD_SUPERELEVATIONS_CHECK => {
                             serde_json::from_value::<crate::SuperelevationsChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SUPERELEVATIONS_WIDEN => {
+                            serde_json::from_value::<crate::SuperelevationsWidened>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_EDIT => {

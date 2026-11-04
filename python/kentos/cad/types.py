@@ -7328,6 +7328,18 @@ WallsFromModeName = Literal["each", "pairs", "contours"]
 """The names of :class:`WallsFromMode`, for a plain string."""
 
 
+class WideningMethod(_StrEnum):
+    """AASHTO's two forms of the width on a curve (docs/adr/0932 §1): `standard` `N(U + C) + (N − 1)·F_A + Z`, `simple`
+    `N(U + C)`.
+    """
+    STANDARD = "standard"
+    SIMPLE = "simple"
+
+
+WideningMethodName = Literal["standard", "simple"]
+"""The names of :class:`WideningMethod`, for a plain string."""
+
+
 class Workspace(_StrEnum):
     """A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each
     with its own scene, axes and ribbon; every command still runs in both.
@@ -77388,6 +77400,110 @@ class SuperelevationsQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SuperelevationsWiden(_Model):
+    """Input of `road.superelevations.widen` v1 (docs/adr/0932 §3): each curve's traveled way widening for a design
+    vehicle, suggested for a schedule (its id or name) on a template's lanes (their number N and width on the tangent
+    W_n; the template by id or name). The vehicle is `road.swept.query`'s (its wheelbase, front overhang, width and
+    trailer); `track` is its track width out to out of the tires (absent: its width). `clearance` (C, per lane), the
+    design `speed` (km/h; absent: no extra width Z), the rounding `step` and the `least` widening worth building are the
+    standard's: KentOS gives none. `drive`: also drive the vehicle along each curve (the tractrix of `road.swept.query`,
+    its front axle on the alignment) and say the largest off-tracking it reaches, which a curve too short for the steady
+    state keeps under the formula's.
+
+    Refusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`, `invalid_widening` (a vehicle
+    size, the track, clearance, speed, step or least not right, a template without a lane).
+    Attributes:
+        clearance: Unit: m.
+        least: Unit: m.
+        speed: Unit: km/h.
+        step: Unit: m.
+        track: Unit: m.
+    """
+    superelevation: str
+    template: str
+    vehicle: SweptVehicleDef
+    clearance: float
+    drive: bool | Unset = UNSET
+    least: float | None | Unset = UNSET
+    method: WideningMethod | WideningMethodName | None | Unset = UNSET
+    speed: float | None | Unset = UNSET
+    step: float | None | Unset = UNSET
+    track: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevation"] = self.superelevation
+        out["template"] = self.template
+        out["vehicle"] = self.vehicle.to_json()
+        out["clearance"] = float(self.clearance)
+        if self.drive is not UNSET:
+            out["drive"] = self.drive
+        if self.least is not UNSET:
+            out["least"] = None if self.least is None else float(self.least)
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        if self.track is not UNSET:
+            out["track"] = None if self.track is None else float(self.track)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsWiden:
+        return cls(
+            superelevation=data["superelevation"],
+            template=data["template"],
+            vehicle=SweptVehicleDef.from_json(data["vehicle"]),
+            clearance=float(data["clearance"]),
+            drive=data.get("drive", UNSET),
+            least=UNSET if "least" not in data else None if data["least"] is None else float(data["least"]),
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(WideningMethod, data["method"]),
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+            track=UNSET if "track" not in data else None if data["track"] is None else float(data["track"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SuperelevationsWidened(_Model):
+    """Output of `road.superelevations.widen` v1: the schedule, the template's lanes and width on the tangent, the method,
+    the curves' widenings in station order and the PIs whose radius the vehicle cannot turn steadily on.
+    Attributes:
+        lanes: Unit: count.
+        tangent: Unit: m.
+    """
+    superelevation: str
+    lanes: int
+    tangent: float
+    method: WideningMethod | WideningMethodName
+    curves: list[WideningRow]
+    unturnable: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["superelevation"] = self.superelevation
+        out["lanes"] = self.lanes
+        out["tangent"] = float(self.tangent)
+        out["method"] = _enum_out(self.method)
+        out["curves"] = [e0.to_json() for e0 in self.curves]
+        out["unturnable"] = list(self.unturnable)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SuperelevationsWidened:
+        return cls(
+            superelevation=data["superelevation"],
+            lanes=data["lanes"],
+            tangent=float(data["tangent"]),
+            method=_enum_in(WideningMethod, data["method"]),
+            curves=[WideningRow.from_json(e0) for e0 in data["curves"]],
+            unturnable=list(data["unturnable"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SuperelevationsWritten(_Model):
     """Output of `road.superelevations.edit` v1.
     Attributes:
@@ -86791,6 +86907,77 @@ class WallsRectangle(_Model):
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             style=data.get("style", UNSET),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WideningRow(_Model):
+    """A curve's widening: its PI, TS and ST (m), radius, the vehicle's steady-state off-tracking, the track U, the front
+    overhang's width F_A, the extra width Z, the width on the curve W_c, the widening W_c − W_n (negative: the tangent's
+    width is enough), the suggestion (rounded; 0 below `least`), the schedule's widening on the curve now and, with
+    `drive`, the largest off-tracking of the drive.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        radius: Unit: m.
+        offtracking: Unit: m.
+        track: Unit: m.
+        overhang: Unit: m.
+        allowance: Unit: m.
+        width: Unit: m.
+        widening: Unit: m.
+        suggested: Unit: m.
+        current: Unit: m.
+        driven: Unit: m.
+    """
+    pi: str
+    from_: float
+    to: float
+    radius: float
+    offtracking: float
+    track: float
+    overhang: float
+    allowance: float
+    width: float
+    widening: float
+    suggested: float
+    current: float
+    driven: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pi"] = self.pi
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["radius"] = float(self.radius)
+        out["offtracking"] = float(self.offtracking)
+        out["track"] = float(self.track)
+        out["overhang"] = float(self.overhang)
+        out["allowance"] = float(self.allowance)
+        out["width"] = float(self.width)
+        out["widening"] = float(self.widening)
+        out["suggested"] = float(self.suggested)
+        out["current"] = float(self.current)
+        if self.driven is not UNSET:
+            out["driven"] = None if self.driven is None else float(self.driven)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WideningRow:
+        return cls(
+            pi=data["pi"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            radius=float(data["radius"]),
+            offtracking=float(data["offtracking"]),
+            track=float(data["track"]),
+            overhang=float(data["overhang"]),
+            allowance=float(data["allowance"]),
+            width=float(data["width"]),
+            widening=float(data["widening"]),
+            suggested=float(data["suggested"]),
+            current=float(data["current"]),
+            driven=UNSET if "driven" not in data else None if data["driven"] is None else float(data["driven"]),
         )
 
 
@@ -109018,6 +109205,8 @@ __all__ = [
     "SuperelevationsEdit",
     "SuperelevationsQueried",
     "SuperelevationsQuery",
+    "SuperelevationsWiden",
+    "SuperelevationsWidened",
     "SuperelevationsWritten",
     "SurfaceCloudDef",
     "SurfaceExclusion",
@@ -109423,6 +109612,9 @@ __all__ = [
     "WallsPlan",
     "WallsRectangle",
     "WeightCurveEdit",
+    "WideningMethod",
+    "WideningMethodName",
+    "WideningRow",
     "WindowPaperPlotArea",
     "WindowSelectRegion",
     "Wipeout",

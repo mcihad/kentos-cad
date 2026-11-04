@@ -1,6 +1,6 @@
 # 0932 — KentOS Yol: kurpta tasarım taşıtına göre genişletme
 
-Tarih: 2026-11-04. plan/road.md Y28 (ROAD-DEVER-05). Durum: Y28.1 kabul; Y28.2–Y28.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y28 (ROAD-DEVER-05). Durum: Y28.1–Y28.2 kabul; Y28.3 bu belgeyle ilerler.
 
 ## Dayanak
 
@@ -75,6 +75,30 @@ sürüldü (L₁ 6,6, mafsal −0,8, L₂ 12,5 m). Sonuç her durumda kararlı d
 pencerede sürüşle birlikte gösterilir.
 
 Bekçi: `tests/all/widening.rs::the_steady_state_bounds_the_drive`.
+
+### §3 Komut (`road.superelevations.widen` v1, Y28.2)
+
+Salt okunur sorgudur; öneriyi çizelgeye Dever penceresi `road.superelevations.edit` ile yazar.
+
+- **Girdi:** dever çizelgesi ve tip kesit (kimlik ya da ad). Taşıt `road.swept.query`'nin `SweptVehicleDef`'idir; Y17'nin
+  taşıtı ikinci kez tanımlanmaz. `track` lastiklerin dıştan dışa iz genişliğidir, yoksa taşıtın genişliği alınır.
+  `clearance` (C, şerit başına) zorunludur. `speed`, `method` (`standard` | `simple`), `step`, `least` ve `drive`
+  isteğe bağlıdır.
+- **N ve W_n tip kesitten gelir:** iki yanın şeritlerinin sayısı ve teğetteki genişliklerinin toplamı. Şeritsiz tip
+  kesit reddedilir.
+- **Çıktı:** her kurp için PI, TS, ST, R, iz, U, F_A, Z, W_c, genişletme, öneri, çizelgedeki genişletme (`current`;
+  km satırlı çizelgede 0) ve `drive` ile sürüşün izi (`driven`). Kararlı dönülemeyen kurplar `unturnable`'da listelenir,
+  satır açılmaz.
+- **Sürüş:** taşıtın ön dingili aks üzerinde, TS'den taşıt boyunun iki katı artı 10 m önce başlar ve ST'ye kadar
+  0,25 m adımla sürülür (`swept::drive`). En arka dingilin ön dingil izine en büyük uzaklığı okunur.
+- **Kodlar:** `invalid_widening` (taşıt, iz, açıklık, hız, adım, en az genişletme, şeritsiz tip kesit) ve
+  `widening_unturnable` uyarısı. Eskimiş çizelgede `superelevation_stale` de gelir.
+
+27 ortak durum `scripts/fixtures/road_widening_command_cases.py`'dir. Genişletme Y28.1'in dingil dingil referansından
+gelir. Sürüş referansı bisiklet modelinin diferansiyel denklemleridir: ön dingilin yeri de aksın eğriliğinden
+tümlenir, dördüncü mertebe Runge–Kutta 2,5 cm adımla. KentOS tractrix'i 25 cm kirişlerde kesin sürer. İkisi 5 mm
+içinde aynı çıkar. Ölçülen WB-19 durumunda (R 150 m, 40 m klotoid, 47° sapma) referans 0,6648, kararlı durum 0,6654 m
+verir.
 
 ## Doğrulama
 

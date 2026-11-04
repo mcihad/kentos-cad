@@ -658,6 +658,10 @@ codes! {
     INVALID_SUPERELEVATION_CHECK = "invalid_superelevation_check", Failed, false, "Dever denetimi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a superelevation breaks the given relative gradient or side friction (docs/adr/0931 §2).
     SUPERELEVATION_LIMIT_BROKEN = "superelevation_limit_broken", Warning, false, "Dever çizelgesi verilen göreli eğim ya da yanal sürtünme sınırını aşıyor.";
+    /// A refusal: a widening's question is not valid (docs/adr/0932 §3).
+    INVALID_WIDENING = "invalid_widening", Failed, false, "Genişletme sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the design vehicle cannot turn steadily on a curve's radius (docs/adr/0932 §3).
+    WIDENING_UNTURNABLE = "widening_unturnable", Warning, false, "Tasarım taşıtı bir kurbun yarıçapında kararlı dönemez.";
     DESIGN_RULE_BROKEN = "design_rule_broken", Warning, false, "Aks ya da boykesit verilen tasarım kurallarına uymuyor.";
     INVALID_SIGHT = "invalid_sight", Failed, false, "Görüş mesafesi sorusu geçerli değil; ileti nedenini söyler.";
     /// A grade line proposal asked that is not right or cannot be made: a circular curve, no surface, an unknown PVI,

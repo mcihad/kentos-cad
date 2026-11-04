@@ -302,3 +302,122 @@ pub struct SuperelevationsChecked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub step: f64,
 }
+
+pub const ROAD_SUPERELEVATIONS_WIDEN: &str = "road.superelevations.widen";
+pub const ROAD_SUPERELEVATIONS_WIDEN_VERSION: u32 = 1;
+
+/// AASHTO's two forms of the width on a curve (docs/adr/0932 §1): `standard` `N(U + C) + (N − 1)·F_A + Z`, `simple`
+/// `N(U + C)`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WideningMethod {
+    #[default]
+    Standard,
+    Simple,
+}
+
+/// Input of `road.superelevations.widen` v1 (docs/adr/0932 §3): each curve's traveled way widening for a design
+/// vehicle, suggested for a schedule (its id or name) on a template's lanes (their number N and width on the tangent
+/// W_n; the template by id or name). The vehicle is `road.swept.query`'s (its wheelbase, front overhang, width and
+/// trailer); `track` is its track width out to out of the tires (absent: its width). `clearance` (C, per lane), the
+/// design `speed` (km/h; absent: no extra width Z), the rounding `step` and the `least` widening worth building are the
+/// standard's: KentOS gives none. `drive`: also drive the vehicle along each curve (the tractrix of `road.swept.query`,
+/// its front axle on the alignment) and say the largest off-tracking it reaches, which a curve too short for the steady
+/// state keeps under the formula's.
+///
+/// Refusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`, `invalid_widening` (a vehicle
+/// size, the track, clearance, speed, step or least not right, a template without a lane).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationsWiden {
+    pub superelevation: String,
+    pub template: String,
+    pub vehicle: crate::SweptVehicleDef,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub track: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub clearance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub speed: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub method: Option<WideningMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub least: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub drive: bool,
+}
+
+/// A curve's widening: its PI, TS and ST (m), radius, the vehicle's steady-state off-tracking, the track U, the front
+/// overhang's width F_A, the extra width Z, the width on the curve W_c, the widening W_c − W_n (negative: the tangent's
+/// width is enough), the suggestion (rounded; 0 below `least`), the schedule's widening on the curve now and, with
+/// `drive`, the largest off-tracking of the drive.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WideningRow {
+    pub pi: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub offtracking: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub track: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub overhang: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub allowance: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub width: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub widening: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub suggested: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub current: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub driven: Option<f64>,
+}
+
+/// Output of `road.superelevations.widen` v1: the schedule, the template's lanes and width on the tangent, the method,
+/// the curves' widenings in station order and the PIs whose radius the vehicle cannot turn steadily on.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SuperelevationsWidened {
+    pub superelevation: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub lanes: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tangent: f64,
+    pub method: WideningMethod,
+    pub curves: Vec<WideningRow>,
+    pub unturnable: Vec<String>,
+}

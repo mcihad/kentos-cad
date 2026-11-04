@@ -39451,6 +39451,228 @@
       ]
     },
     {
+      "id": "road.superelevations.widen",
+      "version": 1,
+      "title": "Genişletme öner",
+      "summary": "Bir dever çizelgesinin aksındaki her kurp için tasarım taşıtına göre kaplama genişletmesi önerir; hiçbir şey yazmaz. AASHTO: W_c = N(U + C) + (N − 1)·F_A + Z, genişletme W_c − W_n. N ve W_n tip kesitin şerit sayısı ve teğetteki şerit genişliğidir. U = u + R − √(R² − ΣLᵢ²): taşıtın kararlı durum izi, ΣLᵢ² = L₁² − k² + L₂² (mafsal ötelemesi eksi). F_A = √(R² + A(2L + A)) − R ön çıkıntının genişliğidir, Z = 0,1·V/√R. method: standard (öntanımlı) ya da simple (N(U + C)). Taşıt road.swept.query'ninkidir; track lastiklerin dıştan dışa iz genişliğidir, yoksa taşıtın genişliği alınır. clearance (C, şerit başına), speed, step (yukarı yuvarlama) ve least (bunun altı yazılmaz) standardındır, KentOS sayı vermez. drive: taşıt her kurpta aks üzerinde sürülür (tractrix) ve ulaştığı en büyük iz söylenir; kararlı duruma varmayan kısa kurpta formülün altında kalır. Cevap: şerit sayısı, teğet genişliği, her kurbun U, F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki genişletmesi ve sürüşü; kararlı dönülemeyen kurplar. Uyarılar: widening_unturnable, superelevation_stale. Retler: invalid_widening, not_a_road_project, unknown_superelevation, unknown_road_template.",
+      "aliases": [
+        "genisletme"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.superelevations.widen` v1 (docs/adr/0932 §3): each curve's traveled way widening for a design\nvehicle, suggested for a schedule (its id or name) on a template's lanes (their number N and width on the tangent\nW_n; the template by id or name). The vehicle is `road.swept.query`'s (its wheelbase, front overhang, width and\ntrailer); `track` is its track width out to out of the tires (absent: its width). `clearance` (C, per lane), the\ndesign `speed` (km/h; absent: no extra width Z), the rounding `step` and the `least` widening worth building are the\nstandard's: KentOS gives none. `drive`: also drive the vehicle along each curve (the tractrix of `road.swept.query`,\nits front axle on the alignment) and say the largest off-tracking it reaches, which a curve too short for the steady\nstate keeps under the formula's.\n\nRefusals: `not_a_road_project`, `unknown_superelevation`, `unknown_road_template`, `invalid_widening` (a vehicle\nsize, the track, clearance, speed, step or least not right, a template without a lane).",
+        "properties": {
+          "clearance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "drive": {
+            "type": "boolean"
+          },
+          "least": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WideningMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "speed": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "km/h"
+          },
+          "step": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "superelevation": {
+            "type": "string"
+          },
+          "template": {
+            "type": "string"
+          },
+          "track": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "vehicle": {
+            "$ref": "#/$defs/SweptVehicleDef"
+          }
+        },
+        "required": [
+          "superelevation",
+          "template",
+          "vehicle",
+          "clearance"
+        ],
+        "title": "SuperelevationsWiden",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.widen` v1: the schedule, the template's lanes and width on the tangent, the method,\nthe curves' widenings in station order and the PIs whose radius the vehicle cannot turn steadily on.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/WideningRow"
+            },
+            "type": "array"
+          },
+          "lanes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "method": {
+            "$ref": "#/$defs/WideningMethod"
+          },
+          "superelevation": {
+            "type": "string"
+          },
+          "tangent": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "unturnable": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "superelevation",
+          "lanes",
+          "tangent",
+          "method",
+          "curves",
+          "unturnable"
+        ],
+        "title": "SuperelevationsWidened",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.superelevations.widen` v1: the schedule, the template's lanes and width on the tangent, the method,\nthe curves' widenings in station order and the PIs whose radius the vehicle cannot turn steadily on.",
+        "properties": {
+          "curves": {
+            "items": {
+              "$ref": "#/$defs/WideningRow"
+            },
+            "type": "array"
+          },
+          "lanes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "method": {
+            "$ref": "#/$defs/WideningMethod"
+          },
+          "superelevation": {
+            "type": "string"
+          },
+          "tangent": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "unturnable": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "superelevation",
+          "lanes",
+          "tangent",
+          "method",
+          "curves",
+          "unturnable"
+        ],
+        "title": "SuperelevationsWidened",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_widening",
+          "not_a_road_project",
+          "unknown_superelevation",
+          "unknown_road_template"
+        ],
+        "warnings": [
+          "widening_unturnable",
+          "superelevation_stale"
+        ]
+      },
+      "examples": [
+        {
+          "title": "WB-19 boyutlarında çekici ve römork, 7,2 m'de C 0,9 m, 80 km/sa, 0,1 m'ye yuvarla",
+          "input": {
+            "clearance": 0.9,
+            "drive": true,
+            "speed": 80.0,
+            "step": 0.1,
+            "superelevation": "Ana aks deveri",
+            "template": "Tip 1",
+            "vehicle": {
+              "front": 1.2,
+              "rear": 0.0,
+              "trailer": {
+                "front": 0.9,
+                "kingpin": -0.8,
+                "rear": 1.0,
+                "wheelbase": 12.5,
+                "width": 2.59
+              },
+              "wheelbase": 6.6,
+              "width": 2.59
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "road.corridors.edit",
       "version": 1,
       "title": "Koridoru düzenle",
@@ -84931,6 +85153,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Dever çizelgesi verilen göreli eğim ya da yanal sürtünme sınırını aşıyor."
+    },
+    {
+      "code": "invalid_widening",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Genişletme sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "widening_unturnable",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tasarım taşıtı bir kurbun yarıçapında kararlı dönemez."
     },
     {
       "code": "design_rule_broken",
@@ -171561,6 +171795,100 @@
       "required": [
         "walls",
         "revision"
+      ],
+      "type": "object"
+    },
+    "WideningMethod": {
+      "description": "AASHTO's two forms of the width on a curve (docs/adr/0932 §1): `standard` `N(U + C) + (N − 1)·F_A + Z`, `simple`\n`N(U + C)`.",
+      "enum": [
+        "standard",
+        "simple"
+      ],
+      "type": "string"
+    },
+    "WideningRow": {
+      "description": "A curve's widening: its PI, TS and ST (m), radius, the vehicle's steady-state off-tracking, the track U, the front\noverhang's width F_A, the extra width Z, the width on the curve W_c, the widening W_c − W_n (negative: the tangent's\nwidth is enough), the suggestion (rounded; 0 below `least`), the schedule's widening on the curve now and, with\n`drive`, the largest off-tracking of the drive.",
+      "properties": {
+        "allowance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "current": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "driven": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "offtracking": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "overhang": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "pi": {
+          "type": "string"
+        },
+        "radius": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "suggested": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "track": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "widening": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "width": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pi",
+        "from",
+        "to",
+        "radius",
+        "offtracking",
+        "track",
+        "overhang",
+        "allowance",
+        "width",
+        "widening",
+        "suggested",
+        "current"
       ],
       "type": "object"
     },
