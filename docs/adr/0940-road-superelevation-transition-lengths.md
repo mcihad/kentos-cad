@@ -131,10 +131,12 @@ Y28'in Genişletme önerisi gibi Dever'in yerine açılır.
 
 Resimler `.run/gui-evidence/yol-y34/` altındadır.
 
+**Yan düzeltme:** Dever diyagramında km'si yakın kritik nokta yazıları iki satıra dağılıyordu, ama üçüncü yazı ikinci
+satırdakinin üstüne biniyordu ("NCRCS"). Artık her satırın son yazısı ayrı izlenir. Sığmayan yazı atlanır; kesikli
+çizgisi kalır ve Kritik km tablosu onu adıyla söyler.
+
 ## Açık
 
 - **Dever oranı:** standart profil gelince önerilir.
 - **AASHTO'nun `b_w` çok şerit azaltması:** isteğe bağlı olarak eklenebilir.
 - **Klotoid boyunu aksa yazmak:** bugün yalnız söylenir; aks Güzergâh penceresinin işidir.
-- **Dever diyagramında yazılar:** km'si çok yakın kritik nokta yazıları (LC, RC) üst üste biniyor. Bu, Y6 çiziminin
-  kusurudur.

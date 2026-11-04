@@ -949,7 +949,9 @@ impl canvas::Program<Message> for Chart<'_> {
             }
             v += grid;
         }
-        let mut last: Option<f32> = None;
+        // The last name on each of the two rows: a name goes on the first row it fits, else it is left out (its dashed
+        // line stays and the Kritik km table names it); two rows alone let a third name lie over the second's.
+        let mut last: [Option<f32>; 2] = [None, None];
         for c in &rep.critical {
             let at = x(c.station);
             frame.stroke(
@@ -962,16 +964,13 @@ impl canvas::Program<Message> for Chart<'_> {
                 "reverseCrown" => "RC",
                 _ => "FS",
             };
-            // The second row where the last name on the first is nearer than a name's width.
-            let low = last.is_some_and(|l: f32| at - l < 22.0);
-            if !low {
-                last = Some(at);
-            }
+            let Some(row) = (0..2).find(|&r| last[r].is_none_or(|l: f32| at - l >= 22.0)) else { continue };
+            last[row] = Some(at);
             let base = part.bottom(bottom + 4.0, 26.0);
             crate::picture::label(
                 &mut frame,
                 mark.into(),
-                Point::new(at, base + if low { 13.0 } else { 0.0 }),
+                Point::new(at, base + if row == 1 { 13.0 } else { 0.0 }),
                 t.muted,
                 true,
                 (base < bottom + 3.5).then_some(t.field.scale_alpha(0.9)),
