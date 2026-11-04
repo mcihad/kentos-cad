@@ -43,6 +43,7 @@ pub mod route;
 pub mod section;
 pub mod sources;
 pub mod superelevation;
+pub mod superelevation_physics;
 pub mod swept;
 pub mod surface;
 pub mod volume;

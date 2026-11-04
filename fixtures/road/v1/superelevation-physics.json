@@ -1,0 +1,642 @@
+{
+ "lift": [
+  {
+   "name": "Eksen etrafında: kalkış yok",
+   "pivot": "centerline",
+   "slopes": [
+    -6,
+    6
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    3.5,
+    3.5
+   ],
+   "lift": 0.0
+  },
+  {
+   "name": "İç kenar etrafında, sola dönen kurp",
+   "pivot": "insideEdge",
+   "slopes": [
+    -6,
+    6
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    3.5,
+    3.5
+   ],
+   "lift": 0.1225
+  },
+  {
+   "name": "Dış kenar etrafında, sola dönen kurp",
+   "pivot": "outsideEdge",
+   "slopes": [
+    -6,
+    6
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    3.5,
+    3.5
+   ],
+   "lift": -0.2975
+  },
+  {
+   "name": "İç kenar etrafında, sağa dönen kurp",
+   "pivot": "insideEdge",
+   "slopes": [
+    6,
+    -6
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    3.5,
+    3.5
+   ],
+   "lift": 0.1225
+  },
+  {
+   "name": "Sol kenar etrafında, genişlemiş sol",
+   "pivot": "leftEdge",
+   "slopes": [
+    -6,
+    6
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    4.3,
+    3.5
+   ],
+   "lift": 0.1505
+  },
+  {
+   "name": "Sağ kenar etrafında",
+   "pivot": "rightEdge",
+   "slopes": [
+    -6,
+    6
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    3.5,
+    3.5
+   ],
+   "lift": -0.2975
+  },
+  {
+   "name": "Normal eğimde iç kenar: kalkış yok",
+   "pivot": "insideEdge",
+   "slopes": [
+    -2.5,
+    -2.5
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    3.5,
+    3.5
+   ],
+   "lift": 0.0
+  },
+  {
+   "name": "Düz eğimli dış yan, iç kenar",
+   "pivot": "insideEdge",
+   "slopes": [
+    -2.5,
+    0
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "widths": [
+    3.5,
+    3.5
+   ],
+   "lift": 0.0
+  }
+ ],
+ "gradients": [
+  {
+   "name": "Eksen etrafında",
+   "pivot": "centerline",
+   "way": {
+    "leftSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      126.47058823529412,
+      -2.5
+     ],
+     [
+      160,
+      -6
+     ]
+    ],
+    "rightSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      160,
+      6
+     ]
+    ],
+    "leftWidth": [
+     [
+      0,
+      3.5
+     ]
+    ],
+    "rightWidth": [
+     [
+      0,
+      3.5
+     ]
+    ]
+   },
+   "from": 80.0,
+   "to": 180.0,
+   "rows": [
+    {
+     "from": 80.0,
+     "to": 100.0,
+     "left": 0.0,
+     "right": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 126.47058823529412,
+     "left": 0.0,
+     "right": 0.004958333333333334
+    },
+    {
+     "from": 126.47058823529412,
+     "to": 160.0,
+     "left": 0.0036535087719298245,
+     "right": 0.004958333333333334
+    },
+    {
+     "from": 160.0,
+     "to": 180.0,
+     "left": 0.0,
+     "right": 0.0
+    }
+   ]
+  },
+  {
+   "name": "İç kenar etrafında: dış kenar bütün genişliği döner",
+   "pivot": "insideEdge",
+   "way": {
+    "leftSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      126.47058823529412,
+      -2.5
+     ],
+     [
+      160,
+      -6
+     ]
+    ],
+    "rightSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      160,
+      6
+     ]
+    ],
+    "leftWidth": [
+     [
+      0,
+      3.5
+     ]
+    ],
+    "rightWidth": [
+     [
+      0,
+      3.5
+     ]
+    ]
+   },
+   "from": 80.0,
+   "to": 180.0,
+   "rows": [
+    {
+     "from": 80.0,
+     "to": 100.0,
+     "left": 0.0,
+     "right": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 126.47058823529412,
+     "left": 0.0,
+     "right": 0.004958333333333334
+    },
+    {
+     "from": 126.47058823529412,
+     "to": 160.0,
+     "left": 0.0,
+     "right": 0.008611842105263157
+    },
+    {
+     "from": 160.0,
+     "to": 180.0,
+     "left": 0.0,
+     "right": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Dış kenar etrafında",
+   "pivot": "outsideEdge",
+   "way": {
+    "leftSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      126.47058823529412,
+      -2.5
+     ],
+     [
+      160,
+      -6
+     ]
+    ],
+    "rightSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      160,
+      6
+     ]
+    ],
+    "leftWidth": [
+     [
+      0,
+      3.5
+     ]
+    ],
+    "rightWidth": [
+     [
+      0,
+      3.5
+     ]
+    ]
+   },
+   "from": 80.0,
+   "to": 180.0,
+   "rows": [
+    {
+     "from": 80.0,
+     "to": 100.0,
+     "left": 0.0,
+     "right": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 126.47058823529412,
+     "left": 0.004958333333333334,
+     "right": 0.0
+    },
+    {
+     "from": 126.47058823529412,
+     "to": 160.0,
+     "left": 0.008611842105263157,
+     "right": 0.0
+    },
+    {
+     "from": 160.0,
+     "to": 180.0,
+     "left": 0.0,
+     "right": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Sol kenar etrafında",
+   "pivot": "leftEdge",
+   "way": {
+    "leftSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      126.47058823529412,
+      -2.5
+     ],
+     [
+      160,
+      -6
+     ]
+    ],
+    "rightSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      160,
+      6
+     ]
+    ],
+    "leftWidth": [
+     [
+      0,
+      3.5
+     ]
+    ],
+    "rightWidth": [
+     [
+      0,
+      3.5
+     ]
+    ]
+   },
+   "from": 80.0,
+   "to": 180.0,
+   "rows": [
+    {
+     "from": 80.0,
+     "to": 100.0,
+     "left": 0.0,
+     "right": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 126.47058823529412,
+     "left": 0.0,
+     "right": 0.004958333333333334
+    },
+    {
+     "from": 126.47058823529412,
+     "to": 160.0,
+     "left": 0.0,
+     "right": 0.008611842105263157
+    },
+    {
+     "from": 160.0,
+     "to": 180.0,
+     "left": 0.0,
+     "right": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Genişleyen iç yan, eksen etrafında",
+   "pivot": "centerline",
+   "way": {
+    "leftSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      126.47058823529412,
+      -2.5
+     ],
+     [
+      160,
+      -6
+     ]
+    ],
+    "rightSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      160,
+      6
+     ]
+    ],
+    "leftWidth": [
+     [
+      100,
+      3.5
+     ],
+     [
+      160,
+      4.3
+     ]
+    ],
+    "rightWidth": [
+     [
+      0,
+      3.5
+     ]
+    ]
+   },
+   "from": 80.0,
+   "to": 180.0,
+   "rows": [
+    {
+     "from": 80.0,
+     "to": 100.0,
+     "left": 0.0,
+     "right": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 126.47058823529412,
+     "left": 0.00033333333333333327,
+     "right": 0.004958333333333334
+    },
+    {
+     "from": 126.47058823529412,
+     "to": 160.0,
+     "left": 0.00528859649122807,
+     "right": 0.004958333333333334
+    },
+    {
+     "from": 160.0,
+     "to": 180.0,
+     "left": 0.0,
+     "right": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Genişleyen iç yan, dış kenar etrafında",
+   "pivot": "outsideEdge",
+   "way": {
+    "leftSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      126.47058823529412,
+      -2.5
+     ],
+     [
+      160,
+      -6
+     ]
+    ],
+    "rightSlope": [
+     [
+      100,
+      -2.5
+     ],
+     [
+      160,
+      6
+     ]
+    ],
+    "leftWidth": [
+     [
+      100,
+      3.5
+     ],
+     [
+      160,
+      4.3
+     ]
+    ],
+    "rightWidth": [
+     [
+      0,
+      3.5
+     ]
+    ]
+   },
+   "from": 80.0,
+   "to": 180.0,
+   "rows": [
+    {
+     "from": 80.0,
+     "to": 100.0,
+     "left": 0.0,
+     "right": 0.0
+    },
+    {
+     "from": 100.0,
+     "to": 126.47058823529412,
+     "left": 0.005291666666666667,
+     "right": 0.0
+    },
+    {
+     "from": 126.47058823529412,
+     "to": 160.0,
+     "left": 0.010246929824561404,
+     "right": 0.0
+    },
+    {
+     "from": 160.0,
+     "to": 180.0,
+     "left": 0.0,
+     "right": 0.0
+    }
+   ]
+  }
+ ],
+ "friction": [
+  {
+   "name": "80 km/sa, R 300 m, %6 dever",
+   "speed": 80.0,
+   "radius": 300.0,
+   "e": 0.06,
+   "friction": 0.10677911918282054,
+   "approximate": 0.10797900262467192
+  },
+  {
+   "name": "50 km/sa, R 80 m, %8 dever",
+   "speed": 50.0,
+   "radius": 80.0,
+   "e": 0.08,
+   "friction": 0.16268064375481542,
+   "approximate": 0.16606299212598424
+  },
+  {
+   "name": "Ters eğimli dış yan (−%2,5)",
+   "speed": 60.0,
+   "radius": 400.0,
+   "e": -0.025,
+   "friction": 0.09598354948038446,
+   "approximate": 0.09586614173228347
+  },
+  {
+   "name": "Deversiz",
+   "speed": 70.0,
+   "radius": 500.0,
+   "e": 0.0,
+   "friction": 0.07710817042580013,
+   "approximate": 0.07716535433070866
+  },
+  {
+   "name": "Yavaş araç: sürtünme içe (eksi)",
+   "speed": 20.0,
+   "radius": 300.0,
+   "e": 0.06,
+   "friction": -0.0494779483441912,
+   "approximate": -0.049501312335958
+  }
+ ],
+ "toward": [
+  {
+   "name": "Sola dönen kurpta tam dever",
+   "left": -6,
+   "right": 6,
+   "leftTurn": true,
+   "e": 0.06
+  },
+  {
+   "name": "Sağa dönen kurpta tam dever",
+   "left": 6,
+   "right": -6,
+   "leftTurn": false,
+   "e": 0.06
+  },
+  {
+   "name": "Sola dönen kurpta normal eğim: dış yan ters",
+   "left": -2.5,
+   "right": -2.5,
+   "leftTurn": true,
+   "e": -0.025
+  },
+  {
+   "name": "Sola dönen kurpta düz dış yan",
+   "left": -2.5,
+   "right": 0,
+   "leftTurn": true,
+   "e": 0.0
+  }
+ ]
+}
