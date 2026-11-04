@@ -590,3 +590,81 @@ fn screens_progress() {
         }
     }
 }
+
+/// `road.volumes.compare`'s drawing: the volumes' and two alternatives of the main road (docs/adr/0943).
+fn alternatives() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.compare.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Y37.3 (docs/adr/0943): switching an alternative on in Kübaj reads the comparison as `road.volumes.compare`'s shared
+/// case does, draws the alignments and lists it; switching it off takes it away.
+#[test]
+fn the_window_compares_alternatives_as_the_shared_case_does() {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.compare.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Geniş kurp: aks kurpta ayrılıyor");
+    let want = &case.expect("the case")["steps"][0]["result"]["output"]["alternatives"][1]["against"];
+    let mut app = alternatives();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    assert!(app.volume_window.as_ref().unwrap().comparison.is_none(), "nothing picked, no comparison");
+    send(&mut app, W::Alternative("v-5".into(), true));
+    let w = app.volume_window.as_ref().unwrap();
+    assert_eq!(w.shown, crate::volume_window::Shown::Compare);
+    let (c, _) = w.comparison.clone().expect("asked").expect("reads");
+    let got = c.alternatives[1].against.as_ref().expect("against the base");
+    let plan = want["plan"].as_array().unwrap();
+    assert_eq!(got.plan.len(), plan.len(), "{got:?}");
+    for (g, p) in got.plan.iter().zip(plan) {
+        assert!((g.from - p["from"].as_f64().unwrap()).abs() < 1e-6 && (g.to - p["to"].as_f64().unwrap()).abs() < 1e-6);
+    }
+    assert_eq!(w.traces.len(), 1, "the alternative's departures traced");
+    let largest = w.traces[0].plan.iter().map(|p| p.1).fold(0.0, f64::max);
+    assert!((largest - plan[0]["largest"].as_f64().unwrap()).abs() < 0.05, "the trace reaches the largest departure");
+    send(&mut app, W::Alternative("v-5".into(), false));
+    assert!(app.volume_window.as_ref().unwrap().comparison.is_none());
+}
+
+/// The comparison in Kübaj, light and dark: the main road against the wider curve and the higher crest;
+/// `.run/gui-evidence/yol-y37/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_compare -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_compare() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y37");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        for (picked, step) in [(&["v-5", "v-6"][..], "iki"), (&["v-6"][..], "kot")] {
+            let mut app = alternatives();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("volume.editor"));
+            send(&mut app, W::Choose(0));
+            for id in picked {
+                send(&mut app, W::Alternative((*id).into(), true));
+            }
+            let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("y37-{step}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

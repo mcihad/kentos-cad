@@ -7,7 +7,8 @@ reference. No KentOS code, and not KentOS's method (that one marches by the dist
 
 The cases with tangents and grades are checked first against closed forms: a tangent leaving at angle θ departs at
 t / sin θ, one running past the base's end at the end plus t, a PVI raised by h departs where the grade difference
-reaches the height tolerance.
+reaches the height tolerance, two tangents crossing at slope 0.1 lie within t for only 2t / sin θ (20 cm at 1 cm, under
+the sampling step: found by halving where the samples could hide a dip).
 
     uv run --no-project --python 3.11 --with mpmath --with numpy python3 scripts/fixtures/road_alternatives_cases.py
     ... --check   # fails when fixtures/road/v1/alternatives.json is not what this writes
@@ -97,19 +98,36 @@ NEAR = 1e-4
 
 def stretches(other, margin_rough, out_exact):
     """The stretches where out_exact(s) holds: samples every STEP by the rough margin (exactly near 0), side changes
-    bisected exactly."""
+    bisected exactly. Two neighbouring samples on one side whose margins add up to less than their spacing could hide
+    a dip to the other side between them (the distance moves at most a metre per metre): the gap is halved until it
+    cannot, or is a millimetre (a crossing of two alignments lies within the tolerance for only centimetres)."""
     n = int(math.ceil(float(other.length) / STEP))
-    ss = [float(other.length) * i / n for i in range(n + 1)]
 
     def flag(s):
         m = margin_rough(s)
-        return out_exact(s) if m is not None and abs(m) < NEAR else (m is not None and m > 0)
+        return (out_exact(s) if m is not None and abs(m) < NEAR else (m is not None and m > 0)), m
+
+    samples = []
+
+    def fill(a, fa, b, fb):
+        (ka, ma), (kb, mb) = fa, fb
+        if ka == kb and ma is not None and mb is not None and abs(ma) + abs(mb) < b - a and b - a > 1e-3:
+            m = (a + b) / 2
+            fm = flag(m)
+            fill(a, fa, m, fm)
+            samples.append((m, fm[0]))
+            fill(m, fm, b, fb)
+
+    ss = [float(other.length) * i / n for i in range(n + 1)]
     flags = [flag(s) for s in ss]
-    out, start = [], (mp.mpf(0) if flags[0] else None)
+    samples.append((ss[0], flags[0][0]))
     for i in range(1, len(ss)):
-        if flags[i] != flags[i - 1]:
-            a = flags[i - 1]
-            edge = bisect(out_exact, ss[i - 1], ss[i], a)
+        fill(ss[i - 1], flags[i - 1], ss[i], flags[i])
+        samples.append((ss[i], flags[i][0]))
+    out, start = [], (mp.mpf(0) if samples[0][1] else None)
+    for (sa, a), (sb, b) in zip(samples, samples[1:]):
+        if a != b:
+            edge = bisect(out_exact, sa, sb, a)
             if a:
                 out.append((start if start is not None else mp.mpf(0), edge))
                 start = None
@@ -163,7 +181,9 @@ def height(base, other, tol, h):
         if abs(d - float(tol)) < NEAR:
             return 0.0  # decided exactly
         if d > float(tol):
-            return None
+            # Apart: not departed in height, by how far from coming together (so a short stretch together between two
+            # samples is looked for).
+            return -(d - float(tol))
         zo, zb = other.z(F(s)), base.z(F(min(max(st, 0.0), float(base.length))))
         return None if zo is None or zb is None else abs(zo[0] - zb[0]) - float(h)
 
@@ -216,6 +236,8 @@ def cases():
              closed={"plan": [(0.5 / math.sin(theta), math.hypot(1000, 100))]}),
         case("Uzayan aks: sonu tabanın ötesinde", ([pi("a", 0, 0), pi("b", 600, 0)],), (straight,), 0.2,
              closed={"plan": [(600.2, 1000)]}),
+        case("Kesişen iki aks: 20 cm birlikte", (straight,), ([pi("a", 0, -50), pi("b", 1000, 50)],), 0.01,
+             closed={"plan": [(0, (50 - 0.01) / math.sin(theta)), ((50 + 0.01) / math.sin(theta), math.hypot(1000, 100))]}),
         case("Ters yönde aynı aks", (curve,), (list(reversed([{**p, "id": p["id"] + "r"} for p in curve])),), 0.01,
              closed={"plan": []}),
         case("Ortada sapıp geri dönen", (straight,),

@@ -2390,6 +2390,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.volumes.compare",
+        refusals: &[&["invalid_volume_compare", "not_a_road_project", "unknown_volume"]],
+        warnings: &["volume_compare_broken"],
+        targets: none,
+    },
+    Entry {
         id: "road.volumes.approve",
         refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],
         warnings: &[],

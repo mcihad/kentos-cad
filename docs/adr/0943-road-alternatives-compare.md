@@ -1,6 +1,6 @@
 # 0943 — Alternatiflerin karşılaştırması: nerede ayrılıyorlar, ne kadar tutuyorlar
 
-Tarih: 2026-11-04. Durum: kabul (Y37.1 çekirdek). Kapsam ROAD-ALIGN-12 ve ROAD-VOL-15'in kalanı.
+Tarih: 2026-11-04. Durum: kabul (Y37.1 çekirdek, Y37.2 komut, Y37.3 pencere). Kapsam ROAD-ALIGN-12 ve ROAD-VOL-15'in kalanı.
 
 ## Sorun
 
@@ -50,7 +50,64 @@ korunsun." ROAD-VOL-15'in kalanı da alternatif miktarların kaynak özetiyle ka
   - Eğimler bir parçanın uçları arasında monotondur (parabol ve daire); en büyüğü uçlardadır.
 - **Planda ayrılan yerde** kot karşılaştırılmaz; planın ayrılması zaten söyler.
 
-## Ortak durumlar ve ölçüm
+### §3 Komut: `road.volumes.compare` (Y37.2)
+
+Komut yalnız okur ve şemayı değiştirmez.
+
+- **Girdi:** iki ile altı arasında kübaj (ilki taban), isteğe bağlı `tolerance` ve `height` (m).
+- **Öntanımlı toleranslar 1 cm'dir.** Bunlar mühendislik kararı değildir; yalnız "iki çizgi aynı çizgi" eşiğidir.
+- **Her alternatifin raporu:**
+  - koridor, aks, boykesit ve yüzey, revizyonlarıyla;
+  - yüzeyin **kaynak özeti** (digest);
+  - aksın uzunluğu;
+  - kazı ve dolgu (doğal ve düzeltilmiş);
+  - onaylıysa onay günü ve onaydan bu yana değişim.
+- **Tabana göre:** uzunluk ve hacim farkı, planda ve kotta ayrılan km aralıkları (iki aksın km'siyle) ve en büyük
+  ayrılma.
+- **En büyük ayrılmanın yeri sözleşmede yoktur.** İki boykesitin paralel gittiği bir aralıkta her istasyon en büyüktür;
+  yer tek değildir. İlk yazımda iki uygulama aynı değeri 393,657 ve 394,156 m'de buldu.
+- **Uyarı:** `volume_compare_broken`. Hesaplanamayan kübaj rakamsız listelenir; karşılaştırma durmaz.
+- **Retler:** `invalid_volume_compare`, `unknown_volume`.
+
+**Ortak durumlar (20):** Python başvurusu (`road_volume_compare_command_cases.py`) çizime ana yolun iki alternatifini
+ekler:
+
+- "Geniş kurp": kurbun yarıçapı 150 → 220 m, kendi aksı ve boykesitiyle;
+- "Yüksek kot": aynı aks, tepe PVI'ı 1,5 m yukarıda.
+
+Ayrılmaları §1–§2'nin başvurusuyla hesaplar. Rust ve Python tipli katmanı aynı sonucu verir.
+
+**Ölçüm:**
+
+| Alternatif | Planda ayrılan | Kotta ayrılan | Δ kazı | Δ dolgu |
+|---|---|---|---|---|
+| Geniş kurp | 1+172,38 – 1+376,84 | 1+376,84'ten sona üç aralık | +654 m³ | +112 m³ |
+| Yüksek kot | — | 1+143,47 – 1+543,05 | −1.779 m³ | +2.645 m³ |
+
+- **Geniş kurbun kotu kurptan sonra da ayrılıyor.** Aks 3,35 m kısaldığı için boykesitin aynı km'leri artık başka
+  yerlere düşüyor. Alternatif kurulurken kırmızı kotun km'ye bağlı olduğu unutulursa bu fark gözden kaçar;
+  karşılaştırma onu açıkça gösteriyor.
+- **Başvurunun kör noktası:** yan yol ana yolu kesiyor. Kesişmede iki aks yalnız birkaç santimetre boyunca 1 cm içinde
+  kalıyor. KentOS'un yürüyüşü bu aralığı buldu; başvurunun 0,25 m'lik örneklemesi kaçırdı. Başvuru, iki örnek
+  arasında bir dalış saklanabilecekse (|m_a| + |m_b| < aralık) aralığı 1 mm'ye kadar ikiye bölecek biçimde
+  düzeltildi. Kesişme noktasında iki yolun kotları 2,83 m farklı; KentOS bunu 2 cm'lik bir kot ayrılması olarak da
+  verir. Başvuru bunu ancak ayrı yerlerde de bir pay ölçüsü (birleşmeye uzaklık, −(d − t)) kullanınca buldu.
+  Çekirdek durumlarına kapalı biçimli bir "kesişen iki aks" durumu eklendi: 1 cm toleransta 20 cm birlikte.
+
+### §4 Pencere: Kübaj → Alternatifler (Y37.3)
+
+- **Form:** "Alternatifler" bölümünde öbür kaydedilmiş kübajların her biri için bir "Karşılaştır" anahtarı var. Seçili
+  kübaj tabandır; kaydedilmemişse karşılaştırma yapılmaz ve bunun nedeni yazılır.
+- **Gösterim:**
+  - Bir cümle her alternatifin ayrıldığı km aralıklarını ve hacim farkını söyler.
+  - "Karşılaştırma" tablosu uzunlukları, hacimleri, farkları, onayı ve ayrılan aralıkları listeler.
+  - Resim bir **ayrılma diyagramıdır**: istasyon boyunca üstte tabana plandaki uzaklık, altta iki aksın birlikte
+    gittiği yerde kot farkı, her alternatif kendi renginde, 1 cm toleransı kesikli.
+  - İlk sürüm aksları planda çiziyordu ve hiçbir şey göstermiyordu: 600 m'lik yolda 6 m'lik ayrılma bir pikseldir.
+
+Resimler `.run/gui-evidence/yol-y37/` altındadır.
+
+## Ortak durumlar ve ölçüm (çekirdek)
 
 `scripts/fixtures/road_alternatives_cases.py`, KentOS kodu olmadan ve **KentOS'un yönteminden farklı** bir yoldan
 çalışır:
@@ -63,12 +120,14 @@ korunsun." ROAD-VOL-15'in kalanı da alternatif miktarların kaynak özetiyle ka
 Toleransa 1e-4 m'den yakın örneklerde taraf kesin uzaklıkla seçilir. İlk yazımda kaba çoklu çizgi bir sınırı yutmuştu;
 kapalı biçim denetimi yakaladı.
 
-15 durum var. Kapalı biçimle sınananlar:
+16 durum var. Kapalı biçimle sınananlar:
 
 - θ açısıyla ayrılan aliyman t / sin θ'da ayrılır;
 - tabanın ucunu geçen aks ucun t ötesinde ayrılır;
 - paralel 5 m'lik aks t = 1'de baştan sona ayrılır, t = 6'da hiç ayrılmaz;
 - ortası 1 m yükseltilmiş kırmızı kot, h = 5 cm'de 25–975 m arasında ayrılır;
+- kesişen iki aks (eğim 0,1) 1 cm toleransta yalnız 2t / sin θ = 20 cm birlikte gider; bu, başvurunun örnekleme
+  adımından kısadır;
 - aynı aks, ters yönde çizilmiş aynı aks ve aynı kotlar hiç ayrılmaz.
 
 Ötekiler:
@@ -81,5 +140,5 @@ kapalı biçim denetimi yakaladı.
 - düşey kurp boyu 200 → 300;
 - planı ayrılan aksın kotu.
 
-Rust 15 durumda da aralık uçlarını, taban istasyonlarını ve en büyük ayrılmayı 1e-6 m içinde aynı bulur
+Rust 16 durumda da aralık uçlarını, taban istasyonlarını ve en büyük ayrılmayı 1e-6 m içinde aynı bulur
 (`crates/shared/road/tests/all/alternatives.rs`).

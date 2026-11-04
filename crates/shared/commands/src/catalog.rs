@@ -7663,6 +7663,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_VOLUMES_COMPARE.into(),
+            version: crate::ROAD_VOLUMES_COMPARE_VERSION,
+            title: "Alternatifleri karşılaştır".into(),
+            summary: "İkiden altıya kadar kübaj hesabını (volumes; ilki taban) yan yana koyar; hiçbir şey yazmaz (docs/adr/0943). Her alternatif için koridor, aks, boykesit ve yüzey revizyonlarıyla, yüzeyin kaynak özeti (digest), aksın uzunluğu, kazı ve dolgu (doğal ve düzeltilmiş) ve onaylıysa onaydan bu yana değişimi; tabana göre uzunluk ve hacim farkı, aksın planda tabandan tolerance (m, öntanımlı 0,01) uzaklaştığı ve kırmızı kotun height (m, öntanımlı 0,01) farklılaştığı km aralıkları, en büyük ayrılmayla. Ayrılma, uzaklığın 1-Lipschitz olmasından yararlanan, kaçırmayan bir yürüyüşle bulunur; 1 cm'den kısa ayrılmalar görünmeyebilir. Kot yalnız iki aksın birlikte gittiği yerde karşılaştırılır. \
+                      Uyarı: volume_compare_broken (bir kübaj hesaplanamıyor; hacmi yok). Retler: invalid_volume_compare (ikiden az ya da altıdan çok kübaj, aynı kübaj iki kez, tolerans 0 ya da 10 m'den büyük), not_a_road_project, unknown_volume."
+                .into(),
+            aliases: vec!["alternatifkarsilastir".into(), "kubajkarsilastir".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesCompare>(),
+            output: schema::<crate::VolumesCompared>(),
+            plan: Some(schema::<crate::VolumesCompared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Uygulama projesine karşı yarıçapı büyütülmüş alternatif".into(),
+                input: json!({ "volumes": ["Ana kübaj", "Geniş kurp"], "tolerance": 0.01 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_EDIT.into(),
             version: crate::ROAD_HAULS_EDIT_VERSION,
             title: "Brükneri düzenle".into(),
@@ -14671,6 +14696,9 @@ mod tests {
                     crate::ROAD_VOLUMES_PROGRESS => {
                         serde_json::from_value::<crate::VolumesProgress>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_COMPARE => {
+                        serde_json::from_value::<crate::VolumesCompare>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
@@ -15518,6 +15546,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_PROGRESS => {
                             serde_json::from_value::<crate::VolumeProgressReport>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_COMPARE => {
+                            serde_json::from_value::<crate::VolumesCompared>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_EDIT => {
                             serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())

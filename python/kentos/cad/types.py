@@ -11881,6 +11881,38 @@ class AffectedFrame(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AgainstBase(_Model):
+    """An alternative against the base: its length's and volumes' changes (none where either does not compute), and the
+    stretches its alignment departs in plan and its profile in height.
+    Attributes:
+        length_change: Unit: m.
+    """
+    plan: list[DepartureRow]
+    height: list[DepartureRow]
+    figures_change: AlternativeFigures | None | Unset = UNSET
+    length_change: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["plan"] = [e0.to_json() for e0 in self.plan]
+        out["height"] = [e0.to_json() for e0 in self.height]
+        if self.figures_change is not UNSET:
+            out["figuresChange"] = None if self.figures_change is None else self.figures_change.to_json()
+        if self.length_change is not UNSET:
+            out["lengthChange"] = None if self.length_change is None else float(self.length_change)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AgainstBase:
+        return cls(
+            plan=[DepartureRow.from_json(e0) for e0 in data["plan"]],
+            height=[DepartureRow.from_json(e0) for e0 in data["height"]],
+            figures_change=UNSET if "figuresChange" not in data else None if data["figuresChange"] is None else AlternativeFigures.from_json(data["figuresChange"]),
+            length_change=UNSET if "lengthChange" not in data else None if data["lengthChange"] is None else float(data["lengthChange"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentCurveRow(_Model):
     """A curve on a PI.
     Attributes:
@@ -12984,6 +13016,137 @@ class AltUnits(_Model):
         return cls(
             unit=_enum_in(DrawingUnit, data["unit"]),
             decimals=data.get("decimals", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlternativeApproval(_Model):
+    """An alternative's approval: the day, and its bank cut's and fill's change since (m³), and whether anything changed.
+    Attributes:
+        cut_change: Unit: volume.
+        fill_change: Unit: volume.
+    """
+    at: str
+    changed: bool
+    cut_change: float
+    fill_change: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = self.at
+        out["changed"] = self.changed
+        out["cutChange"] = float(self.cut_change)
+        out["fillChange"] = float(self.fill_change)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlternativeApproval:
+        return cls(
+            at=data["at"],
+            changed=data["changed"],
+            cut_change=float(data["cutChange"]),
+            fill_change=float(data["fillChange"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlternativeFigures(_Model):
+    """An alternative's volumes (m³): bank cut and fill, factored cut and fill.
+    Attributes:
+        cut: Unit: volume.
+        fill: Unit: volume.
+        factored_cut: Unit: volume.
+        factored_fill: Unit: volume.
+    """
+    cut: float
+    fill: float
+    factored_cut: float
+    factored_fill: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["factoredCut"] = float(self.factored_cut)
+        out["factoredFill"] = float(self.factored_fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlternativeFigures:
+        return cls(
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            factored_cut=float(data["factoredCut"]),
+            factored_fill=float(data["factoredFill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlternativeReport(_Model):
+    """One alternative: its volume, corridor, alignment, profile and surface with their revisions and the surface's
+    sources' digest; its alignment's length; its volumes (bank and factored); its approval's changes (none when not
+    approved); against the base (none for the base itself): the volumes' changes and the stretches its alignment and
+    profile depart. A volume that does not compute says why and has no figures.
+    Attributes:
+        alignment_revision: Unit: version.
+        profile_revision: Unit: version.
+        length: Unit: m.
+    """
+    volume: str
+    name: str
+    corridor: str
+    alignment: str
+    alignment_revision: int
+    profile: str
+    profile_revision: int
+    surface: str
+    surface_digest: str
+    against: AgainstBase | None | Unset = UNSET
+    approved: AlternativeApproval | None | Unset = UNSET
+    figures: AlternativeFigures | None | Unset = UNSET
+    length: float | None | Unset = UNSET
+    problem: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["name"] = self.name
+        out["corridor"] = self.corridor
+        out["alignment"] = self.alignment
+        out["alignmentRevision"] = self.alignment_revision
+        out["profile"] = self.profile
+        out["profileRevision"] = self.profile_revision
+        out["surface"] = self.surface
+        out["surfaceDigest"] = self.surface_digest
+        if self.against is not UNSET:
+            out["against"] = None if self.against is None else self.against.to_json()
+        if self.approved is not UNSET:
+            out["approved"] = None if self.approved is None else self.approved.to_json()
+        if self.figures is not UNSET:
+            out["figures"] = None if self.figures is None else self.figures.to_json()
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        if self.problem is not UNSET:
+            out["problem"] = self.problem
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlternativeReport:
+        return cls(
+            volume=data["volume"],
+            name=data["name"],
+            corridor=data["corridor"],
+            alignment=data["alignment"],
+            alignment_revision=data["alignmentRevision"],
+            profile=data["profile"],
+            profile_revision=data["profileRevision"],
+            surface=data["surface"],
+            surface_digest=data["surfaceDigest"],
+            against=UNSET if "against" not in data else None if data["against"] is None else AgainstBase.from_json(data["against"]),
+            approved=UNSET if "approved" not in data else None if data["approved"] is None else AlternativeApproval.from_json(data["approved"]),
+            figures=UNSET if "figures" not in data else None if data["figures"] is None else AlternativeFigures.from_json(data["figures"]),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            problem=data.get("problem", UNSET),
         )
 
 
@@ -23079,6 +23242,50 @@ class DeclaredVertical(_Model):
         return cls(
             name=data["name"],
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DepartureRow(_Model):
+    """A stretch where an alternative departs from the base: its stations and km on the alternative, the base's nearest
+    stations and km at its ends (none beyond the base's ends), and its largest departure (m; not where: on a stretch
+    where two profiles run parallel every station is the largest, so the place is not one).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        largest: Unit: m.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    largest: float
+    base_from_text: str | None | Unset = UNSET
+    base_to_text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["largest"] = float(self.largest)
+        if self.base_from_text is not UNSET:
+            out["baseFromText"] = self.base_from_text
+        if self.base_to_text is not UNSET:
+            out["baseToText"] = self.base_to_text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DepartureRow:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            largest=float(data["largest"]),
+            base_from_text=data.get("baseFromText", UNSET),
+            base_to_text=data.get("baseToText", UNSET),
         )
 
 
@@ -86749,6 +86956,67 @@ class VolumesApprove(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumesCompare(_Model):
+    """Input of `road.volumes.compare` v1 (plan/road.md Y37, docs/adr/0943): two to six earthwork volumes (ids or names),
+    the first the base; the plan tolerance (m, default 0.01) within which two alignments are the same line, and the
+    height tolerance (m, default 0.01) within which two profiles are the same.
+
+    Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_compare` (fewer than two or more than six volumes,
+    one named twice, a tolerance not above 0 or over 10 m).
+    Attributes:
+        height: Unit: elevation.
+        tolerance: Unit: m.
+    """
+    volumes: list[str]
+    height: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volumes"] = list(self.volumes)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesCompare:
+        return cls(
+            volumes=list(data["volumes"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesCompared(_Model):
+    """Output of `road.volumes.compare` v1 (docs/adr/0943): the tolerances used and the alternatives, the base first.
+    Attributes:
+        tolerance: Unit: m.
+        height: Unit: elevation.
+    """
+    tolerance: float
+    height: float
+    alternatives: list[AlternativeReport]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tolerance"] = float(self.tolerance)
+        out["height"] = float(self.height)
+        out["alternatives"] = [e0.to_json() for e0 in self.alternatives]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesCompared:
+        return cls(
+            tolerance=float(data["tolerance"]),
+            height=float(data["height"]),
+            alternatives=[AlternativeReport.from_json(e0) for e0 in data["alternatives"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumesEdit(_Model):
     """Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,
     `corridor` and `method`. A volume is not rebound: it follows its corridor.
@@ -107769,6 +108037,7 @@ __all__ = [
     "AffectedFrame",
     "AffineCrsPlane",
     "AffineTransform",
+    "AgainstBase",
     "AlignHatchEdit",
     "AlignLeaderEdit",
     "AlignPaperOp",
@@ -107813,6 +108082,9 @@ __all__ = [
     "AlongPointConstruction",
     "AlongSubPlace",
     "AltUnits",
+    "AlternativeApproval",
+    "AlternativeFigures",
+    "AlternativeReport",
     "AngleArcDimensionMeasure",
     "AngleBlockParameter",
     "AngleConstraintRule",
@@ -108346,6 +108618,7 @@ __all__ = [
     "DeleteUcsTo",
     "DeleteViewsOp",
     "DeltaLengthenChange",
+    "DepartureRow",
     "DerivationEntry",
     "DerivationInput",
     "DerivationInputNow",
@@ -111105,6 +111378,8 @@ __all__ = [
     "VolumeStripDef",
     "VolumeUncertaintyReport",
     "VolumesApprove",
+    "VolumesCompare",
+    "VolumesCompared",
     "VolumesEdit",
     "VolumesProgress",
     "VolumesQueried",

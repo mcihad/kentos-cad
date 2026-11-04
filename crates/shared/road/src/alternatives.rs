@@ -34,6 +34,10 @@ pub struct Departure {
 
 /// The distance from `p` to the base and the base's station there (its nearest foot, else the end it lies beyond:
 /// then no station).
+pub fn distance(base: &Alignment, p: [f64; 2]) -> (f64, Option<f64>) {
+    gap(base, p)
+}
+
 fn gap(base: &Alignment, p: [f64; 2]) -> (f64, Option<f64>) {
     let found = base.locate(p);
     match (found.nearest, found.beyond) {

@@ -41864,6 +41864,141 @@
       ]
     },
     {
+      "id": "road.volumes.compare",
+      "version": 1,
+      "title": "Alternatifleri karşılaştır",
+      "summary": "İkiden altıya kadar kübaj hesabını (volumes; ilki taban) yan yana koyar; hiçbir şey yazmaz (docs/adr/0943). Her alternatif için koridor, aks, boykesit ve yüzey revizyonlarıyla, yüzeyin kaynak özeti (digest), aksın uzunluğu, kazı ve dolgu (doğal ve düzeltilmiş) ve onaylıysa onaydan bu yana değişimi; tabana göre uzunluk ve hacim farkı, aksın planda tabandan tolerance (m, öntanımlı 0,01) uzaklaştığı ve kırmızı kotun height (m, öntanımlı 0,01) farklılaştığı km aralıkları, en büyük ayrılmayla. Ayrılma, uzaklığın 1-Lipschitz olmasından yararlanan, kaçırmayan bir yürüyüşle bulunur; 1 cm'den kısa ayrılmalar görünmeyebilir. Kot yalnız iki aksın birlikte gittiği yerde karşılaştırılır. Uyarı: volume_compare_broken (bir kübaj hesaplanamıyor; hacmi yok). Retler: invalid_volume_compare (ikiden az ya da altıdan çok kübaj, aynı kübaj iki kez, tolerans 0 ya da 10 m'den büyük), not_a_road_project, unknown_volume.",
+      "aliases": [
+        "alternatifkarsilastir",
+        "kubajkarsilastir"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.volumes.compare` v1 (plan/road.md Y37, docs/adr/0943): two to six earthwork volumes (ids or names),\nthe first the base; the plan tolerance (m, default 0.01) within which two alignments are the same line, and the\nheight tolerance (m, default 0.01) within which two profiles are the same.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_compare` (fewer than two or more than six volumes,\none named twice, a tolerance not above 0 or over 10 m).",
+        "properties": {
+          "height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "volumes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "volumes"
+        ],
+        "title": "VolumesCompare",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.compare` v1 (docs/adr/0943): the tolerances used and the alternatives, the base first.",
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/$defs/AlternativeReport"
+            },
+            "type": "array"
+          },
+          "height": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "tolerance",
+          "height",
+          "alternatives"
+        ],
+        "title": "VolumesCompared",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.compare` v1 (docs/adr/0943): the tolerances used and the alternatives, the base first.",
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/$defs/AlternativeReport"
+            },
+            "type": "array"
+          },
+          "height": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "tolerance",
+          "height",
+          "alternatives"
+        ],
+        "title": "VolumesCompared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_volume_compare",
+          "not_a_road_project",
+          "unknown_volume"
+        ],
+        "warnings": [
+          "volume_compare_broken"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Uygulama projesine karşı yarıçapı büyütülmüş alternatif",
+          "input": {
+            "tolerance": 0.01,
+            "volumes": [
+              "Ana kübaj",
+              "Geniş kurp"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "road.hauls.edit",
       "version": 1,
       "title": "Brükneri düzenle",
@@ -86777,6 +86912,18 @@
       "meaning": "Dönemde yapılan iş eksi: ölçü hatası ya da geri doldurma."
     },
     {
+      "code": "invalid_volume_compare",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kübaj karşılaştırması sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "volume_compare_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Karşılaştırılan bir kübaj hesaplanamıyor; hacmi yok."
+    },
+    {
       "code": "corridor_in_use",
       "kind": "failed",
       "retryable": false,
@@ -93864,6 +94011,46 @@
       ],
       "type": "object"
     },
+    "AgainstBase": {
+      "description": "An alternative against the base: its length's and volumes' changes (none where either does not compute), and the\nstretches its alignment departs in plan and its profile in height.",
+      "properties": {
+        "figuresChange": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlternativeFigures"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "items": {
+            "$ref": "#/$defs/DepartureRow"
+          },
+          "type": "array"
+        },
+        "lengthChange": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "plan": {
+          "items": {
+            "$ref": "#/$defs/DepartureRow"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "plan",
+        "height"
+      ],
+      "type": "object"
+    },
     "AlignmentCurveRow": {
       "description": "A curve on a PI.",
       "properties": {
@@ -94533,6 +94720,160 @@
       },
       "required": [
         "unit"
+      ],
+      "type": "object"
+    },
+    "AlternativeApproval": {
+      "description": "An alternative's approval: the day, and its bank cut's and fill's change since (m³), and whether anything changed.",
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "cutChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "at",
+        "changed",
+        "cutChange",
+        "fillChange"
+      ],
+      "type": "object"
+    },
+    "AlternativeFigures": {
+      "description": "An alternative's volumes (m³): bank cut and fill, factored cut and fill.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredCut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredFill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "cut",
+        "fill",
+        "factoredCut",
+        "factoredFill"
+      ],
+      "type": "object"
+    },
+    "AlternativeReport": {
+      "description": "One alternative: its volume, corridor, alignment, profile and surface with their revisions and the surface's\nsources' digest; its alignment's length; its volumes (bank and factored); its approval's changes (none when not\napproved); against the base (none for the base itself): the volumes' changes and the stretches its alignment and\nprofile depart. A volume that does not compute says why and has no figures.",
+      "properties": {
+        "against": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgainstBase"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alignment": {
+          "type": "string"
+        },
+        "alignmentRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "approved": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlternativeApproval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "corridor": {
+          "type": "string"
+        },
+        "figures": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AlternativeFigures"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "length": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "type": "string"
+        },
+        "profileRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "surfaceDigest": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "volume",
+        "name",
+        "corridor",
+        "alignment",
+        "alignmentRevision",
+        "profile",
+        "profileRevision",
+        "surface",
+        "surfaceDigest"
       ],
       "type": "object"
     },
@@ -107286,6 +107627,52 @@
       },
       "required": [
         "name"
+      ],
+      "type": "object"
+    },
+    "DepartureRow": {
+      "description": "A stretch where an alternative departs from the base: its stations and km on the alternative, the base's nearest\nstations and km at its ends (none beyond the base's ends), and its largest departure (m; not where: on a stretch\nwhere two profiles run parallel every station is the largest, so the place is not one).",
+      "properties": {
+        "baseFromText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baseToText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "largest": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "largest"
       ],
       "type": "object"
     },

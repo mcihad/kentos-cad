@@ -88,7 +88,7 @@ pub(crate) struct Made {
 /// schedule and its swath; a section at any station of it.
 pub(crate) struct Sampler {
     pub alignment: Built,
-    vertical: kentos_road::profile::vertical::Vertical,
+    pub(crate) vertical: kentos_road::profile::vertical::Vertical,
     pub surface: Option<kentos_road::surface::Surface>,
     schedule: Option<(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
     left: f64,

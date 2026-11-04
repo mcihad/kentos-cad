@@ -65,6 +65,9 @@ pub(crate) const UNCERTAINTY: [&str; 3] = ["Kot σ (m)", "Sistematik kayma (m)",
 pub(crate) const PROGRESS: &str = "Dönem metrajı";
 pub(crate) const SURVEY: &str = "Ara ölçü";
 pub(crate) const PREVIOUS: &str = "Önceki ölçü";
+/// The comparison's list and form section (docs/adr/0943).
+pub(crate) const COMPARE: &str = "Karşılaştırma";
+pub(crate) const ALTERNATIVES: &str = "Alternatifler";
 /// The previous survey's “none”.
 const NO_PREVIOUS: &str = "Yok (ilk araziden bu yana)";
 
@@ -91,6 +94,8 @@ pub enum Shown {
     Budget,
     /// The work done and left by a survey (docs/adr/0942).
     Progress,
+    /// The chosen volume against its alternatives (docs/adr/0943).
+    Compare,
 }
 
 impl std::fmt::Display for Shown {
@@ -101,6 +106,7 @@ impl std::fmt::Display for Shown {
             Shown::Layers => LAYERS,
             Shown::Budget => BUDGET,
             Shown::Progress => PROGRESS,
+            Shown::Compare => COMPARE,
         })
     }
 }
@@ -264,6 +270,11 @@ pub struct Window {
     pub(crate) previous: Option<String>,
     /// The progress read on the volume as typed, when a survey is chosen.
     pub(crate) progress: Option<Result<(kentos_commands::VolumeProgressReport, Vec<CommandWarning>), String>>,
+    /// The saved volumes compared with the chosen one (docs/adr/0943), and the comparison with each one's alignment
+    /// drawn in plan.
+    pub(crate) alternatives: Vec<String>,
+    pub(crate) comparison: Option<Result<(kentos_commands::VolumesCompared, Vec<CommandWarning>), String>>,
+    pub(crate) traces: Vec<kentos_native_application::road_volumes_compare::Trace>,
 }
 
 #[derive(Debug, Clone)]
@@ -286,6 +297,8 @@ pub enum Event {
     Survey(Option<String>),
     /// The survey before it; none: since the original ground.
     Previous(Option<String>),
+    /// A saved volume compared with the chosen one, or not (docs/adr/0943).
+    Alternative(String, bool),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
     Factor(usize, usize, String),
     /// A strip row's from (0), to (1) or depth (2).
@@ -343,6 +356,9 @@ impl App {
             survey: None,
             previous: None,
             progress: None,
+            alternatives: Vec::new(),
+            comparison: None,
+            traces: Vec::new(),
         }));
         self.dialog = Some(Dialog::Volumes);
         self.refresh_volume();
@@ -399,6 +415,21 @@ impl App {
                 Some(kentos_native_application::road_volumes_progress::preview(&doc.model, &def, &input))
             }
             _ => None,
+        };
+        // The comparison, of the chosen volume as saved with the alternatives picked.
+        let chosen_id = r.id.clone();
+        let saved = w.kept.iter().any(|k| k.id == chosen_id);
+        let others: Vec<String> = w.alternatives.iter().filter(|a| **a != chosen_id && w.kept.iter().any(|k| &k.id == *a)).cloned().collect();
+        let input = kentos_commands::VolumesCompare {
+            volumes: std::iter::once(chosen_id).chain(others).collect(),
+            tolerance: None,
+            height: None,
+        };
+        let asked = saved && input.volumes.len() > 1;
+        w.comparison = asked.then(|| kentos_native_application::road_volumes_compare::preview(&doc.model, &input));
+        w.traces = match &w.comparison {
+            Some(Ok(_)) => kentos_native_application::road_volumes_compare::traces(&doc.model, &input),
+            _ => Vec::new(),
         };
     }
 
@@ -562,6 +593,13 @@ impl App {
                 w.survey = id;
             }
             Event::Previous(id) => w.previous = id,
+            Event::Alternative(id, on) => {
+                w.alternatives.retain(|a| *a != id);
+                if on {
+                    w.alternatives.push(id);
+                    w.shown = Shown::Compare;
+                }
+            }
             Event::Rule(r) => {
                 if let Some(row) = chosen_row(w) {
                     row.rule = r;
@@ -746,10 +784,12 @@ impl App {
             .ghost(APPROVE, (saved && !approved).then(|| msg(Event::Approve(true))))
             .ghost(REVOKE, approved.then(|| msg(Event::Approve(false))));
         let works = w.progress.as_ref().and_then(|p| p.as_ref().ok()).filter(|_| w.shown == Shown::Progress);
+        let plans = (w.shown == Shown::Compare && !w.traces.is_empty()).then_some(&w.traces);
         if chosen.is_some() {
-            d = match works {
-                Some((p, _)) => d.picture(iced::widget::canvas(Works { report: p }).width(Fill).height(Fill), 190.0),
-                None => d.picture(iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(Fill), 190.0),
+            d = match (works, plans) {
+                (Some((p, _)), _) => d.picture(iced::widget::canvas(Works { report: p }).width(Fill).height(Fill), 190.0),
+                (None, Some(tr)) => d.picture(iced::widget::canvas(Departures { traces: tr }).width(Fill).height(Fill), 190.0),
+                _ => d.picture(iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(Fill), 190.0),
             };
             match (&w.preview.why, &w.preview.report) {
                 (Some(e), _) => d = d.note(Banner::error(e.clone())),
@@ -814,6 +854,17 @@ impl App {
                         }
                         None => {}
                     }
+                    let comparison = w.comparison.as_ref().and_then(|c| c.as_ref().ok());
+                    match &w.comparison {
+                        Some(Err(e)) => d = d.note(Banner::error(e.clone())),
+                        Some(Ok((c, warnings))) => {
+                            d = d.note(Banner::info(compare_words(c)));
+                            for wn in warnings {
+                                d = d.note(Banner::warning(wn.message.clone()));
+                            }
+                        }
+                        None => {}
+                    }
                     let mut options = vec![Shown::Sheet];
                     if !rep.layers.is_empty() {
                         options.push(Shown::Layers);
@@ -824,11 +875,15 @@ impl App {
                     if progress.is_some() {
                         options.push(Shown::Progress);
                     }
+                    if comparison.is_some() {
+                        options.push(Shown::Compare);
+                    }
                     let now = if options.contains(&w.shown) { w.shown } else { Shown::Sheet };
-                    let list: Element<'_, Message> = match (now, budget, progress) {
-                        (Shown::Layers, _, _) => layers_table(rep),
-                        (Shown::Budget, Some((b, _)), _) => budget_table(b),
-                        (Shown::Progress, _, Some((p, _))) => progress_table(p),
+                    let list: Element<'_, Message> = match (now, budget, progress, comparison) {
+                        (Shown::Layers, _, _, _) => layers_table(rep),
+                        (Shown::Budget, Some((b, _)), _, _) => budget_table(b),
+                        (Shown::Progress, _, Some((p, _)), _) => progress_table(p),
+                        (Shown::Compare, _, _, Some((c, _))) => compare_table(c),
                         _ => sheet_table(rep),
                     };
                     d = d.detail(road_dialog::detail_choice(options, now, |v| msg(Event::View(v)), list));
@@ -977,6 +1032,25 @@ impl App {
                 .field(PREVIOUS, on_previous)
                 .help("Bir önceki hakedişin ölçüsü: dönemin işi iki ölçünün birikmiş işlerinin farkıdır.")
         };
+        // The alternatives: the other saved volumes, each with a switch.
+        form = form.section(ALTERNATIVES);
+        let saved = w.kept.iter().any(|k| k.id == r.id);
+        let others: Vec<&VolumeDef> = w.kept.iter().filter(|k| k.id != r.id).collect();
+        if !saved {
+            form = form.row(label::caption("Kaydedilmiş kübajlar karşılaştırılır; önce bu kübajı kaydedin.").style(muted));
+        } else if others.is_empty() {
+            form = form.row(label::caption("Karşılaştırmak için başka bir koridorun ya da aynı koridorun başka bir kübajını oluşturun.").style(muted));
+        } else {
+            for k in others {
+                let id = k.id.clone();
+                let on = w.alternatives.contains(&k.id);
+                form = form.field(
+                    k.name.as_str(),
+                    kentos_ui::widget::Switch::new(on, move |v| msg(Event::Alternative(id.clone(), v))).label("Karşılaştır"),
+                );
+            }
+            form = form.help("Seçili kübaj taban sayılır. Aksın planda 1 cm, kırmızı kotun 1 cm'den çok ayrıldığı km aralıkları bulunur.");
+        }
         form
     }
 
@@ -1002,6 +1076,11 @@ impl App {
             Control::Press(LAYERS) => Some(msg(Event::View(Shown::Layers))),
             Control::Press(BUDGET) => Some(msg(Event::View(Shown::Budget))),
             Control::Press(PROGRESS) => Some(msg(Event::View(Shown::Progress))),
+            Control::Press(COMPARE) => Some(msg(Event::View(Shown::Compare))),
+            Control::Fill(name, on) if w.kept.iter().any(|k| k.name == name) => {
+                let id = w.kept.iter().find(|k| k.name == name).map(|k| k.id.clone()).unwrap_or_default();
+                Some(msg(Event::Alternative(id, on == "açık")))
+            }
             Control::Pick(SURVEY, name) => Some(msg(Event::Survey(self.volume_surface_named(name)?))),
             Control::Pick(PREVIOUS, name) => Some(msg(Event::Previous(self.volume_surface_named(name)?))),
             Control::Fill(name, text) if UNCERTAINTY.contains(&name) => {
@@ -1423,6 +1502,159 @@ impl canvas::Program<Message> for Works<'_> {
             caption(&mut frame, words.into(), Point::new(x + 16.0, base), t.text);
             x += wide(words);
         }
+        vec![frame.into_geometry()]
+    }
+}
+
+/// The comparison in a sentence (docs/adr/0943): each alternative's departures and its volumes' changes.
+fn compare_words(c: &kentos_commands::VolumesCompared) -> String {
+    let base = c.alternatives.first().map_or("", |a| a.name.as_str());
+    let mut out = format!("Taban “{base}”.");
+    for a in c.alternatives.iter().skip(1) {
+        let Some(g) = &a.against else { continue };
+        let stretch = |d: &kentos_commands::DepartureRow, unit: &str| {
+            format!("km {}–{} (en çok {} {unit})", d.from_text, d.to_text, grouped(d.largest, 2))
+        };
+        let plan = if g.plan.is_empty() {
+            "aks aynı".to_owned()
+        } else {
+            format!("aks {} yerde ayrılıyor: {}", g.plan.len(), g.plan.iter().map(|d| stretch(d, "m")).collect::<Vec<_>>().join(", "))
+        };
+        let height = if g.height.is_empty() {
+            String::new()
+        } else {
+            format!("; kot {}", g.height.iter().map(|d| stretch(d, "m")).collect::<Vec<_>>().join(", "))
+        };
+        let volumes = g.figures_change.map_or_else(String::new, |f| format!("; kazı {} m³, dolgu {} m³", signed(f.cut), signed(f.fill)));
+        out += &format!(" “{}”: {plan}{height}{volumes}.", a.name);
+    }
+    out
+}
+
+/// The comparison's table: each alternative's length, volumes, changes against the base, approval and departures.
+fn compare_table(c: &kentos_commands::VolumesCompared) -> Element<'_, Message> {
+    use road_dialog::{col, num};
+    let ranges = |list: &[kentos_commands::DepartureRow]| {
+        if list.is_empty() { "—".to_owned() } else { list.iter().map(|d| format!("{}–{}", d.from_text, d.to_text)).collect::<Vec<_>>().join(", ") }
+    };
+    let rows = c
+        .alternatives
+        .iter()
+        .map(|a| {
+            let f = a.figures;
+            let g = a.against.as_ref();
+            let change = |pick: fn(&kentos_commands::AlternativeFigures) -> f64| {
+                g.and_then(|g| g.figures_change.as_ref()).map_or_else(|| "—".to_owned(), |x| signed(pick(x)))
+            };
+            vec![
+                a.name.clone(),
+                a.length.map_or_else(|| "—".into(), |v| grouped(v, 1)),
+                f.map_or_else(|| "—".into(), |f| grouped(f.cut, 0)),
+                f.map_or_else(|| "—".into(), |f| grouped(f.fill, 0)),
+                if g.is_some() { change(|x| x.cut) } else { "taban".into() },
+                if g.is_some() { change(|x| x.fill) } else { "taban".into() },
+                a.approved.as_ref().map_or_else(
+                    || "—".into(),
+                    |p| if p.changed { format!("{} · kazı {}", p.at, signed(p.cut_change)) } else { format!("{} · aynı", p.at) },
+                ),
+                g.map_or_else(|| "—".into(), |g| ranges(&g.plan)),
+                g.map_or_else(|| "—".into(), |g| ranges(&g.height)),
+            ]
+        })
+        .collect();
+    road_dialog::sheet(
+        vec![
+            col("Kübaj", 120.0),
+            num("Aks (m)", 76.0),
+            num("Kazı (m³)", 84.0),
+            num("Dolgu (m³)", 84.0),
+            num("Δ kazı", 80.0),
+            num("Δ dolgu", 80.0),
+            col("Onay", 150.0),
+            col("Planda ayrılan km", 200.0),
+            col("Kotta ayrılan km", 200.0),
+        ],
+        rows,
+        "Karşılaştırılacak kübaj yok",
+        220.0,
+    )
+}
+
+/// The alternatives' departures along their stations (docs/adr/0943): above, the distance from the base in plan;
+/// below, the elevation difference where the two lie within the tolerance; each alternative in its colour, the 1 cm
+/// tolerance dashed. A picture of the alignments in plan showed nothing: a 6 m departure on a 600 m road is a pixel.
+struct Departures<'a> {
+    traces: &'a [kentos_native_application::road_volumes_compare::Trace],
+}
+
+impl canvas::Program<Message> for Departures<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let t = Tokens::of(theme);
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let caption = |frame: &mut canvas::Frame, words: String, p: Point, color: Color| {
+            frame.fill_text(Text { content: words, position: p, color, size: Pixels(typography::caption()), font: typography::ui(), ..Text::default() });
+        };
+        let colours = [t.accent, Color::from_rgb8(0xea, 0x58, 0x0c), Color::from_rgb8(0x16, 0xa3, 0x4a), Color::from_rgb8(0x93, 0x33, 0xea), t.danger];
+        let s1 = self.traces.iter().flat_map(|r| r.plan.last().map(|p| p.0)).fold(1.0, f64::max);
+        let top_plan = self.traces.iter().flat_map(|r| r.plan.iter().map(|p| p.1)).fold(0.05, f64::max) * 1.1;
+        let top_z = self.traces.iter().flat_map(|r| r.height.iter().filter_map(|p| p.1.map(f64::abs))).fold(0.05, f64::max) * 1.1;
+        let (left, right, top, gap) = (64.0f64, 12.0f64, 18.0f64, 22.0f64);
+        let usable = bounds.height as f64 - top - 22.0 - gap;
+        let band = usable / 2.0;
+        let width = bounds.width as f64 - left - right;
+        let x = |s: f64| (left + s / s1 * width) as f32;
+        // The plan band: 0 at its bottom; the height band: 0 in its middle.
+        let y_plan = |v: f64| (top + band - v / top_plan * band) as f32;
+        let z0 = top + band + gap + band / 2.0;
+        let y_z = |v: f64| (z0 - v / top_z * band / 2.0) as f32;
+        let grid = Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0);
+        let axis = Stroke::default().with_color(t.muted).with_width(1.0);
+        frame.stroke(&Path::line(Point::new(x(0.0), y_plan(0.0)), Point::new(x(s1), y_plan(0.0))), axis);
+        frame.stroke(&Path::line(Point::new(x(0.0), z0 as f32), Point::new(x(s1), z0 as f32)), axis);
+        for (v, y) in [(top_plan / 1.1, y_plan(top_plan / 1.1)), (top_z / 1.1, y_z(top_z / 1.1)), (-top_z / 1.1, y_z(-top_z / 1.1))] {
+            frame.stroke(&Path::line(Point::new(x(0.0), y), Point::new(x(s1), y)), grid);
+            caption(&mut frame, format!("{} m", grouped(v, if v.abs() < 1.0 { 2 } else { 1 })), Point::new(4.0, y - 7.0), t.muted);
+        }
+        caption(&mut frame, "Planda uzaklık".into(), Point::new(left as f32 + 6.0, top as f32 - 16.0), t.muted);
+        caption(&mut frame, "Kot farkı".into(), Point::new(left as f32 + 6.0, (top + band + gap) as f32 - 16.0), t.muted);
+        // The tolerance, dashed, in the plan band.
+        let dashed = Stroke { line_dash: canvas::LineDash { segments: &[4.0, 4.0], offset: 0 }, ..Stroke::default().with_color(t.muted).with_width(1.0) };
+        frame.stroke(&Path::line(Point::new(x(0.0), y_plan(0.01)), Point::new(x(s1), y_plan(0.01))), dashed);
+        for (i, r) in self.traces.iter().enumerate() {
+            let colour = colours[i % colours.len()];
+            let line = Path::new(|b| {
+                for (k, (s, d)) in r.plan.iter().enumerate() {
+                    let p = Point::new(x(*s), y_plan(d.min(top_plan)));
+                    if k == 0 { b.move_to(p) } else { b.line_to(p) }
+                }
+            });
+            frame.stroke(&line, Stroke::default().with_color(colour).with_width(1.6));
+            let z = Path::new(|b| {
+                let mut on = false;
+                for (s, dz) in &r.height {
+                    match dz {
+                        Some(v) => {
+                            let p = Point::new(x(*s), y_z(*v));
+                            if on { b.line_to(p) } else { b.move_to(p) }
+                            on = true;
+                        }
+                        None => on = false,
+                    }
+                }
+            });
+            frame.stroke(&z, Stroke::default().with_color(colour).with_width(1.6));
+        }
+        let base = bounds.height - 18.0;
+        let mut lx = left as f32;
+        for (i, r) in self.traces.iter().enumerate() {
+            let colour = colours[i % colours.len()];
+            frame.fill_rectangle(Point::new(lx, base + 5.0), iced::Size::new(14.0, 3.0), colour);
+            caption(&mut frame, r.name.clone(), Point::new(lx + 18.0, base), t.text);
+            lx += 18.0 + 6.4 * r.name.chars().count() as f32 + 24.0;
+        }
+        caption(&mut frame, "Kesikli: 1 cm tolerans · yatay: alternatifin istasyonu".into(), Point::new(lx, base), t.muted);
         vec![frame.into_geometry()]
     }
 }

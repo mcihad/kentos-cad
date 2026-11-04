@@ -495,6 +495,70 @@
    }
   },
   {
+   "name": "Kesişen iki aks: 20 cm birlikte",
+   "base": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 0,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "other": {
+    "pis": [
+     {
+      "id": "a",
+      "x": 0,
+      "y": -50,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     },
+     {
+      "id": "b",
+      "x": 1000,
+      "y": 50,
+      "radius": 0,
+      "spiralIn": 0,
+      "spiralOut": 0
+     }
+    ]
+   },
+   "tolerance": 0.01,
+   "expected": {
+    "plan": [
+     {
+      "from": 0.0,
+      "to": 502.39328229983283,
+      "baseFrom": 0.0,
+      "baseTo": 499.8999999999995,
+      "largest": 50.0,
+      "at": 0.0
+     },
+     {
+      "from": 502.59427981225616,
+      "to": 1004.987562112089,
+      "baseFrom": 500.1000000000005,
+      "baseTo": 1000.0,
+      "largest": 50.0,
+      "at": 1004.987562112089
+     }
+    ]
+   }
+  },
+  {
    "name": "Ters yönde aynı aks",
    "base": {
     "pis": [

@@ -592,3 +592,158 @@ pub struct VolumeProgressReport {
     pub uncovered: f64,
     pub stretches: Vec<StretchProgress>,
 }
+
+pub const ROAD_VOLUMES_COMPARE: &str = "road.volumes.compare";
+pub const ROAD_VOLUMES_COMPARE_VERSION: u32 = 1;
+
+/// Input of `road.volumes.compare` v1 (plan/road.md Y37, docs/adr/0943): two to six earthwork volumes (ids or names),
+/// the first the base; the plan tolerance (m, default 0.01) within which two alignments are the same line, and the
+/// height tolerance (m, default 0.01) within which two profiles are the same.
+///
+/// Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_compare` (fewer than two or more than six volumes,
+/// one named twice, a tolerance not above 0 or over 10 m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesCompare {
+    pub volumes: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tolerance: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: Option<f64>,
+}
+
+/// A stretch where an alternative departs from the base: its stations and km on the alternative, the base's nearest
+/// stations and km at its ends (none beyond the base's ends), and its largest departure (m; not where: on a stretch
+/// where two profiles run parallel every station is the largest, so the place is not one).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DepartureRow {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub base_from_text: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub base_to_text: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub largest: f64,
+}
+
+/// One alternative: its volume, corridor, alignment, profile and surface with their revisions and the surface's
+/// sources' digest; its alignment's length; its volumes (bank and factored); its approval's changes (none when not
+/// approved); against the base (none for the base itself): the volumes' changes and the stretches its alignment and
+/// profile depart. A volume that does not compute says why and has no figures.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlternativeReport {
+    pub volume: String,
+    pub name: String,
+    pub corridor: String,
+    pub alignment: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub alignment_revision: u32,
+    pub profile: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub profile_revision: u32,
+    pub surface: String,
+    pub surface_digest: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub figures: Option<AlternativeFigures>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub problem: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approved: Option<AlternativeApproval>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub against: Option<AgainstBase>,
+}
+
+/// An alternative's volumes (m³): bank cut and fill, factored cut and fill.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlternativeFigures {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_fill: f64,
+}
+
+/// An alternative's approval: the day, and its bank cut's and fill's change since (m³), and whether anything changed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlternativeApproval {
+    pub at: String,
+    pub changed: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_change: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_change: f64,
+}
+
+/// An alternative against the base: its length's and volumes' changes (none where either does not compute), and the
+/// stretches its alignment departs in plan and its profile in height.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AgainstBase {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length_change: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub figures_change: Option<AlternativeFigures>,
+    pub plan: Vec<DepartureRow>,
+    pub height: Vec<DepartureRow>,
+}
+
+/// Output of `road.volumes.compare` v1 (docs/adr/0943): the tolerances used and the alternatives, the base first.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesCompared {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tolerance: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: f64,
+    pub alternatives: Vec<AlternativeReport>,
+}
