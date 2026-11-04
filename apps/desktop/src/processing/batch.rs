@@ -498,7 +498,7 @@ impl App {
                     .height(Fill),
             )
             .push(horizontal_divider())
-            .push(footer(b))
+            .footer(footer(b))
             .width(WIDTH)
             .max_height(HEIGHT)
             .modal(ev(Event::Back))

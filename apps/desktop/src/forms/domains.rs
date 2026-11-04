@@ -755,7 +755,7 @@ impl App {
         if let Some(why) = &problem {
             frame = frame.push(words::text_line(Kind::Warn, why.clone()));
         }
-        frame = frame.push(
+        frame = frame.footer(
             row![
                 words::ghost(REMOVE, at.map(|_| msg(Event::Remove))),
                 space::horizontal().width(Fill),

@@ -123,7 +123,7 @@ impl App {
         Dialog::new(d.title())
             .on_close(ev(Event::Close))
             .push(frame)
-            .push(footer(d))
+            .footer(footer(d))
             .width(typography::unscaled(width))
             .max_height(typography::unscaled(height))
             .into()

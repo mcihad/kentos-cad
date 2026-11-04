@@ -393,7 +393,7 @@ impl App {
         if let Some(why) = &problem {
             frame = frame.push(words::text_line(Kind::Warn, why.clone()));
         }
-        frame = frame.push(
+        frame = frame.footer(
             row![
                 space::horizontal().width(Fill),
                 words::secondary(CANCEL, Some(msg(Event::Cancel))),

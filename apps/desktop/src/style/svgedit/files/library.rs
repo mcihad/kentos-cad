@@ -137,7 +137,7 @@ impl App {
                 .align_y(Center),
             )
             .push(list)
-            .push(
+            .footer(
                 row![
                     label::caption("Sistem çizimi açılınca kopyası Kitaplığım’a alınır.")
                         .style(ui_style::text::muted),

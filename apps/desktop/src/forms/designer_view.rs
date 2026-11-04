@@ -370,7 +370,7 @@ impl App {
         }
         frame = frame.fill(main);
         if form.is_some() {
-            frame = frame.push(self.forms_footer(w, form, &issues, locked.is_none()));
+            frame = frame.footer(self.forms_footer(w, form, &issues, locked.is_none()));
         }
         frame.key(TITLE).width(1040.0).modal(msg(Event::Cancel))
     }

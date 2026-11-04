@@ -468,7 +468,7 @@ pub fn view<'a>(
     Dialog::new("Dışa aktar")
         .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(row![preview, form].spacing(18))
-        .push(foot)
+        .footer(foot)
         .width(typography::unscaled(width))
         .max_height(typography::unscaled(height))
         .into()

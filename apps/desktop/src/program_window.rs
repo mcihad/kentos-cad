@@ -28,7 +28,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use iced::futures::channel::mpsc;
-use iced::widget::{Column, column, container, row, scrollable, space, text};
+use iced::widget::{Column, column, container, row, space, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     BuildingProgram, CommandResult, ProgramAssign, ProgramBuilding, ProgramCheck, ProgramChecked, ProgramEdit,
@@ -663,8 +663,13 @@ impl App {
             .push(space::horizontal().width(Fill))
             .push(words::secondary(CANCEL, Some(msg(Event::Cancel))))
             .push(words::primary(SAVE, Some(msg(Event::Save))));
-        let content = column![head, scrollable(container(body).padding(iced::Padding::ZERO.right(14))).height(Length::Fixed(380.0)), foot].spacing(14);
-        Frame::new(TITLE).push(content).width(1000.0).modal(msg(Event::Cancel))
+        // The body scrolls with the window and grows resized or full screen; the buttons are the footer (ADR 0746 eki).
+        Frame::new(TITLE)
+            .push(head)
+            .scroll(container(body).padding(iced::Padding::ZERO.right(14)))
+            .footer(foot)
+            .width(1000.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn program_units_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {

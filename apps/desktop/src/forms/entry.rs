@@ -2401,7 +2401,7 @@ impl App {
         let frame = Frame::new(title)
             .push(head)
             .fill(page)
-            .push(self.entry_footer(e, locked));
+            .footer(self.entry_footer(e, locked));
         frame.key(key).width(760.0).modal(e.msg(Event::Cancel))
     }
 

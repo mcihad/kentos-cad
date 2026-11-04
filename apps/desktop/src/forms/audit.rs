@@ -269,7 +269,8 @@ impl App {
             }
         }
         let some = w.answer.as_ref().is_some_and(|a| !a.records.is_empty());
-        body = body.push(
+        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
+        let footer =
             row![
                 words::secondary(SELECT_ALL, some.then(|| msg(Event::SelectAll))),
                 space::horizontal().width(Fill),
@@ -277,10 +278,10 @@ impl App {
                 words::primary(CLOSE, Some(msg(Event::Close))),
             ]
             .spacing(8)
-            .align_y(Center),
-        );
+            .align_y(Center);
         Frame::new(format!("{TITLE} · {}", w.name))
-            .push(body)
+            .scroll(body)
+            .footer(footer)
             .width(760.0)
             .modal(msg(Event::Close))
     }

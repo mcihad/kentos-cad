@@ -412,7 +412,7 @@ pub fn place_view<'a>(ed: &SvgEditor) -> Element<'a, Message> {
     Dialog::new("Altlığın konumu ve boyu")
         .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(body)
-        .push(
+        .footer(
             row![
                 space::horizontal(),
                 button(label::body("Tamam").style(ui_style::text::on_accent))

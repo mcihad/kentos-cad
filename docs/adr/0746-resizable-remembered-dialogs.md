@@ -116,7 +116,13 @@ footer olsun."
     Koridor 330, Brükner ve Arazi 360 px) artık gövdeyle birlikte kayar. Böylece tam ekranda büyürler; normal boyda da
     Boykesit'in PVI tablosu iç kaydırma olmadan görünür.
   - Çizim satırları (Çizime, Km yazısı, Eş yükselti) gövdeden çıkıp alt çubuğun hemen üstüne alındı.
-  - Öbür 84 pencere dokunuldukça taşınır.
+  - Aynı gün Yol dışı pencereler de taşındı. Düğme satırı gövdenin sonunda olan altısı alt çubuğa geçti (olay bağları,
+    birleşimler, katman dizinleri, tablo stilleri, katman kuralları, ilişkiler), ayrıca form denetimi ve bina
+    programı (iç kaydırması 380 px'ti). Gövdesi zaten esnek (`fill`) olan form pencerelerinin son satırı ve
+    `.push(footer(..))` zincirli 13 pencere `footer`'a çevrildi (işleme toplu, tasarımcı, stil yöneticisi, SVG
+    düzenleyicinin altı penceresi, katman stili, ifade, 3B sahne).
+  - Hesap pencereleri (kutupsal, kestirme, poligon) zaten `action` kullanıyordu. Kalanlar tuval çizimidir ya da
+    pencere değildir. Başlangıç ekranı kendi düzenini korur: boyutlanmaz, alt satırı bir anahtardır.
 
 Bekçi: `widget::fit::tests::a_kept_box_fills_loose_limits_and_its_footer_goes_down`.
 

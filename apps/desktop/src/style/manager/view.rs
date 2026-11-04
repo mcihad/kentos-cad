@@ -171,7 +171,7 @@ impl App {
             .on_close(ev(Event::Close))
             .push(bar(m, width - 2.0 * MARGIN))
             .push(frame)
-            .push(footer(m, lib))
+            .footer(footer(m, lib))
             .width(typography::unscaled(width))
             .max_height(typography::unscaled(height))
             .into()

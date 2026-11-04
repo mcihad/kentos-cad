@@ -481,7 +481,7 @@ fn save_as<'a>(form: &files::SaveAs) -> Element<'a, Message> {
     Dialog::new("Farklı kaydet")
         .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(body)
-        .push(
+        .footer(
             row![
                 space::horizontal(),
                 button(label::body("Vazgeç"))
@@ -683,7 +683,7 @@ impl App {
         Dialog::new(ed.title())
             .on_close(ev(Event::Close))
             .push(frame)
-            .push(footer(ed, width < typography::from_default(1250.0)))
+            .footer(footer(ed, width < typography::from_default(1250.0)))
             .width(typography::unscaled(width))
             .max_height(typography::unscaled(height))
             .into()

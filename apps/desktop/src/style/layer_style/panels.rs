@@ -113,7 +113,7 @@ impl App {
             .push(top)
             .scroll_fill(container(body).padding([0, 4]).width(Fill))
             .push(horizontal_divider())
-            .push(footer(window))
+            .footer(footer(window))
             .width(WIDTH)
             .max_height(HEIGHT)
             .modal(ev(Event::Close));

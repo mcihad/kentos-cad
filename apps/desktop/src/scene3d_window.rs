@@ -461,7 +461,7 @@ impl App {
         Frame::new(TITLE)
             .push(top)
             .fill(area)
-            .push(
+            .footer(
                 row![
                     label::caption(info).style(muted).width(Fill),
                     words::primary(EXPORT, Some(msg(Event::Export))),

@@ -95,7 +95,7 @@ impl App {
             Dialog::new(title)
                 .push(body)
                 .push(horizontal_divider())
-                .push(footer(b))
+                .footer(footer(b))
                 .width(if flow { FLOW_WIDTH } else { WIDTH })
                 .max_height(if flow { FLOW_HEIGHT } else { HEIGHT })
                 .modal(ev(Event::Cancel)),

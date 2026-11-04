@@ -414,7 +414,7 @@ pub fn view<'a>(
             ]
             .spacing(18),
         )
-        .push(foot)
+        .footer(foot)
         .width(typography::unscaled(width))
         .max_height(typography::unscaled(height))
         .into()
