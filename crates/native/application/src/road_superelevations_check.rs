@@ -17,7 +17,7 @@ use crate::road_superelevations as common;
 use crate::road_terrains::fail;
 
 /// The check now, and its warnings.
-pub fn answer(doc: &Document, input: &SuperelevationsCheck) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(doc: &Document, input: &SuperelevationsCheck) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let bad = |path: &str, words: &str| fail(codes::INVALID_SUPERELEVATION_CHECK, words.into(), path);
     let positive = |v: Option<f64>| v.is_none_or(|x| x.is_finite() && x > 0.0);
@@ -38,6 +38,26 @@ pub fn answer(doc: &Document, input: &SuperelevationsCheck) -> Result<(Superelev
         return Err(bad("step", "Klotoidin okunma adımı 0'dan büyük, en çok 100 m olmalı."));
     }
     let (_, def) = common::find(doc.road_superelevations(), &input.superelevation, "superelevation")?;
+    check_def(doc, def, input, step)
+}
+
+/// The check of a schedule as typed (the desktop's Dever window, before it is saved): `input`'s limits on `def`.
+pub fn preview(doc: &Document, def: &kentos_commands::SuperelevationDef, input: &SuperelevationsCheck) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), String> {
+    let words = |stop: Stop| match stop {
+        Stop::Failed(e) | Stop::Conflict(e) => e.message,
+        Stop::Cancelled => String::new(),
+    };
+    common::road_project(doc).map_err(words)?;
+    check_def(doc, def, input, input.step.unwrap_or(1.0)).map_err(words)
+}
+
+fn check_def(
+    doc: &Document,
+    def: &kentos_commands::SuperelevationDef,
+    input: &SuperelevationsCheck,
+    step: f64,
+) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), Stop> {
+    let bad = |path: &str, words: &str| fail(codes::INVALID_SUPERELEVATION_CHECK, words.into(), path);
     let template = doc
         .road_templates()
         .iter()

@@ -184,7 +184,8 @@ pub fn curve_friction(
     let mut out = Vec::new();
     for c in &al.curves {
         let (from, to) = (c.stations[0], c.stations[3]);
-        if !(to > from) {
+        // Also a NaN station: no curve to read.
+        if to.partial_cmp(&from) != Some(std::cmp::Ordering::Greater) {
             continue;
         }
         let mut at: Vec<f64> = c.stations.to_vec();

@@ -580,6 +580,8 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
     alt alta yığılmaz.
 - **Sonuç formu izler.** Yalnız okuyan pencere değer değişince kendiliğinden yeniden okur, “Önizle” düğmesi yoktur.
   Sonuç yokken yerinde tek soluk cümle durur.
+- **Denetim formda:** standart sınırları (hız, sürtünme, 1:n) formun son bölümüdür; sonuç yazılan tanımda kaydetmeden
+  okunur (Dever, ADR 0931 §3). Oran sınırı 1:n'nin n'i olarak yazılır.
 - **Alt çubuk.** Solda durum yazar, sağda Kapat ve tek birincil eylem durur (yazan iş: “Yeni boykesit olarak yaz”).
   Yazılacak bir şey yoksa birincil eylem kapalıdır.
 - **Tablo formda:** birkaç sütunlu girdi tablosu (bileşenler, tabakalar, katsayılar) `Form::wide` ile etiket sütunu
@@ -587,7 +589,7 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 - **Ölü denetim gösterilmez:** seçili şeye uymayan satır gizlenir. Örnek: Enkesit'te Çizime satırı ve Aksa yeniden bağla
   yalnız kesit takımında görünür.
 - Taşınan pencereler: Kırmızı kot önerisi (Y26.0), Kübaj ve Enkesit'in tip kesit düzenleyicisi (Y26.3), Görüş mesafesi,
-  Platform suyu, Taşıma planı ve Tasarım denetimi (Y26.4). Öbürleri sırayla taşınır.
+  Platform suyu, Taşıma planı ve Tasarım denetimi (Y26.4), Dever (Y27.3). Öbürleri sırayla taşınır.
 - **Açıklama çizimin altındadır:** renklerin ne demek olduğunu çizimin içine yazmak, çizimi sola ve üste sıkıştırıyordu.
 - **Girilmemiş zorunlu sayı hata değildir:** formun eksiği sonuç alanında soluk cümleyle söylenir. Kırmızı not yalnız
   komutun reddidir.

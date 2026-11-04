@@ -1,6 +1,6 @@
 # 0931 — KentOS Yol: deverin dönme ekseni, göreli eğim ve yanal sürtünme
 
-Tarih: 2026-11-04. plan/road.md Y27 (ROAD-DEVER-01, 07, 11). Durum: Y27.1 kabul; Y27.2–Y27.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y27 (ROAD-DEVER-01, 07, 11). Durum: Y27.1–Y27.3 kabul.
 
 ## Dayanak
 
@@ -57,8 +57,29 @@ Tarih: 2026-11-04. plan/road.md Y27 (ROAD-DEVER-01, 07, 11). Durum: Y27.1 kabul;
 
 ### §3 Masaüstü (Y27.3)
 
-Dever penceresinde Dönme ekseni seçimi ve Denetim bölümü bulunur (hız, sürtünme ve göreli eğim sınırı). Pencere ortak
-düzene taşınır (DESIGN.md §7.19).
+Dever penceresi ortak düzene taşındı (DESIGN.md §7.19). Formun üç bölümü var: Tanım (ad, aks, normal eğimler, yöntem,
+**Dönme ekseni**: Eksen, İç kenar, Dış kenar, Sol kenar, Sağ kenar), Kurplar ya da Km satırları (`Form::wide`) ve
+**Denetim** (tip kesit, proje hızı, en büyük sürtünme, en dik göreli eğim).
+
+- **Denetim kaydedilmemiş çizelgeyi okur.** `road_superelevations_check::preview` komutun hesabını yazılan tanım
+  üstünde çalıştırır. Değer değişince sonuç kendiliğinden yenilenir. Böylece kullanıcı geçiş boyunu uzatıp bulgunun
+  kalktığını kaydetmeden görür.
+- **Sınır 1:n'nin n'i olarak yazılır.** Kılavuzlar göreli eğimi 1:154 gibi verir; 0,0065 yazdırmak hata davet eder. n ≤ 1
+  reddedilir ve neden yazılır.
+- **Özetler:** kritik km sayısı, en dik göreli eğim (1:n), en çok sürtünme, bulgu sayısı. Liste seçimi: Kritik km |
+  Göreli eğim | Sürtünme | Bulgular. Hız yokken yalnız Kritik km gösterilir; sürtünme kartı “hız yok” der.
+- **Kenar etrafında göreli eğim iki katına yaklaşır.** Örnek çizimde (R 150 m, %6, 40 m geçiş, iki 3,5 m şerit) eksen
+  etrafında 1:148 olan en dik göreli eğim iç kenar etrafında 1:83'tür (dönen genişlik iki katı). 50 km/sa için
+  AASHTO'nun 1:154'ü (pencerede 150 yazıldı) iki bulgu verir. Geçiş 80 m olunca iç kenar etrafında 1:167'ye (eksen
+  etrafında 1:296) çıkar ve bulgu kalmaz.
+- **Kısa daire yayında en çok sürtünme tam deverde değildir.** Aynı örnekte 80 m geçiş daire yayını tam dever
+  kurulmadan bitirir. Sürtünme R 150 m'nin başladığı km 234,71'de, %3 deverde en çoktur (0,101; 40 m geçişte %6 ile
+  0,071). Çekirdek bu yeri
+  geçişin kırılma noktalarında okuduğu için gösterir.
+- Grafikte birbirine 22 px'ten yakın kritik km adları ikinci satıra iner (dar pencerede NC LC RC FS üst üste
+  biniyordu). Alanlar sayıyı Türkçe virgülle gösterir (`-2,5`).
+
+Bekçi: `superelevation_window_tests::the_axis_is_written_and_denetim_reads_the_schedule_as_typed`.
 
 ## Doğrulama
 

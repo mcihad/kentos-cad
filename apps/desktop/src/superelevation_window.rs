@@ -1,24 +1,28 @@
-//! Dever (plan/road.md Y6, `superelevation.editor`): a road project's superelevation schedules, as Civil 3D's
-//! superelevation view and OpenRoads' superelevation editor show them: on an alignment, the normal cross slopes, then
-//! each curve's rate, runoff, share on the tangent and inside widening (rotating about the centreline), or rows of
-//! stations; the diagram of both sides' slopes with the critical stations (NC, LC, RC, FS) and the widening, built as
-//! it is typed (`kentos.superelevation/1`), so why it does not build shows before it is saved.
+//! Dever (plan/road.md Y6 and Y27, `superelevation.editor`): a road project's superelevation schedules, as Civil 3D's
+//! superelevation view and OpenRoads' superelevation editor show them: on an alignment, the normal cross slopes, the
+//! axis of rotation (docs/adr/0931: the centreline, an edge), then each curve's rate, runoff, share on the tangent and
+//! inside widening, or rows of stations; the diagram of both sides' slopes with the critical stations (NC, LC, RC, FS)
+//! and the widening, built as it is typed (`kentos.superelevation/1`), so why it does not build shows before it is
+//! saved. Denetim reads `road.superelevations.check` on the schedule as typed: the relative gradients about the axis
+//! and each curve's side friction at the design speed, against the standard's limits the user writes. The layout is
+//! the road windows' one (road_dialog.rs, DESIGN.md §7.19).
 //!
 //! ```text
-//! ┌ Dever ──────────────────────────────────────────────────────────────────────────────────────┐
-//! │ Dever çizelgeleri   │ Ad [Ana aks deveri] Aks [Ana aks ▾] Normal sol [-2,5] sağ [-2,5] [Kurplardan ▾]│
-//! │ ● Ana aks deveri    │ ┌───────────────────────────────────────────────────────────────────┐ │
-//! │ [Yeni dever]        │ │  %6 ─────/‾‾‾‾‾\──── left blue, right red, NC LC RC FS, widening │ │
-//! │                     │ └───────────────────────────────────────────────────────────────────┘ │
-//! │                     │ PI   Oran (%)  Geçiş boyu (m)  Teğet payı  Genişleme (m)               │
-//! │                     │ [Kurp ekle] [Kurbu sil] [Bütün kurplar]                                 │
-//! │ [Sil] [Aksa yeniden bağla]                                               [Vazgeç] [Kaydet] │
-//! └─────────────────────────────────────────────────────────────────────────────────────────────┘
+//! ┌ Dever ─────────────────────────────────────────────────────────────────────────────── × ┐
+//! │ Dever çizelgeleri [Yeni]  ┌ the diagram: left blue, right red, NC LC RC FS, widening ─┐ │
+//! │ ● Ana aks deveri          └──────────────────────────────────────────────────────────┘ │
+//! │ Tanım ──────────────────  [kritik km] [göreli eğim 1:n] [sürtünme] [bulgu]            │
+//! │  Ad, Aks, Normal sol/sağ  (Kurplar | Kritik km | Göreli eğim | Sürtünme | Bulgular)    │
+//! │  Yöntem, Dönme ekseni      table                                                       │
+//! │ Kurplar ─── table         notes                                                        │
+//! │ Denetim ─── Tip kesit, Hız, Sürtünme, Göreli eğim                                      │
+//! │ Sil · Aksa yeniden bağla                                          [Vazgeç] [■ Kaydet] │
+//! └────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 //!
 //! The window edits a copy of the schedules; Kaydet writes what changed through `road.superelevations.edit` (removes,
-//! then sets), each one undo step, and closes. The rates, runoffs and widths come from the standard or the project:
-//! nothing is filled in for the user.
+//! then sets), each one undo step, and closes. The rates, runoffs, widths and limits come from the standard or the
+//! project: nothing is filled in for the user.
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
@@ -31,11 +35,12 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_superelevations, road_superelevations_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided};
+use kentos_ui::widget::{Banner, Elided, Form};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
+use crate::road_dialog::{self, RoadDialog, col, num};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -49,14 +54,48 @@ const ADD: &str = "Satır ekle";
 const REMOVE_ROW: &str = "Satırı sil";
 const ALL_CURVES: &str = "Bütün kurplar";
 const METHODS: [&str; 2] = ["Kurplardan", "Km satırlarından"];
+pub(crate) const PIVOT: &str = "Dönme ekseni";
+pub(crate) const SPEED: &str = "Proje hızı (km/sa)";
+pub(crate) const FRICTION: &str = "En büyük sürtünme";
+pub(crate) const RELATIVE: &str = "En dik göreli eğim (1:n)";
+/// The axes of rotation offered, the centreline first (no field).
+const PIVOTS: [Option<kentos_commands::SuperelevationPivot>; 5] = [
+    None,
+    Some(kentos_commands::SuperelevationPivot::InsideEdge),
+    Some(kentos_commands::SuperelevationPivot::OutsideEdge),
+    Some(kentos_commands::SuperelevationPivot::LeftEdge),
+    Some(kentos_commands::SuperelevationPivot::RightEdge),
+];
+
+/// Which list the window shows under its figures.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Listed {
+    #[default]
+    Critical,
+    Gradients,
+    Friction,
+    Findings,
+}
+
+impl std::fmt::Display for Listed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Listed::Critical => "Kritik km",
+            Listed::Gradients => "Göreli eğim",
+            Listed::Friction => "Sürtünme",
+            Listed::Findings => "Bulgular",
+        })
+    }
+}
 
 fn comma(v: f64, digits: usize) -> String {
     format!("{v:.digits$}").replace('.', ",")
 }
 
+/// A stored number as the field shows it: the comma Turkish writes, no trailing zeros.
 fn trimmed(v: f64) -> String {
     let s = format!("{v:.6}");
-    s.trim_end_matches('0').trim_end_matches('.').to_owned()
+    s.trim_end_matches('0').trim_end_matches('.').replace('.', ",")
 }
 
 fn number(text: &str) -> Result<Option<f64>, ()> {
@@ -173,6 +212,11 @@ pub struct Window {
     /// The alignment's length and its curves' PIs (id, TS, ST).
     length: f64,
     curves: Vec<(String, f64, f64)>,
+    /// Denetim: the template whose lanes the edges are, the speed and the limits as typed (docs/adr/0931 §3).
+    pub(crate) check_template: Option<String>,
+    pub(crate) check: [String; 3],
+    pub(crate) checked: Option<Result<kentos_commands::SuperelevationsChecked, String>>,
+    pub(crate) list: Listed,
 }
 
 #[derive(Debug, Clone)]
@@ -192,6 +236,11 @@ pub enum Event {
     Add,
     RemoveRow,
     AllCurves,
+    Pivot(Option<kentos_commands::SuperelevationPivot>),
+    CheckTemplate(String),
+    /// Denetim's field: 0 speed, 1 most friction, 2 most relative gradient (1:n).
+    Check(usize, String),
+    List(Listed),
     Save,
     Cancel,
 }
@@ -216,6 +265,7 @@ impl App {
             chosen: (!kept.is_empty()).then_some(0),
             rows: kept.iter().map(Row::of).collect(),
             kept,
+            check_template: doc.model.road_templates().first().map(|t| t.id.clone()),
             ..Window::default()
         }));
         self.dialog = Some(Dialog::Superelevations);
@@ -259,6 +309,13 @@ impl App {
                 }
             }
         });
+        // Denetim on the schedule as typed, once it builds and has a template.
+        w.checked = match (r.def(), &w.check_template, &w.report) {
+            (Ok(def), Some(t), Some(Ok(_))) => Some(check_input(&w.check, t, &def.id).and_then(|q| {
+                kentos_native_application::road_superelevations_check::preview(&doc.model, &def, &q).map(|x| x.0)
+            })),
+            _ => None,
+        };
     }
 
     fn superelevation_alignments(&self) -> Vec<(String, String, u32)> {
@@ -368,6 +425,17 @@ impl App {
                     }
                     w.line = None;
                 }
+            }
+            Event::Pivot(p) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.pivot = p;
+                }
+            }
+            Event::CheckTemplate(t) => w.check_template = Some(t),
+            Event::Check(k, t) => w.check[k.min(2)] = t,
+            Event::List(l) => {
+                w.list = l;
+                return Task::none();
             }
             Event::AllCurves => {
                 let pis: Vec<String> = w.curves.iter().map(|c| c.0.clone()).collect();
@@ -493,7 +561,8 @@ impl App {
         let mut list = Column::new().spacing(1).padding(2);
         for (i, r) in w.rows.iter().enumerate() {
             let on = alignments.iter().find(|a| a.0 == r.alignment).map_or(r.alignment.clone(), |a| a.1.clone());
-            let kind = if stale_of(r) { format!("{on} · eski") } else { on };
+            let axis = r.pivot.map_or("eksen", |p| p.words());
+            let kind = if stale_of(r) { format!("{on} · {axis} · eski") } else { format!("{on} · {axis}") };
             let face = column![
                 Elided::new(r.name.clone()).size(typography::body()).font(typography::ui()).width(Fill),
                 label::caption(kind).style(muted),
@@ -510,38 +579,108 @@ impl App {
         if w.rows.is_empty() {
             list = list.push(label::caption("Dever çizelgesi yok. Yeni dever ile bir aksın kurplarına dever verin.").style(muted));
         }
-        let left = column![
-            label::strong("Dever çizelgeleri"),
-            container(scrollable(list).height(typography::scaled(300.0))).style(style::container::field_box).width(Fill),
-            words::secondary(NEW, Some(msg(Event::New))),
+        let head = column![
+            row![label::strong("Dever çizelgeleri"), space::horizontal().width(Fill), words::secondary(NEW, Some(msg(Event::New)))]
+                .align_y(Center),
+            container(scrollable(list).height(typography::scaled(84.0))).style(style::container::field_box).width(Fill),
         ]
-        .spacing(8);
+        .spacing(6);
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
-        let right: Element<'_, Message> = match chosen {
-            None => container(label::caption("Bir dever çizelgesi seçin ya da yeni bir çizelge oluşturun.")).padding(12).into(),
-            Some(r) => scrollable(self.superelevation_editor(w, r, stale_of(r))).height(typography::scaled(420.0)).into(),
-        };
         let saved = chosen.is_some_and(|r| w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)));
-        let body = column![
-            row![container(left).width(220), container(right).width(Fill)].spacing(16),
-            row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                words::secondary(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(14);
-        Frame::new(TITLE).push(body).width(1080.0).modal(msg(Event::Cancel))
+        let form = match chosen {
+            None => Form::new().row(label::caption("Bir dever çizelgesi seçin ya da yeni bir çizelge oluşturun.").style(muted)),
+            Some(r) => self.superelevation_form(w, r),
+        };
+        let mut d = RoadDialog::new(TITLE, form, msg(Event::Cancel))
+            .head(head)
+            .form_width(420.0)
+            .width(1200.0)
+            .close_caption(CANCEL)
+            .ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove)))
+            .ghost(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind)));
+        if let Some(r) = chosen {
+            let normal = r.def().ok().map(|d| (d.normal_left, d.normal_right));
+            let built = w.report.as_ref().and_then(|x| x.as_ref().ok());
+            d = d
+                .picture(iced::widget::canvas(Chart { report: built, normal, length: w.length, curves: &w.curves }).width(Fill).height(Fill), 210.0)
+                .legend("Sol yan mavi, sağ yan kırmızı (yüzde, dışa düşen eksi); iç yanın genişlemesi yeşil; NC LC RC FS kritik km'ler");
+            if stale_of(r) {
+                d = d.note(Banner::warning("Aks değişti: km'leri denetleyip aksa yeniden bağlayın."));
+            }
+            match &w.report {
+                Some(Err(e)) => d = d.note(Banner::error(e.clone())),
+                Some(Ok(rep)) => {
+                    d = d.figure("Kritik km", rep.critical.len().to_string());
+                    let ch = w.checked.as_ref().and_then(|c| c.as_ref().ok());
+                    let steepest = ch.and_then(|c| c.gradients.iter().map(|g| g.left.max(g.right)).reduce(f64::max)).filter(|g| *g > 0.0);
+                    d = d.figure("En dik göreli eğim", steepest.map_or_else(|| "—".into(), |g| format!("1:{:.0}", 1.0 / g)));
+                    let most = ch.and_then(|c| c.curves.iter().map(|x| x.friction).reduce(f64::max));
+                    d = d.figure("En çok sürtünme", most.map_or_else(|| "hız yok".into(), |f| comma(f, 3)));
+                    d = d.figure("Bulgu", ch.map_or_else(|| "—".into(), |c| c.findings.len().to_string()));
+                    if let Some(Err(e)) = &w.checked {
+                        d = d.note(Banner::error(e.clone()));
+                    }
+                    let critical = road_dialog::table(
+                        vec![col("PI", 80.0), col("Nokta", 160.0), num("Km (m)", 120.0), col("Yer", 80.0)],
+                        rep.critical
+                            .iter()
+                            .map(|c| {
+                                let mark = match c.mark.as_str() {
+                                    "normalCrown" => "NC normal bombe",
+                                    "levelCrown" => "LC düz dış yan",
+                                    "reverseCrown" => "RC ters bombe",
+                                    _ => "FS tam dever",
+                                };
+                                vec![c.pi.clone(), mark.into(), comma(c.station, 2), if c.exit { "çıkış" } else { "giriş" }.into()]
+                            })
+                            .collect(),
+                        "Kritik km yok (km satırlarından)",
+                    );
+                    let table = match (w.list, ch) {
+                        (Listed::Gradients, Some(c)) => road_dialog::table(
+                            vec![num("Baş (m)", 100.0), num("Son (m)", 100.0), num("Sol (1:n)", 100.0), num("Sağ (1:n)", 100.0)],
+                            c.gradients
+                                .iter()
+                                .filter(|g| g.left > 0.0 || g.right > 0.0)
+                                .map(|g| {
+                                    let n = |v: f64| if v > 0.0 { format!("{:.0}", 1.0 / v) } else { "—".into() };
+                                    vec![comma(g.from, 2), comma(g.to, 2), n(g.left), n(g.right)]
+                                })
+                                .collect(),
+                            "Eğim değişmiyor",
+                        ),
+                        (Listed::Friction, Some(c)) => road_dialog::table(
+                            vec![col("PI", 70.0), num("Sürtünme", 90.0), num("Km (m)", 100.0), num("R (m)", 90.0), num("Dever (%)", 90.0)],
+                            c.curves
+                                .iter()
+                                .map(|x| vec![x.pi.clone(), comma(x.friction, 3), comma(x.at, 2), comma(x.radius, 1), comma(100.0 * x.e, 2)])
+                                .collect(),
+                            "Sürtünme bir hızda okunur: Denetim'de proje hızını yazın",
+                        ),
+                        (Listed::Findings, Some(c)) => road_dialog::table(
+                            vec![road_dialog::Col { title: "Bulgu", width: None, number: false }],
+                            c.findings.iter().map(|f| vec![f.message.clone()]).collect(),
+                            "Verilen sınırların hepsi tutuyor",
+                        ),
+                        _ => critical,
+                    };
+                    let shown = if ch.is_none() { Listed::Critical } else { w.list };
+                    let options: Vec<Listed> = if ch.is_some() {
+                        vec![Listed::Critical, Listed::Gradients, Listed::Friction, Listed::Findings]
+                    } else {
+                        vec![Listed::Critical]
+                    };
+                    d = d.detail(road_dialog::detail_choice(options, shown, |l| msg(Event::List(l)), table));
+                }
+                None => {}
+            }
+        }
+        d.primary(SAVE, Some(msg(Event::Save))).view()
     }
 
-    fn superelevation_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message> {
+    /// The chosen schedule as a grouped form: its definition, its curves or rows, and Denetim.
+    fn superelevation_form<'a>(&'a self, w: &'a Window, r: &'a Row) -> Form<'a, Message> {
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
         let alignments = self.superelevation_alignments();
         let ids: Vec<String> = alignments.iter().map(|a| a.0.clone()).collect();
         let on_alignment = Select::new(
@@ -551,48 +690,15 @@ impl App {
         )
         .placeholder("Aks");
         let method = Select::new(METHODS.iter().map(|m| Choice::new((*m).to_owned())), Some(r.method), |m| msg(Event::Method(m)));
-        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
-        col = col.push(
-            row![
-                words::field("Ad", kentos_ui::widget::text_field("Çizelgenin adı", &r.name).on_input(|t| msg(Event::Name(t))), None),
-                words::field("Aks", on_alignment, None),
-                words::field("Normal sol (%)", kentos_ui::widget::text_field("-2,5", &r.normal[0]).on_input(|t| msg(Event::Normal(0, t))).width(90), None),
-                words::field("Normal sağ (%)", kentos_ui::widget::text_field("-2,5", &r.normal[1]).on_input(|t| msg(Event::Normal(1, t))).width(90), None),
-                words::field("Yöntem", container(method).width(180), None),
-            ]
-            .spacing(10),
+        let pivot = Select::new(
+            PIVOTS.iter().map(|p| Choice::new(p.map_or("Eksen", |p| p.words()).to_owned())),
+            PIVOTS.iter().position(|p| *p == r.pivot),
+            |i| msg(Event::Pivot(PIVOTS[i])),
         );
-        let normal = r.def().ok().map(|d| (d.normal_left, d.normal_right));
-        let built = w.report.as_ref().and_then(|x| x.as_ref().ok());
-        col = col.push(
-            container(
-                iced::widget::canvas(Chart { report: built, normal, length: w.length, curves: &w.curves })
-                    .width(Fill)
-                    .height(typography::scaled(220.0)),
-            )
-            .style(style::container::field_box)
-            .width(Fill),
-        );
-        match &w.report {
-            Some(Err(e)) => col = col.push(label::caption(e.clone()).style(danger)),
-            Some(Ok(rep)) => {
-                let what = if r.method == 0 {
-                    let full = rep.critical.iter().filter(|c| c.mark == "full").count() / 2;
-                    format!("{full} kurp · {} kritik km", rep.critical.len())
-                } else {
-                    format!("{} km satırı", r.rows.len())
-                };
-                col = col.push(label::caption(format!("{what} · sol mavi, sağ kırmızı, iç yanın genişlemesi yeşil")));
-            }
-            None => {}
-        }
-        if stale {
-            col = col.push(label::caption("Aks değişti: km'leri denetleyip aksa yeniden bağlayın.").style(warn));
-        }
         let (head, widths): (Vec<&str>, Vec<f32>) = if r.method == 0 {
-            (vec!["PI", "Oran (%)", "Geçiş boyu (m)", "Teğet payı (0–1)", "Genişleme (m)"], vec![80.0, 90.0, 110.0, 110.0, 110.0])
+            (vec!["PI", "Oran (%)", "Geçiş (m)", "Teğet payı", "Genişleme"], vec![54.0, 66.0, 70.0, 74.0, 76.0])
         } else {
-            (vec!["Km (m)", "Sol (%)", "Sağ (%)"], vec![120.0, 100.0, 100.0])
+            (vec!["Km (m)", "Sol (%)", "Sağ (%)"], vec![110.0, 90.0, 90.0])
         };
         let mut table = Column::new().spacing(3);
         table = table.push(head.iter().zip(&widths).fold(row![].spacing(4), |row, (h, wd)| row.push(label::caption(*h).style(muted).width(*wd))));
@@ -604,9 +710,7 @@ impl App {
         for (j, line) in cells.into_iter().enumerate() {
             let mut cells_row = row![].spacing(4).align_y(Center);
             for (k, v) in line.into_iter().enumerate() {
-                cells_row = cells_row.push(
-                    kentos_ui::widget::text_field("", v).on_input(move |t| msg(Event::Cell(j, k, t))).width(widths[k]),
-                );
+                cells_row = cells_row.push(kentos_ui::widget::text_field("", v).on_input(move |t| msg(Event::Cell(j, k, t))).width(widths[k]));
             }
             cells_row = cells_row.push(
                 iced::widget::button(label::caption(if w.line == Some(j) { "●" } else { "○" }))
@@ -616,20 +720,45 @@ impl App {
             );
             table = table.push(cells_row);
         }
-        let title = if r.method == 0 { "Kurplar" } else { "Km satırları" };
-        col = col.push(words::field(title, table, None)).push(
-            row![
-                words::secondary(ADD, Some(msg(Event::Add))),
-                words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow))),
-                words::secondary(ALL_CURVES, (!w.curves.is_empty()).then(|| msg(Event::AllCurves))),
-            ]
-            .spacing(8),
-        );
-        col = col.push(
-            label::caption("Oran, geçiş boyu, teğet payı ve genişleme KGM'nin standardından ya da projeden yazılır; KentOS öntanımlı sayı vermez.")
-                .style(muted),
-        );
-        col.into()
+        let templates: Vec<(String, String)> = self
+            .document
+            .as_ref()
+            .map_or_else(Vec::new, |d| d.model.road_templates().iter().map(|t| (t.id.clone(), t.name.clone())).collect());
+        let tids: Vec<String> = templates.iter().map(|t| t.0.clone()).collect();
+        let on_template = Select::new(
+            templates.iter().map(|t| Choice::new(t.1.clone())),
+            w.check_template.as_ref().and_then(|t| tids.iter().position(|i| i == t)),
+            move |i| msg(Event::CheckTemplate(tids[i].clone())),
+        )
+        .placeholder("Tip kesit");
+        let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &w.check[k]).on_input(move |t| msg(Event::Check(k, t)));
+        Form::new()
+            .label_width(130.0)
+            .section("Tanım")
+            .field("Ad", kentos_ui::widget::text_field("Çizelgenin adı", &r.name).on_input(|t| msg(Event::Name(t))))
+            .field("Aks", on_alignment)
+            .field("Normal sol (%)", kentos_ui::widget::text_field("-2,5", &r.normal[0]).on_input(|t| msg(Event::Normal(0, t))))
+            .field("Normal sağ (%)", kentos_ui::widget::text_field("-2,5", &r.normal[1]).on_input(|t| msg(Event::Normal(1, t))))
+            .field("Yöntem", method)
+            .field(PIVOT, pivot)
+            .help("Kenar etrafında o kenar normal bombedeki kotunda kalır, eksen kalkar; kesitler ve koridor bunu izler.")
+            .section(if r.method == 0 { "Kurplar" } else { "Km satırları" })
+            .wide(table)
+            .wide(
+                row![
+                    words::secondary(ADD, Some(msg(Event::Add))),
+                    words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow))),
+                    words::secondary(ALL_CURVES, (!w.curves.is_empty() && r.method == 0).then(|| msg(Event::AllCurves))),
+                ]
+                .spacing(8),
+            )
+            .section("Denetim")
+            .field("Tip kesit", on_template)
+            .help("Göreli eğim bu tip kesitin şerit kenarında okunur.")
+            .field(SPEED, field(0, ""))
+            .field(FRICTION, field(1, "yok"))
+            .field(RELATIVE, field(2, "yok"))
+            .help("Örneğin 200, 1:200 demektir. Sınırlar standardındır; KentOS sayı vermez.")
     }
 
     pub(crate) fn superelevation_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -652,6 +781,9 @@ impl App {
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Normal sol (%)", text) => Some(msg(Event::Normal(0, text.to_owned()))),
             Control::Fill("Normal sağ (%)", text) => Some(msg(Event::Normal(1, text.to_owned()))),
+            Control::Fill(SPEED, text) => Some(msg(Event::Check(0, text.to_owned()))),
+            Control::Fill(FRICTION, text) => Some(msg(Event::Check(1, text.to_owned()))),
+            Control::Fill(RELATIVE, text) => Some(msg(Event::Check(2, text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -696,7 +828,8 @@ impl canvas::Program<Message> for Chart<'_> {
         let widened = !(rep.left_widening.is_empty() && rep.right_widening.is_empty());
         // The slopes above, the widening in its own strip under them, the critical stations' names at the bottom.
         let strip = if widened { 40.0 } else { 0.0 };
-        let plot = Rectangle { x: 52.0, y: 12.0, width: bounds.width - 64.0, height: bounds.height - 34.0 - strip };
+        // The names take two rows where they crowd (a short runoff at a narrow width puts NC LC RC FS within a few px).
+        let plot = Rectangle { x: 52.0, y: 12.0, width: bounds.width - 64.0, height: bounds.height - 46.0 - strip };
         let x = |s: f64| plot.x + (s / length * plot.width as f64) as f32;
         let y = |v: f64| plot.y + plot.height / 2.0 - (v / top * plot.height as f64 / 2.0) as f32;
         let bottom = plot.y + plot.height + strip;
@@ -714,6 +847,7 @@ impl canvas::Program<Message> for Chart<'_> {
             word(&mut frame, shown, Point::new(4.0, y(v) - 7.0), t.muted, false);
             v += step;
         }
+        let mut last: Option<f32> = None;
         for c in &rep.critical {
             let at = x(c.station);
             frame.stroke(
@@ -726,7 +860,12 @@ impl canvas::Program<Message> for Chart<'_> {
                 "reverseCrown" => "RC",
                 _ => "FS",
             };
-            word(&mut frame, mark.into(), Point::new(at, bottom + 4.0), t.muted, true);
+            // The second row where the last name on the first is nearer than a name's width.
+            let low = last.is_some_and(|l: f32| at - l < 22.0);
+            if !low {
+                last = Some(at);
+            }
+            word(&mut frame, mark.into(), Point::new(at, bottom + 4.0 + if low { 13.0 } else { 0.0 }), t.muted, true);
         }
         let side = |points: &[[f64; 2]], normal: f64| -> Vec<[f64; 2]> {
             let mut out = vec![[0.0, points.first().map_or(normal, |p| p[1])]];
@@ -765,4 +904,24 @@ impl canvas::Program<Message> for Chart<'_> {
         }
         vec![frame.into_geometry()]
     }
+}
+
+/// Denetim's input from the typed fields (docs/adr/0931 §3): a speed in km/h, the most friction, the most relative
+/// gradient written as the n of 1:n; an empty field is no limit.
+fn check_input(fields: &[String; 3], template: &str, id: &str) -> Result<kentos_commands::SuperelevationsCheck, String> {
+    let read = |k: usize, what: &str| -> Result<Option<f64>, String> {
+        number(&fields[k]).map_err(|()| format!("{what} bir sayı olmalı."))
+    };
+    let relative = read(2, RELATIVE)?;
+    if relative.is_some_and(|n| n <= 1.0) {
+        return Err(format!("{RELATIVE}: 1'den büyük bir n yazın (1:200 için 200)."));
+    }
+    Ok(kentos_commands::SuperelevationsCheck {
+        superelevation: id.to_owned(),
+        template: template.to_owned(),
+        speed: read(0, SPEED)?,
+        most_friction: read(1, FRICTION)?,
+        most_relative: relative.map(|n| 1.0 / n),
+        step: None,
+    })
 }

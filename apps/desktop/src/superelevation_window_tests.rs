@@ -1,5 +1,6 @@
-//! Dever (superelevation_window.rs, plan/road.md Y6): the window builds a schedule as it is typed, says why it does
-//! not build, and writes through `road.superelevations.edit`, each write one undo step; and its pictures.
+//! Dever (superelevation_window.rs, plan/road.md Y6, Y27): the window builds a schedule as it is typed, says why it does
+//! not build, and writes through `road.superelevations.edit`, each write one undo step; its axis of rotation and
+//! Denetim (docs/adr/0931); and its pictures.
 
 use crate::app::{App, Dialog, Message};
 use crate::superelevation_window::Event as W;
@@ -102,6 +103,45 @@ fn a_stale_schedule_is_rebound_and_a_used_one_stays() {
     assert_eq!(model(&mut app).road_superelevations().len(), 2, "the set's schedule stays");
 }
 
+#[test]
+fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
+    use kentos_commands::SuperelevationPivot as P;
+    let mut app = app(false);
+    made(&mut app);
+    let w = app.superelevation_window.as_ref().expect("open");
+    assert_eq!(w.check_template.as_deref(), Some("tk-1"), "the first template is the one read");
+    let c = w.checked.as_ref().expect("checked").as_ref().expect("reads");
+    assert!(c.curves.is_empty(), "no speed, no friction");
+    assert!(c.gradients.iter().any(|g| g.left > 0.0 || g.right > 0.0), "the slopes change on the runoff");
+    // 80 km/h, friction at most 0,05 and 1:400: the limits break, before anything is saved.
+    send(&mut app, W::Check(0, "80".into()));
+    send(&mut app, W::Check(1, "0,05".into()));
+    send(&mut app, W::Check(2, "400".into()));
+    let c = app.superelevation_window.as_ref().unwrap().checked.clone().expect("checked").expect("reads");
+    assert_eq!(c.curves.len(), 1);
+    assert!(c.findings.len() >= 2, "{:?}", c.findings);
+    assert!(model(&mut app).road_superelevations().is_empty(), "Denetim writes nothing");
+    // About the inside edge the edge's gradient doubles over the centreline's.
+    let before = c.gradients.iter().map(|g| g.left.max(g.right)).fold(0.0, f64::max);
+    send(&mut app, W::Pivot(Some(P::InsideEdge)));
+    let c = app.superelevation_window.as_ref().unwrap().checked.clone().expect("checked").expect("reads");
+    let after = c.gradients.iter().map(|g| g.left.max(g.right)).fold(0.0, f64::max);
+    assert!(after > 1.5 * before, "{before} → {after}");
+    // n of 1:n at most 1 says why.
+    send(&mut app, W::Check(2, "1".into()));
+    let why = app.superelevation_window.as_ref().unwrap().checked.clone().expect("checked").expect_err("refused");
+    assert!(why.contains("1:200"), "{why}");
+    send(&mut app, W::Check(2, "400".into()));
+    send(&mut app, W::Save);
+    assert_eq!(model(&mut app).road_superelevations()[0].pivot, Some(P::InsideEdge));
+    // The centreline is stored as no field.
+    let _ = app.update(Message::Run("superelevation.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Pivot(None));
+    send(&mut app, W::Save);
+    assert_eq!(model(&mut app).road_superelevations()[0].pivot, None);
+}
+
 /// The window over the drawing, wide and narrow, light and dark; `.run/gui-evidence/yol-y6-*`:
 ///
 /// ```text
@@ -128,7 +168,11 @@ fn screens() {
         };
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
-            let file = out.join(format!("yol-y6-{file}-{name}.png"));
+            let file = if let Some(file) = file.strip_prefix("../") {
+                out.join(format!("{file}-{name}.png"))
+            } else {
+                out.join(format!("yol-y6-{file}-{name}.png"))
+            };
             snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
@@ -142,6 +186,25 @@ fn screens() {
         send(&mut app, W::Choose(0));
         send(&mut app, W::Cell(0, 1, "2".into()));
         shot(&mut app, "dever-red");
+        send(&mut app, W::Cancel);
+        // Y27.3: the axis of rotation and Denetim on the main schedule, 50 km/h with AASHTO's limits there (side
+        // friction 0,16, relative gradient 1:154 written 150) as an example; the 40 m runoff is too steep about the inside edge.
+        let _ = app.update(Message::Run("superelevation.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Pivot(Some(kentos_commands::SuperelevationPivot::InsideEdge)));
+        send(&mut app, W::Check(0, "50".into()));
+        send(&mut app, W::Check(1, "0,16".into()));
+        send(&mut app, W::Check(2, "150".into()));
+        let y27 = |f: &str| format!("../yol-y26/y27-3-{f}");
+        shot(&mut app, &y27("dever-eksen"));
+        send(&mut app, W::List(crate::superelevation_window::Listed::Gradients));
+        shot(&mut app, &y27("dever-goreli"));
+        send(&mut app, W::List(crate::superelevation_window::Listed::Findings));
+        shot(&mut app, &y27("dever-bulgular"));
+        // A longer runoff: the gradient falls under the limit, the findings go.
+        send(&mut app, W::Cell(0, 2, "80".into()));
+        send(&mut app, W::List(crate::superelevation_window::Listed::Friction));
+        shot(&mut app, &y27("dever-surtunme"));
         send(&mut app, W::Cancel);
         if name == "acik-genis" {
             // Enkesit's set takes the schedule; the lanes turn with it on the curve.
