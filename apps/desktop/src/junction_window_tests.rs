@@ -201,3 +201,95 @@ fn clearance_screens() {
         shot(&mut app, "egik-kisa");
     }
 }
+
+/// `road.junctions.tie`'s drawing: straight roads, their profiles, superelevations and at-grade junctions.
+fn tie_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.junctions.tie.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+fn tied(app: &App) -> Result<kentos_commands::JunctionsTied, String> {
+    match app.junction_window.as_ref().and_then(|w| w.tie.clone()) {
+        Some(Ok((t, _))) => Ok(t),
+        Some(Err(why)) => Err(why),
+        None => Err("not read".into()),
+    }
+}
+
+fn pvis(app: &App, id: &str) -> Vec<String> {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    doc.road_profiles().iter().find(|p| p.id == id).map(|p| p.pvis.iter().map(|v| v.id.clone()).collect()).unwrap_or_default()
+}
+
+#[test]
+fn an_at_grade_junction_ties_the_secondary_profile_to_the_crown() {
+    let mut app = tie_app();
+    let _ = app.update(Message::Run("junction.editor"));
+    assert_eq!(app.junction_window.as_ref().expect("open").chosen.as_deref(), Some("j-1"));
+    // The slopes are the user's: none typed, none read; and the secondary alignment has three profiles.
+    send(&mut app, W::ClearProfile(0, Some("b-1".into())));
+    send(&mut app, W::ClearProfile(1, Some("b-2".into())));
+    assert!(tied(&app).is_err_and(|why| why.contains("yazılmalı")));
+    send(&mut app, W::TieField(0, "-2.5".into()));
+    send(&mut app, W::TieField(1, "-2.5".into()));
+    let t = tied(&app).expect("reads");
+    assert_eq!(t.ties.iter().map(|x| x.pvi.as_str()).collect::<Vec<_>>(), ["j-1.a", "j-1.x", "j-1.b"]);
+    assert!((t.changes[1] - 5.0).abs() < 1e-9, "{t:?}");
+    // The primary road's superelevation instead of the typed slopes.
+    send(&mut app, W::TieSuper(Some("d-1".into())));
+    assert!((tied(&app).expect("reads").ties[2].crossfall - 3.0).abs() < 1e-9);
+    assert_eq!(pvis(&app, "b-2"), ["a", "v1", "v2", "v3", "b"]);
+    send(&mut app, W::Tie);
+    assert_eq!(pvis(&app, "b-2"), ["a", "v1", "j-1.a", "j-1.x", "j-1.b", "v3", "b"]);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(pvis(&app, "b-2"), ["a", "v1", "v2", "v3", "b"]);
+}
+
+/// The tie at the crossroads, typed slopes and the superelevation, wide and narrow, light and dark;
+/// `.run/gui-evidence/yol-y17-kavsak-bagi-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib junction_window_tests::tie_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn tie_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = tie_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("yol-y17-kavsak-bagi-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("junction.editor"));
+        send(&mut app, W::ClearProfile(0, Some("b-1".into())));
+        send(&mut app, W::ClearProfile(1, Some("b-2".into())));
+        send(&mut app, W::TieField(0, "-2.5".into()));
+        send(&mut app, W::TieField(1, "-2.5".into()));
+        send(&mut app, W::TieField(2, "4".into()));
+        shot(&mut app, "egim");
+        send(&mut app, W::TieSuper(Some("d-1".into())));
+        shot(&mut app, "dever");
+    }
+}

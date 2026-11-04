@@ -49,7 +49,7 @@ açıklığı yerleriyle (x, y, iki km ve iki öteleme, iki kot), iki aksın kes
 ### §3 Ret ve uyarılar
 
 Ret sırası: `not_a_road_project`, `unknown_junction`, `invalid_junction` (okunamayan ya da hemzemin kavşak),
-`unknown_road_profile`, `invalid_road_profile` (kurulamayan boykesit), `invalid_clearance` (iki boykesit değil,
+`unknown_road_profile`, `invalid_road_profile` ve `profile_curves_overlap` (kurulamayan boykesit), `invalid_clearance` (iki boykesit değil,
 boykesit kolun aksında değil, bir kolun boykesiti yok ya da birden çok, `depth` eksi, `step` 0'dan büyük değil,
 `minimum` eksi, en çok 1 000 000 ızgara noktası, iki kol kesişimde aynı kotta, boykesit örtüşme bölgesini örtmüyor,
 yollar örtüşmüyor). Uyarılar: `junction_stale`, `profile_stale`, `junction_clearance_short`.

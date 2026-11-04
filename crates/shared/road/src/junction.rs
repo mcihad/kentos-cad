@@ -203,6 +203,66 @@ pub fn overlap(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step:
     out
 }
 
+/// The secondary road's stations where its centreline crosses the primary road's left and right edges, nearest
+/// `around` (the crossing's station on it) (docs/adr/0918 §2): the centreline scanned every 0.25 m each side of the
+/// crossing as far as both edges could lie (`sine` the sine of the angle between the roads), the place's offset on
+/// the primary road compared with the edge's, and the bracket nearest the crossing refined by bisection to 1e-12 m (a
+/// scanned place within 1e-9 m of the edge taken as it is).
+/// `[left, right]`; none where it does not cross.
+pub fn edge_stations(primary: Deck<'_>, secondary: &Alignment, around: f64, sine: f64) -> [Option<f64>; 2] {
+    const SCAN: f64 = 0.25;
+    let reach = 2.0 * (primary.left + primary.right) / sine.abs().max(1e-6) + 1.0;
+    let offset = |s: f64| -> Option<f64> {
+        let p = secondary.at(s)?;
+        primary.alignment.locate([p.x, p.y]).nearest.map(|f| f.offset)
+    };
+    let k = (reach / SCAN).ceil() as i64;
+    let samples: Vec<(f64, f64)> = (-k..=k)
+        .filter_map(|i| {
+            let s = (around + i as f64 * SCAN).clamp(0.0, secondary.length);
+            offset(s).map(|o| (s, o))
+        })
+        .collect();
+    let find = |edge: f64| -> Option<f64> {
+        // The bracket nearest the crossing: its distance and its two scanned (station, offset) places.
+        type Bracket = (f64, (f64, f64), (f64, f64));
+        let mut best: Option<Bracket> = None;
+        for w in samples.windows(2) {
+            let (a, b) = (w[0], w[1]);
+            if (a.1 - edge) * (b.1 - edge) > 0.0 || a.0 == b.0 {
+                continue;
+            }
+            let d = (0.5 * (a.0 + b.0) - around).abs();
+            if best.is_none_or(|x| d < x.0) {
+                best = Some((d, a, b));
+            }
+        }
+        let (_, a, b) = best?;
+        // A scanned place on the edge itself is the answer.
+        for end in [a, b] {
+            if (end.1 - edge).abs() < 1e-9 {
+                return Some(end.0);
+            }
+        }
+        let (mut lo, mut hi) = (a.0, b.0);
+        let below = a.1 < edge;
+        for _ in 0..200 {
+            if hi - lo < 1e-12 {
+                break;
+            }
+            let m = 0.5 * (lo + hi);
+            let o = offset(m)?;
+            if (o < edge) == below {
+                lo = m;
+            } else {
+                hi = m;
+            }
+        }
+        Some(0.5 * (lo + hi))
+    };
+    [find(-primary.left), find(primary.right)]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -38665,6 +38665,55 @@ class JunctionReturn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JunctionTie(_Model):
+    """A tied PVI: its id, its station on the secondary road, the primary road's station and its offset there (right
+    positive, 0 at the crossing), the cross slope used (percent; 0 at the crossing), the elevation tied, the secondary
+    profile's elevation there before and the difference (tied less before).
+    Attributes:
+        station: Unit: m.
+        primary_station: Unit: m.
+        primary_offset: Unit: m.
+        crossfall: Unit: percent.
+        elevation: Unit: elevation.
+        before: Unit: elevation.
+        difference: Unit: m.
+    """
+    pvi: str
+    station: float
+    primary_station: float
+    primary_offset: float
+    crossfall: float
+    elevation: float
+    before: float
+    difference: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pvi"] = self.pvi
+        out["station"] = float(self.station)
+        out["primaryStation"] = float(self.primary_station)
+        out["primaryOffset"] = float(self.primary_offset)
+        out["crossfall"] = float(self.crossfall)
+        out["elevation"] = float(self.elevation)
+        out["before"] = float(self.before)
+        out["difference"] = float(self.difference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionTie:
+        return cls(
+            pvi=data["pvi"],
+            station=float(data["station"]),
+            primary_station=float(data["primaryStation"]),
+            primary_offset=float(data["primaryOffset"]),
+            crossfall=float(data["crossfall"]),
+            elevation=float(data["elevation"]),
+            before=float(data["before"]),
+            difference=float(data["difference"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class JunctionsClearance(_Model):
     """Input of `road.junctions.clearance` v1 (docs/adr/0917): a separated junction's vertical clearance, the upper road's
     profile less its deck's `depth` over the lower road's profile, sampled where the roads overlap in plan. `profiles`
@@ -38673,10 +38722,10 @@ class JunctionsClearance(_Model):
     gives no number. Reads only.
 
     Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at
-    grade), `unknown_road_profile`, `invalid_road_profile`, `invalid_clearance` (not two profiles, a profile not on its
-    leg's alignment, a leg with no profile or more than one, depth negative, step not positive, minimum negative, more
-    than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing, the roads not overlapping, a
-    profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
+    grade), `unknown_road_profile`, `invalid_road_profile`, `profile_curves_overlap`, `invalid_clearance` (not two
+    profiles, a profile not on its leg's alignment, a leg with no profile or more than one, depth negative, step not
+    positive, minimum negative, more than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing,
+    the roads not overlapping, a profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
     Attributes:
         depth: Unit: m.
         step: Unit: m.
@@ -38924,6 +38973,108 @@ class JunctionsQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> JunctionsQuery:
         return cls(
             junction=data.get("junction", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsTie(_Model):
+    """Input of `road.junctions.tie` v1 (docs/adr/0918): at an at-grade junction the secondary road's profile tied to the
+    primary road's crown, which is kept: three PVIs without curves on the secondary profile, at the crossing (the
+    primary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation
+    plus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the
+    leg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's
+    alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, percent outward,
+    falling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.
+    `maxGradeChange` (percent) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
+
+    Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is
+    separated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not
+    build, before or after the tie), `unknown_superelevation`, `invalid_superelevation`, `invalid_tie` (see docs/adr/0918 §3), `invalid_revision`,
+    `revision_conflict`. Warnings: `junction_stale`, `profile_stale`, `superelevation_stale`, `junction_grade_change`.
+    Attributes:
+        primary: Unit: index.
+        crossfall: The primary road's cross slopes, left and right (percent, outward, falling negative). Unit: percent.
+        max_grade_change: Unit: percent.
+    """
+    junction: str
+    primary: int
+    crossfall: list[float] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    max_grade_change: float | None | Unset = UNSET
+    profiles: list[str] | None | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["primary"] = self.primary
+        if self.crossfall is not UNSET:
+            out["crossfall"] = None if self.crossfall is None else [float(e0) for e0 in self.crossfall]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.max_grade_change is not UNSET:
+            out["maxGradeChange"] = None if self.max_grade_change is None else float(self.max_grade_change)
+        if self.profiles is not UNSET:
+            out["profiles"] = None if self.profiles is None else list(self.profiles)
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsTie:
+        return cls(
+            junction=data["junction"],
+            primary=data["primary"],
+            crossfall=UNSET if "crossfall" not in data else None if data["crossfall"] is None else [float(e0) for e0 in data["crossfall"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            max_grade_change=UNSET if "maxGradeChange" not in data else None if data["maxGradeChange"] is None else float(data["maxGradeChange"]),
+            profiles=UNSET if "profiles" not in data else None if data["profiles"] is None else list(data["profiles"]),
+            superelevation=data.get("superelevation", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsTied(_Model):
+    """Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its
+    three ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the
+    ties, the grade change at each tie (percent, absolute), and the revision.
+    Attributes:
+        primary: Unit: index.
+        grades: Unit: percent.
+        changes: Unit: percent.
+    """
+    junction: str
+    primary: int
+    profile: str
+    ties: list[JunctionTie]
+    removed: list[str]
+    grades: list[float]
+    changes: list[float]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["junction"] = self.junction
+        out["primary"] = self.primary
+        out["profile"] = self.profile
+        out["ties"] = [e0.to_json() for e0 in self.ties]
+        out["removed"] = list(self.removed)
+        out["grades"] = [float(e0) for e0 in self.grades]
+        out["changes"] = [float(e0) for e0 in self.changes]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsTied:
+        return cls(
+            junction=data["junction"],
+            primary=data["primary"],
+            profile=data["profile"],
+            ties=[JunctionTie.from_json(e0) for e0 in data["ties"]],
+            removed=list(data["removed"]),
+            grades=[float(e0) for e0 in data["grades"]],
+            changes=[float(e0) for e0 in data["changes"]],
+            revision=data["revision"],
         )
 
 
@@ -104802,6 +104953,7 @@ __all__ = [
     "JunctionReturn",
     "JunctionRole",
     "JunctionRoleName",
+    "JunctionTie",
     "JunctionsClearance",
     "JunctionsCleared",
     "JunctionsDraw",
@@ -104810,6 +104962,8 @@ __all__ = [
     "JunctionsQueried",
     "JunctionsQuery",
     "JunctionsRoadWork",
+    "JunctionsTie",
+    "JunctionsTied",
     "JunctionsWritten",
     "KeySourcesEditOp",
     "KmAsk",

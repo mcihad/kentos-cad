@@ -253,10 +253,10 @@ pub const MOST_CLEARANCE_SAMPLES: usize = 1_000_000;
 /// gives no number. Reads only.
 ///
 /// Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at
-/// grade), `unknown_road_profile`, `invalid_road_profile`, `invalid_clearance` (not two profiles, a profile not on its
-/// leg's alignment, a leg with no profile or more than one, depth negative, step not positive, minimum negative, more
-/// than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing, the roads not overlapping, a
-/// profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
+/// grade), `unknown_road_profile`, `invalid_road_profile`, `profile_curves_overlap`, `invalid_clearance` (not two
+/// profiles, a profile not on its leg's alignment, a leg with no profile or more than one, depth negative, step not
+/// positive, minimum negative, more than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing,
+/// the roads not overlapping, a profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -333,4 +333,98 @@ pub struct JunctionsCleared {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub minimum: Option<f64>,
     pub short: bool,
+}
+
+pub const ROAD_JUNCTIONS_TIE: &str = "road.junctions.tie";
+pub const ROAD_JUNCTIONS_TIE_VERSION: u32 = 1;
+
+/// Input of `road.junctions.tie` v1 (docs/adr/0918): at an at-grade junction the secondary road's profile tied to the
+/// primary road's crown, which is kept: three PVIs without curves on the secondary profile, at the crossing (the
+/// primary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation
+/// plus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the
+/// leg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's
+/// alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, percent outward,
+/// falling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.
+/// `maxGradeChange` (percent) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
+///
+/// Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is
+/// separated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not
+/// build, before or after the tie), `unknown_superelevation`, `invalid_superelevation`, `invalid_tie` (see docs/adr/0918 §3), `invalid_revision`,
+/// `revision_conflict`. Warnings: `junction_stale`, `profile_stale`, `superelevation_stale`, `junction_grade_change`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionsTie {
+    pub junction: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub primary: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profiles: Option<Vec<String>>,
+    /// The primary road's cross slopes, left and right (percent, outward, falling negative).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub crossfall: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub max_grade_change: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// A tied PVI: its id, its station on the secondary road, the primary road's station and its offset there (right
+/// positive, 0 at the crossing), the cross slope used (percent; 0 at the crossing), the elevation tied, the secondary
+/// profile's elevation there before and the difference (tied less before).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionTie {
+    pub pvi: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub primary_station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub primary_offset: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub crossfall: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub elevation: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub before: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub difference: f64,
+}
+
+/// Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its
+/// three ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the
+/// ties, the grade change at each tie (percent, absolute), and the revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct JunctionsTied {
+    pub junction: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub primary: u32,
+    pub profile: String,
+    pub ties: Vec<JunctionTie>,
+    pub removed: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub grades: Vec<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub changes: Vec<f64>,
+    pub revision: String,
 }

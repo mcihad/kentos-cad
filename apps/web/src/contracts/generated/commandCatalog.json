@@ -44718,7 +44718,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.junctions.clearance` v1 (docs/adr/0917): a separated junction's vertical clearance, the upper road's\nprofile less its deck's `depth` over the lower road's profile, sampled where the roads overlap in plan. `profiles`\nare the legs' profiles in the legs' order (by id or name); absent, each leg's alignment's only profile. `depth`\n(the deck from its profile grade to its underside) and `minimum` (the clearance asked) are the user's; KentOS\ngives no number. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at\ngrade), `unknown_road_profile`, `invalid_road_profile`, `invalid_clearance` (not two profiles, a profile not on its\nleg's alignment, a leg with no profile or more than one, depth negative, step not positive, minimum negative, more\nthan `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing, the roads not overlapping, a\nprofile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.",
+        "description": "Input of `road.junctions.clearance` v1 (docs/adr/0917): a separated junction's vertical clearance, the upper road's\nprofile less its deck's `depth` over the lower road's profile, sampled where the roads overlap in plan. `profiles`\nare the legs' profiles in the legs' order (by id or name); absent, each leg's alignment's only profile. `depth`\n(the deck from its profile grade to its underside) and `minimum` (the clearance asked) are the user's; KentOS\ngives no number. Reads only.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at\ngrade), `unknown_road_profile`, `invalid_road_profile`, `profile_curves_overlap`, `invalid_clearance` (not two\nprofiles, a profile not on its leg's alignment, a leg with no profile or more than one, depth negative, step not\npositive, minimum negative, more than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing,\nthe roads not overlapping, a profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.",
         "properties": {
           "depth": {
             "format": "double",
@@ -44910,6 +44910,7 @@
           "invalid_junction",
           "unknown_road_profile",
           "invalid_road_profile",
+          "profile_curves_overlap",
           "invalid_clearance"
         ],
         "warnings": [
@@ -44926,6 +44927,249 @@
             "junction": "Üst geçit",
             "minimum": 4.5,
             "step": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.junctions.tie",
+      "version": 1,
+      "title": "Kavşağa bağla",
+      "summary": "Hemzemin kavşakta tali yolun boykesitini ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil 3D'nin Primary Road Crown Maintained'i). Tali yol boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; yüzde, dışa, düşen eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (yüzde) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar: junction_stale, profile_stale, superelevation_stale, junction_grade_change. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie, invalid_revision, revision_conflict.",
+      "aliases": [
+        "kavsakbagla",
+        "talibagla"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.junctions.tie` v1 (docs/adr/0918): at an at-grade junction the secondary road's profile tied to the\nprimary road's crown, which is kept: three PVIs without curves on the secondary profile, at the crossing (the\nprimary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation\nplus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the\nleg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's\nalignment's only one). The primary road's cross slopes are either `crossfall` (left and right, percent outward,\nfalling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.\n`maxGradeChange` (percent) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is\nseparated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not\nbuild, before or after the tie), `unknown_superelevation`, `invalid_superelevation`, `invalid_tie` (see docs/adr/0918 §3), `invalid_revision`,\n`revision_conflict`. Warnings: `junction_stale`, `profile_stale`, `superelevation_stale`, `junction_grade_change`.",
+        "properties": {
+          "crossfall": {
+            "description": "The primary road's cross slopes, left and right (percent, outward, falling negative).",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "junction": {
+            "type": "string"
+          },
+          "maxGradeChange": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "primary": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "profiles": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "superelevation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "junction",
+          "primary"
+        ],
+        "title": "JunctionsTie",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its\nthree ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the\nties, the grade change at each tie (percent, absolute), and the revision.",
+        "properties": {
+          "changes": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "percent"
+          },
+          "grades": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "percent"
+          },
+          "junction": {
+            "type": "string"
+          },
+          "primary": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "ties": {
+            "items": {
+              "$ref": "#/$defs/JunctionTie"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "junction",
+          "primary",
+          "profile",
+          "ties",
+          "removed",
+          "grades",
+          "changes",
+          "revision"
+        ],
+        "title": "JunctionsTied",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its\nthree ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the\nties, the grade change at each tie (percent, absolute), and the revision.",
+        "properties": {
+          "changes": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "percent"
+          },
+          "grades": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "percent"
+          },
+          "junction": {
+            "type": "string"
+          },
+          "primary": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "ties": {
+            "items": {
+              "$ref": "#/$defs/JunctionTie"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "junction",
+          "primary",
+          "profile",
+          "ties",
+          "removed",
+          "grades",
+          "changes",
+          "revision"
+        ],
+        "title": "JunctionsTied",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_junction",
+          "invalid_junction",
+          "unknown_road_profile",
+          "invalid_road_profile",
+          "profile_curves_overlap",
+          "unknown_superelevation",
+          "invalid_superelevation",
+          "invalid_tie",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "junction_stale",
+          "profile_stale",
+          "superelevation_stale",
+          "junction_grade_change"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana yolun sırtı korunur, %2,5 enine eğim",
+          "input": {
+            "crossfall": [
+              -2.5,
+              -2.5
+            ],
+            "junction": "j-1",
+            "maxGradeChange": 4.0,
+            "primary": 0
           }
         }
       ]
@@ -82222,6 +82466,18 @@
       "meaning": "En küçük düşey açıklık istenen açıklıktan az."
     },
     {
+      "code": "invalid_tie",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kavşak boykesit bağı geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "junction_grade_change",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bağlanan bir PVI'de eğim değişimi istenenden büyük."
+    },
+    {
       "code": "invalid_pay_book",
       "kind": "failed",
       "retryable": false,
@@ -117451,6 +117707,60 @@
           "type": "string"
         }
       ]
+    },
+    "JunctionTie": {
+      "description": "A tied PVI: its id, its station on the secondary road, the primary road's station and its offset there (right\npositive, 0 at the crossing), the cross slope used (percent; 0 at the crossing), the elevation tied, the secondary\nprofile's elevation there before and the difference (tied less before).",
+      "properties": {
+        "before": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "crossfall": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "elevation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "primaryOffset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "primaryStation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "pvi": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "pvi",
+        "station",
+        "primaryStation",
+        "primaryOffset",
+        "crossfall",
+        "elevation",
+        "before",
+        "difference"
+      ],
+      "type": "object"
     },
     "KmAsk": {
       "description": "A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).",

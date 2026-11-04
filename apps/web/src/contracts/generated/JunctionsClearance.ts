@@ -8,9 +8,9 @@
  * gives no number. Reads only.
  *
  * Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is at
- * grade), `unknown_road_profile`, `invalid_road_profile`, `invalid_clearance` (not two profiles, a profile not on its
- * leg's alignment, a leg with no profile or more than one, depth negative, step not positive, minimum negative, more
- * than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing, the roads not overlapping, a
- * profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
+ * grade), `unknown_road_profile`, `invalid_road_profile`, `profile_curves_overlap`, `invalid_clearance` (not two
+ * profiles, a profile not on its leg's alignment, a leg with no profile or more than one, depth negative, step not
+ * positive, minimum negative, more than `MOST_CLEARANCE_SAMPLES` grid places, both legs at one height at the crossing,
+ * the roads not overlapping, a profile not covering the overlap). Warnings: `junction_stale`, `profile_stale`, `junction_clearance_short`.
  */
 export type JunctionsClearance = { junction: string, profiles?: Array<string>, depth: number, step: number, minimum?: number, };

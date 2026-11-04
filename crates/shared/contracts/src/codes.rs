@@ -808,6 +808,12 @@ codes! {
     INVALID_CLEARANCE = "invalid_clearance", Failed, false, "Düşey açıklık sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: the least vertical clearance falls short of the minimum asked (docs/adr/0917 §3).
     JUNCTION_CLEARANCE_SHORT = "junction_clearance_short", Warning, false, "En küçük düşey açıklık istenen açıklıktan az.";
+    /// A profile tie asked that is not right: no primary leg, not two profiles, a profile off its leg, the cross
+    /// slope given twice or not at all, the secondary road not crossing the primary's edges, a profile not covering
+    /// the tie, a tie's PVI id taken (docs/adr/0918 §3).
+    INVALID_TIE = "invalid_tie", Failed, false, "Kavşak boykesit bağı geçerli değil; ileti nedenini söyler.";
+    /// A warning: a tied PVI's grade change is larger than the one asked (docs/adr/0918 §3).
+    JUNCTION_GRADE_CHANGE = "junction_grade_change", Warning, false, "Bağlanan bir PVI'de eğim değişimi istenenden büyük.";
     /// A pay item book that is not right: no source or version, items or rules out of bounds (docs/adr/0909 §4).
     INVALID_PAY_BOOK = "invalid_pay_book", Failed, false, "Poz defteri geçerli değil; ileti nedenini söyler.";
     /// The project has no pay item book (docs/adr/0909 §4).

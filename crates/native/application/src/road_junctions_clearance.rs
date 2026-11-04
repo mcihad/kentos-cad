@@ -5,7 +5,6 @@
 
 use kentos_commands::{
     CommandResult, CommandWarning, JunctionClearanceAt, JunctionKind, JunctionsCleared, JunctionsClearance, MOST_CLEARANCE_SAMPLES,
-    ProfileDef,
 };
 use kentos_domain::Document;
 use kentos_road::junction::{Deck, Overlap, overlap, overlap_grid};
@@ -13,9 +12,7 @@ use kentos_road::junction::{Deck, Overlap, overlap, overlap_grid};
 use crate::ExecutionContext;
 use crate::checks::Stop;
 use crate::codes;
-use crate::road_alignments as alignments;
 use crate::road_junctions as common;
-use crate::road_profiles as profiles;
 use crate::road_terrains::fail;
 
 fn bad(words: String, path: &str) -> Stop {
@@ -33,39 +30,7 @@ fn answer(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleare
             "junction",
         ));
     }
-    let own = profiles::profiles(doc);
-    // The legs' profiles: asked, else each leg's alignment's only one.
-    let mut chosen: Vec<&ProfileDef> = Vec::new();
-    match &input.profiles {
-        Some(names) => {
-            for (k, name) in names.iter().enumerate() {
-                chosen.push(profiles::find(own, name, &format!("profiles[{k}]"))?.1);
-            }
-        }
-        None => {
-            for leg in &report.legs {
-                let on: Vec<&ProfileDef> = own.iter().filter(|p| p.alignment == leg.alignment).collect();
-                let name = alignments::alignments(doc).iter().find(|a| a.id == leg.alignment).map_or("", |a| a.name.as_str());
-                match on.as_slice() {
-                    [one] => chosen.push(one),
-                    [] => return Err(bad(format!("“{name}” aksının boykesiti yok; profiles ile verin."), "profiles")),
-                    _ => return Err(bad(format!("“{name}” aksının {} boykesiti var; hangisi, profiles ile verin.", on.len()), "profiles")),
-                }
-            }
-        }
-    }
-    let mut built = Vec::new();
-    for p in &chosen {
-        built.push(profiles::build(doc, p)?);
-    }
-    if chosen.len() != 2 {
-        return Err(bad(format!("Kolların sırasıyla iki boykesit verin; {} verildi.", chosen.len()), "profiles"));
-    }
-    for (k, (p, leg)) in chosen.iter().zip(&report.legs).enumerate() {
-        if p.alignment != leg.alignment {
-            return Err(bad(format!("“{}” boykesiti kavşağın {}. kolunun aksında değil.", p.name, k + 1), &format!("profiles[{k}]")));
-        }
-    }
+    let (chosen, built) = common::leg_profiles(doc, &report, input.profiles.as_deref(), codes::INVALID_CLEARANCE)?;
     if !(input.depth.is_finite() && input.depth >= 0.0) {
         return Err(bad("Tabliye derinliği (depth) 0 ya da daha büyük olmalı.".into(), "depth"));
     }
@@ -75,19 +40,7 @@ fn answer(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleare
     if input.minimum.is_some_and(|m| !(m.is_finite() && m >= 0.0)) {
         return Err(bad("Gerekli açıklık (minimum) 0 ya da daha büyük olmalı.".into(), "minimum"));
     }
-    for p in &chosen {
-        let (stale, now) = profiles::stale(doc, p);
-        if stale {
-            warnings.push(CommandWarning {
-                code: codes::PROFILE_STALE.into(),
-                message: format!(
-                    "“{}” boykesitinin aksı değişti (boykesit {}. revizyona göre kurulu, aks şimdi {}.); PVI'ları denetleyip aksa yeniden bağlayın.",
-                    p.name, p.alignment_revision, now
-                ),
-                path: Some("profiles".into()),
-            });
-        }
-    }
+    warnings.extend(common::profiles_stale(doc, &chosen));
     // The upper road: the higher at the crossing.
     let height = |k: usize, s: f64| built[k].vertical.at(s).map(|r| r.0);
     let (s0, s1) = (report.legs[0].station, report.legs[1].station);

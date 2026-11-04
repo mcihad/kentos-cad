@@ -4,7 +4,10 @@
 //! curb returns drawn around the crossing. Kaydet writes it (one undo step “Kavşak”), Planda çiz draws the returns on a
 //! layer (one step “Kavşak çiz”). A saved separated junction's vertical clearance is read as it is typed
 //! (`road.junctions.clearance`, docs/adr/0917): the legs' profiles, the deck's depth and the minimum are the user's;
-//! the least and the largest clearance and the one at the crossing, marked in plan.
+//! the least and the largest clearance and the one at the crossing, marked in plan. At grade, the secondary road's
+//! profile is tied to the primary road's crown as it is typed (`road.junctions.tie`, docs/adr/0918): which leg keeps
+//! its crown, the cross slopes (or the primary road's superelevation) and the largest grade change are the user's;
+//! Bağla writes it (one undo step “Kavşağa bağla”).
 //!
 //! ```text
 //! ┌ Kavşak ─────────────────────────────────────────────────────────────────────────────────────┐
@@ -23,10 +26,12 @@ use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsClearance, JunctionsCleared, JunctionsDraw,
-    JunctionsEdit, RoadEditOperation,
+    JunctionsEdit, JunctionsTie, JunctionsTied, RoadEditOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit};
+use kentos_native_application::{
+    ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit, road_junctions_tie,
+};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
@@ -42,6 +47,7 @@ const SAVE: &str = "Kaydet";
 const CLOSE: &str = "Kapat";
 const DRAW: &str = "Planda çiz";
 const REMOVE: &str = "Sil";
+const TIE: &str = "Bağla";
 /// The typed fields, in order: the junction's, each leg's edges, the quadrants' radii.
 pub(crate) const FIELDS: [&str; 11] = [
     "Ad",
@@ -59,6 +65,12 @@ pub(crate) const FIELDS: [&str; 11] = [
 
 /// The clearance's typed fields: the deck's depth, the sampling step, the minimum asked.
 pub(crate) const CLEAR_FIELDS: [&str; 3] = ["Tabliye derinliği (m)", "Aralık (m)", "Gerekli açıklık (m)"];
+
+/// The tie's typed fields: the primary road's left and right cross slopes, the largest grade change.
+pub(crate) const TIE_FIELDS: [&str; 3] = ["Sol enine eğim (%)", "Sağ enine eğim (%)", "En büyük eğim değişimi (%)"];
+
+/// The tie as last read.
+pub(crate) type Tied = Result<(JunctionsTied, Vec<CommandWarning>), String>;
 
 /// The clearance as last read.
 pub(crate) type Cleared = Result<(JunctionsCleared, Vec<CommandWarning>), String>;
@@ -83,6 +95,11 @@ pub struct Window {
     pub(crate) clear_profiles: [Option<String>; 2],
     pub(crate) clear_fields: [String; 3],
     pub(crate) clearance: Option<Cleared>,
+    /// The tie: the leg whose crown is kept, the primary road's superelevation (none: the typed slopes) and fields.
+    pub(crate) tie_primary: u32,
+    pub(crate) tie_super: Option<String>,
+    pub(crate) tie_fields: [String; 3],
+    pub(crate) tie: Option<Tied>,
 }
 
 #[derive(Debug, Clone)]
@@ -94,6 +111,10 @@ pub enum Event {
     Layer(String),
     ClearProfile(usize, Option<String>),
     ClearField(usize, String),
+    TiePrimary(u32),
+    TieSuper(Option<String>),
+    TieField(usize, String),
+    Tie,
     Save,
     Draw,
     Remove,
@@ -175,6 +196,35 @@ impl Window {
     }
 }
 
+impl Window {
+    /// The tie asked of the saved junction, or why not.
+    pub(crate) fn tie_input(&self) -> Result<JunctionsTie, String> {
+        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince boykesit bağı okunur.".to_owned())?;
+        let profiles = match &self.clear_profiles {
+            [None, None] => None,
+            [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
+            _ => return Err("İki kolun boykesitini birlikte seçin.".into()),
+        };
+        let crossfall = match self.tie_super {
+            Some(_) => None,
+            None => {
+                let need =
+                    |k: usize| number(&self.tie_fields[k], TIE_FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", TIE_FIELDS[k]));
+                Some([need(0)?, need(1)?])
+            }
+        };
+        Ok(JunctionsTie {
+            junction,
+            primary: self.tie_primary,
+            profiles,
+            crossfall,
+            superelevation: self.tie_super.clone(),
+            max_grade_change: number(&self.tie_fields[2], TIE_FIELDS[2])?,
+            expected_revision: None,
+        })
+    }
+}
+
 impl App {
     /// Kavşak: the window on the road project's first junction, or a new one on its first two alignments.
     pub(crate) fn open_junctions(&mut self) {
@@ -203,6 +253,10 @@ impl App {
             clear_profiles: [None, None],
             clear_fields: Default::default(),
             clearance: None,
+            tie_primary: 0,
+            tie_super: None,
+            tie_fields: Default::default(),
+            tie: None,
         }));
         self.dialog = Some(Dialog::Junctions);
         let _ = self.junction_event(Event::Choose(chosen));
@@ -219,6 +273,9 @@ impl App {
             && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::Separated));
         w.clearance = saved_separated
             .then(|| w.clearance_input().and_then(|q| road_junctions_clearance::preview(&doc.model, &q)));
+        let saved_at_grade = w.kind == JunctionKind::AtGrade
+            && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::AtGrade));
+        w.tie = saved_at_grade.then(|| w.tie_input().and_then(|q| road_junctions_tie::preview(&doc.model, &q)));
     }
 
     pub(crate) fn junction_event(&mut self, event: Event) -> Task<Message> {
@@ -252,6 +309,7 @@ impl App {
                 }
                 w.fields = f;
                 w.clear_profiles = [None, None];
+                w.tie_super = None;
             }
             Event::Kind(k) => w.kind = k,
             Event::Leg(i, a) => w.legs[i.min(1)] = Some(a),
@@ -259,6 +317,13 @@ impl App {
             Event::Layer(l) => w.layer = Some(l),
             Event::ClearProfile(i, p) => w.clear_profiles[i.min(1)] = p,
             Event::ClearField(k, t) => w.clear_fields[k.min(2)] = t,
+            Event::TiePrimary(k) => {
+                w.tie_primary = k.min(1);
+                w.tie_super = None;
+            }
+            Event::TieSuper(d) => w.tie_super = d,
+            Event::TieField(k, t) => w.tie_fields[k.min(2)] = t,
+            Event::Tie => return self.tie_junction(),
             Event::Save => return self.save_junction(),
             Event::Draw => return self.draw_junction(),
             Event::Remove => return self.remove_junction(),
@@ -289,6 +354,25 @@ impl App {
             let id = r.id.clone();
             return self.junction_event(Event::Choose(Some(id)));
         }
+        Task::none()
+    }
+
+    fn tie_junction(&mut self) -> Task<Message> {
+        let Some(w) = self.junction_window.as_ref() else { return Task::none() };
+        let input = match w.tie_input() {
+            Ok(i) => i,
+            Err(why) => {
+                self.warn(format!("Boykesit bağlanamaz: {why}"));
+                return Task::none();
+            }
+        };
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let result = road_junctions_tie::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let most = out.changes.iter().fold(0.0_f64, |a, b| a.max(*b));
+            self.say(Level::Success, format!("“{}” boykesiti kavşağa bağlandı; en büyük eğim değişimi %{most:.2}.", out.profile));
+        }
+        self.refresh_junction();
         Task::none()
     }
 
@@ -395,8 +479,7 @@ impl App {
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
         let mut body = Column::new().spacing(10).push(top).push(legs);
-        if !at_grade {
-            let profile = |i: usize| {
+        let profile = |i: usize| {
                 let on = w.legs[i].clone();
                 let mut ids: Vec<Option<String>> = vec![None];
                 let mut names = vec!["Aksın tek boykesiti".to_owned()];
@@ -406,7 +489,8 @@ impl App {
                 }
                 let at = ids.iter().position(|x| *x == w.clear_profiles[i]);
                 Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::ClearProfile(i, ids[k].clone())))
-            };
+        };
+        if !at_grade {
             let clear = |k: usize, hint: &'static str| {
                 words::field(
                     CLEAR_FIELDS[k],
@@ -425,6 +509,42 @@ impl App {
                 .spacing(10)
                 .align_y(iced::alignment::Vertical::Bottom),
             );
+        } else if w.chosen.is_some() {
+            let primaries = ["1. kolun sırtı", "2. kolun sırtı"];
+            let on_primary =
+                Select::new(primaries.map(Choice::new), Some(w.tie_primary as usize), |k| msg(Event::TiePrimary(k as u32)));
+            let main_axis = w.legs[w.tie_primary as usize].clone();
+            let mut sids: Vec<Option<String>> = vec![None];
+            let mut snames = vec!["Yazılan eğimler".to_owned()];
+            for d in model.map_or(&[][..], |m| m.road_superelevations()).iter().filter(|d| Some(&d.alignment) == main_axis.as_ref()) {
+                sids.push(Some(d.id.clone()));
+                snames.push(d.name.clone());
+            }
+            let at = sids.iter().position(|x| *x == w.tie_super);
+            let on_super = Select::new(snames.into_iter().map(Choice::new), at, move |k| msg(Event::TieSuper(sids[k].clone())));
+            let tie = |k: usize, hint: &'static str| {
+                words::field(
+                    TIE_FIELDS[k],
+                    kentos_ui::widget::text_field(hint, &w.tie_fields[k]).on_input(move |t| msg(Event::TieField(k, t))).width(110),
+                    None,
+                )
+            };
+            let mut inputs = row![
+                words::field("Korunan sırt", container(on_primary).width(130), None),
+                words::field("1. kolun boykesiti", container(profile(0)).width(150), None),
+                words::field("2. kolun boykesiti", container(profile(1)).width(150), None),
+                words::field("Enine eğim", container(on_super).width(150), None),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom);
+            if w.tie_super.is_none() {
+                inputs = inputs.push(tie(0, "%")).push(tie(1, "%"));
+            }
+            inputs = inputs.push(tie(2, "isteğe bağlı")).push(words::secondary(
+                TIE,
+                w.tie.as_ref().is_some_and(Result::is_ok).then(|| msg(Event::Tie)),
+            ));
+            body = body.push(inputs);
         }
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
@@ -468,6 +588,37 @@ impl App {
                 }
                 if r.returns.is_empty() {
                     list = list.push(label::caption("Katlı kavşağın dönüş yayı yok.").style(muted));
+                }
+                if let Some(t) = &w.tie {
+                    list = list.push(space::vertical().height(8)).push(label::caption("Boykesit bağı").style(muted));
+                    match t {
+                        Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
+                        Ok((t, warnings)) => {
+                            list = list.push(
+                                row![head("PVI", 80.0), head("Tali km", 70.0), head("Kot", 80.0), head("Fark", 70.0), head("Eğim farkı", 90.0)]
+                                    .spacing(6),
+                            );
+                            for (tie, change) in t.ties.iter().zip(&t.changes) {
+                                list = list.push(
+                                    row![
+                                        label::caption(tie.pvi.clone()).width(80),
+                                        label::caption(format!("{:.2}", tie.station)).width(70),
+                                        label::caption(format!("{:.3}", tie.elevation)).width(80),
+                                        label::caption(format!("{:+.3}", tie.difference)).width(70),
+                                        label::caption(format!("%{change:.2}")).width(90),
+                                    ]
+                                    .spacing(6),
+                                );
+                            }
+                            let grades = t.grades.iter().map(|g| format!("%{g:+.2}")).collect::<Vec<_>>().join(" → ");
+                            let gone = if t.removed.is_empty() { "kalkan PVI yok".to_owned() } else { format!("kalkan: {}", t.removed.join(", ")) };
+                            list = list.push(label::caption(format!("Eğimler {grades} · {gone}")).style(muted));
+                            if !warnings.is_empty() {
+                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                list = list.push(label::caption(all).style(warn));
+                            }
+                        }
+                    }
                 }
                 if let Some(c) = &w.clearance {
                     list = list.push(space::vertical().height(8)).push(label::caption("Düşey açıklık").style(muted));
@@ -539,6 +690,11 @@ impl App {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
+            Control::Press(TIE) => Some(msg(Event::Tie)),
+            Control::Fill(name, t) if TIE_FIELDS.contains(&name) => {
+                let k = TIE_FIELDS.iter().position(|f| *f == name).unwrap_or(0);
+                Some(msg(Event::TieField(k, t.to_owned())))
+            }
             Control::Fill(name, t) if FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))
