@@ -1786,7 +1786,8 @@ impl canvas::Program<Message> for Chart<'_> {
         let labels = |frame: &mut canvas::Frame| {
             let mut z = (z0 / step).ceil() * step;
             while z <= z1 {
-                if shown.has_y(y(z)) {
+                // Not into the offsets' row at the bottom.
+                if shown.has_y(y(z)) && y(z) < base - 8.0 {
                     crate::picture::label(frame, comma(z, places), Point::new(left, y(z) - 7.0), t.muted, false, backdrop(left > 4.5));
                 }
                 z += step;

@@ -31,6 +31,7 @@ use crate::traces::Control;
 pub const TITLE: &str = "Taşıma planı";
 const PREVIEW: &str = "Önizle";
 const CLOSE: &str = "Kapat";
+pub(crate) const FLEET: &str = "Kamyon filosu…";
 pub(crate) const MOMENT: &str = "En küçük moment";
 pub(crate) const COST: &str = "En düşük maliyet";
 
@@ -72,10 +73,16 @@ pub struct Window {
     pub(crate) preview: Option<Result<HaulPlanned, String>>,
     pub(crate) warnings: Vec<String>,
     pub(crate) list: Listed,
+    /// Kamyon filosu over the window (haul_fleet_window.rs, docs/adr/0936 §3), and its values kept when closed.
+    pub(crate) fleet: Option<Box<crate::haul_fleet_window::Fleet>>,
+    pub(crate) fleet_kept: Option<crate::haul_fleet_window::Fleet>,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// Kamyon filosu…: the fleet window on the diagram and objective chosen.
+    OpenFleet,
+    Fleet(crate::haul_fleet_window::Event),
     List(Listed),
     Haul(String),
     Aim(Aim),
@@ -129,8 +136,21 @@ impl App {
     }
 
     pub(crate) fn haul_plan_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::OpenFleet => {
+                self.open_haul_fleet();
+                return Task::none();
+            }
+            Event::Fleet(e) => {
+                self.haul_fleet_event(e);
+                return Task::none();
+            }
+            _ => {}
+        }
         let Some(w) = self.haul_plan_window.as_mut() else { return Task::none() };
         match event {
+            // Answered before the window is borrowed.
+            Event::OpenFleet | Event::Fleet(_) => return Task::none(),
             Event::Haul(h) => w.haul = Some(h),
             Event::Aim(a) => w.aim = a,
             Event::List(l) => {
@@ -172,6 +192,9 @@ impl App {
         let Some(w) = &self.haul_plan_window else {
             return iced::widget::text("").into();
         };
+        if let Some(x) = &w.fleet {
+            return self.haul_fleet_view(x);
+        }
         let list: Vec<(String, String)> = self
             .document
             .as_ref()
@@ -186,7 +209,9 @@ impl App {
             .field("Brükner", pick)
             .field("Amaç", aim)
             .help("En küçük moment taşıma uzaklığını, en düşük maliyet Brüknerin serbest taşımasını ve fiyatlarını okur.");
+        let feasible = matches!(&w.preview, Some(Ok(r)) if r.feasible);
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Close))
+            .ghost(FLEET, feasible.then(|| msg(Event::OpenFleet)))
             .form_width(380.0)
             .empty("Her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır.");
         match &w.preview {
@@ -257,10 +282,23 @@ impl App {
     }
 
     pub(crate) fn haul_plan_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.haul_plan_window.is_none() {
+        let Some(w) = &self.haul_plan_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
+        };
+        if w.fleet.is_some() {
+            use crate::haul_fleet_window::{BACK, Event as X, FIELDS as FF, TITLE as FT};
+            let x = |e: X| msg(Event::Fleet(e));
+            return Ok(match control {
+                Control::Press(BACK) => Some(x(X::Back)),
+                Control::Fill(name, text) => match FF.iter().position(|f| *f == name) {
+                    Some(k) => Some(x(X::Field(k, text.to_owned()))),
+                    None => return Err(format!("“{FT}” penceresinde “{name}” alanı yok")),
+                },
+                other => return Err(format!("“{FT}” penceresinde {other} yok")),
+            });
         }
         Ok(match control {
+            Control::Press(FLEET) => Some(msg(Event::OpenFleet)),
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
             Control::Press(MOMENT) => Some(msg(Event::Aim(Aim::Moment))),

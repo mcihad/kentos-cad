@@ -1,6 +1,6 @@
 # 0936 — KentOS Yol: taşıma filosu — çevrim süresi, enerji ve yükleyici kuyruğu
 
-Tarih: 2026-11-04. plan/road.md Y32 (ROAD-HAUL-10). Durum: Y32.1–Y32.2 kabul; Y32.3 bu belgeyle ilerler.
+Tarih: 2026-11-04. plan/road.md Y32 (ROAD-HAUL-10). Durum: Y32.1–Y32.3 kabul.
 
 ## Dayanak
 
@@ -98,6 +98,24 @@ bıraktığı yerdeydi. v² değişimiyle sınırlanan adım 0,47 ms'ye indi; ad
 - Taşımalar kısa (25–150 m) olduğu için yükleyici darboğazdır. 4 kamyonda uyum katsayısı 2,26, yükleyici %99 dolu.
   Üretim saatte 50 dakikayla 299 m³/sa; yükleyicinin sınırı 15/150 s × 50/60 = 300.
 - Tek kamyonda yükleyici %57 dolu.
+
+### §3 Taşıma planında Kamyon filosu (Y32.3)
+
+- Taşıma planı penceresinin alt çubuğunda **Kamyon filosu…** düğmesi vardır; plan kurulunca açılır. Pencere planın
+  Brükneri ve amacıyla `road.hauls.trucks`'ı okur. Carlson'un Haul Cycle Analysis penceresinin karşılığıdır: kamyon
+  değerleri, çevrimler, üretim ve filo.
+- **Form:** kamyon (kütleler, güç, verim, hızlar, çekiş, tahrik payı, fren), yol (Proje kotu | Arazi, yuvarlanma
+  direnci), çevrim (kasa, yükleme, boşaltma, manevra), filo (kamyon sayısı, saatte çalışılan dakika), yakıt (özgül
+  tüketim, rölanti, CO₂). Değerlerin hiçbiri KentOS'tan gelmez; Geri ile kapanınca program açık kaldıkça tutulur.
+- **Çizim:** izlenen taşımanın yüklü gidiş ve boş dönüş hızları (km/sa) km'ye göre. Ortak görüntüleyicidedir (ADR 0937):
+  yakınlaşınca hız ve km aralıkları sıklaşır.
+- **Özetler:** sefer, ortalama çevrim; filo verilince kuyruklu üretim ve süre, yoksa denge sayısı ve motor enerjisi.
+  Bir not uyum katsayısını, yükleyicinin doluluğunu, beklemeyi ve iki üretimi (belirlenimci, kuyruklu) söyler.
+- **Tablolar:** Taşımalar (km'ler, hacim, uzaklık, kot farkı, yüklü ve boş süre, çevrim, sefer, denge) ve Filo.
+- **Ölçülen düzeltme:** form pencereden uzun olduğu için gövde kayıyordu ve tam ekranda çizim en az boyunda kalıyordu.
+  Kayan gövde artık zaten en büyük boyundadır ve çizim görünen yüksekliği alır (ADR 0937 §2).
+
+Bekçi: `haul_fleet_window_tests` (ortak durumla aynı sefer, çevrim, üretim ve yakıt; arazide ret; değerlerin tutulması).
 
 ## Doğrulama
 

@@ -69,7 +69,13 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Reach<'a, Message> {
         let exact = max.height.is_finite() && (max.height - min.height).abs() < 0.5;
         let fills = max.height.is_finite() && self.content.as_widget().size().height.is_fill();
         let previous = ROOM.with(|room| room.replace((exact || fills).then_some(max.height)));
-        let node = self.content.as_widget_mut().layout(&mut tree.children[0], renderer, limits);
+        let mut node = self.content.as_widget_mut().layout(&mut tree.children[0], renderer, limits);
+        // A body that does not fit is at its most already and scrolls: its pictures may take the height shown (a tall
+        // form beside a picture in a full screen window left the picture at its least, docs/adr/0937 §2).
+        if !(exact || fills) && max.height.is_finite() && node.size().height >= max.height - 0.5 {
+            ROOM.with(|room| room.set(Some(max.height)));
+            node = self.content.as_widget_mut().layout(&mut tree.children[0], renderer, limits);
+        }
         ROOM.with(|room| room.set(previous));
         Node::with_children(node.size(), vec![node])
     }
@@ -389,6 +395,33 @@ mod tests {
         let (height, children) = heights(body(), loose);
         assert_eq!(children, [30.0, 100.0, 50.0]);
         assert_eq!(height, 30.0 + 100.0 + 50.0 + 20.0);
+    }
+
+    /// A body taller than its room (a tall form beside the picture) scrolls at its most: the picture takes the height
+    /// shown, less what the others in its column take.
+    #[test]
+    fn a_body_that_scrolls_gives_its_picture_the_height_shown() {
+        let tall = Reach::new(
+            scrollable(
+                iced::widget::row![
+                    block(2000.0),
+                    Grows::new().spacing(10.0).push(block(30.0)).push_grow(picture(), 100.0).push(block(50.0)),
+                ],
+            )
+            .height(Length::Shrink),
+        );
+        let snapshot = Snapshot::new(Size::new(400.0, 800.0)).expect("çizici kurulamadı");
+        let mut element: Element<'_, ()> = tall.into();
+        let mut tree = Tree::new(&element);
+        let node = element.as_widget_mut().layout(
+            &mut tree,
+            snapshot.renderer(),
+            &Limits::new(Size::ZERO, Size::new(400.0, 600.0)),
+        );
+        // Reach › scrollable › row › [block, Grows › children].
+        let column = &node.children()[0].children()[0].children()[1];
+        assert_eq!(node.size().height, 600.0);
+        assert_eq!(column.children()[1].size().height, 600.0 - 30.0 - 50.0 - 20.0);
     }
 
     #[test]
