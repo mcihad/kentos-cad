@@ -6,6 +6,7 @@ mod alternatives;
 mod analysis;
 mod cloud_ground;
 mod corridor;
+mod culvert_hydraulics;
 mod curve_volumes;
 mod cutout;
 mod drainage;

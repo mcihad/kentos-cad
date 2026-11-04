@@ -1,0 +1,716 @@
+{
+ "inlets": {
+  "pipe-square-headwall": {
+   "form": 1,
+   "k": 0.0098,
+   "m": 2.0,
+   "c": 0.0398,
+   "y": 0.67,
+   "ks": -0.5
+  },
+  "pipe-groove-headwall": {
+   "form": 1,
+   "k": 0.0018,
+   "m": 2.0,
+   "c": 0.0292,
+   "y": 0.74,
+   "ks": -0.5
+  },
+  "pipe-groove-projecting": {
+   "form": 1,
+   "k": 0.0045,
+   "m": 2.0,
+   "c": 0.0317,
+   "y": 0.69,
+   "ks": -0.5
+  },
+  "box-wingwall-30-75": {
+   "form": 1,
+   "k": 0.026,
+   "m": 1.0,
+   "c": 0.0347,
+   "y": 0.81,
+   "ks": -0.5
+  },
+  "box-wingwall-90-15": {
+   "form": 1,
+   "k": 0.061,
+   "m": 0.75,
+   "c": 0.04,
+   "y": 0.8,
+   "ks": -0.5
+  },
+  "box-wingwall-0": {
+   "form": 1,
+   "k": 0.061,
+   "m": 0.75,
+   "c": 0.0423,
+   "y": 0.82,
+   "ks": -0.5
+  },
+  "box-headwall-chamfer": {
+   "form": 2,
+   "k": 0.515,
+   "m": 0.667,
+   "c": 0.0375,
+   "y": 0.79,
+   "ks": -0.5
+  }
+ },
+ "cases": [
+  {
+   "name": "Boru, küçük debi: giriş kontrollü, batmamış",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 0.8,
+   "tailwater": 0.3,
+   "expected": {
+    "critical": 0.48216137162125405,
+    "headwater": 0.6728417104780959,
+    "control": "inlet",
+    "inlet": 0.6728417104780959,
+    "outlet": 0.5919653581241884,
+    "culvert": 0.8,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Boru, orta debi: geçiş bölgesi",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 2.6,
+   "tailwater": 0.5,
+   "expected": {
+    "critical": 0.8888878568769589,
+    "headwater": 1.5190091068249378,
+    "control": "inlet",
+    "inlet": 1.5190091068249378,
+    "outlet": 1.281913279750472,
+    "culvert": 2.6,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Boru, büyük debi: batmış giriş",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 4.0,
+   "tailwater": 0.8,
+   "expected": {
+    "critical": 1.0714087165442863,
+    "headwater": 2.430808334162709,
+    "control": "inlet",
+    "inlet": 2.430808334162709,
+    "outlet": 2.1078211661111785,
+    "culvert": 4.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Boru, yüksek kuyruk suyu: çıkış kontrollü",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 2.0,
+   "tailwater": 2.6,
+   "expected": {
+    "critical": 0.7780609722310045,
+    "headwater": 2.618029201959759,
+    "control": "outlet",
+    "inlet": 1.2111514251862614,
+    "outlet": 2.618029201959759,
+    "culvert": 2.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Oluklu ağızlı boru",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-groove-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 2.6,
+   "tailwater": 0.5,
+   "expected": {
+    "critical": 0.8888878568769589,
+    "headwater": 1.400254915810549,
+    "control": "inlet",
+    "inlet": 1.400254915810549,
+    "outlet": 1.281913279750472,
+    "culvert": 2.6,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Çıkıntılı oluklu boru",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-groove-projecting",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 2.6,
+   "tailwater": 0.5,
+   "expected": {
+    "critical": 0.8888878568769589,
+    "headwater": 1.408871929595049,
+    "control": "inlet",
+    "inlet": 1.408871929595049,
+    "outlet": 1.281913279750472,
+    "culvert": 2.6,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Kutu menfez 30–75° kanat",
+   "culvert": {
+    "section": {
+     "kind": "box",
+     "width": 2.0,
+     "height": 1.5
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "box-wingwall-30-75",
+    "ke": 0.4
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 8.0,
+   "tailwater": 0.8,
+   "expected": {
+    "critical": 1.1771098442672114,
+    "headwater": 2.0237366587088204,
+    "control": "inlet",
+    "inlet": 2.0237366587088204,
+    "outlet": 1.6575523148610156,
+    "culvert": 8.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Kutu menfez 90° ve 15° kanat",
+   "culvert": {
+    "section": {
+     "kind": "box",
+     "width": 2.0,
+     "height": 1.5
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "box-wingwall-90-15",
+    "ke": 0.4
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 8.0,
+   "tailwater": 0.8,
+   "expected": {
+    "critical": 1.1771098442672114,
+    "headwater": 2.1342805115089076,
+    "control": "inlet",
+    "inlet": 2.1342805115089076,
+    "outlet": 1.6575523148610156,
+    "culvert": 8.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Kutu menfez kanatsız",
+   "culvert": {
+    "section": {
+     "kind": "box",
+     "width": 2.0,
+     "height": 1.5
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "box-wingwall-0",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 8.0,
+   "tailwater": 0.8,
+   "expected": {
+    "critical": 1.1771098442672114,
+    "headwater": 2.209790571491422,
+    "control": "inlet",
+    "inlet": 2.209790571491422,
+    "outlet": 1.6937965101266177,
+    "culvert": 8.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Pahlı başlıklı kutu (form 2)",
+   "culvert": {
+    "section": {
+     "kind": "box",
+     "width": 2.0,
+     "height": 1.5
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "box-headwall-chamfer",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 8.0,
+   "tailwater": 0.8,
+   "expected": {
+    "critical": 1.1771098442672114,
+    "headwater": 2.0438382408024367,
+    "control": "inlet",
+    "inlet": 2.0438382408024367,
+    "outlet": 1.6937965101266177,
+    "culvert": 8.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "İki gözlü kutu",
+   "culvert": {
+    "section": {
+     "kind": "box",
+     "width": 2.0,
+     "height": 1.5
+    },
+    "cells": 2,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "box-wingwall-30-75",
+    "ke": 0.4
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 16.0,
+   "tailwater": 0.8,
+   "expected": {
+    "critical": 1.1771098442672114,
+    "headwater": 2.0237366587088204,
+    "control": "inlet",
+    "inlet": 2.0237366587088204,
+    "outlet": 1.6575523148610156,
+    "culvert": 16.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Üç borulu menfez",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 3,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 7.0,
+   "tailwater": 0.5,
+   "expected": {
+    "critical": 0.8420090106586876,
+    "headwater": 1.358871575315595,
+    "control": "inlet",
+    "inlet": 1.358871575315595,
+    "outlet": 1.1538775857745711,
+    "culvert": 7.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Uzun, pürüzlü, yatık: çıkış kontrollü",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 120.0,
+    "slope": 0.002,
+    "n": 0.024,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 2.5,
+   "tailwater": 0.6,
+   "expected": {
+    "critical": 0.8717463318193067,
+    "headwater": 2.8511475958924883,
+    "control": "outlet",
+    "inlet": 1.4694590010952289,
+    "outlet": 2.8511475958924883,
+    "culvert": 2.5,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  },
+  {
+   "name": "Yol taşıyor: az",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 2.2,
+    "length": 40.0,
+    "cd": 1.66
+   },
+   "flow": 5.0,
+   "tailwater": 0.5,
+   "expected": {
+    "critical": 1.1372428180554368,
+    "headwater": 2.268995563867778,
+    "control": "inlet",
+    "inlet": 2.268995563867778,
+    "outlet": 1.9719454986330556,
+    "culvert": 3.7966281949180285,
+    "overtopping": 1.2033718050819713,
+    "head": 0.06899556386777808,
+    "depth": 0.04518596461026622,
+    "speed": 0.6657884895570902,
+    "unit": 0.030084295127049285,
+    "hazard": 1
+   }
+  },
+  {
+   "name": "Yol taşıyor: çok",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 2.2,
+    "length": 40.0,
+    "cd": 1.66
+   },
+   "flow": 30.0,
+   "tailwater": 0.5,
+   "expected": {
+    "critical": 1.1999481983619946,
+    "headwater": 2.7303906149969546,
+    "control": "inlet",
+    "inlet": 2.7303906149969546,
+    "outlet": 2.355502216408777,
+    "culvert": 4.3515086074038285,
+    "overtopping": 25.64849139259617,
+    "head": 0.5303906149969544,
+    "depth": 0.34735873171205844,
+    "speed": 1.8459656438014478,
+    "unit": 0.6412122848149043,
+    "hazard": 4
+   }
+  },
+  {
+   "name": "Kutu menfezde yol taşıyor",
+   "culvert": {
+    "section": {
+     "kind": "box",
+     "width": 2.0,
+     "height": 1.5
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "box-wingwall-30-75",
+    "ke": 0.4
+   },
+   "weir": {
+    "crest": 2.6,
+    "length": 80.0,
+    "cd": 1.66
+   },
+   "flow": 40.0,
+   "tailwater": 1.0,
+   "expected": {
+    "critical": 1.5,
+    "headwater": 2.956269440204794,
+    "control": "inlet",
+    "inlet": 2.956269440204794,
+    "outlet": 2.537573127941091,
+    "culvert": 11.759919386574072,
+    "overtopping": 28.240080613425928,
+    "head": 0.3562694402047941,
+    "depth": 0.2333248315451678,
+    "speed": 1.5129165864178025,
+    "unit": 0.3530010076678241,
+    "hazard": 2
+   }
+  },
+  {
+   "name": "Kısa taşma boyu: tehlikeli",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 2.2,
+    "length": 8.0,
+    "cd": 1.66
+   },
+   "flow": 15.0,
+   "tailwater": 0.5,
+   "expected": {
+    "critical": 1.1991707874844701,
+    "headwater": 3.0446011848123002,
+    "control": "inlet",
+    "inlet": 3.0446011848123002,
+    "outlet": 2.6111986815703188,
+    "culvert": 4.691971645266796,
+    "overtopping": 10.308028354733203,
+    "head": 0.8446011848123001,
+    "depth": 0.5531387397580312,
+    "speed": 2.3294400694214663,
+    "unit": 1.2885035443416504,
+    "hazard": 5
+   }
+  },
+  {
+   "name": "Sıfır debi",
+   "culvert": {
+    "section": {
+     "kind": "circle",
+     "diameter": 1.2
+    },
+    "cells": 1,
+    "length": 30.0,
+    "slope": 0.01,
+    "n": 0.013,
+    "inlet": "pipe-square-headwall",
+    "ke": 0.5
+   },
+   "weir": {
+    "crest": 4.0,
+    "length": 60.0,
+    "cd": 1.66
+   },
+   "flow": 0.0,
+   "tailwater": 0.0,
+   "expected": {
+    "critical": 0.0,
+    "headwater": 0.0,
+    "control": "outlet",
+    "inlet": -0.006,
+    "outlet": 0.3,
+    "culvert": 0.0,
+    "overtopping": 0.0,
+    "head": 0.0,
+    "depth": 0.0,
+    "speed": 0.0,
+    "unit": 0.0,
+    "hazard": 0
+   }
+  }
+ ]
+}

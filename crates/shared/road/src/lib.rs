@@ -35,6 +35,7 @@ pub mod cloud_ground;
 pub mod corridor;
 pub mod sampling;
 pub mod culvert;
+pub mod culvert_hydraulics;
 pub mod grading;
 pub mod cutout;
 pub mod drainage;
