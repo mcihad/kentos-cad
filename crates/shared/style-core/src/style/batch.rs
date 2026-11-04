@@ -1070,6 +1070,24 @@ mod tests {
         assert_eq!(sink.tile_of(Vec2::new(f64::NAN, f64::INFINITY)), [0.0, 0.0]);
     }
 
+    #[test]
+    fn cad_mark_mesh_uses_mapped_contours_for_nonlinear_projection() {
+        use kentos_geometry_core::crs::map::{MapProjection, interned};
+        use kentos_geometry_core::crs::{Datum, System};
+        let source = System::Tm { datum: Datum::Turef, central_meridian: 36., scale_factor: 1., false_easting: 500_000., false_northing: 0., latitude_of_origin: None };
+        let projection = interned(MapProjection::new(source, System::Mercator {}, Vec::new()));
+        let anchor = projection.forward(ANCHOR).unwrap();
+        let rings = vec![vec![ANCHOR, Vec2::new(ANCHOR.x + 6000., ANCHOR.y), Vec2::new(ANCHOR.x + 6000., ANCHOR.y + 4000.), Vec2::new(ANCHOR.x, ANCHOR.y + 4000.)]];
+        let paint = FillPaint::Solid { color: "#884422".into(), opacity: 0.5, level: 0. };
+        let mut expected = BatchSink::new(anchor); expected.set_map(Some(projection)); expected.cad_mark(&paint, &rings);
+        let mut actual = BatchSink::new(anchor); actual.set_map(Some(projection)); actual.cad_mark_mesh(&paint, &rings, &[0, 1, 2, 0, 2, 3]);
+        let (expected, actual) = (expected.finish(), actual.finish());
+        assert!(!actual.data.is_empty());
+        assert_eq!(actual.json, expected.json);
+        assert_eq!(actual.data, expected.data);
+        assert_eq!(actual.low, expected.low);
+    }
+
     /// A picture on a map of another system (docs/adr/0630 §2): its batch holds its small triangles on the map with
     /// the picture's coordinates, x, y, u, v; the frame's corners are the picture's own corners on the map.
     #[test]
