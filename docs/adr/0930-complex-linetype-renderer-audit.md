@@ -236,3 +236,40 @@ Kanıtlar repo dışında `line-types-phase.kcad`, `make-phase-fixture.py`,
 `long-pattern-phase-model-gui.png`, `long-pattern-phase-sheet-gui.png`,
 `long-pattern-phase-gui.pdf`, `long-pattern-phase-detail.png`.
 Bu deney adlandırılmış `settings.lineTypes`ın 12 öğe sınırını yükseltmez.
+
+## Yazı/şekil adımı için yeniden kullanım incelemesi
+
+- `shared/style-core/src/style/compile.rs::emit_markers_along` ve
+  `place.rs::place_along` mevcut mesafe/teğet altyapısıdır. Fakat mevcut
+  markerLine, dönen her metni otomatik okunur tutar ve 30° üstü köşelerin
+  çevresindeki bazı işaretleri atlar. CAD `R` ile `U` aynı davranış
+  değildir; bu katmanı doğrudan ekleyip bütün LIN metinlerini desteklendi
+  saymak yanlış olur. `A` yönü ile `X/Y` yerel ötelemesi ayrıca yürütülmeli.
+- Aynı placement döngüsünde `MAX_MARKERS_PER_PATH` sınırı vardır. CAD
+  tekrar sayısı bu sınıra geldiğinde görünmeyen işaretler için sessiz
+  başarı verilemez; kaynak bütçesi, görünüm culling'i ve çıktı hata/iptali
+  birlikte tasarlanmalı. Mevcut GIS markerLine davranışı değiştirilmemeli.
+- `shared/contracts/src/annotation.rs::TextStyleDef` zaten font,
+  yükseklik, genişlik katsayısı, eğiklik ve özgün `font_file` kaynağını
+  tutar. `formats/src/dxf/styles.rs::text_style` bulunamayan font için
+  proje fontunu seçip özgün dosya adını korur. LIN `PatternText.style`
+  adı bu kaynakla ve importtaki yeniden adlandırmalarla eşleştirilmeli;
+  yalnız seçilmiş `DrawingFont`u bulmak özgün kaynağın bulunduğunu kanıtlamaz.
+- `apps/desktop/src/style/images.rs::outline` mevcut genel stil metnini
+  Iced Advanced shaping ile üretir. `native/style/src/picture.rs::TextOutline`
+  yalnız size/advance/outline taşır. Bu yol CAD-ADV-10'un dondurulmuş
+  glyph/font planının karşılığı kabul edilmemeli; CAD işaretleri mevcut
+  ortak CAD metin motorunun planını GPU/CPU/PDF'ye aynı biçimde vermeli.
+- SHX shape adı/dosyası `PatternShape` içinde saklanır; bu kayıt çözülmüş
+  bir shape kaynağı değildir. Kaynak gerçekten çözülemeden genel bir
+  marker/harf veya boşluk konup mevcut çıktı koruması kaldırılmamalı.
+
+**LIN sınırı hakkında kaynak düzeltmesi:**
+[AutoCAD 2026 basit çizgi tipi belgesi](https://help.autodesk.com/view/ACD/2026/ENU/?caas=caas%2Fdocumentation%2FACDLT%2F2014%2FENU%2Ffiles%2FGUID-EF1DF0A9-2088-487C-8085-16FEE6425405-htm.html)
+12 dash uzunluğu ve 80 karakterlik LIN satırını belirtir. Rendererimizin
+sekizde kesmesi bu kurala uygun değildi ve kapatıldı. LIN'deki 12 sınırı,
+tek başına keyfî bir renderer sınırı diye kaldırılmamalı. Planın daha
+uzun tarif hedefi özel KentOS stilinde gerçek GUI/PDF ile sınandı.
+Adlandırılmış yerel tanım ayrıca genişletilecekse KCAD sürümü, eski
+okuyucunun açık reddi ve AutoCAD uyumlu LIN/DWG/DXF teslim politikası
+birlikte tanımlanmalı; bu incelemede dosya şeması değiştirilmedi.
