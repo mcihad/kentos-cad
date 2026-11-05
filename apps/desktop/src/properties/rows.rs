@@ -2591,6 +2591,56 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             rows: geo,
         });
     }
+    if drawn && doc.settings().workspace == Some(kentos_commands::Workspace::Cad) {
+        if let Some(layer) = layers.get(&base.layer_id) {
+            let look = kentos_commands::resolve_look(
+                kentos_commands::OwnLook {
+                    color: base.color.as_deref(),
+                    line_weight: base.line_weight,
+                    look: &base.look,
+                },
+                &layer.style,
+                None,
+            );
+            let source = |from: kentos_commands::LookSource| {
+                match from {
+                    kentos_commands::LookSource::Own => "Nesne".to_owned(),
+                    kentos_commands::LookSource::Layer => format!("Katman: {}", layer_path(layers, &base.layer_id)),
+                    kentos_commands::LookSource::Block => "Blok".to_owned(),
+                }
+            };
+            let pattern = if let Some(name) = base.look.line_pattern.as_deref() {
+                Some(name)
+            } else if base.look.line_type.is_none() {
+                layer.style.line_pattern.as_deref()
+            } else {
+                None
+            };
+            let type_name = pattern.map_or_else(
+                || crate::ribbon_panels::line_type_text(Some(look.line_type)).to_owned(),
+                str::to_owned,
+            );
+            let mut appearance = vec![
+                Row::text("Renk", format!("{} · {}", look.color, source(look.from[0]))),
+                Row::text("Saydamlık", format!("%{} · {}", (look.transparency * 100.0).round(),
+                    if look.from[4] == kentos_commands::LookSource::Own { "Nesne" } else { "Varsayılan" })),
+            ];
+            if e.draws_lines() {
+                appearance.insert(1, Row::text("Çizgi tipi", format!("{type_name} · {}",
+                    source(look.from[1]))));
+                appearance.insert(2, Row::text("Kalınlık", format!("{} · {}",
+                    weight_label(look.line_weight), source(look.from[3]))));
+                appearance.push(Row::text("Çizgi tipi ölçeği", format!("{} · {}",
+                    plain_number(look.line_type_scale),
+                    if look.from[2] == kentos_commands::LookSource::Own { "Nesne" } else { "Varsayılan" })));
+            }
+            sections.push(Section {
+                id: "modelAppearance".into(),
+                title: "Temel model görünüşü".into(),
+                rows: appearance,
+            });
+        }
+    }
     // The kitchen run the object is part of (docs/adr/0727 §6).
     let in_run = casework::section(doc, slot, locked);
     let run_member = in_run.is_some();

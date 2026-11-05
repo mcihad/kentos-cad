@@ -233,7 +233,9 @@ pub fn resolve_look(
     };
     let from = [
         source(own.color.is_some(), Some(LookPart::Color)),
-        source(own.look.line_type.is_some(), Some(LookPart::LineType)),
+        // A named pattern owns the rendered type even when its built-in
+        // fallback is absent. The caller displays the pattern's name.
+        source(own.look.line_type.is_some() || own.look.line_pattern.is_some(), Some(LookPart::LineType)),
         source(own.look.line_type_scale.is_some(), None),
         source(own.line_weight.is_some(), Some(LookPart::LineWeight)),
         source(
@@ -415,6 +417,25 @@ mod tests {
             });
             assert_eq!(&got, want, "{name}");
         }
+    }
+
+    #[test]
+    fn a_named_object_pattern_reports_the_object_as_its_source() {
+        let layer: crate::LayerStyle = serde_json::from_value(serde_json::json!({
+            "color": "#123456", "lineType": "continuous", "lineWeight": 0.25
+        })).unwrap();
+        let own = ObjectLook {
+            line_pattern: Some("OFFICE-DASH".into()),
+            ..ObjectLook::default()
+        };
+        let resolved = resolve_look(
+            OwnLook { color: None, line_weight: None, look: &own },
+            &layer,
+            None,
+        );
+        assert_eq!(resolved.from[0], LookSource::Layer);
+        assert_eq!(resolved.from[1], LookSource::Own);
+        assert_eq!(resolved.color, layer.color);
     }
 
     #[test]

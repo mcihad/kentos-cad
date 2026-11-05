@@ -1906,6 +1906,14 @@ JSON dosyasında aynı alanın birden fazla yazılması da reddedilir; aksi hâl
 son değerin sessizce seçilmesi farklı denetim sonuçlarına yol açabilirdi.
 Paket, standart ve katman örnekleri otomatik testte; uyarı ve uygulamanın
 devre dışı kalması gerçek dosya seçicisinde doğrulandı.
+CAD özellik paneli, seçilen nesnenin temel model görünüşünde renk, çizgi tipi,
+kalınlık, saydamlık ve çizgi tipi ölçeğinin etkin değerini ve nesne/katman/
+varsayılan kökenini salt okunur bölümde gösterir. Adlandırılmış nesne çizgi
+tipinin kökeni de nesne olarak hesaplanır. Nokta ve çizgi otomatik sınamaları,
+gerçek uygulamada noktanın seçilip bölümün açılması ve ekran görüntüsüyle
+doğrulandı (`/tmp/kentos-cad-adv12-model-appearance.png`; repo dışında).
+Bu yalnız modelin temel görünüşünü açıklar; blok içi parça, viewport, plot
+profili ve stillerin görsel etkisi için tam köken/override analizi açıktır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

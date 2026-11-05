@@ -273,6 +273,31 @@ fn add(app: &mut App, e: Entity) -> u32 {
 }
 
 #[test]
+fn cad_inspector_explains_inherited_and_own_model_appearance_without_writing() {
+    let mut app = objects();
+    crate::files_testing::make_cad(&mut app);
+    let slot = add(&mut app, Entity::Line(LineEntity {
+        base: base("parsel"),
+        a: Wire { x: E, y: N },
+        b: Wire { x: E + 1.0, y: N },
+        za: None, zb: None, ma: None, mb: None,
+    }));
+    select(&mut app, &[slot]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let source = value(&app, "Temel model görünüşü", "Renk");
+    assert!(source.contains("Katman:"), "{source}");
+    assert!(value(&app, "Temel model görünüşü", "Çizgi tipi").contains("Katman:"));
+    assert!(value(&app, "Temel model görünüşü", "Kalınlık").contains("Katman:"));
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+
+    event(&mut app, Event::Color(vec![Slot(slot)], Some("#E5484D".into())));
+    assert_eq!(value(&app, "Temel model görünüşü", "Renk"), "#E5484D · Nesne");
+    assert!(value(&app, "Temel model görünüşü", "Kalınlık").contains("Katman:"));
+    event(&mut app, Event::Color(vec![Slot(slot)], None));
+    assert!(value(&app, "Temel model görünüşü", "Renk").contains("Katman:"));
+}
+
+#[test]
 fn nothing_selected_shows_the_drawing() {
     let app = objects();
     let doc = app.document.as_ref().expect("open");
