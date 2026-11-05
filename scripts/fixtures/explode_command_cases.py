@@ -19,8 +19,15 @@ Writes fixtures/commands/v1/cad.entities.explode.json. The ADR's rules, computed
   becomes a polyline, docs/adr/0308; its cases are explode_curve_cases.py's),
   the refusal when none explodes; an object on a locked layer the same with the locked words (docs/adr/0278).
 - The checks' order: no_entities, invalid_uid, the revision, entity_not_found, layer_locked, not_explodable.
+- Under an insert of unequal x and y factors (docs/adr/1008) an open, flat, widthless polyline with arcs becomes one
+  rational quadratic NURBS: each arc cut in halves until each spans less than a half circle, a piece's middle
+  control point where its end tangents meet (the centre plus r / cos(φ/2) towards the piece's middle angle), weight
+  cos(φ/2); a straight edge its ends and middle, weight 1; the control points mapped, the weights kept, double inner
+  knots. A straight wide polyline keeps its vertices mapped and each edge's widths times |det M| / |M·t|. Computed
+  here from the arcs' centres and angles, not from the bulge formulas KentOS uses.
 """
 import copy
+import math
 import json
 import sys
 from pathlib import Path
@@ -67,14 +74,26 @@ CLOSED = {"kind": "polyline", **base(8), "pts": [p(70, 0), p(75, 0), p(75, 5)], 
 POINT = {"kind": "point", **base(9), "p": p(80, 0)}
 # A plain wall 0.2 m wide along the x axis (docs/adr/0340 §5): at 1:100 drawn schematically, its two faces and caps.
 WALL = {"kind": "wall", **base(10, color="#404040"), "pts": [p(90, 0), p(94, 0)], "width": 0.2, "justify": "center"}
-ENTITIES = [OPEN, AREA, LINE, CIRCLE, LOCKED_PATH, INSERT, PARTS, CLOSED, POINT, WALL]
+CURVED = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02"
+# An insert of “Eğri yol” three times as wide and half as high (docs/adr/1008).
+WARPED = {"kind": "insert", **base(11), "block": CURVED, "p": p(100, 0), "scale": 3, "yScale": 0.5, "rotation": 0}
+ENTITIES = [OPEN, AREA, LINE, CIRCLE, LOCKED_PATH, INSERT, PARTS, CLOSED, POINT, WALL, WARPED]
 BY_ID = {e["id"]: e for e in ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
-NEXT = 11
+NEXT = 12
 LOST = "düz çizgiler ve taramalar oldu: stili, bileşenleri, katı, yüksekliği ve birleşimleri artık taşınmıyor; komşu duvarlar onlarla birleşmez."
 DEFINITION = {"id": BLOCK, "name": "Rögar", "base": p(0, 0), "entities": [
     {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": p(0, 0), "b": p(1, 0)},
     {"kind": "circle", "id": 2, "layerId": "agac", "attrs": {}, "color": "#00ff00", "lineWeight": 0.35, "c": p(0, 1), "r": 0.5},
+]}
+
+
+# A half circle from (0, 0) to (2, 0) turning counter-clockwise (bulge 1: about (1, 0) through (1, −1)), then a
+# straight edge down to (2, −1); and a straight wide path.
+CURVED_DEFINITION = {"id": CURVED, "name": "Eğri yol", "base": p(0, 0), "entities": [
+    {"kind": "polyline", "id": 1, "layerId": "", "attrs": {}, "pts": [p(0, 0), p(2, 0), p(2, -1)], "bulges": [1, 0]},
+    {"kind": "polyline", "id": 2, "layerId": "", "attrs": {}, "pts": [p(0, 3), p(4, 3), p(4, 5)],
+     "widths": [[0.2, 0.2], [0.4, 0.2], [0, 0]]},
 ]}
 
 
@@ -88,7 +107,7 @@ def setup():
         "activeLayer": "cizim",
         "entities": copy.deepcopy(ENTITIES),
         "styles": {"items": [], "categories": []},
-        "blocks": [copy.deepcopy(DEFINITION)],
+        "blocks": [copy.deepcopy(DEFINITION), copy.deepcopy(CURVED_DEFINITION)],
     }
 
 
@@ -124,6 +143,8 @@ def pieces(e):
         right = [p(a["x"], a["y"] - h), p(b["x"], b["y"] - h)]
         return [{"kind": "polyline", **look(e), "pts": left}, {"kind": "polyline", **look(e), "pts": right},
                 {"kind": "line", **look(e), "a": left[0], "b": right[0]}, {"kind": "line", **look(e), "a": left[1], "b": right[1]}]
+    elif kind == "insert" and e["block"] == CURVED:
+        return warped_pieces(e)
     elif kind == "insert":
         out = []
         s, at = e["scale"], e["p"]
@@ -143,6 +164,31 @@ def pieces(e):
     else:
         raise AssertionError(kind)
     return [{"kind": "line", **look(e), "a": a, "b": b} for pts, closed in rings for a, b in edges(pts, closed)]
+
+
+def warped_pieces(e):
+    """“Eğri yol” under the insert's x factor sx and y factor sy (no turn, base (0, 0))."""
+    sx, sy, at = e["scale"], e["yScale"], e["p"]
+    m = lambda x, y: p(at["x"] + sx * x, at["y"] + sy * y)  # noqa: E731
+    # The half circle: centre (1, 0), radius 1, from angle π counter-clockwise to 2π, cut at 3π/2 into two quarters.
+    ctrl, weights = [m(0, 0)], [1]
+    for a0, a1 in ((math.pi, 1.5 * math.pi), (1.5 * math.pi, 2 * math.pi)):
+        half = (a1 - a0) / 2
+        reach = 1 / math.cos(half)
+        mid = a0 + half
+        ctrl += [m(1 + reach * math.cos(mid), reach * math.sin(mid)), m(1 + math.cos(a1), math.sin(a1))]
+        weights += [math.cos(half), 1]
+    # The straight edge (2, 0)–(2, −1): its middle, then its end.
+    ctrl += [m(2, -0.5), m(2, -1)]
+    weights += [1, 1]
+    look_ = {"layerId": e["layerId"], "attrs": {}}
+    curve = {"kind": "nurbs", **look_, "degree": 2, "ctrl": ctrl, "knots": [0, 0, 0, 1, 1, 2, 2, 3, 3, 3],
+             "weights": [num(w) for w in weights]}
+    det = abs(sx * sy)
+    k = lambda tx, ty: det / math.hypot(sx * tx, sy * ty)  # noqa: E731
+    wide = {"kind": "polyline", **look_, "pts": [m(0, 3), m(4, 3), m(4, 5)],
+            "widths": [[num(0.2 * k(1, 0)), num(0.2 * k(1, 0))], [num(0.4 * k(0, 1)), num(0.2 * k(0, 1))], [0, 0]]}
+    return [curve, wide]
 
 
 def exploded(ids, start=NEXT):
@@ -168,12 +214,14 @@ def capture(ids):
     return [{"op": "captureUid", "id": i, "as": f"o{i}"} for i in ids]
 
 
-def written(name, ids, input_ids=None, warnings=(), undo=False, more_ids=()):
+def written(name, ids, input_ids=None, warnings=(), undo=False, more_ids=(), within=None):
     made, slots = exploded(ids)
     kept = [i for i in IDS if i not in ids]
     steps = capture(ids) + [{"op": "execute", "input": {"uids": [U(i) for i in (input_ids or ids)]},
                              "result": done(ids, slots, warnings),
                              "expect": {"ids": sorted(kept + slots), "entities": made, "revision": "changed", "canUndo": True}}]
+    if within is not None:
+        steps[-1]["within"] = within
     if undo:
         steps.append({"op": "undo", "returns": LABEL, "expect": {"ids": IDS, "entities": {str(i): BY_ID[i] for i in ids}}})
     return {"name": name, "steps": steps}
@@ -198,6 +246,8 @@ def cases():
         written("Bloğun yerleştirmesi tanımın nesnelerine açılır: ölçekli, katmanı ya da yerleştirmeninki, rengi ya da yerleştirmeninki",
                 [6], undo=True),
         written("İki nesne birlikte, verildikleri sırayla: silme ve parçaları", [1, 2]),
+        written("Eşit olmayan ölçekli bloğun yaylı yolu kesin NURBS, genişlikli düz yolu kenarına dik ölçülen genişlikler olur; geri alınır",
+                [11], undo=True, within=1e-12),
         written("Aynı kimlik iki kez: bir kez patlar", [1], input_ids=[1, 1]),
         written("Duvar görünüşünün çizgilerine açılır: iki yüzü ve uçları, rengi geçer; anlamını yitirdiği söylenir; geri alınır",
                 [10], warnings=[{"code": "semantics_lost", "message": f"1 duvar {LOST}", "path": "uids"}], undo=True),

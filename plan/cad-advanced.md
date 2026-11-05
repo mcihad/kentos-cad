@@ -2466,6 +2466,12 @@ aç–düzenle–dışa aktar–yeniden oku kanıtlı; ezdxf dışa aktarmayı b
 kapalı/kotlu yaylı yol, birim/OCS/blok/katman/kâğıt kararlarının tek yapılı rapor bölümü; AutoCAD denetimi yapılmadı
 (CAD-IO-20). Madde `[~]`.
 
+**Patlat'ta eşit olmayan yay (6 Kasım 2026, [ADR 1008](../docs/adr/1008-exploding-a-nonuniform-insert-keeps-arcs-exact.md)):**
+ADR 1061'in kesin NURBS ve kesin genişlik kuralları ortak çekirdeğe taşındı; DXF okuyucusu ve Patlat aynı kodu
+kullanır. Eşit olmayan ölçekli bloğun açık yaylı yolu Patlat'ta kesin NURBS, genişlikli düz yolu kenarına dik ölçülen
+genişlikler olur. Bağımsız (merkez/açıyla hesaplanan) ortak vaka ve masaüstü resmi var. Açık: kapalı/genişlikli/
+kotlu yaylı yol, Patlat'ın NURBS uyarısı, tek yapılı rapor bölümü, AutoCAD denetimi.
+
 ### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [~]
 
 **Öncelik:** P0 bütünlük/kurtarma; P1 ileri temizlik. **Kod:** [C28]–[C30].

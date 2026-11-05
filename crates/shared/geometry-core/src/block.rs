@@ -773,7 +773,7 @@ impl Blocks {
         let mut nested = Vec::with_capacity(flat.entities.len());
         for e in &flat.entities {
             nested.push(if similar || !matches!(e.shape, Shape::Insert { .. }) {
-                place_in(&e.shape, &m, similar, self.font)
+                (!similar).then(|| exact_path(e, &m)).flatten().unwrap_or_else(|| place_in(&e.shape, &m, similar, self.font))
             } else {
                 match insert_through(&e.shape, &m) {
                     Some(s) => s,
@@ -840,6 +840,55 @@ impl Blocks {
             .collect();
         Cut::Pieces(pieces)
     }
+}
+
+/// A path exploded out of a non-similar insert kept exact (docs/adr/1008, the reader's rule of docs/adr/1061 §3):
+/// an open, flat, widthless polyline with arcs as one rational quadratic NURBS (its arcs' images are elliptic arcs,
+/// not vertices within 0.1 mm); a polyline of straight edges with widths, its widths measured again across each
+/// mapped edge. None for anything else (a closed or multi-part path with arcs, an arc path with widths or
+/// elevations): the warp's own way.
+fn exact_path(e: &Entity, m: &Affine) -> Option<Shape> {
+    let Shape::Polyline { pts, bulges, holes: None, parts: None, closed, widths } = &e.shape else {
+        return None;
+    };
+    let level = match e.rest.iter().find(|(k, _)| k == "zs").map(|(_, v)| v) {
+        None | Some(Json::Null) => true,
+        Some(Json::Arr(zs)) => zs.windows(2).all(|w| w[0] == w[1]),
+        Some(_) => false,
+    };
+    let arcs = bulges.as_ref().is_some_and(|b| b.iter().any(|b| *b != 0.0));
+    let wide = widths.as_ref().is_some_and(|w| w.iter().flatten().any(|w| *w != 0.0));
+    if arcs {
+        let flat = !e.rest.iter().any(|(k, v)| k == "zs" && !matches!(v, Json::Null));
+        if *closed || wide || !flat {
+            return None;
+        }
+        let (ctrl, weights, knots) =
+            crate::geom::affine_path::arcs_as_nurbs(m, pts, bulges.as_deref().unwrap_or(&[]))?;
+        return Some(Shape::Nurbs {
+            degree: 2,
+            ctrl,
+            knots,
+            weights: Some(weights),
+            closed: false,
+            periodic: false,
+            fit: None,
+            fit_tolerance: None,
+            tangents: None,
+        });
+    }
+    if !wide || !level {
+        return None;
+    }
+    let widths = crate::geom::affine_path::exact_widths(m, pts, widths.as_deref()?, *closed)?;
+    Some(Shape::Polyline {
+        pts: pts.iter().map(|p| apply(m, *p)).collect(),
+        bulges: bulges.clone(),
+        holes: None,
+        parts: None,
+        closed: *closed,
+        widths: Some(widths),
+    })
 }
 
 /// An attribute definition from its JSON (the contract's `AttributeDefinition`).

@@ -3615,109 +3615,21 @@ fn is_arch(e: &Entity) -> bool {
     ) || matches!(e, Entity::Polyline(p) if p.space_separator.is_some())
 }
 
-/// The widths of a straight path's edges under the affine map `m` (docs/adr/1061 §3): edge `i` (from vertex `i` to
-/// the next) keeps its start and end widths times |det M| / |M·t|, t its unit direction in the source. None when the
-/// map is singular or an edge has no length (its direction, so its width, is not defined): the caller reports it.
+/// [`kentos_geometry_core::geom::affine_path::exact_widths`] under the reader's map (docs/adr/1061 §3).
 fn exact_widths(m: Tf, pts: &[Vec2], widths: &[[f64; 2]], closed: bool) -> Option<Vec<[f64; 2]>> {
-    let det = (m.a * m.d - m.b * m.c).abs();
-    if !(det.is_finite() && det > 0.0) {
-        return None;
-    }
-    let n = pts.len();
-    let edges = if closed { n } else { n.saturating_sub(1) };
-    let mut out = Vec::with_capacity(n);
-    for (i, w) in widths.iter().enumerate().take(n) {
-        if i >= edges {
-            // An open path's last vertex starts no edge: its widths draw nothing.
-            out.push(*w);
-            continue;
-        }
-        let (p, q) = (pts[i], pts[(i + 1) % n]);
-        let len = dist(p, q);
-        if !(len > 0.0 && len.is_finite()) {
-            return None;
-        }
-        let (tx, ty) = ((q.x - p.x) / len, (q.y - p.y) / len);
-        let image = hypot(m.a * tx + m.c * ty, m.b * tx + m.d * ty);
-        if !(image > 0.0 && image.is_finite()) {
-            return None;
-        }
-        let k = det / image;
-        out.push([w[0] * k, w[1] * k]);
-    }
-    Some(out)
+    let pts: Vec<CoreVec2> = pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
+    kentos_geometry_core::geom::affine_path::exact_widths(&core_affine(m), &pts, widths, closed)
 }
 
-/// An open vertex path with bulges under the affine map `m` as one rational quadratic B-spline (docs/adr/1061 §3):
-/// each edge a rational Bézier piece (a straight edge its ends and their middle, weight 1; an arc of sweep φ, split in
-/// halves while |bulge| ≥ 1, its ends and the meeting of its end tangents, weight cos(φ/2) = (1 − b²)/(1 + b²) with
-/// b = tan(φ/4)), joined end to end (double inner knots). The control points are mapped, the weights kept: a rational
-/// Bézier's image under an affine map is the Bézier of the mapped points. Control points, weights and knots; none
-/// when an edge has no length or a number is not finite.
+/// [`kentos_geometry_core::geom::affine_path::arcs_as_nurbs`] under the reader's map (docs/adr/1061 §3).
 fn arcs_as_nurbs(m: Tf, pts: &[Vec2], bulges: &[f64]) -> Option<(Vec<Vec2>, Vec<f64>, Vec<f64>)> {
-    if pts.len() < 2 {
-        return None;
-    }
-    let mut pieces: Vec<(Vec2, Vec2, f64)> = Vec::new();
-    let mut ctrl = vec![m.apply(pts[0])];
-    let mut weights = vec![1.0];
-    for i in 0..pts.len() - 1 {
-        let (p, q) = (pts[i], pts[i + 1]);
-        let c = dist(p, q);
-        if !(c > 0.0 && c.is_finite()) {
-            return None;
-        }
-        let b = bulges.get(i).copied().unwrap_or(0.0);
-        if !b.is_finite() {
-            return None;
-        }
-        // Halves of an arc as wide as a half circle or wider: tan(θ/8) = b / (1 + √(1 + b²)).
-        let mut arcs: Vec<(Vec2, Vec2, f64)> = vec![(p, q, b)];
-        while let Some(k) = arcs.iter().position(|a| a.2.abs() >= 1.0) {
-            let (a0, a1, ab) = arcs.remove(k);
-            let half = ab / (1.0 + hypot(1.0, ab));
-            let mid = bulge_point(a0, a1, ab);
-            arcs.insert(k, (mid, a1, half));
-            arcs.insert(k, (a0, mid, half));
-            if arcs.len() > 8 {
-                return None;
-            }
-        }
-        pieces.extend(arcs);
-    }
-    for (p, q, b) in pieces {
-        let (apex, w) = if b == 0.0 {
-            (v((p.x + q.x) / 2.0, (p.y + q.y) / 2.0), 1.0)
-        } else {
-            // The end tangents meet at the chord's middle moved to the arc's side by c/2 · tan(φ/2), tan(φ/2) =
-            // 2b/(1 − b²); a positive bulge turns counter-clockwise, its arc right of the chord.
-            let (dx, dy) = (q.x - p.x, q.y - p.y);
-            let rise = 2.0 * b / (1.0 - b * b) / 2.0;
-            (v((p.x + q.x) / 2.0 + dy * rise, (p.y + q.y) / 2.0 - dx * rise), (1.0 - b * b) / (1.0 + b * b))
-        };
-        if !(w > 0.0 && w.is_finite() && finite(apex)) {
-            return None;
-        }
-        ctrl.push(m.apply(apex));
-        weights.push(w);
-        ctrl.push(m.apply(q));
-        weights.push(1.0);
-    }
-    let n = (ctrl.len() - 1) / 2;
-    let mut knots = vec![0.0, 0.0, 0.0];
-    for k in 1..n {
-        knots.push(k as f64);
-        knots.push(k as f64);
-    }
-    knots.extend([n as f64; 3]);
-    ctrl.iter().all(|c| finite(*c)).then_some((ctrl, weights, knots))
+    let pts: Vec<CoreVec2> = pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
+    let (ctrl, w, knots) = kentos_geometry_core::geom::affine_path::arcs_as_nurbs(&core_affine(m), &pts, bulges)?;
+    Some((ctrl.into_iter().map(|c| v(c.x, c.y)).collect(), w, knots))
 }
 
-/// The point at the middle of the arc from `p` to `q` with bulge `b`: the chord's middle moved right of it by the
-/// sagitta, c/2 · b.
-fn bulge_point(p: Vec2, q: Vec2, b: f64) -> Vec2 {
-    let (dx, dy) = (q.x - p.x, q.y - p.y);
-    v((p.x + q.x) / 2.0 + dy * b / 2.0, (p.y + q.y) / 2.0 - dx * b / 2.0)
+fn core_affine(m: Tf) -> kentos_geometry_core::geom::affine::Affine {
+    [m.a, m.b, m.c, m.d, m.e, m.f]
 }
 
 #[cfg(test)]
