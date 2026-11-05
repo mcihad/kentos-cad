@@ -7511,6 +7511,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_PREFLIGHT.into(),
+            version: crate::ROAD_CORRIDORS_PREFLIGHT_VERSION,
+            title: "Koridor ön denetimi".into(),
+            summary: "Bir koridoru, yüzeyine ve hacmine güvenilmeden önce denetler; hiçbir şey yazmaz. Katlanma: kesitin her noktasının payı 1 + κ·o (κ kurbun eğriliği, o ofset): kurbun iç tarafında yarıçapı aşan nokta 0'ın altına iner, koridor orada kendi üstüne katlanır; margin verilirse altındaki kesitler de söylenir. Örneklenmiş kesitlerin planda kesiştiği aralıklar. Üst yüzeyin km paylaşmayan iki parçasının planda üst üste bindiği yerler (serpantin, dar dönüş): alan ve iki yüzey arasındaki kot. Bitişik bölgelerin aynı km'deki kesitleri kod kod: kot ve plan sıçraması, yalnız birinde olan kodlar (tolerance, yoksa 1 mm). \
+                      Uyarılar: corridor_tight, corridor_overlap, corridor_seam, corridor_folded, corridor_stale, corridor_unsolved, corridor_gap, corridor_surface_gone. Retler: not_a_road_project, unknown_corridor, invalid_preflight."
+                .into(),
+            aliases: vec!["koridordenetimi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsPreflight>(),
+            output: schema::<crate::CorridorPreflight>(),
+            plan: Some(schema::<crate::CorridorPreflight>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridor, %20 pay".into(),
+                input: json!({ "corridor": "c-1", "margin": 0.2 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_PROTECTED.into(),
             version: crate::ROAD_CORRIDORS_PROTECTED_VERSION,
             title: "Korunan alanlar".into(),
@@ -14884,6 +14909,9 @@ mod tests {
                     crate::ROAD_CORRIDORS_PROTECTED => {
                         serde_json::from_value::<crate::CorridorsProtected>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CORRIDORS_PREFLIGHT => {
+                        serde_json::from_value::<crate::CorridorsPreflight>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_EDIT => {
                         serde_json::from_value::<crate::VolumesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15754,6 +15782,9 @@ mod tests {
                         }
                         crate::ROAD_CORRIDORS_PROTECTED => {
                             serde_json::from_value::<crate::CorridorProtected>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_PREFLIGHT => {
+                            serde_json::from_value::<crate::CorridorPreflight>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_VOLUMES_EDIT => {
                             serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())

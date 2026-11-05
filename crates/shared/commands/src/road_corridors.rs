@@ -704,3 +704,164 @@ pub struct CorridorProtected {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub covered: f64,
 }
+
+pub const ROAD_CORRIDORS_PREFLIGHT: &str = "road.corridors.preflight";
+pub const ROAD_CORRIDORS_PREFLIGHT_VERSION: u32 = 1;
+
+/// Input of `road.corridors.preflight` v1 (plan/road.md Y50, docs/adr/0956; ROAD-COR-13): a corridor checked before
+/// its surface and volumes are trusted — where it folds (each cross's margin `1 + κ·o` against its curve, and the
+/// sampled sections crossing), where its top surface lies over itself (strips that share no station overlapping in
+/// plan) and where its regions do not meet (the crosses at a region's end and the next's start, code by code).
+/// `margin` warns of crosses below it too (absent: only those that fold, at or below 0); `tolerance` (m) is how far
+/// apart two crosses at a seam may be (absent: 1 mm). Reads only.
+///
+/// Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_preflight` (a margin not in [0, 1), a tolerance not in
+/// (0, 10] m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorsPreflight {
+    pub corridor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub margin: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tolerance: Option<f64>,
+}
+
+/// A stretch of crosses whose margin is below the limit: region, stations and km, the least margin, where, the offset
+/// of the point giving it and the curve's radius there (none on a tangent).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorTight {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub least: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub at: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub offset: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub radius: Option<f64>,
+}
+
+/// A stretch of sampled sections crossing each other in plan (no surface made there): region and stations with km.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorFold {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+}
+
+/// Two parts of the top surface over each other in plan: their stations with km, the area, and the least and the most
+/// height between the two surfaces over it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorOverlap {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub first: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub second: [f64; 2],
+    pub first_text: [String; 2],
+    pub second_text: [String; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub least: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub most: f64,
+}
+
+/// Where one region meets the next: the station and km, the regions, the largest plan shift and height step between
+/// the codes both crosses have and which code gives each, the codes only one has, and whether they meet within the
+/// tolerance.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorSeam {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub km: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub before: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub after: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub shift: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shift_code: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub step: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub step_code: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub only_before: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub only_after: Vec<String>,
+    pub meets: bool,
+}
+
+/// Output of `road.corridors.preflight` v1: the corridor, how many crosses, strips and triangles were checked, the
+/// least margin and where, the tight stretches, the folds, the overlaps and the seams, and whether all is clear.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorPreflight {
+    pub corridor: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub crosses: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub strips: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub triangles: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub least: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub least_at: Option<f64>,
+    pub tight: Vec<CorridorTight>,
+    pub folds: Vec<CorridorFold>,
+    pub overlaps: Vec<CorridorOverlap>,
+    pub seams: Vec<CorridorSeam>,
+    pub clear: bool,
+}

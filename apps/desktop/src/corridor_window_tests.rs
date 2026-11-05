@@ -427,3 +427,83 @@ fn screens_protected() {
         println!("{}", file.display());
     }
 }
+
+/// The preflight's shared cases' drawing for case `name` (its own setup, else the file's).
+fn preflight_app(name: &str) -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.corridors.preflight.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone();
+    let setup = case.get("setup").cloned().unwrap_or_else(|| cases["setup"].clone());
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// ROAD-COR-13 (docs/adr/0956): the preflight's view reads `road.corridors.preflight` as its cases do: the tight
+/// curve folds, its top surface lies over itself; the main corridor's two templates do not meet at their seam.
+#[test]
+fn the_preflight_reads_the_shared_cases() {
+    let mut app = preflight_app("Dar kurp: katlanma ve üst üste binme");
+    let _ = app.update(Message::Run("corridor.editor"));
+    let at = app.corridor_window.as_ref().expect("open").rows.iter().position(|r| r.id == "c-3").expect("c-3");
+    send(&mut app, W::Choose(at));
+    send(&mut app, W::Check(true));
+    let w = app.corridor_window.as_ref().expect("open");
+    let Some(Ok((c, warnings))) = &w.preflight else { panic!("the check reads: {:?}", w.preflight) };
+    assert!(!c.clear && !c.folds.is_empty() && !c.overlaps.is_empty());
+    assert!(c.least.is_some_and(|m| m < 0.0));
+    assert!(warnings.iter().any(|x| x.code == "corridor_overlap"));
+    let mut app = preflight_app("Ana koridor: iki tip kesitin dikişi");
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Check(true));
+    send(&mut app, W::Margin("0,95".into()));
+    let w = app.corridor_window.as_ref().expect("open");
+    let Some(Ok((c, _))) = &w.preflight else { panic!("the check reads") };
+    assert!(c.seams.len() == 1 && !c.seams[0].meets && c.seams[0].step > 0.05);
+    assert!(!c.tight.is_empty(), "a margin of 0.95 finds the curve tight");
+}
+
+/// The preflight over the plan: the tight curve light and wide, the main corridor's seam and tight curve dark and
+/// narrow. `.run/gui-evidence/yol-y50/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib corridor_window_tests::screens_preflight -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_preflight() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y50");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (case, corridor, margin, theme, size, name) in [
+        ("Dar kurp: katlanma ve üst üste binme", "c-3", "", "light", Size::new(1440.0, 900.0), "dar-kurp-acik-genis"),
+        ("Ana koridor: iki tip kesitin dikişi", "c-1", "0,95", "light", Size::new(1440.0, 900.0), "dikis-acik-genis"),
+        ("Ana koridor: iki tip kesitin dikişi", "c-1", "0,95", "dark", Size::new(1100.0, 650.0), "dikis-koyu-dar"),
+        ("Yan koridor: düz aks", "c-2", "", "dark", Size::new(1440.0, 900.0), "temiz-koyu-genis"),
+    ] {
+        let mut app = preflight_app(case);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("corridor.editor"));
+        let at = app.corridor_window.as_ref().expect("open").rows.iter().position(|r| r.id == corridor).expect("the corridor");
+        send(&mut app, W::Choose(at));
+        send(&mut app, W::Check(true));
+        if !margin.is_empty() {
+            send(&mut app, W::Margin(margin.into()));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y50-on-denetim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

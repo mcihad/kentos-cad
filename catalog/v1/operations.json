@@ -2692,9 +2692,10 @@
         "road.corridors.query",
         "road.corridors.draw",
         "road.corridors.daylights",
-        "road.corridors.protected"
+        "road.corridors.protected",
+        "road.corridors.preflight"
       ],
-      "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905); Şev uçları görünümü road.corridors.daylights ile her kesitin şev ucunu, kesişmelerini ve duyarlılığını okur (Y45, ADR 0951); Korunan alanlar görünümü road.corridors.protected ile izin seçilen katmanın alanlarına girişini okur (Y46, ADR 0952)."
+      "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905); Şev uçları görünümü road.corridors.daylights ile her kesitin şev ucunu, kesişmelerini ve duyarlılığını okur (Y45, ADR 0951); Korunan alanlar görünümü road.corridors.protected ile izin seçilen katmanın alanlarına girişini okur (Y46, ADR 0952). Ön denetim görünümü road.corridors.preflight ile katlanmayı, yüzeyin kendi üstüne binmesini ve bölge dikişlerini okur (Y50, ADR 0956)."
     },
     "corridor.new": {
       "level": "semantic",

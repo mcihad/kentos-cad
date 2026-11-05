@@ -40686,6 +40686,249 @@
       ]
     },
     {
+      "id": "road.corridors.preflight",
+      "version": 1,
+      "title": "Koridor ön denetimi",
+      "summary": "Bir koridoru, yüzeyine ve hacmine güvenilmeden önce denetler; hiçbir şey yazmaz. Katlanma: kesitin her noktasının payı 1 + κ·o (κ kurbun eğriliği, o ofset): kurbun iç tarafında yarıçapı aşan nokta 0'ın altına iner, koridor orada kendi üstüne katlanır; margin verilirse altındaki kesitler de söylenir. Örneklenmiş kesitlerin planda kesiştiği aralıklar. Üst yüzeyin km paylaşmayan iki parçasının planda üst üste bindiği yerler (serpantin, dar dönüş): alan ve iki yüzey arasındaki kot. Bitişik bölgelerin aynı km'deki kesitleri kod kod: kot ve plan sıçraması, yalnız birinde olan kodlar (tolerance, yoksa 1 mm). Uyarılar: corridor_tight, corridor_overlap, corridor_seam, corridor_folded, corridor_stale, corridor_unsolved, corridor_gap, corridor_surface_gone. Retler: not_a_road_project, unknown_corridor, invalid_preflight.",
+      "aliases": [
+        "koridordenetimi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.corridors.preflight` v1 (plan/road.md Y50, docs/adr/0956; ROAD-COR-13): a corridor checked before\nits surface and volumes are trusted — where it folds (each cross's margin `1 + κ·o` against its curve, and the\nsampled sections crossing), where its top surface lies over itself (strips that share no station overlapping in\nplan) and where its regions do not meet (the crosses at a region's end and the next's start, code by code).\n`margin` warns of crosses below it too (absent: only those that fold, at or below 0); `tolerance` (m) is how far\napart two crosses at a seam may be (absent: 1 mm). Reads only.\n\nRefusals: `not_a_road_project`, `unknown_corridor`, `invalid_preflight` (a margin not in [0, 1), a tolerance not in\n(0, 10] m).",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "margin": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "corridor"
+        ],
+        "title": "CorridorsPreflight",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.preflight` v1: the corridor, how many crosses, strips and triangles were checked, the\nleast margin and where, the tight stretches, the folds, the overlaps and the seams, and whether all is clear.",
+        "properties": {
+          "clear": {
+            "type": "boolean"
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "crosses": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "folds": {
+            "items": {
+              "$ref": "#/$defs/CorridorFold"
+            },
+            "type": "array"
+          },
+          "least": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "leastAt": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "overlaps": {
+            "items": {
+              "$ref": "#/$defs/CorridorOverlap"
+            },
+            "type": "array"
+          },
+          "seams": {
+            "items": {
+              "$ref": "#/$defs/CorridorSeam"
+            },
+            "type": "array"
+          },
+          "strips": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tight": {
+            "items": {
+              "$ref": "#/$defs/CorridorTight"
+            },
+            "type": "array"
+          },
+          "triangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "corridor",
+          "crosses",
+          "strips",
+          "triangles",
+          "tight",
+          "folds",
+          "overlaps",
+          "seams",
+          "clear"
+        ],
+        "title": "CorridorPreflight",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.preflight` v1: the corridor, how many crosses, strips and triangles were checked, the\nleast margin and where, the tight stretches, the folds, the overlaps and the seams, and whether all is clear.",
+        "properties": {
+          "clear": {
+            "type": "boolean"
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "crosses": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "folds": {
+            "items": {
+              "$ref": "#/$defs/CorridorFold"
+            },
+            "type": "array"
+          },
+          "least": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "leastAt": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "overlaps": {
+            "items": {
+              "$ref": "#/$defs/CorridorOverlap"
+            },
+            "type": "array"
+          },
+          "seams": {
+            "items": {
+              "$ref": "#/$defs/CorridorSeam"
+            },
+            "type": "array"
+          },
+          "strips": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tight": {
+            "items": {
+              "$ref": "#/$defs/CorridorTight"
+            },
+            "type": "array"
+          },
+          "triangles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "corridor",
+          "crosses",
+          "strips",
+          "triangles",
+          "tight",
+          "folds",
+          "overlaps",
+          "seams",
+          "clear"
+        ],
+        "title": "CorridorPreflight",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "invalid_preflight"
+        ],
+        "warnings": [
+          "corridor_tight",
+          "corridor_overlap",
+          "corridor_seam",
+          "corridor_folded",
+          "corridor_stale",
+          "corridor_unsolved",
+          "corridor_gap",
+          "corridor_surface_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridor, %20 pay",
+          "input": {
+            "corridor": "c-1",
+            "margin": 0.2
+          }
+        }
+      ]
+    },
+    {
       "id": "road.corridors.protected",
       "version": 1,
       "title": "Korunan alanlar",
@@ -88495,6 +88738,30 @@
       "meaning": "Ardışık kesitler planda kesişiyor (dar kurpta geniş şerit); orada üst yüzey kurulmadı."
     },
     {
+      "code": "corridor_overlap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun üst yüzeyinin komşu olmayan iki parçası planda üst üste biniyor (serpantin, dar dönüş); yüzey ve hacim orada güvenilmez."
+    },
+    {
+      "code": "corridor_seam",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bitişik iki bölgenin aynı km'deki kesitleri buluşmuyor: kotta ya da planda sıçrama var ya da bir kod yalnız birinde."
+    },
+    {
+      "code": "corridor_tight",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kurbun iç tarafında kesit kurbun yarıçapına yaklaşıyor ya da onu aşıyor (1 + κ·o istenen paydan küçük); orada koridor katlanır."
+    },
+    {
+      "code": "invalid_preflight",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Koridor ön denetimi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
       "code": "corridor_gap",
       "kind": "warning",
       "retryable": false,
@@ -106451,6 +106718,41 @@
       ],
       "type": "object"
     },
+    "CorridorFold": {
+      "description": "A stretch of sampled sections crossing each other in plan (no surface made there): region and stations with km.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "region",
+        "from",
+        "to",
+        "fromText",
+        "toText"
+      ],
+      "type": "object"
+    },
     "CorridorLeft": {
       "description": "An interval refining left as it is (docs/adr/0939 §2): its region and stations, why (`change`: the section changes\nkind within it, found to the least step; `least`: it still strays at the least step; `budget`: not measured, the\nstations allowed are used up) and how far its middle strayed.",
       "properties": {
@@ -106530,6 +106832,72 @@
         "alignment",
         "revision",
         "stale"
+      ],
+      "type": "object"
+    },
+    "CorridorOverlap": {
+      "description": "Two parts of the top surface over each other in plan: their stations with km, the area, and the least and the most\nheight between the two surfaces over it.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "first": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "firstText": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "least": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "most": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "second": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "secondText": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "first",
+        "second",
+        "firstText",
+        "secondText",
+        "area",
+        "least",
+        "most"
       ],
       "type": "object"
     },
@@ -106757,6 +107125,78 @@
       ],
       "type": "object"
     },
+    "CorridorSeam": {
+      "description": "Where one region meets the next: the station and km, the regions, the largest plan shift and height step between\nthe codes both crosses have and which code gives each, the codes only one has, and whether they meet within the\ntolerance.",
+      "properties": {
+        "after": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "before": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "km": {
+          "type": "string"
+        },
+        "meets": {
+          "type": "boolean"
+        },
+        "onlyAfter": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "onlyBefore": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shift": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "shiftCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "step": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "stepCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "station",
+        "km",
+        "before",
+        "after",
+        "shift",
+        "step",
+        "meets"
+      ],
+      "type": "object"
+    },
     "CorridorStation": {
       "description": "A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,\n`user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between\nstrayed, docs/adr/0939).",
       "properties": {
@@ -106874,6 +107314,67 @@
         "to",
         "fromText",
         "toText"
+      ],
+      "type": "object"
+    },
+    "CorridorTight": {
+      "description": "A stretch of crosses whose margin is below the limit: region, stations and km, the least margin, where, the offset\nof the point giving it and the curve's radius there (none on a tangent).",
+      "properties": {
+        "at": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "least": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "radius": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "region",
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "least",
+        "at",
+        "offset"
       ],
       "type": "object"
     },

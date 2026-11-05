@@ -33,6 +33,7 @@ pub mod accuracy;
 pub mod alternatives;
 pub mod cloud_ground;
 pub mod corridor;
+pub mod corridor_check;
 pub mod sampling;
 pub mod culvert;
 pub mod culvert_closure;

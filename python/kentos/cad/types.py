@@ -21109,6 +21109,40 @@ class CorridorFeature(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CorridorFold(_Model):
+    """A stretch of sampled sections crossing each other in plan (no surface made there): region and stations with km.
+    Attributes:
+        region: Unit: index.
+        from_: Unit: m.
+        to: Unit: m.
+    """
+    region: int
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorFold:
+        return cls(
+            region=data["region"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CorridorLeft(_Model):
     """An interval refining left as it is (docs/adr/0939 §2): its region and stations, why (`change`: the section changes
     kind within it, found to the least step; `least`: it still strays at the least step; `budget`: not measured, the
@@ -21184,6 +21218,106 @@ class CorridorListed(_Model):
             alignment=data["alignment"],
             revision=data["revision"],
             stale=data["stale"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorOverlap(_Model):
+    """Two parts of the top surface over each other in plan: their stations with km, the area, and the least and the most
+    height between the two surfaces over it.
+    Attributes:
+        first: Unit: m.
+        second: Unit: m.
+        area: Unit: area.
+        least: Unit: length.
+        most: Unit: length.
+    """
+    first: list[float]
+    second: list[float]
+    first_text: list[str]
+    second_text: list[str]
+    area: float
+    least: float
+    most: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["first"] = [float(e0) for e0 in self.first]
+        out["second"] = [float(e0) for e0 in self.second]
+        out["firstText"] = list(self.first_text)
+        out["secondText"] = list(self.second_text)
+        out["area"] = float(self.area)
+        out["least"] = float(self.least)
+        out["most"] = float(self.most)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorOverlap:
+        return cls(
+            first=[float(e0) for e0 in data["first"]],
+            second=[float(e0) for e0 in data["second"]],
+            first_text=list(data["firstText"]),
+            second_text=list(data["secondText"]),
+            area=float(data["area"]),
+            least=float(data["least"]),
+            most=float(data["most"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorPreflight(_Model):
+    """Output of `road.corridors.preflight` v1: the corridor, how many crosses, strips and triangles were checked, the
+    least margin and where, the tight stretches, the folds, the overlaps and the seams, and whether all is clear.
+    Attributes:
+        crosses: Unit: count.
+        strips: Unit: count.
+        triangles: Unit: count.
+        least: Unit: 1.
+        least_at: Unit: m.
+    """
+    corridor: str
+    crosses: int
+    strips: int
+    triangles: int
+    tight: list[CorridorTight]
+    folds: list[CorridorFold]
+    overlaps: list[CorridorOverlap]
+    seams: list[CorridorSeam]
+    clear: bool
+    least: float | None | Unset = UNSET
+    least_at: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["crosses"] = self.crosses
+        out["strips"] = self.strips
+        out["triangles"] = self.triangles
+        out["tight"] = [e0.to_json() for e0 in self.tight]
+        out["folds"] = [e0.to_json() for e0 in self.folds]
+        out["overlaps"] = [e0.to_json() for e0 in self.overlaps]
+        out["seams"] = [e0.to_json() for e0 in self.seams]
+        out["clear"] = self.clear
+        if self.least is not UNSET:
+            out["least"] = None if self.least is None else float(self.least)
+        if self.least_at is not UNSET:
+            out["leastAt"] = None if self.least_at is None else float(self.least_at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorPreflight:
+        return cls(
+            corridor=data["corridor"],
+            crosses=data["crosses"],
+            strips=data["strips"],
+            triangles=data["triangles"],
+            tight=[CorridorTight.from_json(e0) for e0 in data["tight"]],
+            folds=[CorridorFold.from_json(e0) for e0 in data["folds"]],
+            overlaps=[CorridorOverlap.from_json(e0) for e0 in data["overlaps"]],
+            seams=[CorridorSeam.from_json(e0) for e0 in data["seams"]],
+            clear=data["clear"],
+            least=UNSET if "least" not in data else None if data["least"] is None else float(data["least"]),
+            least_at=UNSET if "leastAt" not in data else None if data["leastAt"] is None else float(data["leastAt"]),
         )
 
 
@@ -21395,6 +21529,66 @@ class CorridorSampling(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CorridorSeam(_Model):
+    """Where one region meets the next: the station and km, the regions, the largest plan shift and height step between
+    the codes both crosses have and which code gives each, the codes only one has, and whether they meet within the
+    tolerance.
+    Attributes:
+        station: Unit: m.
+        before: Unit: index.
+        after: Unit: index.
+        shift: Unit: length.
+        step: Unit: length.
+    """
+    station: float
+    km: str
+    before: int
+    after: int
+    shift: float
+    step: float
+    meets: bool
+    only_after: list[str] | Unset = UNSET
+    only_before: list[str] | Unset = UNSET
+    shift_code: str | None | Unset = UNSET
+    step_code: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = self.km
+        out["before"] = self.before
+        out["after"] = self.after
+        out["shift"] = float(self.shift)
+        out["step"] = float(self.step)
+        out["meets"] = self.meets
+        if self.only_after is not UNSET:
+            out["onlyAfter"] = list(self.only_after)
+        if self.only_before is not UNSET:
+            out["onlyBefore"] = list(self.only_before)
+        if self.shift_code is not UNSET:
+            out["shiftCode"] = self.shift_code
+        if self.step_code is not UNSET:
+            out["stepCode"] = self.step_code
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorSeam:
+        return cls(
+            station=float(data["station"]),
+            km=data["km"],
+            before=data["before"],
+            after=data["after"],
+            shift=float(data["shift"]),
+            step=float(data["step"]),
+            meets=data["meets"],
+            only_after=list(data["onlyAfter"]) if "onlyAfter" in data else UNSET,
+            only_before=list(data["onlyBefore"]) if "onlyBefore" in data else UNSET,
+            shift_code=data.get("shiftCode", UNSET),
+            step_code=data.get("stepCode", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CorridorStation(_Model):
     """A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,
     `user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between
@@ -21507,6 +21701,58 @@ class CorridorStretch(_Model):
             to=float(data["to"]),
             from_text=data["fromText"],
             to_text=data["toText"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorTight(_Model):
+    """A stretch of crosses whose margin is below the limit: region, stations and km, the least margin, where, the offset
+    of the point giving it and the curve's radius there (none on a tangent).
+    Attributes:
+        region: Unit: index.
+        from_: Unit: m.
+        to: Unit: m.
+        least: Unit: 1.
+        at: Unit: m.
+        offset: Unit: length.
+        radius: Unit: length.
+    """
+    region: int
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    least: float
+    at: float
+    offset: float
+    radius: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["least"] = float(self.least)
+        out["at"] = float(self.at)
+        out["offset"] = float(self.offset)
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorTight:
+        return cls(
+            region=data["region"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            least=float(data["least"]),
+            at=float(data["at"]),
+            offset=float(data["offset"]),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
         )
 
 
@@ -21731,6 +21977,43 @@ class CorridorsEdit(_Model):
             surface=data.get("surface", UNSET),
             tangent=UNSET if "tangent" not in data else None if data["tangent"] is None else float(data["tangent"]),
             vertical_sag=UNSET if "verticalSag" not in data else None if data["verticalSag"] is None else float(data["verticalSag"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorsPreflight(_Model):
+    """Input of `road.corridors.preflight` v1 (plan/road.md Y50, docs/adr/0956; ROAD-COR-13): a corridor checked before
+    its surface and volumes are trusted — where it folds (each cross's margin `1 + κ·o` against its curve, and the
+    sampled sections crossing), where its top surface lies over itself (strips that share no station overlapping in
+    plan) and where its regions do not meet (the crosses at a region's end and the next's start, code by code).
+    `margin` warns of crosses below it too (absent: only those that fold, at or below 0); `tolerance` (m) is how far
+    apart two crosses at a seam may be (absent: 1 mm). Reads only.
+
+    Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_preflight` (a margin not in [0, 1), a tolerance not in
+    (0, 10] m).
+    Attributes:
+        margin: Unit: 1.
+        tolerance: Unit: length.
+    """
+    corridor: str
+    margin: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        if self.margin is not UNSET:
+            out["margin"] = None if self.margin is None else float(self.margin)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorsPreflight:
+        return cls(
+            corridor=data["corridor"],
+            margin=UNSET if "margin" not in data else None if data["margin"] is None else float(data["margin"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
 
@@ -110818,20 +111101,26 @@ __all__ = [
     "CorridorDaylights",
     "CorridorDef",
     "CorridorFeature",
+    "CorridorFold",
     "CorridorLeft",
     "CorridorListed",
+    "CorridorOverlap",
+    "CorridorPreflight",
     "CorridorProtected",
     "CorridorRefineDef",
     "CorridorRegionDef",
     "CorridorReport",
     "CorridorSampling",
+    "CorridorSeam",
     "CorridorStation",
     "CorridorStray",
     "CorridorStretch",
+    "CorridorTight",
     "CorridorsDaylights",
     "CorridorsDraw",
     "CorridorsDrawn",
     "CorridorsEdit",
+    "CorridorsPreflight",
     "CorridorsProtected",
     "CorridorsQueried",
     "CorridorsQuery",

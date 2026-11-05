@@ -1897,6 +1897,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.corridors.preflight",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_preflight"]],
+        warnings: &["corridor_tight", "corridor_overlap", "corridor_seam", "corridor_folded", "corridor_stale", "corridor_unsolved", "corridor_gap", "corridor_surface_gone"],
+        targets: none,
+    },
+    Entry {
         id: "road.corridors.protected",
         refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_protected_check"]],
         warnings: &["corridor_protected", "corridor_stale", "corridor_unsolved", "corridor_gap", "corridor_surface_gone"],

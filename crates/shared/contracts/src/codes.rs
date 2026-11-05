@@ -736,6 +736,10 @@ codes! {
     CORRIDOR_UNSOLVED = "corridor_unsolved", Warning, false, "Koridorun bazı km aralıkları çözülmedi: kesit kurulmadı ya da şev araziyle buluşmadı; ileti aralıkları söyler.";
     /// A warning: consecutive sections cross in plan; no top surface there (docs/adr/0905 §5).
     CORRIDOR_FOLDED = "corridor_folded", Warning, false, "Ardışık kesitler planda kesişiyor (dar kurpta geniş şerit); orada üst yüzey kurulmadı.";
+    CORRIDOR_OVERLAP = "corridor_overlap", Warning, false, "Koridorun üst yüzeyinin komşu olmayan iki parçası planda üst üste biniyor (serpantin, dar dönüş); yüzey ve hacim orada güvenilmez.";
+    CORRIDOR_SEAM = "corridor_seam", Warning, false, "Bitişik iki bölgenin aynı km'deki kesitleri buluşmuyor: kotta ya da planda sıçrama var ya da bir kod yalnız birinde.";
+    CORRIDOR_TIGHT = "corridor_tight", Warning, false, "Kurbun iç tarafında kesit kurbun yarıçapına yaklaşıyor ya da onu aşıyor (1 + κ·o istenen paydan küçük); orada koridor katlanır.";
+    INVALID_PREFLIGHT = "invalid_preflight", Failed, false, "Koridor ön denetimi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: the corridor's regions leave stretches without sections.
     CORRIDOR_GAP = "corridor_gap", Warning, false, "Koridorun bölgeleri arasında kesitsiz aralık var.";
     /// A warning: intervals where the section between still strays at the least step, or the stations ran out

@@ -55,7 +55,9 @@ const ADD: &str = "Bölge ekle";
 const REMOVE_ROW: &str = "Bölgeyi sil";
 const DRAW: &str = "Şevli plan çiz";
 /// The picture's two views and the daylight check's threshold (docs/adr/0951).
-pub(crate) const VIEWS: [&str; 3] = ["Plan", "Şev uçları", "Korunan alanlar"];
+pub(crate) const VIEWS: [&str; 4] = ["Plan", "Şev uçları", "Korunan alanlar", "Ön denetim"];
+/// The preflight's margin (docs/adr/0956): crosses below it are told too.
+pub(crate) const MARGIN: &str = "İstenen pay (1 + κ·o)";
 /// The protected areas' layer (docs/adr/0952).
 pub(crate) const PROTECTED_LAYER: &str = "Korunan alan katmanı";
 pub(crate) const SENSITIVE: &str = "Duyarlılık sınırı (m/m)";
@@ -213,6 +215,10 @@ pub struct Window {
     pub(crate) protecting: bool,
     pub(crate) protected_layer: Option<String>,
     pub(crate) protected: Option<Result<(kentos_commands::CorridorProtected, Vec<CommandWarning>), String>>,
+    /// The preflight shown over the plan (docs/adr/0956): the margin written and the check read.
+    pub(crate) checking: bool,
+    pub(crate) margin: String,
+    pub(crate) preflight: Option<Result<(kentos_commands::CorridorPreflight, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -245,6 +251,9 @@ pub enum Event {
     /// The protected areas' view and layer.
     Protected(bool),
     ProtectedLayer(String),
+    /// The preflight's view and margin.
+    Check(bool),
+    Margin(String),
     Draw,
     Save,
     Cancel,
@@ -323,6 +332,18 @@ impl App {
             )),
             (true, None, _) => Some(Err("Korunan alanların katmanını seçin.".into())),
             (true, _, None) => Some(Err("Korunan alanlar kaydedilmiş koridorla okunur; önce koridoru kaydedin.".into())),
+            _ => None,
+        };
+        // The preflight while shown: the corridor as saved (docs/adr/0956).
+        w.preflight = match (w.checking, w.kept.iter().find(|k| k.id == r.id)) {
+            (true, Some(_)) => Some(match number(&w.margin) {
+                Err(()) => Err(format!("{MARGIN} bir sayı olmalı.")),
+                Ok(m) => kentos_native_application::road_corridors_preflight::preview(
+                    &doc.model,
+                    &kentos_commands::CorridorsPreflight { corridor: r.id.clone(), margin: m, tolerance: None },
+                ),
+            }),
+            (true, None) => Some(Err("Ön denetim kaydedilmiş koridorla okunur; önce koridoru kaydedin.".into())),
             _ => None,
         };
         // The daylights while shown: the corridor as typed is built once more.
@@ -477,11 +498,19 @@ impl App {
             Event::Daylight(on) => {
                 w.daylight = on;
                 w.protecting = false;
+                w.checking = false;
             }
             Event::Protected(on) => {
                 w.protecting = on;
                 w.daylight &= !on;
+                w.checking &= !on;
             }
+            Event::Check(on) => {
+                w.checking = on;
+                w.daylight &= !on;
+                w.protecting &= !on;
+            }
+            Event::Margin(t) => w.margin = t,
             Event::ProtectedLayer(l) => w.protected_layer = Some(l),
             Event::Sensitive(t) => w.sensitive = t,
             Event::Cancel => {
@@ -793,8 +822,15 @@ impl App {
             .align_y(iced::alignment::Vertical::Bottom),
         );
         // The picture: the corridor in plan, or its daylights along the stations (docs/adr/0951).
-        let shown_view = if w.protecting { 2 } else { usize::from(w.daylight) };
+        let shown_view = if w.checking {
+            3
+        } else if w.protecting {
+            2
+        } else {
+            usize::from(w.daylight)
+        };
         let on_view = Select::new(VIEWS.map(Choice::new), Some(shown_view), |i| match i {
+            3 => msg(Event::Check(true)),
             2 => msg(Event::Protected(true)),
             i => msg(Event::Daylight(i == 1)),
         });
@@ -821,16 +857,28 @@ impl App {
             views = views.push(words::field(PROTECTED_LAYER, container(on_layer).width(200), None));
             views = views.push(label::caption("Katmandaki alan nesneleri (bina parseli, sit alanı, dere yatağı) koridorun izine karşı.").style(muted));
         }
+        if w.checking {
+            views = views.push(words::field(
+                MARGIN,
+                kentos_ui::widget::text_field("0 (yalnız katlanan)", &w.margin).on_input(|t| msg(Event::Margin(t))).width(150),
+                None,
+            ));
+            views = views.push(
+                label::caption("Kesit noktası P = C + o·N: dP/ds = (1 + κ·o)·T. İç taraftaki nokta yarıçapı aşınca pay 0'ın altına iner, koridor katlanır.")
+                    .style(muted),
+            );
+        }
         col = col.push(views);
         let read = w.daylights.as_ref().and_then(|d| d.as_ref().ok()).filter(|_| w.daylight);
         let zones = w.protected.as_ref().and_then(|d| d.as_ref().ok()).filter(|_| w.protecting).map(|(z, _)| z);
+        let check = w.preflight.as_ref().and_then(|d| d.as_ref().ok()).filter(|_| w.checking).map(|(c, _)| c);
         col = match read {
             Some((d, _)) => col.push_grow(
                 crate::picture::picture(iced::widget::canvas(Daylights { read: d }).width(Fill).height(Fill), "Şev uçları"),
                 typography::scaled(190.0),
             ),
             None => col.push_grow(
-                crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview, zones }).width(Fill).height(Fill), "Koridor"),
+                crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview, zones, check }).width(Fill).height(Fill), "Koridor"),
                 typography::scaled(190.0),
             ),
         };
@@ -840,6 +888,19 @@ impl App {
                 Some(Ok((z, _))) => {
                     col = col.push(label::caption(protected_words(z)));
                     col = col.push(protected_table(z));
+                }
+                None => {}
+            }
+        }
+        if w.checking {
+            match &w.preflight {
+                Some(Err(e)) => col = col.push(label::caption(e.clone()).style(danger)),
+                Some(Ok((c, warnings))) => {
+                    col = col.push(label::caption(preflight_words(c)));
+                    for wn in warnings.iter().filter(|x| ["corridor_tight", "corridor_overlap", "corridor_seam", "corridor_folded"].contains(&x.code.as_str())) {
+                        col = col.push(label::caption(wn.message.clone()).style(warn));
+                    }
+                    col = col.push(preflight_table(c));
                 }
                 None => {}
             }
@@ -944,6 +1005,8 @@ impl App {
             Control::Fill("Tarama (m)", text) => Some(msg(Event::Tick(text.to_owned()))),
             Control::Fill(SENSITIVE, text) => Some(msg(Event::Sensitive(text.to_owned()))),
             Control::Pick("Görünüş", words) if words == VIEWS[2] => Some(msg(Event::Protected(true))),
+            Control::Pick("Görünüş", words) if words == VIEWS[3] => Some(msg(Event::Check(true))),
+            Control::Fill(MARGIN, text) => Some(msg(Event::Margin(text.to_owned()))),
             Control::Pick("Görünüş", words) => Some(msg(Event::Daylight(words == VIEWS[1]))),
             Control::Pick(PROTECTED_LAYER, words) => {
                 let id = self.relation_layers().into_iter().find(|l| l.1 == words).map(|l| l.0).ok_or_else(|| format!("“{words}” diye bir katman yok"))?;
@@ -959,6 +1022,8 @@ struct Plan<'a> {
     preview: &'a Preview,
     /// The protected areas over the plan (docs/adr/0952): covered ones in red, the others in grey.
     zones: Option<&'a kentos_commands::CorridorProtected>,
+    /// The preflight over the plan (docs/adr/0956): folds red, tight stretches orange, overlaps violet, seams marked.
+    check: Option<&'a kentos_commands::CorridorPreflight>,
 }
 
 impl canvas::Program<Message> for Plan<'_> {
@@ -1075,6 +1140,65 @@ impl canvas::Program<Message> for Plan<'_> {
                 align_x: iced::alignment::Horizontal::Center.into(),
                 ..Text::default()
             });
+        }
+        // The preflight (docs/adr/0956): each finding's sections across the road, coloured by kind; a seam's line and
+        // its step.
+        if let Some(c) = self.check {
+            let violet = Color::from_rgb8(0x93, 0x33, 0xea);
+            let amber = Color::from_rgb8(0xd9, 0x77, 0x06);
+            let mark = |frame: &mut canvas::Frame, from: f64, to: f64, color: Color, width: f32| {
+                for (key, pts) in &across {
+                    let s = f64::from_bits(*key);
+                    if s < from - 1e-6 || s > to + 1e-6 || pts.len() < 2 {
+                        continue;
+                    }
+                    let mut far = (0.0, pts[0], pts[0]);
+                    for (i, a) in pts.iter().enumerate() {
+                        for b in &pts[i + 1..] {
+                            let d = (a[0] - b[0]).hypot(a[1] - b[1]);
+                            if d > far.0 {
+                                far = (d, *a, *b);
+                            }
+                        }
+                    }
+                    frame.stroke(&Path::line(at(far.1[0], far.1[1]), at(far.2[0], far.2[1])), Stroke::default().with_color(color).with_width(width));
+                }
+            };
+            for o in &c.overlaps {
+                mark(&mut frame, o.first[0], o.first[1], violet, 2.0);
+                mark(&mut frame, o.second[0], o.second[1], violet, 2.0);
+            }
+            for tt in &c.tight {
+                mark(&mut frame, tt.from, tt.to, amber, 2.2);
+            }
+            for f in &c.folds {
+                mark(&mut frame, f.from, f.to, t.danger, 2.6);
+            }
+            for sm in &c.seams {
+                let color = if sm.meets { t.success } else { t.danger };
+                mark(&mut frame, sm.station, sm.station, color, 3.0);
+                if let Some(axis) = rep.features.iter().find(|f| f.code == "axis")
+                    && let Some(p) = axis.points.iter().find(|p| (p[0] - sm.station).abs() < 1e-3)
+                {
+                    // The words on a plate of the surface's colour: they sit over the corridor's lines.
+                    let words = if sm.meets { "dikiş".to_owned() } else { format!("dikiş Δz {} m", comma(sm.step, 3)) };
+                    let corner = at(p[1], p[2]) + iced::Vector::new(8.0, -30.0);
+                    let wide = typography::current().text_width(&words, typography::caption(), false) + 8.0;
+                    frame.fill(
+                        &Path::rounded_rectangle(corner, iced::Size::new(wide, typography::caption() * 1.6), 3.0.into()),
+                        Color { a: 0.92, ..t.surface },
+                    );
+                    frame.stroke(&Path::line(at(p[1], p[2]), corner + iced::Vector::new(0.0, typography::caption() * 1.6)), Stroke::default().with_color(color).with_width(1.0));
+                    frame.fill_text(Text {
+                        content: words,
+                        position: corner + iced::Vector::new(4.0, 2.0),
+                        color,
+                        size: Pixels(typography::caption()),
+                        font: typography::ui(),
+                        ..Text::default()
+                    });
+                }
+            }
         }
         // The stretches not solved, over the axis.
         let orange = Color::from_rgb8(0xea, 0x58, 0x0c);
@@ -1335,5 +1459,70 @@ fn protected_table(z: &kentos_commands::CorridorProtected) -> Element<'_, Messag
         rows,
         "Katmanda alan nesnesi yok",
         typography::scaled(150.0),
+    )
+}
+
+use kentos_native_application::road_corridors_preflight::code_words as words_of;
+
+/// The preflight in a sentence (docs/adr/0956).
+fn preflight_words(c: &kentos_commands::CorridorPreflight) -> String {
+    let least = match (c.least, c.least_at) {
+        (Some(m), Some(at)) => format!("en küçük pay {} (km {})", comma(m, 3), comma(at, 1)),
+        _ => "pay okunmadı".into(),
+    };
+    if c.clear {
+        return format!("Ön denetim temiz: {} kesit, {} şerit, {} üçgen; {least}.", c.crosses, c.strips, c.triangles);
+    }
+    format!(
+        "{} kesit, {} şerit, {} üçgen; {least}. Dar {} aralık, katlanan {}, üst üste binen {}, buluşmayan dikiş {}.",
+        c.crosses,
+        c.strips,
+        c.triangles,
+        c.tight.len(),
+        c.folds.len(),
+        c.overlaps.len(),
+        c.seams.iter().filter(|s| !s.meets).count()
+    )
+}
+
+/// Each finding of the preflight in a row: what, where, how much.
+fn preflight_table(c: &kentos_commands::CorridorPreflight) -> Element<'_, Message> {
+    let mut rows: Vec<Vec<String>> = Vec::new();
+    for f in &c.folds {
+        rows.push(vec!["Katlanma".into(), format!("{} – {}", f.from_text, f.to_text), "ardışık kesitler planda kesişiyor; yüzey kurulmadı".into()]);
+    }
+    for t in &c.tight {
+        let r = t.radius.map_or_else(String::new, |r| format!(", R {} m", comma(r, 1)));
+        rows.push(vec![
+            if t.least <= 0.0 { "Yarıçapı aşan".into() } else { "Dar".into() },
+            format!("{} – {}", t.from_text, t.to_text),
+            format!("pay {} ({} m ofsette{r})", comma(t.least, 3), comma(t.offset, 2)),
+        ]);
+    }
+    for o in &c.overlaps {
+        rows.push(vec![
+            "Üst üste binme".into(),
+            format!("{} – {} / {} – {}", o.first_text[0], o.first_text[1], o.second_text[0], o.second_text[1]),
+            format!("{} m², aradaki kot {}–{} m", comma(o.area, 1), comma(o.least, 2), comma(o.most, 2)),
+        ]);
+    }
+    for s in &c.seams {
+        let mut parts = vec![format!("Δz {} m, plan {} m", comma(s.step, 3), comma(s.shift, 3))];
+        if !s.only_before.is_empty() {
+            parts.push(format!("yalnız öncekinde {}", s.only_before.iter().map(|c| words_of(c)).collect::<Vec<_>>().join(", ")));
+        }
+        if !s.only_after.is_empty() {
+            parts.push(format!("yalnız sonrakinde {}", s.only_after.iter().map(|c| words_of(c)).collect::<Vec<_>>().join(", ")));
+        }
+        rows.push(vec![
+            if s.meets { "Dikiş (buluşuyor)".into() } else { "Dikiş".into() },
+            format!("{} ({}. → {}. bölge)", s.km, s.before + 1, s.after + 1),
+            parts.join("; "),
+        ]);
+    }
+    crate::road_dialog::table(
+        vec![crate::road_dialog::col("Bulgu", 150.0), crate::road_dialog::col("Km", 220.0), crate::road_dialog::Col { title: "Ayrıntı", width: None, number: false }],
+        rows,
+        "Bulgu yok",
     )
 }

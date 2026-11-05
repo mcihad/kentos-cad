@@ -302,7 +302,7 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [x] **ROAD-COR-10:** Daylight solver hangi terrain branch/sidewall aradığını açık alsın; no-hit, multiple-hit, iteration limit ve missing terrain ayrı sonuç olsun.
 - [ ] **ROAD-COR-11:** İmalat feature strings ve top/datum/subgrade/material surfaces stable lineage ile oluşsun.
 - [ ] **ROAD-COR-12:** Bridge/tunnel/retaining wall gibi çok katlı/overhang geometriyi 2.5D TIN'e zorla bastırma; 3D mesh/solid capability gerekir.
-- [ ] **ROAD-COR-13:** Koridor self-intersection, region seam, inverted triangles ve material shape closure preflight'ı çalışsın.
+- [x] **ROAD-COR-13:** Koridor self-intersection, region seam, inverted triangles ve material shape closure preflight'ı çalışsın. *(Y50, ADR 0956: katlanma payı 1 + κ·o, ardışık kesitlerin kesişmesi, üst yüzeyin kendi üstüne binmesi, bölge dikişleri; malzeme şekli kapanması kesit çiziminde açık.)*
 - [ ] **ROAD-COR-14:** Preview GPU buffers ve source solve result revision/generation ile bağlansın; geç sonuç yeni tasarımı ezmesin.
 - [ ] **ROAD-COR-15:** Küçük edit yalnız etkilenen station/region/terrain tiles ve halo'sunu rebuild etsin; downstream quantities stale işaretlensin.
 - [ ] **ROAD-COR-16:** Build result solved/unsolved ranges, source refs, quality/error bound, generated feature/material IDs ve warnings taşısın.
@@ -351,11 +351,11 @@ Kesit yöntemleri: `V_AEA=L(A0+A1)/2`; gerçek orta kesit alınırsa `V_prismoid
 - [ ] **ROAD-VOL-01:** QuantityRun source original/design surfaces, AOI, overlap/no-data coverage, method, tolerance, algorithm version ve units taşısın.
 - [ ] **ROAD-VOL-02:** Cut ve fill gross ayrı hesaplansın; net=fill−cut tek başına hakediş veya taşınacak malzeme miktarı olmasın.
 - [~] **ROAD-VOL-03:** AEA, prismoidal, TIN overlay ve raster integration ayrı methods olsun; rapor hangi yaklaşım ve örnekleme adımını kullandığını söylesin.
-- [ ] **ROAD-VOL-04:** TIN overlay iki source triangulation kenarlarını ve AOI/hole sınırlarını ortak planar subdivision'a bölsün.
-- [ ] **ROAD-VOL-05:** Height difference sıfır çizgisinde alt poligonları split et; işaret değiştiren üçgende signed average'ın mutlak değeri gross miktar değildir.
+- [x] **ROAD-VOL-04:** TIN overlay iki source triangulation kenarlarını ve AOI/hole sınırlarını ortak planar subdivision'a bölsün. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
+- [x] **ROAD-VOL-05:** Height difference sıfır çizgisinde alt poligonları split et; işaret değiştiren üçgende signed average'ın mutlak değeri gross miktar değildir. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
 - [ ] **ROAD-VOL-06:** Adaptive exact predicates ve construction error controls sliver/near-coincident edge/zero-area durumlarını güvenle çözsün.
-- [ ] **ROAD-VOL-07:** Her overlay alt üçgende integral signed area·(d0+d1+d2)/3 olarak hesapla; aynı sign region'ları cut/fill'e ayrı ekle.
-- [ ] **ROAD-VOL-08:** Tam ortak domain dışında veri olmayan alanı sıfır kazı/dolgu sayma; excluded area/coverage ve blocked final durumunu raporla.
+- [x] **ROAD-VOL-07:** Her overlay alt üçgende integral signed area·(d0+d1+d2)/3 olarak hesapla; aynı sign region'ları cut/fill'e ayrı ekle. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
+- [x] **ROAD-VOL-08:** Tam ortak domain dışında veri olmayan alanı sıfır kazı/dolgu sayma; excluded area/coverage ve blocked final durumunu raporla. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
 - [ ] **ROAD-VOL-09:** Material layers ve geology strata için karşılaştırılan top/bottom/shape'ın ownership ve units'ini kontrol et; aynı excavation iki malzemeye çift yazılmasın.
 - [ ] **ROAD-VOL-10:** Bank/in-situ, loose ve compacted hacimler açık volume-state conversion ile taşınsın; swell/shrink/compaction faktörleri kaynak ve onay taşısın.
 - [ ] **ROAD-VOL-11:** Solid/overhang yapı miktarı watertight oriented topology gerektirsin; kapalı olmayan mesh'e güvenilir solid volume verme.
@@ -640,6 +640,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y47 | Taşıma planının çalışma kitabı | ROAD-HAUL-12 | Özet (Brükner ve kübaj sürümleri, kübajın onayı, hacimlerin ne olduğu, birimler), taşımalar (uygun ve uygunsuz ayrı, engelin dolaşmasıyla taşıma boyu), alanlar, engeller; XLSX/ODS/CSV (ADR 0953) |
 | Y48 | Taşıma planının onayı ve eskimesi | ROAD-HAUL-08 | `road.hauls.approve` (numaralı onay, not, geçmiş; KCAD 172); plan onaya göre okunur: Brükner/kübaj sürümü, kübaj onayı, alan kapasitesi, planın momenti/hacmi/tutarı değişince `haul_plan_stale` gerekçeleriyle; pencerede Onayla/Onayı kaldır, Onay listesi; Planı yaz onayı taşır (ADR 0954) |
 | Y49 | Taşıma ağı | ROAD-HAUL-06 | `road.hauls.network`; katmandaki çizgiler yol, yalnız uçlar toleransla birleşir (T dahil), kesişme ve boşta uç söylenir; yol dışı alan aksa en kısa yoldan (Dijkstra), erişimi üç çözücüde momente ve maliyete girer, bağlanmayan alan hesaba katılmaz; KCAD 173; Taşıma planı → Ağ görünüşü; ortak gösterge sırası `StatRow` (ADR 0955) |
+| Y50 | Koridor ön denetimi | ROAD-COR-13 | `road.corridors.preflight`: kesit payı 1 + κ·o (iki yanlı eğrilikle), örneklenmiş katlanma, üst yüzeyin km paylaşmayan parçalarının planda üst üste binmesi (alan, aradaki kot), bölge dikişi kod kod (kot ve plan sıçraması, tek taraflı kod); Koridor → Görünüş: Ön denetim (ADR 0956) |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 

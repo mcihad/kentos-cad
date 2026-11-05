@@ -321,6 +321,12 @@ pub fn stake_points(template: &Template, cross: &Cross) -> Vec<StakePoint> {
 }
 
 /// The cross's line on the top surface, left to right: the whole side, or to the hinge on an open side.
+/// A cross's top line (the surface's points across the road, left to right, in plan with heights): an open side to
+/// its last component (docs/adr/0956's margins read it).
+pub fn top_line_of(line: &SampleLine, section: &Section, components: [usize; 2]) -> Vec<[f64; 3]> {
+    top_line(line, section, components)
+}
+
 fn top_line(line: &SampleLine, section: &Section, components: [usize; 2]) -> Vec<[f64; 3]> {
     let upto = |s: &SideSection, n: usize| -> Vec<[f64; 2]> {
         if s.kind == Kind::Open { s.points[..=n.min(s.points.len() - 1)].to_vec() } else { s.points.clone() }
