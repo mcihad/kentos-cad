@@ -1948,6 +1948,17 @@ verisinin eşitliği geometri eşitliğinin kanıtı değildir; blokların güve
 eşlenmesi ve içerik denetimi hâlâ açıktır.
 Pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
 tam görünüş kökeni ile kabul senaryosu hâlâ açıktır.
+Sürüm 2 paketine `sheetTemplates` altında onaylı pafta şablonu kimliği ve
+revizyonu eklendi. Birleşik sorgu ilk kaynak önceliğini ve kökeni, çakışma
+sorgusu aynı kimliğin farklı revizyonlarını bildirir. Denetim paftanın
+kaydedilmiş `origin` alanını onaylı sürümle salt okunur karşılaştırır; elle
+oluşturulan paftayı yeniden üretmez ve aynı içerik olduğunu iddia etmez.
+Komut sınamasında farklı/eşit revizyon, kaynak önceliği, çakışma ve çizimin
+değişmemesi doğrulandı. Gerçek uygulamada şablon sürümü 1 olan pafta,
+ofis sürümü 2 karşısında ayrı bulgu olarak göründü; satır seçiminin açıklaması
+ve pasif Uygula düğmesi ekran görüntüsüyle doğrulandı (repo dışında).
+Şablon içeriğinin
+paketlenmesi/eşlenmesi ve palet akışı açık kaldığı için madde `[~]` kalır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

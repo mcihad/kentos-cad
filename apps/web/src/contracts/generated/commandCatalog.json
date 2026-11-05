@@ -159906,7 +159906,8 @@
             "missingHatchPatternDefinition",
             "hatchPatternDefinition",
             "missingBlockReference",
-            "blockPublication"
+            "blockPublication",
+            "sheetTemplateOrigin"
           ],
           "type": "string"
         },
@@ -160053,6 +160054,12 @@
         "rules": {
           "$ref": "#/$defs/StandardOrigin"
         },
+        "sheetTemplates": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
         "textStyles": {
           "additionalProperties": {
             "$ref": "#/$defs/StandardOrigin"
@@ -160067,7 +160074,8 @@
         "dimensionStyles",
         "lineTypes",
         "hatchPatterns",
-        "blocks"
+        "blocks",
+        "sheetTemplates"
       ],
       "type": "object"
     },
@@ -160092,8 +160100,34 @@
             "$ref": "#/$defs/LineTypeDef"
           },
           "type": "array"
+        },
+        "sheetTemplates": {
+          "items": {
+            "$ref": "#/$defs/StandardSheetTemplateReference"
+          },
+          "type": "array"
         }
       },
+      "type": "object"
+    },
+    "StandardSheetTemplateReference": {
+      "additionalProperties": false,
+      "description": "Approved sheet-template origin. It identifies a template revision, not a\ncopy of its contents or permission to modify an existing sheet.",
+      "properties": {
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "templateId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "templateId",
+        "revision"
+      ],
       "type": "object"
     },
     "StandardTextStyle": {

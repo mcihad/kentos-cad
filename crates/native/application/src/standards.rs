@@ -119,6 +119,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         line_types: Default::default(),
         hatch_patterns: Default::default(),
         blocks: Default::default(),
+        sheet_templates: Default::default(),
     };
     let mut layers: BTreeSet<_> = result
         .layers
@@ -138,6 +139,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
     let mut line_types = BTreeSet::new();
     let mut hatch_patterns = BTreeSet::new();
     let mut blocks = BTreeSet::new();
+    let mut sheet_templates = BTreeSet::new();
     for package in &packages {
         let Some(source) = &package.resources else {
             continue;
@@ -162,6 +164,14 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
             if blocks.insert(kentos_commands::blocks::name_key(&item.name)) {
                 provenance.blocks.insert(item.name.clone(), origin(package));
                 resources.blocks.push(item.clone());
+            }
+        }
+        for item in &source.sheet_templates {
+            if sheet_templates.insert(item.template_id.to_lowercase()) {
+                provenance
+                    .sheet_templates
+                    .insert(item.template_id.clone(), origin(package));
+                resources.sheet_templates.push(item.clone());
             }
         }
     }
@@ -293,6 +303,10 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
         BTreeMap::new();
     let mut blocks: BTreeMap<String, (&String, &kentos_commands::StandardBlockReference)> =
         BTreeMap::new();
+    let mut sheet_templates: BTreeMap<
+        String,
+        (&String, &kentos_commands::StandardSheetTemplateReference),
+    > = BTreeMap::new();
     let mut conflicts = Vec::new();
     for package in &packages {
         if let Some(first) = packages.first().filter(|first| first.id != package.id) {
@@ -479,6 +493,29 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     }
                 } else {
                     blocks.insert(key, (&package.id, item));
+                }
+            }
+            for item in &resources.sheet_templates {
+                let key = item.template_id.to_lowercase();
+                if let Some((first_id, first)) = sheet_templates.get(&key) {
+                    if first.revision != item.revision {
+                        let fields = vec!["revision".into()];
+                        let first_value =
+                            serde_json::to_value(first).expect("validated sheet template");
+                        let later_value =
+                            serde_json::to_value(item).expect("validated sheet template");
+                        conflicts.push(StandardConflict {
+                            kind: "sheetTemplateReference".into(),
+                            name: item.template_id.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    sheet_templates.insert(key, (&package.id, item));
                 }
             }
         }
@@ -1189,7 +1226,10 @@ fn report(doc: &Document, input: &StandardsCheck) -> CommandResult<StandardsRepo
     }
     let mut issues = issues(doc, &standard);
     if let Some(resources) = &input.resources {
-        issues.extend(resource_issues(doc, resources));
+        match resource_issues(doc, resources) {
+            Ok(found) => issues.extend(found),
+            Err(stop) => return stop.into(),
+        }
     }
     CommandResult::Completed {
         output: StandardsReport {
@@ -1223,13 +1263,22 @@ fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Re
     if let Some(problem) = kentos_commands::standard_blocks_problem(&resources.blocks) {
         return Err(fail(codes::INVALID_STANDARD, problem, "resources.blocks"));
     }
+    if let Some(problem) =
+        kentos_commands::standard_sheet_templates_problem(&resources.sheet_templates)
+    {
+        return Err(fail(
+            codes::INVALID_STANDARD,
+            problem,
+            "resources.sheetTemplates",
+        ));
+    }
     Ok(())
 }
 
 fn resource_issues(
     doc: &Document,
     resources: &kentos_commands::StandardResources,
-) -> Vec<StandardIssue> {
+) -> Result<Vec<StandardIssue>, Stop> {
     fn resource_geometry<T: serde::Serialize>(item: &T) -> serde_json::Value {
         let mut value = serde_json::to_value(item).expect("validated resource");
         let object = value.as_object_mut().expect("resource object");
@@ -1356,7 +1405,41 @@ fn resource_issues(
             message,
         });
     }
-    issues
+    if !resources.sheet_templates.is_empty() {
+        if let Some(sheets) = doc.sheets() {
+            // A sheet records the source revision it was made from. The
+            // standard checks that provenance without altering the layout.
+            let (book, _) = kentos_sheet::project::read_project_sheets(sheets)
+                .map_err(|e| fail(&e.code, e.message, "sheets"))?;
+            for sheet in &book.sheets {
+                let Some(origin) = &sheet.origin else {
+                    continue;
+                };
+                let approved = resources.sheet_templates.iter().find(|item| {
+                    item.template_id.to_lowercase() == origin.template_id.to_lowercase()
+                });
+                if approved.is_some_and(|item| item.revision == origin.revision) {
+                    continue;
+                }
+                issues.push(StandardIssue {
+                    kind: StandardIssueKind::SheetTemplateOrigin,
+                    subject: approved
+                        .map_or_else(|| origin.template_id.clone(), |item| item.template_id.clone()),
+                    layer: None,
+                    expected: approved
+                        .map(|item| format!("{} · sürüm {}", item.template_id, item.revision)),
+                    found: Some(format!("{} · sürüm {}", origin.template_id, origin.revision)),
+                    objects: 0,
+                    fixable: false,
+                    message: format!(
+                        "“{}” paftasının şablon kökeni ofis standardındaki onaylı şablon sürümüyle uyuşmuyor; pafta kendiliğinden yeniden oluşturulmaz.",
+                        sheet.name
+                    ),
+                });
+            }
+        }
+    }
+    Ok(issues)
 }
 
 // ── cad.standards.apply ─────────────────────────────────────────────────────

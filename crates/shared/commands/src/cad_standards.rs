@@ -75,6 +75,7 @@ pub struct StandardProvenance {
     pub line_types: std::collections::BTreeMap<String, StandardOrigin>,
     pub hatch_patterns: std::collections::BTreeMap<String, StandardOrigin>,
     pub blocks: std::collections::BTreeMap<String, StandardOrigin>,
+    pub sheet_templates: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
@@ -251,6 +252,45 @@ pub struct StandardResources {
         ts(optional, as = "Option<Vec<StandardBlockReference>>")
     )]
     pub blocks: Vec<StandardBlockReference>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<StandardSheetTemplateReference>>")
+    )]
+    pub sheet_templates: Vec<StandardSheetTemplateReference>,
+}
+
+/// Approved sheet-template origin. It identifies a template revision, not a
+/// copy of its contents or permission to modify an existing sheet.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardSheetTemplateReference {
+    pub template_id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+}
+
+pub fn standard_sheet_templates_problem(
+    items: &[StandardSheetTemplateReference],
+) -> Option<String> {
+    let mut ids = std::collections::BTreeSet::new();
+    for item in items {
+        if item.template_id.trim().is_empty()
+            || item.template_id.trim() != item.template_id
+            || item.template_id.len() > 128
+            || item.template_id.chars().any(char::is_control)
+            || item.revision == 0
+        {
+            return Some("Pafta şablonu kimliği 1–128 bayt ve revizyonu en az 1 olmalı".into());
+        }
+        if !ids.insert(item.template_id.to_lowercase()) {
+            return Some(format!("“{}” pafta şablonu yineleniyor", item.template_id));
+        }
+    }
+    None
 }
 
 /// A named block library release required by an office standard. The
@@ -356,6 +396,10 @@ pub fn parse_standard_document(
                 }
                 if let Some(problem) = standard_blocks_problem(&resources.blocks) {
                     return Err(format!("Blok kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = standard_sheet_templates_problem(&resources.sheet_templates)
+                {
+                    return Err(format!("Pafta şablonu kaynağı geçersiz: {problem}."));
                 }
             }
             _ => {}
@@ -463,7 +507,7 @@ fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
     keys(
         resources,
         "resources",
-        &["lineTypes", "hatchPatterns", "blocks"],
+        &["lineTypes", "hatchPatterns", "blocks", "sheetTemplates"],
     )?;
     let root = object(resources, "resources")?;
     if let Some(value) = root.get("blocks") {
@@ -480,6 +524,18 @@ fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
                     &["familyId", "typeId", "typeName", "release"],
                 )?;
             }
+        }
+    }
+    if let Some(value) = root.get("sheetTemplates") {
+        let templates = value
+            .as_array()
+            .ok_or("resources.sheetTemplates bir dizi olmalı.")?;
+        for (i, item) in templates.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.sheetTemplates[{i}]"),
+                &["templateId", "revision"],
+            )?;
         }
     }
     for (section, fields) in [
@@ -712,6 +768,7 @@ pub enum StandardIssueKind {
     HatchPatternDefinition,
     MissingBlockReference,
     BlockPublication,
+    SheetTemplateOrigin,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.
@@ -937,6 +994,7 @@ mod tests {
                 line_types: vec![line],
                 hatch_patterns: vec![hatch],
                 blocks: vec![],
+                sheet_templates: vec![],
             }),
         };
         let mut value = serde_json::to_value(&package).unwrap();
@@ -1004,6 +1062,42 @@ mod tests {
             .unwrap()
             .push(duplicate);
         value["resources"]["blocks"][1]["name"] = "a-kapı".into();
+        assert!(parse(&value).unwrap_err().contains("yineleniyor"));
+    }
+
+    #[test]
+    fn version_two_sheet_template_references_validate_revision_and_duplicates() {
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                sheet_templates: vec![StandardSheetTemplateReference {
+                    template_id: "office-a3".into(),
+                    revision: 2,
+                }],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["sheetTemplates"][0]["unknown"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["sheetTemplates"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["resources"]["sheetTemplates"][0]["revision"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("revizyonu"));
+        value["resources"]["sheetTemplates"][0]["revision"] = 2.into();
+        value["resources"]["sheetTemplates"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"templateId":"OFFICE-A3","revision":3}));
         assert!(parse(&value).unwrap_err().contains("yineleniyor"));
     }
 

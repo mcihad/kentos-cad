@@ -230,6 +230,7 @@ fn version_two_resource_definitions_resolve_by_order_and_report_content_conflict
                 line_types: vec![line],
                 hatch_patterns: vec![hatch],
                 blocks: vec![],
+                sheet_templates: vec![],
             }),
         })
         .unwrap(),
@@ -346,6 +347,7 @@ fn named_resources_are_checked_without_installing_or_replacing_drawing_definitio
         line_types: vec![line],
         hatch_patterns: vec![hatch],
         blocks: vec![],
+        sheet_templates: vec![],
     };
     let input = json!({"standard":kentos_commands::built_in_standard("mimari-ofis").unwrap(), "resources":resources});
     let kinds = |doc: &mut Document| {
@@ -520,6 +522,125 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
             .any(|c| c["kind"] == "blockReference" && c["fields"] == json!(["publication"]))
     );
     assert_eq!(doc.to_snapshot_v2(), bound);
+    assert_eq!(doc.undo_labels(), undo);
+}
+
+#[test]
+fn office_sheet_template_revision_is_checked_without_rebuilding_the_sheet() {
+    use kentos_commands::{
+        CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,
+        STANDARD_PACKAGE_RESOURCES_VERSION, StandardPackage, StandardResources,
+        StandardSheetTemplateReference,
+    };
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let sheet_fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/drawing-set.json"
+    ))
+    .unwrap();
+    let mut book: kentos_sheet::SheetBook =
+        serde_json::from_value(sheet_fixture["cases"][0]["book"].clone()).unwrap();
+    book.sheets[0].origin = Some(kentos_sheet::model::TemplateOrigin {
+        template_id: "office-a3".into(),
+        revision: 1,
+    });
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let package = |id: &str, revision: u32| ProjectStandardDocument {
+        text: serde_json::to_string(&StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: id.into(),
+            revision: "2".into(),
+            standard: standard.clone(),
+            resources: Some(StandardResources {
+                sheet_templates: vec![StandardSheetTemplateReference {
+                    template_id: "office-a3".into(),
+                    revision,
+                }],
+                ..Default::default()
+            }),
+        })
+        .unwrap(),
+    };
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![package("ofis-a", 2), package("ofis-b", 3)];
+    doc.set_settings(settings);
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let resolved = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.resolve",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert_eq!(
+        resolved["output"]["resources"]["sheetTemplates"][0]["revision"],
+        2
+    );
+    assert_eq!(
+        resolved["output"]["provenance"]["sheetTemplates"]["office-a3"]["id"],
+        "ofis-a"
+    );
+    let conflicts = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.conflicts",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert!(
+        conflicts["output"]["conflicts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["kind"] == "sheetTemplateReference"
+                && item["fields"] == json!(["revision"]))
+    );
+    let input = json!({"standard":standard,
+        "resources":resolved["output"]["resources"]});
+    let report = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.check",
+        CallOp::Execute,
+        input,
+    )
+    .unwrap();
+    assert!(
+        report["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "sheetTemplateOrigin"
+                && issue["found"] == "office-a3 · sürüm 1")
+    );
+    let matching = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.check",
+        CallOp::Execute,
+        json!({"standard":standard,
+            "resources": StandardResources {
+                sheet_templates: vec![StandardSheetTemplateReference {
+                    template_id: "office-a3".into(), revision: 1,
+                }], ..Default::default()
+            }}),
+    )
+    .unwrap();
+    assert!(!matching["output"]["issues"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|issue| issue["kind"] == "sheetTemplateOrigin"));
+    assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);
 }
 

@@ -3053,6 +3053,7 @@ __all__ = [
     "StandardOrigin",
     "StandardProvenance",
     "StandardResources",
+    "StandardSheetTemplateReference",
     "StandardTextStyle",
     "StandardsApplied",
     "StandardsApply",

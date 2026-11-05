@@ -171,6 +171,7 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::HatchPatternDefinition => "Tarama tanımı",
         K::MissingBlockReference => "Eksik kitaplık bloğu",
         K::BlockPublication => "Blok yayını",
+        K::SheetTemplateOrigin => "Pafta şablonu",
         K::ObjectLineType => "Nesne çizgi tipi",
         K::OwnLook => "Nesne görünüşü",
     }
@@ -853,6 +854,7 @@ impl App {
                     | StandardIssueKind::HatchPatternDefinition => Some(&p.hatch_patterns),
                     StandardIssueKind::MissingBlockReference
                     | StandardIssueKind::BlockPublication => Some(&p.blocks),
+                    StandardIssueKind::SheetTemplateOrigin => Some(&p.sheet_templates),
                     _ => None,
                 });
                 let resource = matches!(
@@ -863,6 +865,7 @@ impl App {
                         | StandardIssueKind::HatchPatternDefinition
                         | StandardIssueKind::MissingBlockReference
                         | StandardIssueKind::BlockPublication
+                        | StandardIssueKind::SheetTemplateOrigin
                 );
                 if let Some(origin) = definitions.and_then(|entries| {
                     entries
@@ -900,6 +903,7 @@ impl App {
                         | StandardIssueKind::HatchPatternDefinition
                         | StandardIssueKind::MissingBlockReference
                         | StandardIssueKind::BlockPublication
+                        | StandardIssueKind::SheetTemplateOrigin
                 ) {
                     if let Some(found) = &issue.found {
                         if block {
@@ -1159,7 +1163,7 @@ impl App {
                         let item = &conflicts[i];
                         let kind = match item.kind.as_str() {
                             "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural",
-                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", "blockReference" => "Blok yayını", _ => "Tanım",
+                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", "blockReference" => "Blok yayını", "sheetTemplateReference" => "Pafta şablonu", _ => "Tanım",
                         };
                         let fields = item.fields.iter().map(|field| conflict_field(field)).collect::<Vec<_>>().join(", ");
                         let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
@@ -1276,6 +1280,9 @@ fn change_words(issue: &StandardIssue) -> String {
         | StandardIssueKind::HatchPatternDefinition
         | StandardIssueKind::BlockPublication => {
             return "tanım farklı → standart tanımı".into();
+        }
+        StandardIssueKind::SheetTemplateOrigin => {
+            return "şablon sürümü → ofis sürümü".into();
         }
         _ => {}
     }

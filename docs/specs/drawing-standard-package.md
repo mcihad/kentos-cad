@@ -33,10 +33,11 @@ blocks, hatch definitions, templates, palette items or viewport overrides.
 
 Version 2 keeps the same `format`, `id`, `revision` and `standard` fields and
 requires a `resources` object. Its supported fields are `lineTypes`,
-`hatchPatterns` and `blocks`. The first two hold the corresponding KentOS
+`hatchPatterns`, `blocks` and `sheetTemplates`. The first two hold the corresponding KentOS
 project definitions. `blocks` holds a block name and its existing library
 `publication` metadata (`familyId`, `typeId`, `typeName`, `release`), without
-embedding geometry. An empty resources object is valid. For example:
+embedding geometry. `sheetTemplates` holds approved template IDs and revision
+numbers; it does not embed or install a template. An empty resources object is valid. For example:
 
 ```json
 {
@@ -48,7 +49,8 @@ embedding geometry. An empty resources object is valid. For example:
   "resources": {
     "lineTypes": [{ "name": "OFFICE-DASH", "elements": [{ "length": 2 }, { "length": -1 }] }],
     "hatchPatterns": [{ "name": "OFFICE-HATCH", "lines": [{ "angle": 45, "origin": [0, 0], "offset": [0, 2] }] }],
-    "blocks": [{ "name": "OFFICE-DOOR", "publication": { "familyId": "22222222-3333-4444-8555-666666666666", "typeId": "33333333-4444-4555-8666-777777777777", "typeName": "Standard door", "release": 2 } }]
+    "blocks": [{ "name": "OFFICE-DOOR", "publication": { "familyId": "22222222-3333-4444-8555-666666666666", "typeId": "33333333-4444-4555-8666-777777777777", "typeName": "Standard door", "release": 2 } }],
+    "sheetTemplates": [{ "templateId": "office-a3", "revision": 2 }]
   }
 }
 ```
@@ -57,7 +59,9 @@ Unknown resource fields, including nested definition and pattern fields, are
 rejected. Definition validity and duplicate names are checked using the same
 rules as project line types, hatch patterns and published block cards. Block
 names use the drawing's Turkish case folding, must be unique, and the
-publication identifiers and release must be valid. Version 1 rejects `resources`;
+publication identifiers and release must be valid. Template IDs must be unique
+without regard to case, must contain 1–128 bytes, and revisions must be
+positive. Version 1 rejects `resources`;
 version 2 without `resources` and unsupported later versions are rejected.
 The project keeps the original JSON text, including the order and content of
 both versions. Attaching it through `cad.settings.set` remains revision checked
@@ -65,7 +69,8 @@ and does not replace, install, purge or rename a drawing resource.
 
 `cad.standards.resolve` returns the first definition of each resource name in
 binding order under `resources`, with its source document and revision in
-`provenance.lineTypes`, `provenance.hatchPatterns` or `provenance.blocks`.
+`provenance.lineTypes`, `provenance.hatchPatterns`, `provenance.blocks` or
+`provenance.sheetTemplates`.
 Line and hatch names use the project resource tables' case insensitive
 comparison; block names use the block table's Turkish case folding. The standard's drawing
 rules still resolve as before. `cad.standards.conflicts` reports differing
@@ -73,6 +78,9 @@ fields and both values when two bound packages define the same resource name
 with different content; a case difference in the name alone is not a content
 conflict. Both queries are read only and available through the command
 registry, Python SDK and MCP contract.
+Conflicting template revisions of the same ID are reported as
+`sheetTemplateReference` with both sources and values; binding order selects
+the first revision for checking.
 
 `cad.standards.check` may receive the resolved or a single package's
 `resources` alongside its `standard`. It reports missing named line/hatch
@@ -87,11 +95,18 @@ change geometric equality. The command and the desktop standard window
 perform this check without installing or replacing a definition. The full
 expected and actual geometry stays in the structured command result; the
 window uses short row labels and shows the values after selecting a finding.
+When `sheetTemplates` is nonempty, the check also compares each sheet's
+recorded template origin against the approved ID and revision. A sheet made
+from an unlisted template or an older/different revision gets a non-fixable
+`sheetTemplateOrigin` finding. Manually created sheets without an origin are
+not subject to this check. The finding neither rebuilds a sheet nor proves
+that its actual page content equals the template: `origin` is provenance
+metadata, not a content digest.
 
 Version 2 currently transports and checks definitions for explicit
 mapping work. It does not apply them to the drawing. In particular, named
 patterns in layers and objects, SHX shape files referenced by a line type,
-block geometry, text/leader/table styles, sheet templates, palette recipes and
+block geometry, text/leader/table styles, sheet-template contents, palette recipes and
 viewport overrides are not yet packaged or reconciled. An office standard
 must not be marked fully applied on the basis of these resource queries.
 
@@ -147,4 +162,5 @@ For the association workflow Autodesk documents both
 [drawing-to-standard associations](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-Core/files/GUID-3430632D-3294-44EA-ACDE-429CBE1F1BDD.htm)
 and [ordered precedence for conflicting standards](https://help.autodesk.com/cloudhelp/2022/ENU/AutoCAD-Architecture/files/GUID-22AC35EC-47D1-4FA4-96AF-671663396F55.htm).
 The current resolution covers the named definitions and global rules described
-above; block, hatch, line-type definition and template conflicts remain open.
+above. Contents and automatic mapping or installation of these resources
+remain open.

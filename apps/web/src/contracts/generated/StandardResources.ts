@@ -2,9 +2,10 @@
 import type { HatchPatternDef } from "./HatchPatternDef";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { StandardBlockReference } from "./StandardBlockReference";
+import type { StandardSheetTemplateReference } from "./StandardSheetTemplateReference";
 
 /**
  * Portable resource definitions carried by a version 2 office standard.
  * Association alone never overwrites the project's definitions.
  */
-export type StandardResources = { lineTypes?: Array<LineTypeDef>, hatchPatterns?: Array<HatchPatternDef>, blocks?: Array<StandardBlockReference>, };
+export type StandardResources = { lineTypes?: Array<LineTypeDef>, hatchPatterns?: Array<HatchPatternDef>, blocks?: Array<StandardBlockReference>, sheetTemplates?: Array<StandardSheetTemplateReference>, };

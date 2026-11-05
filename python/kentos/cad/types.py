@@ -6446,6 +6446,7 @@ class StandardIssueKind(_StrEnum):
     - ``hatchPatternDefinition``
     - ``missingBlockReference``
     - ``blockPublication``
+    - ``sheetTemplateOrigin``
     - ``missingLayer``: A standard layer the drawing lacks.
     - ``layerName``: A layer whose name the standard does not have nor allow.
     - ``projectFont``: The project's drawing font is not one of the standard's.
@@ -6469,6 +6470,7 @@ class StandardIssueKind(_StrEnum):
     HATCH_PATTERN_DEFINITION = "hatchPatternDefinition"
     MISSING_BLOCK_REFERENCE = "missingBlockReference"
     BLOCK_PUBLICATION = "blockPublication"
+    SHEET_TEMPLATE_ORIGIN = "sheetTemplateOrigin"
     MISSING_LAYER = "missingLayer"
     LAYER_NAME = "layerName"
     PROJECT_FONT = "projectFont"
@@ -6480,7 +6482,7 @@ class StandardIssueKind(_StrEnum):
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "sheetTemplateOrigin", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
@@ -75775,6 +75777,7 @@ class StandardProvenance(_Model):
     line_types: dict[str, StandardOrigin]
     hatch_patterns: dict[str, StandardOrigin]
     blocks: dict[str, StandardOrigin]
+    sheet_templates: dict[str, StandardOrigin]
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75785,6 +75788,7 @@ class StandardProvenance(_Model):
         out["lineTypes"] = {k0: e0.to_json() for k0, e0 in self.line_types.items()}
         out["hatchPatterns"] = {k0: e0.to_json() for k0, e0 in self.hatch_patterns.items()}
         out["blocks"] = {k0: e0.to_json() for k0, e0 in self.blocks.items()}
+        out["sheetTemplates"] = {k0: e0.to_json() for k0, e0 in self.sheet_templates.items()}
         return out
 
     @classmethod
@@ -75797,6 +75801,7 @@ class StandardProvenance(_Model):
             line_types={k0: StandardOrigin.from_json(e0) for k0, e0 in data["lineTypes"].items()},
             hatch_patterns={k0: StandardOrigin.from_json(e0) for k0, e0 in data["hatchPatterns"].items()},
             blocks={k0: StandardOrigin.from_json(e0) for k0, e0 in data["blocks"].items()},
+            sheet_templates={k0: StandardOrigin.from_json(e0) for k0, e0 in data["sheetTemplates"].items()},
         )
 
 
@@ -75808,6 +75813,7 @@ class StandardResources(_Model):
     blocks: list[StandardBlockReference] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
+    sheet_templates: list[StandardSheetTemplateReference] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75817,6 +75823,8 @@ class StandardResources(_Model):
             out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
         if self.line_types is not UNSET:
             out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
+        if self.sheet_templates is not UNSET:
+            out["sheetTemplates"] = [e0.to_json() for e0 in self.sheet_templates]
         return out
 
     @classmethod
@@ -75825,6 +75833,31 @@ class StandardResources(_Model):
             blocks=[StandardBlockReference.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
+            sheet_templates=[StandardSheetTemplateReference.from_json(e0) for e0 in data["sheetTemplates"]] if "sheetTemplates" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardSheetTemplateReference(_Model):
+    """Approved sheet-template origin. It identifies a template revision, not a
+    copy of its contents or permission to modify an existing sheet.
+    Attributes:
+        revision: Unit: version.
+    """
+    template_id: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["templateId"] = self.template_id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardSheetTemplateReference:
+        return cls(
+            template_id=data["templateId"],
+            revision=data["revision"],
         )
 
 
@@ -108740,6 +108773,7 @@ __all__ = [
     "StandardOrigin",
     "StandardProvenance",
     "StandardResources",
+    "StandardSheetTemplateReference",
     "StandardTextStyle",
     "StandardsApplied",
     "StandardsApply",
