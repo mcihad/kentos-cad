@@ -1,4 +1,4 @@
-# Drawing standard document, version 1
+# Drawing standard document, versions 1 and 2
 
 A versioned drawing standard document is UTF-8 JSON. Its root is an object
 with exactly these fields:
@@ -28,6 +28,52 @@ The file is limited to 1 MiB by the desktop file picker.
 
 Version 1 contains drawing-standard rules only. It does not package styles,
 blocks, hatch definitions, templates, palette items or viewport overrides.
+
+## Version 2: named line and hatch definitions
+
+Version 2 keeps the same `format`, `id`, `revision` and `standard` fields and
+requires a `resources` object. Its supported fields are `lineTypes` and
+`hatchPatterns`, each an array of the corresponding KentOS project definition
+contract. An empty resources object is valid. For example:
+
+```json
+{
+  "format": "kentos.drawing-standard",
+  "version": 2,
+  "id": "office-architecture",
+  "revision": "2026.2",
+  "standard": { "name": "Office", "layers": [] },
+  "resources": {
+    "lineTypes": [{ "name": "OFFICE-DASH", "elements": [{ "length": 2 }, { "length": -1 }] }],
+    "hatchPatterns": [{ "name": "OFFICE-HATCH", "lines": [{ "angle": 45, "origin": [0, 0], "offset": [0, 2] }] }]
+  }
+}
+```
+
+Unknown resource fields, including nested definition and pattern fields, are
+rejected. Definition validity and duplicate names are checked using the same
+rules as project line types and hatch patterns. Version 1 rejects `resources`;
+version 2 without `resources` and unsupported later versions are rejected.
+The project keeps the original JSON text, including the order and content of
+both versions. Attaching it through `cad.settings.set` remains revision checked
+and does not replace, install, purge or rename a drawing resource.
+
+`cad.standards.resolve` returns the first definition of each resource name in
+binding order under `resources`, with its source document and revision in
+`provenance.lineTypes` or `provenance.hatchPatterns`. Resource names use the
+project resource tables' case insensitive comparison. The standard's drawing
+rules still resolve as before. `cad.standards.conflicts` reports differing
+fields and both values when two bound packages define the same resource name
+with different content; a case difference in the name alone is not a content
+conflict. Both queries are read only and available through the command
+registry, Python SDK and MCP contract.
+
+Version 2 currently transports definitions for inspection and explicit
+mapping work. It does not apply them to the drawing. In particular, named
+patterns in layers and objects, SHX shape files referenced by a line type,
+blocks, text/leader/table styles, sheet templates, palette recipes and
+viewport overrides are not yet packaged or reconciled. An office standard
+must not be marked fully applied on the basis of these resource queries.
 The desktop file selection is temporary until the user explicitly chooses
 “Projeye bağla”. Loading or associating a document does not apply its rules:
 checking and applying are separate actions, and applying is revision-checked.
@@ -66,9 +112,9 @@ values when the user selects a difference, and clears the selection whenever
 the comparison changes.
 
 This format is a starting point for CAD-ADV-12, not the complete office
-package. Future resource packaging and the complete association workflow
-require explicit format and project-schema evolution, resource conflict handling,
-migration tests, and the same command access for desktop, Python and MCP.
+package. Remaining resource packaging and the complete association workflow
+require explicit format evolution, conflict mappings, migration tests, and
+the same command access for desktop, Python and MCP.
 
 For the association workflow Autodesk documents both
 [drawing-to-standard associations](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-Core/files/GUID-3430632D-3294-44EA-ACDE-429CBE1F1BDD.htm)

@@ -48,8 +48,10 @@ pub fn project_standards_problem(documents: &[ProjectStandardDocument]) -> Optio
             return Some("Standart belgesi bir nesne olmalı".into());
         };
         if object.get("format").and_then(|v| v.as_str()) != Some("kentos.drawing-standard")
-            || object.get("version").and_then(|v| v.as_u64()) != Some(1)
+            || !matches!(object.get("version").and_then(|v| v.as_u64()), Some(1 | 2))
             || !object.get("standard").is_some_and(|v| v.is_object())
+            || (object.get("version").and_then(|v| v.as_u64()) == Some(2)
+                && !object.get("resources").is_some_and(|v| v.is_object()))
         {
             return Some("Standart belgesinin biçimi veya sürümü desteklenmiyor".into());
         }
@@ -99,5 +101,22 @@ mod tests {
             project_standards_problem(&[ProjectStandardDocument { text: "{".into() }]).is_some()
         );
         assert!(project_standards_problem(&[document("")]).is_some());
+        let mut version_two: serde_json::Value =
+            serde_json::from_str(&document("v2").text).unwrap();
+        version_two["version"] = 2.into();
+        version_two["resources"] = serde_json::json!({"lineTypes":[], "hatchPatterns":[]});
+        assert_eq!(
+            project_standards_problem(&[ProjectStandardDocument {
+                text: version_two.to_string(),
+            }]),
+            None
+        );
+        version_two.as_object_mut().unwrap().remove("resources");
+        assert!(
+            project_standards_problem(&[ProjectStandardDocument {
+                text: version_two.to_string(),
+            }])
+            .is_some()
+        );
     }
 }

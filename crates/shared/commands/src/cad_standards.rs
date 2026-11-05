@@ -42,6 +42,9 @@ pub struct StandardsResolve {}
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsResolved {
     pub standard: DrawingStandard,
+    /// First definition of each named resource, in binding order. Read-only;
+    /// `cad.standards.apply` does not install or replace these resources.
+    pub resources: StandardResources,
     pub sources: Vec<String>,
     pub provenance: StandardProvenance,
     pub revision: String,
@@ -69,6 +72,8 @@ pub struct StandardProvenance {
     pub layers: std::collections::BTreeMap<String, StandardOrigin>,
     pub text_styles: std::collections::BTreeMap<String, StandardOrigin>,
     pub dimension_styles: std::collections::BTreeMap<String, StandardOrigin>,
+    pub line_types: std::collections::BTreeMap<String, StandardOrigin>,
+    pub hatch_patterns: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
@@ -222,9 +227,27 @@ pub struct DrawingStandard {
     pub by_layer: bool,
 }
 
-/// A portable, versioned envelope for a drawing standard. This first version
-/// carries the currently supported drawing rules only; it does not claim to
-/// contain block, hatch or sheet resources.
+/// Portable resource definitions carried by a version 2 office standard.
+/// Association alone never overwrites the project's definitions.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardResources {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LineTypeDef>>"))]
+    pub line_types: Vec<crate::LineTypeDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::HatchPatternDef>>")
+    )]
+    pub hatch_patterns: Vec<crate::HatchPatternDef>,
+}
+
+/// A portable, versioned envelope for a drawing standard. Version 1 carries
+/// rules only; version 2 additionally carries named line and hatch definitions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StandardPackage {
@@ -234,10 +257,13 @@ pub struct StandardPackage {
     pub id: String,
     pub revision: String,
     pub standard: DrawingStandard,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resources: Option<StandardResources>,
 }
 
 pub const STANDARD_PACKAGE_FORMAT: &str = "kentos.drawing-standard";
 pub const STANDARD_PACKAGE_VERSION: u32 = 1;
+pub const STANDARD_PACKAGE_RESOURCES_VERSION: u32 = 2;
 
 /// Parse either the original bare standard or the versioned envelope. Unknown
 /// fields are refused at every supported level: silently discarding a rule
@@ -259,9 +285,33 @@ pub fn parse_standard_document(
                 e.to_string().replace("duplicate field", "yinelenen alan")
             )
         })?;
-        if package.format != STANDARD_PACKAGE_FORMAT || package.version != STANDARD_PACKAGE_VERSION
+        if package.format != STANDARD_PACKAGE_FORMAT
+            || ![STANDARD_PACKAGE_VERSION, STANDARD_PACKAGE_RESOURCES_VERSION]
+                .contains(&package.version)
         {
             return Err("Standart paketinin biçimi veya sürümü desteklenmiyor.".into());
+        }
+        match package.version {
+            STANDARD_PACKAGE_VERSION if object.contains_key("resources") => {
+                return Err("Sürüm 1 standart paketi kaynak tanımı içeremez.".into());
+            }
+            STANDARD_PACKAGE_RESOURCES_VERSION => {
+                let Some(resources) = object.get("resources") else {
+                    return Err("Sürüm 2 standart paketinin kaynaklar bölümü eksik.".into());
+                };
+                check_resource_fields(resources)?;
+                let resources = package
+                    .resources
+                    .as_ref()
+                    .ok_or("Kaynaklar bölümü geçersiz.")?;
+                if let Some(problem) = crate::line_types_problem(&resources.line_types) {
+                    return Err(format!("Çizgi tipi kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = crate::hatch_patterns_problem(&resources.hatch_patterns) {
+                    return Err(format!("Tarama kaynağı geçersiz: {problem}."));
+                }
+            }
+            _ => {}
         }
         if package.id.trim().is_empty()
             || package.revision.trim().is_empty()
@@ -341,6 +391,90 @@ pub fn parse_standard_document(
         return Err(format!("Standart geçersiz: {problem}."));
     }
     Ok((standard, package))
+}
+
+/// Resource types in the drawing model are lenient when reading old drawing
+/// files. Office packages must reject unknown rules even inside a definition.
+fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
+    fn object<'a>(
+        value: &'a serde_json::Value,
+        path: &str,
+    ) -> Result<&'a serde_json::Map<String, serde_json::Value>, String> {
+        value
+            .as_object()
+            .ok_or_else(|| format!("{path} bir nesne olmalı."))
+    }
+    fn keys(value: &serde_json::Value, path: &str, allowed: &[&str]) -> Result<(), String> {
+        if let Some(key) = object(value, path)?
+            .keys()
+            .find(|key| !allowed.contains(&key.as_str()))
+        {
+            return Err(format!("{path} içinde bilinmeyen alan: {key}."));
+        }
+        Ok(())
+    }
+    keys(resources, "resources", &["lineTypes", "hatchPatterns"])?;
+    let root = object(resources, "resources")?;
+    for (section, fields) in [
+        (
+            "lineTypes",
+            &["name", "description", "elements", "unit", "source"][..],
+        ),
+        (
+            "hatchPatterns",
+            &["name", "description", "unit", "lines", "source"][..],
+        ),
+    ] {
+        let Some(value) = root.get(section) else {
+            continue;
+        };
+        let items = value
+            .as_array()
+            .ok_or_else(|| format!("resources.{section} bir dizi olmalı."))?;
+        for (i, item) in items.iter().enumerate() {
+            let path = format!("resources.{section}[{i}]");
+            keys(item, &path, fields)?;
+            let nested = if section == "lineTypes" {
+                "elements"
+            } else {
+                "lines"
+            };
+            if let Some(value) = object(item, &path)?.get(nested) {
+                let elements = value
+                    .as_array()
+                    .ok_or_else(|| format!("{path}.{nested} bir dizi olmalı."))?;
+                for (j, element) in elements.iter().enumerate() {
+                    let child = format!("{path}.{nested}[{j}]");
+                    if section == "lineTypes" {
+                        keys(element, &child, &["length", "text", "shape"])?;
+                        for (kind, fields) in [
+                            (
+                                "text",
+                                &[
+                                    "text", "style", "scale", "rotation", "absolute", "upright",
+                                    "x", "y",
+                                ][..],
+                            ),
+                            (
+                                "shape",
+                                &[
+                                    "name", "file", "scale", "rotation", "absolute", "upright",
+                                    "x", "y",
+                                ][..],
+                            ),
+                        ] {
+                            if let Some(value) = object(element, &child)?.get(kind) {
+                                keys(value, &format!("{child}.{kind}"), fields)?;
+                            }
+                        }
+                    } else {
+                        keys(element, &child, &["angle", "origin", "offset", "dashes"])?;
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// A font's name in the contract and the file (`architects-daughter`).
@@ -673,13 +807,14 @@ mod tests {
             id: "belediye-mimari".into(),
             revision: "2026.1".into(),
             standard: original.clone(),
+            resources: None,
         };
         let mut value = serde_json::to_value(&package).unwrap();
         let (standard, parsed) =
             parse_standard_document(&serde_json::to_vec(&value).unwrap()).unwrap();
         assert_eq!(standard, original);
         assert_eq!(parsed, Some(package));
-        value["version"] = 2.into();
+        value["version"] = 3.into();
         assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
         value["version"] = 1.into();
         value["standard"]["layers"][0]["unsupportedRule"] = true.into();
@@ -702,6 +837,51 @@ mod tests {
             let error = parse_standard_document(raw).unwrap_err();
             assert!(error.contains("yinelenen alan"), "{error}");
         }
+    }
+
+    #[test]
+    fn version_two_resources_are_strict_and_version_one_cannot_carry_them() {
+        let line: crate::LineTypeDef = serde_json::from_value(serde_json::json!({
+            "name":"OFFICE-DASH", "elements":[{"length":2.0},{"length":-1.0}]
+        }))
+        .unwrap();
+        let hatch: crate::HatchPatternDef = serde_json::from_value(serde_json::json!({
+            "name":"OFFICE-HATCH", "lines":[{"angle":45.0,"origin":[0.0,0.0],"offset":[0.0,2.0]}]
+        }))
+        .unwrap();
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                line_types: vec![line],
+                hatch_patterns: vec![hatch],
+            }),
+        };
+        let mut value = serde_json::to_value(&package).unwrap();
+        assert_eq!(
+            parse_standard_document(&serde_json::to_vec(&value).unwrap())
+                .unwrap()
+                .1,
+            Some(package)
+        );
+        value["resources"]["lineTypes"][0]["elements"][0]["unknown"] = true.into();
+        assert!(
+            parse_standard_document(&serde_json::to_vec(&value).unwrap())
+                .unwrap_err()
+                .contains("bilinmeyen alan")
+        );
+        value["resources"]["lineTypes"][0]["elements"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["version"] = 1.into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["version"] = 2.into();
+        value.as_object_mut().unwrap().remove("resources");
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
     }
 
     #[test]

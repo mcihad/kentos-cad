@@ -98,6 +98,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         revision: package.revision.clone(),
     };
     let first_origin = origin(&packages[0]);
+    let mut resources = kentos_commands::StandardResources::default();
     let mut provenance = StandardProvenance {
         rules: first_origin.clone(),
         layers: result
@@ -115,6 +116,8 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
             .iter()
             .map(|item| (item.name.clone(), first_origin.clone()))
             .collect(),
+        line_types: Default::default(),
+        hatch_patterns: Default::default(),
     };
     let mut layers: BTreeSet<_> = result
         .layers
@@ -131,6 +134,29 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         .iter()
         .map(|item| fold_name(item.name.trim()))
         .collect();
+    let mut line_types = BTreeSet::new();
+    let mut hatch_patterns = BTreeSet::new();
+    for package in &packages {
+        let Some(source) = &package.resources else {
+            continue;
+        };
+        for item in &source.line_types {
+            if line_types.insert(item.name.trim().to_lowercase()) {
+                provenance
+                    .line_types
+                    .insert(item.name.clone(), origin(package));
+                resources.line_types.push(item.clone());
+            }
+        }
+        for item in &source.hatch_patterns {
+            if hatch_patterns.insert(item.name.trim().to_lowercase()) {
+                provenance
+                    .hatch_patterns
+                    .insert(item.name.clone(), origin(package));
+                resources.hatch_patterns.push(item.clone());
+            }
+        }
+    }
     for package in packages.iter().skip(1) {
         for item in &package.standard.layers {
             if layers.insert(fold_name(item.name.trim())) {
@@ -166,6 +192,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
     CommandResult::Completed {
         output: StandardsResolved {
             standard: result,
+            resources,
             sources: packages.into_iter().map(|p| p.id).collect(),
             provenance,
             revision: doc.revision().to_string(),
@@ -251,6 +278,10 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
     let mut texts: BTreeMap<String, (&String, &kentos_commands::StandardTextStyle)> =
         BTreeMap::new();
     let mut dimensions: BTreeMap<String, (&String, &kentos_commands::StandardDimensionStyle)> =
+        BTreeMap::new();
+    let mut line_types: BTreeMap<String, (&String, &kentos_commands::LineTypeDef)> =
+        BTreeMap::new();
+    let mut hatch_patterns: BTreeMap<String, (&String, &kentos_commands::HatchPatternDef)> =
         BTreeMap::new();
     let mut conflicts = Vec::new();
     for package in &packages {
@@ -374,6 +405,50 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                 dimensions.insert(key, (&package.id, style));
             }
         }
+        if let Some(resources) = &package.resources {
+            for item in &resources.line_types {
+                let key = item.name.trim().to_lowercase();
+                if let Some((first_id, first)) = line_types.get(&key) {
+                    let first_value = serde_json::to_value(first).expect("validated line type");
+                    let later_value = serde_json::to_value(item).expect("validated line type");
+                    let fields = resource_differences(&first_value, &later_value);
+                    if !fields.is_empty() {
+                        conflicts.push(StandardConflict {
+                            kind: "lineTypeDefinition".into(),
+                            name: item.name.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    line_types.insert(key, (&package.id, item));
+                }
+            }
+            for item in &resources.hatch_patterns {
+                let key = item.name.trim().to_lowercase();
+                if let Some((first_id, first)) = hatch_patterns.get(&key) {
+                    let first_value = serde_json::to_value(first).expect("validated hatch pattern");
+                    let later_value = serde_json::to_value(item).expect("validated hatch pattern");
+                    let fields = resource_differences(&first_value, &later_value);
+                    if !fields.is_empty() {
+                        conflicts.push(StandardConflict {
+                            kind: "hatchPatternDefinition".into(),
+                            name: item.name.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    hatch_patterns.insert(key, (&package.id, item));
+                }
+            }
+        }
     }
     CommandResult::Completed {
         output: StandardsConflictsReport {
@@ -382,6 +457,19 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
         },
         warnings: Vec::new(),
     }
+}
+
+fn resource_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
+    let mut fields = std::collections::BTreeSet::new();
+    for value in [first, later] {
+        if let Some(object) = value.as_object() {
+            fields.extend(object.keys().cloned());
+        }
+    }
+    fields
+        .into_iter()
+        .filter(|field| field != "name" && first.get(field) != later.get(field))
+        .collect()
 }
 
 fn fail(code: &str, message: String, path: &str) -> Stop {

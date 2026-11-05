@@ -1914,6 +1914,19 @@ gerçek uygulamada noktanın seçilip bölümün açılması ve ekran görüntü
 doğrulandı (`/tmp/kentos-cad-adv12-model-appearance.png`; repo dışında).
 Bu yalnız modelin temel görünüşünü açıklar; blok içi parça, viewport, plot
 profili ve stillerin görsel etkisi için tam köken/override analizi açıktır.
+Sürüm 2 standart belgesi, çizgi tipi ve tarama deseninin adlandırılmış
+tanımlarını `resources` içinde taşıyabilir. Dosya, komut ve KCAD sınırında
+biçim/sürüm/alan/doğruluk denetimi vardır; V1'e kaynak eklenmesi veya V2'de
+kaynak bölümünün olmaması reddedilir. `cad.standards.resolve` ilk kaynak
+tanımını ve kökenini verir, `cad.standards.conflicts` aynı adlı farklı
+tanımların alanlarını ve iki değerini raporlar. Bağlama, kaydetme, yeniden
+okuma, sıra değiştirme ve salt okunur sorgular komut sınamasında doğrulandı;
+masaüstü derlemesi geçti. İki sürüm 2 paketi gerçek uygulamada bağlanıp
+çizgi tipi ile tarama tanımı farkları standart penceresinde görüldü; ekran
+görüntüsü repo dışında `/tmp/kentos-cad-adv12-v2-conflicts.png` konumunda.
+Kaynak tanımları çizime otomatik uygulanmaz.
+Blok, pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
+tam görünüş kökeni ile kabul senaryosu hâlâ açıktır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

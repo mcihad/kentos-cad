@@ -69,6 +69,7 @@ fn standard_conflicts_use_the_same_numeric_tolerance_as_the_checker() {
             id: id.into(),
             revision: "1".into(),
             standard,
+            resources: None,
         })
         .unwrap(),
     };
@@ -139,6 +140,7 @@ fn project_standards_resolve_by_order() {
             id: id.into(),
             revision: "1".into(),
             standard,
+            resources: None,
         })
         .unwrap(),
     };
@@ -190,6 +192,139 @@ fn project_standards_resolve_by_order() {
 }
 
 #[test]
+fn version_two_resource_definitions_resolve_by_order_and_report_content_conflicts() {
+    use kentos_commands::{
+        CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,
+        STANDARD_PACKAGE_RESOURCES_VERSION, StandardPackage, StandardResources,
+    };
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let first_line = serde_json::from_value(json!({"name":"OFFICE-DASH",
+        "elements":[{"length":2.0},{"length":-1.0}]}))
+    .unwrap();
+    let later_line = serde_json::from_value(json!({"name":"office-dash",
+        "elements":[{"length":3.0},{"length":-1.0}]}))
+    .unwrap();
+    let first_hatch = serde_json::from_value(json!({"name":"OFFICE-HATCH",
+        "lines":[{"angle":45.0,"origin":[0.0,0.0],"offset":[0.0,2.0]}]}))
+    .unwrap();
+    let later_hatch = serde_json::from_value(json!({"name":"office-hatch",
+        "lines":[{"angle":45.0,"origin":[0.0,0.0],"offset":[0.0,3.0]}]}))
+    .unwrap();
+    let document = |id: &str, line, hatch| ProjectStandardDocument {
+        text: serde_json::to_string(&StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: id.into(),
+            revision: "2".into(),
+            standard: standard.clone(),
+            resources: Some(StandardResources {
+                line_types: vec![line],
+                hatch_patterns: vec![hatch],
+            }),
+        })
+        .unwrap(),
+    };
+    let first = document("office-a", first_line, first_hatch);
+    let later = document("office-b", later_line, later_hatch);
+    let input = json!({"standardDocs":[first.clone(), later.clone()],
+        "expectedRevision":doc.revision().to_string()});
+    let before_binding = doc.to_snapshot_v2();
+    let planned = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Plan,
+        input.clone(),
+    )
+    .unwrap();
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert_eq!(doc.to_snapshot_v2(), before_binding);
+    let bound = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        input,
+    )
+    .unwrap();
+    assert_eq!(bound["status"], "completed", "{bound}");
+    let before = doc.to_snapshot_v2();
+    let bytes = kentos_kcad::encode_verified(&before).unwrap();
+    let reopened = kentos_kcad::decode(&bytes).unwrap();
+    assert_eq!(
+        reopened.settings.standard_docs,
+        before.settings.standard_docs
+    );
+    let read = |doc: &mut Document, command| {
+        registry::run(
+            &mut ExecutionContext::new(doc),
+            command,
+            CallOp::Execute,
+            json!({}),
+        )
+        .unwrap()
+    };
+    let resolved = read(&mut doc, "cad.standards.resolve");
+    assert_eq!(
+        resolved["output"]["resources"]["lineTypes"][0]["elements"][0]["length"],
+        2.0
+    );
+    assert_eq!(
+        resolved["output"]["resources"]["hatchPatterns"][0]["lines"][0]["offset"][1],
+        2.0
+    );
+    assert_eq!(
+        resolved["output"]["provenance"]["lineTypes"]["OFFICE-DASH"]["id"],
+        "office-a"
+    );
+    let conflicts = read(&mut doc, "cad.standards.conflicts");
+    let items = conflicts["output"]["conflicts"].as_array().unwrap();
+    assert_eq!(items.len(), 2, "{conflicts}");
+    assert!(
+        items
+            .iter()
+            .any(|item| item["kind"] == "lineTypeDefinition"
+                && item["fields"] == json!(["elements"]))
+    );
+    assert!(
+        items
+            .iter()
+            .any(|item| item["kind"] == "hatchPatternDefinition"
+                && item["fields"] == json!(["lines"]))
+    );
+    assert_eq!(
+        doc.to_snapshot_v2(),
+        before,
+        "resolution and conflict queries are read-only"
+    );
+    let revision = doc.revision().to_string();
+    let reordered = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        json!({"standardDocs":[later, first], "expectedRevision":revision}),
+    )
+    .unwrap();
+    assert_eq!(reordered["status"], "completed", "{reordered}");
+    let reversed = read(&mut doc, "cad.standards.resolve");
+    assert_eq!(
+        reversed["output"]["resources"]["lineTypes"][0]["elements"][0]["length"],
+        3.0
+    );
+    assert_eq!(
+        reversed["output"]["provenance"]["lineTypes"]["office-dash"]["id"],
+        "office-b"
+    );
+}
+
+#[test]
 fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
     use kentos_commands::{
         CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,
@@ -221,6 +356,7 @@ fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
             id: id.into(),
             revision: "1".into(),
             standard,
+            resources: None,
         })
         .unwrap(),
     };
@@ -348,6 +484,7 @@ fn project_standard_associations_are_validated_and_revision_checked() {
         id: id.into(),
         revision: "2026.1".into(),
         standard: kentos_commands::built_in_standard("mimari-ofis").unwrap(),
+        resources: None,
     };
     let a = json!({"text":serde_json::to_string(&package("office-a")).unwrap()});
     let b = json!({"text":serde_json::to_string(&package("office-b")).unwrap()});

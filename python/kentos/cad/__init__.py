@@ -3051,6 +3051,7 @@ __all__ = [
     "StandardLayer",
     "StandardOrigin",
     "StandardProvenance",
+    "StandardResources",
     "StandardTextStyle",
     "StandardsApplied",
     "StandardsApply",

@@ -57454,6 +57454,10 @@
           "provenance": {
             "$ref": "#/$defs/StandardProvenance"
           },
+          "resources": {
+            "$ref": "#/$defs/StandardResources",
+            "description": "First definition of each named resource, in binding order. Read-only;\n`cad.standards.apply` does not install or replace these resources."
+          },
           "revision": {
             "type": "string"
           },
@@ -57469,6 +57473,7 @@
         },
         "required": [
           "standard",
+          "resources",
           "sources",
           "provenance",
           "revision"
@@ -57483,6 +57488,10 @@
           "provenance": {
             "$ref": "#/$defs/StandardProvenance"
           },
+          "resources": {
+            "$ref": "#/$defs/StandardResources",
+            "description": "First definition of each named resource, in binding order. Read-only;\n`cad.standards.apply` does not install or replace these resources."
+          },
           "revision": {
             "type": "string"
           },
@@ -57498,6 +57507,7 @@
         },
         "required": [
           "standard",
+          "resources",
           "sources",
           "provenance",
           "revision"
@@ -159982,7 +159992,19 @@
           },
           "type": "object"
         },
+        "hatchPatterns": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
         "layers": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "lineTypes": {
           "additionalProperties": {
             "$ref": "#/$defs/StandardOrigin"
           },
@@ -160002,8 +160024,29 @@
         "rules",
         "layers",
         "textStyles",
-        "dimensionStyles"
+        "dimensionStyles",
+        "lineTypes",
+        "hatchPatterns"
       ],
+      "type": "object"
+    },
+    "StandardResources": {
+      "additionalProperties": false,
+      "description": "Portable resource definitions carried by a version 2 office standard.\nAssociation alone never overwrites the project's definitions.",
+      "properties": {
+        "hatchPatterns": {
+          "items": {
+            "$ref": "#/$defs/HatchPatternDef"
+          },
+          "type": "array"
+        },
+        "lineTypes": {
+          "items": {
+            "$ref": "#/$defs/LineTypeDef"
+          },
+          "type": "array"
+        }
+      },
       "type": "object"
     },
     "StandardTextStyle": {

@@ -75738,6 +75738,8 @@ class StandardProvenance(_Model):
     layers: dict[str, StandardOrigin]
     text_styles: dict[str, StandardOrigin]
     dimension_styles: dict[str, StandardOrigin]
+    line_types: dict[str, StandardOrigin]
+    hatch_patterns: dict[str, StandardOrigin]
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75745,6 +75747,8 @@ class StandardProvenance(_Model):
         out["layers"] = {k0: e0.to_json() for k0, e0 in self.layers.items()}
         out["textStyles"] = {k0: e0.to_json() for k0, e0 in self.text_styles.items()}
         out["dimensionStyles"] = {k0: e0.to_json() for k0, e0 in self.dimension_styles.items()}
+        out["lineTypes"] = {k0: e0.to_json() for k0, e0 in self.line_types.items()}
+        out["hatchPatterns"] = {k0: e0.to_json() for k0, e0 in self.hatch_patterns.items()}
         return out
 
     @classmethod
@@ -75754,6 +75758,32 @@ class StandardProvenance(_Model):
             layers={k0: StandardOrigin.from_json(e0) for k0, e0 in data["layers"].items()},
             text_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["textStyles"].items()},
             dimension_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyles"].items()},
+            line_types={k0: StandardOrigin.from_json(e0) for k0, e0 in data["lineTypes"].items()},
+            hatch_patterns={k0: StandardOrigin.from_json(e0) for k0, e0 in data["hatchPatterns"].items()},
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardResources(_Model):
+    """Portable resource definitions carried by a version 2 office standard.
+    Association alone never overwrites the project's definitions.
+    """
+    hatch_patterns: list[HatchPatternDef] | Unset = UNSET
+    line_types: list[LineTypeDef] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.hatch_patterns is not UNSET:
+            out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
+        if self.line_types is not UNSET:
+            out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardResources:
+        return cls(
+            hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
+            line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
         )
 
 
@@ -76000,8 +76030,12 @@ class StandardsResolve(_Model):
 class StandardsResolved(_Model):
     """Read-only effective standard. Global rules and duplicate named definitions
     come from the first document; other named definitions are added in order.
+    Attributes:
+        resources: First definition of each named resource, in binding order. Read-only;
+            `cad.standards.apply` does not install or replace these resources.
     """
     standard: DrawingStandard
+    resources: StandardResources
     sources: list[str]
     provenance: StandardProvenance
     revision: str
@@ -76009,6 +76043,7 @@ class StandardsResolved(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["standard"] = self.standard.to_json()
+        out["resources"] = self.resources.to_json()
         out["sources"] = list(self.sources)
         out["provenance"] = self.provenance.to_json()
         out["revision"] = self.revision
@@ -76018,6 +76053,7 @@ class StandardsResolved(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsResolved:
         return cls(
             standard=DrawingStandard.from_json(data["standard"]),
+            resources=StandardResources.from_json(data["resources"]),
             sources=list(data["sources"]),
             provenance=StandardProvenance.from_json(data["provenance"]),
             revision=data["revision"],
@@ -108655,6 +108691,7 @@ __all__ = [
     "StandardLayer",
     "StandardOrigin",
     "StandardProvenance",
+    "StandardResources",
     "StandardTextStyle",
     "StandardsApplied",
     "StandardsApply",

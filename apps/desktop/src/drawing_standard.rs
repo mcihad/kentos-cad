@@ -180,6 +180,12 @@ fn conflict_field(field: &str) -> &'static str {
         "naming" => "Katman adlandırma",
         "fonts" => "Yazı tipleri",
         "lineTypes" => "Çizgi tipleri",
+        "hatchPatterns" => "Tarama desenleri",
+        "elements" => "Çizgi dizisi",
+        "lines" => "Tarama çizgileri",
+        "unit" => "Birim",
+        "description" => "Açıklama",
+        "source" => "Kaynak dosya",
         "byLayer" => "Katmana göre görünüş",
         _ => "Özellik",
     }
@@ -1076,7 +1082,8 @@ impl App {
                     let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
                         let item = &conflicts[i];
                         let kind = match item.kind.as_str() {
-                            "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural", _ => "Tanım",
+                            "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural",
+                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", _ => "Tanım",
                         };
                         let fields = item.fields.iter().map(|field| conflict_field(field)).collect::<Vec<_>>().join(", ");
                         let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
@@ -1239,6 +1246,7 @@ mod tests {
                 id: id.into(),
                 revision: "1".into(),
                 standard: standard.clone(),
+                resources: None,
             })
             .unwrap(),
         };
@@ -1293,6 +1301,7 @@ mod tests {
                 id: id.into(),
                 revision: "1".into(),
                 standard: built_in_standard("mimari-ofis").unwrap(),
+                resources: None,
             })
             .unwrap(),
         };
@@ -1427,6 +1436,7 @@ mod tests {
             id: "ofis".into(),
             revision: "1".into(),
             standard: standard.clone(),
+            resources: None,
         };
         let text = serde_json::to_string(&package).unwrap();
         let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
