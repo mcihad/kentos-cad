@@ -12,4 +12,9 @@ id: string, name: string,
 /**
  * Which station of it: a PVI's id, `from`, `to`, `region 2 from`, `station 3`, `row 1`, `curve PI2`.
  */
-item: string, station: number, to?: number, };
+item: string, station: number, to?: number, 
+/**
+ * The edit writes it there itself (a reversal turns the profiles and schedules round, docs/adr/0965); otherwise
+ * it stays where it is named and goes stale.
+ */
+carried?: boolean, };

@@ -773,9 +773,13 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
     km kayması; boykesit PVI'ları, kesit takımlarının km'leri, koridor bölgelerinin
     uçları ve km'leri, dever çizelgesinin satırları ve PI'ı kalkan kurpları taşınır ya
     da çözülmez diye; paralel akslar ve dokunulan koridorlardaki kübaj ve taşıma
-    planları, onaylılar. Uyarılar: alignment_impact_unresolved,
-    alignment_impact_approved. Retler: not_a_road_project, unknown_alignment,
-    invalid_alignment, invalid_alignment_impact.
+    planları, onaylılar. Ters çevirme (`reverse`) de sorulur: her km L − s'ye gider,
+    boykesitler ve dever çizelgeleri onunla döner, gerisi eski yönde kalır ve söylenir.
+    Kübaj katsayı ve sıyırma aralıkları, Brükner alanları, uygunsuz aralıkları ve
+    engelleri, menfez, duvar ve pafta takımı km'leri de raporda. Uyarılar:
+    alignment_impact_unresolved, alignment_impact_approved, alignment_reverse_stale.
+    Retler: not_a_road_project, unknown_alignment, invalid_alignment,
+    invalid_alignment_impact.
     """
     __slots__ = ()
     id = "road.alignments.impact"
@@ -792,7 +796,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         /,
         *,
         alignment: str,
-        pis: Sequence[AlignmentPi],
+        pis: Sequence[AlignmentPi] | Unset = UNSET,
+        reverse: bool | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -804,14 +809,20 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         aksın dışında kalan yeni aralıklar, aradaki aralıkların km kayması; boykesit
         PVI'ları, kesit takımlarının km'leri, koridor bölgelerinin uçları ve km'leri, dever
         çizelgesinin satırları ve PI'ı kalkan kurpları taşınır ya da çözülmez diye; paralel
-        akslar ve dokunulan koridorlardaki kübaj ve taşıma planları, onaylılar. Uyarılar:
-        alignment_impact_unresolved, alignment_impact_approved. Retler: not_a_road_project,
+        akslar ve dokunulan koridorlardaki kübaj ve taşıma planları, onaylılar. Ters çevirme
+        (`reverse`) de sorulur: her km L − s'ye gider, boykesitler ve dever çizelgeleri
+        onunla döner, gerisi eski yönde kalır ve söylenir. Kübaj katsayı ve sıyırma
+        aralıkları, Brükner alanları, uygunsuz aralıkları ve engelleri, menfez, duvar ve
+        pafta takımı km'leri de raporda. Uyarılar: alignment_impact_unresolved,
+        alignment_impact_approved, alignment_reverse_stale. Retler: not_a_road_project,
         unknown_alignment, invalid_alignment, invalid_alignment_impact.
 
         Args:
             doc: The drawing it works on.
             alignment: The alignment's id or name.
-            pis: The PIs it would have.
+            pis: The PIs it would have; none with `reverse`.
+            reverse: The alignment turned round instead (`road.alignments.edit reverse`, docs/adr/0965): every station s goes to
+                L − s; the profiles and superelevation schedules turn with it, the rest is told.
             tolerance: Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -827,7 +838,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         """
         return self.execute_input(doc, AlignmentsImpact(
             alignment=alignment,
-            pis=list(pis),
+            pis=_opt(pis, lambda x: list(x)),
+            reverse=reverse,
             tolerance=tolerance,
         ), request_id=request_id, expected=expected)
 
@@ -837,7 +849,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         /,
         *,
         alignment: str,
-        pis: Sequence[AlignmentPi],
+        pis: Sequence[AlignmentPi] | Unset = UNSET,
+        reverse: bool | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> AlignmentImpact:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -845,7 +858,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         """
         return self.plan_input(doc, AlignmentsImpact(
             alignment=alignment,
-            pis=list(pis),
+            pis=_opt(pis, lambda x: list(x)),
+            reverse=reverse,
             tolerance=tolerance,
         ))
 
@@ -855,7 +869,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         /,
         *,
         alignment: str,
-        pis: Sequence[AlignmentPi],
+        pis: Sequence[AlignmentPi] | Unset = UNSET,
+        reverse: bool | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -863,7 +878,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         """
         return self.validate_input(doc, AlignmentsImpact(
             alignment=alignment,
-            pis=list(pis),
+            pis=_opt(pis, lambda x: list(x)),
+            reverse=reverse,
             tolerance=tolerance,
         ))
 
@@ -873,7 +889,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         /,
         *,
         alignment: str,
-        pis: Sequence[AlignmentPi],
+        pis: Sequence[AlignmentPi] | Unset = UNSET,
+        reverse: bool | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -886,7 +903,8 @@ class _RoadAlignmentsImpact(LocalCommand[AlignmentsImpact, AlignmentImpact, Alig
         """
         return self.answer_input(doc, AlignmentsImpact(
             alignment=alignment,
-            pis=list(pis),
+            pis=_opt(pis, lambda x: list(x)),
+            reverse=reverse,
             tolerance=tolerance,
         ), op=op, request_id=request_id, expected=expected)
 

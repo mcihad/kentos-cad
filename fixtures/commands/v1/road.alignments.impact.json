@@ -794,6 +794,73 @@
       "volume": "v-3",
       "revision": 1
      }
+    ],
+    "culverts": [
+     {
+      "id": "m-1",
+      "name": "Km 1+380 menfezi",
+      "corridor": "c-1",
+      "corridorRevision": 1,
+      "revision": 1,
+      "station": 380.0,
+      "shape": {
+       "kind": "box",
+       "width": 2.0,
+       "height": 1.5,
+       "thickness": 0.25,
+       "slab": 0.3,
+       "cells": 2
+      },
+      "invert": 106.5,
+      "slope": 1.0,
+      "flow": "right",
+      "extend": 1.0,
+      "cover": 0.5,
+      "material": "Betonarme",
+      "roughness": 0.013
+     }
+    ],
+    "walls": [
+     {
+      "id": "d-1",
+      "name": "Sağ istinat",
+      "corridor": "c-1",
+      "corridorRevision": 1,
+      "revision": 1,
+      "side": "right",
+      "from": 340.0,
+      "to": 420.0,
+      "step": 20.0,
+      "shape": {
+       "top": 0.3,
+       "batter": 0.1,
+       "footing": 2.4,
+       "base": 0.5,
+       "toe": 0.6,
+       "cover": 0.6,
+       "above": 0.9
+      },
+      "highest": 5.0,
+      "material": "Betonarme"
+     }
+    ],
+    "sheetSets": [
+     {
+      "id": "ps-1",
+      "name": "Ana paftalar",
+      "alignment": "g-1",
+      "alignmentRevision": 1,
+      "from": 50.0,
+      "to": 550.0,
+      "scale": 1000,
+      "sheets": [
+       {
+        "sheet": "ana-1",
+        "from": 50.0,
+        "to": 550.0
+       }
+      ]
+     }
     ]
    }
   },
@@ -3246,6 +3313,73 @@
          "volume": "v-3",
          "revision": 1
         }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
        ]
       }
      },
@@ -3443,6 +3577,75 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 598.5735541137539
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 378.5735541137538
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 418.5735541137538
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 598.5735541137539
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 598.5735541137539
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 588.5735541137539
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 548.5735541137539
         }
        ],
        "parallels": [
@@ -3480,7 +3683,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Sağ istinat başı, Ana kübaj 1. katsayı satırı sonu, Ana kübaj 2. katsayı satırı başı. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -4269,6 +4472,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -4467,6 +4737,75 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 599.573627575154
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 379.57362757515403
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 419.57362757515403
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 599.573627575154
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 599.573627575154
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 589.573627575154
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 549.573627575154
         }
        ],
        "parallels": [
@@ -4504,7 +4843,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Sağ istinat başı, Ana kübaj 1. katsayı satırı sonu, Ana kübaj 2. katsayı satırı başı. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -5293,6 +5632,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -6207,6 +6613,73 @@
          "volume": "v-3",
          "revision": 1
         }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
        ]
       }
      },
@@ -6429,6 +6902,108 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 579.987248962683
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 359.987248962683
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0,
+         "to": 319.987248962683
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 399.987248962683
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 from",
+         "station": 0.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0,
+         "to": 279.987248962683
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0,
+         "to": 279.987248962683
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 579.987248962683
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 from",
+         "station": 0.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 579.987248962683
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D1",
+         "station": 40.0,
+         "to": 19.987248962683
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 569.987248962683
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "from",
+         "station": 50.0,
+         "to": 29.987248962682997
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 529.987248962683
         }
        ],
        "parallels": [
@@ -6466,7 +7041,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI a, Ana koridor 1. bölge başı. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI a, Ana koridor 1. bölge başı, Ana kübaj 1. katsayı satırı başı, Dolgu kübajı 1. katsayı satırı başı. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -7255,6 +7830,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -7440,6 +8082,69 @@
          "name": "Ana koridor",
          "item": "region 2 to",
          "station": 600.0
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0
         }
        ],
        "parallels": [
@@ -7477,7 +8182,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Proje kotu PVI v3, Proje kotu PVI b, Kısmi kot PVI b, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Ana koridor 2. bölge sonu. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Proje kotu PVI v3, Proje kotu PVI b, Kısmi kot PVI b, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Ana koridor 2. bölge sonu ve 9 yer daha. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -8266,6 +8971,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -8491,6 +9263,110 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 620.012751037317
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 400.012751037317
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0,
+         "to": 360.012751037317
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 440.012751037317
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 from",
+         "station": 0.0,
+         "to": 20.012751037317003
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0,
+         "to": 320.012751037317
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0,
+         "to": 320.012751037317
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 620.012751037317
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 from",
+         "station": 0.0,
+         "to": 20.012751037317003
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 620.012751037317
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D1",
+         "station": 40.0,
+         "to": 60.012751037316995
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 610.012751037317
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "from",
+         "station": 50.0,
+         "to": 70.012751037317
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 570.012751037317
         }
        ],
        "parallels": [
@@ -9312,6 +10188,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -9500,6 +10443,75 @@
          "to": 607.7808541974658
         },
         {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 387.78085419746577
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 427.78085419746577
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 607.7808541974658
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 607.7808541974658
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 597.7808541974658
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 557.7808541974658
+        },
+        {
          "owner": "superelevation",
          "id": "d-1",
          "name": "Ana aks deveri",
@@ -9542,7 +10554,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Ana aks deveri p1 kurbu. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Sağ istinat başı, Ana kübaj 1. katsayı satırı sonu, Ana kübaj 2. katsayı satırı başı, Ana aks deveri p1 kurbu. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -10331,6 +11343,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -10524,6 +11603,83 @@
          "station": 600.0
         },
         {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D1",
+         "station": 40.0
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "from",
+         "station": 50.0
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0
+        },
+        {
          "owner": "superelevation",
          "id": "d-1",
          "name": "Ana aks deveri",
@@ -10566,7 +11722,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v1, Proje kotu PVI v2, Proje kotu PVI v3, Proje kotu PVI b, Kısmi kot PVI a, Kısmi kot PVI b, Enkesitler başı, Enkesitler sonu ve 4 yer daha. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v1, Proje kotu PVI v2, Proje kotu PVI v3, Proje kotu PVI b, Kısmi kot PVI a, Kısmi kot PVI b, Enkesitler başı, Enkesitler sonu ve 15 yer daha. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -11355,6 +12511,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -11534,6 +12757,78 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 599.9999528056717
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 379.9999528056716
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0,
+         "to": 339.9999529479331
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 419.9999528056716
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0,
+         "to": 299.99996330458964
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0,
+         "to": 299.99996330458964
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 599.9999528056717
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 599.9999528056717
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 589.9999528056717
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 549.9999528056717
         }
        ],
        "parallels": [
@@ -12355,6 +13650,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -12553,6 +13915,75 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 599.9763993601243
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 379.97639936012433
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 419.97639936012433
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 599.9763993601243
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 599.9763993601243
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 589.9763993601243
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 549.9763993601243
         }
        ],
        "parallels": [
@@ -12590,7 +14021,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Sağ istinat başı, Ana kübaj 1. katsayı satırı sonu, Ana kübaj 2. katsayı satırı başı. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -13379,6 +14810,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -13421,7 +14919,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Sağ istinat başı, Ana kübaj 1. katsayı satırı sonu, Ana kübaj 2. katsayı satırı başı. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -14210,6 +15708,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -14408,6 +15973,75 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 598.5735541137539
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 378.5735541137538
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 418.5735541137538
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 598.5735541137539
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 598.5735541137539
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 588.5735541137539
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 548.5735541137539
         }
        ],
        "parallels": [
@@ -14445,7 +16079,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Sağ istinat başı, Ana kübaj 1. katsayı satırı sonu, Ana kübaj 2. katsayı satırı başı. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        },
        {
@@ -15235,6 +16869,73 @@
          "volume": "v-3",
          "revision": 1
         }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
        ]
       }
      },
@@ -15432,6 +17133,75 @@
          "item": "region 2 to",
          "station": 600.0,
          "to": 598.5735541137539
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 378.5735541137538
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 418.5735541137538
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 598.5735541137539
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 598.5735541137539
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 588.5735541137539
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 548.5735541137539
         }
        ],
        "parallels": [
@@ -15469,7 +17239,7 @@
       "warnings": [
        {
         "code": "alignment_impact_unresolved",
-        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı. Kaydedilirse bunlar elle yeniden verilmeli.",
+        "message": "“Ana aks” aksının yeni PI'larıyla şu km'lerin yeri aksın üstünde kalmıyor: Proje kotu PVI v2, Enkesitler sonu, Ana koridor 1. bölge sonu, Ana koridor 2. bölge başı, Sağ istinat başı, Ana kübaj 1. katsayı satırı sonu, Ana kübaj 2. katsayı satırı başı. Kaydedilirse bunlar elle yeniden verilmeli.",
         "path": "pis"
        }
       ]
@@ -16005,6 +17775,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -16552,6 +18389,73 @@
         "name": "Dolgu Brükneri",
         "volume": "v-3",
         "revision": 1
+       }
+      ],
+      "culverts": [
+       {
+        "id": "m-1",
+        "name": "Km 1+380 menfezi",
+        "corridor": "c-1",
+        "corridorRevision": 1,
+        "revision": 1,
+        "station": 380.0,
+        "shape": {
+         "kind": "box",
+         "width": 2.0,
+         "height": 1.5,
+         "thickness": 0.25,
+         "slab": 0.3,
+         "cells": 2
+        },
+        "invert": 106.5,
+        "slope": 1.0,
+        "flow": "right",
+        "extend": 1.0,
+        "cover": 0.5,
+        "material": "Betonarme",
+        "roughness": 0.013
+       }
+      ],
+      "walls": [
+       {
+        "id": "d-1",
+        "name": "Sağ istinat",
+        "corridor": "c-1",
+        "corridorRevision": 1,
+        "revision": 1,
+        "side": "right",
+        "from": 340.0,
+        "to": 420.0,
+        "step": 20.0,
+        "shape": {
+         "top": 0.3,
+         "batter": 0.1,
+         "footing": 2.4,
+         "base": 0.5,
+         "toe": 0.6,
+         "cover": 0.6,
+         "above": 0.9
+        },
+        "highest": 5.0,
+        "material": "Betonarme"
+       }
+      ],
+      "sheetSets": [
+       {
+        "id": "ps-1",
+        "name": "Ana paftalar",
+        "alignment": "g-1",
+        "alignmentRevision": 1,
+        "from": 50.0,
+        "to": 550.0,
+        "scale": 1000,
+        "sheets": [
+         {
+          "sheet": "ana-1",
+          "from": 50.0,
+          "to": 550.0
+         }
+        ]
        }
       ]
      }
@@ -18107,6 +20011,3131 @@
    }
   },
   {
+   "name": "Ters çevrilir: her km L − s'ye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "alignment": "g-1",
+      "reverse": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "alignment": "g-1",
+       "mapping": [
+        {
+         "element": "b/aliyman",
+         "change": "reversed",
+         "before": [
+          357.8635760864612,
+          669.3863251505563
+         ],
+         "after": [
+          0.0,
+          311.5227490640952
+         ]
+        },
+        {
+         "element": "p1/giris",
+         "change": "reversed",
+         "before": [
+          317.8635760864612,
+          357.8635760864612
+         ],
+         "after": [
+          311.5227490640952,
+          351.5227490640952
+         ]
+        },
+        {
+         "element": "p1/kurp",
+         "change": "reversed",
+         "before": [
+          234.712598760949,
+          317.8635760864612
+         ],
+         "after": [
+          351.5227490640952,
+          434.67372638960734
+         ]
+        },
+        {
+         "element": "p1/cikis",
+         "change": "reversed",
+         "before": [
+          194.712598760949,
+          234.712598760949
+         ],
+         "after": [
+          434.67372638960734,
+          474.67372638960734
+         ]
+        },
+        {
+         "element": "p1/aliyman",
+         "change": "reversed",
+         "before": [
+          0.0,
+          194.712598760949
+         ],
+         "after": [
+          474.67372638960734,
+          669.3863251505563
+         ]
+        }
+       ],
+       "removed": [],
+       "added": [],
+       "runs": [
+        {
+         "from": 0.0,
+         "to": 669.3863251505563,
+         "fromText": "1+000.000",
+         "toText": "1+669.386",
+         "shiftFrom": 669.3863251505563,
+         "shiftTo": -669.3863251505563
+        }
+       ],
+       "refs": [
+        {
+         "owner": "profile",
+         "id": "b-1",
+         "name": "Proje kotu",
+         "item": "a",
+         "station": 0.0,
+         "to": 669.3863251505563,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-1",
+         "name": "Proje kotu",
+         "item": "v1",
+         "station": 170.0,
+         "to": 499.38632515055633,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-1",
+         "name": "Proje kotu",
+         "item": "v2",
+         "station": 340.0,
+         "to": 329.38632515055633,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-1",
+         "name": "Proje kotu",
+         "item": "v3",
+         "station": 520.0,
+         "to": 149.38632515055633,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-1",
+         "name": "Proje kotu",
+         "item": "b",
+         "station": 669.0,
+         "to": 0.3863251505563312,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "item": "a",
+         "station": 100.0,
+         "to": 569.3863251505563,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "item": "b",
+         "station": 400.0,
+         "to": 269.38632515055633,
+         "carried": true
+        },
+        {
+         "owner": "sectionSet",
+         "id": "k-1",
+         "name": "Enkesitler",
+         "item": "from",
+         "station": 100.0,
+         "to": 569.3863251505563
+        },
+        {
+         "owner": "sectionSet",
+         "id": "k-1",
+         "name": "Enkesitler",
+         "item": "to",
+         "station": 300.0,
+         "to": 369.38632515055633
+        },
+        {
+         "owner": "corridor",
+         "id": "c-1",
+         "name": "Ana koridor",
+         "item": "region 1 from",
+         "station": 0.0,
+         "to": 669.3863251505563
+        },
+        {
+         "owner": "corridor",
+         "id": "c-1",
+         "name": "Ana koridor",
+         "item": "region 1 to",
+         "station": 300.0,
+         "to": 369.38632515055633
+        },
+        {
+         "owner": "corridor",
+         "id": "c-1",
+         "name": "Ana koridor",
+         "item": "region 2 from",
+         "station": 300.0,
+         "to": 369.38632515055633
+        },
+        {
+         "owner": "corridor",
+         "id": "c-1",
+         "name": "Ana koridor",
+         "item": "region 2 to",
+         "station": 600.0,
+         "to": 69.38632515055633
+        },
+        {
+         "owner": "culvert",
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "item": "station",
+         "station": 380.0,
+         "to": 289.38632515055633
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "from",
+         "station": 340.0,
+         "to": 329.38632515055633
+        },
+        {
+         "owner": "wall",
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "item": "to",
+         "station": 420.0,
+         "to": 249.38632515055633
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 from",
+         "station": 0.0,
+         "to": 669.3863251505563
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 1 to",
+         "station": 300.0,
+         "to": 369.38632515055633
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 from",
+         "station": 300.0,
+         "to": 369.38632515055633
+        },
+        {
+         "owner": "volume",
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "item": "factor 2 to",
+         "station": 600.0,
+         "to": 69.38632515055633
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 from",
+         "station": 0.0,
+         "to": 669.3863251505563
+        },
+        {
+         "owner": "volume",
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "item": "factor 1 to",
+         "station": 600.0,
+         "to": 69.38632515055633
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D1",
+         "station": 40.0,
+         "to": 629.3863251505563
+        },
+        {
+         "owner": "haul",
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "item": "site D2",
+         "station": 590.0,
+         "to": 79.38632515055633
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "from",
+         "station": 50.0,
+         "to": 619.3863251505563
+        },
+        {
+         "owner": "sheetSet",
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "item": "to",
+         "station": 550.0,
+         "to": 119.38632515055633
+        }
+       ],
+       "parallels": [
+        {
+         "id": "g-3",
+         "name": "Sağ kenar"
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "approved": true
+        },
+        {
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "approved": false
+        }
+       ],
+       "hauls": [
+        {
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "approved": true
+        },
+        {
+         "id": "h-3",
+         "name": "Dolgu Brükneri",
+         "approved": false
+        }
+       ],
+       "clear": false
+      },
+      "warnings": [
+       {
+        "code": "alignment_impact_approved",
+        "message": "“Ana aks” aksının yeni PI'ları onaylı hesapları değiştirir: “Ana kübaj” kübajı, “Ana Brükner” taşıma planı. Yazılınca onayları eskir; yeni bir hesap onaylanmalı.",
+        "path": "pis"
+       },
+       {
+        "code": "alignment_reverse_stale",
+        "message": "“Ana aks” aksı ters çevrilince boykesitler ve dever çizelgeleri onunla döner; şunlar dönmez, km'leri eski yönde kalır ve eskir: Enkesitler, Ana koridor, Km 1+380 menfezi, Sağ istinat, Ana kübaj, Dolgu kübajı, Ana Brükner, Ana paftalar.",
+        "path": "alignment"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "cut": 1.25,
+           "fill": 0.9
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2
+          }
+         ],
+         "approved": {
+          "revision": 1,
+          "at": "2026-11-03",
+          "number": 1,
+          "cut": 25878.14593084839,
+          "fill": 3507.380684331716,
+          "factoredCut": 31611.668615970284,
+          "factoredFill": 3495.464956323876,
+          "rows": [
+           [
+            0.0,
+            25.0,
+            830.3180834649165,
+            0.0
+           ],
+           [
+            25.0,
+            50.0,
+            1682.9425134868288,
+            0.0
+           ],
+           [
+            50.0,
+            75.0,
+            1600.6993453965194,
+            0.0
+           ],
+           [
+            75.0,
+            100.0,
+            1196.716165183281,
+            0.0
+           ],
+           [
+            100.0,
+            125.0,
+            690.732303354783,
+            0.0
+           ],
+           [
+            125.0,
+            150.0,
+            277.5839053905673,
+            0.0
+           ],
+           [
+            150.0,
+            175.0,
+            35.492851844457995,
+            66.62399602149243
+           ],
+           [
+            175.0,
+            194.712598760949,
+            124.11882160170718,
+            52.533284056909686
+           ],
+           [
+            194.712598760949,
+            204.712598760949,
+            172.646116323654,
+            0.0
+           ],
+           [
+            204.712598760949,
+            214.712598760949,
+            264.2585886556393,
+            0.0
+           ],
+           [
+            214.712598760949,
+            224.712598760949,
+            355.77270241536377,
+            0.0
+           ],
+           [
+            224.712598760949,
+            234.712598760949,
+            450.9990762070264,
+            0.0
+           ],
+           [
+            234.712598760949,
+            243.95159624156145,
+            491.41300460180327,
+            0.0
+           ],
+           [
+            243.95159624156145,
+            253.19059372217393,
+            542.5393553984381,
+            0.0
+           ],
+           [
+            253.19059372217393,
+            262.4295912027864,
+            576.7070903999205,
+            0.0
+           ],
+           [
+            262.4295912027864,
+            271.66858868339887,
+            593.3280970615705,
+            0.0
+           ],
+           [
+            271.66858868339887,
+            280.9075861640113,
+            548.5692307360441,
+            0.0
+           ],
+           [
+            280.9075861640113,
+            290.1465836446238,
+            424.85125631951854,
+            0.0
+           ],
+           [
+            290.1465836446238,
+            299.3855811252363,
+            283.9342701360498,
+            0.0
+           ],
+           [
+            299.3855811252363,
+            300.0,
+            14.24720106619386,
+            0.0
+           ],
+           [
+            300.0,
+            308.62457860584874,
+            131.19066059949236,
+            0.0
+           ],
+           [
+            308.62457860584874,
+            317.8635760864612,
+            47.198715451970216,
+            2.1555795581506976
+           ],
+           [
+            317.8635760864612,
+            327.8635760864612,
+            3.0649197407534983,
+            47.40580725758967
+           ],
+           [
+            327.8635760864612,
+            337.8635760864612,
+            0.0,
+            135.39661574782625
+           ],
+           [
+            337.8635760864612,
+            347.8635760864612,
+            0.0,
+            223.90438790366653
+           ],
+           [
+            347.8635760864612,
+            357.8635760864612,
+            0.0,
+            301.1774759374853
+           ],
+           [
+            357.8635760864612,
+            375.0,
+            0.0,
+            603.3296970713396
+           ],
+           [
+            375.0,
+            400.0,
+            0.0,
+            868.3480752321221
+           ],
+           [
+            400.0,
+            425.0,
+            0.0,
+            743.5274723847514
+           ],
+           [
+            425.0,
+            450.0,
+            0.0,
+            399.67561877915927
+           ],
+           [
+            450.0,
+            475.0,
+            239.7602051149267,
+            63.30267438122278
+           ],
+           [
+            475.0,
+            500.0,
+            1041.6047907563582,
+            0.0
+           ],
+           [
+            500.0,
+            525.0,
+            2257.070276615331,
+            0.0
+           ],
+           [
+            525.0,
+            550.0,
+            3376.129744276058,
+            0.0
+           ],
+           [
+            550.0,
+            575.0,
+            3837.0273097559043,
+            0.0
+           ],
+           [
+            575.0,
+            600.0,
+            3787.229329493317,
+            0.0
+           ]
+          ]
+         }
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "revision": 1,
+         "method": "surfaces"
+        },
+        {
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 600.0,
+           "cut": 0.1,
+           "fill": 5.0
+          }
+         ]
+        }
+       ],
+       "hauls": [
+        {
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "volume": "v-1",
+         "revision": 1,
+         "free": 150.0,
+         "sites": [
+          {
+           "name": "D1",
+           "kind": "waste",
+           "station": 40.0,
+           "volume": 10000.0
+          },
+          {
+           "name": "D2",
+           "kind": "waste",
+           "station": 590.0,
+           "volume": 25000.0
+          }
+         ],
+         "approved": {
+          "number": 1,
+          "at": "2026-11-04",
+          "revision": 1,
+          "volumeRevision": 1,
+          "volumeApproval": 1,
+          "moment": 1974258.134519718,
+          "moved": 31450.886437885216,
+          "sites": [
+           {
+            "name": "D1",
+            "capacity": 10000.0,
+            "used": 10000.0
+           },
+           {
+            "name": "D2",
+            "capacity": 25000.0,
+            "used": 18116.20365964641
+           }
+          ]
+         }
+        },
+        {
+         "id": "h-2",
+         "name": "Yan Brükner",
+         "volume": "v-2",
+         "revision": 1,
+         "sites": [
+          {
+           "name": "Döküm 1",
+           "kind": "waste",
+           "station": 300.0,
+           "volume": 6000.0
+          }
+         ]
+        },
+        {
+         "id": "h-3",
+         "name": "Dolgu Brükneri",
+         "volume": "v-3",
+         "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yan aks ters çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "alignment": "Yan aks",
+      "reverse": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "alignment": "g-2",
+       "mapping": [
+        {
+         "element": "b/aliyman",
+         "change": "reversed",
+         "before": [
+          0.0,
+          657.3431371817918
+         ],
+         "after": [
+          0.0,
+          657.3431371817918
+         ]
+        }
+       ],
+       "removed": [],
+       "added": [],
+       "runs": [
+        {
+         "from": 0.0,
+         "to": 657.3431371817918,
+         "fromText": "0+000.000",
+         "toText": "0+657.343",
+         "shiftFrom": 657.3431371817918,
+         "shiftTo": -657.3431371817918
+        }
+       ],
+       "refs": [
+        {
+         "owner": "profile",
+         "id": "b-2",
+         "name": "Yan kot",
+         "item": "a",
+         "station": 0.0,
+         "to": 657.3431371817918,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-2",
+         "name": "Yan kot",
+         "item": "v1",
+         "station": 300.0,
+         "to": 357.3431371817918,
+         "carried": true
+        },
+        {
+         "owner": "profile",
+         "id": "b-2",
+         "name": "Yan kot",
+         "item": "b",
+         "station": 650.0,
+         "to": 7.343137181791803,
+         "carried": true
+        },
+        {
+         "owner": "sectionSet",
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "item": "station 1",
+         "station": 50.0,
+         "to": 607.3431371817918
+        },
+        {
+         "owner": "sectionSet",
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "item": "station 2",
+         "station": 200.0,
+         "to": 457.3431371817918
+        },
+        {
+         "owner": "sectionSet",
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "item": "station 3",
+         "station": 400.0,
+         "to": 257.3431371817918
+        },
+        {
+         "owner": "corridor",
+         "id": "c-2",
+         "name": "Yan koridor",
+         "item": "region 1 from",
+         "station": 50.0,
+         "to": 607.3431371817918
+        },
+        {
+         "owner": "corridor",
+         "id": "c-2",
+         "name": "Yan koridor",
+         "item": "region 1 to",
+         "station": 400.0,
+         "to": 257.3431371817918
+        },
+        {
+         "owner": "haul",
+         "id": "h-2",
+         "name": "Yan Brükner",
+         "item": "site Döküm 1",
+         "station": 300.0,
+         "to": 357.3431371817918
+        },
+        {
+         "owner": "superelevation",
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "item": "row 1",
+         "station": 100.0,
+         "to": 557.3431371817918,
+         "carried": true
+        },
+        {
+         "owner": "superelevation",
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "item": "row 2",
+         "station": 200.0,
+         "to": 457.3431371817918,
+         "carried": true
+        },
+        {
+         "owner": "superelevation",
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "item": "row 3",
+         "station": 400.0,
+         "to": 257.3431371817918,
+         "carried": true
+        },
+        {
+         "owner": "superelevation",
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "item": "row 4",
+         "station": 500.0,
+         "to": 157.3431371817918,
+         "carried": true
+        }
+       ],
+       "parallels": [],
+       "volumes": [
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "approved": false
+        }
+       ],
+       "hauls": [
+        {
+         "id": "h-2",
+         "name": "Yan Brükner",
+         "approved": false
+        }
+       ],
+       "clear": false
+      },
+      "warnings": [
+       {
+        "code": "alignment_reverse_stale",
+        "message": "“Yan aks” aksı ters çevrilince boykesitler ve dever çizelgeleri onunla döner; şunlar dönmez, km'leri eski yönde kalır ve eskir: Yan kesitler, Yan koridor, Yan Brükner.",
+        "path": "alignment"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "cut": 1.25,
+           "fill": 0.9
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2
+          }
+         ],
+         "approved": {
+          "revision": 1,
+          "at": "2026-11-03",
+          "number": 1,
+          "cut": 25878.14593084839,
+          "fill": 3507.380684331716,
+          "factoredCut": 31611.668615970284,
+          "factoredFill": 3495.464956323876,
+          "rows": [
+           [
+            0.0,
+            25.0,
+            830.3180834649165,
+            0.0
+           ],
+           [
+            25.0,
+            50.0,
+            1682.9425134868288,
+            0.0
+           ],
+           [
+            50.0,
+            75.0,
+            1600.6993453965194,
+            0.0
+           ],
+           [
+            75.0,
+            100.0,
+            1196.716165183281,
+            0.0
+           ],
+           [
+            100.0,
+            125.0,
+            690.732303354783,
+            0.0
+           ],
+           [
+            125.0,
+            150.0,
+            277.5839053905673,
+            0.0
+           ],
+           [
+            150.0,
+            175.0,
+            35.492851844457995,
+            66.62399602149243
+           ],
+           [
+            175.0,
+            194.712598760949,
+            124.11882160170718,
+            52.533284056909686
+           ],
+           [
+            194.712598760949,
+            204.712598760949,
+            172.646116323654,
+            0.0
+           ],
+           [
+            204.712598760949,
+            214.712598760949,
+            264.2585886556393,
+            0.0
+           ],
+           [
+            214.712598760949,
+            224.712598760949,
+            355.77270241536377,
+            0.0
+           ],
+           [
+            224.712598760949,
+            234.712598760949,
+            450.9990762070264,
+            0.0
+           ],
+           [
+            234.712598760949,
+            243.95159624156145,
+            491.41300460180327,
+            0.0
+           ],
+           [
+            243.95159624156145,
+            253.19059372217393,
+            542.5393553984381,
+            0.0
+           ],
+           [
+            253.19059372217393,
+            262.4295912027864,
+            576.7070903999205,
+            0.0
+           ],
+           [
+            262.4295912027864,
+            271.66858868339887,
+            593.3280970615705,
+            0.0
+           ],
+           [
+            271.66858868339887,
+            280.9075861640113,
+            548.5692307360441,
+            0.0
+           ],
+           [
+            280.9075861640113,
+            290.1465836446238,
+            424.85125631951854,
+            0.0
+           ],
+           [
+            290.1465836446238,
+            299.3855811252363,
+            283.9342701360498,
+            0.0
+           ],
+           [
+            299.3855811252363,
+            300.0,
+            14.24720106619386,
+            0.0
+           ],
+           [
+            300.0,
+            308.62457860584874,
+            131.19066059949236,
+            0.0
+           ],
+           [
+            308.62457860584874,
+            317.8635760864612,
+            47.198715451970216,
+            2.1555795581506976
+           ],
+           [
+            317.8635760864612,
+            327.8635760864612,
+            3.0649197407534983,
+            47.40580725758967
+           ],
+           [
+            327.8635760864612,
+            337.8635760864612,
+            0.0,
+            135.39661574782625
+           ],
+           [
+            337.8635760864612,
+            347.8635760864612,
+            0.0,
+            223.90438790366653
+           ],
+           [
+            347.8635760864612,
+            357.8635760864612,
+            0.0,
+            301.1774759374853
+           ],
+           [
+            357.8635760864612,
+            375.0,
+            0.0,
+            603.3296970713396
+           ],
+           [
+            375.0,
+            400.0,
+            0.0,
+            868.3480752321221
+           ],
+           [
+            400.0,
+            425.0,
+            0.0,
+            743.5274723847514
+           ],
+           [
+            425.0,
+            450.0,
+            0.0,
+            399.67561877915927
+           ],
+           [
+            450.0,
+            475.0,
+            239.7602051149267,
+            63.30267438122278
+           ],
+           [
+            475.0,
+            500.0,
+            1041.6047907563582,
+            0.0
+           ],
+           [
+            500.0,
+            525.0,
+            2257.070276615331,
+            0.0
+           ],
+           [
+            525.0,
+            550.0,
+            3376.129744276058,
+            0.0
+           ],
+           [
+            550.0,
+            575.0,
+            3837.0273097559043,
+            0.0
+           ],
+           [
+            575.0,
+            600.0,
+            3787.229329493317,
+            0.0
+           ]
+          ]
+         }
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "revision": 1,
+         "method": "surfaces"
+        },
+        {
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 600.0,
+           "cut": 0.1,
+           "fill": 5.0
+          }
+         ]
+        }
+       ],
+       "hauls": [
+        {
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "volume": "v-1",
+         "revision": 1,
+         "free": 150.0,
+         "sites": [
+          {
+           "name": "D1",
+           "kind": "waste",
+           "station": 40.0,
+           "volume": 10000.0
+          },
+          {
+           "name": "D2",
+           "kind": "waste",
+           "station": 590.0,
+           "volume": 25000.0
+          }
+         ],
+         "approved": {
+          "number": 1,
+          "at": "2026-11-04",
+          "revision": 1,
+          "volumeRevision": 1,
+          "volumeApproval": 1,
+          "moment": 1974258.134519718,
+          "moved": 31450.886437885216,
+          "sites": [
+           {
+            "name": "D1",
+            "capacity": 10000.0,
+            "used": 10000.0
+           },
+           {
+            "name": "D2",
+            "capacity": 25000.0,
+            "used": 18116.20365964641
+           }
+          ]
+         }
+        },
+        {
+         "id": "h-2",
+         "name": "Yan Brükner",
+         "volume": "v-2",
+         "revision": 1,
+         "sites": [
+          {
+           "name": "Döküm 1",
+           "kind": "waste",
+           "station": 300.0,
+           "volume": 6000.0
+          }
+         ]
+        },
+        {
+         "id": "h-3",
+         "name": "Dolgu Brükneri",
+         "volume": "v-3",
+         "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Hem PI hem ters çevirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "alignment": "g-1",
+      "pis": [
+       {
+        "id": "a",
+        "x": 20.0,
+        "y": 50.0
+       },
+       {
+        "id": "p1",
+        "x": 300.0,
+        "y": 60.0,
+        "radius": 150.0,
+        "spiralIn": 40.0,
+        "spiralOut": 40.0
+       },
+       {
+        "id": "b",
+        "x": 560.0,
+        "y": 360.0
+       }
+      ],
+      "reverse": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_alignment_impact",
+       "message": "Ya yeni PI'lar ya ters çevirme sorulur; ikisi birden değil.",
+       "path": "pis"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "cut": 1.25,
+           "fill": 0.9
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2
+          }
+         ],
+         "approved": {
+          "revision": 1,
+          "at": "2026-11-03",
+          "number": 1,
+          "cut": 25878.14593084839,
+          "fill": 3507.380684331716,
+          "factoredCut": 31611.668615970284,
+          "factoredFill": 3495.464956323876,
+          "rows": [
+           [
+            0.0,
+            25.0,
+            830.3180834649165,
+            0.0
+           ],
+           [
+            25.0,
+            50.0,
+            1682.9425134868288,
+            0.0
+           ],
+           [
+            50.0,
+            75.0,
+            1600.6993453965194,
+            0.0
+           ],
+           [
+            75.0,
+            100.0,
+            1196.716165183281,
+            0.0
+           ],
+           [
+            100.0,
+            125.0,
+            690.732303354783,
+            0.0
+           ],
+           [
+            125.0,
+            150.0,
+            277.5839053905673,
+            0.0
+           ],
+           [
+            150.0,
+            175.0,
+            35.492851844457995,
+            66.62399602149243
+           ],
+           [
+            175.0,
+            194.712598760949,
+            124.11882160170718,
+            52.533284056909686
+           ],
+           [
+            194.712598760949,
+            204.712598760949,
+            172.646116323654,
+            0.0
+           ],
+           [
+            204.712598760949,
+            214.712598760949,
+            264.2585886556393,
+            0.0
+           ],
+           [
+            214.712598760949,
+            224.712598760949,
+            355.77270241536377,
+            0.0
+           ],
+           [
+            224.712598760949,
+            234.712598760949,
+            450.9990762070264,
+            0.0
+           ],
+           [
+            234.712598760949,
+            243.95159624156145,
+            491.41300460180327,
+            0.0
+           ],
+           [
+            243.95159624156145,
+            253.19059372217393,
+            542.5393553984381,
+            0.0
+           ],
+           [
+            253.19059372217393,
+            262.4295912027864,
+            576.7070903999205,
+            0.0
+           ],
+           [
+            262.4295912027864,
+            271.66858868339887,
+            593.3280970615705,
+            0.0
+           ],
+           [
+            271.66858868339887,
+            280.9075861640113,
+            548.5692307360441,
+            0.0
+           ],
+           [
+            280.9075861640113,
+            290.1465836446238,
+            424.85125631951854,
+            0.0
+           ],
+           [
+            290.1465836446238,
+            299.3855811252363,
+            283.9342701360498,
+            0.0
+           ],
+           [
+            299.3855811252363,
+            300.0,
+            14.24720106619386,
+            0.0
+           ],
+           [
+            300.0,
+            308.62457860584874,
+            131.19066059949236,
+            0.0
+           ],
+           [
+            308.62457860584874,
+            317.8635760864612,
+            47.198715451970216,
+            2.1555795581506976
+           ],
+           [
+            317.8635760864612,
+            327.8635760864612,
+            3.0649197407534983,
+            47.40580725758967
+           ],
+           [
+            327.8635760864612,
+            337.8635760864612,
+            0.0,
+            135.39661574782625
+           ],
+           [
+            337.8635760864612,
+            347.8635760864612,
+            0.0,
+            223.90438790366653
+           ],
+           [
+            347.8635760864612,
+            357.8635760864612,
+            0.0,
+            301.1774759374853
+           ],
+           [
+            357.8635760864612,
+            375.0,
+            0.0,
+            603.3296970713396
+           ],
+           [
+            375.0,
+            400.0,
+            0.0,
+            868.3480752321221
+           ],
+           [
+            400.0,
+            425.0,
+            0.0,
+            743.5274723847514
+           ],
+           [
+            425.0,
+            450.0,
+            0.0,
+            399.67561877915927
+           ],
+           [
+            450.0,
+            475.0,
+            239.7602051149267,
+            63.30267438122278
+           ],
+           [
+            475.0,
+            500.0,
+            1041.6047907563582,
+            0.0
+           ],
+           [
+            500.0,
+            525.0,
+            2257.070276615331,
+            0.0
+           ],
+           [
+            525.0,
+            550.0,
+            3376.129744276058,
+            0.0
+           ],
+           [
+            550.0,
+            575.0,
+            3837.0273097559043,
+            0.0
+           ],
+           [
+            575.0,
+            600.0,
+            3787.229329493317,
+            0.0
+           ]
+          ]
+         }
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "revision": 1,
+         "method": "surfaces"
+        },
+        {
+         "id": "v-3",
+         "name": "Dolgu kübajı",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 600.0,
+           "cut": 0.1,
+           "fill": 5.0
+          }
+         ]
+        }
+       ],
+       "hauls": [
+        {
+         "id": "h-1",
+         "name": "Ana Brükner",
+         "volume": "v-1",
+         "revision": 1,
+         "free": 150.0,
+         "sites": [
+          {
+           "name": "D1",
+           "kind": "waste",
+           "station": 40.0,
+           "volume": 10000.0
+          },
+          {
+           "name": "D2",
+           "kind": "waste",
+           "station": 590.0,
+           "volume": 25000.0
+          }
+         ],
+         "approved": {
+          "number": 1,
+          "at": "2026-11-04",
+          "revision": 1,
+          "volumeRevision": 1,
+          "volumeApproval": 1,
+          "moment": 1974258.134519718,
+          "moved": 31450.886437885216,
+          "sites": [
+           {
+            "name": "D1",
+            "capacity": 10000.0,
+            "used": 10000.0
+           },
+           {
+            "name": "D2",
+            "capacity": 25000.0,
+            "used": 18116.20365964641
+           }
+          ]
+         }
+        },
+        {
+         "id": "h-2",
+         "name": "Yan Brükner",
+         "volume": "v-2",
+         "revision": 1,
+         "sites": [
+          {
+           "name": "Döküm 1",
+           "kind": "waste",
+           "station": 300.0,
+           "volume": 6000.0
+          }
+         ]
+        },
+        {
+         "id": "h-3",
+         "name": "Dolgu Brükneri",
+         "volume": "v-3",
+         "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
    "name": "Olmayan aks",
    "steps": [
     {
@@ -18921,6 +23950,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -19744,6 +24840,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }
@@ -20569,6 +25732,73 @@
          "volume": "v-3",
          "revision": 1
         }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
        ]
       }
      },
@@ -21393,6 +26623,73 @@
          "volume": "v-3",
          "revision": 1
         }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
+        }
        ]
       }
      },
@@ -22202,6 +27499,73 @@
          "name": "Dolgu Brükneri",
          "volume": "v-3",
          "revision": 1
+        }
+       ],
+       "culverts": [
+        {
+         "id": "m-1",
+         "name": "Km 1+380 menfezi",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "station": 380.0,
+         "shape": {
+          "kind": "box",
+          "width": 2.0,
+          "height": 1.5,
+          "thickness": 0.25,
+          "slab": 0.3,
+          "cells": 2
+         },
+         "invert": 106.5,
+         "slope": 1.0,
+         "flow": "right",
+         "extend": 1.0,
+         "cover": 0.5,
+         "material": "Betonarme",
+         "roughness": 0.013
+        }
+       ],
+       "walls": [
+        {
+         "id": "d-1",
+         "name": "Sağ istinat",
+         "corridor": "c-1",
+         "corridorRevision": 1,
+         "revision": 1,
+         "side": "right",
+         "from": 340.0,
+         "to": 420.0,
+         "step": 20.0,
+         "shape": {
+          "top": 0.3,
+          "batter": 0.1,
+          "footing": 2.4,
+          "base": 0.5,
+          "toe": 0.6,
+          "cover": 0.6,
+          "above": 0.9
+         },
+         "highest": 5.0,
+         "material": "Betonarme"
+        }
+       ],
+       "sheetSets": [
+        {
+         "id": "ps-1",
+         "name": "Ana paftalar",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "from": 50.0,
+         "to": 550.0,
+         "scale": 1000,
+         "sheets": [
+          {
+           "sheet": "ana-1",
+           "from": 50.0,
+           "to": 550.0
+          }
+         ]
         }
        ]
       }

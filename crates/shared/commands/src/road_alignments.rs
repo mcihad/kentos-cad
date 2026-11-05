@@ -419,6 +419,11 @@ pub struct AlignmentsWritten {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub superelevations: Vec<String>,
+    /// The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new
+    /// start.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub profiles: Vec<String>,
     pub alignments: Vec<AlignmentListed>,
     pub revision: String,
 }
@@ -532,8 +537,15 @@ pub const ROAD_ALIGNMENTS_IMPACT_VERSION: u32 = 1;
 pub struct AlignmentsImpact {
     /// The alignment's id or name.
     pub alignment: String,
-    /// The PIs it would have.
+    /// The PIs it would have; none with `reverse`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentPi>>", optional))]
     pub pis: Vec<AlignmentPi>,
+    /// The alignment turned round instead (`road.alignments.edit reverse`, docs/adr/0965): every station s goes to
+    /// L − s; the profiles and superelevation schedules turn with it, the rest is told.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub reverse: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -590,6 +602,14 @@ pub enum StationOwner {
     SectionSet,
     Corridor,
     Superelevation,
+    /// A volume on a corridor of the alignment: its factor rows and topsoil stretches (docs/adr/0965).
+    Volume,
+    /// A haul diagram on such a volume: its sites, unsuitable stretches and barriers.
+    Haul,
+    Culvert,
+    Wall,
+    /// A sheet set on the alignment.
+    SheetSet,
 }
 
 /// A station something names, where it lands: `to` on the new line, none where its place left the line.
@@ -611,6 +631,11 @@ pub struct StationRef {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
+    /// The edit writes it there itself (a reversal turns the profiles and schedules round, docs/adr/0965); otherwise
+    /// it stays where it is named and goes stale.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub carried: bool,
 }
 
 /// An alignment that follows this one (a parallel axis).

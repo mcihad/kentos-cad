@@ -793,6 +793,7 @@ codes! {
     /// A warning: stretches without factors are not converted (docs/adr/0906 §4).
     VOLUME_UNFACTORED = "volume_unfactored", Warning, false, "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir.";
     ALIGNMENT_IMPACT_UNRESOLVED = "alignment_impact_unresolved", Warning, false, "Aksın yeni PI'larıyla bir boykesitin, kesit takımının, koridorun ya da dever çizelgesinin bir km'sinin yeri aksın üstünde kalmıyor; kaydedilirse elle yeniden verilmeli.";
+    ALIGNMENT_REVERSE_STALE = "alignment_reverse_stale", Warning, false, "Aks ters çevrilince koridor, kesit takımı, kübaj, Brükner, menfez, duvar ya da pafta km'leri onunla dönmez; eski yönde kalır ve eskir.";
     ALIGNMENT_IMPACT_APPROVED = "alignment_impact_approved", Warning, false, "Aksın yeni PI'ları onaylı bir kübajı ya da taşıma planını değiştirir; yazılınca onayları eskir.";
     PROFILE_IMPACT_APPROVED = "profile_impact_approved", Warning, false, "Boykesitin yeni PVI'ları onaylı bir kübajı ya da taşıma planını değiştirir; yazılınca onayları eskir.";
     VOLUME_FACTOR_PHYSICS = "volume_factor_physics", Warning, false, "Bir katsayı ya da yoğunluk zeminin yapamayacağını söylüyor (gevşek hacim yerindekinden ya da sıkışıktan az); kütle ordinatı karışık hallerle kurulmuş olabilir.";

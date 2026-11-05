@@ -18,6 +18,11 @@ export type AlignmentsImpact = {
  */
 alignment: string, 
 /**
- * The PIs it would have.
+ * The PIs it would have; none with `reverse`.
  */
-pis: Array<AlignmentPi>, tolerance?: number, };
+pis?: Array<AlignmentPi>, 
+/**
+ * The alignment turned round instead (`road.alignments.edit reverse`, docs/adr/0965): every station s goes to
+ * L − s; the profiles and superelevation schedules turn with it, the rest is told.
+ */
+reverse?: boolean, tolerance?: number, };

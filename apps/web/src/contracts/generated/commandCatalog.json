@@ -36156,6 +36156,13 @@
             },
             "type": "array"
           },
+          "profiles": {
+            "description": "The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new\nstart.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "type": "string"
           },
@@ -36208,6 +36215,13 @@
             "description": "What the edit did to the stations, by element.",
             "items": {
               "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "profiles": {
+            "description": "The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new\nstart.",
+            "items": {
+              "type": "string"
             },
             "type": "array"
           },
@@ -36397,6 +36411,13 @@
             },
             "type": "array"
           },
+          "profiles": {
+            "description": "The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new\nstart.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "type": "string"
           },
@@ -36449,6 +36470,13 @@
             "description": "What the edit did to the stations, by element.",
             "items": {
               "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "profiles": {
+            "description": "The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new\nstart.",
+            "items": {
+              "type": "string"
             },
             "type": "array"
           },
@@ -42600,7 +42628,7 @@
       "id": "road.alignments.impact",
       "version": 1,
       "title": "Aks değişikliğinin etkisi",
-      "summary": "Bir aksın yeni PI'ları yazılmadan km'lere bağlı her şeye ne yapacağını söyler; hiçbir şey yazmaz. Eski aksın her km'sinin yeri yeni aksa izdüşürülür: toleransın (öntanımlı 1 mm) içindeyse km yeni aksın km'sine taşınır, değilse yer aksın üstünde kalmaz. Yeni aksın dışında kalan eski aralıklar, eski aksın dışında kalan yeni aralıklar, aradaki aralıkların km kayması; boykesit PVI'ları, kesit takımlarının km'leri, koridor bölgelerinin uçları ve km'leri, dever çizelgesinin satırları ve PI'ı kalkan kurpları taşınır ya da çözülmez diye; paralel akslar ve dokunulan koridorlardaki kübaj ve taşıma planları, onaylılar. Uyarılar: alignment_impact_unresolved, alignment_impact_approved. Retler: not_a_road_project, unknown_alignment, invalid_alignment, invalid_alignment_impact.",
+      "summary": "Bir aksın yeni PI'ları yazılmadan km'lere bağlı her şeye ne yapacağını söyler; hiçbir şey yazmaz. Eski aksın her km'sinin yeri yeni aksa izdüşürülür: toleransın (öntanımlı 1 mm) içindeyse km yeni aksın km'sine taşınır, değilse yer aksın üstünde kalmaz. Yeni aksın dışında kalan eski aralıklar, eski aksın dışında kalan yeni aralıklar, aradaki aralıkların km kayması; boykesit PVI'ları, kesit takımlarının km'leri, koridor bölgelerinin uçları ve km'leri, dever çizelgesinin satırları ve PI'ı kalkan kurpları taşınır ya da çözülmez diye; paralel akslar ve dokunulan koridorlardaki kübaj ve taşıma planları, onaylılar. Ters çevirme (`reverse`) de sorulur: her km L − s'ye gider, boykesitler ve dever çizelgeleri onunla döner, gerisi eski yönde kalır ve söylenir. Kübaj katsayı ve sıyırma aralıkları, Brükner alanları, uygunsuz aralıkları ve engelleri, menfez, duvar ve pafta takımı km'leri de raporda. Uyarılar: alignment_impact_unresolved, alignment_impact_approved, alignment_reverse_stale. Retler: not_a_road_project, unknown_alignment, invalid_alignment, invalid_alignment_impact.",
       "aliases": [
         "aksetkisi"
       ],
@@ -42625,11 +42653,15 @@
             "type": "string"
           },
           "pis": {
-            "description": "The PIs it would have.",
+            "description": "The PIs it would have; none with `reverse`.",
             "items": {
               "$ref": "#/$defs/AlignmentPi"
             },
             "type": "array"
+          },
+          "reverse": {
+            "description": "The alignment turned round instead (`road.alignments.edit reverse`, docs/adr/0965): every station s goes to\nL − s; the profiles and superelevation schedules turn with it, the rest is told.",
+            "type": "boolean"
           },
           "tolerance": {
             "format": "double",
@@ -42641,8 +42673,7 @@
           }
         },
         "required": [
-          "alignment",
-          "pis"
+          "alignment"
         ],
         "title": "AlignmentsImpact",
         "type": "object"
@@ -42814,7 +42845,8 @@
         ],
         "warnings": [
           "alignment_impact_unresolved",
-          "alignment_impact_approved"
+          "alignment_impact_approved",
+          "alignment_reverse_stale"
         ]
       },
       "examples": [
@@ -89611,6 +89643,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aksın yeni PI'larıyla bir boykesitin, kesit takımının, koridorun ya da dever çizelgesinin bir km'sinin yeri aksın üstünde kalmıyor; kaydedilirse elle yeniden verilmeli."
+    },
+    {
+      "code": "alignment_reverse_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aks ters çevrilince koridor, kesit takımı, kübaj, Brükner, menfez, duvar ya da pafta km'leri onunla dönmez; eski yönde kalır ve eskir."
     },
     {
       "code": "alignment_impact_approved",
@@ -167733,17 +167771,42 @@
     },
     "StationOwner": {
       "description": "What names a station of the alignment.",
-      "enum": [
-        "profile",
-        "sectionSet",
-        "corridor",
-        "superelevation"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "profile",
+            "sectionSet",
+            "corridor",
+            "superelevation",
+            "culvert",
+            "wall"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "volume",
+          "description": "A volume on a corridor of the alignment: its factor rows and topsoil stretches (docs/adr/0965).",
+          "type": "string"
+        },
+        {
+          "const": "haul",
+          "description": "A haul diagram on such a volume: its sites, unsuitable stretches and barriers.",
+          "type": "string"
+        },
+        {
+          "const": "sheetSet",
+          "description": "A sheet set on the alignment.",
+          "type": "string"
+        }
+      ]
     },
     "StationRef": {
       "description": "A station something names, where it lands: `to` on the new line, none where its place left the line.",
       "properties": {
+        "carried": {
+          "description": "The edit writes it there itself (a reversal turns the profiles and schedules round, docs/adr/0965); otherwise\nit stays where it is named and goes stale.",
+          "type": "boolean"
+        },
         "id": {
           "description": "The owner's id and name.",
           "type": "string"

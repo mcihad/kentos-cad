@@ -86,7 +86,6 @@ birlikte geri getirir.
 
 ## Açık
 
-- **Diğer km'ler:** Ters çevirmede boykesit PVI'larının, kesit takımı ve koridor km'lerinin dönüştürülmesi yok. Bunlar
-  eskir ve ROAD-ALIGN-10'un açık kısmıdır. Profilin aynalanması ayrı bir karar ister: kırmızı kot aynı, eğimin işareti
-  ters, asimetrik kurbun kolları yer değiştirir.
+- **Diğer km'ler:** Boykesitler Y59'dan beri ters çevirmede onunla döner (ADR 0965). Kesit takımı ve koridor km'leri
+  dönmez; tip kesitin yanları yüzünden eskir ve söylenir.
 - **Km eşitlikleri:** Ters çevirmede eskisi gibi silinir; Civil 3D de siler.

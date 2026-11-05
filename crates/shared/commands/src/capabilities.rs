@@ -2416,7 +2416,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.alignments.impact",
         refusals: &[&["not_a_road_project", "unknown_alignment", "invalid_alignment", "invalid_alignment_impact"]],
-        warnings: &["alignment_impact_unresolved", "alignment_impact_approved"],
+        warnings: &["alignment_impact_unresolved", "alignment_impact_approved", "alignment_reverse_stale"],
         targets: none,
     },
     Entry {

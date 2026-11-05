@@ -3,4 +3,4 @@
 /**
  * What names a station of the alignment.
  */
-export type StationOwner = "profile" | "sectionSet" | "corridor" | "superelevation";
+export type StationOwner = "profile" | "sectionSet" | "corridor" | "superelevation" | "volume" | "haul" | "culvert" | "wall" | "sheetSet";

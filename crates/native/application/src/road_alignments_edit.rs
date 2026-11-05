@@ -23,6 +23,8 @@ struct Checked {
     list: Vec<AlignmentDef>,
     /// The superelevation schedules turned round with a reversed alignment (docs/adr/0964); none otherwise.
     supers: Option<Vec<kentos_commands::SuperelevationDef>>,
+    /// The profiles turned round with it (docs/adr/0965); none otherwise.
+    profiles: Option<Vec<kentos_commands::ProfileDef>>,
     target: Option<String>,
     mapping: Vec<StationMapRow>,
     warnings: Vec<CommandWarning>,
@@ -41,6 +43,7 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
     let mut warnings = Vec::new();
     let mut mapping = Vec::new();
     let mut supers = None;
+    let mut profiles = None;
     let target = match input.operation {
         AlignmentsEditOperation::Set => {
             if input.name.is_none() && input.pis.is_none() && input.stationing.is_none() && input.offset.is_none() {
@@ -139,6 +142,15 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                         .collect(),
                 );
             }
+            // Its profiles too: the grade line read from the other end (docs/adr/0965).
+            if doc.road_profiles().iter().any(|d| d.alignment == id) {
+                profiles = Some(
+                    doc.road_profiles()
+                        .iter()
+                        .map(|d| if d.alignment == id { crate::road_profiles::reversed(d, length, now) } else { d.clone() })
+                        .collect(),
+                );
+            }
             mapping = built
                 .core
                 .elements
@@ -206,6 +218,7 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
     Ok(Checked {
         list,
         supers,
+        profiles,
         target,
         mapping,
         warnings,
@@ -249,27 +262,35 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsEdit) -> CommandR
 }
 
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<AlignmentsWritten> {
-    let Some(supers) = c.supers else {
+    if c.supers.is_none() && c.profiles.is_none() {
         return common::write(cx, c.list, STEP, c.target.as_deref(), c.mapping, c.warnings);
-    };
-    // The alignment and its schedules in one step: written in one transaction, the report read after.
-    let turned: Vec<String> = supers
-        .iter()
-        .zip(cx.doc.road_superelevations())
-        .filter(|(n, o)| n != o)
-        .map(|(n, _)| n.id.clone())
-        .collect();
-    let list = c.list.clone();
+    }
+    // The alignment, its profiles and its schedules in one step: written in one transaction, the report read after.
+    let changed = |new: &[String]| new.to_vec();
+    let turned_supers: Vec<String> = c.supers.as_ref().map_or_else(Vec::new, |s| {
+        changed(&s.iter().zip(cx.doc.road_superelevations()).filter(|(n, o)| n != o).map(|(n, _)| n.id.clone()).collect::<Vec<_>>())
+    });
+    let turned_profiles: Vec<String> = c.profiles.as_ref().map_or_else(Vec::new, |s| {
+        s.iter().zip(cx.doc.road_profiles()).filter(|(n, o)| n != o).map(|(n, _)| n.id.clone()).collect()
+    });
+    let (list, supers, profiles) = (c.list.clone(), c.supers, c.profiles);
     let written = cx.doc.transact(STEP, |doc| {
         doc.set_road_alignments(list, STEP)?;
-        doc.set_road_superelevations(supers, STEP)
+        if let Some(p) = profiles {
+            doc.set_road_profiles(p, STEP)?;
+        }
+        if let Some(s) = supers {
+            doc.set_road_superelevations(s, STEP)?;
+        }
+        Ok::<(), kentos_domain::Refusal>(())
     });
     if let Err(r) = written {
         return fail(codes::INVALID_ALIGNMENT, format!("Aks kurallarına uymuyor: {}.", r.0), "").into();
     }
     let mut out = common::write(cx, c.list, STEP, c.target.as_deref(), c.mapping, c.warnings);
     if let CommandResult::Completed { output, .. } = &mut out {
-        output.superelevations = turned;
+        output.superelevations = turned_supers;
+        output.profiles = turned_profiles;
     }
     out
 }

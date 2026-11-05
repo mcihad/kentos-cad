@@ -588,6 +588,60 @@ def edit_cases():
     cases.append({"name": "Ters çevirmenin planı devere de bakar", "setup": with_supers, "steps": [
         step("plan", {"alignment": "g-1", "operation": "reverse"}, completed(plan_out),
              {**UNCHANGED, "road": road_before})]})
+    # Docs/adr/0965: its profiles turn round with it too. A PVI at s goes to L − s with its elevation, in the reversed
+    # order; a parabola and a circle are symmetric about their PVI, an asymmetric parabola's arms swap; a crossing goes
+    # to L − s. Checked against the vertical reference: the grade line at L − s is the old one at s.
+    import road_vertical_cases as vref
+
+    def pv(id_, s_, z, **c):
+        return {"id": id_, "station": float(s_), "elevation": float(z), **{k: float(v) for k, v in c.items()}}
+
+    prof = {"id": "b-1", "name": "Proje kotu", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+            "pvis": [pv("a", 0, 100), pv("v1", 250, 108, length=120), pv("v2", 560, 101, lengthIn=60, lengthOut=90),
+                     pv("v3", 900, 112, radius=3000), pv("b", length, 106)],
+            "crossings": [{"name": "Köprü", "station": 300.0, "side": "above", "elevation": 120.0, "clearance": 5.5}]}
+
+    def turned_profile(d):
+        out = {**d, "alignmentRevision": 2, "revision": d["revision"] + 1, "pvis": [], "crossings": [
+            {**c, "station": length - c["station"]} for c in d["crossings"]]}
+        for p_ in reversed(d["pvis"]):
+            q = {**p_, "station": length - p_["station"]}
+            if "lengthIn" in p_:
+                q["lengthIn"], q["lengthOut"] = p_["lengthOut"], p_["lengthIn"]
+            out["pvis"].append(q)
+        return out
+
+    def to_v(pvis):
+        out = []
+        for p_ in pvis:
+            c = None
+            if p_.get("radius"):
+                c = vref.circ(p_["radius"])
+            elif p_.get("length"):
+                c = vref.par(p_["length"])
+            elif p_.get("lengthIn"):
+                c = vref.asym(p_["lengthIn"], p_["lengthOut"])
+            out.append(vref.pvi(p_["id"], p_["station"], p_["elevation"], c))
+        return out
+
+    turned_prof = turned_profile(prof)
+    z_was = vref.solve(to_v(prof["pvis"]))[1]
+    z_now = vref.solve(to_v(turned_prof["pvis"]))[1]
+    for k in range(401):
+        s_ = length * k / 400
+        za, zb = z_was(s_), z_now(length - s_)
+        assert za is not None and zb is not None and abs(za[0] - zb[0]) < 1e-9, ("the grade line moved", s_)
+    with_profile = setup(start)
+    with_profile["settings"]["road"]["superelevations"] = copy.deepcopy(supers)
+    with_profile["settings"]["road"]["profiles"] = [copy.deepcopy(prof)]
+    out_p = written([rmain, rleft, LINK], "g-1", rows)
+    out_p["superelevations"] = ["d-1", "d-2"]
+    out_p["profiles"] = ["b-1"]
+    cases.append({"name": "Ters çevrilir: boykesit de döner", "setup": with_profile, "steps": [
+        step("execute", {"alignment": "g-1", "operation": "reverse"}, completed(out_p),
+             {**STEPPED, "road": {**road_after, "profiles": [turned_prof]}}),
+        {"op": "undo", "returns": "Aksı düzenle",
+         "expect": {"road": {**road_before, "profiles": [prof]}, "canRedo": True}}]})
     link_eq = {**LINK, "stationing": {"start": 500.0, "equations": [{"back": 550.0, "ahead": 600.0}]}}
     lr_pis = list(reversed(LINK_PIS))
     rlink = {**LINK, "revision": 2, "pis": lr_pis, "stationing": {"start": 500.0}}

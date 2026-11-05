@@ -333,3 +333,72 @@ fn screens_reverse() {
         }
     }
 }
+
+/// Ters çevir with profiles, corridors, a culvert, a wall and a sheet set on the alignment (Y59, docs/adr/0965): the
+/// profiles and schedules turn with it in one step, what does not turn is told by name.
+#[test]
+fn reversing_turns_the_profiles_and_tells_what_goes_stale() {
+    let mut app = impact_app();
+    let before: Vec<kentos_commands::ProfileDef> =
+        app.document.as_ref().expect("a drawing").model.road_profiles().iter().filter(|p| p.alignment == "g-1").cloned().collect();
+    let _ = app.update(Message::Run("alignment.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Reverse);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let length = kentos_native_application::road_alignments::made_alignments(doc)
+        .into_iter()
+        .find(|(d, _)| d.id == "g-1")
+        .and_then(|(_, b)| b.ok())
+        .map(|b| b.core.length)
+        .expect("builds");
+    for p0 in &before {
+        let p1 = doc.road_profiles().iter().find(|p| p.id == p0.id).expect("kept");
+        let (first, last) = (&p0.pvis[0], &p1.pvis[p1.pvis.len() - 1]);
+        assert!((last.station - (length - first.station)).abs() < 1e-9 && last.elevation == first.elevation, "{}", p0.id);
+    }
+    let said: String = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
+    assert!(said.contains("boykesiti") && said.contains("dever çizelgesi"), "{said}");
+    assert!(said.contains("Ana koridor") && said.contains("Km 1+380 menfezi") && said.contains("Sağ istinat"), "{said}");
+}
+
+/// The reversal told, and the profile read from its new start, wide and narrow, light and dark;
+/// `.run/gui-evidence/yol-y59/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib alignment_window_tests::screens_reverse_profile -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_reverse_profile() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y59");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = impact_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y59-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("profile.editor"));
+        shot(&mut app, "boykesit-once");
+        let _ = app.update(Message::Profiles(crate::profile_window::Event::Cancel));
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Reverse);
+        shot(&mut app, "ters-cevrildi");
+        let _ = app.update(Message::Alignments(crate::alignment_window::Event::Cancel));
+        let _ = app.update(Message::Run("profile.editor"));
+        shot(&mut app, "boykesit-sonra");
+    }
+}

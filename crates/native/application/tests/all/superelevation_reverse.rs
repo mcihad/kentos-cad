@@ -75,3 +75,52 @@ fn a_reversed_alignment_keeps_every_edge_s_slope() {
         assert!(worst < 1e-9, "{}: an edge's slope moved by {worst}", d0.id);
     }
 }
+
+/// The profiles turn round with it (Y59, docs/adr/0965): the core's grade line at L − s after is the one at s before,
+/// a symmetric and an asymmetric parabola and a circle among its curves; the crossing moves with it.
+#[test]
+fn a_reversed_alignment_keeps_the_grade_line() {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.alignments.edit.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ters çevrilir: boykesit de döner").expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("setup");
+    let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+    let line = |doc: &kentos_domain::Document| {
+        let d = doc.road_profiles()[0].clone();
+        (kentos_road::profile::vertical::build(&kentos_native_application::road_profiles::pvis_of(&d)).expect("builds"), d)
+    };
+    let (was, d0) = line(&doc);
+    let length = kentos_native_application::road_alignments::made_alignments(&doc)
+        .into_iter()
+        .find(|(d, _)| d.id == "g-1")
+        .and_then(|(_, b)| b.ok())
+        .map(|b| b.core.length)
+        .expect("the alignment builds");
+    let input = AlignmentsEdit {
+        alignment: "g-1".into(),
+        operation: AlignmentsEditOperation::Reverse,
+        name: None,
+        pis: None,
+        stationing: None,
+        offset: None,
+        expected_revision: None,
+    };
+    let CommandResult::Completed { output, .. } = road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc), input) else {
+        panic!("reversed")
+    };
+    assert_eq!(output.profiles, ["b-1"]);
+    let (now, d1) = line(&doc);
+    let mut worst: f64 = 0.0;
+    for k in 0..=1000 {
+        let s = length * f64::from(k) / 1000.0;
+        // The ends written as L − s land within rounding of the line's span: read there clamped into it.
+        let (a, b) = (
+            was.at(s.clamp(was.start, was.end)).expect("on the line").0,
+            now.at((length - s).clamp(now.start, now.end)).expect("on the line").0,
+        );
+        worst = worst.max((a - b).abs());
+    }
+    assert!(worst < 1e-9, "the grade line moved by {worst}");
+    assert!((d1.crossings[0].station - (length - d0.crossings[0].station)).abs() < 1e-12);
+    assert_eq!(d1.alignment_revision, doc.road_alignments()[0].revision, "bound to the new revision");
+}

@@ -23,4 +23,9 @@ dependents: Array<string>,
  * The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and
  * pivot read from the new start.
  */
-superelevations?: Array<string>, alignments: Array<AlignmentListed>, revision: string, };
+superelevations?: Array<string>, 
+/**
+ * The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new
+ * start.
+ */
+profiles?: Array<string>, alignments: Array<AlignmentListed>, revision: string, };

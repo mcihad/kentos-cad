@@ -578,7 +578,7 @@ impl App {
         w.impact = w.chosen.and_then(|i| w.rows.get(i)).and_then(|r| r.def().ok()).and_then(|d| {
             let kept = w.kept.iter().find(|k| k.id == d.id && k.offset_of.is_none())?;
             (kept.pis != d.pis && d.offset_of.is_none()).then(|| {
-                let input = kentos_commands::AlignmentsImpact { alignment: d.id.clone(), pis: d.pis.clone(), tolerance: None };
+                let input = kentos_commands::AlignmentsImpact { alignment: d.id.clone(), pis: d.pis.clone(), reverse: false, tolerance: None };
                 kentos_native_application::road_alignments_impact::preview(&doc.model, &input)
             })
         });
@@ -691,23 +691,33 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
+        // What does not turn with it, read before (docs/adr/0965): told after it is turned.
+        let stale: Vec<String> = kentos_native_application::road_alignments_impact::preview(
+            &doc.model,
+            &kentos_commands::AlignmentsImpact { alignment: edit.alignment.clone(), pis: Vec::new(), reverse: true, tolerance: None },
+        )
+        .map(|(_, w)| w.into_iter().filter(|w| w.code == "alignment_reverse_stale").map(|w| w.message).collect())
+        .unwrap_or_default();
         let result = road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
         if let Some(out) = self.answered(result) {
-            // Its superelevation schedules turned round with it (docs/adr/0964): said by name.
+            // Its profiles and superelevation schedules turned round with it (docs/adr/0964, 0965): said by name.
             let names: Vec<String> = self.document.as_ref().map_or_else(Vec::new, |d| {
-                out.superelevations
-                    .iter()
-                    .filter_map(|id| d.model.road_superelevations().iter().find(|s| s.id == *id).map(|s| format!("“{}”", s.name)))
-                    .collect()
+                let profiles = out.profiles.iter().filter_map(|id| {
+                    d.model.road_profiles().iter().find(|p| p.id == *id).map(|p| format!("“{}” boykesiti", p.name))
+                });
+                let supers = out.superelevations.iter().filter_map(|id| {
+                    d.model.road_superelevations().iter().find(|s| s.id == *id).map(|s| format!("“{}” dever çizelgesi", s.name))
+                });
+                profiles.chain(supers).collect()
             });
             self.reload_alignments();
             if names.is_empty() {
                 self.say(Level::Success, "Aks ters çevrildi.");
             } else {
-                self.say(
-                    Level::Success,
-                    format!("Aks ters çevrildi; {} dever çizelgesi de km'leri ve yanlarıyla döndü.", names.join(", ")),
-                );
+                self.say(Level::Success, format!("Aks ters çevrildi; {} de km'leriyle döndü.", names.join(", ")));
+            }
+            for words in stale {
+                self.warn(words);
             }
         }
         Task::none()

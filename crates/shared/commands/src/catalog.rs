@@ -7766,7 +7766,8 @@ pub fn catalog() -> CommandCatalog {
             version: crate::ROAD_ALIGNMENTS_IMPACT_VERSION,
             title: "Aks değişikliğinin etkisi".into(),
             summary: "Bir aksın yeni PI'ları yazılmadan km'lere bağlı her şeye ne yapacağını söyler; hiçbir şey yazmaz. Eski aksın her km'sinin yeri yeni aksa izdüşürülür: toleransın (öntanımlı 1 mm) içindeyse km yeni aksın km'sine taşınır, değilse yer aksın üstünde kalmaz. Yeni aksın dışında kalan eski aralıklar, eski aksın dışında kalan yeni aralıklar, aradaki aralıkların km kayması; boykesit PVI'ları, kesit takımlarının km'leri, koridor bölgelerinin uçları ve km'leri, dever çizelgesinin satırları ve PI'ı kalkan kurpları taşınır ya da çözülmez diye; paralel akslar ve dokunulan koridorlardaki kübaj ve taşıma planları, onaylılar. \
-                      Uyarılar: alignment_impact_unresolved, alignment_impact_approved. Retler: not_a_road_project, unknown_alignment, invalid_alignment, invalid_alignment_impact."
+                      Ters çevirme (`reverse`) de sorulur: her km L − s'ye gider, boykesitler ve dever çizelgeleri onunla döner, gerisi eski yönde kalır ve söylenir. Kübaj katsayı ve sıyırma aralıkları, Brükner alanları, uygunsuz aralıkları ve engelleri, menfez, duvar ve pafta takımı km'leri de raporda. \
+                      Uyarılar: alignment_impact_unresolved, alignment_impact_approved, alignment_reverse_stale. Retler: not_a_road_project, unknown_alignment, invalid_alignment, invalid_alignment_impact."
                 .into(),
             aliases: vec!["aksetkisi".into()],
             effect: CommandEffect::Query,

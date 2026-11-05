@@ -25,12 +25,21 @@ pub const TOLERANCE: f64 = 1e-3;
 pub const SHIFT: f64 = 1e-6;
 
 /// A named station's item in words: “from” → “başı”, “region 2 to” → “2. bölge sonu”, “station 3” → “3. km”, “row 1”
-/// → “1. satır”, “curve p1” → “p1 kurbu”, a PVI's id → “PVI v2”.
+/// → “1. satır”, “curve p1” → “p1 kurbu”, a PVI's id → “PVI v2”, “crossing Köprü” → “Köprü kesişmesi”, “factor 1 to” →
+/// “1. katsayı satırı sonu”, “strip 2 from” → “2. sıyırma aralığı başı”, “site D1” → “D1 alanı”, “unsuitable 1 from” →
+/// “1. uygunsuz aralık başı”, “barrier Dere” → “Dere engeli”, a culvert's “station” → “km”.
 pub fn item_words(owner: StationOwner, item: &str) -> String {
     let n = |rest: &str| rest.split_whitespace().next().unwrap_or("").to_owned();
-    if let Some(rest) = item.strip_prefix("region ") {
-        let end = if rest.ends_with(" from") { "başı" } else { "sonu" };
-        return format!("{}. bölge {end}", n(rest));
+    let end = |rest: &str| if rest.ends_with(" from") { "başı" } else { "sonu" };
+    for (key, words) in [
+        ("region ", "bölge"),
+        ("factor ", "katsayı satırı"),
+        ("strip ", "sıyırma aralığı"),
+        ("unsuitable ", "uygunsuz aralık"),
+    ] {
+        if let Some(rest) = item.strip_prefix(key) {
+            return format!("{}. {words} {}", n(rest), end(rest));
+        }
     }
     if let Some(rest) = item.strip_prefix("station ") {
         return format!("{}. km", n(rest));
@@ -38,13 +47,16 @@ pub fn item_words(owner: StationOwner, item: &str) -> String {
     if let Some(rest) = item.strip_prefix("row ") {
         return format!("{}. satır", n(rest));
     }
-    if let Some(rest) = item.strip_prefix("curve ") {
-        return format!("{rest} kurbu");
+    for (key, words) in [("curve ", "kurbu"), ("crossing ", "kesişmesi"), ("site ", "alanı"), ("barrier ", "engeli")] {
+        if let Some(rest) = item.strip_prefix(key) {
+            return format!("{rest} {words}");
+        }
     }
     match (owner, item) {
         (StationOwner::Profile, _) => format!("PVI {item}"),
         (_, "from") => "başı".into(),
         (_, "to") => "sonu".into(),
+        (_, "station") => "km".into(),
         _ => item.to_owned(),
     }
 }
@@ -64,14 +76,28 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
     if !(tolerance.is_finite() && tolerance > 0.0 && tolerance <= 1.0) {
         return Err(fail(codes::INVALID_ALIGNMENT_IMPACT, "Etki toleransı 0'dan büyük, en çok 1 m olur.".into(), "tolerance"));
     }
-    // The new PIs judged and built as road.alignments.edit would.
+    // The new PIs, or the alignment turned round, judged and built as road.alignments.edit would.
     let before = common::build(own, old, "")?;
     let mut list = own.to_vec();
-    list[at].pis = input.pis.clone();
+    if input.reverse {
+        if !input.pis.is_empty() {
+            return Err(fail(codes::INVALID_ALIGNMENT_IMPACT, "Ya yeni PI'lar ya ters çevirme sorulur; ikisi birden değil.".into(), "pis"));
+        }
+        let def = &mut list[at];
+        def.pis.reverse();
+        for p in &mut def.pis {
+            std::mem::swap(&mut p.spiral_in, &mut p.spiral_out);
+        }
+        if let Some(st) = &mut def.stationing {
+            st.equations.clear();
+        }
+    } else {
+        list[at].pis = input.pis.clone();
+    }
     common::judged(&list, at, "")?;
     let after = common::build(&list, &list[at], "")?;
     let (b, a) = (&before.core, &after.core);
-    let moved = impact::moved(b, a, tolerance);
+    let length = b.length;
     let old_text = |s: f64| km_text(before.km(s), 3);
     let new_text = |s: f64| km_text(after.km(s), 3);
     let stretch = |st: &impact::Stretch, text: &dyn Fn(f64) -> String| AlignmentStretch {
@@ -81,31 +107,55 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
         to_text: text(st.to),
         most: st.most,
     };
-    let removed: Vec<AlignmentStretch> = moved.removed.iter().map(|s| stretch(s, &old_text)).collect();
-    let added: Vec<AlignmentStretch> = moved.added.iter().map(|s| stretch(s, &new_text)).collect();
-    let runs: Vec<AlignmentRun> = moved
-        .runs
-        .iter()
-        .map(|r| AlignmentRun {
-            from: r.from,
-            to: r.to,
-            from_text: old_text(r.from),
-            to_text: old_text(r.to),
-            shift_from: r.shift_from,
-            shift_to: r.shift_to,
-        })
-        .collect();
-    // Every station named, kept where it lands on the same station.
+    // Turned round, the line is where it was: every station s is at L − s (docs/adr/0965), nothing leaves the line.
+    let (removed, added, runs, mapping) = if input.reverse {
+        let run = AlignmentRun { from: 0.0, to: length, from_text: old_text(0.0), to_text: old_text(length), shift_from: length, shift_to: -length };
+        let rows = a
+            .elements
+            .iter()
+            .map(|e| kentos_commands::StationMapRow {
+                element: e.id.clone(),
+                change: "reversed".into(),
+                before: Some([length - e.end_station(), length - e.station]),
+                after: Some([e.station, e.end_station()]),
+            })
+            .collect();
+        (Vec::new(), Vec::new(), vec![run], rows)
+    } else {
+        let moved = impact::moved(b, a, tolerance);
+        let removed: Vec<AlignmentStretch> = moved.removed.iter().map(|s| stretch(s, &old_text)).collect();
+        let added: Vec<AlignmentStretch> = moved.added.iter().map(|s| stretch(s, &new_text)).collect();
+        let runs: Vec<AlignmentRun> = moved
+            .runs
+            .iter()
+            .map(|r| AlignmentRun {
+                from: r.from,
+                to: r.to,
+                from_text: old_text(r.from),
+                to_text: old_text(r.to),
+                shift_from: r.shift_from,
+                shift_to: r.shift_to,
+            })
+            .collect();
+        (removed, added, runs, common::mapping_rows(Some(b), Some(a)))
+    };
+    let lands = |s: f64| if input.reverse { Some(length - s) } else { impact::map(b, a, s, tolerance) };
+    // Every station named, kept where it lands on the same station; a reversal writes the profiles' and the
+    // schedules' itself (carried).
     let mut refs: Vec<StationRef> = Vec::new();
     let name = |refs: &mut Vec<StationRef>, owner: StationOwner, id: &str, nm: &str, item: String, s: f64| {
-        let to = impact::map(b, a, s, tolerance);
+        let to = lands(s);
         if to.is_none_or(|t| (t - s).abs() > SHIFT) {
-            refs.push(StationRef { owner, id: id.to_owned(), name: nm.to_owned(), item, station: s, to });
+            let carried = input.reverse && matches!(owner, StationOwner::Profile | StationOwner::Superelevation);
+            refs.push(StationRef { owner, id: id.to_owned(), name: nm.to_owned(), item, station: s, to, carried });
         }
     };
     for p in doc.road_profiles().iter().filter(|p| p.alignment == old.id) {
         for v in &p.pvis {
             name(&mut refs, StationOwner::Profile, &p.id, &p.name, v.id.clone(), v.station);
+        }
+        for c in &p.crossings {
+            name(&mut refs, StationOwner::Profile, &p.id, &p.name, format!("crossing {}", c.name), c.station);
         }
     }
     for d in doc.road_sections().iter().filter(|d| d.alignment == old.id) {
@@ -124,7 +174,8 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
         }
     }
     let mut touched: Vec<String> = Vec::new();
-    for c in doc.road_corridors().iter().filter(|c| c.alignment == old.id) {
+    let mine: Vec<&kentos_commands::CorridorDef> = doc.road_corridors().iter().filter(|c| c.alignment == old.id).collect();
+    for c in &mine {
         let n = refs.len();
         for (k, r) in c.regions.iter().enumerate() {
             name(&mut refs, StationOwner::Corridor, &c.id, &c.name, format!("region {} from", k + 1), r.from);
@@ -133,10 +184,47 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
         for (k, s) in c.stations.iter().enumerate() {
             name(&mut refs, StationOwner::Corridor, &c.id, &c.name, format!("station {}", k + 1), *s);
         }
-        let over = moved.removed.iter().any(|st| c.regions.iter().any(|r| st.from < r.to && st.to > r.from));
+        let over = removed.iter().any(|st| c.regions.iter().any(|r| st.from < r.to && st.to > r.from));
         if over || refs.len() > n {
             touched.push(c.id.clone());
         }
+    }
+    // What lies on those corridors by station: culverts, walls, volumes' rows and their haul diagrams'
+    // sites, unsuitable stretches and barriers (docs/adr/0965).
+    let on_mine = |corridor: &str| mine.iter().any(|c| c.id == corridor);
+    for d in doc.road_culverts().iter().filter(|d| on_mine(&d.corridor)) {
+        name(&mut refs, StationOwner::Culvert, &d.id, &d.name, "station".into(), d.station);
+    }
+    for d in doc.road_walls().iter().filter(|d| on_mine(&d.corridor)) {
+        name(&mut refs, StationOwner::Wall, &d.id, &d.name, "from".into(), d.from);
+        name(&mut refs, StationOwner::Wall, &d.id, &d.name, "to".into(), d.to);
+    }
+    let volumes_here: Vec<&kentos_commands::VolumeDef> = doc.road_volumes().iter().filter(|v| on_mine(&v.corridor)).collect();
+    for v in &volumes_here {
+        for (k, f) in v.factors.iter().enumerate() {
+            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("factor {} from", k + 1), f.from);
+            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("factor {} to", k + 1), f.to);
+        }
+        for (k, f) in v.strip.iter().enumerate() {
+            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("strip {} from", k + 1), f.from);
+            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("strip {} to", k + 1), f.to);
+        }
+    }
+    for h in doc.road_hauls().iter().filter(|h| volumes_here.iter().any(|v| v.id == h.volume)) {
+        for s in &h.sites {
+            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("site {}", s.name), s.station);
+        }
+        for (k, u) in h.unsuitable.iter().enumerate() {
+            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("unsuitable {} from", k + 1), u.from);
+            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("unsuitable {} to", k + 1), u.to);
+        }
+        for x in &h.barriers {
+            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("barrier {}", x.name), x.station);
+        }
+    }
+    for d in doc.road_sheet_sets().iter().filter(|d| d.alignment == old.id) {
+        name(&mut refs, StationOwner::SheetSet, &d.id, &d.name, "from".into(), d.from);
+        name(&mut refs, StationOwner::SheetSet, &d.id, &d.name, "to".into(), d.to);
     }
     for d in doc.road_superelevations().iter().filter(|d| d.alignment == old.id) {
         match &d.method {
@@ -152,14 +240,14 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
                     if let Some(was) = b.curves.iter().find(|x| x.pi == c.pi)
                         && !a.curves.iter().any(|x| x.pi == c.pi)
                     {
-                        let s = was.stations[0];
                         refs.push(StationRef {
                             owner: StationOwner::Superelevation,
                             id: d.id.clone(),
                             name: d.name.clone(),
                             item: format!("curve {}", c.pi),
-                            station: s,
+                            station: was.stations[0],
                             to: None,
+                            carried: false,
                         });
                     }
                 }
@@ -216,10 +304,31 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
             path: Some("pis".into()),
         });
     }
+    // Turned round, what is not carried goes stale where it is: a corridor's or a section set's template has a left and
+    // a right side, and turning them would put the left on the physical right (docs/adr/0965).
+    if input.reverse {
+        let mut stale: Vec<String> = Vec::new();
+        for r in refs.iter().filter(|r| !r.carried) {
+            if !stale.contains(&r.name) {
+                stale.push(r.name.clone());
+            }
+        }
+        if !stale.is_empty() {
+            warnings.push(CommandWarning {
+                code: codes::ALIGNMENT_REVERSE_STALE.into(),
+                message: format!(
+                    "“{}” aksı ters çevrilince boykesitler ve dever çizelgeleri onunla döner; şunlar dönmez, km'leri eski yönde kalır ve eskir: {}.",
+                    old.name,
+                    stale.join(", ")
+                ),
+                path: Some("alignment".into()),
+            });
+        }
+    }
     let clear = removed.is_empty() && added.is_empty() && refs.is_empty();
     let out = AlignmentImpact {
         alignment: old.id.clone(),
-        mapping: common::mapping_rows(Some(b), Some(a)),
+        mapping,
         removed,
         added,
         runs,

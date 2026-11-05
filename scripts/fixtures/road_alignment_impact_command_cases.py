@@ -42,6 +42,48 @@ SHIFT = 1e-6
 N = 32
 
 
+# Docs/adr/0965: what lies on the main corridor and alignment by station, as their own references write it: the culvert
+# m-1 (road_culvert_cases.py), the wall d-1 (road_wall_cases.py) and a sheet set (road_sheets_cases.py's on g-1).
+BOX = {"kind": "box", "width": 2.0, "height": 1.5, "thickness": 0.25, "slab": 0.3, "cells": 2}
+CULVERT = {"id": "m-1", "name": "Km 1+380 menfezi", "corridor": "c-1", "corridorRevision": 1, "revision": 1,
+           "station": 380.0, "shape": BOX, "invert": 106.5, "slope": 1.0, "flow": "right", "extend": 1.0, "cover": 0.5,
+           "material": "Betonarme", "roughness": 0.013}
+SHAPE = {"top": 0.3, "batter": 0.1, "footing": 2.4, "base": 0.5, "toe": 0.6, "cover": 0.6, "above": 0.9}
+WALL = {"id": "d-1", "name": "Sağ istinat", "corridor": "c-1", "corridorRevision": 1, "revision": 1, "side": "right",
+        "from": 340.0, "to": 420.0, "step": 20.0, "shape": SHAPE, "highest": 5.0, "material": "Betonarme"}
+SHEETS = {"id": "ps-1", "name": "Ana paftalar", "alignment": "g-1", "alignmentRevision": 1, "from": 50.0, "to": 550.0,
+          "scale": 1000, "sheets": [{"sheet": "ana-1", "from": 50.0, "to": 550.0}]}
+
+
+def with_more(road):
+    return {**road, "culverts": [CULVERT], "walls": [WALL], "sheetSets": [SHEETS]}
+
+
+def setup_more(hauls, volumes, work="road"):
+    base = hc.setup(hauls, volumes, work=work)
+    if work == "road":
+        base["settings"]["road"] = with_more(base["settings"]["road"])
+    return base
+
+
+def item_words(owner, item):
+    head, _, rest = item.partition(" ")
+    words = {"region": "bölge", "factor": "katsayı satırı", "strip": "sıyırma aralığı", "unsuitable": "uygunsuz aralık"}
+    if head in words:
+        k, end = rest.split(" ")
+        return f"{k}. {words[head]} {'başı' if end == 'from' else 'sonu'}"
+    if head == "station" and rest:
+        return f"{rest}. km"
+    if head == "row":
+        return f"{rest}. satır"
+    after = {"curve": "kurbu", "crossing": "kesişmesi", "site": "alanı", "barrier": "engeli"}
+    if head in after:
+        return f"{rest} {after[head]}"
+    if owner == "profile":
+        return f"PVI {item}"
+    return {"from": "başı", "to": "sonu", "station": "km"}.get(item, item)
+
+
 class Refused(Exception):
     def __init__(self, result):
         super().__init__(result["error"]["message"])
@@ -136,22 +178,6 @@ def most(line, other, a, b):
     return {"most": float(max(gap(line, other, best), vals[k]))}
 
 
-def item_words(owner, item):
-    head, _, rest = item.partition(" ")
-    if head == "region":
-        k, end = rest.split(" ")
-        return f"{k}. bölge {'başı' if end == 'from' else 'sonu'}"
-    if head == "station":
-        return f"{rest}. km"
-    if head == "row":
-        return f"{rest}. satır"
-    if head == "curve":
-        return f"{rest} kurbu"
-    if owner == "profile":
-        return f"PVI {item}"
-    return {"from": "başı", "to": "sonu"}.get(item, item)
-
-
 def answer(inp, volumes=pimp.VOLUMES, hauls=pimp.HAULS):
     alignments = pcmd.ALIGNMENTS
     name = inp["alignment"]
@@ -165,19 +191,42 @@ def answer(inp, volumes=pimp.VOLUMES, hauls=pimp.HAULS):
     tol = inp.get("tolerance", TOLERANCE)
     if not 0 < tol <= 1:
         raise Refused(failed("invalid_alignment_impact", "Etki toleransı 0'dan büyük, en çok 1 m olur.", "tolerance"))
-    if len(inp["pis"]) < 2:
-        raise Refused(acmd.rule("aksın 2 ile 10000 arası noktası olur", "pis"))
-    new_d = {**d, "pis": inp["pis"]}
+    reverse = inp.get("reverse", False)
+    if reverse and inp.get("pis"):
+        raise Refused(failed("invalid_alignment_impact", "Ya yeni PI'lar ya ters çevirme sorulur; ikisi birden değil.", "pis"))
+    if reverse:
+        # Turned round as road.alignments.edit does: the PIs in the other order, the clothoids' in and out swapped,
+        # the km equations dropped.
+        pis = []
+        for p in reversed(d["pis"]):
+            q = {k: v for k, v in p.items() if k not in ("spiralIn", "spiralOut")}
+            if p.get("spiralOut"):
+                q["spiralIn"] = p["spiralOut"]
+            if p.get("spiralIn"):
+                q["spiralOut"] = p["spiralIn"]
+            pis.append(q)
+        st = d.get("stationing")
+        new_d = {**d, "pis": pis, **({"stationing": {**st, "equations": []}} if st else {})}
+    else:
+        if len(inp["pis"]) < 2:
+            raise Refused(acmd.rule("aksın 2 ile 10000 arası noktası olur", "pis"))
+        new_d = {**d, "pis": inp["pis"]}
     before = Line(d, alignments)
     after = Line(new_d, [new_d if a["id"] == d["id"] else a for a in alignments])
-    removed = off(before, after, tol)
-    added = off(after, before, tol)
+    L = float(before.length)
+    if reverse:
+        removed, added = [], []
+    else:
+        removed = off(before, after, tol)
+        added = off(after, before, tol)
     for r in removed:
         r["fromText"], r["toText"] = before.km_text(r["from"]), before.km_text(r["to"])
     for r in added:
         r["fromText"], r["toText"] = after.km_text(r["from"]), after.km_text(r["to"])
 
     def mapped(s):
+        if reverse:
+            return L - s
         f = after.foot(before.at(s))
         return float(f[0]) if f is not None and f[1] <= tol else None
 
@@ -187,11 +236,15 @@ def answer(inp, volumes=pimp.VOLUMES, hauls=pimp.HAULS):
         return float(f[0] - mp.mpf(s))
 
     runs, at = [], 0.0
-    for a, b in [(r["from"], r["to"]) for r in removed] + [(float(before.length), float(before.length))]:
-        if a - at > 1e-9:
-            runs.append({"from": at, "to": a, "fromText": before.km_text(at), "toText": before.km_text(a),
-                         "shiftFrom": shift(at), "shiftTo": shift(a)})
-        at = b
+    if reverse:
+        runs = [{"from": 0.0, "to": L, "fromText": before.km_text(0.0), "toText": before.km_text(L), "shiftFrom": L,
+                 "shiftTo": -L}]
+    else:
+        for a, b in [(r["from"], r["to"]) for r in removed] + [(L, L)]:
+            if a - at > 1e-9:
+                runs.append({"from": at, "to": a, "fromText": before.km_text(at), "toText": before.km_text(a),
+                             "shiftFrom": shift(at), "shiftTo": shift(a)})
+            at = b
     refs = []
 
     def name_(owner, id_, nm, item, s):
@@ -200,12 +253,16 @@ def answer(inp, volumes=pimp.VOLUMES, hauls=pimp.HAULS):
             r = {"owner": owner, "id": id_, "name": nm, "item": item, "station": float(s)}
             if to is not None:
                 r["to"] = to
+            if reverse and owner in ("profile", "superelevation"):
+                r["carried"] = True
             refs.append(r)
 
     for p in hc.ccmd.PROFILES:
         if p["alignment"] == d["id"]:
             for v in p["pvis"]:
                 name_("profile", p["id"], p["name"], v["id"], v["station"])
+            for c in p.get("crossings", []):
+                name_("profile", p["id"], p["name"], f"crossing {c['name']}", c["station"])
     for s_ in [scmd.S1, scmd.S2]:
         if s_["alignment"] != d["id"]:
             continue
@@ -229,7 +286,34 @@ def answer(inp, volumes=pimp.VOLUMES, hauls=pimp.HAULS):
         over = any(st["from"] < r["to"] and st["to"] > r["from"] for st in removed for r in c["regions"])
         if over or len(refs) > n:
             touched.append(c["id"])
-    new_pis = {p["id"] for p in inp["pis"]}
+    mine = [c["id"] for c in hc.CORRIDORS if c["alignment"] == d["id"]]
+    if CULVERT["corridor"] in mine:
+        name_("culvert", CULVERT["id"], CULVERT["name"], "station", CULVERT["station"])
+    if WALL["corridor"] in mine:
+        name_("wall", WALL["id"], WALL["name"], "from", WALL["from"])
+        name_("wall", WALL["id"], WALL["name"], "to", WALL["to"])
+    here = [v for v in volumes if v["corridor"] in mine]
+    for v in here:
+        for k, f in enumerate(v.get("factors", [])):
+            name_("volume", v["id"], v["name"], f"factor {k + 1} from", f["from"])
+            name_("volume", v["id"], v["name"], f"factor {k + 1} to", f["to"])
+        for k, f in enumerate(v.get("strip", [])):
+            name_("volume", v["id"], v["name"], f"strip {k + 1} from", f["from"])
+            name_("volume", v["id"], v["name"], f"strip {k + 1} to", f["to"])
+    for h in hauls:
+        if not any(v["id"] == h["volume"] for v in here):
+            continue
+        for x in h.get("sites", []):
+            name_("haul", h["id"], h["name"], f"site {x['name']}", x["station"])
+        for k, u in enumerate(h.get("unsuitable", [])):
+            name_("haul", h["id"], h["name"], f"unsuitable {k + 1} from", u["from"])
+            name_("haul", h["id"], h["name"], f"unsuitable {k + 1} to", u["to"])
+        for x in h.get("barriers", []):
+            name_("haul", h["id"], h["name"], f"barrier {x['name']}", x["station"])
+    if SHEETS["alignment"] == d["id"]:
+        name_("sheetSet", SHEETS["id"], SHEETS["name"], "from", SHEETS["from"])
+        name_("sheetSet", SHEETS["id"], SHEETS["name"], "to", SHEETS["to"])
+    new_pis = {p["id"] for p in new_d["pis"]}
     for sd in hc.ccmd.SUPERS:
         if sd["alignment"] != d["id"]:
             continue
@@ -238,7 +322,7 @@ def answer(inp, volumes=pimp.VOLUMES, hauls=pimp.HAULS):
             for k, r in enumerate(m["rows"]):
                 name_("superelevation", sd["id"], sd["name"], f"row {k + 1}", r["station"])
         else:
-            curved = {p["id"] for p in inp["pis"] if p.get("radius") or p.get("spiralIn") or p.get("spiralOut")}
+            curved = {p["id"] for p in new_d["pis"] if p.get("radius") or p.get("spiralIn") or p.get("spiralOut")}
             for cv in m["curves"]:
                 rep = next((x for x in before.b.reports if x["pi"] == cv["pi"]), None)
                 if rep is not None and cv["pi"] not in curved:
@@ -264,21 +348,36 @@ def answer(inp, volumes=pimp.VOLUMES, hauls=pimp.HAULS):
                          "message": f"“{d['name']}” aksının yeni PI'ları onaylı hesapları değiştirir: {', '.join(told)}. "
                                     "Yazılınca onayları eskir; yeni bir hesap onaylanmalı.",
                          "path": "pis"})
-    out = {"alignment": d["id"], "mapping": acmd.mapping(before.b, after.b), "removed": removed, "added": added,
+    if reverse:
+        stale = []
+        for r in refs:
+            if not r.get("carried") and r["name"] not in stale:
+                stale.append(r["name"])
+        if stale:
+            warnings.append({"code": "alignment_reverse_stale",
+                             "message": f"“{d['name']}” aksı ters çevrilince boykesitler ve dever çizelgeleri onunla döner; "
+                                        f"şunlar dönmez, km'leri eski yönde kalır ve eskir: {', '.join(stale)}.",
+                             "path": "alignment"})
+        mapping_rows = [{"element": e.id, "change": "reversed",
+                         "before": [float(after.length - e.station - e.length), float(after.length - e.station)],
+                         "after": [float(e.station), float(e.station + e.length)]} for e in after.els]
+    else:
+        mapping_rows = acmd.mapping(before.b, after.b)
+    out = {"alignment": d["id"], "mapping": mapping_rows, "removed": removed, "added": added,
            "runs": runs, "refs": refs, "parallels": parallels, "volumes": vols, "hauls": hs,
            "clear": not removed and not added and not refs}
     return out, warnings
 
 
 def cases():
-    base = hc.setup(pimp.HAULS, pimp.VOLUMES)
-    road = hc.road_of(pimp.HAULS, pimp.VOLUMES)
+    base = setup_more(pimp.HAULS, pimp.VOLUMES)
+    road = with_more(hc.road_of(pimp.HAULS, pimp.VOLUMES))
     out = []
 
     def ok(name, inp, op="execute", volumes=pimp.VOLUMES, hauls=pimp.HAULS, setup_=None):
         o, w = answer(inp, volumes, hauls)
         result = completed(None, w) if op == "validate" else completed(o, w)
-        s = step(op, inp, result, {**UNCHANGED, "road": road if setup_ is None else hc.road_of(hauls, volumes)})
+        s = step(op, inp, result, {**UNCHANGED, "road": road if setup_ is None else with_more(hc.road_of(hauls, volumes))})
         s["within"] = W
         c = case(name, [s])
         if setup_ is not None:
@@ -324,7 +423,11 @@ def cases():
     ok("Planı", {"alignment": "g-1", "pis": with_(1, radius=180.0)}, op="plan")
     unapproved = [pimp.vcmd.V1, pimp.vcmd.V2, pimp.hap.pc.V3]
     ok("Onaysız kübaj ve plan", {"alignment": "g-1", "pis": with_(1, radius=180.0)},
-       volumes=unapproved, hauls=pimp.hap.START, setup_=hc.setup(pimp.hap.START, unapproved))
+       volumes=unapproved, hauls=pimp.hap.START, setup_=setup_more(pimp.hap.START, unapproved))
+    # Docs/adr/0965: turned round, every station s is at L − s; the profiles and schedules turn with it, the rest is told.
+    ok("Ters çevrilir: her km L − s'ye", {"alignment": "g-1", "reverse": True})
+    ok("Yan aks ters çevrilir", {"alignment": "Yan aks", "reverse": True})
+    no("Hem PI hem ters çevirme", {"alignment": "g-1", "pis": main, "reverse": True})
     no("Olmayan aks", {"alignment": "yok", "pis": main})
     no("Paralel aks", {"alignment": "g-3", "pis": main})
     no("Sıfır tolerans", {"alignment": "g-1", "pis": main, "tolerance": 0.0})

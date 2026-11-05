@@ -164,6 +164,34 @@ pub(crate) fn build(doc: &Document, def: &ProfileDef) -> Result<Built, Stop> {
     Ok(Built { vertical, alignment })
 }
 
+/// `def` on its alignment turned round (docs/adr/0965; ROAD-ALIGN-10): the same grade line read from the other end. A
+/// PVI at s goes to `length` − s with its elevation, in the reversed order; a symmetric parabola and a circle are
+/// symmetric about their PVI and stay, an asymmetric parabola's arms swap (the arm before the PVI is now after it). The
+/// crossings go to `length` − s; above and below stay. Bound to the alignment's new revision `revision`.
+pub(crate) fn reversed(def: &ProfileDef, length: f64, revision: u32) -> ProfileDef {
+    ProfileDef {
+        pvis: def
+            .pvis
+            .iter()
+            .rev()
+            .map(|p| kentos_commands::ProfilePvi {
+                station: length - p.station,
+                length_in: p.length_out,
+                length_out: p.length_in,
+                ..p.clone()
+            })
+            .collect(),
+        crossings: def
+            .crossings
+            .iter()
+            .map(|c| kentos_commands::ProfileCrossingDef { station: length - c.station, ..c.clone() })
+            .collect(),
+        alignment_revision: revision,
+        revision: def.revision.saturating_add(1),
+        ..def.clone()
+    }
+}
+
 /// Whether the profile's alignment changed since it was made or rebound, and the alignment's present revision.
 pub(crate) fn stale(doc: &Document, def: &ProfileDef) -> (bool, u32) {
     let now = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);

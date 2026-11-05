@@ -6579,14 +6579,30 @@ StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "l
 
 
 class StationOwner(_StrEnum):
-    """What names a station of the alignment."""
+    """What names a station of the alignment.
+
+    - ``profile``
+    - ``sectionSet``
+    - ``corridor``
+    - ``superelevation``
+    - ``culvert``
+    - ``wall``
+    - ``volume``: A volume on a corridor of the alignment: its factor rows and topsoil stretches (docs/adr/0965).
+    - ``haul``: A haul diagram on such a volume: its sites, unsuitable stretches and barriers.
+    - ``sheetSet``: A sheet set on the alignment.
+    """
     PROFILE = "profile"
     SECTION_SET = "sectionSet"
     CORRIDOR = "corridor"
     SUPERELEVATION = "superelevation"
+    CULVERT = "culvert"
+    WALL = "wall"
+    VOLUME = "volume"
+    HAUL = "haul"
+    SHEET_SET = "sheetSet"
 
 
-StationOwnerName = Literal["profile", "sectionSet", "corridor", "superelevation"]
+StationOwnerName = Literal["profile", "sectionSet", "corridor", "superelevation", "culvert", "wall", "volume", "haul", "sheetSet"]
 """The names of :class:`StationOwner`, for a plain string."""
 
 
@@ -13022,17 +13038,23 @@ class AlignmentsImpact(_Model):
     axis), `invalid_alignment_impact` (a tolerance not above 0 or above 1 m).
     Attributes:
         alignment: The alignment's id or name.
-        pis: The PIs it would have.
+        pis: The PIs it would have; none with `reverse`.
+        reverse: The alignment turned round instead (`road.alignments.edit reverse`, docs/adr/0965): every station s goes to
+            L − s; the profiles and superelevation schedules turn with it, the rest is told.
         tolerance: Unit: m.
     """
     alignment: str
-    pis: list[AlignmentPi]
+    pis: list[AlignmentPi] | Unset = UNSET
+    reverse: bool | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["alignment"] = self.alignment
-        out["pis"] = [e0.to_json() for e0 in self.pis]
+        if self.pis is not UNSET:
+            out["pis"] = [e0.to_json() for e0 in self.pis]
+        if self.reverse is not UNSET:
+            out["reverse"] = self.reverse
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         return out
@@ -13041,7 +13063,8 @@ class AlignmentsImpact(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> AlignmentsImpact:
         return cls(
             alignment=data["alignment"],
-            pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]],
+            pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
+            reverse=data.get("reverse", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -13270,6 +13293,8 @@ class AlignmentsWritten(_Model):
         mapping: What the edit did to the stations, by element.
         dependents: The parallel axes that follow it.
         alignment: The alignment written; absent when removed.
+        profiles: The profiles turned round with it in the same step (docs/adr/0965): their PVIs and crossings read from the new
+            start.
         superelevations: The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and
             pivot read from the new start.
     """
@@ -13278,6 +13303,7 @@ class AlignmentsWritten(_Model):
     alignments: list[AlignmentListed]
     revision: str
     alignment: AlignmentReport | None | Unset = UNSET
+    profiles: list[str] | Unset = UNSET
     superelevations: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13288,6 +13314,8 @@ class AlignmentsWritten(_Model):
         out["revision"] = self.revision
         if self.alignment is not UNSET:
             out["alignment"] = None if self.alignment is None else self.alignment.to_json()
+        if self.profiles is not UNSET:
+            out["profiles"] = list(self.profiles)
         if self.superelevations is not UNSET:
             out["superelevations"] = list(self.superelevations)
         return out
@@ -13300,6 +13328,7 @@ class AlignmentsWritten(_Model):
             alignments=[AlignmentListed.from_json(e0) for e0 in data["alignments"]],
             revision=data["revision"],
             alignment=UNSET if "alignment" not in data else None if data["alignment"] is None else AlignmentReport.from_json(data["alignment"]),
+            profiles=list(data["profiles"]) if "profiles" in data else UNSET,
             superelevations=list(data["superelevations"]) if "superelevations" in data else UNSET,
         )
 
@@ -79726,6 +79755,8 @@ class StationRef(_Model):
         id: The owner's id and name.
         item: Which station of it: a PVI's id, `from`, `to`, `region 2 from`, `station 3`, `row 1`, `curve PI2`.
         station: Unit: m.
+        carried: The edit writes it there itself (a reversal turns the profiles and schedules round, docs/adr/0965); otherwise
+            it stays where it is named and goes stale.
         to: Unit: m.
     """
     owner: StationOwner | StationOwnerName
@@ -79733,6 +79764,7 @@ class StationRef(_Model):
     name: str
     item: str
     station: float
+    carried: bool | Unset = UNSET
     to: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -79742,6 +79774,8 @@ class StationRef(_Model):
         out["name"] = self.name
         out["item"] = self.item
         out["station"] = float(self.station)
+        if self.carried is not UNSET:
+            out["carried"] = self.carried
         if self.to is not UNSET:
             out["to"] = None if self.to is None else float(self.to)
         return out
@@ -79754,6 +79788,7 @@ class StationRef(_Model):
             name=data["name"],
             item=data["item"],
             station=float(data["station"]),
+            carried=data.get("carried", UNSET),
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
         )
 
