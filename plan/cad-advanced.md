@@ -2497,6 +2497,12 @@ sapması, uzakta başıboş nesne, aynı içerikli blok tanımı; varsayılan de
 raporlar, tek Undo. CAD denetimi penceresinde Çizim sağlığı ve Ucu kenara getir. Bağımsız başvuruyla 45 ortak durum.
 Açılışta bütçeli salt okunur denetim, onarım tarifinin kaydı, kurtarma senaryoları ve kısmi okuma açık; madde `[~]`.
 
+**Gerçek süreç ölümünde kayıt (5 Kasım 2026, [ADR 1006](../docs/adr/1006-save-survives-a-killed-process.md)):**
+Test kendini alt süreç olarak başlatıp büyük, paftalı bir çizimi art arda kaydederken on farklı anda `SIGKILL` ile
+öldürülür; her seferinde adın altındaki dosya özgün dosya ya da tam yazılmış bir sürümle bayt bayt aynıdır, açılır ve
+paftalarını korur. Yazmayı reddeden klasörde çizim kaydedilmemiş kalır, önceki dosya ve Undo zinciri sağlamdır.
+Gerçek ENOSPC, ayrı onarım kopyası ve kısmi okuma açık.
+
 ### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [ ]
 
 **Öncelik:** P0; diğer maddeler boyunca uygulanır. **Kod:** [C05], [C13], [C31].
