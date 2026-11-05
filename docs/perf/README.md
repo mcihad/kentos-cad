@@ -19,6 +19,20 @@ EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXP
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## Masaüstünde büyük karma 2B çizim (2026-11-06, `e6145d28c` + dilim → ADR 1062)
+
+- **Kaynak:** [large-desktop-2026-11-06.md](large-desktop-2026-11-06.md) (ham veri `large-desktop-{once,sonra}-2026-11-05.json`),
+  kararlılık `stability-desktop-{once,sonra}-2026-11-05.json`. Karar [ADR 1062](../adr/1062-large-2d-drawing-fluency-and-stability.md)'dir.
+- **Ortam:** Apple M5 (10 çekirdek), 32 GB, macOS 26.6.2, GPU Apple M5 (Metal), rustc 1.96.0, `--release` (lto thin),
+  pencere 1440×900, 4× örnekleme. Veri: `perf::mixed`, tohum 19 (çizgi, yazı, daire/yay, üç kat iç içe blok, yoğun
+  tarama, ölçü, uzun çizgi), 10⁴/10⁵/10⁶ nesne.
+- Hedefte: yakın görünüm (1:200) kareleri, yazı girişi (en kötü yankı ≤ 16,3 ms), iptal (Esc karesi ≤ 5,1 ms, iş
+  parçacığı ≤ 1,7 ms'de durur), tek düzenleme (1 000 000 nesnede 1/1470 parça, ~21 ms MİB).
+- Tutmayan: uzak görünümde kaydırma/tekerlek GPU'su (10⁵: ~0,22 s, 10⁶: ~1,8 s; payın çoğu blokların 72 kirişli
+  daireleri), uzak tekerlekte MİB p95 ~35 ms, açılışın ilk karesi (10⁶: 2,5 s MİB), hepsini seç (10⁶: 2,3 s).
+- Düzeltilen: uzak görünümde kaydırma yazıları değiştiriyordu (10⁴'te 22 318 görünür piksel → 0); uzak kaydırmada
+  MİB p95 10⁶'da 20,0 → 12,3 ms, bütçeyi aşan kare 11 → 0.
+
 ## Masaüstünde büyük seçim (2026-09-28, `5b2c6a7` → ADR 0123)
 
 - **Kaynak:** önce [frame-desktop-parts-2026-09-28.md](frame-desktop-parts-2026-09-28.md), sonra [frame-desktop-select-2026-09-28.md](frame-desktop-select-2026-09-28.md). Karar [ADR 0123](../adr/0123-desktop-large-selection.md)'tedir.

@@ -286,7 +286,13 @@ pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
     let resources: ProjectStyles = serde_json::from_value(resource["styles"].clone()).unwrap();
     let mut entities = Vec::<Entity>::new();
     let mut store = Store::new();
-    for i in 0..800u32 {
+    // KENTOS_LINETYPE_LINES measures another count (docs/adr/1062 §6): past the 2 000 000 contour points of one
+    // build the pattern is refused, said as `lineTypeLoss`, and the case is reported, not drawn short.
+    let lines: u32 = std::env::var("KENTOS_LINETYPE_LINES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(800);
+    for i in 0..lines {
         let y = f64::from(i) * 0.01;
         entities.push(
             serde_json::from_value(json!({"kind":"line","id":i+1,"layerId":"a","attrs":{},
@@ -335,7 +341,7 @@ pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
     };
     let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
     println!(
-        "CAD-ADV-11: profile={}, 800 lines × 4m, 1:50, 1440x900, 40 pan/zoom frames after 4 warmups; GPU completion included, no pixel readback",
+        "CAD-ADV-11: profile={}, {lines} lines × 4m, 1:50, 1440x900, 40 pan/zoom frames after 4 warmups; GPU completion included, no pixel readback",
         if cfg!(debug_assertions) {
             "debug"
         } else {
@@ -380,7 +386,14 @@ pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
             line_types: Some(&types),
         };
         let (_, batches) = build_layer(&store, &style, &list, &opts).unwrap();
-        assert!(!batches.json.contains("lineTypeLoss"), "{mode}");
+        if batches.json.contains("lineTypeLoss") {
+            assert_ne!(lines, 800, "{mode}: the shared 800-line case stays within the limit");
+            println!(
+                "{mode}: {lines} lines refused past the contour point limit ({:.1} ms, lineTypeLoss said)",
+                started.elapsed().as_secs_f64() * 1000.
+            );
+            continue;
+        }
         let layer = decode(
             batches,
             &DecodeOptions {

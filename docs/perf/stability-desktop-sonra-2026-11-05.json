@@ -1,0 +1,192 @@
+{
+  "objects": 10000,
+  "rows": [
+    {
+      "pan": {
+        "compared": 330128,
+        "different": 1082,
+        "ink": 199721,
+        "largest": 2,
+        "visible": 0
+      },
+      "panOfWholeCells": {
+        "compared": 328062,
+        "different": 1026,
+        "ink": 199181,
+        "largest": 3,
+        "visible": 0
+      },
+      "pxPerM": 0.7037069789051323,
+      "sameViewAgain": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 214126,
+        "largest": 0,
+        "visible": 0
+      },
+      "view": "uzak"
+    },
+    {
+      "pan": {
+        "compared": 330128,
+        "different": 1718,
+        "ink": 80426,
+        "largest": 1,
+        "visible": 0
+      },
+      "panOfWholeCells": {
+        "compared": 328062,
+        "different": 1619,
+        "ink": 79519,
+        "largest": 1,
+        "visible": 0
+      },
+      "pxPerM": 18.89787587875123,
+      "sameViewAgain": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 90854,
+        "largest": 0,
+        "visible": 0
+      },
+      "view": "yakın 1:200"
+    },
+    {
+      "pan": {
+        "compared": 330128,
+        "different": 1716,
+        "ink": 64421,
+        "largest": 1,
+        "visible": 0
+      },
+      "panOfWholeCells": {
+        "compared": 328062,
+        "different": 1268,
+        "ink": 63533,
+        "largest": 1,
+        "visible": 0
+      },
+      "pxPerM": 188.9787587875123,
+      "sameViewAgain": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 71657,
+        "largest": 0,
+        "visible": 0
+      },
+      "view": "milimetrik 1:20"
+    },
+    {
+      "across": {
+        "compared": 364518,
+        "different": 30,
+        "ink": 78194,
+        "largest": 1,
+        "visible": 0
+      },
+      "bands": [
+        -8,
+        -9
+      ],
+      "inside": {
+        "compared": 364518,
+        "different": 77,
+        "ink": 78194,
+        "largest": 1,
+        "visible": 0
+      },
+      "pxPerM": 32.0,
+      "quarters": [
+        32.0,
+        32.0
+      ],
+      "step": "eğri bandı"
+    },
+    {
+      "across": {
+        "compared": 364518,
+        "different": 505,
+        "ink": 96923,
+        "largest": 1,
+        "visible": 0
+      },
+      "bands": [
+        -8,
+        -8
+      ],
+      "inside": {
+        "compared": 364518,
+        "different": 4638,
+        "ink": 96923,
+        "largest": 2,
+        "visible": 0
+      },
+      "pxPerM": 17.448123722644123,
+      "quarters": [
+        16.0,
+        19.027313840043536
+      ],
+      "step": "çeyrek oktav"
+    }
+  ],
+  "seed": 19,
+  "snaps": [
+    {
+      "hits": [
+        [
+          486411.60056219745,
+          4420420.202095919
+        ],
+        [
+          486411.60056219745,
+          4420420.202095919
+        ],
+        [
+          486411.60056219745,
+          4420420.202095919
+        ]
+      ],
+      "offRadius": 1.3903678208748715e-10,
+      "sameToTheBit": true,
+      "snap": "daire, en yakın"
+    },
+    {
+      "hits": [
+        [
+          486411.026,
+          4420421.677
+        ],
+        [
+          486411.026,
+          4420421.677
+        ],
+        [
+          486411.026,
+          4420421.677
+        ]
+      ],
+      "offRadius": null,
+      "sameToTheBit": true,
+      "snap": "çizgi ucu"
+    },
+    {
+      "hits": [
+        [
+          486876.625,
+          4420402.789
+        ],
+        [
+          486876.625,
+          4420402.789
+        ],
+        [
+          486876.625,
+          4420402.789
+        ]
+      ],
+      "offRadius": null,
+      "sameToTheBit": true,
+      "snap": "uzun çizginin köşesi"
+    }
+  ]
+}

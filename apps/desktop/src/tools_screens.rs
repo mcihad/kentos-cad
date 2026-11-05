@@ -641,6 +641,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::attachment_scenes::scenes());
     all.extend(crate::source_relation_scenes::scenes());
     all.extend(crate::layer_type_scenes::scenes());
+    all.extend(crate::large_scenes::scenes());
     all
 }
 

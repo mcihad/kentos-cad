@@ -1,0 +1,1758 @@
+{
+  "environment": {
+    "commit": "e6145d28c",
+    "date": "2026-11-06",
+    "dirtyTree": true,
+    "machine": {
+      "cpu": "Apple M5",
+      "kernel": "25.6.0",
+      "memoryGb": 32.0,
+      "os": "macOS 26.6.2 (25G83)",
+      "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+      "threads": 10
+    },
+    "machineText": "Apple M5, 10 iş parçacığı, 32 GB; macOS 26.6.2 (25G83) (25.6.0); rustc 1.96.0 (ac68faa20 2026-05-25)"
+  },
+  "gpu": {
+    "backend": "Metal",
+    "driver": "",
+    "driverInfo": "",
+    "name": "Apple M5"
+  },
+  "label": "sonra",
+  "rows": [
+    {
+      "drawing": {
+        "bytes": 2000228,
+        "fingerprint": "7f200b185434b8be",
+        "kinds": {
+          "arc": 500,
+          "circle": 500,
+          "dimension": 500,
+          "hatch": 500,
+          "insert": 1000,
+          "line": 4000,
+          "longPolyline": 100,
+          "polyline": 900,
+          "text": 2000
+        },
+        "makeMs": 66.73474999999999
+      },
+      "measured": {
+        "cancel": {
+          "escAfterMs": 3.692917,
+          "escFrame": {
+            "gpuMs": 3.6363749999999997,
+            "uiMs": 0.393875,
+            "viewMs": 0.095083
+          },
+          "escUiPlusGpuMs": 4.03025,
+          "stopped": true,
+          "threadGaveNothing": true,
+          "threadStoppedAfterMs": 1.6,
+          "windowGoneOnEscFrame": true
+        },
+        "commands": [
+          {
+            "buildMs": 0.5875,
+            "command": "İlk komut (bir yazıyı taşı)",
+            "gpuMs": 16.311084,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.36416699999999996,
+            "partsBuilt": 1,
+            "partsTotal": 6,
+            "uiMs": 291.110332,
+            "viewMs": 0.897583
+          },
+          {
+            "buildMs": 0.286792,
+            "command": "Bir yazıyı taşı",
+            "gpuMs": 3.9600420000000005,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.299417,
+            "partsBuilt": 1,
+            "partsTotal": 6,
+            "uiMs": 1.2020410000000001,
+            "viewMs": 0.479042
+          },
+          {
+            "buildMs": 0.22949999999999998,
+            "command": "Bir yazının metnini değiştir",
+            "gpuMs": 3.986041,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.255583,
+            "partsBuilt": 1,
+            "partsTotal": 6,
+            "uiMs": 4.539291,
+            "viewMs": 0.38316700000000004
+          },
+          {
+            "buildMs": 18.200457999999998,
+            "command": "Bir blok yerleşimini taşı",
+            "gpuMs": 8.449958,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.38429099999999994,
+            "partsBuilt": 1,
+            "partsTotal": 6,
+            "uiMs": 18.779791999999997,
+            "viewMs": 18.403416999999997
+          },
+          {
+            "buildMs": 1.8671250000000001,
+            "command": "Bir çizgiyi sil",
+            "gpuMs": 7.421333,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.400625,
+            "partsBuilt": 1,
+            "partsTotal": 6,
+            "uiMs": 3.664916,
+            "viewMs": 2.0596669999999997
+          },
+          {
+            "buildMs": 2.031125,
+            "command": "Geri al",
+            "gpuMs": 5.8409580000000005,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.434459,
+            "partsBuilt": 1,
+            "partsTotal": 6,
+            "uiMs": 3.0292079999999997,
+            "viewMs": 2.24925
+          },
+          {
+            "buildMs": 1.794333,
+            "command": "Yinele",
+            "gpuMs": 7.322167,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.316417,
+            "partsBuilt": 1,
+            "partsTotal": 6,
+            "uiMs": 2.238042,
+            "viewMs": 1.9592500000000002
+          },
+          {
+            "buildMs": null,
+            "command": "Hepsini seç (Ctrl+A)",
+            "gpuMs": 6.686667,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.684418,
+            "partsBuilt": 0,
+            "partsTotal": 6,
+            "uiMs": 18.007,
+            "viewMs": 15.195875
+          },
+          {
+            "command": "Seçimi bırak (Esc)",
+            "gpuMs": 7.087209,
+            "uiMs": 0.848375
+          }
+        ],
+        "firstInteraction": {
+          "pan": {
+            "gpuMs": 25.680125,
+            "uiMs": 1.231084,
+            "viewMs": 0.172208
+          },
+          "pointer": {
+            "gpuMs": 55.4735,
+            "uiMs": 21.157041,
+            "viewMs": 0.297458
+          },
+          "wheel": {
+            "gpuMs": 32.133625,
+            "uiMs": 20.712457,
+            "viewMs": 0.09095800000000001
+          }
+        },
+        "frames": [
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 120,
+              "gpuMax": 4.897458,
+              "gpuP50": 2.483667,
+              "gpuP95": 4.133625,
+              "gpuP99": 4.525791000000001,
+              "uiMax": 0.811793,
+              "uiOverBudget": 0,
+              "uiP50": 0.289418,
+              "uiP95": 0.42187600000000003,
+              "uiP95Parts": [
+                0.023125,
+                0.017499999999999998,
+                0.110584,
+                0.197917,
+                0.07275000000000001
+              ],
+              "uiP99": 0.686583,
+              "viewP50": 0.07004200000000001
+            },
+            "trace": "imleç",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 26.537374999999997,
+              "gpuP50": 17.824083,
+              "gpuP95": 25.589209,
+              "gpuP99": 26.537374999999997,
+              "uiMax": 31.02946,
+              "uiOverBudget": 7,
+              "uiP50": 1.0325,
+              "uiP95": 25.898792,
+              "uiP95Parts": [
+                0.02,
+                0.015208000000000001,
+                0.07087500000000001,
+                0.152334,
+                25.640375
+              ],
+              "uiP99": 31.02946,
+              "viewP50": 0.09875
+            },
+            "trace": "tekerlek",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 26.453375,
+              "gpuP50": 23.732583,
+              "gpuP95": 25.746624999999998,
+              "gpuP99": 26.453375,
+              "uiMax": 1.530249,
+              "uiOverBudget": 0,
+              "uiP50": 0.500125,
+              "uiP95": 1.287127,
+              "uiP95Parts": [
+                0.056584,
+                0.037709,
+                0.194125,
+                0.32175,
+                0.676959
+              ],
+              "uiP99": 1.530249,
+              "viewP50": 0.066667
+            },
+            "trace": "kaydırma",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 60,
+              "gpuMax": 5.846708,
+              "gpuP50": 2.595291,
+              "gpuP95": 5.037624999999999,
+              "gpuP99": 5.274166,
+              "uiMax": 0.8084579999999999,
+              "uiOverBudget": 0,
+              "uiP50": 0.286666,
+              "uiP95": 0.700126,
+              "uiP95Parts": [
+                0.041124999999999995,
+                0.109708,
+                0.15304199999999998,
+                0.278667,
+                0.11758400000000001
+              ],
+              "uiP99": 0.7642920000000002,
+              "viewP50": 0.071584
+            },
+            "trace": "imleç",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 7.413959,
+              "gpuP50": 5.586125,
+              "gpuP95": 6.875084,
+              "gpuP99": 7.413959,
+              "uiMax": 2.7383319999999998,
+              "uiOverBudget": 0,
+              "uiP50": 0.530873,
+              "uiP95": 2.177292,
+              "uiP95Parts": [
+                0.020458999999999998,
+                0.011916999999999999,
+                0.069375,
+                0.149708,
+                1.9258330000000001
+              ],
+              "uiP99": 2.7383319999999998,
+              "viewP50": 0.08925
+            },
+            "trace": "tekerlek",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 10.672459,
+              "gpuP50": 7.539708,
+              "gpuP95": 8.038667,
+              "gpuP99": 10.672459,
+              "uiMax": 0.9315009999999999,
+              "uiOverBudget": 0,
+              "uiP50": 0.441708,
+              "uiP95": 0.740501,
+              "uiP95Parts": [
+                0.048833,
+                0.025084,
+                0.183792,
+                0.301458,
+                0.181334
+              ],
+              "uiP99": 0.9315009999999999,
+              "viewP50": 0.10041699999999999
+            },
+            "trace": "kaydırma",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 120,
+              "gpuMax": 6.699708,
+              "gpuP50": 2.528,
+              "gpuP95": 4.5655,
+              "gpuP99": 6.672667000000001,
+              "uiMax": 1.2632909999999997,
+              "uiOverBudget": 0,
+              "uiP50": 0.29725100000000004,
+              "uiP95": 0.508333,
+              "uiP95Parts": [
+                0.022667000000000003,
+                0.010417000000000001,
+                0.110708,
+                0.283083,
+                0.081458
+              ],
+              "uiP99": 1.0042090000000001,
+              "viewP50": 0.07133300000000001
+            },
+            "trace": "imleç",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 26.991916,
+              "gpuP50": 17.212625,
+              "gpuP95": 25.28325,
+              "gpuP99": 26.991916,
+              "uiMax": 1.6095409999999999,
+              "uiOverBudget": 0,
+              "uiP50": 0.7995829999999999,
+              "uiP95": 1.397375,
+              "uiP95Parts": [
+                0.045250000000000005,
+                0.032583,
+                0.324292,
+                0.3805,
+                0.6147499999999999
+              ],
+              "uiP99": 1.6095409999999999,
+              "viewP50": 0.111916
+            },
+            "trace": "tekerlek",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 27.224,
+              "gpuP50": 23.687167,
+              "gpuP95": 26.2335,
+              "gpuP99": 27.224,
+              "uiMax": 1.559708,
+              "uiOverBudget": 0,
+              "uiP50": 0.48354199999999997,
+              "uiP95": 1.230249,
+              "uiP95Parts": [
+                0.051,
+                0.026083000000000002,
+                0.218583,
+                0.296083,
+                0.6385
+              ],
+              "uiP99": 1.559708,
+              "viewP50": 0.062583
+            },
+            "trace": "kaydırma",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 60,
+              "gpuMax": 6.667083,
+              "gpuP50": 2.631042,
+              "gpuP95": 5.038458,
+              "gpuP99": 6.589875,
+              "uiMax": 0.8552080000000001,
+              "uiOverBudget": 0,
+              "uiP50": 0.304834,
+              "uiP95": 0.5589160000000001,
+              "uiP95Parts": [
+                0.037333000000000005,
+                0.03175,
+                0.135375,
+                0.26033300000000004,
+                0.094125
+              ],
+              "uiP99": 0.8000419999999999,
+              "viewP50": 0.078708
+            },
+            "trace": "imleç",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 7.474375,
+              "gpuP50": 5.141500000000001,
+              "gpuP95": 6.2375,
+              "gpuP99": 7.474375,
+              "uiMax": 1.104625,
+              "uiOverBudget": 0,
+              "uiP50": 0.33404199999999995,
+              "uiP95": 0.804084,
+              "uiP95Parts": [
+                0.045333,
+                0.023458,
+                0.174375,
+                0.317584,
+                0.243334
+              ],
+              "uiP99": 1.104625,
+              "viewP50": 0.08287499999999999
+            },
+            "trace": "tekerlek",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 12.788625,
+              "gpuP50": 6.449083000000001,
+              "gpuP95": 8.06025,
+              "gpuP99": 12.788625,
+              "uiMax": 1.1726239999999999,
+              "uiOverBudget": 0,
+              "uiP50": 0.406206,
+              "uiP95": 0.654749,
+              "uiP95Parts": [
+                0.041,
+                0.026250000000000002,
+                0.162,
+                0.269208,
+                0.15629099999999999
+              ],
+              "uiP99": 1.1726239999999999,
+              "viewP50": 0.093916
+            },
+            "trace": "kaydırma",
+            "view": "yakın 1:200"
+          }
+        ],
+        "keys": {
+          "commandLine": {
+            "frames": 14,
+            "gpuMax": 8.971833,
+            "gpuP50": 7.751875,
+            "gpuP95": 8.283916000000001,
+            "gpuP99": 8.971833,
+            "uiMax": 2.6147509999999996,
+            "uiOverBudget": 0,
+            "uiP50": 0.48158399999999996,
+            "uiP95": 1.8934999999999997,
+            "uiP95Parts": [
+              0.064375,
+              0.7609579999999999,
+              0.321708,
+              0.608417,
+              0.138042
+            ],
+            "uiP99": 2.6147509999999996,
+            "viewP50": 0.099042
+          },
+          "valueField": {
+            "frames": 9,
+            "gpuMax": 8.124042,
+            "gpuP50": 7.269,
+            "gpuP95": 8.124042,
+            "gpuP99": 8.124042,
+            "uiMax": 0.596207,
+            "uiOverBudget": 0,
+            "uiP50": 0.37108399999999997,
+            "uiP95": 0.596207,
+            "uiP95Parts": [
+              0.033833,
+              0.03025,
+              0.083083,
+              0.1855,
+              0.263541
+            ],
+            "uiP99": 0.596207,
+            "viewP50": 0.083083
+          },
+          "valueFieldOpened": true
+        },
+        "memory": {
+          "footprintEnd": {
+            "gpuMemoryMb": 54.203125,
+            "physFootprintMb": 836.0,
+            "physFootprintPeakMb": 1227.0
+          },
+          "footprintOpen": {
+            "gpuMemoryMb": 56.15625,
+            "physFootprintMb": 492.0,
+            "physFootprintPeakMb": 492.0
+          },
+          "residentBootMb": 208.984375,
+          "residentEndMb": 719.71875,
+          "residentOpenMb": 328.53125
+        },
+        "objects": 10000,
+        "open": {
+          "firstFrame": {
+            "gpuMs": 16.236833,
+            "uiMs": 57.375376,
+            "viewMs": 31.464709
+          },
+          "framesWhileOpening": {
+            "frames": 1,
+            "gpuMax": 2.4065,
+            "gpuP50": 2.4065,
+            "gpuP95": 2.4065,
+            "gpuP99": 2.4065,
+            "uiMax": 2.800043,
+            "uiOverBudget": 0,
+            "uiP50": 2.800043,
+            "uiP95": 2.800043,
+            "uiP95Parts": [
+              0.0,
+              2.0800419999999997,
+              0.134917,
+              0.5279590000000001,
+              0.057125
+            ],
+            "uiP99": 2.800043,
+            "viewP50": 0.134917
+          },
+          "settledMs": 101.34025000000001,
+          "threadMs": 23.745458,
+          "toFirstFrameMs": 97.97533299999999
+        },
+        "readbackFloor": {
+          "frames": 20,
+          "gpuMax": 19.263416,
+          "gpuP50": 2.242625,
+          "gpuP95": 4.765791,
+          "gpuP99": 19.263416,
+          "uiMax": 7.170667,
+          "uiOverBudget": 0,
+          "uiP50": 0.155875,
+          "uiP95": 0.2695,
+          "uiP95Parts": [
+            0.0,
+            0.0,
+            0.082792,
+            0.142375,
+            0.044333
+          ],
+          "uiP99": 7.170667,
+          "viewP50": 0.040292
+        },
+        "viewFar": {
+          "drawCalls": 3,
+          "residentBytes": 20639960,
+          "samples": 4,
+          "segments": 4,
+          "targetBytes": 14912160,
+          "triangles": 0
+        },
+        "viewNear": {
+          "drawCalls": 14,
+          "residentBytes": 20650256,
+          "samples": 4,
+          "segments": 290,
+          "targetBytes": 14912160,
+          "triangles": 0
+        }
+      },
+      "objects": 10000
+    },
+    {
+      "drawing": {
+        "bytes": 19978989,
+        "fingerprint": "a0142ee95cc85d46",
+        "kinds": {
+          "arc": 5000,
+          "circle": 5000,
+          "dimension": 5000,
+          "hatch": 5000,
+          "insert": 10000,
+          "line": 40000,
+          "longPolyline": 1000,
+          "polyline": 9000,
+          "text": 20000
+        },
+        "makeMs": 467.87375
+      },
+      "measured": {
+        "cancel": {
+          "escAfterMs": 37.102791,
+          "escFrame": {
+            "gpuMs": 4.458666,
+            "uiMs": 0.36024900000000004,
+            "viewMs": 0.08620799999999999
+          },
+          "escUiPlusGpuMs": 4.8189150000000005,
+          "stopped": true,
+          "threadGaveNothing": true,
+          "threadStoppedAfterMs": 1.669542,
+          "windowGoneOnEscFrame": true
+        },
+        "commands": [
+          {
+            "buildMs": 0.335833,
+            "command": "İlk komut (bir yazıyı taşı)",
+            "gpuMs": 11.543459,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.390084,
+            "partsBuilt": 1,
+            "partsTotal": 102,
+            "uiMs": 243.358376,
+            "viewMs": 0.760542
+          },
+          {
+            "buildMs": 0.18620799999999998,
+            "command": "Bir yazıyı taşı",
+            "gpuMs": 4.0897499999999996,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.439875,
+            "partsBuilt": 1,
+            "partsTotal": 102,
+            "uiMs": 0.746584,
+            "viewMs": 0.390959
+          },
+          {
+            "buildMs": 0.163916,
+            "command": "Bir yazının metnini değiştir",
+            "gpuMs": 4.166375,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.40158399999999994,
+            "partsBuilt": 1,
+            "partsTotal": 102,
+            "uiMs": 0.808919,
+            "viewMs": 0.38808400000000004
+          },
+          {
+            "buildMs": 7.111541,
+            "command": "Bir blok yerleşimini taşı",
+            "gpuMs": 6.229084,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.34862499999999996,
+            "partsBuilt": 1,
+            "partsTotal": 102,
+            "uiMs": 7.634334999999999,
+            "viewMs": 7.323125
+          },
+          {
+            "buildMs": 1.079084,
+            "command": "Bir çizgiyi sil",
+            "gpuMs": 4.37625,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.369292,
+            "partsBuilt": 1,
+            "partsTotal": 102,
+            "uiMs": 1.571874,
+            "viewMs": 1.244833
+          },
+          {
+            "buildMs": 0.9675830000000001,
+            "command": "Geri al",
+            "gpuMs": 4.129708,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.386125,
+            "partsBuilt": 1,
+            "partsTotal": 102,
+            "uiMs": 1.5538330000000002,
+            "viewMs": 1.1906670000000001
+          },
+          {
+            "buildMs": 1.068125,
+            "command": "Yinele",
+            "gpuMs": 4.390167,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.3545,
+            "partsBuilt": 1,
+            "partsTotal": 102,
+            "uiMs": 1.6238329999999999,
+            "viewMs": 1.27525
+          },
+          {
+            "buildMs": null,
+            "command": "Hepsini seç (Ctrl+A)",
+            "gpuMs": 25.638208,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 1.964875,
+            "partsBuilt": 0,
+            "partsTotal": 102,
+            "uiMs": 172.274249,
+            "viewMs": 161.14083300000001
+          },
+          {
+            "command": "Seçimi bırak (Esc)",
+            "gpuMs": 6.019583,
+            "uiMs": 0.522082
+          }
+        ],
+        "firstInteraction": {
+          "pan": {
+            "gpuMs": 236.636167,
+            "uiMs": 0.808834,
+            "viewMs": 0.092375
+          },
+          "pointer": {
+            "gpuMs": 395.208042,
+            "uiMs": 25.386208,
+            "viewMs": 0.0945
+          },
+          "wheel": {
+            "gpuMs": 381.079334,
+            "uiMs": 26.144083,
+            "viewMs": 0.08075
+          }
+        },
+        "frames": [
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 120,
+              "gpuMax": 4.355166,
+              "gpuP50": 2.64825,
+              "gpuP95": 4.246958,
+              "gpuP99": 4.3425,
+              "uiMax": 0.438876,
+              "uiOverBudget": 0,
+              "uiP50": 0.30108399999999996,
+              "uiP95": 0.381167,
+              "uiP95Parts": [
+                0.0255,
+                0.077834,
+                0.09962499999999999,
+                0.123667,
+                0.054541
+              ],
+              "uiP99": 0.414876,
+              "viewP50": 0.068792
+            },
+            "trace": "imleç",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 262.376792,
+              "gpuP50": 132.471708,
+              "gpuP95": 231.544,
+              "gpuP99": 262.376792,
+              "uiMax": 57.524208,
+              "uiOverBudget": 24,
+              "uiP50": 26.406625,
+              "uiP95": 51.620374000000005,
+              "uiP95Parts": [
+                0.026333,
+                0.018792,
+                0.08029099999999999,
+                0.16370800000000002,
+                51.331250000000004
+              ],
+              "uiP99": 57.524208,
+              "viewP50": 0.10166700000000001
+            },
+            "trace": "tekerlek",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 243.453375,
+              "gpuP50": 216.01066699999998,
+              "gpuP95": 236.067958,
+              "gpuP99": 243.453375,
+              "uiMax": 17.432125,
+              "uiOverBudget": 1,
+              "uiP50": 0.8617489999999999,
+              "uiP95": 13.495083999999999,
+              "uiP95Parts": [
+                0.02275,
+                0.020166999999999997,
+                0.098709,
+                0.120333,
+                13.233125
+              ],
+              "uiP99": 17.432125,
+              "viewP50": 0.101
+            },
+            "trace": "kaydırma",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 60,
+              "gpuMax": 4.932042,
+              "gpuP50": 2.7945,
+              "gpuP95": 4.307583,
+              "gpuP99": 4.452375,
+              "uiMax": 0.639458,
+              "uiOverBudget": 0,
+              "uiP50": 0.313707,
+              "uiP95": 0.526957,
+              "uiP95Parts": [
+                0.038208,
+                0.041083,
+                0.152416,
+                0.2195,
+                0.07575
+              ],
+              "uiP99": 0.58404,
+              "viewP50": 0.079542
+            },
+            "trace": "imleç",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 8.182500000000001,
+              "gpuP50": 5.836875,
+              "gpuP95": 8.023957999999999,
+              "gpuP99": 8.182500000000001,
+              "uiMax": 4.658833,
+              "uiOverBudget": 0,
+              "uiP50": 0.5137929999999999,
+              "uiP95": 3.539625,
+              "uiP95Parts": [
+                0.018959,
+                0.011875,
+                0.07475,
+                0.126125,
+                3.307916
+              ],
+              "uiP99": 4.658833,
+              "viewP50": 0.105833
+            },
+            "trace": "tekerlek",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 13.173625,
+              "gpuP50": 6.749375000000001,
+              "gpuP95": 11.184083,
+              "gpuP99": 13.173625,
+              "uiMax": 0.835292,
+              "uiOverBudget": 0,
+              "uiP50": 0.442209,
+              "uiP95": 0.7425419999999999,
+              "uiP95Parts": [
+                0.06825,
+                0.031083,
+                0.1855,
+                0.269584,
+                0.18812500000000001
+              ],
+              "uiP99": 0.835292,
+              "viewP50": 0.106
+            },
+            "trace": "kaydırma",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 120,
+              "gpuMax": 4.4797910000000005,
+              "gpuP50": 2.749167,
+              "gpuP95": 4.296958,
+              "gpuP99": 4.468959,
+              "uiMax": 0.4425,
+              "uiOverBudget": 0,
+              "uiP50": 0.29675,
+              "uiP95": 0.400083,
+              "uiP95Parts": [
+                0.022708,
+                0.112167,
+                0.082292,
+                0.12875,
+                0.054166000000000006
+              ],
+              "uiP99": 0.426085,
+              "viewP50": 0.069041
+            },
+            "trace": "imleç",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 242.1915,
+              "gpuP50": 130.964541,
+              "gpuP95": 221.470833,
+              "gpuP99": 242.1915,
+              "uiMax": 37.666124999999994,
+              "uiOverBudget": 26,
+              "uiP50": 24.165833,
+              "uiP95": 34.959832,
+              "uiP95Parts": [
+                0.024875,
+                0.017333,
+                0.11808300000000001,
+                0.139416,
+                34.660125
+              ],
+              "uiP99": 37.666124999999994,
+              "viewP50": 0.10041599999999999
+            },
+            "trace": "tekerlek",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 248.087375,
+              "gpuP50": 218.83266600000002,
+              "gpuP95": 236.16737500000002,
+              "gpuP99": 248.087375,
+              "uiMax": 17.582875,
+              "uiOverBudget": 1,
+              "uiP50": 0.829501,
+              "uiP95": 8.037875,
+              "uiP95Parts": [
+                0.026208000000000002,
+                0.019167,
+                0.1175,
+                0.14162499999999997,
+                7.733375
+              ],
+              "uiP99": 17.582875,
+              "viewP50": 0.10041699999999999
+            },
+            "trace": "kaydırma",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 60,
+              "gpuMax": 6.4214579999999994,
+              "gpuP50": 2.717334,
+              "gpuP95": 4.779167,
+              "gpuP99": 5.105459,
+              "uiMax": 0.9474990000000001,
+              "uiOverBudget": 0,
+              "uiP50": 0.29283400000000004,
+              "uiP95": 0.61121,
+              "uiP95Parts": [
+                0.035875,
+                0.0385,
+                0.161042,
+                0.274459,
+                0.10133400000000001
+              ],
+              "uiP99": 0.8786670000000001,
+              "viewP50": 0.076375
+            },
+            "trace": "imleç",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 8.40625,
+              "gpuP50": 5.900625,
+              "gpuP95": 8.071792,
+              "gpuP99": 8.40625,
+              "uiMax": 3.8327090000000004,
+              "uiOverBudget": 0,
+              "uiP50": 0.574333,
+              "uiP95": 2.8466660000000004,
+              "uiP95Parts": [
+                0.015625,
+                0.010958,
+                0.06933299999999999,
+                0.116709,
+                2.6340410000000003
+              ],
+              "uiP99": 3.8327090000000004,
+              "viewP50": 0.109291
+            },
+            "trace": "tekerlek",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 15.147542,
+              "gpuP50": 6.453083,
+              "gpuP95": 10.0525,
+              "gpuP99": 15.147542,
+              "uiMax": 0.9718329999999998,
+              "uiOverBudget": 0,
+              "uiP50": 0.42374900000000004,
+              "uiP95": 0.7984589999999999,
+              "uiP95Parts": [
+                0.053125,
+                0.028709,
+                0.205875,
+                0.303958,
+                0.206792
+              ],
+              "uiP99": 0.9718329999999998,
+              "viewP50": 0.100333
+            },
+            "trace": "kaydırma",
+            "view": "yakın 1:200"
+          }
+        ],
+        "keys": {
+          "commandLine": {
+            "frames": 14,
+            "gpuMax": 8.824458,
+            "gpuP50": 6.8376660000000005,
+            "gpuP95": 8.589417000000001,
+            "gpuP99": 8.824458,
+            "uiMax": 1.077127,
+            "uiOverBudget": 0,
+            "uiP50": 0.49595799999999995,
+            "uiP95": 0.77,
+            "uiP95Parts": [
+              0.043542,
+              0.053458000000000006,
+              0.154291,
+              0.38787499999999997,
+              0.130834
+            ],
+            "uiP99": 1.077127,
+            "viewP50": 0.11900000000000001
+          },
+          "valueField": {
+            "frames": 9,
+            "gpuMax": 7.885209000000001,
+            "gpuP50": 7.515458,
+            "gpuP95": 7.885209000000001,
+            "gpuP99": 7.885209000000001,
+            "uiMax": 0.437125,
+            "uiOverBudget": 0,
+            "uiP50": 0.314707,
+            "uiP95": 0.437125,
+            "uiP95Parts": [
+              0.064208,
+              0.041667,
+              0.12079200000000001,
+              0.13783299999999998,
+              0.07262500000000001
+            ],
+            "uiP99": 0.437125,
+            "viewP50": 0.084708
+          },
+          "valueFieldOpened": true
+        },
+        "memory": {
+          "footprintEnd": {
+            "gpuMemoryMb": 59.296875,
+            "physFootprintMb": 3030.0,
+            "physFootprintPeakMb": 3195.0
+          },
+          "footprintOpen": {
+            "gpuMemoryMb": 50.25,
+            "physFootprintMb": 1167.0,
+            "physFootprintPeakMb": 1336.0
+          },
+          "residentBootMb": 209.171875,
+          "residentEndMb": 1832.09375,
+          "residentOpenMb": 851.890625
+        },
+        "objects": 100000,
+        "open": {
+          "firstFrame": {
+            "gpuMs": 52.58,
+            "uiMs": 239.967083,
+            "viewMs": 111.65133300000001
+          },
+          "framesWhileOpening": {
+            "frames": 7,
+            "gpuMax": 3.8800000000000003,
+            "gpuP50": 2.3555,
+            "gpuP95": 3.8800000000000003,
+            "gpuP99": 3.8800000000000003,
+            "uiMax": 0.44920899999999997,
+            "uiOverBudget": 0,
+            "uiP50": 0.333791,
+            "uiP95": 0.44920899999999997,
+            "uiP95Parts": [
+              0.0,
+              0.0,
+              0.197417,
+              0.196875,
+              0.054917
+            ],
+            "uiP99": 0.44920899999999997,
+            "viewP50": 0.095167
+          },
+          "settledMs": 470.314167,
+          "threadMs": 155.198959,
+          "toFirstFrameMs": 447.94800000000004
+        },
+        "readbackFloor": {
+          "frames": 20,
+          "gpuMax": 14.238166999999999,
+          "gpuP50": 2.264041,
+          "gpuP95": 3.7885,
+          "gpuP99": 14.238166999999999,
+          "uiMax": 5.147208999999999,
+          "uiOverBudget": 0,
+          "uiP50": 0.15691700000000003,
+          "uiP95": 0.272583,
+          "uiP95Parts": [
+            0.0,
+            0.0,
+            0.0875,
+            0.140416,
+            0.044667
+          ],
+          "uiP99": 5.147208999999999,
+          "viewP50": 0.04075
+        },
+        "viewFar": {
+          "drawCalls": 3,
+          "residentBytes": 206646024,
+          "samples": 4,
+          "segments": 4,
+          "targetBytes": 14912160,
+          "triangles": 0
+        },
+        "viewNear": {
+          "drawCalls": 34,
+          "residentBytes": 206656320,
+          "samples": 4,
+          "segments": 290,
+          "targetBytes": 14912160,
+          "triangles": 0
+        }
+      },
+      "objects": 100000
+    },
+    {
+      "drawing": {
+        "bytes": 199876546,
+        "fingerprint": "c48958125ed2220e",
+        "kinds": {
+          "arc": 50000,
+          "circle": 50000,
+          "dimension": 50000,
+          "hatch": 50000,
+          "insert": 100000,
+          "line": 400000,
+          "longPolyline": 10000,
+          "polyline": 90000,
+          "text": 200000
+        },
+        "makeMs": 4628.295666
+      },
+      "measured": {
+        "cancel": {
+          "escAfterMs": 42.078625,
+          "escFrame": {
+            "gpuMs": 4.37675,
+            "uiMs": 0.682792,
+            "viewMs": 0.325084
+          },
+          "escUiPlusGpuMs": 5.059542,
+          "stopped": true,
+          "threadGaveNothing": true,
+          "threadStoppedAfterMs": 1.14375,
+          "windowGoneOnEscFrame": true
+        },
+        "commands": [
+          {
+            "buildMs": 20.679166,
+            "command": "İlk komut (bir yazıyı taşı)",
+            "gpuMs": 15.7295,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.7032919999999999,
+            "partsBuilt": 1,
+            "partsTotal": 1470,
+            "uiMs": 259.659335,
+            "viewMs": 21.217917
+          },
+          {
+            "buildMs": 20.238,
+            "command": "Bir yazıyı taşı",
+            "gpuMs": 6.634625,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.698582,
+            "partsBuilt": 1,
+            "partsTotal": 1470,
+            "uiMs": 20.972707999999997,
+            "viewMs": 20.617167
+          },
+          {
+            "buildMs": 20.126917000000002,
+            "command": "Bir yazının metnini değiştir",
+            "gpuMs": 6.873708,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.7309169999999999,
+            "partsBuilt": 1,
+            "partsTotal": 1470,
+            "uiMs": 21.235333,
+            "viewMs": 20.514167
+          },
+          {
+            "buildMs": 27.294416,
+            "command": "Bir blok yerleşimini taşı",
+            "gpuMs": 9.132583,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.92725,
+            "partsBuilt": 1,
+            "partsTotal": 1470,
+            "uiMs": 28.020498999999997,
+            "viewMs": 27.673458
+          },
+          {
+            "buildMs": 20.800917,
+            "command": "Bir çizgiyi sil",
+            "gpuMs": 6.841083,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.7006669999999999,
+            "partsBuilt": 1,
+            "partsTotal": 1470,
+            "uiMs": 21.699375999999994,
+            "viewMs": 21.193707999999997
+          },
+          {
+            "buildMs": 21.004375,
+            "command": "Geri al",
+            "gpuMs": 8.047875,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.642876,
+            "partsBuilt": 1,
+            "partsTotal": 1470,
+            "uiMs": 21.811,
+            "viewMs": 21.455
+          },
+          {
+            "buildMs": 21.141541,
+            "command": "Yinele",
+            "gpuMs": 7.905083,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 0.644627,
+            "partsBuilt": 1,
+            "partsTotal": 1470,
+            "uiMs": 21.885875,
+            "viewMs": 21.54075
+          },
+          {
+            "buildMs": null,
+            "command": "Hepsini seç (Ctrl+A)",
+            "gpuMs": 709.703292,
+            "nextFramePartsBuilt": 0,
+            "nextFrameUiMs": 8.878166,
+            "partsBuilt": 0,
+            "partsTotal": 1470,
+            "uiMs": 2256.26025,
+            "viewMs": 2112.377625
+          },
+          {
+            "command": "Seçimi bırak (Esc)",
+            "gpuMs": 9.421666,
+            "uiMs": 1.645083
+          }
+        ],
+        "firstInteraction": {
+          "pan": {
+            "gpuMs": 1793.124625,
+            "uiMs": 1.061584,
+            "viewMs": 0.19325
+          },
+          "pointer": {
+            "gpuMs": 7284.638708,
+            "uiMs": 17.611749999999997,
+            "viewMs": 0.19025
+          },
+          "wheel": {
+            "gpuMs": 6549.985542,
+            "uiMs": 17.948083000000004,
+            "viewMs": 0.162167
+          }
+        },
+        "frames": [
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 120,
+              "gpuMax": 13.168375,
+              "gpuP50": 6.2641670000000005,
+              "gpuP95": 7.877250000000001,
+              "gpuP99": 9.3285,
+              "uiMax": 0.955626,
+              "uiOverBudget": 0,
+              "uiP50": 0.4812489999999999,
+              "uiP95": 0.874,
+              "uiP95Parts": [
+                0.017333,
+                0.364208,
+                0.275417,
+                0.148584,
+                0.068458
+              ],
+              "uiP99": 0.940418,
+              "viewP50": 0.159916
+            },
+            "trace": "imleç",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 1834.971208,
+              "gpuP50": 1069.9997910000002,
+              "gpuP95": 1728.3104580000002,
+              "gpuP99": 1834.971208,
+              "uiMax": 76.467582,
+              "uiOverBudget": 28,
+              "uiP50": 33.117126,
+              "uiP95": 55.253625,
+              "uiP95Parts": [
+                0.024749999999999998,
+                0.024834,
+                0.184458,
+                0.140416,
+                54.879167
+              ],
+              "uiP99": 76.467582,
+              "viewP50": 0.19808299999999998
+            },
+            "trace": "tekerlek",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 1848.450667,
+              "gpuP50": 1769.3426670000001,
+              "gpuP95": 1842.865959,
+              "gpuP99": 1848.450667,
+              "uiMax": 15.279333999999999,
+              "uiOverBudget": 0,
+              "uiP50": 1.176541,
+              "uiP95": 12.342417,
+              "uiP95Parts": [
+                0.024666,
+                0.018584,
+                0.15425,
+                0.1265,
+                12.018417
+              ],
+              "uiP99": 15.279333999999999,
+              "viewP50": 0.186708
+            },
+            "trace": "kaydırma",
+            "view": "uzak"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 60,
+              "gpuMax": 5.989167,
+              "gpuP50": 4.459875,
+              "gpuP95": 5.873209,
+              "gpuP99": 5.956124999999999,
+              "uiMax": 0.59896,
+              "uiOverBudget": 0,
+              "uiP50": 0.39912499999999995,
+              "uiP95": 0.506792,
+              "uiP95Parts": [
+                0.021834000000000003,
+                0.051791,
+                0.250167,
+                0.13037500000000002,
+                0.052625
+              ],
+              "uiP99": 0.516749,
+              "viewP50": 0.15625
+            },
+            "trace": "imleç",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 21.791332999999998,
+              "gpuP50": 10.48775,
+              "gpuP95": 17.232750000000003,
+              "gpuP99": 21.791332999999998,
+              "uiMax": 24.090581999999998,
+              "uiOverBudget": 1,
+              "uiP50": 0.575874,
+              "uiP95": 2.943209,
+              "uiP95Parts": [
+                0.019334,
+                0.014291,
+                0.136959,
+                0.11854200000000001,
+                2.654083
+              ],
+              "uiP99": 24.090581999999998,
+              "viewP50": 0.200208
+            },
+            "trace": "tekerlek",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ilk",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 18.732917,
+              "gpuP50": 10.343375,
+              "gpuP95": 15.449584,
+              "gpuP99": 18.732917,
+              "uiMax": 0.9070020000000001,
+              "uiOverBudget": 0,
+              "uiP50": 0.5031669999999999,
+              "uiP95": 0.8435839999999999,
+              "uiP95Parts": [
+                0.040125,
+                0.021084,
+                0.291417,
+                0.237292,
+                0.253666
+              ],
+              "uiP99": 0.9070020000000001,
+              "viewP50": 0.201
+            },
+            "trace": "kaydırma",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 120,
+              "gpuMax": 6.8015,
+              "gpuP50": 5.3193340000000005,
+              "gpuP95": 6.481792,
+              "gpuP99": 6.690207999999999,
+              "uiMax": 1.072792,
+              "uiOverBudget": 0,
+              "uiP50": 0.43041799999999997,
+              "uiP95": 0.839833,
+              "uiP95Parts": [
+                0.017,
+                0.38366700000000004,
+                0.236708,
+                0.138208,
+                0.06425
+              ],
+              "uiP99": 0.911999,
+              "viewP50": 0.156667
+            },
+            "trace": "imleç",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 1790.5361659999999,
+              "gpuP50": 1066.79125,
+              "gpuP95": 1733.1544999999999,
+              "gpuP99": 1790.5361659999999,
+              "uiMax": 54.512626,
+              "uiOverBudget": 28,
+              "uiP50": 28.683792,
+              "uiP95": 34.52270899999999,
+              "uiP95Parts": [
+                0.024459,
+                0.018375,
+                0.178083,
+                0.140542,
+                34.161249999999995
+              ],
+              "uiP99": 54.512626,
+              "viewP50": 0.216125
+            },
+            "trace": "tekerlek",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 1876.272958,
+              "gpuP50": 1764.58475,
+              "gpuP95": 1852.332041,
+              "gpuP99": 1876.272958,
+              "uiMax": 12.546542,
+              "uiOverBudget": 0,
+              "uiP50": 1.195751,
+              "uiP95": 11.26525,
+              "uiP95Parts": [
+                0.025083,
+                0.01875,
+                0.208042,
+                0.14650000000000002,
+                10.866875
+              ],
+              "uiP99": 12.546542,
+              "viewP50": 0.18304199999999998
+            },
+            "trace": "kaydırma",
+            "view": "uzak"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 60,
+              "gpuMax": 5.956084000000001,
+              "gpuP50": 4.349333000000001,
+              "gpuP95": 5.818582999999999,
+              "gpuP99": 5.895499999999999,
+              "uiMax": 0.551041,
+              "uiOverBudget": 0,
+              "uiP50": 0.38520699999999997,
+              "uiP95": 0.486374,
+              "uiP95Parts": [
+                0.027625,
+                0.052291,
+                0.172667,
+                0.16333299999999998,
+                0.07045799999999999
+              ],
+              "uiP99": 0.49096,
+              "viewP50": 0.14875000000000002
+            },
+            "trace": "imleç",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 32,
+              "gpuMax": 15.279541,
+              "gpuP50": 9.454416,
+              "gpuP95": 11.233082999999999,
+              "gpuP99": 15.279541,
+              "uiMax": 22.941458,
+              "uiOverBudget": 1,
+              "uiP50": 0.560751,
+              "uiP95": 2.5170840000000005,
+              "uiP95Parts": [
+                0.017084000000000002,
+                0.0125,
+                0.142667,
+                0.115666,
+                2.2291670000000003
+              ],
+              "uiP99": 22.941458,
+              "viewP50": 0.184458
+            },
+            "trace": "tekerlek",
+            "view": "yakın 1:200"
+          },
+          {
+            "run": "ısınmış",
+            "stats": {
+              "frames": 40,
+              "gpuMax": 26.771791999999998,
+              "gpuP50": 8.765916,
+              "gpuP95": 19.248292,
+              "gpuP99": 26.771791999999998,
+              "uiMax": 1.216333,
+              "uiOverBudget": 0,
+              "uiP50": 0.44145799999999996,
+              "uiP95": 0.9037510000000001,
+              "uiP95Parts": [
+                0.038583,
+                0.035334,
+                0.349875,
+                0.30604200000000004,
+                0.173917
+              ],
+              "uiP99": 1.216333,
+              "viewP50": 0.156417
+            },
+            "trace": "kaydırma",
+            "view": "yakın 1:200"
+          }
+        ],
+        "keys": {
+          "commandLine": {
+            "frames": 14,
+            "gpuMax": 14.956875,
+            "gpuP50": 9.177458,
+            "gpuP95": 14.68475,
+            "gpuP99": 14.956875,
+            "uiMax": 1.389375,
+            "uiOverBudget": 0,
+            "uiP50": 0.588126,
+            "uiP95": 1.047086,
+            "uiP95Parts": [
+              0.038584,
+              0.062042,
+              0.477334,
+              0.34816699999999995,
+              0.12095900000000001
+            ],
+            "uiP99": 1.389375,
+            "viewP50": 0.276084
+          },
+          "valueField": {
+            "frames": 9,
+            "gpuMax": 11.4045,
+            "gpuP50": 8.537875,
+            "gpuP95": 11.4045,
+            "gpuP99": 11.4045,
+            "uiMax": 0.605332,
+            "uiOverBudget": 0,
+            "uiP50": 0.42424899999999993,
+            "uiP95": 0.605332,
+            "uiP95Parts": [
+              0.0235,
+              0.020458,
+              0.213666,
+              0.22262500000000002,
+              0.125083
+            ],
+            "uiP99": 0.605332,
+            "viewP50": 0.18204199999999998
+          },
+          "valueFieldOpened": true
+        },
+        "memory": {
+          "footprintEnd": {
+            "gpuMemoryMb": 56.21875,
+            "physFootprintMb": 15360.0,
+            "physFootprintPeakMb": 16384.0
+          },
+          "footprintOpen": {
+            "gpuMemoryMb": 36.21875,
+            "physFootprintMb": 8417.0,
+            "physFootprintPeakMb": 10240.0
+          },
+          "residentBootMb": 213.296875,
+          "residentEndMb": 9872.921875,
+          "residentOpenMb": 6348.59375
+        },
+        "objects": 1000000,
+        "open": {
+          "firstFrame": {
+            "gpuMs": 450.652708,
+            "uiMs": 2545.5737929999996,
+            "viewMs": 1084.3339999999998
+          },
+          "framesWhileOpening": {
+            "frames": 68,
+            "gpuMax": 8.567834,
+            "gpuP50": 3.8870419999999997,
+            "gpuP95": 8.307792,
+            "gpuP99": 8.479709,
+            "uiMax": 0.48974999999999996,
+            "uiOverBudget": 0,
+            "uiP50": 0.315792,
+            "uiP95": 0.43412500000000004,
+            "uiP95Parts": [
+              0.0,
+              0.000042,
+              0.16179200000000002,
+              0.209291,
+              0.063
+            ],
+            "uiP99": 0.438209,
+            "viewP50": 0.1
+          },
+          "settledMs": 4903.118,
+          "threadMs": 1646.0818339999998,
+          "toFirstFrameMs": 4642.438959
+        },
+        "readbackFloor": {
+          "frames": 20,
+          "gpuMax": 15.864957999999998,
+          "gpuP50": 2.282584,
+          "gpuP95": 5.299333,
+          "gpuP99": 15.864957999999998,
+          "uiMax": 5.181583,
+          "uiOverBudget": 0,
+          "uiP50": 0.188374,
+          "uiP95": 0.307624,
+          "uiP95Parts": [
+            0.0,
+            0.0,
+            0.054708,
+            0.219291,
+            0.033624999999999995
+          ],
+          "uiP99": 5.181583,
+          "viewP50": 0.052833
+        },
+        "viewFar": {
+          "drawCalls": 3,
+          "residentBytes": 2066227512,
+          "samples": 4,
+          "segments": 4,
+          "targetBytes": 14912160,
+          "triangles": 0
+        },
+        "viewNear": {
+          "drawCalls": 27,
+          "residentBytes": 2066237772,
+          "samples": 4,
+          "segments": 289,
+          "targetBytes": 14912160,
+          "triangles": 0
+        }
+      },
+      "objects": 1000000
+    }
+  ],
+  "setup": {
+    "budgetMs": 16.666666666666668,
+    "profile": "release (lto thin)",
+    "seed": 19,
+    "sizes": [
+      10000,
+      100000,
+      1000000
+    ],
+    "window": [
+      1440.0,
+      900.0
+    ]
+  }
+}

@@ -978,6 +978,16 @@ impl Viewport {
         self.styled.try_borrow().ok().and_then(|c| c.last_build)
     }
 
+    /// The last styled build, taken, so the next one is seen alone; and the layer parts built now (docs/adr/1062's
+    /// edit scope).
+    #[cfg(test)]
+    pub fn take_styled_build(&self) -> (Option<(Duration, usize)>, usize) {
+        self.styled
+            .try_borrow_mut()
+            .map(|mut c| (c.last_build.take(), c.part_count()))
+            .unwrap_or_default()
+    }
+
     /// The plain scene of `doc`, from the cache when nothing it depends on changed.
     #[cfg(test)]
     fn scene(

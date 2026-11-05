@@ -58,6 +58,16 @@ impl Parts {
         self.event + self.app + self.view + self.layout + self.draw
     }
 
+    /// The UI thread's parts: event, app, view, layout, draw (milliseconds).
+    pub(super) fn split(&self) -> [f64; 5] {
+        [self.event, self.app, self.view, self.layout, self.draw]
+    }
+
+    /// `App::view`'s share, milliseconds (the drawing's scene is built there when it is out of date).
+    pub(super) fn view_ms(&self) -> f64 {
+        self.view
+    }
+
     /// The headless GPU's frame and read back, milliseconds (none without a GPU).
     pub(super) fn gpu_ms(&self) -> f64 {
         self.gpu.unwrap_or(0.0)
@@ -81,7 +91,7 @@ pub(super) fn moved(position: Point) -> Event {
 }
 
 /// A left click at a place: the pointer there, the button pressed and let go.
-fn click(position: Point) -> [Event; 3] {
+pub(super) fn click(position: Point) -> [Event; 3] {
     [
         moved(position),
         Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
@@ -213,6 +223,24 @@ impl Harness {
         self.frame_with(app, events, |_| {})
     }
 
+    /// The last frame drawn again and read back: RGBA rows of the window at one device pixel per logical pixel
+    /// (docs/adr/1062's pixel comparisons). Empty without a GPU.
+    pub(super) fn picture(&mut self, app: &App) -> Vec<u8> {
+        if !self.gpu {
+            return Vec::new();
+        }
+        self.renderer.screenshot(
+            Size::new(WINDOW.width as u32, WINDOW.height as u32),
+            1.0,
+            app.theme().palette().background,
+        )
+    }
+
+    /// Whether frames are drawn on a GPU (wgpu), not in software.
+    pub(super) fn on_gpu(&self) -> bool {
+        self.gpu
+    }
+
     /// Frames until the interface asks for nothing more (the area's size, the first fit).
     pub(super) fn settle(&mut self, app: &mut App) {
         for _ in 0..12 {
@@ -272,7 +300,7 @@ pub(super) fn pan(app: &mut App, h: &mut Harness, center: Point) -> Vec<Parts> {
 }
 
 /// A key pressed and let go, as the window gives it.
-fn key(named: key::Named) -> Vec<Event> {
+pub(super) fn key(named: key::Named) -> Vec<Event> {
     let physical = key::Physical::Unidentified(key::NativeCode::Unidentified);
     let key = keyboard::Key::Named(named);
     vec![
@@ -297,7 +325,7 @@ fn key(named: key::Named) -> Vec<Event> {
 
 /// `count` places over the drawing area, along a path that crosses it
 /// (a Lissajous figure), so the pointer passes over many objects.
-fn path(area: Rectangle, count: usize) -> Vec<Point> {
+pub(super) fn path(area: Rectangle, count: usize) -> Vec<Point> {
     (0..count)
         .map(|i| {
             let t = i as f32 / count as f32 * std::f32::consts::TAU;
@@ -610,7 +638,7 @@ fn processing(app: &mut App, h: &mut Harness, out: &mut Vec<(&'static str, Vec<P
     app.viewport.camera = fitted;
 }
 
-fn percentile(xs: &[f64], p: f64) -> f64 {
+pub(super) fn percentile(xs: &[f64], p: f64) -> f64 {
     let mut xs = xs.to_vec();
     xs.sort_by(f64::total_cmp);
     if xs.is_empty() {
