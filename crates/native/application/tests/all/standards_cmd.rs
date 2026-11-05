@@ -42,6 +42,46 @@ fn unknown_standard_rules_are_refused_by_command_registry_without_mutation() {
 }
 
 #[test]
+fn unknown_resource_style_fields_are_refused_before_normalization_or_execution() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let snapshot = DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap();
+    let mut doc = Document::from_snapshot(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+
+    for (section, unknown) in [
+        ("textStyleDefinitions", "missingFontRule"),
+        ("dimensionStyleDefinitions", "toleranceRule"),
+    ] {
+        let input = json!({
+            "name": "mimari-ofis",
+            "resources": {section: [{"name": "A-NOT", unknown: true}]}
+        });
+        let normalized = registry::normalize("cad.standards.check", input.clone()).unwrap_err();
+        assert_eq!(normalized.code, "invalid_input");
+        assert!(normalized.message.contains(unknown), "{}", normalized.message);
+        for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+            let error = registry::run(
+                &mut ExecutionContext::new(&mut doc),
+                "cad.standards.check",
+                op,
+                input.clone(),
+            )
+            .unwrap_err();
+            assert_eq!(error.code, "invalid_input");
+            assert!(error.message.contains(unknown), "{}", error.message);
+            assert_eq!(doc.to_snapshot_v2(), before);
+            assert_eq!(doc.undo_labels(), undo);
+        }
+    }
+}
+
+#[test]
 fn standard_conflicts_use_the_same_numeric_tolerance_as_the_checker() {
     use kentos_commands::{
         CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,

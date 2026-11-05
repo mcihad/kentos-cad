@@ -516,7 +516,7 @@ pub fn parse_standard_document(
 
 /// Resource types in the drawing model are lenient when reading old drawing
 /// files. Office packages must reject unknown rules even inside a definition.
-fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
+pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
     fn object<'a>(
         value: &'a serde_json::Value,
         path: &str,

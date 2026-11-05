@@ -177,6 +177,21 @@ fn unreadable(command: &str, e: &serde_json::Error) -> Unrun {
     }
 }
 
+// Drawing style records stay permissive for legacy KCAD files. A direct
+// standards command must enforce the package's stricter resource contract
+// before serde drops unrecognized fields during typed deserialization.
+fn check_standard_resource_input(command: &str, input: &Value) -> Result<(), Unrun> {
+    if command == kentos_commands::CAD_STANDARDS_CHECK {
+        if let Some(resources) = input.get("resources").filter(|value| !value.is_null()) {
+            kentos_commands::check_resource_fields(resources).map_err(|message| Unrun {
+                code: codes::INVALID_INPUT,
+                message: format!("{command} girdisi okunamadı: {message}"),
+            })?;
+        }
+    }
+    Ok(())
+}
+
 fn unwritable(command: &str, e: &serde_json::Error) -> Unrun {
     Unrun {
         code: codes::INVALID_INPUT,
@@ -792,6 +807,7 @@ macro_rules! by_command {
 /// in, its fields in the type's form (what the journal keeps and a
 /// request's fingerprint is made of).
 pub fn normalize(command: &str, input: Value) -> Result<Value, Unrun> {
+    check_standard_resource_input(command, &input)?;
     macro_rules! normal {
         ($module:ident, $input:ty) => {{
             let typed: $input =
@@ -810,6 +826,7 @@ pub fn run(
     op: CallOp,
     input: Value,
 ) -> Result<Value, Unrun> {
+    check_standard_resource_input(command, &input)?;
     macro_rules! go {
         ($module:ident, $input:ty) => {{
             let typed: $input =

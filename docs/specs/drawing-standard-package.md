@@ -73,6 +73,11 @@ validated style shapes; the short `standard.textStyles` and
 `standard.dimensionStyles` rules remain separate. Source IDs are not compared
 with local IDs. Version 1 rejects `resources`; version 2 without `resources`
 and unsupported later versions are rejected.
+
+Direct `cad.standards.check` input and command normalization enforce the same
+resource-field allowlist before deserialization, so Python and MCP calls cannot
+silently discard an unrecognized text or dimension style field. Legacy KCAD
+style records retain their separate, permissive reading contract.
 The project keeps the original JSON text, including the order and content of
 both versions. Attaching it through `cad.settings.set` remains revision checked
 and does not replace, install, purge or rename a drawing resource.

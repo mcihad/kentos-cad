@@ -1976,9 +1976,14 @@ satırların ayrıntısı ve pasif Uygula düğmesi görüldü. Ölçü stili JS
 tek satırda kesildiği için görünüm satır kaydırmalı yapıldı; gerçek uygulamada
 aşağı kaydırılarak tanımın tamamının okunabildiği doğrulandı. Görüntüler repo
 dışındadır. Tablo stili,
-ham komut girdisindeki iç stil alanlarının sıkı reddi, güvenli kaynak eşlemesi,
+güvenli kaynak eşlemesi,
 palet ve tam görünüş kökeni açık olduğundan madde
 `[~]` kalır.
+Doğrudan `cad.standards.check` girdisi ile komut normalizasyonu da paketle
+aynı kaynak alanı denetimini çalıştırır; bilinmeyen yazı/ölçü stili alanları
+Python/MCP yolunda sessizce kaybolmaz. Üç komut aşamasında çizimin ve Undo
+geçmişinin değişmediği otomatik sınandı. Eski KCAD çizimlerindeki toleranslı
+stil okuma korunur; bu değişiklik arayüz davranışını değiştirmez.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
