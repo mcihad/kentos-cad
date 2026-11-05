@@ -135,6 +135,114 @@ pub struct DrawingStandard {
     pub by_layer: bool,
 }
 
+/// A portable, versioned envelope for a drawing standard. This first version
+/// carries the currently supported drawing rules only; it does not claim to
+/// contain block, hatch or sheet resources.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StandardPackage {
+    pub format: String,
+    pub version: u32,
+    /// Stable office-assigned identity and revision, independent of a filename.
+    pub id: String,
+    pub revision: String,
+    pub standard: DrawingStandard,
+}
+
+pub const STANDARD_PACKAGE_FORMAT: &str = "kentos.drawing-standard";
+pub const STANDARD_PACKAGE_VERSION: u32 = 1;
+
+/// Parse either the original bare standard or the versioned envelope. Unknown
+/// fields are refused at every supported level: silently discarding a rule
+/// would make an incomplete standard appear to pass inspection.
+pub fn parse_standard_document(
+    bytes: &[u8],
+) -> Result<(DrawingStandard, Option<StandardPackage>), String> {
+    let value: serde_json::Value =
+        serde_json::from_slice(bytes).map_err(|e| format!("Standart okunamadı: {e}"))?;
+    let object = value
+        .as_object()
+        .ok_or("Standart bir JSON nesnesi olmalı.")?;
+    let (standard_value, package) = if object.contains_key("format")
+        || object.contains_key("version")
+    {
+        let package: StandardPackage = serde_json::from_value(value.clone())
+            .map_err(|e| format!("Standart paketi okunamadı: {e}"))?;
+        if package.format != STANDARD_PACKAGE_FORMAT || package.version != STANDARD_PACKAGE_VERSION
+        {
+            return Err("Standart paketinin biçimi veya sürümü desteklenmiyor.".into());
+        }
+        if package.id.trim().is_empty()
+            || package.revision.trim().is_empty()
+            || package.id.len() > 128
+            || package.revision.len() > 128
+        {
+            return Err("Paket kimliği ve revizyonu boş olmamalı ve 128 baytı aşmamalı.".into());
+        }
+        (
+            object
+                .get("standard")
+                .ok_or("Paketin standart tanımı yok.")?,
+            Some(package),
+        )
+    } else {
+        (&value, None)
+    };
+    let standard_object = standard_value
+        .as_object()
+        .ok_or("Standart bir JSON nesnesi olmalı.")?;
+    const FIELDS: &[&str] = &[
+        "name",
+        "description",
+        "layers",
+        "naming",
+        "fonts",
+        "textStyles",
+        "dimensionStyles",
+        "lineTypes",
+        "byLayer",
+    ];
+    if let Some(key) = standard_object
+        .keys()
+        .find(|key| !FIELDS.contains(&key.as_str()))
+    {
+        return Err(format!("Standartta bilinmeyen alan: {key}."));
+    }
+    for (section, allowed) in [
+        (
+            "layers",
+            &[
+                "name",
+                "description",
+                "color",
+                "lineType",
+                "lineWeight",
+                "plot",
+                "from",
+            ][..],
+        ),
+        ("textStyles", &["name", "font", "height"][..]),
+        ("dimensionStyles", &["name", "height"][..]),
+    ] {
+        if let Some(items) = standard_object.get(section).and_then(|v| v.as_array()) {
+            for item in items {
+                if let Some(key) = item
+                    .as_object()
+                    .and_then(|o| o.keys().find(|k| !allowed.contains(&k.as_str())))
+                {
+                    return Err(format!("{section} içinde bilinmeyen alan: {key}."));
+                }
+            }
+        }
+    }
+    let standard: DrawingStandard = serde_json::from_value(standard_value.clone())
+        .map_err(|e| format!("Standart okunamadı: {e}"))?;
+    if let Some(problem) = standard_problem(&standard) {
+        return Err(format!("Standart geçersiz: {problem}."));
+    }
+    Ok((standard, package))
+}
+
 /// A font's name in the contract and the file (`architects-daughter`).
 pub fn font_id(f: DrawingFont) -> &'static str {
     match f {
@@ -449,5 +557,38 @@ mod tests {
         assert!(s.by_layer);
         assert!(!s.layers[9].plot);
         assert_eq!(built_in_standard("yok"), None);
+    }
+
+    #[test]
+    fn standard_documents_preserve_legacy_and_reject_unsupported_package_rules() {
+        let original = built_in_standard("mimari-ofis").unwrap();
+        let raw = serde_json::to_vec(&original).unwrap();
+        let (standard, package) = parse_standard_document(&raw).unwrap();
+        assert_eq!(standard, original);
+        assert!(package.is_none());
+
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_VERSION,
+            id: "belediye-mimari".into(),
+            revision: "2026.1".into(),
+            standard: original.clone(),
+        };
+        let mut value = serde_json::to_value(&package).unwrap();
+        let (standard, parsed) =
+            parse_standard_document(&serde_json::to_vec(&value).unwrap()).unwrap();
+        assert_eq!(standard, original);
+        assert_eq!(parsed, Some(package));
+        value["version"] = 2.into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["version"] = 1.into();
+        value["standard"]["layers"][0]["unsupportedRule"] = true.into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["standard"]["layers"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unsupportedRule");
+        value["id"] = " ".into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
     }
 }

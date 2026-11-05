@@ -1843,6 +1843,14 @@ boyutu ve tanımı denetlenir, bilinmeyen alanlar reddedilir; kaynak ve seçimin
 değişimi, yerleşik standarda dönüş ve hatalı dosyanın reddi doğrulandı.
 Bu seçim kalıcı veya sürümlü ofis paketi değildir; paket kapsamı açık kalır.
 
+Kimlik ve ofis revizyonu taşıyan sürümlü standart tanımının ilk biçimi
+eklendi (`docs/specs/drawing-standard-package.md`). Eski yalın standart
+dosyaları okunur; bilinmeyen kurallar ve desteklenmeyen sürümler reddedilir.
+Otomatik testler ve gerçek uygulamada dosya seçimiyle kimlik/revizyon gösterimi
+doğrulandı. Bu ilk biçim yalnız mevcut standart kurallarını taşır; seçimi
+projeye kaydetmez ve blok, tarama, şablon veya palet kaynaklarını paketlemez.
+Dolayısıyla 12. maddenin kalıcı, kapsamlı ofis paketi kabulü açık kalır.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

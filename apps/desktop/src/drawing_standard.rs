@@ -10,7 +10,7 @@ use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DrawingStandard, StandardIssue, StandardIssueKind, StandardsApplied,
     StandardsApply, StandardsCheck, StandardsReport, built_in_standard, built_in_standards,
-    standard_problem,
+    parse_standard_document,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, standards};
@@ -213,60 +213,17 @@ impl App {
                         if bytes.len() > 1_048_576 {
                             return Err("Standart dosyası 1 MiB sınırını aşıyor.".into());
                         }
-                        let value: serde_json::Value = serde_json::from_slice(&bytes)
-                            .map_err(|e| format!("Standart okunamadı: {e}"))?;
-                        let object = value
-                            .as_object()
-                            .ok_or("Standart bir JSON nesnesi olmalı.")?;
-                        const FIELDS: &[&str] = &[
-                            "name",
-                            "description",
-                            "layers",
-                            "naming",
-                            "fonts",
-                            "textStyles",
-                            "dimensionStyles",
-                            "lineTypes",
-                            "byLayer",
-                        ];
-                        if let Some(key) = object.keys().find(|key| !FIELDS.contains(&key.as_str()))
-                        {
-                            return Err(format!("Standartta bilinmeyen alan: {key}."));
-                        }
-                        for (section, allowed) in [
-                            (
-                                "layers",
-                                &[
-                                    "name",
-                                    "description",
-                                    "color",
-                                    "lineType",
-                                    "lineWeight",
-                                    "plot",
-                                    "from",
-                                ][..],
+                        let (standard, package) = parse_standard_document(&bytes)?;
+                        let name = match package {
+                            Some(package) => format!(
+                                "{} · {} · sürüm {}",
+                                file.file_name(),
+                                package.id,
+                                package.revision
                             ),
-                            ("textStyles", &["name", "font", "height"][..]),
-                            ("dimensionStyles", &["name", "height"][..]),
-                        ] {
-                            if let Some(items) = object.get(section).and_then(|v| v.as_array()) {
-                                for item in items {
-                                    if let Some(key) = item.as_object().and_then(|o| {
-                                        o.keys().find(|k| !allowed.contains(&k.as_str()))
-                                    }) {
-                                        return Err(format!(
-                                            "{section} içinde bilinmeyen alan: {key}."
-                                        ));
-                                    }
-                                }
-                            }
-                        }
-                        let standard: DrawingStandard = serde_json::from_value(value)
-                            .map_err(|e| format!("Standart okunamadı: {e}"))?;
-                        if let Some(problem) = standard_problem(&standard) {
-                            return Err(format!("Standart geçersiz: {problem}."));
-                        }
-                        Ok(Some((file.file_name(), standard)))
+                            None => file.file_name(),
+                        };
+                        Ok(Some((name, standard)))
                     },
                     |result| msg(Event::Loaded(result)),
                 );
