@@ -53,6 +53,8 @@ pub(crate) struct Revision {
     for_doc: Option<(u64, u64)>,
     /// Definition edits can change every insert without touching its entity slot.
     for_blocks: Option<String>,
+    /// A layer appearance edit can change every object on it without touching its slot.
+    for_layers: Option<String>,
     /// What differs, by lasting id: objects not here are the same (or in neither state).
     kinds: HashMap<Uuid, Kind>,
     /// The open drawing's ids by slot, as the marks last saw them: a removed object's id is gone from the drawing.
@@ -95,6 +97,7 @@ impl Revision {
             counts: Counts::default(),
             for_doc: None,
             for_blocks: None,
+            for_layers: None,
             kinds: HashMap::new(),
             now_uids: HashMap::new(),
             at: None,
@@ -116,7 +119,10 @@ impl Revision {
         let blocks = block_catalog_fingerprint(&now.model);
         let blocks_changed = self.for_blocks.as_ref().is_some_and(|old| old != &blocks);
         self.for_blocks = Some(blocks);
-        let touched = match (same_drawing && !blocks_changed, self.at) {
+        let layers = layer_catalog_fingerprint(&now.model);
+        let layers_changed = self.for_layers.as_ref().is_some_and(|old| old != &layers);
+        self.for_layers = Some(layers);
+        let touched = match (same_drawing && !blocks_changed && !layers_changed, self.at) {
             (true, Some(at)) => match now.model.changes_since(at) {
                 Changes::Slots(slots) if slots.len() <= MOST_FOLLOWED => Some(slots.to_vec()),
                 _ => None,
@@ -272,6 +278,11 @@ fn block_catalog_fingerprint(doc: &kentos_domain::Document) -> String {
             bytes.extend_from_slice(&encoded);
         }
     }
+    kentos_commands::encoding::sha256_hex(&bytes)
+}
+
+fn layer_catalog_fingerprint(doc: &kentos_domain::Document) -> String {
+    let bytes = serde_json::to_vec(doc.layers().nodes()).unwrap_or_default();
     kentos_commands::encoding::sha256_hex(&bytes)
 }
 

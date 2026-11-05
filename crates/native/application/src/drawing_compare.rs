@@ -26,6 +26,7 @@ use crate::file_import_block::read_drawing;
 const UID: &str = "\0uid";
 const LAYER: &str = "\0layer";
 const DEFINITION: &str = "\0blockDefinition";
+const LAYER_STYLE: &str = "\0layerStyle";
 
 /// One object in both states that differs.
 #[derive(Clone, Debug, PartialEq)]
@@ -86,6 +87,7 @@ fn member(
     uid: kentos_domain::Uuid,
     e: &Entity,
     cache: &mut HashMap<BlockId, String>,
+    layer_styles: &mut HashMap<String, String>,
 ) -> Member {
     let base = e.base();
     let mut attrs: Vec<(String, String)> = base
@@ -95,6 +97,15 @@ fn member(
         .collect();
     attrs.push((UID.to_owned(), uid.to_string()));
     attrs.push((LAYER.to_owned(), base.layer_id.clone()));
+    if let Some(style) = layer_styles.get(&base.layer_id) {
+        attrs.push((LAYER_STYLE.to_owned(), style.clone()));
+    } else if let Some(layer) = doc.layers().get(&base.layer_id) {
+        if let Ok(style) = serde_json::to_vec(&layer.style) {
+            let fingerprint = sha256_hex(&style);
+            layer_styles.insert(base.layer_id.clone(), fingerprint.clone());
+            attrs.push((LAYER_STYLE.to_owned(), fingerprint));
+        }
+    }
     if let Entity::Insert(insert) = e {
         attrs.push((
             DEFINITION.to_owned(),
@@ -111,8 +122,9 @@ fn members(doc: &Document) -> (Vec<Member>, Vec<Slot>) {
     let mut out = Vec::new();
     let mut slots = Vec::new();
     let mut definitions = HashMap::new();
+    let mut layer_styles = HashMap::new();
     for (uid, e) in doc.entities_with_uids() {
-        out.push(member(doc, uid, e, &mut definitions));
+        out.push(member(doc, uid, e, &mut definitions, &mut layer_styles));
         slots.push(Slot(e.base().id));
     }
     (out, slots)
@@ -143,11 +155,13 @@ pub fn differs(
         old.uid(old_slot)?,
         old.get(old_slot)?,
         &mut HashMap::new(),
+        &mut HashMap::new(),
     );
     let b = member(
         new,
         new.uid(new_slot)?,
         new.get(new_slot)?,
+        &mut HashMap::new(),
         &mut HashMap::new(),
     );
     let rows = compare(&[a], &[b], &settings(tolerance));
@@ -176,6 +190,8 @@ pub fn diff(old: &Document, new: &Document, tolerance: f64) -> Diff {
                             "layer".to_owned()
                         } else if f == DEFINITION {
                             "blockDefinition".to_owned()
+                        } else if f == LAYER_STYLE {
+                            "layerStyle".to_owned()
                         } else {
                             f.clone()
                         }
@@ -414,5 +430,28 @@ mod tests {
             differs(&before, slot, &after, delta.changed[0].new, COMPARE_TOLERANCE),
             Some(true)
         );
+    }
+
+    #[test]
+    fn color_only_layer_change_is_an_attribute_difference() {
+        let old: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        let mut revised = old.clone();
+        revised["layers"][1]["style"]["color"] = json!("#6495ED");
+        let before = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
+        )
+        .unwrap();
+        let after = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
+        )
+        .unwrap();
+        let delta = diff(&before, &after, COMPARE_TOLERANCE);
+        assert_eq!((delta.same, delta.changed.len()), (0, 3));
+        assert!(delta.changed.iter().all(|c| {
+            c.status == "attributes" && c.fields == ["layerStyle".to_owned()]
+        }));
     }
 }

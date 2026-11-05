@@ -294,6 +294,31 @@ fn revision_follows_block_definition_edits_without_insert_slot_changes() {
     assert_eq!(revision.counts, revision.whole(&now).0);
 }
 
+#[test]
+fn revision_follows_layer_style_edits_without_entity_slot_changes() {
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../fixtures/kcad/v2/dynamic-blocks.json"
+    ))
+    .expect("block fixture");
+    let mut now = Document::from_v2(snapshot, None).expect("drawing");
+    let baseline = Document::of_model(now.model.clone());
+    let mut revision = crate::split_revision::Revision::new(
+        "baseline".to_owned(),
+        baseline,
+        Source::Drawing,
+    );
+    revision.mark(&now);
+    let mark = now.model.change_mark();
+    let mut style = now.model.layers().get("kapilar").expect("layer").style.clone();
+    style.color = "#6495ED".to_owned();
+    assert!(now.model.set_layer_style("kapilar", style, "Renk"));
+    assert!(matches!(now.model.changes_since(mark), kentos_domain::Changes::Slots(slots) if slots.is_empty()));
+    revision.mark(&now);
+    assert_eq!(revision.counts.changed, 3);
+    assert_eq!(revision.marked.ids().len(), 3);
+    assert_eq!(revision.counts, revision.whole(&now).0);
+}
+
 /// A drawing file, and a downloaded revision, in the other view (docs/adr/0576 §3): the same counts the shared cases
 /// of `cad.drawing.compare` give; the downloaded file is read and removed, and the catalog goes.
 #[test]

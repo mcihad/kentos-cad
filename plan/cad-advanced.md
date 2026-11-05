@@ -2293,7 +2293,10 @@ yapıyor; küçük blok örneğindeki üç yerleştirme için hem komut hem canl
 izleyici regresyonu geçti. Güncel masaüstü derlemesinde değişmiş çizim
 ile temel KCAD dosyası bölünmüş görünümde açıldı; `0 eklendi · 0 silindi ·
 3 değişti` sayacı ve sahnedeki fark vurgusu gerçek ekran görüntüsüyle
-doğrulandı. Görüntü repo dışında tutuldu. Stil/ölçü/viewport semantiği, farklı UUID
+doğrulandı. Yalnız katman rengi değişimi de `layerStyle` alanı ve
+`attributes` durumu olarak ayrıldı; bölünmüş görünümde mavi/açık kahverengi
+çizimler ve `3 değişti` sayacı gerçek uygulamada doğrulandı. Görüntüler
+repo dışında tutuldu. Ölçü/viewport semantiği, farklı UUID
 eşleme adayları, inceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
 tamamlandı olarak işaretlenmedi.
 
