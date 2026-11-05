@@ -1655,6 +1655,7 @@ pub(crate) fn check_geometry(
             aligns: aligns.as_deref(),
             frame: *frame,
             source: source.as_ref(),
+            breaks: None,
         };
         if let Some((field, words)) = shape.problem() {
             return Err(Stop::failed(error(

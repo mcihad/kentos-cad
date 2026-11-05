@@ -1,0 +1,413 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Kat 2",
+ "uids": [
+  "0192f5a1-1030-7000-8200-000000000001",
+  "0192f5a1-1030-7000-8200-000000000002",
+  "0192f5a1-1030-7000-8200-000000000003",
+  "0192f5a1-1030-7000-8200-000000000004",
+  "0192f5a1-1030-7000-8200-000000000005",
+  "0192f5a1-1030-7000-8200-000000000006",
+  "0192f5a1-1030-7000-8200-000000000007"
+ ],
+ "settings": {
+  "srid": 0,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 50.0,
+  "workspace": "cad",
+  "drawingUnit": "m"
+ },
+ "origin": {
+  "x": 0.0,
+  "y": 0.0
+ },
+ "layers": [
+  {
+   "id": "a",
+   "name": "Genel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "mobilya",
+   "name": "Mobilya",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kapi",
+   "name": "Kapı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "a",
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "blocks": [
+  {
+   "id": "0192f5a1-1030-7000-8000-00000000b001",
+   "name": "Sandalye",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "units": "m",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.5,
+       "y": 0.0
+      },
+      {
+       "x": 0.5,
+       "y": 0.5
+      },
+      {
+       "x": 0.0,
+       "y": 0.5
+      }
+     ]
+    }
+   ],
+   "attributes": [
+    {
+     "tag": "KOD",
+     "value": "S-01",
+     "p": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "height": 0.1,
+     "rotation": 0
+    }
+   ]
+  },
+  {
+   "id": "0192f5a1-1030-7000-8000-00000000b002",
+   "name": "Masa",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "units": "m",
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.75
+      },
+      {
+       "x": 0.0,
+       "y": 0.75
+      }
+     ]
+    },
+    {
+     "kind": "insert",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "block": "0192f5a1-1030-7000-8000-00000000b001",
+     "p": {
+      "x": 0.0,
+      "y": -0.75
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "block": "0192f5a1-1030-7000-8000-00000000b001",
+     "p": {
+      "x": 1.0,
+      "y": -0.75
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "block": "0192f5a1-1030-7000-8000-00000000b001",
+     "p": {
+      "x": 0.0,
+      "y": 1.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    },
+    {
+     "kind": "insert",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "block": "0192f5a1-1030-7000-8000-00000000b001",
+     "p": {
+      "x": 1.0,
+      "y": 1.0
+     },
+     "scale": 1.0,
+     "rotation": 0.0
+    }
+   ],
+   "attributes": [
+    {
+     "tag": "KOD",
+     "value": "M-01",
+     "p": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "height": 0.1,
+     "rotation": 0,
+     "constant": true
+    }
+   ]
+  },
+  {
+   "id": "0192f5a1-1030-7000-8000-00000000b003",
+   "name": "Kapı",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "units": "m",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.875,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.875,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1.75,
+      "y": 0.0
+     }
+    }
+   ],
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "visibility",
+      "name": "Tip",
+      "states": [
+       {
+        "name": "Tek",
+        "hidden": [
+         2
+        ]
+       },
+       {
+        "name": "Çift"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "entities": [
+  {
+   "kind": "insert",
+   "id": 1,
+   "layerId": "mobilya",
+   "attrs": {},
+   "block": "0192f5a1-1030-7000-8000-00000000b002",
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 2,
+   "layerId": "mobilya",
+   "attrs": {},
+   "block": "0192f5a1-1030-7000-8000-00000000b001",
+   "p": {
+    "x": 4.0,
+    "y": 0.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 3,
+   "layerId": "mobilya",
+   "attrs": {
+    "KOD": "S-02"
+   },
+   "block": "0192f5a1-1030-7000-8000-00000000b001",
+   "p": {
+    "x": 4.0,
+    "y": 1.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 4,
+   "layerId": "kapi",
+   "attrs": {},
+   "block": "0192f5a1-1030-7000-8000-00000000b003",
+   "p": {
+    "x": 8.0,
+    "y": 0.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0,
+   "parameters": {
+    "Tip": "Çift"
+   }
+  },
+  {
+   "kind": "insert",
+   "id": 5,
+   "layerId": "mobilya",
+   "attrs": {},
+   "block": "0192f5a1-1030-7000-8000-00000000b001",
+   "p": {
+    "x": 0.0,
+    "y": 4.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 6,
+   "layerId": "mobilya",
+   "attrs": {},
+   "block": "0192f5a1-1030-7000-8000-00000000b001",
+   "p": {
+    "x": 1.0,
+    "y": 4.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  },
+  {
+   "kind": "insert",
+   "id": 7,
+   "layerId": "mobilya",
+   "attrs": {},
+   "block": "0192f5a1-1030-7000-8000-00000000b001",
+   "p": {
+    "x": 2.0,
+    "y": 4.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0
+  }
+ ],
+ "arrays": [
+  {
+   "id": "0192f5a1-1030-7000-8000-00000000a002",
+   "block": "0192f5a1-1030-7000-8000-00000000b001",
+   "layerId": "mobilya",
+   "p": {
+    "x": 0.0,
+    "y": 4.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0,
+   "layout": {
+    "kind": "grid",
+    "rows": 1,
+    "cols": 3,
+    "dx": 1.0,
+    "dy": 0.0
+   },
+   "items": [
+    {
+     "uid": "0192f5a1-1030-7000-8200-000000000005"
+    },
+    {
+     "uid": "0192f5a1-1030-7000-8200-000000000006"
+    },
+    {
+     "uid": "0192f5a1-1030-7000-8200-000000000007"
+    }
+   ]
+  }
+ ]
+}

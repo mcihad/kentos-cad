@@ -139,6 +139,7 @@ use kentos_native_application::{
 use kentos_native_application::{
     schedules_create, schedules_edit, schedules_query, tags_check, tags_create, tags_edit,
 };
+use kentos_native_application::{extract_run, extract_table};
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
 use kentos_native_application::{topology_check, topology_exceptions};
 use serde_json::{Value, json};
@@ -1457,6 +1458,22 @@ impl Input for kentos_commands::SpacesFinish {
     }
 }
 
+impl Input for kentos_commands::ExtractRun {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ExtractTable {
+    /// `at.x` and `.y`, `height` (docs/adr/1030).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => Some(&mut self.at.x),
+            "at.y" => Some(&mut self.at.y),
+            "height" => self.height.as_mut(),
+            _ => None,
+        }
+    }
+}
 impl Input for kentos_commands::SchedulesCreate {
     /// `at.x` and `.y`, `height`, `lineWeight` (docs/adr/0344).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -5232,6 +5249,8 @@ fn run_op(
         kentos_commands::CAD_SCHEDULES_CREATE => {
             run!(schedules_create, kentos_commands::SchedulesCreate)
         }
+        kentos_commands::CAD_EXTRACT_RUN => run!(extract_run, kentos_commands::ExtractRun),
+        kentos_commands::CAD_EXTRACT_TABLE => run!(extract_table, kentos_commands::ExtractTable),
         kentos_commands::CAD_SCHEDULES_EDIT => {
             run!(schedules_edit, kentos_commands::SchedulesEdit)
         }

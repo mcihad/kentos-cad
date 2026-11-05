@@ -30,6 +30,7 @@ pub mod coords;
 pub mod dimension_spans;
 pub mod dxf;
 pub mod exif;
+pub mod extract;
 pub(crate) mod export_geom;
 pub mod field;
 pub mod fields;

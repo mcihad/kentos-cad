@@ -173,6 +173,7 @@ fn create_check(
         styles: Vec::new(),
         formulas: Vec::new(),
         fields: Vec::new(),
+        breaks: None,
     };
     Ok((warnings, doc.table_worked_out(&table)))
 }

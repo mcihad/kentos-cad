@@ -1,0 +1,180 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Veri çıkarımı",
+ "settings": {
+  "srid": 0,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 50.0,
+  "workspace": "cad"
+ },
+ "origin": {
+  "x": 0.0,
+  "y": 0.0
+ },
+ "layers": [
+  {
+   "id": "tablo",
+   "name": "Tablolar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "tablo",
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "uids": [
+  "0192f5a1-1030-7000-8000-000000000101",
+  "0192f5a1-1030-7000-8000-000000000102"
+ ],
+ "entities": [
+  {
+   "kind": "table",
+   "id": 1,
+   "layerId": "tablo",
+   "attrs": {},
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "rotation": 0.0,
+   "height": 0.25,
+   "rows": [
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "columns": [
+    3.0,
+    2.0,
+    4.0
+   ],
+   "cells": [
+    [
+     "Blok",
+     "Adet",
+     "Not"
+    ],
+    [
+     "Masa",
+     "3",
+     "Toplantı\nodası"
+    ],
+    [
+     "Sandalye",
+     "23",
+     ""
+    ],
+    [
+     "Toplam",
+     "26",
+     ""
+    ]
+   ],
+   "aligns": [
+    "left",
+    "right",
+    "left"
+   ],
+   "header": true,
+   "source": {
+    "kind": "extraction",
+    "recipe": {
+     "name": "Mobilya",
+     "drawings": [
+      "kat2.kcad"
+     ],
+     "scope": {
+      "nested": true,
+      "xrefs": true
+     },
+     "columns": [
+      {
+       "label": "Blok",
+       "value": {
+        "of": "block"
+       }
+      },
+      {
+       "label": "Adet",
+       "value": {
+        "of": "count"
+       }
+      }
+     ],
+     "group": true,
+     "total": true
+    },
+    "read": [
+     {
+      "path": "kat2.kcad",
+      "digest": "cfd80840854244c458f02ef57416fc2d5abbc5ff9a82cf32c5a579aedf53bf4e"
+     }
+    ],
+    "keys": [
+     "Masa",
+     "Sandalye"
+    ],
+    "copy": [
+     [
+      "Blok",
+      "Adet"
+     ],
+     [
+      "Masa",
+      "3"
+     ],
+     [
+      "Sandalye",
+      "23"
+     ],
+     [
+      "Toplam",
+      "26"
+     ]
+    ]
+   },
+   "breaks": {
+    "height": 1.5,
+    "gap": 1.0
+   }
+  },
+  {
+   "kind": "table",
+   "id": 2,
+   "layerId": "tablo",
+   "attrs": {},
+   "p": {
+    "x": 20.0,
+    "y": 0.0
+   },
+   "rotation": 0.0,
+   "height": 0.25,
+   "rows": [
+    1.0
+   ],
+   "columns": [
+    4.0
+   ],
+   "cells": [
+    [
+     "İki\nsatır"
+    ]
+   ]
+  }
+ ]
+}

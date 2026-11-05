@@ -613,6 +613,7 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
             frame,
             source,
             styles,
+            breaks,
             face,
         } => {
             // Mirrored, the table's new top left is the image of its top right when its baseline turns back,
@@ -642,6 +643,11 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                 frame: frame.map(|f| f * s),
                 source: source.clone(),
                 styles: styles.clone(),
+                breaks: breaks.map(|b| crate::entity::TableBreaks {
+                    height: b.height * s,
+                    gap: b.gap.map(|g| g * s),
+                    once: b.once,
+                }),
                 face: face.clone(),
             }
         }

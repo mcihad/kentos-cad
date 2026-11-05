@@ -179,6 +179,8 @@ pub mod cad_drawing_inspect;
 pub use cad_drawing_inspect::*;
 mod cad_arrays_find;
 pub use cad_arrays_find::*;
+mod cad_extract;
+pub use cad_extract::*;
 pub use cad_attachments::*;
 pub use cad_audit::*;
 pub use cad_drawing_compare::*;

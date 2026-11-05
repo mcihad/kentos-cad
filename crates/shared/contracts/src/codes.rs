@@ -2782,6 +2782,37 @@ codes! {
     OUT_OF_SYSTEM = "out_of_system", Host, false, "Ölçülen yerin bir noktası projenin sisteminin ulaştığı yerin dışında.";
     /// A file that cannot be read, or is not a KentOS drawing.
     FILE_UNREADABLE = "file_unreadable", Host, false, "Dosya okunamadı ya da bir KentOS çizimi (.kcad) değil.";
+    // Veri çıkarımı (docs/adr/1030).
+    /// A data extraction recipe against its rules: an empty name, an unknown kind, a column, a sort or a join.
+    INVALID_EXTRACTION_RECIPE = "invalid_extraction_recipe", Failed, false, "Veri çıkarımı tarifi kurallarına uymuyor: adı, türleri, sütunları, sıralaması ya da eşlemesi.";
+    /// A table without a data extraction recipe.
+    NOT_AN_EXTRACTION = "not_an_extraction", Failed, false, "Tablo bir veri çıkarımı tablosu değil; tarifi yok.";
+    /// A drawing a recipe names that is the open drawing's own file: it would be counted twice.
+    DRAWING_READ_TWICE = "drawing_read_twice", Failed, false, "Tarifin okuduğu çizim açık çizimin kendi dosyası; her çizim bir kez sayılır.";
+    /// A drawing or a joined file a recipe reads not where its path says (a refresh keeps the table as it is).
+    EXTRACTION_SOURCE_MISSING = "extraction_source_missing", FailedOrWarning, false, "Tarifin okuduğu çizim ya da dış tablo yolunda yok.";
+    /// A drawing or a joined file that does not read as one.
+    EXTRACTION_SOURCE_UNREADABLE = "extraction_source_unreadable", FailedOrWarning, false, "Tarifin okuduğu çizim ya da dış tablo okunamadı.";
+    /// A joined table without its key column or a joined column, or with an empty or repeated key.
+    JOIN_UNUSABLE = "join_unusable", FailedOrWarning, false, "Dış tablo anahtarla eşlenemiyor: anahtar ya da istenen sütun yok, bir anahtar boş ya da tekrarlı.";
+    /// An extraction that reads more occurrences than it may.
+    EXTRACTION_TOO_LARGE = "extraction_too_large", Failed, false, "Tarif bir kerede okunabilecekten çok nesne okuyor; kapsamı daraltın.";
+    /// An extraction with no row to write as a table.
+    EXTRACTION_EMPTY = "extraction_empty", Failed, false, "Tarif hiçbir nesne bulmadı; yazılacak satır yok.";
+    /// Hidden pieces and objects on hidden layers left out of a count.
+    EXTRACTION_HIDDEN = "extraction_hidden", Warning, false, "Görünmeyen parçalar ve gizli katmanlardaki nesneler sayılmadı.";
+    /// An external reference whose content is not loaded: it was not looked into.
+    XREF_UNLOADED = "xref_unloaded", Warning, false, "Dış referansın içeriği yüklü değil; içine bakılmadı.";
+    /// An external reference to a drawing the recipe reads itself: counted once, as that drawing.
+    XREF_READ_APART = "xref_read_apart", Warning, false, "Dış referansın çizimi tarifte ayrıca okunuyor; içeriği bir kez, kendi çizimi olarak sayıldı.";
+    /// Rows whose key the joined table does not have.
+    JOIN_UNMATCHED = "join_unmatched", Warning, false, "Bazı satırların anahtarı dış tabloda yok; eşlenen hücreleri boş kaldı.";
+    /// Dimensions whose text overrides their measure: shown as words, never summed.
+    DIMENSION_OVERRIDES = "dimension_overrides", Warning, false, "Bazı ölçülerin yazısı elle yazılmış; yazılan metin toplanmadı, gerçek ölçü kullanıldı.";
+    /// Nested blocks deeper than the deepest level looked into.
+    EXTRACTION_TOO_DEEP = "extraction_too_deep", Warning, false, "En derin düzeyden daha derin iç içe bloklara bakılmadı.";
+    /// A refresh that would lose a hand edit or a user's row: the table is kept as it is.
+    REFRESH_KEPT = "refresh_kept", Warning, false, "Yenileme elle girilen bir değeri ya da kullanıcı satırını kaybettirecekti; tablo olduğu gibi kaldı.";
     /// An old v1 file a save would write over.
     LEGACY_FILE = "legacy_file", Host, false, "Eski (v1) çizimin üzerine yazılmaz; kaydı yeni bir yola yapın.";
     /// A save with nowhere to go.

@@ -1488,7 +1488,27 @@ impl Writer<'_> {
         let (xs, ys) = (edges(&t.columns), edges(&t.rows));
         let h = t.height;
         let mut changed = false;
-        for (i, row) in t.cells.iter().enumerate() {
+        // A table in parts or with cells of several lines (docs/adr/1030 §7): each line where the core's layout puts
+        // it (its start, left justified), part by part; the heading's copies too.
+        let laid = t.breaks.is_some() || t.cells.iter().flatten().any(|w| w.contains('\n'));
+        if laid {
+            for c in g.layout(kentos_geometry_core::text::Font::DEFAULT).cells {
+                let words = t.cells.get(c.row).and_then(|r| r.get(c.col)).map_or("", String::as_str);
+                let line = kentos_geometry_core::geom::table::cell_line(words, c.line);
+                if line.trim().is_empty() {
+                    continue;
+                }
+                let (value, lost) = text_value(line);
+                changed |= lost;
+                self.block_text(
+                    record,
+                    &value,
+                    &Justified { p: app(c.at), height: h, rotation: 0.0, align: None, width_factor: None },
+                    &style,
+                );
+            }
+        }
+        for (i, row) in t.cells.iter().enumerate().filter(|_| !laid) {
             for (j, words) in row.iter().enumerate() {
                 if words.trim().is_empty() {
                     continue;

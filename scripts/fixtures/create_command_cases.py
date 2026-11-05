@@ -1066,7 +1066,8 @@ def table_message(kind, *given):
         "rowHeight": "Tablonun {}. satırının yüksekliği {}; sıfırdan büyük ve sonlu olmalı.",
         "cells": "Tablonun {} satırı var ama {} satırlık hücre verildi; her satırın hücreleri verilmeli.",
         "row": "Tablonun {}. satırında {} hücre var; sütun sayısı kadar ({}) olmalı.",
-        "cell": "{}. satırın {}. hücresi: satır sonu ya da denetim karakteri var; hücre tek satırdır.",
+        # A line break is a cell's since docs/adr/1030 §7; another control character is refused.
+        "cell": "{}. satırın {}. hücresi: satır sonu (\\n) dışında bir denetim karakteri var.",
         "merge": "{}. birleşik alan ({}. satır, {}. sütundan {} × {}) tablonun içinde ve birden çok hücre olmalı.",
         "overlap": "{}. birleşik alan, {}. satır {}. sütundaki birleşik alanla örtüşüyor; birleşik alanlar ayrı olmalı.",
         "hidden": "{}. satırın {}. hücresi birleşik bir alanın içinde ama boş değil; birleşik alanın yazısı sol üst hücresindedir.",
@@ -1099,7 +1100,7 @@ cases.append({
          "result": failed("invalid_table", table_message("cells", 3, 2), "objects[0].geometry.cells"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "cells": [["Ad", "Alan (m²)"], ["7"], ["8", "400.00"]]})]},
          "result": failed("invalid_table", table_message("row", 2, 1, 2), "objects[0].geometry.cells"), "expect": NOTHING},
-        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "cells": [["Ad", "Alan (m²)"], ["7", "600\n00"], ["8", "400.00"]]})]},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "cells": [["Ad", "Alan (m²)"], ["7", "600\t00"], ["8", "400.00"]]})]},
          "result": failed("invalid_table", table_message("cell", 2, 2), "objects[0].geometry.cells"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TABLE, "merges": [{"row": 2, "col": 0, "rows": 2, "cols": 1}]})]},
          "result": failed("invalid_table", table_message("merge", 1, 3, 1, 2, 1), "objects[0].geometry.merges"), "expect": NOTHING},

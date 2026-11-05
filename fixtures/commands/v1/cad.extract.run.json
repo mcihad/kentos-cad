@@ -1,0 +1,7024 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.extract.run",
+ "commandVersion": 1,
+ "title": "Veri çıkarımı",
+ "note": "ADR 1030. Independent expectations (scripts/fixtures/extract_command_cases.py, no KentOS code).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kat 1",
+  "uids": [
+   "0192f5a1-1030-7000-8100-000000000001",
+   "0192f5a1-1030-7000-8100-000000000002",
+   "0192f5a1-1030-7000-8100-000000000003",
+   "0192f5a1-1030-7000-8100-000000000004",
+   "0192f5a1-1030-7000-8100-000000000005",
+   "0192f5a1-1030-7000-8100-000000000006",
+   "0192f5a1-1030-7000-8100-000000000007",
+   "0192f5a1-1030-7000-8100-000000000008",
+   "0192f5a1-1030-7000-8100-000000000009",
+   "0192f5a1-1030-7000-8100-000000000010",
+   "0192f5a1-1030-7000-8100-000000000011",
+   "0192f5a1-1030-7000-8100-000000000012",
+   "0192f5a1-1030-7000-8100-000000000013",
+   "0192f5a1-1030-7000-8100-000000000014",
+   "0192f5a1-1030-7000-8100-000000000015",
+   "0192f5a1-1030-7000-8100-000000000016",
+   "0192f5a1-1030-7000-8100-000000000017",
+   "0192f5a1-1030-7000-8100-000000000018",
+   "0192f5a1-1030-7000-8100-000000000019"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50.0,
+   "workspace": "cad",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "a",
+    "name": "Genel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "mobilya",
+    "name": "Mobilya",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "olcu",
+    "name": "Ölçü",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "ref",
+    "name": "Referans",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "alt",
+      "name": "Alt",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "a",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a1-1030-7000-8000-00000000b001",
+    "name": "Sandalye",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "units": "m",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 0.5,
+        "y": 0.0
+       },
+       {
+        "x": 0.5,
+        "y": 0.5
+       },
+       {
+        "x": 0.0,
+        "y": 0.5
+       }
+      ]
+     }
+    ],
+    "attributes": [
+     {
+      "tag": "KOD",
+      "value": "S-01",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "height": 0.1,
+      "rotation": 0
+     }
+    ]
+   },
+   {
+    "id": "0192f5a1-1030-7000-8000-00000000b002",
+    "name": "Masa",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "units": "m",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 1.5,
+        "y": 0.0
+       },
+       {
+        "x": 1.5,
+        "y": 0.75
+       },
+       {
+        "x": 0.0,
+        "y": 0.75
+       }
+      ]
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": -0.75
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": -0.75
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 1.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": 1.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ],
+    "attributes": [
+     {
+      "tag": "KOD",
+      "value": "M-01",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "height": 0.1,
+      "rotation": 0,
+      "constant": true
+     }
+    ]
+   },
+   {
+    "id": "0192f5a1-1030-7000-8000-00000000b003",
+    "name": "Kapı",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "units": "m",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "b": {
+       "x": 0.875,
+       "y": 0.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0.875,
+       "y": 0.0
+      },
+      "b": {
+       "x": 1.75,
+       "y": 0.0
+      }
+     }
+    ],
+    "dynamic": {
+     "parameters": [
+      {
+       "kind": "visibility",
+       "name": "Tip",
+       "states": [
+        {
+         "name": "Tek",
+         "hidden": [
+          2
+         ]
+        },
+        {
+         "name": "Çift"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "0192f5a1-1030-7000-8000-00000000b004",
+    "name": "Kat2",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "units": "m",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "b": {
+       "x": 2.0,
+       "y": 0.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "b": {
+       "x": 0.0,
+       "y": 1.5
+      }
+     }
+    ],
+    "xref": {
+     "path": "$fixture:commands/v1/extract/kat2.kcad",
+     "relative": "kat2.kcad",
+     "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820",
+     "objects": [
+      "0192f5a1-1030-7000-8200-000000000091",
+      "0192f5a1-1030-7000-8200-000000000092"
+     ]
+    }
+   }
+  ],
+  "entities": [
+   {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "mobilya",
+    "attrs": {
+     "KOD": "X"
+    },
+    "block": "0192f5a1-1030-7000-8000-00000000b002",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 2,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b002",
+    "p": {
+     "x": 8.0,
+     "y": 0.0
+    },
+    "scale": 2.0,
+    "rotation": 1.5707963267948966
+   },
+   {
+    "kind": "insert",
+    "id": 3,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 0.0,
+     "y": 4.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 4,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 1.0,
+     "y": 4.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 5,
+    "layerId": "mobilya",
+    "attrs": {
+     "KOD": "S-02"
+    },
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 2.0,
+     "y": 4.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 6,
+    "layerId": "gizli",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 3.0,
+     "y": 4.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 7,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 0.0,
+     "y": 8.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 8,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 1.0,
+     "y": 8.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 9,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 2.0,
+     "y": 8.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 10,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 0.0,
+     "y": 9.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 11,
+    "layerId": "mobilya",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "p": {
+     "x": 2.0,
+     "y": 9.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 12,
+    "layerId": "kapi",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b003",
+    "p": {
+     "x": 12.0,
+     "y": 0.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 13,
+    "layerId": "kapi",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b003",
+    "p": {
+     "x": 12.0,
+     "y": 4.0
+    },
+    "scale": 2.0,
+    "rotation": 0.0,
+    "parameters": {
+     "Tip": "Çift"
+    }
+   },
+   {
+    "kind": "line",
+    "id": 14,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": -4.0
+    },
+    "b": {
+     "x": 0.3359375,
+     "y": -4.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 15,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 1.0,
+     "y": -4.0
+    },
+    "b": {
+     "x": 1.3359375,
+     "y": -4.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 16,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 2.0,
+     "y": -4.0
+    },
+    "b": {
+     "x": 2.3359375,
+     "y": -4.0
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 17,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": -6.0
+    },
+    "b": {
+     "x": 4.0,
+     "y": -6.0
+    },
+    "offset": 1.0,
+    "height": 0.25,
+    "text": "5.00"
+   },
+   {
+    "kind": "dimension",
+    "id": 18,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": -8.0
+    },
+    "b": {
+     "x": 0.0,
+     "y": -5.0
+    },
+    "offset": 1.0,
+    "height": 0.25
+   },
+   {
+    "kind": "insert",
+    "id": 19,
+    "layerId": "ref",
+    "attrs": {},
+    "block": "0192f5a1-1030-7000-8000-00000000b004",
+    "p": {
+     "x": 20.0,
+     "y": 0.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   }
+  ],
+  "arrays": [
+   {
+    "id": "0192f5a1-1030-7000-8000-00000000a001",
+    "block": "0192f5a1-1030-7000-8000-00000000b001",
+    "layerId": "mobilya",
+    "p": {
+     "x": 0.0,
+     "y": 8.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0,
+    "layout": {
+     "kind": "grid",
+     "rows": 2,
+     "cols": 3,
+     "dx": 1.0,
+     "dy": 1.0
+    },
+    "items": [
+     {
+      "uid": "0192f5a1-1030-7000-8100-000000000007"
+     },
+     {
+      "uid": "0192f5a1-1030-7000-8100-000000000008"
+     },
+     {
+      "uid": "0192f5a1-1030-7000-8100-000000000009"
+     },
+     {
+      "uid": "0192f5a1-1030-7000-8100-000000000010"
+     },
+     {},
+     {
+      "uid": "0192f5a1-1030-7000-8100-000000000011"
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "iki çizimden parça listesi: iç içe bloklar, diziler, dış tablo, tekil sayım",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Blok",
+        "Kod",
+        "Açıklama",
+        "Birim fiyat",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        false,
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Kapı\u001f",
+         "cells": [
+          "Kapı",
+          "",
+          "",
+          "",
+          "3"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012",
+          "#0192f5a1-1030-7000-8100-000000000013",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000004"
+         ]
+        },
+        {
+         "key": "Masa\u001fM-01",
+         "cells": [
+          "Masa",
+          "M-01",
+          "Çalışma masası 150x75",
+          "2500",
+          "3"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001",
+          "#0192f5a1-1030-7000-8100-000000000002",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-01",
+         "cells": [
+          "Sandalye",
+          "S-01",
+          "Ofis sandalyesi",
+          "750",
+          "23"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          23.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001/2",
+          "#0192f5a1-1030-7000-8100-000000000001/3",
+          "#0192f5a1-1030-7000-8100-000000000001/4",
+          "#0192f5a1-1030-7000-8100-000000000001/5",
+          "#0192f5a1-1030-7000-8100-000000000002/2",
+          "#0192f5a1-1030-7000-8100-000000000002/3",
+          "#0192f5a1-1030-7000-8100-000000000002/4",
+          "#0192f5a1-1030-7000-8100-000000000002/5",
+          "#0192f5a1-1030-7000-8100-000000000003",
+          "#0192f5a1-1030-7000-8100-000000000004",
+          "#0192f5a1-1030-7000-8100-000000000007",
+          "#0192f5a1-1030-7000-8100-000000000008",
+          "#0192f5a1-1030-7000-8100-000000000009",
+          "#0192f5a1-1030-7000-8100-000000000010",
+          "#0192f5a1-1030-7000-8100-000000000011",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/2",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/3",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/4",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/5",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000002",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000005",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000006",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000007"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-02",
+         "cells": [
+          "Sandalye",
+          "S-02",
+          "Ofis sandalyesi",
+          "750",
+          "2"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          2.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000005",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000003"
+         ]
+        }
+       ],
+       "occurrences": 31,
+       "notes": {
+        "hidden": 1,
+        "unloaded": [],
+        "readApart": [
+         "Kat2"
+        ],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [
+         "Kapı"
+        ],
+        "unused": [
+         "Dolap"
+        ],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "",
+        "",
+        "31"
+       ],
+       "totals": [
+        null,
+        null,
+        null,
+        null,
+        31.0
+       ],
+       "read": [
+        {
+         "path": "kat2.kcad",
+         "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820"
+        },
+        {
+         "path": "aciklama.csv",
+         "digest": "d442c2db2990cc4dd7b194be9a4102e695384fca001077f8bb167a3e9e962717"
+        }
+       ],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       },
+       {
+        "code": "xref_read_apart",
+        "message": "$any"
+       },
+       {
+        "code": "join_unmatched",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı sonucu yazısız verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Blok",
+        "Kod",
+        "Açıklama",
+        "Birim fiyat",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        false,
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Kapı\u001f",
+         "cells": [
+          "Kapı",
+          "",
+          "",
+          "",
+          "3"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012",
+          "#0192f5a1-1030-7000-8100-000000000013",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000004"
+         ]
+        },
+        {
+         "key": "Masa\u001fM-01",
+         "cells": [
+          "Masa",
+          "M-01",
+          "Çalışma masası 150x75",
+          "2500",
+          "3"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001",
+          "#0192f5a1-1030-7000-8100-000000000002",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-01",
+         "cells": [
+          "Sandalye",
+          "S-01",
+          "Ofis sandalyesi",
+          "750",
+          "23"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          23.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001/2",
+          "#0192f5a1-1030-7000-8100-000000000001/3",
+          "#0192f5a1-1030-7000-8100-000000000001/4",
+          "#0192f5a1-1030-7000-8100-000000000001/5",
+          "#0192f5a1-1030-7000-8100-000000000002/2",
+          "#0192f5a1-1030-7000-8100-000000000002/3",
+          "#0192f5a1-1030-7000-8100-000000000002/4",
+          "#0192f5a1-1030-7000-8100-000000000002/5",
+          "#0192f5a1-1030-7000-8100-000000000003",
+          "#0192f5a1-1030-7000-8100-000000000004",
+          "#0192f5a1-1030-7000-8100-000000000007",
+          "#0192f5a1-1030-7000-8100-000000000008",
+          "#0192f5a1-1030-7000-8100-000000000009",
+          "#0192f5a1-1030-7000-8100-000000000010",
+          "#0192f5a1-1030-7000-8100-000000000011",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/2",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/3",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/4",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/5",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000002",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000005",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000006",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000007"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-02",
+         "cells": [
+          "Sandalye",
+          "S-02",
+          "Ofis sandalyesi",
+          "750",
+          "2"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          2.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000005",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000003"
+         ]
+        }
+       ],
+       "occurrences": 31,
+       "notes": {
+        "hidden": 1,
+        "unloaded": [],
+        "readApart": [
+         "Kat2"
+        ],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [
+         "Kapı"
+        ],
+        "unused": [
+         "Dolap"
+        ],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "",
+        "",
+        "31"
+       ],
+       "totals": [
+        null,
+        null,
+        null,
+        null,
+        31.0
+       ],
+       "read": [
+        {
+         "path": "kat2.kcad",
+         "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820"
+        },
+        {
+         "path": "aciklama.csv",
+         "digest": "d442c2db2990cc4dd7b194be9a4102e695384fca001077f8bb167a3e9e962717"
+        }
+       ],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       },
+       {
+        "code": "xref_read_apart",
+        "message": "$any"
+       },
+       {
+        "code": "join_unmatched",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       },
+       {
+        "code": "xref_read_apart",
+        "message": "$any"
+       },
+       {
+        "code": "join_unmatched",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız açık çizim: dış referans içine bakılır, çizgisi blok değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Yalnız bu çizim",
+       "drawings": [],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Blok",
+        "Kod",
+        "Açıklama",
+        "Birim fiyat",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        false,
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Kapı\u001f",
+         "cells": [
+          "Kapı",
+          "",
+          "",
+          "",
+          "2"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          2.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012",
+          "#0192f5a1-1030-7000-8100-000000000013"
+         ]
+        },
+        {
+         "key": "Masa\u001fM-01",
+         "cells": [
+          "Masa",
+          "M-01",
+          "Çalışma masası 150x75",
+          "2500",
+          "2"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          2.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001",
+          "#0192f5a1-1030-7000-8100-000000000002"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-01",
+         "cells": [
+          "Sandalye",
+          "S-01",
+          "Ofis sandalyesi",
+          "750",
+          "15"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          15.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001/2",
+          "#0192f5a1-1030-7000-8100-000000000001/3",
+          "#0192f5a1-1030-7000-8100-000000000001/4",
+          "#0192f5a1-1030-7000-8100-000000000001/5",
+          "#0192f5a1-1030-7000-8100-000000000002/2",
+          "#0192f5a1-1030-7000-8100-000000000002/3",
+          "#0192f5a1-1030-7000-8100-000000000002/4",
+          "#0192f5a1-1030-7000-8100-000000000002/5",
+          "#0192f5a1-1030-7000-8100-000000000003",
+          "#0192f5a1-1030-7000-8100-000000000004",
+          "#0192f5a1-1030-7000-8100-000000000007",
+          "#0192f5a1-1030-7000-8100-000000000008",
+          "#0192f5a1-1030-7000-8100-000000000009",
+          "#0192f5a1-1030-7000-8100-000000000010",
+          "#0192f5a1-1030-7000-8100-000000000011"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-02",
+         "cells": [
+          "Sandalye",
+          "S-02",
+          "Ofis sandalyesi",
+          "750",
+          "1"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          1.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000005"
+         ]
+        }
+       ],
+       "occurrences": 20,
+       "notes": {
+        "hidden": 1,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [
+         "Kapı"
+        ],
+        "unused": [
+         "Dolap"
+        ],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "",
+        "",
+        "20"
+       ],
+       "totals": [
+        null,
+        null,
+        null,
+        null,
+        20.0
+       ],
+       "read": [
+        {
+         "path": "aciklama.csv",
+         "digest": "d442c2db2990cc4dd7b194be9a4102e695384fca001077f8bb167a3e9e962717"
+        }
+       ],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       },
+       {
+        "code": "join_unmatched",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "metraj: uzunluk, gerçek ölçü ve elle yazılmış ölçü metni ayrı; toplam yuvarlamadan önce",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Metraj",
+       "kinds": [
+        "line",
+        "dimension"
+       ],
+       "layers": [
+        "Duvar",
+        "Ölçü"
+       ],
+       "columns": [
+        {
+         "label": "Katman",
+         "value": {
+          "of": "layer"
+         }
+        },
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length"
+         },
+         "decimals": 2
+        },
+        {
+         "label": "Gerçek ölçü",
+         "value": {
+          "of": "measured"
+         }
+        },
+        {
+         "label": "Yazılan",
+         "value": {
+          "of": "shown"
+         }
+        },
+        {
+         "label": "Elle",
+         "value": {
+          "of": "overridden"
+         }
+        },
+        {
+         "label": "Ağırlık",
+         "value": {
+          "of": "computed",
+          "column": 2,
+          "factor": "7.5",
+          "unit": "kg"
+         }
+        }
+       ],
+       "group": true,
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Katman",
+        "Tür",
+        "Uzunluk (m)",
+        "Gerçek ölçü (m)",
+        "Yazılan",
+        "Elle",
+        "Ağırlık (kg)"
+       ],
+       "quantities": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Duvar\u001fÇizgi\u001f\u001f",
+         "cells": [
+          "Duvar",
+          "Çizgi",
+          "1.01",
+          "",
+          "",
+          "",
+          "7.56"
+         ],
+         "values": [
+          null,
+          null,
+          1.0078125,
+          null,
+          null,
+          null,
+          7.55859375
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000014",
+          "#0192f5a1-1030-7000-8100-000000000015",
+          "#0192f5a1-1030-7000-8100-000000000016"
+         ]
+        },
+        {
+         "key": "Ölçü\u001fÖlçü\u001f5.00\u001fevet",
+         "cells": [
+          "Ölçü",
+          "Ölçü",
+          "",
+          "4.000",
+          "5.00",
+          "evet",
+          ""
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          4.0,
+          null,
+          null,
+          null
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000017"
+         ]
+        },
+        {
+         "key": "Ölçü\u001fÖlçü\u001f3.000\u001fhayır",
+         "cells": [
+          "Ölçü",
+          "Ölçü",
+          "",
+          "3.000",
+          "3.000",
+          "hayır",
+          ""
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          3.0,
+          null,
+          null,
+          null
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000018"
+         ]
+        }
+       ],
+       "occurrences": 5,
+       "notes": {
+        "hidden": 0,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 1,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "1.01",
+        "7.000",
+        "",
+        "",
+        "7.56"
+       ],
+       "totals": [
+        null,
+        null,
+        1.0078125,
+        7.0,
+        null,
+        null,
+        7.55859375
+       ],
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "dimension_overrides",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "dinamik bloğun gizli kanadı sayılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Kapı kanatları",
+       "kinds": [
+        "line"
+       ],
+       "layers": [
+        "Kapı"
+       ],
+       "scope": {
+        "nested": true
+       },
+       "columns": [
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Katman",
+         "value": {
+          "of": "layer"
+         }
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length"
+         },
+         "decimals": 2
+        }
+       ],
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Tür",
+        "Katman",
+        "Uzunluk (m)"
+       ],
+       "quantities": [
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000012/1",
+         "cells": [
+          "Çizgi",
+          "Kapı",
+          "0.88"
+         ],
+         "values": [
+          null,
+          null,
+          0.875
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012/1"
+         ]
+        },
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000013/1",
+         "cells": [
+          "Çizgi",
+          "Kapı",
+          "1.75"
+         ],
+         "values": [
+          null,
+          null,
+          1.75
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000013/1"
+         ]
+        },
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000013/2",
+         "cells": [
+          "Çizgi",
+          "Kapı",
+          "1.75"
+         ],
+         "values": [
+          null,
+          null,
+          1.75
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000013/2"
+         ]
+        }
+       ],
+       "occurrences": 3,
+       "notes": {
+        "hidden": 1,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "4.38"
+       ],
+       "totals": [
+        null,
+        null,
+        4.375
+       ],
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "görünmeyen parçalar açıkça seçilince sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Gizliler de",
+       "kinds": [
+        "line"
+       ],
+       "layers": [
+        "Kapı"
+       ],
+       "scope": {
+        "nested": true,
+        "hidden": true
+       },
+       "columns": [
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Katman",
+         "value": {
+          "of": "layer"
+         }
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length"
+         },
+         "decimals": 2
+        }
+       ],
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Tür",
+        "Katman",
+        "Uzunluk (m)"
+       ],
+       "quantities": [
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000012/1",
+         "cells": [
+          "Çizgi",
+          "Kapı",
+          "0.88"
+         ],
+         "values": [
+          null,
+          null,
+          0.875
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012/1"
+         ]
+        },
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000012/2",
+         "cells": [
+          "Çizgi",
+          "Kapı",
+          "0.88"
+         ],
+         "values": [
+          null,
+          null,
+          0.875
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012/2"
+         ]
+        },
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000013/1",
+         "cells": [
+          "Çizgi",
+          "Kapı",
+          "1.75"
+         ],
+         "values": [
+          null,
+          null,
+          1.75
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000013/1"
+         ]
+        },
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000013/2",
+         "cells": [
+          "Çizgi",
+          "Kapı",
+          "1.75"
+         ],
+         "values": [
+          null,
+          null,
+          1.75
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000013/2"
+         ]
+        }
+       ],
+       "occurrences": 4,
+       "notes": {
+        "hidden": 0,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "5.25"
+       ],
+       "totals": [
+        null,
+        null,
+        5.25
+       ],
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "iç içe alanlar ölçek ve dönüşle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Alanlar",
+       "kinds": [
+        "polygon"
+       ],
+       "scope": {
+        "nested": true
+       },
+       "columns": [
+        {
+         "label": "Katman",
+         "value": {
+          "of": "layer"
+         }
+        },
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        },
+        {
+         "label": "Alan",
+         "value": {
+          "of": "area"
+         },
+         "decimals": 4
+        }
+       ],
+       "group": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Katman",
+        "Tür",
+        "Adet",
+        "Alan (m²)"
+       ],
+       "quantities": [
+        false,
+        false,
+        true,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Mobilya\u001fAlan",
+         "cells": [
+          "Mobilya",
+          "Alan",
+          "18",
+          "12.6250"
+         ],
+         "values": [
+          null,
+          null,
+          18.0,
+          12.625
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001/1",
+          "#0192f5a1-1030-7000-8100-000000000001/2/1",
+          "#0192f5a1-1030-7000-8100-000000000001/3/1",
+          "#0192f5a1-1030-7000-8100-000000000001/4/1",
+          "#0192f5a1-1030-7000-8100-000000000001/5/1",
+          "#0192f5a1-1030-7000-8100-000000000002/1",
+          "#0192f5a1-1030-7000-8100-000000000002/2/1",
+          "#0192f5a1-1030-7000-8100-000000000002/3/1",
+          "#0192f5a1-1030-7000-8100-000000000002/4/1",
+          "#0192f5a1-1030-7000-8100-000000000002/5/1",
+          "#0192f5a1-1030-7000-8100-000000000003/1",
+          "#0192f5a1-1030-7000-8100-000000000004/1",
+          "#0192f5a1-1030-7000-8100-000000000005/1",
+          "#0192f5a1-1030-7000-8100-000000000007/1",
+          "#0192f5a1-1030-7000-8100-000000000008/1",
+          "#0192f5a1-1030-7000-8100-000000000009/1",
+          "#0192f5a1-1030-7000-8100-000000000010/1",
+          "#0192f5a1-1030-7000-8100-000000000011/1"
+         ]
+        }
+       ],
+       "occurrences": 18,
+       "notes": {
+        "hidden": 1,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "dizi bütün sayılır, gizli katman dahil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Diziler bütün",
+       "kinds": [
+        "insert"
+       ],
+       "blocks": [
+        "sandalye"
+       ],
+       "scope": {
+        "arrays": "whole",
+        "hidden": true
+       },
+       "columns": [
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Katman",
+         "value": {
+          "of": "layer"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Tür",
+        "Blok",
+        "Katman",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Blok\u001fSandalye\u001fMobilya",
+         "cells": [
+          "Blok",
+          "Sandalye",
+          "Mobilya",
+          "3"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000003",
+          "#0192f5a1-1030-7000-8100-000000000004",
+          "#0192f5a1-1030-7000-8100-000000000005"
+         ]
+        },
+        {
+         "key": "Blok\u001fSandalye\u001fGizli",
+         "cells": [
+          "Blok",
+          "Sandalye",
+          "Gizli",
+          "1"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          1.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000006"
+         ]
+        },
+        {
+         "key": "Dizi\u001fSandalye\u001fMobilya",
+         "cells": [
+          "Dizi",
+          "Sandalye",
+          "Mobilya",
+          "1"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          1.0
+         ],
+         "members": [
+          "#dizi:0192f5a1-1030-7000-8000-00000000a001"
+         ]
+        }
+       ],
+       "occurrences": 5,
+       "notes": {
+        "hidden": 0,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "",
+        "5"
+       ],
+       "totals": [
+        null,
+        null,
+        null,
+        5.0
+       ],
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "dış referansın içi kaynak kimlikleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Referans çizgileri",
+       "kinds": [
+        "line"
+       ],
+       "layers": [
+        "Referans"
+       ],
+       "scope": {
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length"
+         }
+        }
+       ]
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Tür",
+        "Uzunluk (m)"
+       ],
+       "quantities": [
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000019/x:0192f5a1-1030-7000-8200-000000000091",
+         "cells": [
+          "Çizgi",
+          "2.000"
+         ],
+         "values": [
+          null,
+          2.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000019/x:0192f5a1-1030-7000-8200-000000000091"
+         ]
+        },
+        {
+         "key": "#0192f5a1-1030-7000-8100-000000000019/x:0192f5a1-1030-7000-8200-000000000092",
+         "cells": [
+          "Çizgi",
+          "1.500"
+         ],
+         "values": [
+          null,
+          1.5
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000019/x:0192f5a1-1030-7000-8200-000000000092"
+         ]
+        }
+       ],
+       "occurrences": 2,
+       "notes": {
+        "hidden": 0,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "dinamik varyantlar iki çizimden, adete göre azalan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Kapı türleri",
+       "kinds": [
+        "insert"
+       ],
+       "blocks": [
+        "Kapı"
+       ],
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "columns": [
+        {
+         "label": "Çizim",
+         "value": {
+          "of": "drawing"
+         }
+        },
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Tür",
+         "value": {
+          "of": "variant"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 3,
+         "descending": true
+        },
+        {
+         "column": 0
+        }
+       ]
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Çizim",
+        "Blok",
+        "Tür",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Bu çizim\u001fKapı\u001f",
+         "cells": [
+          "Bu çizim",
+          "Kapı",
+          "",
+          "1"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          1.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012"
+         ]
+        },
+        {
+         "key": "Bu çizim\u001fKapı\u001fTip=Çift",
+         "cells": [
+          "Bu çizim",
+          "Kapı",
+          "Tip=Çift",
+          "1"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          1.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000013"
+         ]
+        },
+        {
+         "key": "kat2.kcad\u001fKapı\u001fTip=Çift",
+         "cells": [
+          "kat2.kcad",
+          "Kapı",
+          "Tip=Çift",
+          "1"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          1.0
+         ],
+         "members": [
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000004"
+         ]
+        }
+       ],
+       "occurrences": 3,
+       "notes": {
+        "hidden": 0,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "read": [
+        {
+         "path": "kat2.kcad",
+         "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820"
+        }
+       ],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı uzunluk iki birimde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Birimler",
+       "kinds": [
+        "line",
+        "dimension"
+       ],
+       "layers": [
+        "Duvar",
+        "Ölçü"
+       ],
+       "columns": [
+        {
+         "label": "Katman",
+         "value": {
+          "of": "layer"
+         }
+        },
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length"
+         },
+         "decimals": 2
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length",
+          "unit": "cm"
+         },
+         "decimals": 1
+        }
+       ],
+       "group": true,
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Katman",
+        "Tür",
+        "Uzunluk (m)",
+        "Uzunluk (cm)"
+       ],
+       "quantities": [
+        false,
+        false,
+        true,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Duvar\u001fÇizgi",
+         "cells": [
+          "Duvar",
+          "Çizgi",
+          "1.01",
+          "100.8"
+         ],
+         "values": [
+          null,
+          null,
+          1.0078125,
+          100.78125
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000014",
+          "#0192f5a1-1030-7000-8100-000000000015",
+          "#0192f5a1-1030-7000-8100-000000000016"
+         ]
+        },
+        {
+         "key": "Ölçü\u001fÖlçü",
+         "cells": [
+          "Ölçü",
+          "Ölçü",
+          "",
+          ""
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000017",
+          "#0192f5a1-1030-7000-8100-000000000018"
+         ]
+        }
+       ],
+       "occurrences": 5,
+       "notes": {
+        "hidden": 0,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 1,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "1.01",
+        "100.8"
+       ],
+       "totals": [
+        null,
+        null,
+        1.0078125,
+        100.78125
+       ],
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "dimension_overrides",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarif ya da tablo verilmeli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "$any",
+       "path": "recipe"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikisi birden verilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "table": "0192f5a1-1030-7000-8100-000000000001",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "$any",
+       "path": "recipe"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ölçü yazısı sayı gibi çarpılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Metraj",
+       "kinds": [
+        "line",
+        "dimension"
+       ],
+       "layers": [
+        "Duvar",
+        "Ölçü"
+       ],
+       "columns": [
+        {
+         "label": "Katman",
+         "value": {
+          "of": "layer"
+         }
+        },
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length"
+         },
+         "decimals": 2
+        },
+        {
+         "label": "Gerçek ölçü",
+         "value": {
+          "of": "measured"
+         }
+        },
+        {
+         "label": "Yazılan",
+         "value": {
+          "of": "shown"
+         }
+        },
+        {
+         "label": "Yanlış",
+         "value": {
+          "of": "computed",
+          "column": 4,
+          "factor": "1"
+         }
+        }
+       ],
+       "group": true,
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extraction_recipe",
+       "message": "$any",
+       "path": "recipe.columns[5].value.column"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen tür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "wall"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extraction_recipe",
+       "message": "$any",
+       "path": "recipe.kinds[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "miktar olmadan birleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extraction_recipe",
+       "message": "$any",
+       "path": "recipe.group"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı çizim iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad",
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extraction_recipe",
+       "message": "$any",
+       "path": "recipe.drawings[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "açık çizimin kendi dosyası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "drawingPath": "kat2.kcad",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "drawing_read_twice",
+       "message": "$any",
+       "path": "recipe.drawings[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizim yolunda yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "yok.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "extraction_source_missing",
+       "message": "$any",
+       "path": "recipe.drawings[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dış tablonun anahtarı tekrarlı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "tekrarli.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "join_unusable",
+       "message": "$any",
+       "path": "recipe.join.key"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dış tabloda istenen sütun yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Renk",
+         "value": {
+          "of": "joined",
+          "field": "Renk"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "join_unusable",
+       "message": "$any",
+       "path": "recipe.columns[2].value.field"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tablo değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "table": "0192f5a1-1030-7000-8100-000000000014",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_table",
+       "message": "$any",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "table": "tablo",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "$any",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan tablo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "table": "0192f5a1-1030-7000-8100-000000000999",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "$any",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizim olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "aciklama.csv"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "extraction_source_unreadable",
+       "message": "$any",
+       "path": "recipe.drawings[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "expectedRevision": "x",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "$any",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yüklü olmayan dış referansın içine bakılamaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Referans çizgileri",
+       "kinds": [
+        "line"
+       ],
+       "layers": [
+        "Referans"
+       ],
+       "scope": {
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Tür",
+         "value": {
+          "of": "kind"
+         }
+        },
+        {
+         "label": "Uzunluk",
+         "value": {
+          "of": "length"
+         }
+        }
+       ]
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Tür",
+        "Uzunluk (m)"
+       ],
+       "quantities": [
+        false,
+        true
+       ],
+       "rows": [],
+       "occurrences": 0,
+       "notes": {
+        "hidden": 0,
+        "unloaded": [
+         "Kat2"
+        ],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "xref_unloaded",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kat 1",
+    "uids": [
+     "0192f5a1-1030-7000-8100-000000000001",
+     "0192f5a1-1030-7000-8100-000000000002",
+     "0192f5a1-1030-7000-8100-000000000003",
+     "0192f5a1-1030-7000-8100-000000000004",
+     "0192f5a1-1030-7000-8100-000000000005",
+     "0192f5a1-1030-7000-8100-000000000006",
+     "0192f5a1-1030-7000-8100-000000000007",
+     "0192f5a1-1030-7000-8100-000000000008",
+     "0192f5a1-1030-7000-8100-000000000009",
+     "0192f5a1-1030-7000-8100-000000000010",
+     "0192f5a1-1030-7000-8100-000000000011",
+     "0192f5a1-1030-7000-8100-000000000012",
+     "0192f5a1-1030-7000-8100-000000000013",
+     "0192f5a1-1030-7000-8100-000000000014",
+     "0192f5a1-1030-7000-8100-000000000015",
+     "0192f5a1-1030-7000-8100-000000000016",
+     "0192f5a1-1030-7000-8100-000000000017",
+     "0192f5a1-1030-7000-8100-000000000018",
+     "0192f5a1-1030-7000-8100-000000000019"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50.0,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "a",
+      "name": "Genel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ref",
+      "name": "Referans",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "a",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b001",
+      "name": "Sandalye",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.5
+         },
+         {
+          "x": 0.0,
+          "y": 0.5
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "S-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b002",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.75
+         },
+         {
+          "x": 0.0,
+          "y": 0.75
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "M-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0,
+        "constant": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b003",
+      "name": "Kapı",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.875,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.875,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.75,
+         "y": 0.0
+        }
+       }
+      ],
+      "dynamic": {
+       "parameters": [
+        {
+         "kind": "visibility",
+         "name": "Tip",
+         "states": [
+          {
+           "name": "Tek",
+           "hidden": [
+            2
+           ]
+          },
+          {
+           "name": "Çift"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b004",
+      "name": "Kat2",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [],
+      "xref": {
+       "path": "$fixture:commands/v1/extract/kat2.kcad",
+       "relative": "kat2.kcad",
+       "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820",
+       "objects": [],
+       "unloaded": true
+      }
+     }
+    ],
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "mobilya",
+      "attrs": {
+       "KOD": "X"
+      },
+      "block": "0192f5a1-1030-7000-8000-00000000b002",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b002",
+      "p": {
+       "x": 8.0,
+       "y": 0.0
+      },
+      "scale": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "mobilya",
+      "attrs": {
+       "KOD": "S-02"
+      },
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "gizli",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 3.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 7,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 8,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 9,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 10,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 9.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 11,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 9.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 12,
+      "layerId": "kapi",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b003",
+      "p": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 13,
+      "layerId": "kapi",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b003",
+      "p": {
+       "x": 12.0,
+       "y": 4.0
+      },
+      "scale": 2.0,
+      "rotation": 0.0,
+      "parameters": {
+       "Tip": "Çift"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 0.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 15,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 1.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 1.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 2.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 2.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "dimension",
+      "id": 17,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -6.0
+      },
+      "b": {
+       "x": 4.0,
+       "y": -6.0
+      },
+      "offset": 1.0,
+      "height": 0.25,
+      "text": "5.00"
+     },
+     {
+      "kind": "dimension",
+      "id": 18,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -8.0
+      },
+      "b": {
+       "x": 0.0,
+       "y": -5.0
+      },
+      "offset": 1.0,
+      "height": 0.25
+     },
+     {
+      "kind": "insert",
+      "id": 19,
+      "layerId": "ref",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b004",
+      "p": {
+       "x": 20.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ],
+    "arrays": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000a001",
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "layerId": "mobilya",
+      "p": {
+       "x": 0.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 1.0,
+       "dy": 1.0
+      },
+      "items": [
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000007"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000008"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000009"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000010"
+       },
+       {},
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000011"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "eski revizyon",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Mobilya listesi",
+       "drawings": [
+        "kat2.kcad"
+       ],
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "xrefs": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Kod",
+         "value": {
+          "of": "attribute",
+          "tag": "KOD"
+         }
+        },
+        {
+         "label": "Açıklama",
+         "value": {
+          "of": "joined",
+          "field": "Açıklama"
+         }
+        },
+        {
+         "label": "Birim fiyat",
+         "value": {
+          "of": "joined",
+          "field": "Birim fiyat"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        },
+        {
+         "column": 1
+        }
+       ],
+       "total": true,
+       "join": {
+        "path": "aciklama.csv",
+        "key": "Blok",
+        "on": 0
+       }
+      },
+      "base": "$fixture:commands/v1/extract",
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "$any",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tablo güncel değil: kaynakları değişmiş",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kat 1",
+    "uids": [
+     "0192f5a1-1030-7000-8100-000000000001",
+     "0192f5a1-1030-7000-8100-000000000002",
+     "0192f5a1-1030-7000-8100-000000000003",
+     "0192f5a1-1030-7000-8100-000000000004",
+     "0192f5a1-1030-7000-8100-000000000005",
+     "0192f5a1-1030-7000-8100-000000000006",
+     "0192f5a1-1030-7000-8100-000000000007",
+     "0192f5a1-1030-7000-8100-000000000008",
+     "0192f5a1-1030-7000-8100-000000000009",
+     "0192f5a1-1030-7000-8100-000000000010",
+     "0192f5a1-1030-7000-8100-000000000011",
+     "0192f5a1-1030-7000-8100-000000000012",
+     "0192f5a1-1030-7000-8100-000000000013",
+     "0192f5a1-1030-7000-8100-000000000014",
+     "0192f5a1-1030-7000-8100-000000000015",
+     "0192f5a1-1030-7000-8100-000000000016",
+     "0192f5a1-1030-7000-8100-000000000017",
+     "0192f5a1-1030-7000-8100-000000000018",
+     "0192f5a1-1030-7000-8100-000000000019",
+     "0192f5a1-1030-7000-8100-000000000020"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50.0,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "a",
+      "name": "Genel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ref",
+      "name": "Referans",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "a",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b001",
+      "name": "Sandalye",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.5
+         },
+         {
+          "x": 0.0,
+          "y": 0.5
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "S-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b002",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.75
+         },
+         {
+          "x": 0.0,
+          "y": 0.75
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "M-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0,
+        "constant": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b003",
+      "name": "Kapı",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.875,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.875,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.75,
+         "y": 0.0
+        }
+       }
+      ],
+      "dynamic": {
+       "parameters": [
+        {
+         "kind": "visibility",
+         "name": "Tip",
+         "states": [
+          {
+           "name": "Tek",
+           "hidden": [
+            2
+           ]
+          },
+          {
+           "name": "Çift"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b004",
+      "name": "Kat2",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 2.0,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.0,
+         "y": 1.5
+        }
+       }
+      ],
+      "xref": {
+       "path": "$fixture:commands/v1/extract/kat2.kcad",
+       "relative": "kat2.kcad",
+       "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820",
+       "objects": [
+        "0192f5a1-1030-7000-8200-000000000091",
+        "0192f5a1-1030-7000-8200-000000000092"
+       ]
+      }
+     }
+    ],
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "mobilya",
+      "attrs": {
+       "KOD": "X"
+      },
+      "block": "0192f5a1-1030-7000-8000-00000000b002",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b002",
+      "p": {
+       "x": 8.0,
+       "y": 0.0
+      },
+      "scale": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "mobilya",
+      "attrs": {
+       "KOD": "S-02"
+      },
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "gizli",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 3.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 7,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 8,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 9,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 10,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 9.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 11,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 9.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 12,
+      "layerId": "kapi",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b003",
+      "p": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 13,
+      "layerId": "kapi",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b003",
+      "p": {
+       "x": 12.0,
+       "y": 4.0
+      },
+      "scale": 2.0,
+      "rotation": 0.0,
+      "parameters": {
+       "Tip": "Çift"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 0.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 15,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 1.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 1.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 2.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 2.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "dimension",
+      "id": 17,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -6.0
+      },
+      "b": {
+       "x": 4.0,
+       "y": -6.0
+      },
+      "offset": 1.0,
+      "height": 0.25,
+      "text": "5.00"
+     },
+     {
+      "kind": "dimension",
+      "id": 18,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -8.0
+      },
+      "b": {
+       "x": 0.0,
+       "y": -5.0
+      },
+      "offset": 1.0,
+      "height": 0.25
+     },
+     {
+      "kind": "insert",
+      "id": 19,
+      "layerId": "ref",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b004",
+      "p": {
+       "x": 20.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "table",
+      "id": 20,
+      "layerId": "a",
+      "attrs": {},
+      "p": {
+       "x": 30.0,
+       "y": 0.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ],
+      "columns": [
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0,
+       3.0
+      ],
+      "cells": [
+       [
+        "Blok",
+        "Kod",
+        "Açıklama",
+        "Birim fiyat",
+        "Adet",
+        "Not",
+        "Tutar"
+       ],
+       [
+        "Kapı",
+        "",
+        "",
+        "",
+        "3",
+        "",
+        ""
+       ],
+       [
+        "Masa",
+        "M-01",
+        "Toplantı masası",
+        "2500",
+        "3",
+        "",
+        ""
+       ],
+       [
+        "Sandalye",
+        "S-01",
+        "Sandalye",
+        "750",
+        "22",
+        "acil",
+        ""
+       ],
+       [
+        "Toplam",
+        "",
+        "",
+        "",
+        "28",
+        "",
+        ""
+       ]
+      ],
+      "header": true,
+      "aligns": [
+       "left",
+       "left",
+       "left",
+       "left",
+       "right",
+       "left",
+       "left"
+      ],
+      "source": {
+       "kind": "extraction",
+       "recipe": {
+        "name": "Mobilya listesi",
+        "drawings": [
+         "kat2.kcad"
+        ],
+        "kinds": [
+         "insert"
+        ],
+        "scope": {
+         "nested": true,
+         "xrefs": true
+        },
+        "columns": [
+         {
+          "label": "Blok",
+          "value": {
+           "of": "block"
+          }
+         },
+         {
+          "label": "Kod",
+          "value": {
+           "of": "attribute",
+           "tag": "KOD"
+          }
+         },
+         {
+          "label": "Açıklama",
+          "value": {
+           "of": "joined",
+           "field": "Açıklama"
+          }
+         },
+         {
+          "label": "Birim fiyat",
+          "value": {
+           "of": "joined",
+           "field": "Birim fiyat"
+          }
+         },
+         {
+          "label": "Adet",
+          "value": {
+           "of": "count"
+          }
+         }
+        ],
+        "group": true,
+        "sort": [
+         {
+          "column": 0
+         },
+         {
+          "column": 1
+         }
+        ],
+        "total": true,
+        "join": {
+         "path": "aciklama.csv",
+         "key": "Blok",
+         "on": 0
+        }
+       },
+       "keys": [
+        "Kapı\u001f",
+        "Masa\u001fM-01",
+        "Sandalye\u001fS-01"
+       ],
+       "copy": [
+        [
+         "Blok",
+         "Kod",
+         "Açıklama",
+         "Birim fiyat",
+         "Adet"
+        ],
+        [
+         "Kapı",
+         "",
+         "",
+         "",
+         "3"
+        ],
+        [
+         "Masa",
+         "M-01",
+         "Çalışma masası 150x75",
+         "2500",
+         "3"
+        ],
+        [
+         "Sandalye",
+         "S-01",
+         "Sandalye",
+         "750",
+         "22"
+        ],
+        [
+         "Toplam",
+         "",
+         "",
+         "",
+         "28"
+        ]
+       ],
+       "read": [
+        {
+         "path": "kat2.kcad",
+         "digest": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+         "path": "aciklama.csv",
+         "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+        }
+       ]
+      },
+      "formulas": [
+       {
+        "row": 1,
+        "col": 6,
+        "formula": "=D2*E2"
+       },
+       {
+        "row": 2,
+        "col": 6,
+        "formula": "=D3*E3"
+       },
+       {
+        "row": 3,
+        "col": 6,
+        "formula": "=D4*E4"
+       },
+       {
+        "row": 4,
+        "col": 6,
+        "formula": "=TOPLA(G2:G4)"
+       }
+      ]
+     }
+    ],
+    "arrays": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000a001",
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "layerId": "mobilya",
+      "p": {
+       "x": 0.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 1.0,
+       "dy": 1.0
+      },
+      "items": [
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000007"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000008"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000009"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000010"
+       },
+       {},
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000011"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "table": "0192f5a1-1030-7000-8100-000000000020",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Blok",
+        "Kod",
+        "Açıklama",
+        "Birim fiyat",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        false,
+        false,
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Kapı\u001f",
+         "cells": [
+          "Kapı",
+          "",
+          "",
+          "",
+          "3"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000012",
+          "#0192f5a1-1030-7000-8100-000000000013",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000004"
+         ]
+        },
+        {
+         "key": "Masa\u001fM-01",
+         "cells": [
+          "Masa",
+          "M-01",
+          "Çalışma masası 150x75",
+          "2500",
+          "3"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001",
+          "#0192f5a1-1030-7000-8100-000000000002",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-01",
+         "cells": [
+          "Sandalye",
+          "S-01",
+          "Ofis sandalyesi",
+          "750",
+          "23"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          23.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000001/2",
+          "#0192f5a1-1030-7000-8100-000000000001/3",
+          "#0192f5a1-1030-7000-8100-000000000001/4",
+          "#0192f5a1-1030-7000-8100-000000000001/5",
+          "#0192f5a1-1030-7000-8100-000000000002/2",
+          "#0192f5a1-1030-7000-8100-000000000002/3",
+          "#0192f5a1-1030-7000-8100-000000000002/4",
+          "#0192f5a1-1030-7000-8100-000000000002/5",
+          "#0192f5a1-1030-7000-8100-000000000003",
+          "#0192f5a1-1030-7000-8100-000000000004",
+          "#0192f5a1-1030-7000-8100-000000000007",
+          "#0192f5a1-1030-7000-8100-000000000008",
+          "#0192f5a1-1030-7000-8100-000000000009",
+          "#0192f5a1-1030-7000-8100-000000000010",
+          "#0192f5a1-1030-7000-8100-000000000011",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/2",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/3",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/4",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000001/5",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000002",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000005",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000006",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000007"
+         ]
+        },
+        {
+         "key": "Sandalye\u001fS-02",
+         "cells": [
+          "Sandalye",
+          "S-02",
+          "Ofis sandalyesi",
+          "750",
+          "2"
+         ],
+         "values": [
+          null,
+          null,
+          null,
+          null,
+          2.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8100-000000000005",
+          "kat2.kcad#0192f5a1-1030-7000-8200-000000000003"
+         ]
+        }
+       ],
+       "occurrences": 31,
+       "notes": {
+        "hidden": 1,
+        "unloaded": [],
+        "readApart": [
+         "Kat2"
+        ],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [
+         "Kapı"
+        ],
+        "unused": [
+         "Dolap"
+        ],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "",
+        "",
+        "",
+        "31"
+       ],
+       "totals": [
+        null,
+        null,
+        null,
+        null,
+        31.0
+       ],
+       "read": [
+        {
+         "path": "kat2.kcad",
+         "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820"
+        },
+        {
+         "path": "aciklama.csv",
+         "digest": "d442c2db2990cc4dd7b194be9a4102e695384fca001077f8bb167a3e9e962717"
+        }
+       ],
+       "revision": "$any",
+       "stale": true
+      },
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       },
+       {
+        "code": "xref_read_apart",
+        "message": "$any"
+       },
+       {
+        "code": "join_unmatched",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarifsiz tablo",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kat 1",
+    "uids": [
+     "0192f5a1-1030-7000-8100-000000000001",
+     "0192f5a1-1030-7000-8100-000000000002",
+     "0192f5a1-1030-7000-8100-000000000003",
+     "0192f5a1-1030-7000-8100-000000000004",
+     "0192f5a1-1030-7000-8100-000000000005",
+     "0192f5a1-1030-7000-8100-000000000006",
+     "0192f5a1-1030-7000-8100-000000000007",
+     "0192f5a1-1030-7000-8100-000000000008",
+     "0192f5a1-1030-7000-8100-000000000009",
+     "0192f5a1-1030-7000-8100-000000000010",
+     "0192f5a1-1030-7000-8100-000000000011",
+     "0192f5a1-1030-7000-8100-000000000012",
+     "0192f5a1-1030-7000-8100-000000000013",
+     "0192f5a1-1030-7000-8100-000000000014",
+     "0192f5a1-1030-7000-8100-000000000015",
+     "0192f5a1-1030-7000-8100-000000000016",
+     "0192f5a1-1030-7000-8100-000000000017",
+     "0192f5a1-1030-7000-8100-000000000018",
+     "0192f5a1-1030-7000-8100-000000000019",
+     "0192f5a1-1030-7000-8100-000000000020"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50.0,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "a",
+      "name": "Genel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ref",
+      "name": "Referans",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "a",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b001",
+      "name": "Sandalye",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.5
+         },
+         {
+          "x": 0.0,
+          "y": 0.5
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "S-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b002",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.75
+         },
+         {
+          "x": 0.0,
+          "y": 0.75
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "M-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0,
+        "constant": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b003",
+      "name": "Kapı",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.875,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.875,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.75,
+         "y": 0.0
+        }
+       }
+      ],
+      "dynamic": {
+       "parameters": [
+        {
+         "kind": "visibility",
+         "name": "Tip",
+         "states": [
+          {
+           "name": "Tek",
+           "hidden": [
+            2
+           ]
+          },
+          {
+           "name": "Çift"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b004",
+      "name": "Kat2",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 2.0,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.0,
+         "y": 1.5
+        }
+       }
+      ],
+      "xref": {
+       "path": "$fixture:commands/v1/extract/kat2.kcad",
+       "relative": "kat2.kcad",
+       "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820",
+       "objects": [
+        "0192f5a1-1030-7000-8200-000000000091",
+        "0192f5a1-1030-7000-8200-000000000092"
+       ]
+      }
+     }
+    ],
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "mobilya",
+      "attrs": {
+       "KOD": "X"
+      },
+      "block": "0192f5a1-1030-7000-8000-00000000b002",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b002",
+      "p": {
+       "x": 8.0,
+       "y": 0.0
+      },
+      "scale": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "mobilya",
+      "attrs": {
+       "KOD": "S-02"
+      },
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "gizli",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 3.0,
+       "y": 4.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 7,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 8,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 1.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 9,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 10,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 0.0,
+       "y": 9.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 11,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "p": {
+       "x": 2.0,
+       "y": 9.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 12,
+      "layerId": "kapi",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b003",
+      "p": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 13,
+      "layerId": "kapi",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b003",
+      "p": {
+       "x": 12.0,
+       "y": 4.0
+      },
+      "scale": 2.0,
+      "rotation": 0.0,
+      "parameters": {
+       "Tip": "Çift"
+      }
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 0.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 15,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 1.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 1.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 16,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 2.0,
+       "y": -4.0
+      },
+      "b": {
+       "x": 2.3359375,
+       "y": -4.0
+      }
+     },
+     {
+      "kind": "dimension",
+      "id": 17,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -6.0
+      },
+      "b": {
+       "x": 4.0,
+       "y": -6.0
+      },
+      "offset": 1.0,
+      "height": 0.25,
+      "text": "5.00"
+     },
+     {
+      "kind": "dimension",
+      "id": 18,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -8.0
+      },
+      "b": {
+       "x": 0.0,
+       "y": -5.0
+      },
+      "offset": 1.0,
+      "height": 0.25
+     },
+     {
+      "kind": "insert",
+      "id": 19,
+      "layerId": "ref",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b004",
+      "p": {
+       "x": 20.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "table",
+      "id": 20,
+      "layerId": "a",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ad",
+        "Not"
+       ],
+       [
+        "A",
+        "1"
+       ],
+       [
+        "B",
+        "2"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "arrays": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000a001",
+      "block": "0192f5a1-1030-7000-8000-00000000b001",
+      "layerId": "mobilya",
+      "p": {
+       "x": 0.0,
+       "y": 8.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 3,
+       "dx": 1.0,
+       "dy": 1.0
+      },
+      "items": [
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000007"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000008"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000009"
+       },
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000010"
+       },
+       {},
+       {
+        "uid": "0192f5a1-1030-7000-8100-000000000011"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "table": "0192f5a1-1030-7000-8100-000000000020",
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_an_extraction",
+       "message": "$any",
+       "path": "table"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

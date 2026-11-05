@@ -431,6 +431,8 @@ pub enum Dialog {
     TableInsert,
     /// Tabloyu düzenle (tables/editor.rs, docs/adr/0184 §5); the window is `App::table_editor`.
     TableEditor,
+    /// Veri çıkarımı (tables/extract.rs, docs/adr/1030 §8); the window is `App::extract`.
+    Extract,
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
@@ -812,6 +814,8 @@ pub enum Message {
     TableUpdate(crate::tables::update::Event),
     /// Selected CAD table to CSV, XLSX or ODS.
     TableExport(crate::tables::export::Event),
+    /// Veri çıkarımı (tables/extract.rs, docs/adr/1030 §8).
+    Extract(crate::tables::extract::Event),
     /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
     Navigation(crate::navigation_cards::Event),
     /// The map services' credits and windows (services/app.rs, docs/adr/0208).
@@ -1447,6 +1451,8 @@ pub struct App {
     pub(crate) table_insert: crate::tables::insert::Insert,
     /// Tabloyu düzenle's window (tables/editor.rs).
     pub(crate) table_editor: Option<crate::tables::editor::Editor>,
+    /// Veri çıkarımı's recipe, kept while the program runs (docs/adr/1030 §8).
+    pub(crate) extract: Option<crate::tables::extract::Extract>,
     /// Tabloyu güncelle waiting for its files (tables/update.rs).
     pub(crate) table_update: Option<crate::tables::update::Run>,
     /// Genel bakış and Büyüteç's session state (navigation_cards.rs, docs/adr/0181).
@@ -1870,6 +1876,7 @@ impl App {
             cogo: None,
             table_insert: Default::default(),
             table_editor: None,
+            extract: None,
             table_update: None,
             navigation: Default::default(),
             lens_spots: Default::default(),
@@ -2628,6 +2635,7 @@ impl App {
             Message::TableEditor(event) => return self.table_editor_event(event),
             Message::TableUpdate(event) => return self.table_update_event(event),
             Message::TableExport(event) => return self.table_export_event(event),
+            Message::Extract(event) => return self.extract_event(event),
             Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::ImageFile(file) => self.image_file_given(file),
@@ -3307,6 +3315,8 @@ impl App {
             }
             "table.update" => return self.update_tables(),
             "table.export" => return self.export_selected_table(),
+            // Veri çıkarımı (docs/adr/1030 §8).
+            "table.extract" => self.open_extract(),
             // Tablonun dosyası ve blok çizelgesi (docs/adr/0327 §4–§5).
             "table.link" => return self.link_table(),
             "table.blockSchedule" => self.place_block_schedule(),

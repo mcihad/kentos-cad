@@ -4078,6 +4078,64 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_EXTRACT_RUN.into(),
+            version: crate::CAD_EXTRACT_RUN_VERSION,
+            title: "Veri çıkarımı".into(),
+            summary: "Bir veri çıkarımı tarifini (recipe) ya da bir çıkarım tablosunun (table) tarifini çalıştırır; hiçbir şey yazmaz. Tarif açık çizimi (current, varsayılan evet) ve salt okunur başka çizimleri (drawings: .kcad ya da KentOS JSON yolları, base klasöründen) okur; türler (kinds: insert, line, polyline, polygon, circle, arc, ellipse, spline, hatch, dimension, text, point, leader; yoksa insert), blok adları ve katman adlarıyla süzer. \
+                      Sayım kapsamı (scope) açıktır: nested iç içe blokların içine bakar (her iç yerleştirme ve parça kendi yoluyla sayılır), arrays items her dizi öğesini, whole diziyi bir Dizi olarak sayar; hidden görünürlük durumunun gizlediği parçaları ve gizli/dondurulmuş katmanlardakileri de sayar; xrefs dış referansın içine bakar, tarifin ayrıca okuduğu çizime giden referansa asla bakmaz (bir kez sayılır). Her oluşumun yolu (çizim#kimlik/yerel kimlik, dış referansta /x:kaynak kimliği) bir kez sayılır ve members'ta izlenir. \
+                      Sütunlar (columns): drawing, kind, block, layer, variant, attribute (tag), count (adet), length (m/cm/mm/km), area (m2/donum/ha), measured (ölçünün gerçek uzunluğu), shown (ölçünün yazılan metni: sözcüktür, toplanmaz), overridden, computed (önceki bir miktar sütunu × noktalı ondalık katsayı, birimiyle), joined (join ile eşlenen dış tablonun sütunu). group yazı sütunları aynı satırları birleştirip miktarları toplar; sort sütunlara göre sıralar; total yuvarlanmamış değerlerden Toplam satırı yazar; hücreler en sonda yuvarlanır. \
+                      join: CSV/XLSX/ODS dosyasının key başlıklı sütunu tarifin on sütunuyla eşlenir; eşlenmeyen anahtarlar notes.unmatched, kullanılmayanlar notes.unused. table verilince stale tablonun kaynaklarının değişip değişmediğini söyler. drawingPath açık çizimin kendi dosyasıdır: tarif onu okursa reddedilir. Okunan dosyalar yalnız okunur, özetleri read'de.".into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExtractRun>(),
+            output: schema::<crate::ExtractRan>(),
+            plan: Some(schema::<crate::ExtractRan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İki çizimden iç içe bloklarla parça listesi, dış açıklama tablosuyla".into(),
+                    input: json!({ "recipe": { "name": "Mobilya listesi", "drawings": ["kat2.kcad"], "kinds": ["insert"], "scope": { "nested": true, "xrefs": true }, "columns": [{ "label": "Blok", "value": { "of": "block" } }, { "label": "Açıklama", "value": { "of": "joined", "field": "Açıklama" } }, { "label": "Adet", "value": { "of": "count" } }], "group": true, "sort": [{ "column": 0 }], "total": true, "join": { "path": "aciklama.csv", "key": "Blok", "on": 0 } }, "base": "/proje" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Duvar uzunluğu ve ölçülerin gerçek değeri".into(),
+                    input: json!({ "recipe": { "name": "Metraj", "kinds": ["line", "dimension"], "columns": [{ "label": "Katman", "value": { "of": "layer" } }, { "label": "Uzunluk", "value": { "of": "length" }, "decimals": 2 }, { "label": "Gerçek ölçü", "value": { "of": "measured" } }, { "label": "Yazılan", "value": { "of": "shown" } }], "group": true, "total": true } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_EXTRACT_TABLE.into(),
+            version: crate::CAD_EXTRACT_TABLE_VERSION,
+            title: "Veri çıkarımı tablosu".into(),
+            summary: "cad.extract.run'ın tarifini sol üst köşesi at olan bir tablo olarak yazar; tek geri alma adımı “Veri çıkarımı tablosu”. Tablo tarifini, okunan kaynakların özetlerini, her veri satırının anahtarını ve son çıkarılan hücreleri saklar. \
+                      Tabloyu güncelle (cad.tables.edit refresh) tarifi yeniden çalıştırır: kaynağı değişmeyen elle düzeltilmiş hücre ve kullanıcının eklediği sütunlar, biçimler, formüller, alanlar ve satır yükseklikleri satır anahtarıyla taşınır; toplamın tüm veri satırlarını kapsayan formül aralığı büyür ya da küçülür. Kaynağı da değişen elle düzeltme, kullanıcı verisi olan ve kaynaktan kalkan satır ya da elle eklenen satır tabloyu olduğu gibi bırakır (refresh_kept); overrides replace kaynağı yazar ve sayar. \
+                      Satır bulamayan tarif tablo yazmaz (extraction_empty). Katman verilmezse etkin katman; height yazı yüksekliği (m; verilmezse projenin tablo yüksekliği çizim ölçeğinde). Miktar sütunları sağa yaslanır.".into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExtractTable>(),
+            output: schema::<crate::ExtractTabled>(),
+            plan: Some(schema::<crate::ExtractTablePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Blok adetleri tablosu".into(),
+                input: json!({ "recipe": { "name": "Bloklar", "columns": [{ "label": "Blok", "value": { "of": "block" } }, { "label": "Adet", "value": { "of": "count" } }], "group": true, "total": true }, "at": { "x": 20.0, "y": 0.0 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_SCHEDULES_EDIT.into(),
             version: crate::CAD_SCHEDULES_EDIT_VERSION,
             title: "Çizelgeyi düzenle".into(),
@@ -14826,6 +14884,12 @@ mod tests {
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_EXTRACT_RUN => {
+                        serde_json::from_value::<crate::ExtractRun>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_EXTRACT_TABLE => {
+                        serde_json::from_value::<crate::ExtractTable>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_EDIT => {
                         serde_json::from_value::<crate::SchedulesEdit>(e.input.clone()).map(|_| ())

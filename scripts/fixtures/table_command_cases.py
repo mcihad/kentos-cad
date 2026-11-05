@@ -1055,12 +1055,14 @@ def cases():
     # Refresh.
     rooms = copy.deepcopy(ent(10))
     cells, kept, replaced = overridden(rooms, ROOMS_NEW, "keep")
-    fresh = refreshed(rooms, cells, ["left", "right", "right"])
-    fresh["source"] = {**rooms["source"], "digest": digest("odalar.csv"), "copy": ROOMS_NEW}
+    # Under keep, a cell both the user and the file changed since the copy keeps the whole table (the rule of
+    # 5 November 2026, plan/cad-advanced.md CAD-ADV-13 “Aynı hücre çatışması”): nothing is written, said.
+    assert replaced == 1, "the case's file changes one hand-edited cell"
     out.append({"name": "Güncelle: bağlı dosya, elle değişen hücreler korunur", "steps": [
         {"op": "execute", "input": {"operation": {"kind": "refresh", "uids": ["$uidOf:10"], "base": "$fixture:commands/v1/tables"}},
-         "result": ok(["$uidOf:10"], [{"uid": "$uidOf:10", "status": "updated", "kept": kept, "replaced": replaced}]),
-         "expect": {"ids": ALL, "entities": {"10": tidy(fresh)}, "canUndo": True, "dirty": True, "revision": "changed"}, "within": 1e-9}]})
+         "result": warned([], [{"uid": "$uidOf:10", "status": "unreadable", "kept": 0, "replaced": 0}],
+                          [{"code": "source_unreadable", "message": "“odalar.csv” dosyasında Kaynak ve elle düzeltme aynı 1 hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."}]),
+         "expect": {"ids": ALL, "entities": {"10": ent(10)}, "canUndo": False, "dirty": False, "revision": "same"}}]})
     rooms_r = ent(16)
     cells, kept, replaced = overridden(rooms_r, ROOMS_NEW, "replace")
     fresh = refreshed(rooms_r, cells, ["left", "right", "right"])

@@ -4506,20 +4506,23 @@
      "result": {
       "status": "completed",
       "output": {
-       "changed": [
-        "$uidOf:10"
-       ],
+       "changed": [],
        "revision": "$current",
        "report": [
         {
          "uid": "$uidOf:10",
-         "status": "updated",
-         "kept": 2,
-         "replaced": 1
+         "status": "unreadable",
+         "kept": 0,
+         "replaced": 0
         }
        ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "source_unreadable",
+        "message": "“odalar.csv” dosyasında Kaynak ve elle düzeltme aynı 1 hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."
+       }
+      ]
      },
      "expect": {
       "ids": [
@@ -4555,7 +4558,6 @@
         "rows": [
          0.5,
          0.5,
-         0.5,
          0.5
         ],
         "columns": [
@@ -4571,17 +4573,12 @@
          ],
          [
           "Salon (büyük)",
-          "26.5",
+          "25",
           "1"
          ],
          [
           "Mutfak",
           "12.5",
-          "1"
-         ],
-         [
-          "Banyo",
-          "6.0",
           "1"
          ]
         ],
@@ -4595,7 +4592,7 @@
          "kind": "file",
          "name": "odalar.csv",
          "path": "odalar.csv",
-         "digest": "6fae3d4c644028d9620cde63aaee68303f565a57f1c8332c675aa08f9e4f39a0",
+         "digest": "0000000000000000000000000000000000000000000000000000000000000000",
          "copy": [
           [
            "Oda",
@@ -4604,28 +4601,22 @@
           ],
           [
            "Salon",
-           "26.5",
+           "24.5",
            "1"
           ],
           [
            "Mutfak",
            "12.25",
            "1"
-          ],
-          [
-           "Banyo",
-           "6.0",
-           "1"
           ]
          ]
         }
        }
       },
-      "canUndo": true,
-      "dirty": true,
-      "revision": "changed"
-     },
-     "within": 1e-09
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
     }
    ]
   },

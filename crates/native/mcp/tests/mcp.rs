@@ -9,6 +9,64 @@ use std::process::{Command, Stdio};
 use kentos_mcp::{LEGACY, MODERN, Server};
 use serde_json::{Value, json};
 
+/// Veri çıkarımı (docs/adr/1030): the run reads the other drawing and the description table without writing them or
+/// the drawing; the table is one undo step and keeps its recipe; Tabloyu güncelle of it changes nothing when its
+/// sources did not change.
+#[test]
+fn data_extraction_reads_its_sources_only_and_its_table_keeps_the_recipe() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1");
+    let folder = root.join("extract");
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-extract-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let fixture: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.extract.run.json")).unwrap();
+    let setup = fixture["setup"]
+        .to_string()
+        .replace("$fixture:commands/v1/extract", &folder.display().to_string());
+    let snapshot = serde_json::from_str(&setup).expect("the drawing reads");
+    let path = dir.join("kat1.kcad");
+    std::fs::write(&path, kentos_kcad::encode(&snapshot).expect("encodes")).unwrap();
+    let saved = dir.join("saved.kcad");
+    let sources = [folder.join("kat2.kcad"), folder.join("aciklama.csv")];
+    let before_sources: Vec<Vec<u8>> = sources.iter().map(|p| std::fs::read(p).unwrap()).collect();
+    let mut server = Server::new();
+    let drawing = call(&mut server, "drawing.open", json!({"path": path}))["structuredContent"]["drawing"].clone();
+    call(&mut server, "drawing.save", json!({"drawing": drawing, "path": saved}));
+    let before = std::fs::read(&saved).unwrap();
+    let recipe = fixture["cases"][0]["steps"][0]["input"]["recipe"].clone();
+    let base = folder.display().to_string();
+    let ran = call(&mut server, "cad.extract.run", json!({"drawing": drawing, "recipe": recipe, "base": base}))
+        ["structuredContent"]
+        .clone();
+    assert_eq!(ran["status"], "completed", "{ran}");
+    assert_eq!(ran["output"]["total"][4], "31", "{ran}");
+    assert_eq!(ran["output"]["notes"]["readApart"], json!(["Kat2"]));
+    call(&mut server, "drawing.save", json!({"drawing": drawing, "path": saved}));
+    assert_eq!(std::fs::read(&saved).unwrap(), before, "a run writes nothing");
+    let made = call(
+        &mut server,
+        "cad.extract.table",
+        json!({"drawing": drawing, "op": "execute", "recipe": recipe, "base": base, "at": {"x": 30.0, "y": 0.0}}),
+    )["structuredContent"]
+        .clone();
+    assert_eq!(made["status"], "completed", "{made}");
+    let uid = made["output"]["uid"].clone();
+    let again = call(
+        &mut server,
+        "cad.tables.edit",
+        json!({"drawing": drawing, "op": "execute", "operation": {"kind": "refresh", "uids": [uid], "base": base}}),
+    )["structuredContent"]
+        .clone();
+    assert_eq!(again["status"], "completed", "{again}");
+    assert_eq!(again["output"]["report"][0]["status"], "unchanged", "{again}");
+    call(&mut server, "drawing.undo", json!({"drawing": drawing}));
+    call(&mut server, "drawing.save", json!({"drawing": drawing, "path": saved}));
+    assert_eq!(std::fs::read(&saved).unwrap(), before, "undo takes the table away");
+    let after_sources: Vec<Vec<u8>> = sources.iter().map(|p| std::fs::read(p).unwrap()).collect();
+    assert_eq!(after_sources, before_sources, "the sources are read only");
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
 #[test]
 fn linear_array_search_is_read_only_and_its_reviewed_proposal_uses_the_shared_adoption_command() {
     let dir=std::env::temp_dir().join(format!("kentos-mcp-array-find-{}",std::process::id()));

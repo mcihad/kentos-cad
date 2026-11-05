@@ -967,6 +967,16 @@ pub fn shift(formula: &str, axis: Axis, at: usize, count: isize) -> String {
 /// This is used when a linked file reorders keyed records rather than
 /// inserting a contiguous run of rows.
 pub fn remap_rows(formula: &str, rows: &[Option<usize>]) -> Option<String> {
+    remap_rows_spanning(formula, rows, None)
+}
+
+/// [`remap_rows`] where a range over exactly the rows `span.0` (first, last) becomes one over `span.1`: a total over
+/// every data row of an extraction table follows them as they grow or shrink (docs/adr/1030 §6).
+pub fn remap_rows_spanning(
+    formula: &str,
+    rows: &[Option<usize>],
+    span: Option<((usize, usize), (usize, usize))>,
+) -> Option<String> {
     let mut out = String::with_capacity(formula.len());
     let mut rest = formula;
     while let Some(c) = rest.chars().next() {
@@ -984,6 +994,14 @@ pub fn remap_rows(formula: &str, rows: &[Option<usize>]) -> Option<String> {
                     let (m, col2, row2) = reference_at(next)?;
                     let (dc2, dr2) = dollars(&next[..m]);
                     let (first, last) = (row.min(row2), row.max(row2));
+                    if let Some((from, to)) = span.filter(|(from, _)| *from == (first, last)) {
+                        let _ = from;
+                        out.push_str(&reference_words(dc, col.min(col2), dr, to.0));
+                        out.push(':');
+                        out.push_str(&reference_words(dc2, col.max(col2), dr2, to.1));
+                        rest = &next[m..];
+                        continue;
+                    }
                     let mapped: Vec<usize> = rows.get(first..=last)?.iter().copied().collect::<Option<_>>()?;
                     let lo = *mapped.iter().min()?;
                     let hi = *mapped.iter().max()?;

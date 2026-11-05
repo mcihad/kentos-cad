@@ -21597,6 +21597,599 @@
       ]
     },
     {
+      "id": "cad.extract.run",
+      "version": 1,
+      "title": "Veri çıkarımı",
+      "summary": "Bir veri çıkarımı tarifini (recipe) ya da bir çıkarım tablosunun (table) tarifini çalıştırır; hiçbir şey yazmaz. Tarif açık çizimi (current, varsayılan evet) ve salt okunur başka çizimleri (drawings: .kcad ya da KentOS JSON yolları, base klasöründen) okur; türler (kinds: insert, line, polyline, polygon, circle, arc, ellipse, spline, hatch, dimension, text, point, leader; yoksa insert), blok adları ve katman adlarıyla süzer. Sayım kapsamı (scope) açıktır: nested iç içe blokların içine bakar (her iç yerleştirme ve parça kendi yoluyla sayılır), arrays items her dizi öğesini, whole diziyi bir Dizi olarak sayar; hidden görünürlük durumunun gizlediği parçaları ve gizli/dondurulmuş katmanlardakileri de sayar; xrefs dış referansın içine bakar, tarifin ayrıca okuduğu çizime giden referansa asla bakmaz (bir kez sayılır). Her oluşumun yolu (çizim#kimlik/yerel kimlik, dış referansta /x:kaynak kimliği) bir kez sayılır ve members'ta izlenir. Sütunlar (columns): drawing, kind, block, layer, variant, attribute (tag), count (adet), length (m/cm/mm/km), area (m2/donum/ha), measured (ölçünün gerçek uzunluğu), shown (ölçünün yazılan metni: sözcüktür, toplanmaz), overridden, computed (önceki bir miktar sütunu × noktalı ondalık katsayı, birimiyle), joined (join ile eşlenen dış tablonun sütunu). group yazı sütunları aynı satırları birleştirip miktarları toplar; sort sütunlara göre sıralar; total yuvarlanmamış değerlerden Toplam satırı yazar; hücreler en sonda yuvarlanır. join: CSV/XLSX/ODS dosyasının key başlıklı sütunu tarifin on sütunuyla eşlenir; eşlenmeyen anahtarlar notes.unmatched, kullanılmayanlar notes.unused. table verilince stale tablonun kaynaklarının değişip değişmediğini söyler. drawingPath açık çizimin kendi dosyasıdır: tarif onu okursa reddedilir. Okunan dosyalar yalnız okunur, özetleri read'de.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.extract.run` v1: a recipe, or an extraction table whose recipe is worked out (and said whether it\nis current).",
+        "properties": {
+          "base": {
+            "description": "The folder relative paths are read from (the drawing's).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "drawingPath": {
+            "description": "The open drawing's own file: a recipe naming it is refused (it would be counted twice).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "recipe": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExtractionRecipe"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "table": {
+            "description": "An extraction table by its persistent id.",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ExtractRun",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.extract.run` v1.",
+        "properties": {
+          "headings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "$ref": "#/$defs/ExtractNotes"
+          },
+          "occurrences": {
+            "description": "How many occurrences were counted.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "quantities": {
+            "description": "Which columns are quantities.",
+            "items": {
+              "type": "boolean"
+            },
+            "type": "array"
+          },
+          "read": {
+            "description": "The other drawings and the joined file as read now.",
+            "items": {
+              "$ref": "#/$defs/ExtractRead"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ExtractRow"
+            },
+            "type": "array"
+          },
+          "stale": {
+            "description": "With `table`: whether Tabloyu güncelle would change its extracted cells (its sources changed since).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "The Toplam row's cells, when the recipe totals.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "totals": {
+            "description": "Its quantity columns' unrounded sums.",
+            "items": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "value"
+          }
+        },
+        "required": [
+          "headings",
+          "quantities",
+          "rows",
+          "occurrences",
+          "read",
+          "notes",
+          "revision"
+        ],
+        "title": "ExtractRan",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.extract.run` v1.",
+        "properties": {
+          "headings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "$ref": "#/$defs/ExtractNotes"
+          },
+          "occurrences": {
+            "description": "How many occurrences were counted.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "quantities": {
+            "description": "Which columns are quantities.",
+            "items": {
+              "type": "boolean"
+            },
+            "type": "array"
+          },
+          "read": {
+            "description": "The other drawings and the joined file as read now.",
+            "items": {
+              "$ref": "#/$defs/ExtractRead"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ExtractRow"
+            },
+            "type": "array"
+          },
+          "stale": {
+            "description": "With `table`: whether Tabloyu güncelle would change its extracted cells (its sources changed since).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "The Toplam row's cells, when the recipe totals.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "totals": {
+            "description": "Its quantity columns' unrounded sums.",
+            "items": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "value"
+          }
+        },
+        "required": [
+          "headings",
+          "quantities",
+          "rows",
+          "occurrences",
+          "read",
+          "notes",
+          "revision"
+        ],
+        "title": "ExtractRan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "invalid_extraction_recipe",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_table",
+          "not_an_extraction",
+          "drawing_read_twice",
+          "extraction_source_missing",
+          "extraction_source_unreadable",
+          "join_unusable",
+          "extraction_too_large",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "extraction_hidden",
+          "xref_unloaded",
+          "xref_read_apart",
+          "join_unmatched",
+          "dimension_overrides",
+          "extraction_too_deep"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki çizimden iç içe bloklarla parça listesi, dış açıklama tablosuyla",
+          "input": {
+            "base": "/proje",
+            "recipe": {
+              "columns": [
+                {
+                  "label": "Blok",
+                  "value": {
+                    "of": "block"
+                  }
+                },
+                {
+                  "label": "Açıklama",
+                  "value": {
+                    "field": "Açıklama",
+                    "of": "joined"
+                  }
+                },
+                {
+                  "label": "Adet",
+                  "value": {
+                    "of": "count"
+                  }
+                }
+              ],
+              "drawings": [
+                "kat2.kcad"
+              ],
+              "group": true,
+              "join": {
+                "key": "Blok",
+                "on": 0,
+                "path": "aciklama.csv"
+              },
+              "kinds": [
+                "insert"
+              ],
+              "name": "Mobilya listesi",
+              "scope": {
+                "nested": true,
+                "xrefs": true
+              },
+              "sort": [
+                {
+                  "column": 0
+                }
+              ],
+              "total": true
+            }
+          }
+        },
+        {
+          "title": "Duvar uzunluğu ve ölçülerin gerçek değeri",
+          "input": {
+            "recipe": {
+              "columns": [
+                {
+                  "label": "Katman",
+                  "value": {
+                    "of": "layer"
+                  }
+                },
+                {
+                  "decimals": 2,
+                  "label": "Uzunluk",
+                  "value": {
+                    "of": "length"
+                  }
+                },
+                {
+                  "label": "Gerçek ölçü",
+                  "value": {
+                    "of": "measured"
+                  }
+                },
+                {
+                  "label": "Yazılan",
+                  "value": {
+                    "of": "shown"
+                  }
+                }
+              ],
+              "group": true,
+              "kinds": [
+                "line",
+                "dimension"
+              ],
+              "name": "Metraj",
+              "total": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.extract.table",
+      "version": 1,
+      "title": "Veri çıkarımı tablosu",
+      "summary": "cad.extract.run'ın tarifini sol üst köşesi at olan bir tablo olarak yazar; tek geri alma adımı “Veri çıkarımı tablosu”. Tablo tarifini, okunan kaynakların özetlerini, her veri satırının anahtarını ve son çıkarılan hücreleri saklar. Tabloyu güncelle (cad.tables.edit refresh) tarifi yeniden çalıştırır: kaynağı değişmeyen elle düzeltilmiş hücre ve kullanıcının eklediği sütunlar, biçimler, formüller, alanlar ve satır yükseklikleri satır anahtarıyla taşınır; toplamın tüm veri satırlarını kapsayan formül aralığı büyür ya da küçülür. Kaynağı da değişen elle düzeltme, kullanıcı verisi olan ve kaynaktan kalkan satır ya da elle eklenen satır tabloyu olduğu gibi bırakır (refresh_kept); overrides replace kaynağı yazar ve sayar. Satır bulamayan tarif tablo yazmaz (extraction_empty). Katman verilmezse etkin katman; height yazı yüksekliği (m; verilmezse projenin tablo yüksekliği çizim ölçeğinde). Miktar sütunları sağa yaslanır.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.extract.table` v1: a recipe written as a table at `at` (its top left corner), keeping the recipe.",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "base": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "breaks": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TableBreaks"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its parts (Tabloyu böl, docs/adr/1030 §7): each at most `breaks.height` deep, the heading row atop each;\nabsent: one part."
+          },
+          "drawingPath": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "height": {
+            "description": "Its words' height, metres; absent: the project's table height at its plot scale.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "layerId": {
+            "description": "Its layer; absent: the active one.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overrides": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SourceOverrides"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What Tabloyu güncelle does with a cell changed by hand whose source changed too; absent: keep (refuse the\nrefresh, saying so)."
+          },
+          "recipe": {
+            "$ref": "#/$defs/ExtractionRecipe"
+          }
+        },
+        "required": [
+          "recipe",
+          "at"
+        ],
+        "title": "ExtractTable",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.extract.table` v1.",
+        "properties": {
+          "notes": {
+            "$ref": "#/$defs/ExtractNotes"
+          },
+          "occurrences": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "description": "Its data rows.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uid": {
+            "description": "The table's persistent id.",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "rows",
+          "occurrences",
+          "notes",
+          "revision"
+        ],
+        "title": "ExtractTabled",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.extract.table` would write (plan mode).",
+        "properties": {
+          "notes": {
+            "$ref": "#/$defs/ExtractNotes"
+          },
+          "occurrences": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "table": {
+            "$ref": "#/$defs/Entity"
+          }
+        },
+        "required": [
+          "table",
+          "rows",
+          "occurrences",
+          "notes",
+          "revision"
+        ],
+        "title": "ExtractTablePlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "invalid_table",
+          "invalid_extraction_recipe",
+          "drawing_read_twice",
+          "extraction_source_missing",
+          "extraction_source_unreadable",
+          "join_unusable",
+          "extraction_too_large",
+          "extraction_empty",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden",
+          "extraction_hidden",
+          "xref_unloaded",
+          "xref_read_apart",
+          "join_unmatched",
+          "dimension_overrides",
+          "extraction_too_deep"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Blok adetleri tablosu",
+          "input": {
+            "at": {
+              "x": 20.0,
+              "y": 0.0
+            },
+            "recipe": {
+              "columns": [
+                {
+                  "label": "Blok",
+                  "value": {
+                    "of": "block"
+                  }
+                },
+                {
+                  "label": "Adet",
+                  "value": {
+                    "of": "count"
+                  }
+                }
+              ],
+              "group": true,
+              "name": "Bloklar",
+              "total": true
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.schedules.edit",
       "version": 1,
       "title": "Çizelgeyi düzenle",
@@ -28307,7 +28900,17 @@
         "warnings": [
           "source_missing",
           "source_unreadable",
-          "source_unlinked"
+          "source_unlinked",
+          "refresh_kept",
+          "extraction_source_missing",
+          "extraction_source_unreadable",
+          "join_unusable",
+          "extraction_hidden",
+          "xref_unloaded",
+          "xref_read_apart",
+          "join_unmatched",
+          "dimension_overrides",
+          "extraction_too_deep"
         ]
       },
       "examples": [
@@ -96390,6 +96993,96 @@
       "meaning": "Dosya okunamadı ya da bir KentOS çizimi (.kcad) değil."
     },
     {
+      "code": "invalid_extraction_recipe",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Veri çıkarımı tarifi kurallarına uymuyor: adı, türleri, sütunları, sıralaması ya da eşlemesi."
+    },
+    {
+      "code": "not_an_extraction",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablo bir veri çıkarımı tablosu değil; tarifi yok."
+    },
+    {
+      "code": "drawing_read_twice",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tarifin okuduğu çizim açık çizimin kendi dosyası; her çizim bir kez sayılır."
+    },
+    {
+      "code": "extraction_source_missing",
+      "kind": "failedOrWarning",
+      "retryable": false,
+      "meaning": "Tarifin okuduğu çizim ya da dış tablo yolunda yok."
+    },
+    {
+      "code": "extraction_source_unreadable",
+      "kind": "failedOrWarning",
+      "retryable": false,
+      "meaning": "Tarifin okuduğu çizim ya da dış tablo okunamadı."
+    },
+    {
+      "code": "join_unusable",
+      "kind": "failedOrWarning",
+      "retryable": false,
+      "meaning": "Dış tablo anahtarla eşlenemiyor: anahtar ya da istenen sütun yok, bir anahtar boş ya da tekrarlı."
+    },
+    {
+      "code": "extraction_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tarif bir kerede okunabilecekten çok nesne okuyor; kapsamı daraltın."
+    },
+    {
+      "code": "extraction_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tarif hiçbir nesne bulmadı; yazılacak satır yok."
+    },
+    {
+      "code": "extraction_hidden",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Görünmeyen parçalar ve gizli katmanlardaki nesneler sayılmadı."
+    },
+    {
+      "code": "xref_unloaded",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dış referansın içeriği yüklü değil; içine bakılmadı."
+    },
+    {
+      "code": "xref_read_apart",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dış referansın çizimi tarifte ayrıca okunuyor; içeriği bir kez, kendi çizimi olarak sayıldı."
+    },
+    {
+      "code": "join_unmatched",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı satırların anahtarı dış tabloda yok; eşlenen hücreleri boş kaldı."
+    },
+    {
+      "code": "dimension_overrides",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı ölçülerin yazısı elle yazılmış; yazılan metin toplanmadı, gerçek ölçü kullanıldı."
+    },
+    {
+      "code": "extraction_too_deep",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "En derin düzeyden daha derin iç içe bloklara bakılmadı."
+    },
+    {
+      "code": "refresh_kept",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yenileme elle girilen bir değeri ya da kullanıcı satırını kaybettirecekti; tablo olduğu gibi kaldı."
+    },
+    {
       "code": "legacy_file",
       "kind": "host",
       "retryable": false,
@@ -101069,6 +101762,21 @@
         "vertical"
       ],
       "type": "string"
+    },
+    "ArrayCount": {
+      "description": "How an associative array counts (docs/adr/1030 §3).",
+      "oneOf": [
+        {
+          "const": "items",
+          "description": "Each item an insert of its own (an item removed by hand is not there).",
+          "type": "string"
+        },
+        {
+          "const": "whole",
+          "description": "The array one occurrence (Dizi) of its block; its items not counted apart.",
+          "type": "string"
+        }
+      ]
     },
     "ArrayEdit": {
       "description": "What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).",
@@ -109395,6 +110103,29 @@
         "at",
         "offset"
       ],
+      "type": "object"
+    },
+    "CountScope": {
+      "additionalProperties": false,
+      "description": "What a recipe counts (docs/adr/1030 §3): each choice open, none implied.",
+      "properties": {
+        "arrays": {
+          "$ref": "#/$defs/ArrayCount",
+          "description": "How an associative array counts."
+        },
+        "hidden": {
+          "description": "Görünmeyen parçalar: a dynamic block's pieces its visibility state hides and the objects on a hidden or frozen\nlayer are counted too. Off: left out (the report says how many).",
+          "type": "boolean"
+        },
+        "nested": {
+          "description": "İç içe bloklar: a block's objects are looked into, its nested inserts counted (each by its path), its pieces'\nlengths and areas measured as placed. Off: the drawing's own objects alone.",
+          "type": "boolean"
+        },
+        "xrefs": {
+          "description": "Dış referanslar: an external reference's content is looked into as a nested block's (its objects by their\nsource ids). Off: an external reference is one insert. A reference to a drawing the recipe reads itself is\nnever looked into: that drawing is counted once, as its own.",
+          "type": "boolean"
+        }
+      },
       "type": "object"
     },
     "CreateOperation": {
@@ -119828,6 +120559,547 @@
         "counts",
         "notes",
         "skipped"
+      ],
+      "type": "object"
+    },
+    "ExtractAreaUnit": {
+      "description": "An area's unit (CLAUDE.md §5: a dönüm 1000 m², a hectare 10000 m²).",
+      "enum": [
+        "m2",
+        "donum",
+        "ha"
+      ],
+      "type": "string"
+    },
+    "ExtractColumn": {
+      "additionalProperties": false,
+      "description": "One column of a recipe.",
+      "properties": {
+        "decimals": {
+          "description": "A quantity's decimals; absent: the project's (lengths' for a length or a dimension, areas' for an area, 0 for\na count, the column's it multiplies for a computed one).",
+          "format": "uint32",
+          "maximum": 10,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "label": {
+          "description": "Its heading; a quantity's unit is written after it in brackets (`Uzunluk (m)`). Not empty, one line.",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/ExtractValue"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ExtractJoin": {
+      "additionalProperties": false,
+      "description": "A description table joined to the rows (docs/adr/1030 §5): a CSV, XLSX or ODS file's sheet whose first row names\nits columns; its row whose `key` column reads as a row's `on` column is that row's.",
+      "properties": {
+        "key": {
+          "description": "The file's key column's heading: its words unique and not empty on every row.",
+          "type": "string"
+        },
+        "on": {
+          "description": "The recipe's column (by index, a word column not joined) whose words are looked up.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "path": {
+          "description": "Its path, absolute or from the drawing's folder.",
+          "type": "string"
+        },
+        "sheet": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "key",
+        "on"
+      ],
+      "type": "object"
+    },
+    "ExtractLengthUnit": {
+      "description": "A length's unit.",
+      "enum": [
+        "m",
+        "cm",
+        "mm",
+        "km"
+      ],
+      "type": "string"
+    },
+    "ExtractNotes": {
+      "description": "What an extraction left out or could not match.",
+      "properties": {
+        "angles": {
+          "description": "Dimensions whose measure is an angle (no length).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "hidden": {
+          "description": "Hidden pieces and objects on hidden or frozen layers left out.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "overrides": {
+          "description": "Dimensions whose text overrides their measure.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "readApart": {
+          "description": "External references not looked into: the recipe reads their drawing itself.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "repeated": {
+          "description": "Occurrences reached twice and counted once.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "tooDeep": {
+          "description": "Nested blocks past the deepest level not looked into.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "unloaded": {
+          "description": "External references not loaded, by block name.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unmatched": {
+          "description": "Join keys the joined table lacks.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unused": {
+          "description": "The joined table's keys no row used.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "hidden",
+        "unloaded",
+        "readApart",
+        "repeated",
+        "angles",
+        "overrides",
+        "unmatched",
+        "unused",
+        "tooDeep"
+      ],
+      "type": "object"
+    },
+    "ExtractRead": {
+      "additionalProperties": false,
+      "description": "A source an extraction table was written from, as last read: a drawing or the joined file by its path as the\nrecipe gives it and the SHA-256 of its bytes.",
+      "properties": {
+        "digest": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "ExtractRow": {
+      "description": "One row worked out.",
+      "properties": {
+        "cells": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "key": {
+          "description": "Its key: a grouped row's word cells joined by U+001F, an ungrouped row's occurrence path.",
+          "type": "string"
+        },
+        "members": {
+          "description": "Its occurrences' paths: the drawing (its path as the recipe names it, empty for the open one), `#`, the\nobject's persistent id, each nested piece's local id (`/12`, an external reference's piece `/x:<id>`); an\narray counted whole `#dizi:<id>`.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "values": {
+          "description": "Each column's unrounded value in its unit (a quantity's); null for words or an empty cell.",
+          "items": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": "array",
+          "x-unit": "value"
+        }
+      },
+      "required": [
+        "key",
+        "cells",
+        "values",
+        "members"
+      ],
+      "type": "object"
+    },
+    "ExtractSort": {
+      "additionalProperties": false,
+      "description": "A sort key: a column by index, up or down.",
+      "properties": {
+        "column": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "descending": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "column"
+      ],
+      "type": "object"
+    },
+    "ExtractValue": {
+      "description": "What a column writes of an occurrence (docs/adr/1030 §4).",
+      "oneOf": [
+        {
+          "description": "The drawing it is in: its file's name, Bu çizim for the open one.",
+          "properties": {
+            "of": {
+              "const": "drawing",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Its kind's Turkish name (Blok, Çizgi …; Dizi for an array counted whole).",
+          "properties": {
+            "of": {
+              "const": "kind",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Its block's name; empty for another kind.",
+          "properties": {
+            "of": {
+              "const": "block",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Its effective layer's name.",
+          "properties": {
+            "of": {
+              "const": "layer",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A dynamic block's variant: its parameter values that differ from the defaults, `name=value` by name, `; `\nbetween; empty for the defaults and for another kind.",
+          "properties": {
+            "of": {
+              "const": "variant",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "An attribute's effective value (a constant's, the insert's, the definition's default) or the object's datum.",
+          "properties": {
+            "of": {
+              "const": "attribute",
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "of",
+            "tag"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Adet: one an occurrence.",
+          "properties": {
+            "of": {
+              "const": "count",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Uzunluk: a curve's length (a closed one's perimeter, an area's with its holes), placed as it is drawn.",
+          "properties": {
+            "of": {
+              "const": "length",
+              "type": "string"
+            },
+            "unit": {
+              "$ref": "#/$defs/ExtractLengthUnit"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Alan: a closed object's area net of its holes, placed as it is drawn.",
+          "properties": {
+            "of": {
+              "const": "area",
+              "type": "string"
+            },
+            "unit": {
+              "$ref": "#/$defs/ExtractAreaUnit"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Gerçek ölçü: a length dimension's measured value from its geometry (never its written text).",
+          "properties": {
+            "of": {
+              "const": "measured",
+              "type": "string"
+            },
+            "unit": {
+              "$ref": "#/$defs/ExtractLengthUnit"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yazılan: a dimension's text as shown (words, never summed).",
+          "properties": {
+            "of": {
+              "const": "shown",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Elle yazılmış: whether a dimension's text overrides its measure (evet, hayır).",
+          "properties": {
+            "of": {
+              "const": "overridden",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Hesaplanan: an earlier quantity column (by index) times `factor` (a decimal number, `.` before its fraction),\nin `unit` (one line; may be empty for a pure number).",
+          "properties": {
+            "column": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "factor": {
+              "type": "string"
+            },
+            "of": {
+              "const": "computed",
+              "type": "string"
+            },
+            "unit": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of",
+            "column",
+            "factor"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A joined table's column by its heading (the join's row whose key is this row's key column's words).",
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "of": {
+              "const": "joined",
+              "type": "string"
+            }
+          },
+          "required": [
+            "of",
+            "field"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ExtractionRecipe": {
+      "additionalProperties": false,
+      "description": "A data extraction recipe (docs/adr/1030 §2).",
+      "properties": {
+        "blocks": {
+          "description": "The blocks whose inserts are taken, by name (Turkish case folded as block names are); none named: every block.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "columns": {
+          "description": "The columns, in order; at least one, at most [`MAX_EXTRACT_COLUMNS`].",
+          "items": {
+            "$ref": "#/$defs/ExtractColumn"
+          },
+          "type": "array"
+        },
+        "current": {
+          "description": "The open drawing is read (default yes).",
+          "type": "boolean"
+        },
+        "drawings": {
+          "description": "Other drawings read (read only: never saved nor changed): `.kcad` or KentOS JSON paths, absolute or from the\ndrawing's folder; each once, at most [`MAX_EXTRACT_DRAWINGS`].",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "group": {
+          "description": "Alike rows one (Benzer satırları birleştir): rows whose word columns read the same, their quantities summed.",
+          "type": "boolean"
+        },
+        "join": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractJoin"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A description table joined by a key (Dış veriyle eşle)."
+        },
+        "kinds": {
+          "description": "The kinds taken ([`EXTRACT_KINDS`]); none named: inserts.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "layers": {
+          "description": "The layers whose objects are taken, by name (an object's effective layer: a block's piece on the block's layer\nis on its insert's); none named: every layer.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Its name (Tarif adı); not empty, one line, at most 100 letters.",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/CountScope",
+          "description": "What is counted (docs/adr/1030 §3)."
+        },
+        "sort": {
+          "description": "The rows' order: by these columns in turn; ties keep the reading order.",
+          "items": {
+            "$ref": "#/$defs/ExtractSort"
+          },
+          "type": "array"
+        },
+        "total": {
+          "description": "A last row, Toplam, with every quantity column's sum.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "columns"
       ],
       "type": "object"
     },
@@ -172291,6 +173563,30 @@
       ],
       "type": "string"
     },
+    "TableBreaks": {
+      "additionalProperties": false,
+      "description": "A table drawn in parts (docs/adr/1030 §7): each part at most `height` metres deep (it takes rows while they fit,\nat least one, the first the heading row and one more, never cutting a merged range), the next `gap` metres along\nits rows from the one before, the heading row drawn again at the top of each unless `once`.",
+      "properties": {
+        "gap": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "once": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "height"
+      ],
+      "type": "object"
+    },
     "TableCheck": {
       "additionalProperties": false,
       "description": "A CHECK constraint of a bound table (docs/adr/0755 §1).",
@@ -172328,7 +173624,7 @@
       "description": "One edit of a table's cells, rows and columns, applied in order (Tabloyu düzenle).",
       "oneOf": [
         {
-          "description": "The cell's words (one line); words beginning with `=` are its formula, its words then its result. A cell\ninside a merged range is its top left's.",
+          "description": "The cell's words (at most 20 lines, `\\n` between them; docs/adr/1030 §7); words beginning with `=` are its\nformula, its words then its result. A cell inside a merged range is its top left's.",
           "properties": {
             "col": {
               "format": "uint32",
@@ -172786,7 +174082,7 @@
           "type": "object"
         },
         {
-          "description": "Sığdır: `count` columns from `from` as wide as their words ask, in the drawing's typeface; with `grow` only\nthose narrower get wider; with `rows` every row `ROW` text heights high too (Yazıya sığdır).",
+          "description": "Sığdır: `count` columns from `from` as wide as their words ask, in the drawing's typeface; with `grow` only\nthose narrower get wider; with `rows` every row `ROW` text heights high too, and `LINE` heights more for each\nfurther line of its cells (Yazıya sığdır).",
           "properties": {
             "count": {
               "format": "uint32",
@@ -172911,6 +174207,29 @@
           "type": "object"
         },
         {
+          "description": "Tabloyu böl (docs/adr/1030 §7): the table drawn in parts at most `breaks.height` deep, the heading row again\natop each (null: one part).",
+          "properties": {
+            "breaks": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TableBreaks"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "breaks",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
           "description": "A linked file's unique, nonempty row-key column (null: position-based legacy refresh).",
           "properties": {
             "column": {
@@ -172993,6 +174312,17 @@
         },
         "bold": {
           "type": "boolean"
+        },
+        "breaks": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableBreaks"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its parts (Tabloyu böl, docs/adr/1030 §7, `.kcad` schema 182); absent: one part."
         },
         "byLayer": {
           "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -173586,6 +174916,52 @@
             "kind",
             "of",
             "columns"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Veri çıkarımı (docs/adr/1030): a recipe's rows from the open drawing and other drawings read only, with what\nthey were written from (the sources' digests, the rows' keys, the cells last extracted); written again by\nTabloyu güncelle, never at every step (a drawing it reads is a file).",
+          "properties": {
+            "copy": {
+              "description": "The extracted cells as last written (heading, data rows, total): a cell of them that the table reads otherwise\nwas changed by hand. Only the recipe's columns: the table's further columns are the user's.",
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "keys": {
+              "description": "Each data row's key as last extracted, in the rows' order: a grouped row's word cells, an ungrouped row's\noccurrence path; unique.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "extraction",
+              "type": "string"
+            },
+            "overrides": {
+              "$ref": "#/$defs/SourceOverrides",
+              "description": "What Tabloyu güncelle does with a cell changed by hand whose source changed too."
+            },
+            "read": {
+              "description": "The other drawings and the joined file as last read.",
+              "items": {
+                "$ref": "#/$defs/ExtractRead"
+              },
+              "type": "array"
+            },
+            "recipe": {
+              "$ref": "#/$defs/ExtractionRecipe"
+            }
+          },
+          "required": [
+            "kind",
+            "recipe"
           ],
           "type": "object"
         }

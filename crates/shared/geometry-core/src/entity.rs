@@ -280,6 +280,17 @@ crate::json_struct!(CellRange {
     cols
 });
 
+/// A table broken into parts (docs/adr/1030 §7): each part at most `height` metres deep, the next `gap` metres along
+/// its rows from the one before, the heading row drawn again at the top of each unless `once`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TableBreaks {
+    pub height: f64,
+    pub gap: Option<f64>,
+    pub once: Option<bool>,
+}
+
+crate::json_struct!(TableBreaks { height, gap, once });
+
 /// A style over a table's range of cells (docs/adr/0327 §1): what it sets, a later over an earlier.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CellLook {
@@ -539,6 +550,8 @@ pub enum Shape {
         source: Option<crate::api::json::Json>,
         /// Its cells' styles (docs/adr/0327 §1).
         styles: Option<Vec<CellLook>>,
+        /// Its parts (docs/adr/1030 §7); none: one part.
+        breaks: Option<TableBreaks>,
         face: crate::text::face::Face,
     },
     /// A picture (docs/adr/0192): its frame from `p`, its lower left corner,
@@ -670,7 +683,7 @@ crate::json_tagged!(Shape, "kind",
     Hatch => "hatch" { ring, holes, pattern, assoc, boundary },
     Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params, clip },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask, arms, blocks },
-    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles & face: crate::text::face::Face },
+    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles, breaks & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
     Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset, tiles },
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },

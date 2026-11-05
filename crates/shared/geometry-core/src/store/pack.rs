@@ -204,7 +204,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 37.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 38.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -819,8 +819,9 @@ impl Reader<'_> {
             // widths; each cell's words, row by row; the merged ranges; the alignments (−1
             // none); the heading flag; the lines (−1 all, else `TABLE_GRIDS`); the frame's
             // width (NaN none); the face. Kind 25 (docs/adr/0327 §1): a table with cell styles, 18's then the
-            // styles' JSON text.
-            18 | 25 => {
+            // styles' JSON text. Kind 38 (docs/adr/1030 §7): a table in parts, 25's (its styles `[]` when none) then
+            // the parts' depth, gap and the once flag.
+            18 | 25 | 38 => {
                 let p = self.pt()?;
                 let (rotation, height) = (self.num()?, self.num()?);
                 let rows = self.values()?.unwrap_or_default();
@@ -869,15 +870,24 @@ impl Reader<'_> {
                 let font = self.font()?;
                 let (bold, italic) = (self.flag()?, self.flag()?);
                 let oblique = self.num()?;
-                let styles = if kind == 25.0 {
+                let styles = if kind == 25.0 || kind == 38.0 {
                     let text = self.string()?.unwrap_or_default();
                     let json = crate::api::json::Json::parse(&text)?;
                     Some(<Vec<crate::entity::CellLook> as crate::api::json::FromJson>::from_json(&json)?)
+                        .filter(|s| !s.is_empty())
+                } else {
+                    None
+                };
+                let breaks = if kind == 38.0 {
+                    let (height, gap) = (self.num()?, self.num()?);
+                    let once = self.flag()?;
+                    Some(crate::entity::TableBreaks { height, gap: Some(gap), once: once.then_some(true) })
                 } else {
                     None
                 };
                 Shape::Table {
                     styles,
+                    breaks,
                     p,
                     rotation,
                     height,
@@ -1542,10 +1552,16 @@ impl Packer {
                 frame,
                 source: _,
                 styles,
+                breaks,
                 face,
             } => {
                 let styled = styles.as_ref().filter(|s| !s.is_empty());
-                self.put(&[if styled.is_some() { 25.0 } else { 18.0 }, p.x, p.y, *rotation, *height]);
+                let kind = match (breaks, styled) {
+                    (Some(_), _) => 38.0,
+                    (None, Some(_)) => 25.0,
+                    (None, None) => 18.0,
+                };
+                self.put(&[kind, p.x, p.y, *rotation, *height]);
                 self.values(Some(rows));
                 self.values(Some(columns));
                 for row in cells {
@@ -1590,6 +1606,12 @@ impl Packer {
                     let text = crate::api::json::to_string(list);
                     let w = self.string(&text);
                     self.put(&[w]);
+                } else if breaks.is_some() {
+                    let w = self.string("[]");
+                    self.put(&[w]);
+                }
+                if let Some(b) = breaks {
+                    self.put(&[b.height, b.gap.unwrap_or(0.0), flag(b.once == Some(true))]);
                 }
             }
         }

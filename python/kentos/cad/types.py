@@ -487,6 +487,20 @@ ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", 
 """The names of :class:`ArrangeMode`, for a plain string."""
 
 
+class ArrayCount(_StrEnum):
+    """How an associative array counts (docs/adr/1030 §3).
+
+    - ``items``: Each item an insert of its own (an item removed by hand is not there).
+    - ``whole``: The array one occurrence (Dizi) of its block; its items not counted apart.
+    """
+    ITEMS = "items"
+    WHOLE = "whole"
+
+
+ArrayCountName = Literal["items", "whole"]
+"""The names of :class:`ArrayCount`, for a plain string."""
+
+
 class ArrayFindKind(_StrEnum):
     """Requested pattern family. Omitted kind preserves the original linear search.
 
@@ -2138,6 +2152,29 @@ class EventSide(_StrEnum):
 
 EventSideName = Literal["right", "left"]
 """The names of :class:`EventSide`, for a plain string."""
+
+
+class ExtractAreaUnit(_StrEnum):
+    """An area's unit (CLAUDE.md §5: a dönüm 1000 m², a hectare 10000 m²)."""
+    M2 = "m2"
+    DONUM = "donum"
+    HA = "ha"
+
+
+ExtractAreaUnitName = Literal["m2", "donum", "ha"]
+"""The names of :class:`ExtractAreaUnit`, for a plain string."""
+
+
+class ExtractLengthUnit(_StrEnum):
+    """A length's unit."""
+    M = "m"
+    CM = "cm"
+    MM = "mm"
+    KM = "km"
+
+
+ExtractLengthUnitName = Literal["m", "cm", "mm", "km"]
+"""The names of :class:`ExtractLengthUnit`, for a plain string."""
 
 
 class FeedKind(_StrEnum):
@@ -8790,6 +8827,39 @@ class ExplodeDensity(_Union):
         return _variant(_EXPLODE_DENSITY, "ExplodeDensity", "kind", data).from_json(data)
 
 
+class ExtractValue(_Union):
+    """What a column writes of an occurrence (docs/adr/1030 §4).
+
+    One of:
+
+    - :class:`DrawingExtractValue` (``of: drawing``)
+    - :class:`KindExtractValue` (``of: kind``)
+    - :class:`BlockExtractValue` (``of: block``)
+    - :class:`LayerExtractValue` (``of: layer``)
+    - :class:`VariantExtractValue` (``of: variant``)
+    - :class:`AttributeExtractValue` (``of: attribute``)
+    - :class:`CountExtractValue` (``of: count``)
+    - :class:`LengthExtractValue` (``of: length``)
+    - :class:`AreaExtractValue` (``of: area``)
+    - :class:`MeasuredExtractValue` (``of: measured``)
+    - :class:`ShownExtractValue` (``of: shown``)
+    - :class:`OverriddenExtractValue` (``of: overridden``)
+    - :class:`ComputedExtractValue` (``of: computed``)
+    - :class:`JoinedExtractValue` (``of: joined``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "of"
+
+    @property
+    def of(self) -> str:
+        """The name of the variant (``of`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractValue:
+        return _variant(_EXTRACT_VALUE, "ExtractValue", "of", data).from_json(data)
+
+
 class FeatureChange(_Union):
     """One of:
 
@@ -10838,6 +10908,7 @@ class TableEdit(_Union):
     - :class:`HeaderTableEdit` (``kind: header``)
     - :class:`GridTableEdit` (``kind: grid``)
     - :class:`FrameTableEdit` (``kind: frame``)
+    - :class:`BreaksTableEdit` (``kind: breaks``)
     - :class:`SourceKeyTableEdit` (``kind: sourceKey``)
     - :class:`SourceRuleTableEdit` (``kind: sourceRule``)
     - :class:`UnlinkTableEdit` (``kind: unlink``)
@@ -10866,6 +10937,7 @@ class TableSource(_Union):
     - :class:`FileTableSource` (``kind: file``)
     - :class:`BlocksTableSource` (``kind: blocks``)
     - :class:`ScheduleTableSource` (``kind: schedule``)
+    - :class:`ExtractionTableSource` (``kind: extraction``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -22700,6 +22772,46 @@ class CorridorsWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CountScope(_Model):
+    """What a recipe counts (docs/adr/1030 §3): each choice open, none implied.
+    Attributes:
+        arrays: How an associative array counts.
+        hidden: Görünmeyen parçalar: a dynamic block's pieces its visibility state hides and the objects on a hidden or frozen
+            layer are counted too. Off: left out (the report says how many).
+        nested: İç içe bloklar: a block's objects are looked into, its nested inserts counted (each by its path), its pieces'
+            lengths and areas measured as placed. Off: the drawing's own objects alone.
+        xrefs: Dış referanslar: an external reference's content is looked into as a nested block's (its objects by their
+            source ids). Off: an external reference is one insert. A reference to a drawing the recipe reads itself is
+            never looked into: that drawing is counted once, as its own.
+    """
+    arrays: ArrayCount | ArrayCountName | Unset = UNSET
+    hidden: bool | Unset = UNSET
+    nested: bool | Unset = UNSET
+    xrefs: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.arrays is not UNSET:
+            out["arrays"] = _enum_out(self.arrays)
+        if self.hidden is not UNSET:
+            out["hidden"] = self.hidden
+        if self.nested is not UNSET:
+            out["nested"] = self.nested
+        if self.xrefs is not UNSET:
+            out["xrefs"] = self.xrefs
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CountScope:
+        return cls(
+            arrays=_enum_in(ArrayCount, data["arrays"]) if "arrays" in data else UNSET,
+            hidden=data.get("hidden", UNSET),
+            nested=data.get("nested", UNSET),
+            xrefs=data.get("xrefs", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CrossfallZero(_Model):
     """A station where a side's first lane's crossfall is zero.
     Attributes:
@@ -32824,6 +32936,494 @@ class ExportXyz(_Model):
             time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
             vertices=_enum_in(XyzVertices, data["vertices"]) if "vertices" in data else XyzVertices.POINTS,
             without_z=_enum_in(XyzWithoutZ, data["withoutZ"]) if "withoutZ" in data else XyzWithoutZ.ZERO,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractColumn(_Model):
+    """One column of a recipe.
+    Attributes:
+        label: Its heading; a quantity's unit is written after it in brackets (`Uzunluk (m)`). Not empty, one line.
+        decimals: A quantity's decimals; absent: the project's (lengths' for a length or a dimension, areas' for an area, 0 for
+            a count, the column's it multiplies for a computed one). Unit: count.
+    """
+    label: str
+    value: ExtractValue
+    decimals: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["value"] = self.value.to_json()
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractColumn:
+        return cls(
+            label=data["label"],
+            value=ExtractValue.from_json(data["value"]),
+            decimals=data.get("decimals", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractJoin(_Model):
+    """A description table joined to the rows (docs/adr/1030 §5): a CSV, XLSX or ODS file's sheet whose first row names
+    its columns; its row whose `key` column reads as a row's `on` column is that row's.
+    Attributes:
+        path: Its path, absolute or from the drawing's folder.
+        key: The file's key column's heading: its words unique and not empty on every row.
+        on: The recipe's column (by index, a word column not joined) whose words are looked up. Unit: index.
+    """
+    path: str
+    key: str
+    on: int
+    sheet: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["key"] = self.key
+        out["on"] = self.on
+        if self.sheet is not UNSET:
+            out["sheet"] = self.sheet
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractJoin:
+        return cls(
+            path=data["path"],
+            key=data["key"],
+            on=data["on"],
+            sheet=data.get("sheet", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractNotes(_Model):
+    """What an extraction left out or could not match.
+    Attributes:
+        hidden: Hidden pieces and objects on hidden or frozen layers left out. Unit: count.
+        unloaded: External references not loaded, by block name.
+        read_apart: External references not looked into: the recipe reads their drawing itself.
+        repeated: Occurrences reached twice and counted once. Unit: count.
+        angles: Dimensions whose measure is an angle (no length). Unit: count.
+        overrides: Dimensions whose text overrides their measure. Unit: count.
+        unmatched: Join keys the joined table lacks.
+        unused: The joined table's keys no row used.
+        too_deep: Nested blocks past the deepest level not looked into. Unit: count.
+    """
+    hidden: int
+    unloaded: list[str]
+    read_apart: list[str]
+    repeated: int
+    angles: int
+    overrides: int
+    unmatched: list[str]
+    unused: list[str]
+    too_deep: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["hidden"] = self.hidden
+        out["unloaded"] = list(self.unloaded)
+        out["readApart"] = list(self.read_apart)
+        out["repeated"] = self.repeated
+        out["angles"] = self.angles
+        out["overrides"] = self.overrides
+        out["unmatched"] = list(self.unmatched)
+        out["unused"] = list(self.unused)
+        out["tooDeep"] = self.too_deep
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractNotes:
+        return cls(
+            hidden=data["hidden"],
+            unloaded=list(data["unloaded"]),
+            read_apart=list(data["readApart"]),
+            repeated=data["repeated"],
+            angles=data["angles"],
+            overrides=data["overrides"],
+            unmatched=list(data["unmatched"]),
+            unused=list(data["unused"]),
+            too_deep=data["tooDeep"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractRan(_Model):
+    """Output of `cad.extract.run` v1.
+    Attributes:
+        quantities: Which columns are quantities.
+        occurrences: How many occurrences were counted. Unit: count.
+        read: The other drawings and the joined file as read now.
+        stale: With `table`: whether Tabloyu güncelle would change its extracted cells (its sources changed since).
+        total: The Toplam row's cells, when the recipe totals.
+        totals: Its quantity columns' unrounded sums. Unit: value.
+    """
+    headings: list[str]
+    quantities: list[bool]
+    rows: list[ExtractRow]
+    occurrences: int
+    read: list[ExtractRead]
+    notes: ExtractNotes
+    revision: str
+    stale: bool | None | Unset = UNSET
+    total: list[str] | None | Unset = UNSET
+    totals: list[float | None] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["headings"] = list(self.headings)
+        out["quantities"] = list(self.quantities)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["occurrences"] = self.occurrences
+        out["read"] = [e0.to_json() for e0 in self.read]
+        out["notes"] = self.notes.to_json()
+        out["revision"] = self.revision
+        if self.stale is not UNSET:
+            out["stale"] = self.stale
+        if self.total is not UNSET:
+            out["total"] = None if self.total is None else list(self.total)
+        if self.totals is not UNSET:
+            out["totals"] = None if self.totals is None else [None if e0 is None else float(e0) for e0 in self.totals]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractRan:
+        return cls(
+            headings=list(data["headings"]),
+            quantities=list(data["quantities"]),
+            rows=[ExtractRow.from_json(e0) for e0 in data["rows"]],
+            occurrences=data["occurrences"],
+            read=[ExtractRead.from_json(e0) for e0 in data["read"]],
+            notes=ExtractNotes.from_json(data["notes"]),
+            revision=data["revision"],
+            stale=data.get("stale", UNSET),
+            total=UNSET if "total" not in data else None if data["total"] is None else list(data["total"]),
+            totals=UNSET if "totals" not in data else None if data["totals"] is None else [None if e0 is None else float(e0) for e0 in data["totals"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractRead(_Model):
+    """A source an extraction table was written from, as last read: a drawing or the joined file by its path as the
+    recipe gives it and the SHA-256 of its bytes.
+    """
+    path: str
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractRead:
+        return cls(
+            path=data["path"],
+            digest=data["digest"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractRow(_Model):
+    """One row worked out.
+    Attributes:
+        key: Its key: a grouped row's word cells joined by U+001F, an ungrouped row's occurrence path.
+        values: Each column's unrounded value in its unit (a quantity's); null for words or an empty cell. Unit: value.
+        members: Its occurrences' paths: the drawing (its path as the recipe names it, empty for the open one), `#`, the
+            object's persistent id, each nested piece's local id (`/12`, an external reference's piece `/x:<id>`); an
+            array counted whole `#dizi:<id>`.
+    """
+    key: str
+    cells: list[str]
+    values: list[float | None]
+    members: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["cells"] = list(self.cells)
+        out["values"] = [None if e0 is None else float(e0) for e0 in self.values]
+        out["members"] = list(self.members)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractRow:
+        return cls(
+            key=data["key"],
+            cells=list(data["cells"]),
+            values=[None if e0 is None else float(e0) for e0 in data["values"]],
+            members=list(data["members"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractRun(_Model):
+    """Input of `cad.extract.run` v1: a recipe, or an extraction table whose recipe is worked out (and said whether it
+    is current).
+    Attributes:
+        base: The folder relative paths are read from (the drawing's).
+        drawing_path: The open drawing's own file: a recipe naming it is refused (it would be counted twice).
+        table: An extraction table by its persistent id.
+    """
+    base: str | None | Unset = UNSET
+    drawing_path: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    recipe: ExtractionRecipe | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.base is not UNSET:
+            out["base"] = self.base
+        if self.drawing_path is not UNSET:
+            out["drawingPath"] = self.drawing_path
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.recipe is not UNSET:
+            out["recipe"] = None if self.recipe is None else self.recipe.to_json()
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractRun:
+        return cls(
+            base=data.get("base", UNSET),
+            drawing_path=data.get("drawingPath", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            recipe=UNSET if "recipe" not in data else None if data["recipe"] is None else ExtractionRecipe.from_json(data["recipe"]),
+            table=data.get("table", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractSort(_Model):
+    """A sort key: a column by index, up or down.
+    Attributes:
+        column: Unit: index.
+    """
+    column: int
+    descending: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        if self.descending is not UNSET:
+            out["descending"] = self.descending
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractSort:
+        return cls(
+            column=data["column"],
+            descending=data.get("descending", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractTable(_Model):
+    """Input of `cad.extract.table` v1: a recipe written as a table at `at` (its top left corner), keeping the recipe.
+    Attributes:
+        at: Unit: length.
+        breaks: Its parts (Tabloyu böl, docs/adr/1030 §7): each at most `breaks.height` deep, the heading row atop each;
+            absent: one part.
+        height: Its words' height, metres; absent: the project's table height at its plot scale. Unit: length.
+        layer_id: Its layer; absent: the active one.
+        overrides: What Tabloyu güncelle does with a cell changed by hand whose source changed too; absent: keep (refuse the
+            refresh, saying so).
+    """
+    recipe: ExtractionRecipe
+    at: Vec2
+    base: str | None | Unset = UNSET
+    breaks: TableBreaks | None | Unset = UNSET
+    drawing_path: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    overrides: SourceOverrides | SourceOverridesName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["recipe"] = self.recipe.to_json()
+        out["at"] = _vec2_out(self.at)
+        if self.base is not UNSET:
+            out["base"] = self.base
+        if self.breaks is not UNSET:
+            out["breaks"] = None if self.breaks is None else self.breaks.to_json()
+        if self.drawing_path is not UNSET:
+            out["drawingPath"] = self.drawing_path
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.overrides is not UNSET:
+            out["overrides"] = None if self.overrides is None else _enum_out(self.overrides)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractTable:
+        return cls(
+            recipe=ExtractionRecipe.from_json(data["recipe"]),
+            at=Vec2.from_json(data["at"]),
+            base=data.get("base", UNSET),
+            breaks=UNSET if "breaks" not in data else None if data["breaks"] is None else TableBreaks.from_json(data["breaks"]),
+            drawing_path=data.get("drawingPath", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            layer_id=data.get("layerId", UNSET),
+            overrides=UNSET if "overrides" not in data else None if data["overrides"] is None else _enum_in(SourceOverrides, data["overrides"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractTablePlan(_Model):
+    """What `cad.extract.table` would write (plan mode).
+    Attributes:
+        rows: Unit: count.
+        occurrences: Unit: count.
+    """
+    table: Entity
+    rows: int
+    occurrences: int
+    notes: ExtractNotes
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table.to_json()
+        out["rows"] = self.rows
+        out["occurrences"] = self.occurrences
+        out["notes"] = self.notes.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractTablePlan:
+        return cls(
+            table=Entity.from_json(data["table"]),
+            rows=data["rows"],
+            occurrences=data["occurrences"],
+            notes=ExtractNotes.from_json(data["notes"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractTabled(_Model):
+    """Output of `cad.extract.table` v1.
+    Attributes:
+        uid: The table's persistent id.
+        rows: Its data rows. Unit: count.
+        occurrences: Unit: count.
+    """
+    uid: str
+    rows: int
+    occurrences: int
+    notes: ExtractNotes
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["rows"] = self.rows
+        out["occurrences"] = self.occurrences
+        out["notes"] = self.notes.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractTabled:
+        return cls(
+            uid=data["uid"],
+            rows=data["rows"],
+            occurrences=data["occurrences"],
+            notes=ExtractNotes.from_json(data["notes"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractionRecipe(_Model):
+    """A data extraction recipe (docs/adr/1030 §2).
+    Attributes:
+        name: Its name (Tarif adı); not empty, one line, at most 100 letters.
+        columns: The columns, in order; at least one, at most [`MAX_EXTRACT_COLUMNS`].
+        blocks: The blocks whose inserts are taken, by name (Turkish case folded as block names are); none named: every block.
+        current: The open drawing is read (default yes).
+        drawings: Other drawings read (read only: never saved nor changed): `.kcad` or KentOS JSON paths, absolute or from the
+            drawing's folder; each once, at most [`MAX_EXTRACT_DRAWINGS`].
+        group: Alike rows one (Benzer satırları birleştir): rows whose word columns read the same, their quantities summed.
+        join: A description table joined by a key (Dış veriyle eşle).
+        kinds: The kinds taken ([`EXTRACT_KINDS`]); none named: inserts.
+        layers: The layers whose objects are taken, by name (an object's effective layer: a block's piece on the block's layer
+            is on its insert's); none named: every layer.
+        scope: What is counted (docs/adr/1030 §3).
+        sort: The rows' order: by these columns in turn; ties keep the reading order.
+        total: A last row, Toplam, with every quantity column's sum.
+    """
+    name: str
+    columns: list[ExtractColumn]
+    blocks: list[str] | Unset = UNSET
+    current: bool | Unset = UNSET
+    drawings: list[str] | Unset = UNSET
+    group: bool | Unset = UNSET
+    join: ExtractJoin | None | Unset = UNSET
+    kinds: list[str] | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    scope: CountScope | Unset = UNSET
+    sort: list[ExtractSort] | Unset = UNSET
+    total: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        if self.blocks is not UNSET:
+            out["blocks"] = list(self.blocks)
+        if self.current is not UNSET:
+            out["current"] = self.current
+        if self.drawings is not UNSET:
+            out["drawings"] = list(self.drawings)
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.join is not UNSET:
+            out["join"] = None if self.join is None else self.join.to_json()
+        if self.kinds is not UNSET:
+            out["kinds"] = list(self.kinds)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.scope is not UNSET:
+            out["scope"] = self.scope.to_json()
+        if self.sort is not UNSET:
+            out["sort"] = [e0.to_json() for e0 in self.sort]
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractionRecipe:
+        return cls(
+            name=data["name"],
+            columns=[ExtractColumn.from_json(e0) for e0 in data["columns"]],
+            blocks=list(data["blocks"]) if "blocks" in data else UNSET,
+            current=data.get("current", UNSET),
+            drawings=list(data["drawings"]) if "drawings" in data else UNSET,
+            group=data.get("group", UNSET),
+            join=UNSET if "join" not in data else None if data["join"] is None else ExtractJoin.from_json(data["join"]),
+            kinds=list(data["kinds"]) if "kinds" in data else UNSET,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            scope=CountScope.from_json(data["scope"]) if "scope" in data else UNSET,
+            sort=[ExtractSort.from_json(e0) for e0 in data["sort"]] if "sort" in data else UNSET,
+            total=data.get("total", UNSET),
         )
 
 
@@ -83660,6 +84260,36 @@ class SystemColumns(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TableBreaks(_Model):
+    """A table drawn in parts (docs/adr/1030 §7): each part at most `height` metres deep (it takes rows while they fit,
+    at least one, the first the heading row and one more, never cutting a merged range), the next `gap` metres along
+    its rows from the one before, the heading row drawn again at the top of each unless `once`.
+    Attributes:
+        height: Unit: length.
+        gap: Unit: length.
+    """
+    height: float
+    gap: float = 0.0
+    once: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["height"] = float(self.height)
+        out["gap"] = float(self.gap)
+        if self.once is not UNSET:
+            out["once"] = self.once
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableBreaks:
+        return cls(
+            height=float(data["height"]),
+            gap=float(data["gap"]) if "gap" in data else 0.0,
+            once=data.get("once", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TableCheck(_Model):
     """A CHECK constraint of a bound table (docs/adr/0755 §1).
     Attributes:
@@ -83712,6 +84342,7 @@ class TableEntity(Entity):
         aligns: Each column's alignment, as many as there are columns; absent: all left.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        breaks: Its parts (Tabloyu böl, docs/adr/1030 §7, `.kcad` schema 182); absent: one part.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -83760,6 +84391,7 @@ class TableEntity(Entity):
     aligns: list[TableAlign | TableAlignName] | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     bold: bool | Unset = UNSET
+    breaks: TableBreaks | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     fields: list[CellField] | Unset = UNSET
@@ -83803,6 +84435,8 @@ class TableEntity(Entity):
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bold is not UNSET:
             out["bold"] = self.bold
+        if self.breaks is not UNSET:
+            out["breaks"] = None if self.breaks is None else self.breaks.to_json()
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -83870,6 +84504,7 @@ class TableEntity(Entity):
             aligns=UNSET if "aligns" not in data else None if data["aligns"] is None else [_enum_in(TableAlign, e0) for e0 in data["aligns"]],
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bold=data.get("bold", UNSET),
+            breaks=UNSET if "breaks" not in data else None if data["breaks"] is None else TableBreaks.from_json(data["breaks"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             fields=[CellField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
@@ -100126,6 +100761,241 @@ class DeviationExplodeDensity(ExplodeDensity):
 
 
 @dataclass(kw_only=True, slots=True)
+class DrawingExtractValue(ExtractValue):
+    """The drawing it is in: its file's name, Bu çizim for the open one."""
+    TAG_VALUE: ClassVar[str] = "drawing"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "drawing"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class KindExtractValue(ExtractValue):
+    """Its kind's Turkish name (Blok, Çizgi …; Dizi for an array counted whole)."""
+    TAG_VALUE: ClassVar[str] = "kind"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "kind"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KindExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockExtractValue(ExtractValue):
+    """Its block's name; empty for another kind."""
+    TAG_VALUE: ClassVar[str] = "block"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "block"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerExtractValue(ExtractValue):
+    """Its effective layer's name."""
+    TAG_VALUE: ClassVar[str] = "layer"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "layer"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class VariantExtractValue(ExtractValue):
+    """A dynamic block's variant: its parameter values that differ from the defaults, `name=value` by name, `; `
+    between; empty for the defaults and for another kind.
+    """
+    TAG_VALUE: ClassVar[str] = "variant"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "variant"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VariantExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class AttributeExtractValue(ExtractValue):
+    """An attribute's effective value (a constant's, the insert's, the definition's default) or the object's datum."""
+    TAG_VALUE: ClassVar[str] = "attribute"
+    tag: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "attribute"}
+        out["tag"] = self.tag
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttributeExtractValue:
+        return cls(
+            tag=data["tag"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CountExtractValue(ExtractValue):
+    """Adet: one an occurrence."""
+    TAG_VALUE: ClassVar[str] = "count"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "count"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CountExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class LengthExtractValue(ExtractValue):
+    """Uzunluk: a curve's length (a closed one's perimeter, an area's with its holes), placed as it is drawn."""
+    TAG_VALUE: ClassVar[str] = "length"
+    unit: ExtractLengthUnit | ExtractLengthUnitName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "length"}
+        if self.unit is not UNSET:
+            out["unit"] = _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LengthExtractValue:
+        return cls(
+            unit=_enum_in(ExtractLengthUnit, data["unit"]) if "unit" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreaExtractValue(ExtractValue):
+    """Alan: a closed object's area net of its holes, placed as it is drawn."""
+    TAG_VALUE: ClassVar[str] = "area"
+    unit: ExtractAreaUnit | ExtractAreaUnitName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "area"}
+        if self.unit is not UNSET:
+            out["unit"] = _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaExtractValue:
+        return cls(
+            unit=_enum_in(ExtractAreaUnit, data["unit"]) if "unit" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeasuredExtractValue(ExtractValue):
+    """Gerçek ölçü: a length dimension's measured value from its geometry (never its written text)."""
+    TAG_VALUE: ClassVar[str] = "measured"
+    unit: ExtractLengthUnit | ExtractLengthUnitName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "measured"}
+        if self.unit is not UNSET:
+            out["unit"] = _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeasuredExtractValue:
+        return cls(
+            unit=_enum_in(ExtractLengthUnit, data["unit"]) if "unit" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShownExtractValue(ExtractValue):
+    """Yazılan: a dimension's text as shown (words, never summed)."""
+    TAG_VALUE: ClassVar[str] = "shown"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "shown"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShownExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class OverriddenExtractValue(ExtractValue):
+    """Elle yazılmış: whether a dimension's text overrides its measure (evet, hayır)."""
+    TAG_VALUE: ClassVar[str] = "overridden"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "overridden"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OverriddenExtractValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ComputedExtractValue(ExtractValue):
+    """Hesaplanan: an earlier quantity column (by index) times `factor` (a decimal number, `.` before its fraction),
+    in `unit` (one line; may be empty for a pure number).
+    Attributes:
+        column: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "computed"
+    column: int
+    factor: str
+    unit: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "computed"}
+        out["column"] = self.column
+        out["factor"] = self.factor
+        out["unit"] = self.unit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ComputedExtractValue:
+        return cls(
+            column=data["column"],
+            factor=data["factor"],
+            unit=data["unit"] if "unit" in data else "",
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinedExtractValue(ExtractValue):
+    """A joined table's column by its heading (the join's row whose key is this row's key column's words)."""
+    TAG_VALUE: ClassVar[str] = "joined"
+    field: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"of": "joined"}
+        out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinedExtractValue:
+        return cls(
+            field=data["field"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFeatureChange(FeatureChange):
     """A new object; the client picks the UUID so a retry cannot create it twice."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -110143,8 +111013,8 @@ class ResectionSurveyWork(SurveyWork):
 
 @dataclass(kw_only=True, slots=True)
 class SetCellTableEdit(TableEdit):
-    """The cell's words (one line); words beginning with `=` are its formula, its words then its result. A cell
-    inside a merged range is its top left's.
+    """The cell's words (at most 20 lines, `\\n` between them; docs/adr/1030 §7); words beginning with `=` are its
+    formula, its words then its result. A cell inside a merged range is its top left's.
     Attributes:
         row: Unit: index.
         col: Unit: index.
@@ -110534,7 +111404,8 @@ class ColumnWidthTableEdit(TableEdit):
 @dataclass(kw_only=True, slots=True)
 class FitTableEdit(TableEdit):
     """Sığdır: `count` columns from `from` as wide as their words ask, in the drawing's typeface; with `grow` only
-    those narrower get wider; with `rows` every row `ROW` text heights high too (Yazıya sığdır).
+    those narrower get wider; with `rows` every row `ROW` text heights high too, and `LINE` heights more for each
+    further line of its cells (Yazıya sığdır).
     Attributes:
         from_: Unit: index.
         count: Unit: count.
@@ -110649,6 +111520,27 @@ class FrameTableEdit(TableEdit):
     def from_json(cls, data: Mapping[str, Any]) -> FrameTableEdit:
         return cls(
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BreaksTableEdit(TableEdit):
+    """Tabloyu böl (docs/adr/1030 §7): the table drawn in parts at most `breaks.height` deep, the heading row again
+    atop each (null: one part).
+    """
+    TAG_VALUE: ClassVar[str] = "breaks"
+    breaks: TableBreaks | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "breaks"}
+        if self.breaks is not UNSET:
+            out["breaks"] = None if self.breaks is None else self.breaks.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BreaksTableEdit:
+        return cls(
+            breaks=UNSET if "breaks" not in data else None if data["breaks"] is None else TableBreaks.from_json(data["breaks"]),
         )
 
 
@@ -110888,6 +111780,50 @@ class ScheduleTableSource(TableSource):
             sort=[ScheduleSort.from_json(e0) for e0 in data["sort"]] if "sort" in data else UNSET,
             total=data.get("total", UNSET),
             units=[list(e0) for e0 in data["units"]] if "units" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtractionTableSource(TableSource):
+    """Veri çıkarımı (docs/adr/1030): a recipe's rows from the open drawing and other drawings read only, with what
+    they were written from (the sources' digests, the rows' keys, the cells last extracted); written again by
+    Tabloyu güncelle, never at every step (a drawing it reads is a file).
+    Attributes:
+        copy: The extracted cells as last written (heading, data rows, total): a cell of them that the table reads otherwise
+            was changed by hand. Only the recipe's columns: the table's further columns are the user's.
+        keys: Each data row's key as last extracted, in the rows' order: a grouped row's word cells, an ungrouped row's
+            occurrence path; unique.
+        overrides: What Tabloyu güncelle does with a cell changed by hand whose source changed too.
+        read: The other drawings and the joined file as last read.
+    """
+    TAG_VALUE: ClassVar[str] = "extraction"
+    recipe: ExtractionRecipe
+    copy: list[list[str]] | Unset = UNSET
+    keys: list[str] | Unset = UNSET
+    overrides: SourceOverrides | SourceOverridesName | Unset = UNSET
+    read: list[ExtractRead] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "extraction"}
+        out["recipe"] = self.recipe.to_json()
+        if self.copy is not UNSET:
+            out["copy"] = [list(e0) for e0 in self.copy]
+        if self.keys is not UNSET:
+            out["keys"] = list(self.keys)
+        if self.overrides is not UNSET:
+            out["overrides"] = _enum_out(self.overrides)
+        if self.read is not UNSET:
+            out["read"] = [e0.to_json() for e0 in self.read]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtractionTableSource:
+        return cls(
+            recipe=ExtractionRecipe.from_json(data["recipe"]),
+            copy=[list(e0) for e0 in data["copy"]] if "copy" in data else UNSET,
+            keys=list(data["keys"]) if "keys" in data else UNSET,
+            overrides=_enum_in(SourceOverrides, data["overrides"]) if "overrides" in data else UNSET,
+            read=[ExtractRead.from_json(e0) for e0 in data["read"]] if "read" in data else UNSET,
         )
 
 
@@ -112723,6 +113659,9 @@ _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometr
 _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensity, "step": StepExplodeDensity, "deviation": DeviationExplodeDensity}
 
 
+_EXTRACT_VALUE: dict[str, type[ExtractValue]] = {"drawing": DrawingExtractValue, "kind": KindExtractValue, "block": BlockExtractValue, "layer": LayerExtractValue, "variant": VariantExtractValue, "attribute": AttributeExtractValue, "count": CountExtractValue, "length": LengthExtractValue, "area": AreaExtractValue, "measured": MeasuredExtractValue, "shown": ShownExtractValue, "overridden": OverriddenExtractValue, "computed": ComputedExtractValue, "joined": JoinedExtractValue}
+
+
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "edit": EditFeatureChange, "delete": DeleteFeatureChange}
 
 
@@ -112981,10 +113920,10 @@ _SUPERELEVATION_METHOD: dict[str, type[SuperelevationMethod]] = {"curves": Curve
 _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "polar": PolarSurveyWork, "forward": ForwardSurveyWork, "resection": ResectionSurveyWork}
 
 
-_TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "sourceKey": SourceKeyTableEdit, "sourceRule": SourceRuleTableEdit, "unlink": UnlinkTableEdit}
+_TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "breaks": BreaksTableEdit, "sourceKey": SourceKeyTableEdit, "sourceRule": SourceRuleTableEdit, "unlink": UnlinkTableEdit}
 
 
-_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource}
+_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource, "extraction": ExtractionTableSource}
 
 
 _TABLES_OPERATION: dict[str, type[TablesOperation]] = {"edit": EditTablesOperation, "refresh": RefreshTablesOperation, "link": LinkTablesOperation, "unlink": UnlinkTablesOperation}
@@ -113207,6 +114146,7 @@ __all__ = [
     "ArchSettings",
     "ArchStatus",
     "ArchStatusName",
+    "AreaExtractValue",
     "AreaLabelMode",
     "AreaLabelModeName",
     "AreaLevel",
@@ -113228,6 +114168,8 @@ __all__ = [
     "ArrangeModeName",
     "ArrangeTransform",
     "ArrayBlockAction",
+    "ArrayCount",
+    "ArrayCountName",
     "ArrayEdit",
     "ArrayFindKind",
     "ArrayFindKindName",
@@ -113279,6 +114221,7 @@ __all__ = [
     "AttachmentsInspect",
     "AttachmentsInspected",
     "AttributeDefinition",
+    "AttributeExtractValue",
     "AttributeFilter",
     "AttributeOp",
     "AttributeOpName",
@@ -113322,6 +114265,7 @@ __all__ = [
     "BlockDefinition",
     "BlockEditOperation",
     "BlockEditOperationName",
+    "BlockExtractValue",
     "BlockFileExported",
     "BlockFileImported",
     "BlockFileMode",
@@ -113375,6 +114319,7 @@ __all__ = [
     "BreakLine",
     "BreakLineName",
     "BreaksSectionStations",
+    "BreaksTableEdit",
     "BuildingProgram",
     "CadElement",
     "CadImportScale",
@@ -113528,6 +114473,7 @@ __all__ = [
     "CompareAgainst",
     "ComponentEdge",
     "ComponentHatch",
+    "ComputedExtractValue",
     "ConcentricConstraintRule",
     "ConflictField",
     "ConflictKind",
@@ -113598,6 +114544,8 @@ __all__ = [
     "CorridorsWatered",
     "CorridorsWritten",
     "CountExplodeDensity",
+    "CountExtractValue",
+    "CountScope",
     "CreateBlockChange",
     "CreateDomainsOp",
     "CreateFeatureChange",
@@ -113836,6 +114784,7 @@ __all__ = [
     "DrawingAudited",
     "DrawingCompare",
     "DrawingCompared",
+    "DrawingExtractValue",
     "DrawingFont",
     "DrawingFontName",
     "DrawingInspect",
@@ -114005,6 +114954,24 @@ __all__ = [
     "ExtensionPointConstruction",
     "ExtentSourcesEditOp",
     "ExtentsPaperPlotArea",
+    "ExtractAreaUnit",
+    "ExtractAreaUnitName",
+    "ExtractColumn",
+    "ExtractJoin",
+    "ExtractLengthUnit",
+    "ExtractLengthUnitName",
+    "ExtractNotes",
+    "ExtractRan",
+    "ExtractRead",
+    "ExtractRow",
+    "ExtractRun",
+    "ExtractSort",
+    "ExtractTable",
+    "ExtractTablePlan",
+    "ExtractTabled",
+    "ExtractValue",
+    "ExtractionRecipe",
+    "ExtractionTableSource",
     "FactorsLedgerBy",
     "FeatureChange",
     "FeatureFeed",
@@ -114414,6 +115381,7 @@ __all__ = [
     "JoinTotal",
     "JoinView",
     "JoinWallsOperation",
+    "JoinedExtractValue",
     "JoinsAnswer",
     "JoinsEdit",
     "JoinsEdited",
@@ -114449,6 +115417,7 @@ __all__ = [
     "JunctionsTied",
     "JunctionsWritten",
     "KeySourcesEditOp",
+    "KindExtractValue",
     "KmAsk",
     "KmPlaces",
     "KnownPoint",
@@ -114499,6 +115468,7 @@ __all__ = [
     "LayerDerivation",
     "LayerEditOperation",
     "LayerEditOperationName",
+    "LayerExtractValue",
     "LayerField",
     "LayerFieldKind",
     "LayerFieldKindName",
@@ -114598,6 +115568,7 @@ __all__ = [
     "LegendPaperItemKind",
     "LegendPlan",
     "LegendsMaterials",
+    "LengthExtractValue",
     "LengthPartitionExtent",
     "LengthStyle",
     "LengthStyleName",
@@ -114706,6 +115677,7 @@ __all__ = [
     "MaterialsEdited",
     "MaterialsFile",
     "MaterialsOperation",
+    "MeasuredExtractValue",
     "MeasuredPoint",
     "MedianRoadWork",
     "Meeting",
@@ -114980,6 +115952,7 @@ __all__ = [
     "OrdinateDimensionMeasure",
     "OriginHatchEdit",
     "OriginUcsTo",
+    "OverriddenExtractValue",
     "PackageEmbedded",
     "PackageLeft",
     "PackageProject",
@@ -115916,6 +116889,7 @@ __all__ = [
     "SheetsSetResult",
     "ShiftWallsOperation",
     "ShowHeaderPaperEmptyTable",
+    "ShownExtractValue",
     "ShpColumnAsText",
     "ShpColumnRenamed",
     "ShpEncoding",
@@ -116234,6 +117208,7 @@ __all__ = [
     "TabFormItem",
     "TableAlign",
     "TableAlignName",
+    "TableBreaks",
     "TableCheck",
     "TableEdit",
     "TableEntity",
@@ -116491,6 +117466,7 @@ __all__ = [
     "VariableKind",
     "VariableKindName",
     "VariableValue",
+    "VariantExtractValue",
     "Vec2",
     "Vec2Like",
     "VelocityModel",

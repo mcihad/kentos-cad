@@ -54,7 +54,8 @@ pub const LABEL_PIECE_LINE: f64 = 12.0;
 
 /// One cell's words of a table (docs/adr/0184 §2): x, y where its baseline
 /// starts, a the table's rotation, b its row, c its column, d 1 when bold (a
-/// heading row's, or the face's); its words and face are the table's.
+/// heading row's, or the face's), e which of its words' lines (docs/adr/1030 §7); its words and face are the
+/// table's.
 pub const LABEL_CELL: f64 = 13.0;
 
 /// Numbers per label record.
@@ -389,7 +390,7 @@ impl Store {
                             c.row as f64,
                             c.col as f64,
                             if c.bold { 1.0 } else { 0.0 },
-                            0.0,
+                            c.line as f64,
                         ]);
                     }
                 }

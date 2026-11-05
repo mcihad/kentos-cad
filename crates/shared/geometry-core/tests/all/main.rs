@@ -96,3 +96,4 @@ mod wall_length;
 mod walls;
 mod wall_pick;
 mod view_links;
+mod table_parts;

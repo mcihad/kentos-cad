@@ -1853,6 +1853,7 @@ impl Spatial {
                         row: r[5] as usize,
                         col: r[6] as usize,
                         bold: r[7] == 1.0,
+                        line: r[8] as usize,
                     }
                 } else if what == LABEL_PIECE_DIMENSION {
                     let Shape::Dimension {
@@ -2166,6 +2167,8 @@ pub enum LabelSpot {
         row: usize,
         col: usize,
         bold: bool,
+        /// Which of its words' lines (docs/adr/1030 §7).
+        line: usize,
     },
     /// A dimension's value among a block's pieces, as `Dimension`, its own
     /// text when it has one and `height` as placed.

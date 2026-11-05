@@ -247,6 +247,7 @@ pub use kentos_native_application::style_tables;
 pub mod styles;
 pub mod table;
 pub mod table_place;
+pub mod extract_place;
 pub mod templates;
 pub mod text;
 pub mod text_along;

@@ -1570,7 +1570,9 @@ def table_shape(e):
     """The contract's table rule, as far as an example needs it held (docs/adr/0184 §1)."""
     n, m = len(e["rows"]), len(e["columns"])
     assert 0 < n and 0 < m and len(e["cells"]) == n and all(len(r) == m for r in e["cells"]), "hücreler satır ve sütun sayısı kadar"
-    assert all(not any(ord(c) < 32 or 0x7F <= ord(c) <= 0x9F for c in w) for r in e["cells"] for w in r), "hücre tek satır"
+    # A line break is a cell's (schema 182, docs/adr/1030 §7), at most 20 lines; no other control character.
+    assert all(not any((ord(c) < 32 and c != "\n") or 0x7F <= ord(c) <= 0x9F for c in w) and w.count("\n") < 20
+               for r in e["cells"] for w in r), "hücrede satır sonundan başka denetim karakteri yok"
     assert e.get("merges", [None]), "boş birleşik alan listesi yazılmaz"
     assert len(e.get("aligns", e["columns"])) == m, "her sütunun hizası"
     if "frame" in e:
@@ -1581,11 +1583,12 @@ def table_parts(e):
     """A table's contract form as the file holds it (schema 68, docs/adr/0327 §4–§5): a block schedule's source under
     `schedule`, a linked file's path, digest, copy and rule under `link` beside its name and sheet."""
     src = e.get("source")
-    if src is None or src["kind"] not in ("blocks", "file", "schedule"):
+    if src is None or src["kind"] not in ("blocks", "file", "schedule", "extraction"):
         return e
     e = dict(e)
-    # Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects as a block schedule.
-    if src["kind"] in ("blocks", "schedule"):
+    # Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects as a block schedule; schema 182's data
+    # extraction table too (docs/adr/1030 §6).
+    if src["kind"] in ("blocks", "schedule", "extraction"):
         assert src.get("names", [None]), "boş ad listesi yazılmaz"
         e["schedule"] = e.pop("source")
         return e
@@ -1868,6 +1871,8 @@ KINDS = {
         "fields": (opaque, False),
         "link": (opaque, False),
         "schedule": (opaque, False),
+        # Schema 182 (docs/adr/1030 §7): its parts, as their JSON.
+        "breaks": (opaque, False),
     },
     # Schema 24 (docs/adr/0192): a picture's frame, one source, its clip in its own fractions, its opacity; `mirror`
     # only when true; only in the drawing.
@@ -2466,6 +2471,11 @@ def document(d):
     if any(v.get("method") == "grid" or "cell" in v for v in road.get("volumes", [])):
         # An earthwork volume on a grid and its cell (docs/adr/0974).
         schema = max(schema, 179)
+    tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
+    if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
+           or any("\n" in w for r in t["cells"] for w in r) for t in tables):
+        # A table's parts, a cell of several lines or a data extraction table (docs/adr/1030).
+        schema = max(schema, 182)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3336,7 +3346,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-182.kcad"] = container(root(cmap(parts), version=uint(182)))
+    files["schema-version-183.kcad"] = container(root(cmap(parts), version=uint(183)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5797,6 +5807,36 @@ def build():
     assert gd.count(b"\x67version\x18\xb3") == 1, "a volume on a grid is schema 179"
     out["road-volume-grid.kcad"] = container(gd)
     out["broken/road-volume-grid-in-schema-178.kcad"] = container(gd.replace(b"\x67version\x18\xb3", b"\x67version\x18\xb2"))
+    # Schema 182 (docs/adr/1030): a table's parts, a cell of several lines and a data extraction table; schema 181
+    # refuses each of them.
+    extracted = load("table-extraction.json")
+    xd = document(extracted)
+    assert xd.count(b"\x67version\x18\xb6") == 1, "a table's parts and an extraction table are schema 182"
+    out["table-extraction.kcad"] = container(xd)
+
+    def in_181(change):
+        doc = copy.deepcopy(extracted)
+        change(doc)
+        body = document(doc)
+        assert body.count(b"\x67version\x18\xb6") == 1, "schema 182"
+        return container(body.replace(b"\x67version\x18\xb6", b"\x67version\x18\xb5"))
+
+    def only(keep):
+        def change(doc):
+            t = doc["entities"][0]
+            if keep != "breaks":
+                t.pop("breaks")
+            if keep != "lines":
+                t["cells"][1][2] = "Toplantı odası"
+                doc["entities"] = doc["entities"][:1]
+                doc["uids"] = doc["uids"][:1]
+            if keep != "extraction":
+                t.pop("source")
+        return change
+
+    out["broken/table-breaks-in-schema-181.kcad"] = in_181(only("breaks"))
+    out["broken/table-lines-in-schema-181.kcad"] = in_181(only("lines"))
+    out["broken/table-extraction-in-schema-181.kcad"] = in_181(only("extraction"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

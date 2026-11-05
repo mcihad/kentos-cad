@@ -1434,6 +1434,12 @@ fn shape(entity: &Entity) -> Shape {
             grid: t.grid.map(|g| g.name().to_owned()),
             frame: t.frame,
             source: None,
+            // Its parts (docs/adr/1030 §7): the lines are drawn part by part.
+            breaks: t.breaks.map(|b| kentos_geometry_core::entity::TableBreaks {
+                height: b.height,
+                gap: Some(b.gap),
+                once: b.once.then_some(true),
+            }),
             face: text_face(&t.face),
         },
         Entity::Leader(l) => Shape::Leader {

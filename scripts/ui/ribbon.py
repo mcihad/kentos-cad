@@ -347,7 +347,7 @@ CAD = [
         P("Kılavuz", "leader", [L("tool.leader"), S("leader.styles")],
           overflow=["leader.addArm", "leader.removeArm", "leader.align", "leader.collect", "leader.blocks"]),
         P("Tablo", "table", [L("table.insert"), S("table.edit"), S("table.update")],
-          overflow=["table.link", "table.export", "table.blockSchedule"]),
+          overflow=["table.link", "table.export", "table.extract", "table.blockSchedule"]),
         P("Tarama", "hatch", [L("tool.hatch"), S("tool.hatchSelected"), S("tool.hatchEdit")]),
         # A map sheet's north arrow (docs/adr/0802): KentOS Mimari has it in Belgele › İşaret.
         P("İşaretleme", "revcloud", [S("tool.revcloud"), S("tool.wipeout"), S("tool.northArrow", MAP_ROAD)]),
