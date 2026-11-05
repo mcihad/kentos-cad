@@ -147040,6 +147040,13 @@
           "type": "integer",
           "x-unit": "epsg"
         },
+        "standardDocs": {
+          "description": "Ordered portable drawing standards retained with the project. Earlier\nentries take precedence; choosing a standard does not apply it.",
+          "items": {
+            "$ref": "#/$defs/ProjectStandardDocument"
+          },
+          "type": "array"
+        },
         "survey": {
           "anyOf": [
             {
@@ -147146,6 +147153,20 @@
       },
       "required": [
         "book"
+      ],
+      "type": "object"
+    },
+    "ProjectStandardDocument": {
+      "additionalProperties": false,
+      "description": "An exact versioned standard document retained in the drawing file.",
+      "properties": {
+        "text": {
+          "description": "UTF-8 JSON document, with its format, document version, identity and\noffice revision. Keeping the complete text allows exact re-export.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
       ],
       "type": "object"
     },

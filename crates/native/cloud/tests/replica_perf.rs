@@ -92,6 +92,7 @@ fn opened(n: usize) -> Opened {
         length_style: None,
         xref_paths: Vec::new(),
         profile_files: Vec::new(),
+        standard_docs: Vec::new(),
         heights: None,
         coordinate_epoch: None,
         road: None,

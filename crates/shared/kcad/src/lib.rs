@@ -757,11 +757,13 @@ pub const SCHEMA_WITH_ROAD_WORK: u32 = 162;
 pub const SCHEMA_WITH_TEXT_ENGINE: u32 = 163;
 /// Schema 164 (ADR 0930): embedded SHX source assets.
 pub const SCHEMA_WITH_SHAPE_RESOURCES: u32 = 164;
+/// Schema 165: ordered drawing-standard documents carried by the project.
+pub const SCHEMA_WITH_STANDARD_DOCS: u32 = 165;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 162] = [
+pub const SCHEMAS: [u32; 163] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -924,6 +926,7 @@ pub const SCHEMAS: [u32; 162] = [
     SCHEMA_WITH_ROAD_WORK,
     SCHEMA_WITH_TEXT_ENGINE,
     SCHEMA_WITH_SHAPE_RESOURCES,
+    SCHEMA_WITH_STANDARD_DOCS,
 ];
 
 /// The file a drawing is saved as.

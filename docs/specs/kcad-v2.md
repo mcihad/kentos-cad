@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `163`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-164.kcad`) |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `165`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-166.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1945,3 +1945,16 @@ SHX olmadan eski şema ve baytlar korunur. 163 veya daha eski şemada bu
 öğe `unknown_field`; bozuk veri/özet ve yinelenen kaynak `bad_value` olur.
 Bağımsız örnekler `shape-resources.json/.kcad` ve
 `broken/shape-resources-in-schema-163.kcad` dosyalarıdır.
+
+### Şema 165 — projeye bağlı standart belgeleri
+
+Yalnız `settings.standardDocs` boş değilse yazılır. Liste sırası öncelik
+sırasıdır; her öğe özgün sürümlü standart belgesini `text` alanında taşır.
+En çok 16 belge; her belge en çok 1 MiB, toplam en çok 4 MiB olabilir.
+Biçim, sürüm, kimlik ve revizyon denetlenir; aynı kimlik yinelenemez.
+Standart kurallarının anlam denetimi komut katmanına aittir. Alanı olmayan
+çizimler önceki şemalarını ve baytlarını korur. 164 ve altında yeni alan
+`unknown_field`; bozuk belge veya yinelenen kimlik `bad_value` olur.
+Bağımsız örnekler `standard-docs.json/.kcad` ve ilgili `broken/standard-docs-*`
+dosyalarıdır. Dosya biçimi desteği tek başına arayüzden bağlama veya
+standartların otomatik uygulanması anlamına gelmez.

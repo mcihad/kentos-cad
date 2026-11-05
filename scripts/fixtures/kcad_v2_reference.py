@@ -358,6 +358,7 @@ def settings(s):
                 "linearEvents": (opaque, False),
                 # Schema 131 (docs/adr/0735): the profiles and mappings the project carries, as their JSON.
                 "profileFiles": (opaque, False),
+                "standardDocs": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2381,6 +2382,8 @@ def document(d):
         # A fixture's level, a baseboard's finish, a schedule's fixtures, new fields, type filter or subtotals
         # (docs/adr/0733 §8).
         schema = max(schema, 131)
+    if d["settings"].get("standardDocs"):
+        schema = max(schema, 165)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3276,7 +3279,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-165.kcad"] = container(root(cmap(parts), version=uint(165)))
+    files["schema-version-166.kcad"] = container(root(cmap(parts), version=uint(166)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5530,6 +5533,16 @@ def build():
     fixture_bad("phase", 1, lambda e: e["arch"].update(phase="sonra"))
     fixture_bad("field", 4, lambda e: e["source"]["columns"].append({"field": "brand"}))
     fixture_bad("of", 4, lambda e: e["source"].update(of="furniture"))
+    # Schema 165: ordered, portable standard documents. Schema 164 must refuse the new field.
+    standard_docs = load("standard-docs.json")
+    standard_data = document(standard_docs)
+    assert standard_data.count(b"\x67version\x18\xa5") == 1
+    out["standard-docs.kcad"] = container(standard_data)
+    out["broken/standard-docs-in-schema-164.kcad"] = container(
+        standard_data.replace(b"\x67version\x18\xa5", b"\x67version\x18\xa4"))
+    duplicate = copy.deepcopy(standard_docs)
+    duplicate["settings"]["standardDocs"][1] = duplicate["settings"]["standardDocs"][0].copy()
+    out["broken/standard-docs-duplicate.kcad"] = container(document(duplicate))
     # Schema 132 (docs/adr/0735): a profile, a mapping of the same name after it and another mapping, their documents
     # as the folder's files hold them; schema 131 refuses them.
     carried = load("profile-files.json")

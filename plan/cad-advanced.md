@@ -1850,6 +1850,12 @@ Otomatik testler ve gerçek uygulamada dosya seçimiyle kimlik/revizyon gösteri
 doğrulandı. Bu ilk biçim yalnız mevcut standart kurallarını taşır; seçimi
 projeye kaydetmez ve blok, tarama, şablon veya palet kaynaklarını paketlemez.
 Dolayısıyla 12. maddenin kalıcı, kapsamlı ofis paketi kabulü açık kalır.
+KCAD şema 165, çizimde sıralı standart belgelerini saklama altyapısını taşır;
+bozuk veya yinelenen kimlikli belgeler reddedilir. Bağımsız Python okuyucusu,
+eski şema sınaması ve 235 KCAD testi doğrulandı. Gerçek uygulamada örnek
+çizim açılıp kaydedildi ve iki belgenin sırası/içeriği bağımsız okuyucuyla
+karşılaştırıldı. Henüz belge bağlama, seçme veya öncelik çözme komutu ve
+arayüzü yoktur; standart denetimi bu kayıtları otomatik kullanmaz.
 Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
 komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
 tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve

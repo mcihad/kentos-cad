@@ -26,6 +26,7 @@ import type { NetworkDef } from "./NetworkDef";
 import type { ProjectForm } from "./ProjectForm";
 import type { ProjectProfileFile } from "./ProjectProfileFile";
 import type { ProjectRelation } from "./ProjectRelation";
+import type { ProjectStandardDocument } from "./ProjectStandardDocument";
 import type { ProjectVariable } from "./ProjectVariable";
 import type { RoadSettings } from "./RoadSettings";
 import type { ServiceConnection } from "./ServiceConnection";
@@ -232,6 +233,11 @@ xrefPaths?: Array<string>,
  * others; of a name both have, the drawing's is the one read.
  */
 profileFiles?: Array<ProjectProfileFile>, 
+/**
+ * Ordered portable drawing standards retained with the project. Earlier
+ * entries take precedence; choosing a standard does not apply it.
+ */
+standardDocs?: Array<ProjectStandardDocument>,
 /**
  * What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
  * and the geoid model; absent: not said, and no command takes them for either.

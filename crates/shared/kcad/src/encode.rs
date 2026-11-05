@@ -514,6 +514,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.join_views.is_empty())
             + usize::from(!s.linear_events.is_empty())
             + usize::from(!s.profile_files.is_empty())
+            + usize::from(!s.standard_docs.is_empty())
             + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
@@ -842,6 +843,17 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.profile_files)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        if !s.standard_docs.is_empty() {
+            self.key("standardDocs");
+            self.at(Seg::Name("standardDocs"), |e| {
+                if let Some(problem) = kentos_contracts::project_standards_problem(&s.standard_docs) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.standard_docs)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -2110,6 +2122,9 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    if !doc.settings.standard_docs.is_empty() {
+        return crate::SCHEMA_WITH_STANDARD_DOCS;
+    }
     if doc
         .styles
         .items

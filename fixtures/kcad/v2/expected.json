@@ -93,6 +93,9 @@
     {"file": "broken/schedules-fixtures-phase.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/schedules-fixtures-field.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/schedules-fixtures-of.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "standard-docs.kcad", "sniff": "kcad", "content": "standard-docs.json"},
+    {"file": "broken/standard-docs-in-schema-164.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "broken/standard-docs-duplicate.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "profile-files.kcad", "sniff": "kcad", "content": "profile-files.json"},
     {"file": "broken/profile-files-in-schema-131.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "broken/profile-files-empty.kcad", "sniff": "kcad", "error": "bad_value"},
@@ -380,7 +383,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-165.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-166.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

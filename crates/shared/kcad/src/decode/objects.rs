@@ -271,6 +271,7 @@ pub(super) struct Features {
     pub(super) fixtures: bool,
     /// Schema 132 (docs/adr/0735): the data profiles and mappings the project carries.
     pub(super) profile_files: bool,
+    pub(super) standard_docs: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -535,6 +536,7 @@ impl Features {
             audit_exceptions: schema >= crate::SCHEMA_WITH_AUDIT_EXCEPTIONS,
             fixtures: schema >= crate::SCHEMA_WITH_FIXTURES,
             profile_files: schema >= crate::SCHEMA_WITH_PROFILE_FILES,
+            standard_docs: schema >= crate::SCHEMA_WITH_STANDARD_DOCS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
