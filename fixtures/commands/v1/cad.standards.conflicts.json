@@ -1,0 +1,1239 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.standards.conflicts",
+ "commandVersion": 1,
+ "title": "Bağlı standartlardaki farklı tanımları göster",
+ "note": "Bağımsız başvuru scripts/fixtures/standards_conflicts_cases.py: kurallar belgeden elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Standart farkları",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Bağlı standart yokken boş liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tek standart: fark yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı içerikli ikinci standart: fark yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adlandırma kuralı farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"B-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "rules",
+         "name": "Genel kurallar",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "naming"
+         ],
+         "firstValues": {
+          "naming": [
+           "A-*"
+          ]
+         },
+         "laterValues": {
+          "naming": [
+           "B-*"
+          ]
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı tipleri farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"arimo\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "rules",
+         "name": "Genel kurallar",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "fonts"
+         ],
+         "firstValues": {
+          "fonts": [
+           "barlow"
+          ]
+         },
+         "laterValues": {
+          "fonts": [
+           "arimo"
+          ]
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İzinli çizgi tipleri farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\", \"dashed\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "rules",
+         "name": "Genel kurallar",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "lineTypes"
+         ],
+         "firstValues": {
+          "lineTypes": [
+           "continuous"
+          ]
+         },
+         "laterValues": {
+          "lineTypes": [
+           "continuous",
+           "dashed"
+          ]
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katmana göre görünüş farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": false}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "rules",
+         "name": "Genel kurallar",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "byLayer"
+         ],
+         "firstValues": {
+          "byLayer": true
+         },
+         "laterValues": {
+          "byLayer": false
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bütün genel kurallar farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [], \"fonts\": [\"arimo\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"dotted\"], \"byLayer\": false}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "rules",
+         "name": "Genel kurallar",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "naming",
+          "fonts",
+          "lineTypes",
+          "byLayer"
+         ],
+         "firstValues": {
+          "naming": [
+           "A-*"
+          ],
+          "fonts": [
+           "barlow"
+          ],
+          "lineTypes": [
+           "continuous"
+          ],
+          "byLayer": true
+         },
+         "laterValues": {
+          "naming": [],
+          "fonts": [
+           "arimo"
+          ],
+          "lineTypes": [
+           "dotted"
+          ],
+          "byLayer": false
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman rengi farklı; harf büyüklüğü sayılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"a-kapi\", \"color\": \"#00FF00\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Renk yalnız harf büyüklüğünde farklı: fark yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-KAPI\", \"color\": \"#ff0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman kalınlığı 1e-9 altında: fark yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5000000001, \"from\": \"duvar*\"}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman kalınlığı ve yazdırma farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.35, \"plot\": false, \"from\": \"duvar*\"}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "layer",
+         "name": "A-DUVAR",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "lineWeight",
+          "plot"
+         ],
+         "firstValues": {
+          "lineWeight": 0.5,
+          "plot": true
+         },
+         "laterValues": {
+          "lineWeight": 0.35,
+          "plot": false
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katmanın kaynak deseni farklı ya da yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "layer",
+         "name": "A-DUVAR",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "from"
+         ],
+         "firstValues": {
+          "from": "duvar*"
+         },
+         "laterValues": {
+          "from": null
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman çizgi tipi farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"dashed\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "layer",
+         "name": "A-KAPI",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "lineType"
+         ],
+         "firstValues": {
+          "lineType": "continuous"
+         },
+         "laterValues": {
+          "lineType": "dashed"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı stilinin yazı tipi ve yüksekliği farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-YAZI\", \"font\": \"arimo\", \"height\": 3.0}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "textStyle",
+         "name": "A-YAZI",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "font",
+          "height"
+         ],
+         "firstValues": {
+          "font": "barlow",
+          "height": 2.5
+         },
+         "laterValues": {
+          "font": "arimo",
+          "height": 3.0
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı yüksekliği birinde yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\"}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "textStyle",
+         "name": "A-Yazı",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "height"
+         ],
+         "firstValues": {
+          "height": 2.5
+         },
+         "laterValues": {
+          "height": null
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçü yüksekliği farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 3.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "dimensionStyle",
+         "name": "A-Ölçü",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "height"
+         ],
+         "firstValues": {
+          "height": 2.5
+         },
+         "laterValues": {
+          "height": 3.5
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Üç standart: ikinci ve üçüncü ilkle karşılaştırılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"arimo\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-c\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.0}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "rules",
+         "name": "Genel kurallar",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "fonts"
+         ],
+         "firstValues": {
+          "fonts": [
+           "barlow"
+          ]
+         },
+         "laterValues": {
+          "fonts": [
+           "arimo"
+          ]
+         }
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-Ölçü",
+         "firstId": "ofis-a",
+         "laterId": "ofis-c",
+         "fields": [
+          "height"
+         ],
+         "firstValues": {
+          "height": 2.5
+         },
+         "laterValues": {
+          "height": 2.0
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkinci standardın yeni katmanı üçüncüyle karşılaştırılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"B-EK\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-c\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"B-EK\", \"color\": \"#00FF00\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "layer",
+         "name": "B-EK",
+         "firstId": "ofis-b",
+         "laterId": "ofis-c",
+         "fields": [
+          "color"
+         ],
+         "firstValues": {
+          "color": "ink"
+         },
+         "laterValues": {
+          "color": "#00FF00"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi tipi kaynağı farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}, \"resources\": {\"lineTypes\": [{\"name\": \"GAZ\", \"elements\": [{\"length\": 2.0}, {\"length\": -1.0}], \"unit\": \"paper\"}]}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}, \"resources\": {\"lineTypes\": [{\"name\": \"gaz\", \"elements\": [{\"length\": 3.0}, {\"length\": -1.0}], \"unit\": \"paper\"}]}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "lineTypeDefinition",
+         "name": "gaz",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "elements"
+         ],
+         "firstValues": {
+          "elements": [
+           {
+            "length": 2.0
+           },
+           {
+            "length": -1.0
+           }
+          ]
+         },
+         "laterValues": {
+          "elements": [
+           {
+            "length": 3.0
+           },
+           {
+            "length": -1.0
+           }
+          ]
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi tipi kaynağının birimi farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}, \"resources\": {\"lineTypes\": [{\"name\": \"GAZ\", \"elements\": [{\"length\": 2.0}, {\"length\": -1.0}], \"unit\": \"paper\"}]}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}, \"resources\": {\"lineTypes\": [{\"name\": \"GAZ\", \"elements\": [{\"length\": 2.0}, {\"length\": -1.0}], \"unit\": \"drawing\"}]}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "lineTypeDefinition",
+         "name": "GAZ",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "unit"
+         ],
+         "firstValues": {
+          "unit": "paper"
+         },
+         "laterValues": {
+          "unit": "drawing"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi tipi 1e-9 altında aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}, \"resources\": {\"lineTypes\": [{\"name\": \"GAZ\", \"elements\": [{\"length\": 2.0}, {\"length\": -1.0}], \"unit\": \"paper\"}]}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}, \"resources\": {\"lineTypes\": [{\"name\": \"GAZ\", \"elements\": [{\"length\": 2.0000000001}, {\"length\": -1.0}], \"unit\": \"paper\"}]}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kurallar, katman ve stiller birlikte: sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-DUVAR\", \"color\": \"ink\", \"lineType\": \"continuous\", \"lineWeight\": 0.5, \"from\": \"duvar*\"}, {\"name\": \"A-KAPI\", \"color\": \"#FF0000\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 2.5}], \"lineTypes\": [\"continuous\"], \"byLayer\": true}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"ofis-b\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"Ofis A\", \"layers\": [{\"name\": \"A-KAPI\", \"color\": \"#0000FF\", \"lineType\": \"continuous\", \"lineWeight\": 0.25}], \"naming\": [\"A-*\"], \"fonts\": [\"barlow\"], \"textStyles\": [{\"name\": \"A-Yazı\", \"font\": \"arimo\", \"height\": 2.5}], \"dimensionStyles\": [{\"name\": \"A-Ölçü\", \"height\": 5.0}], \"lineTypes\": [\"continuous\"], \"byLayer\": false}}"
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "rules",
+         "name": "Genel kurallar",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "byLayer"
+         ],
+         "firstValues": {
+          "byLayer": true
+         },
+         "laterValues": {
+          "byLayer": false
+         }
+        },
+        {
+         "kind": "layer",
+         "name": "A-KAPI",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "color"
+         ],
+         "firstValues": {
+          "color": "#FF0000"
+         },
+         "laterValues": {
+          "color": "#0000FF"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-Yazı",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "font"
+         ],
+         "firstValues": {
+          "font": "barlow"
+         },
+         "laterValues": {
+          "font": "arimo"
+         }
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-Ölçü",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "height"
+         ],
+         "firstValues": {
+          "height": 2.5
+         },
+         "laterValues": {
+          "height": 5.0
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}
