@@ -1811,6 +1811,9 @@ değildir.
 Elle müdahale gerektiren bulgular standart penceresinde ilk sırada gösterilir;
 satır seçimi rapordaki asıl bulguya bağlı kalır. Gerçek arayüzde ayrıntılar
 ve otomatik düzeltmeden sonra kalan iki bulgu doğrulandı; görüntü repo dışındadır.
+Rapor değişirse eski seçim temizlenir; böylece aynı sıra numarasına gelen
+başka bir bulgu yanlışlıkla seçili gösterilmez. Bu durum gerçek uygulamada
+eksik katman seçilip uygulandıktan sonra doğrulandı.
 
 Yazı ve ölçü stillerinde standartta belirtilen kâğıt yükseklikleri artık
 denetlenir; farklar mm cinsinden ayrı bulgu olarak raporlanır ve çizimi

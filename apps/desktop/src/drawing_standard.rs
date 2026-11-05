@@ -154,8 +154,15 @@ impl App {
             }
         };
         if let Some(w) = self.drawing_standard.as_mut() {
-            let count = report.as_ref().map_or(0, |r| r.issues.len());
-            w.chosen = w.chosen.filter(|i| *i < count);
+            // An index belongs to the old report; after a fix the same index
+            // can describe a different finding even when it remains in range.
+            let same_findings = match (&w.report, &report) {
+                (Ok(previous), Ok(next)) => previous.issues == next.issues,
+                _ => false,
+            };
+            if !same_findings {
+                w.chosen = None;
+            }
             w.report = report;
             w.preview = preview;
         }
