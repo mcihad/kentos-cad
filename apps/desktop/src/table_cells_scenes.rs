@@ -334,6 +334,25 @@ mod qa {
         crate::document::write(&span_doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());
 
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-merge-row.csv");
+        std::fs::write(&csv, "ID,Description,Price\nB,Second,20\nA,First,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32],"columns":[1.0,2.0,1.0],
+            "cells":[["ID","Description","Price"],["A","First 10",""],["B","Second","20"]],
+            "merges":[{"row":1,"col":1,"rows":1,"cols":2}],"header":true,
+            "source":{"kind":"file","name":"merges.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Description","Price"],["A","First","10"],["B","Second","20"]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut merge_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        merge_doc.add(table).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-merge-row.kcad");
+        crate::document::write(&merge_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
         let csv = std::env::temp_dir().join("kentos-cad-adv13-cell-conflict.csv");
         std::fs::write(&csv, "ID,Price\nA,12\n").unwrap();
         let table: kentos_commands::Entity = serde_json::from_value(json!({

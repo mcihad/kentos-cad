@@ -2131,12 +2131,12 @@ taşınır; başlık ve tüm tablo stili kapsamı korunur. Gerçek CAD penceresi
 `B/10` mavi, `A/11` kırmızı dolgusunu sıra değişiminden sonra korudu. Bu
 ekran kontrolü koyu dolguda tablo düzenleyicisinin varsayılan siyah yazısının
 okunmadığını da gösterdi; varsayılan yazı rengi arka planın karşıtlığına göre
-seçilecek biçimde düzeltildi. Birleşim, formül ve field konumu varsa yeniden
+seçilecek biçimde düzeltildi. Çok satıra yayılan birleşim, formül ve field konumu varsa yeniden
 sıralama henüz güvenle taşınamadığı için durdurulur.
 Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
 B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
 korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç içe blok
-sayımı, konuma bağlı formül/birleşimlerin taşınması ve çok paftalı çıktı açık kaldığından
+sayımı, konuma bağlı formül/çok satırlı birleşimlerin taşınması ve çok paftalı çıktı açık kaldığından
 madde `[~]` durumundadır.
 
 **Çakışma kuralı arayüzü (5 Kasım 2026):** Dosyaya bağlı tablonun
@@ -2163,6 +2163,14 @@ ya da biçim sınırı aşılırsa yenileme durur. Yerel sınama `A/B` biçimli,
 `C` biçimsiz kaynağı `A/C/B` sırasına taşıdı. Gerçek CAD penceresinde
 yenileme sonrası `A/11` ve `B/10` dolgusu kaldı, `C/30` biçimsiz kaldı;
 ekran görüntüsü repo dışında tutuldu.
+
+**Tek satırlı birleşimlerin taşınması (5 Kasım 2026):** Başlıkta duran veya
+tek anahtarlı veri satırının içinde kalan birleşim, kaynak satırları yer
+değiştirince konumunu satırla birlikte günceller. Veri satırları arasında
+yayılan birleşim hâlâ güvenli biçimde reddedilir. Yerel sınama `A` satırının
+birleşimini 1. veri satırından 2. veri satırına taşıdı. Gerçek CAD
+penceresinde `A / First 10` birleşik satırı `B / Second / 20` satırının
+altına taşındı; hücre sınırı ve yazı korundu. Görüntü repo dışındadır.
 
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
