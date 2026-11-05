@@ -312,6 +312,13 @@ impl App {
 
     /// Writes the window's fix; whether it wrote (what it did said).
     pub(crate) fn apply_standard(&mut self) -> bool {
+        if self
+            .drawing_standard
+            .as_ref()
+            .is_some_and(|w| w.load_error.is_some())
+        {
+            return false;
+        }
         let Some(input) = self.drawing_standard.as_ref().map(Window::apply_input) else {
             return false;
         };
@@ -485,7 +492,7 @@ impl App {
                     words::secondary("Dosyadan seç…", Some(msg(Event::Load))),
                     words::secondary(
                         "Yerleşik standarda dön",
-                        w.custom.as_ref().map(|_| msg(Event::BuiltIn))
+                        (w.custom.is_some() || w.load_error.is_some()).then(|| msg(Event::BuiltIn))
                     ),
                     Elided::new(source)
                         .size(typography::caption())
@@ -510,7 +517,10 @@ impl App {
         Frame::new(STANDARD_TITLE)
             .push(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-            .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
+            .action(words::primary(
+                APPLY,
+                (ready && w.load_error.is_none()).then(|| msg(Event::Apply)),
+            ))
             .width(680.0)
             .modal(msg(Event::Close))
     }
