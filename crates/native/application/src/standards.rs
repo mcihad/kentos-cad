@@ -540,6 +540,61 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
         }
     }
     if !standard.line_types.is_empty() {
+        // Definitions are checked once, not once per placement. A named
+        // pattern inside a reusable block is not necessarily present on any
+        // top-level object's base, including when the block is unused.
+        for block in doc.blocks() {
+            let mut patterns = std::collections::BTreeMap::<String, (String, usize)>::new();
+            let mut types = [0usize; 4];
+            for part in &block.entities {
+                if let Some(name) = part.base().look.line_pattern.as_deref() {
+                    let entry = patterns
+                        .entry(fold_name(name))
+                        .or_insert_with(|| (name.to_owned(), 0));
+                    entry.1 += 1;
+                } else if let Some(line_type) = part.base().look.line_type
+                    && let Some(index) = LineType::ALL.iter().position(|t| *t == line_type)
+                {
+                    types[index] += 1;
+                }
+            }
+            for (_, (name, pieces)) in patterns {
+                issue(
+                    StandardIssueKind::ObjectLineType,
+                    &format!("Blok: {}", block.name),
+                    None,
+                    Some(types_text(&standard.line_types)),
+                    Some(name.clone()),
+                    0,
+                    false,
+                    format!(
+                        "“{}” blok tanımındaki {pieces} parça “{name}” özel çizgi tipini kullanıyor; standart yalnız {} yerleşik çizgi tiplerini tanımlar. Tanım bir kez denetlendi; yerleştirme sayısı bu bulguya dahil değildir.",
+                        block.name,
+                        types_text(&standard.line_types)
+                    ),
+                );
+            }
+            for (index, line_type) in LineType::ALL.into_iter().enumerate() {
+                let pieces = types[index];
+                if pieces > 0 && !standard.line_types.contains(&line_type) {
+                    issue(
+                        StandardIssueKind::ObjectLineType,
+                        &format!("Blok: {}", block.name),
+                        None,
+                        Some(types_text(&standard.line_types)),
+                        Some(line_type.name().to_owned()),
+                        0,
+                        false,
+                        format!(
+                            "“{}” blok tanımındaki {pieces} parça {} çizgi tipini kullanıyor; standart yalnız {} çizgi tiplerini tanımlar. Tanım bir kez denetlendi; yerleştirme sayısı bu bulguya dahil değildir.",
+                            block.name,
+                            line_type.label(),
+                            types_text(&standard.line_types)
+                        ),
+                    );
+                }
+            }
+        }
         for (_, (name, objects)) in named_types {
             issue(
                 StandardIssueKind::ObjectLineType,

@@ -182,6 +182,48 @@ fn named_entity_and_allowed_layer_patterns_are_not_mistaken_for_bylayer() {
 }
 
 #[test]
+fn named_patterns_in_block_definitions_are_reported_once_even_without_insertions() {
+    let raw = json!({"format":"kentos.document","version":1,"name":"Standart","settings":{"srid":0,
+      "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100},
+      "origin":{"x":0,"y":0},"layers":[{"id":"a","name":"A-DUVAR","type":"layer","visible":true,
+      "locked":false,"expanded":true,"style":{"color":"ink","lineType":"continuous","lineWeight":0.5},"children":[]}],
+      "activeLayer":"a","entities":[],"styles":{"items":[],"categories":[]},
+      "blocks":[{"id":"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101","name":"Test","base":{"x":0,"y":0},
+      "entities":[{"kind":"line","id":1,"layerId":"a","attrs":{},"linePattern":"WATER","a":{"x":0,"y":0},"b":{"x":1,"y":0}},
+                  {"kind":"line","id":2,"layerId":"a","attrs":{},"linePattern":"WATER","a":{"x":0,"y":1},"b":{"x":1,"y":1}},
+                  {"kind":"line","id":3,"layerId":"a","attrs":{},"lineType":"dotted","a":{"x":0,"y":2},"b":{"x":1,"y":2}}]}]});
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let mut standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    standard.by_layer = false;
+    let issues = standards::issues(&doc, &standard);
+    let found: Vec<_> = issues
+        .iter()
+        .filter(|i| {
+            i.kind == kentos_commands::StandardIssueKind::ObjectLineType
+                && i.subject == "Blok: Test"
+                && i.found.as_deref() == Some("WATER")
+        })
+        .collect();
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].objects, 0);
+    assert!(found[0].message.contains("2 parça"));
+    assert!(!found[0].fixable);
+    assert!(issues.iter().any(|i| i.subject == "Blok: Test"
+        && i.found.as_deref() == Some("dotted")
+        && i.message.contains("1 parça")
+        && !i.fixable));
+    assert_eq!(doc.to_snapshot_v2(), before);
+    standard.line_types.clear();
+    assert!(
+        !standards::issues(&doc, &standard)
+            .iter()
+            .any(|i| i.subject == "Blok: Test")
+    );
+}
+
+#[test]
 fn differing_style_heights_are_reported_without_changing_the_drawing() {
     let raw = json!({"format":"kentos.document","version":1,"name":"Standart","settings":{"srid":0,
       "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100,

@@ -1811,6 +1811,9 @@ değildir.
 Nesnenin adlandırılmış özel çizgi tipi, nesneye özel görünüşe izin veren
 standartlarda da ayrı raporlanır; izin listesi boşsa bu denetim yapılmaz.
 Komut sınamaları ve gerçek penceredeki P_TEXT bulgusu doğrulandı.
+Blok tanımlarındaki özel ve izin dışı yerleşik çizgi tipleri de tanım başına
+bir kez taranır; yerleştirme sayısıyla çarpılmaz. Kullanılmayan tanımlar da
+rapora dahil edilir. Otomatik test ve gerçek penceredeki üç blok doğrulandı.
 
 Elle müdahale gerektiren bulgular standart penceresinde ilk sırada gösterilir;
 satır seçimi rapordaki asıl bulguya bağlı kalır. Gerçek arayüzde ayrıntılar
