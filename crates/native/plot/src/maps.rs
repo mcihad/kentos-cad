@@ -309,9 +309,10 @@ pub(crate) fn built_layers_profile(
     extent: [f64; 4],
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
     labels: &[MapLabel],
+    clip: Option<&[[f64; 2]]>,
 ) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
     let built = built_layers_profile_unchecked(src, layers, overrides, scale, extent, profile, labels)?;
-    let losses = emitted_line_type_losses(&built, scale, extent, src.origin);
+    let losses = emitted_line_type_losses(&built, scale, extent, src.origin, clip);
     if !losses.is_empty() {
         return Err(format!("{} Eksik çizgi deseniyle çıktı üretilmedi.", losses.join("\n")));
     }
@@ -330,7 +331,8 @@ pub(crate) fn line_type_losses(
     }
     let built = built_layers_profile_unchecked(src, &map.layers, &map.layer_overrides,
         map.view.scale, extent, None, &[])?;
-    Ok(emitted_line_type_losses(&built, map.view.scale, extent, src.origin))
+    let clip = ground_clip(map);
+    Ok(emitted_line_type_losses(&built, map.view.scale, extent, src.origin, clip.as_deref()))
 }
 
 /// Cheap source gate, not the finding itself. The ordinary built-in/short
@@ -373,14 +375,57 @@ pub(crate) fn line_type_check_needed(
         || library.items(None).iter().any(|(item,_)|item.symbol().is_some_and(long_dash))
 }
 
+/// The map's visible ground (docs/adr/1007): its clip shape (the frame, a rectangle or a polygon) on its turned
+/// content, in world coordinates. None for a map with no centre.
+pub fn ground_clip(map: &kentos_sheet::display::MapPrim) -> Option<Vec<[f64; 2]>> {
+    let center = map.view.center?;
+    let t = kentos_sheet::projection::Transform::paper(&map.clip, center, map.view.scale.max(1e-6), map.view.rotation);
+    Some(map.clip_shape.paper_points(&map.clip).into_iter().map(|p| t.inverse(p)).collect())
+}
+
+/// Whether the box `[x0, y0, x1, y1]` and the simple polygon `ring` share a point.
+fn box_meets_ring(b: [f64; 4], ring: &[[f64; 2]]) -> bool {
+    let inside_box = |p: &[f64; 2]| p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3];
+    if ring.iter().any(inside_box) {
+        return true;
+    }
+    let inside_ring = |x: f64, y: f64| {
+        let mut inside = false;
+        for (i, a) in ring.iter().enumerate() {
+            let c = ring[(i + 1) % ring.len()];
+            if (a[1] > y) != (c[1] > y) && x < a[0] + (y - a[1]) * (c[0] - a[0]) / (c[1] - a[1]) {
+                inside = !inside;
+            }
+        }
+        inside
+    };
+    if [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]].iter().any(|p| inside_ring(p[0], p[1])) {
+        return true;
+    }
+    let cross = |p: [f64; 2], q: [f64; 2], r: [f64; 2], s: [f64; 2]| {
+        let d = |a: [f64; 2], b: [f64; 2], c: [f64; 2]| (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+        let (d1, d2, d3, d4) = (d(r, s, p), d(r, s, q), d(p, q, r), d(p, q, s));
+        (d1 > 0.0) != (d2 > 0.0) && (d3 > 0.0) != (d4 > 0.0)
+    };
+    let corners = [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]];
+    ring.iter().enumerate().any(|(i, a)| {
+        let c = ring[(i + 1) % ring.len()];
+        (0..4).any(|k| cross(*a, c, corners[k], corners[(k + 1) % 4]))
+    })
+}
+
 fn emitted_line_type_losses(
     built: &[(String, String, kentos_native_style::StyledLayer)],
     scale: f64,
     extent: [f64; 4],
     origin: Vec2,
+    clip: Option<&[[f64; 2]]>,
 ) -> Vec<String> {
+    // The clip in the batches' origin-relative metres: a loss outside the visible shape is not delivered.
+    let ring: Option<Vec<[f64; 2]>> = clip.map(|c| c.iter().map(|p| [p[0] - origin.x, p[1] - origin.y]).collect());
     let seen = [extent[0]-origin.x, extent[1]-origin.y, extent[2]-origin.x, extent[3]-origin.y];
     let px_per_m = 1. / (scale.max(1e-6) * kentos_native_style::program::METRES_PER_PX);
+    let ring = ring.as_deref();
     built.iter().flat_map(|(_, name, layer)| layer.batches.iter().filter_map(move |b| {
         b.line_type_loss.as_ref().filter(|_| {
             let ink = match &b.kind {
@@ -389,6 +434,7 @@ fn emitted_line_type_losses(
                 _ => false,
             };
             ink && b.in_scale(scale) && b.in_view(seen, px_per_m, 1.)
+                && ring.is_none_or(|r| r.len() < 3 || box_meets_ring(b.reach_bounds(px_per_m, 1.), r))
         })
             .map(|loss| format!("{name}: {loss}"))
     })).collect::<std::collections::BTreeSet<_>>().into_iter().collect()
@@ -569,7 +615,22 @@ pub fn vector_content_profile(
     labels: &[MapLabel],
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
-    collect_vector_profile(src, layers, overrides, scale, extent, labels, profile).map_err(|e| {
+    vector_content_clipped(src, layers, overrides, scale, extent, labels, profile, None)
+}
+
+/// [`vector_content_profile`] with the map's visible ground (docs/adr/1007).
+#[allow(clippy::too_many_arguments)]
+pub fn vector_content_clipped(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+    clip: Option<&[[f64; 2]]>,
+) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+    collect_vector_clipped(src, layers, overrides, scale, extent, labels, profile, clip).map_err(|e| {
         match e {
             VectorIssue::Unsupported(why) => why,
             VectorIssue::Invalid(message) => {
@@ -592,6 +653,22 @@ pub fn collect_vector_profile(
     extent: [f64; 4],
     labels: &[MapLabel],
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+) -> Result<MapContent, VectorIssue> {
+    collect_vector_clipped(src, layers, overrides, scale, extent, labels, profile, None)
+}
+
+/// [`collect_vector_profile`] with the map's visible ground (docs/adr/1007): a line type loss outside it does not
+/// refuse the delivery.
+#[allow(clippy::too_many_arguments)]
+pub fn collect_vector_clipped(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+    clip: Option<&[[f64; 2]]>,
 ) -> Result<MapContent, VectorIssue> {
     for l in labels {
         if let Some(u) = &l.unicode
@@ -627,7 +704,7 @@ pub fn collect_vector_profile(
     let mut shapes = Vec::new();
     let mut unsupported = Vec::new();
     for (id, name, styled) in
-        built_layers_profile(src, layers, overrides, scale, extent, profile, labels)
+        built_layers_profile(src, layers, overrides, scale, extent, profile, labels, clip)
             .map_err(VectorIssue::Invalid)?
     {
         let (paths, missing) = layer_paths(&styled, &o, Some(reach));

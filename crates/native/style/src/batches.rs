@@ -1578,6 +1578,16 @@ impl StyledBatch {
         !(self.min_scale.is_some_and(|m| den < m) || self.max_scale.is_some_and(|m| den > m))
     }
 
+    /// Its box (origin-relative metres) grown by its reach at `px_per_m` device pixels per metre.
+    pub fn reach_bounds(&self, px_per_m: f64, dpr: f64) -> [f64; 4] {
+        let r = match self.reach_unit {
+            Unit::World => self.reach,
+            Unit::Px => self.reach * dpr / px_per_m,
+        };
+        let [x0, y0, x1, y1] = self.bounds;
+        [x0 - r, y0 - r, x1 + r, y1 + r]
+    }
+
     /// Whether it can show in `view` (origin-relative box in metres) at
     /// `px_per_m` device pixels per metre (`batchInView`).
     pub fn in_view(&self, view: [f64; 4], px_per_m: f64, dpr: f64) -> bool {

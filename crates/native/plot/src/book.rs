@@ -22,7 +22,7 @@ use kentos_sheet::profile::Capabilities;
 use kentos_sheet::project::read_project_sheets;
 
 use crate::inputs::{crs_info, pdf_crs, sheet_data, sheet_variable};
-use crate::maps::{MapSource, vector_content_profile};
+use crate::maps::MapSource;
 
 /// A PDF of the book, the sheets it holds in order, and what it writes
 /// differently from the window's.
@@ -333,7 +333,7 @@ impl<'a> MapDrawer<'a> {
         let vector = if self.raster_only {
             Err(Vec::new())
         } else {
-            vector_content_profile(
+            crate::maps::vector_content_clipped(
                 src,
                 &m.layers,
                 &m.layer_overrides,
@@ -343,6 +343,7 @@ impl<'a> MapDrawer<'a> {
                 kentos_sheet::plot_profile::for_sheet(book, sheet)
                     .ok()
                     .flatten(),
+                crate::maps::ground_clip(m).as_deref(),
             )
         };
         let content = match vector {

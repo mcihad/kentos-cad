@@ -530,3 +530,70 @@ fn curved_shx_anchors_use_exact_arc_distance_in_actual_vector_and_pdf_output() {
         }
     }
 }
+
+/// docs/adr/1007: a viewport turned on its content or clipped to a polygon delivers only what its shape shows. A
+/// pattern the output cannot draw blocks it only where the line reaches that shape, not anywhere in its box.
+#[test]
+fn a_loss_blocks_only_inside_the_polygon_or_turned_viewport_shape() {
+    // The fixture's frame is 390 × 230 mm at 1:50: 19.5 × 11.5 m of ground about (2.5, 0).
+    let cases: [(&str, Value, i64, [f64; 4], bool); 6] = [
+        // The upper left triangle: ground x −7.25…−1.4, y 2.3…5.75; the line at y = 0 is in the box only.
+        ("triangle_outside", json!({"type":"polygon","points":[[0,0],[300000,0],[0,300000]]}), 0, [0., 0., 5., 0.], false),
+        // The upper right half (frame y ≤ x): the line's right part reaches it.
+        ("triangle_inside", json!({"type":"polygon","points":[[0,0],[1000000,0],[1000000,1000000]]}), 0, [0., 0., 5., 0.], true),
+        // Turned 45°: (12, 10)…(12.5, 10) is 14 m along one of the frame's axes from the centre, past both halves
+        // (9.75 and 5.75 m), yet inside the turned frame's box (±10.96 m).
+        ("turned_corner", json!({"type":"frame"}), 45000, [12., 10., 12.5, 10.], false),
+        ("turned_centre", json!({"type":"frame"}), 45000, [0., 0., 5., 0.], true),
+        ("turned_opposite", json!({"type":"frame"}), 315000, [12., 10., 12.5, 10.], false),
+        // A rectangle clip in the right quarter, turned: the line at the centre is outside it.
+        ("turned_rectangle", json!({"type":"rectangle","bounds":[800000,0,1000000,1000000]}), 30000, [0., 0., 5., 0.], false),
+    ];
+    for (name, clip, rotation, [x0, y0, x1, y1], blocked) in cases {
+        let (mut raw, mut page) = source();
+        raw["settings"]["lineTypes"] = json!([pattern("shape")]);
+        raw["entities"][0]["linePattern"] = json!("P");
+        raw["entities"][0]["a"] = json!({"x": x0, "y": y0});
+        raw["entities"][0]["b"] = json!({"x": x1, "y": y1});
+        let kind = &mut page["sheets"][0]["items"][0]["kind"];
+        kind["clip"] = clip;
+        kind["view"]["rotation"] = json!(rotation);
+        let (doc, book) = document(raw, page);
+        let before = doc.to_snapshot_v2();
+        let found = losses(&doc, &book);
+        assert_eq!(!found.is_empty(), blocked, "{name}: {found:?}");
+        let pdf = book::book_pdf(&doc, &[], "Test", "2026-11-04");
+        if blocked {
+            assert_eq!(pdf.err().unwrap().code, "linetype_unsupported", "{name}");
+        } else {
+            pdf.unwrap_or_else(|e| panic!("{name}: {e:?}"));
+        }
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+}
+
+/// The picture of docs/adr/1007: the triangle-clipped viewport printed with a drawable dashed line inside its shape
+/// and an undrawable one in its box but outside the shape. `cargo test -p kentos-plot --test all
+/// line_types::clip_picture -- --ignored`; written to `.run/gui-evidence/`.
+#[test]
+#[ignore]
+fn clip_picture() {
+    let (mut raw, mut page) = source();
+    raw["settings"]["lineTypes"] = json!([pattern("shape"), {"name":"K","unit":"paper","elements":[{"length":3.},{"length":-1.5}]}]);
+    let mut outside = raw["entities"][0].clone();
+    outside["linePattern"] = json!("P");
+    let mut inside = raw["entities"][0].clone();
+    inside["id"] = json!(2);
+    inside["linePattern"] = json!("K");
+    inside["a"] = json!({"x": -6.5, "y": 5.});
+    inside["b"] = json!({"x": -3., "y": 3.});
+    raw["entities"] = json!([outside, inside]);
+    let kind = &mut page["sheets"][0]["items"][0]["kind"];
+    kind["clip"] = json!({"type":"polygon","points":[[0,0],[300000,0],[0,300000]]});
+    let (doc, book) = document(raw, page);
+    assert!(losses(&doc, &book).is_empty());
+    let image = kentos_plot::preview::page(&doc, "ground", "Test", "2026-11-04", None, 110).expect("delivered");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("adr1007-ucgen-kirpma.png"), &image.png).unwrap();
+}

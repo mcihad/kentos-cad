@@ -102,6 +102,7 @@ fn render_image_captured(
         extent,
         profile,
         labels,
+        crate::maps::ground_clip(m).as_deref(),
     )?;
     let images = match sources{Some(sources)=>Images::captured(src.doc,drawing,sources),None=>Images::new(src.doc,drawing)};
     for (_, _, layer) in &built {

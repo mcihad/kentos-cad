@@ -1607,8 +1607,8 @@ desteklenmeyen kaynak için açık bulgu üretilsin.
   dosyası GUI'den PDF üretti. Kanıtlar repo dışında; test sayıları ve
   kapsam sınırları ADR 0930'da.
 - Bu, uzun/yazılı/şekilli deseni çizme tamamlanması değildir. Çokgen veya
-  döndürülmüş viewportun tam kırpma denetimi de açık; ilk koruma batch
-  sınır kutusunu kullanır. Maddenin tamamlandı işareti değiştirilmedi.
+  döndürülmüş viewportun kırpma denetimi 6 Kasım'da ADR 1007 ile eklendi
+  (aşağıda). Maddenin tamamlandı işareti değiştirilmedi.
 
 **Tam çizgi/boşluk yürütmesi (4 Kasım 2026):**
 
@@ -1768,8 +1768,14 @@ kapsam tamamlandı sayılmaz. Kanıt ve ölçüm sınırları ADR 0930 §22–23
 12'yi aşan deseni artık sessizce kesmez; 256'yı aşanı keser ve raporda söyler. LIN dışa aktarımı uzun deseni
 `pattern_too_long_for_lin` uyarısıyla atlar. Gerçek pencere kanıtında bulunan ayrı hata düzeltildi: metre birimli
 DXF açılınca çizim birimli desenler 1000 kat uzuyor ve çizgiler sürekli çiziliyordu. 16 öğeli desenin tire dizisi
-açılan çizimin ekranından piksel ölçümüyle doğrulandı. Unicode/Big Font SHX, noktalı bant, eğride analitik faz,
-çokgen viewport kırpma denetimi ve 2M nokta sınırının ötesi açık; madde `[~]`.
+açılan çizimin ekranından piksel ölçümüyle doğrulandı. Unicode/Big Font SHX, noktalı bant, eğride analitik faz ve
+2M nokta sınırının ötesi açık; madde `[~]`.
+
+**Viewport'un görünen şekline göre desen kaybı (6 Kasım 2026, [ADR 1007](../docs/adr/1007-line-type-loss-inside-the-viewport-shape.md)):**
+Desteklenmeyen desen artık yalnız kırpma şekline (çokgen, dikdörtgen ya da döndürülmüş çerçeve) değiyorsa ön
+denetimde hata verir ve teslimi engeller; ön denetim, vektör, raster ve PDF kitabı aynı zemini kullanır. Altı
+geometrik durumla test edildi, çokgen sınaması kapatılınca test kırmızı verdi. Yığın kutusu sınaması tutucudur;
+parça düzeyinde kesin kırpma açık.
 
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
