@@ -1137,6 +1137,42 @@ pub struct VolumeFactorDef {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill: Option<f64>,
+    /// The soil's densities from the soil report (docs/adr/0957; KCAD schema 174): the factors follow from them, the
+    /// cut's bank over loose, the fill's compacted over loose (both volumes in loose m³, as a truck carries them); a
+    /// row with densities writes no factor of its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub densities: Option<VolumeDensities>,
+    /// Where its factors or densities come from (the soil report, its borehole or test), in words (docs/adr/0957).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+}
+
+impl VolumeFactorDef {
+    /// The factors as the volume uses them: the densities' where given (cut ρ_bank/ρ_loose, fill ρ_compacted/ρ_loose),
+    /// else the row's own.
+    pub fn effective(&self) -> (Option<f64>, Option<f64>) {
+        match &self.densities {
+            Some(d) => (Some(d.bank / d.loose), Some(d.compacted / d.loose)),
+            None => (self.cut, self.fill),
+        }
+    }
+}
+
+/// A soil's densities (t/m³): in place (bank, yerinde), loosened (loose, gevşek) and compacted in the fill (sıkışık).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeDensities {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t/m3")))]
+    pub bank: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t/m3")))]
+    pub loose: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t/m3")))]
+    pub compacted: f64,
 }
 
 /// The topsoil stripped over a stretch of stations (docs/adr/0906 §6): its depth (m) under the earthwork's footprint.
@@ -3102,6 +3138,18 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
             if [f.cut, f.fill].iter().flatten().any(|k| !(k.is_finite() && *k > 0.0 && *k <= 10.0)) {
                 return fail(path, "katsayı 0'dan büyük, en çok 10 olur");
+            }
+            // Docs/adr/0957: densities make the factors; a row has one or the other.
+            if let Some(d) = &f.densities {
+                if f.cut.is_some() || f.fill.is_some() {
+                    return fail(path, "yoğunluk verilen satıra katsayı yazılmaz; katsayılar yoğunluklardan çıkar");
+                }
+                if [d.bank, d.loose, d.compacted].iter().any(|r| !(r.is_finite() && *r >= 0.5 && *r <= 4.0)) {
+                    return fail(path, "yoğunluk 0,5 ile 4 t/m³ arası olur");
+                }
+            }
+            if f.source.as_ref().is_some_and(|t| t.trim().is_empty() || t.chars().count() > 200) {
+                return fail(path, "katsayının kaynağı boş olmaz, en çok 200 karakter");
             }
         }
         let sections = v.method != VolumeMethod::Surfaces;

@@ -76,6 +76,9 @@ pub(crate) const LEDGER_BY: &str = "Gruplama";
 pub(crate) const ROUNDING: &str = "Yuvarlama";
 /// The approvals' history (docs/adr/0950) and the note an approval or a revocation is written with.
 pub(crate) const HISTORY: &str = "Onay geçmişi";
+/// The earthwork in its three states (docs/adr/0957) and the soil densities' table.
+pub(crate) const STATES: &str = "Hacim halleri";
+pub(crate) const DENSITIES: &str = "Zemin yoğunlukları";
 pub(crate) const APPROVAL_NOTE: &str = "Onay notu";
 const GROUPINGS: [&str; 3] = ["Km dilimleri", "Bölgeler", "Katsayı satırları"];
 const DECIMALS: [&str; 4] = ["Tam sayı", "1 basamak", "2 basamak", "3 basamak"];
@@ -112,6 +115,8 @@ pub enum Shown {
     Largest,
     /// The approvals, oldest first, each against the one before it (docs/adr/0950).
     History,
+    /// Each factor row's earthwork in place, loose and compacted (docs/adr/0957).
+    States,
 }
 
 impl std::fmt::Display for Shown {
@@ -126,6 +131,7 @@ impl std::fmt::Display for Shown {
             Shown::Ledger => LEDGER,
             Shown::Largest => LARGEST,
             Shown::History => HISTORY,
+            Shown::States => STATES,
         })
     }
 }
@@ -178,7 +184,8 @@ pub struct Row {
     corridor: Option<String>,
     method: VolumeMethod,
     /// From, to, the cut's and the fill's factor.
-    factors: Vec<[String; 4]>,
+    /// A factor row: from, to, cut, fill, the soil's bank, loose and compacted densities (docs/adr/0957) and the source.
+    factors: Vec<[String; 8]>,
     /// From, to and the topsoil's depth.
     strip: Vec<[String; 3]>,
     /// The bench's slope (%) and height; both empty: no benching.
@@ -204,7 +211,19 @@ impl Row {
             factors: d
                 .factors
                 .iter()
-                .map(|f| [trimmed(f.from), trimmed(f.to), f.cut.map(trimmed).unwrap_or_default(), f.fill.map(trimmed).unwrap_or_default()])
+                .map(|f| {
+                    let d = |g: fn(&kentos_commands::VolumeDensities) -> f64| f.densities.as_ref().map(|x| trimmed(g(x))).unwrap_or_default();
+                    [
+                        trimmed(f.from),
+                        trimmed(f.to),
+                        f.cut.map(trimmed).unwrap_or_default(),
+                        f.fill.map(trimmed).unwrap_or_default(),
+                        d(|x| x.bank),
+                        d(|x| x.loose),
+                        d(|x| x.compacted),
+                        f.source.clone().unwrap_or_default(),
+                    ]
+                })
                 .collect(),
             strip: d.strip.iter().map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)]).collect(),
             bench: d.bench.as_ref().map_or_else(Default::default, |b| [trimmed(b.slope), trimmed(b.height)]),
@@ -225,11 +244,21 @@ impl Row {
                 _ => Err(format!("{n}. katsayı satırının {what} bir sayı olmalı.")),
             };
             let may = |t: &str, what: &str| number(t).map_err(|()| format!("{n}. katsayı satırının {what} bir sayı olmalı."));
+            // The densities, all three or none (docs/adr/0957).
+            let dens = [may(&f[4], "yerinde yoğunluğu")?, may(&f[5], "gevşek yoğunluğu")?, may(&f[6], "sıkışık yoğunluğu")?];
+            let densities = match dens {
+                [Some(bank), Some(loose), Some(compacted)] => Some(kentos_commands::VolumeDensities { bank, loose, compacted }),
+                [None, None, None] => None,
+                _ => return Err(format!("{n}. satırın yoğunlukları üçü birlikte yazılır: yerinde, gevşek, sıkışık.")),
+            };
+            let source = f[7].trim();
             factors.push(VolumeFactorDef {
                 from: need(&f[0], "başı")?,
                 to: need(&f[1], "sonu")?,
                 cut: may(&f[2], "kabarması")?,
                 fill: may(&f[3], "sıkışması")?,
+                densities,
+                source: (!source.is_empty()).then(|| source.to_owned()),
             });
         }
         let mut strip = Vec::new();
@@ -309,6 +338,8 @@ pub struct Window {
     pub(crate) approval_note: String,
     /// The chosen volume's approvals as saved, read while shown.
     pub(crate) history: Option<kentos_commands::VolumeHistoryRead>,
+    /// The earthwork's three states while shown (docs/adr/0957).
+    pub(crate) states: Option<Result<(kentos_commands::VolumeStatesRead, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -341,7 +372,7 @@ pub enum Event {
     LedgerDecimals(u32),
     /// The next approval's or revocation's note.
     ApprovalNote(String),
-    /// A factor row's from (0), to (1), cut (2) or fill (3).
+    /// A factor row's from (0), to (1), cut (2), fill (3), bank (4), loose (5), compacted (6) density or source (7).
     Factor(usize, usize, String),
     /// A strip row's from (0), to (1) or depth (2).
     Strip(usize, usize, String),
@@ -408,6 +439,7 @@ impl App {
             ledger: None,
             approval_note: String::new(),
             history: None,
+            states: None,
         }));
         self.dialog = Some(Dialog::Volumes);
         self.refresh_volume();
@@ -484,6 +516,11 @@ impl App {
         let kept = w.kept.iter().find(|k| k.id == r.id).cloned();
         w.history = match (w.shown == Shown::History, kept) {
             (true, Some(def)) => Some(kentos_native_application::road_volumes_history::preview_of(&doc.model, &def)),
+            _ => None,
+        };
+        // The states, while shown: the volume as typed (docs/adr/0957).
+        w.states = match (w.shown == Shown::States, &w.preview.report, r.def()) {
+            (true, Some(_), Ok(def)) => Some(kentos_native_application::road_volumes_states::preview_of(&doc.model, &def)),
             _ => None,
         };
         // The ledger, while it is shown: it computes the volume once more.
@@ -602,7 +639,7 @@ impl App {
             }
             Event::Factor(j, k, t) => {
                 if let Some(x) = chosen_row(w).and_then(|r| r.factors.get_mut(j)) {
-                    x[k.min(3)] = t;
+                    x[k.min(7)] = t;
                 }
                 w.line = Some(j);
             }
@@ -611,7 +648,7 @@ impl App {
                 if let Some(r) = chosen_row(w) {
                     // A new row starts where the last ends; its end and factors are the user's.
                     let from = r.factors.last().map(|x| x[1].clone()).unwrap_or_else(|| "0".into());
-                    r.factors.push([from, String::new(), String::new(), String::new()]);
+                    r.factors.push([from, String::new(), String::new(), String::new(), String::new(), String::new(), String::new(), String::new()]);
                     let n = r.factors.len() - 1;
                     w.line = Some(n);
                 }
@@ -981,6 +1018,13 @@ impl App {
                         Some(Ok((l, _))) => d = d.note(Banner::info(ledger_words(l))),
                         None => {}
                     }
+                    // The states (docs/adr/0957): the totals in a sentence; what the soil cannot do as a warning.
+                    if let Some(Ok((st, warnings))) = &w.states {
+                        d = d.note(Banner::info(states_words(st)));
+                        for wn in warnings.iter().filter(|x| x.code == "volume_factor_physics") {
+                            d = d.note(Banner::warning(wn.message.clone()));
+                        }
+                    }
                     let mut options = vec![Shown::Sheet];
                     if !rep.layers.is_empty() {
                         options.push(Shown::Layers);
@@ -996,6 +1040,7 @@ impl App {
                     }
                     options.push(Shown::Ledger);
                     options.push(Shown::Largest);
+                    options.push(Shown::States);
                     if w.kept.iter().any(|k| k.id == chosen.map_or("", |c| c.id.as_str()) && (k.approved.is_some() || !k.history.is_empty())) {
                         options.push(Shown::History);
                     }
@@ -1005,6 +1050,11 @@ impl App {
                             Some(Ok((l, _))) if now == Shown::Ledger => ledger_table(l, w.ledger_factors),
                             Some(Ok((l, _))) => largest_table(l),
                             _ => label::caption("Defter okunamadı; nedeni yukarıda.").into(),
+                        },
+                        (Shown::States, _, _, _) => match &w.states {
+                            Some(Ok((st, _))) => states_table(st),
+                            Some(Err(e)) => label::caption(e.clone()).into(),
+                            None => label::caption("Hacim halleri okunamadı.").into(),
                         },
                         (Shown::History, _, _, _) => match &w.history {
                             Some(h) => history_table(h),
@@ -1068,6 +1118,15 @@ impl App {
             |j| msg(Event::Line(j)),
             "Katsayı satırı yok",
         );
+        // The soil's densities and the source, row by row with the factors (docs/adr/0957).
+        let densities = road_dialog::edit_table(
+            vec![fill("Yerinde (t/m³)"), fill("Gevşek (t/m³)"), fill("Sıkışık (t/m³)"), road_dialog::Col { title: "Kaynak", width: None, number: false }],
+            r.factors.len(),
+            move |j, k| road_dialog::edit(&r.factors[j][k + 4], k < 3, move |v| msg(Event::Factor(j, k + 4, v))),
+            w.line,
+            |j| msg(Event::Line(j)),
+            "Katsayı satırı yok",
+        );
         let strips = road_dialog::edit_table(
             vec![fill("Baş (m)"), fill("Son (m)"), fill("Kalınlık (m)")],
             r.strip.len(),
@@ -1100,11 +1159,12 @@ impl App {
             })
             .section("Kabarma ve sıkışma")
             .wide(factors)
+            .wide(densities)
             .wide(
                 row![words::secondary(ADD, Some(msg(Event::Add))), words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow)))]
                     .spacing(8),
             )
-            .help("Katsayılar zemin raporundan yazılır; KentOS öntanımlı sayı vermez.");
+            .help("Katsayılar ya da yoğunluklar (t/m³) zemin raporundan yazılır; KentOS öntanımlı sayı vermez. Yoğunluklu satırda katsayılar yoğunluklardan çıkar: kabarma yerinde/gevşek, dolgu sıkışık/gevşek; kütle ordinatı ikisini gevşek hacimle karşılaştırır.");
         if sections {
             form = form
                 .section("Sıyırma ve diş kazısı")
@@ -1417,13 +1477,17 @@ impl canvas::Program<Message> for Mass<'_> {
         // The legend at the bottom of the part shown, on its own ground where it moved up over the drawing.
         let base = part.bottom(bounds.height - 18.0, 12.0);
         let mut x = part.left(left as f32 + 8.0);
+        // Both curves loosened (docs/adr/0957): the cut, and what the fill asks. Each entry as wide as its words.
+        let entries = [("Σ kazı (gevşek)", t.danger), ("Σ dolgunun istediği (gevşek)", t.accent), ("Kütle ordinatı", green)];
+        let wide = |w: &str| 18.0 + kentos_ui::theme::typography::current().text_width(w, kentos_ui::theme::typography::caption(), false) + 14.0;
+        let total: f32 = entries.iter().map(|e| wide(e.0)).sum();
         if base < bounds.height - 18.5 || x > left as f32 + 8.5 {
-            frame.fill(&Path::rectangle(Point::new(x - 6.0, base - 4.0), iced::Size::new(430.0, 22.0)), t.field.scale_alpha(0.9));
+            frame.fill(&Path::rectangle(Point::new(x - 6.0, base - 4.0), iced::Size::new(total + 8.0, 22.0)), t.field.scale_alpha(0.9));
         }
-        for (words, color) in [("Σ kazı (gevşek)", t.danger), ("Σ dolgu (sıkışık)", t.accent), ("Kütle ordinatı", green)] {
+        for (words, color) in entries {
             frame.fill_rectangle(Point::new(x, base + 6.0), iced::Size::new(14.0, 3.0), color);
             caption(&mut frame, words.into(), Point::new(x + 18.0, base), t.text);
-            x += 140.0;
+            x += wide(words);
         }
         vec![frame.into_geometry()]
     }
@@ -2233,4 +2297,64 @@ impl canvas::Program<Message> for Approvals<'_> {
         frame.fill_text(Text { content: "● geçerli  ○ yerine yenisi geldi  ⊗ kaldırıldı  ■ bugün".into(), position: Point::new(left, 2.0), color: t.muted, size: small, ..Text::default() });
         vec![frame.into_geometry()]
     }
+}
+
+/// The states' totals in a sentence (docs/adr/0957).
+fn states_words(st: &kentos_commands::VolumeStatesRead) -> String {
+    let mass = match (st.cut_mass, st.fill_mass) {
+        (Some(a), Some(b)) => format!(" Kütle: kazı {} t, dolgu {} t.", grouped(a, 0), grouped(b, 0)),
+        _ => " Kütle her satırda yoğunluk verilince okunur.".into(),
+    };
+    format!(
+        "Kazı yerinde {} m³, gevşek {} m³; dolgu sıkışık {} m³, istediği gevşek {} m³; fazla (gevşek) {} m³.{mass}",
+        grouped(st.cut, 0),
+        grouped(st.cut_loose, 0),
+        grouped(st.fill, 0),
+        grouped(st.fill_loose, 0),
+        grouped(st.balance, 0),
+    )
+}
+
+/// Each factor row's earthwork in its states (docs/adr/0957): the cut in place → loosened, the fill compacted → the
+/// loose it asks, the bank it asks; a row whose factors or densities the soil cannot have is marked (the warning says
+/// why; the sources are in the form's densities).
+fn states_table(st: &kentos_commands::VolumeStatesRead) -> Element<'_, Message> {
+    let m3 = |v: Option<f64>| v.map_or_else(|| "—".into(), |v| grouped(v, 0));
+    let k = |v: Option<f64>| v.map_or_else(|| "—".into(), |v| grouped(v, 3));
+    let mut rows: Vec<Vec<String>> = st
+        .rows
+        .iter()
+        .map(|r| {
+            vec![
+                format!("{}{} – {}", if r.checks.is_empty() { "" } else { "⚠ " }, r.from_text, r.to_text),
+                match &r.densities {
+                    Some(d) => format!("{} / {} / {}", grouped(d.bank, 2), grouped(d.loose, 2), grouped(d.compacted, 2)),
+                    None => format!("{} · {}", k(r.cut_factor), k(r.fill_factor)),
+                },
+                format!("{} → {}", grouped(r.cut, 0), grouped(r.cut_loose, 0)),
+                format!("{} → {}", grouped(r.fill, 0), grouped(r.fill_loose, 0)),
+                m3(r.fill_bank),
+            ]
+        })
+        .collect();
+    if st.unfactored_cut > 0.0 || st.unfactored_fill > 0.0 {
+        rows.push(vec![
+            "katsayısız".into(),
+            "—".into(),
+            format!("{} → {}", grouped(st.unfactored_cut, 0), grouped(st.unfactored_cut, 0)),
+            format!("{} → {}", grouped(st.unfactored_fill, 0), grouped(st.unfactored_fill, 0)),
+            "—".into(),
+        ]);
+    }
+    road_dialog::table(
+        vec![
+            road_dialog::col("Km", 152.0),
+            road_dialog::col("ρ y/g/s · katsayı", 103.0),
+            road_dialog::num("Kazı → gevşek", 115.0),
+            road_dialog::num("Dolgu → ister gevşek", 135.0),
+            road_dialog::Col { title: "ister yerinde", width: None, number: true },
+        ],
+        rows,
+        "Katsayı satırı yok",
+    )
 }

@@ -58,7 +58,7 @@ fn factors_at(def: &VolumeDef, m: f64) -> (Option<f64>, Option<f64>) {
         .iter()
         .enumerate()
         .find(|(i, f)| f.from <= m && (m < f.to || (*i + 1 == n && m <= f.to)))
-        .map_or((None, None), |(_, f)| (f.cut, f.fill))
+        .map_or((None, None), |(_, f)| f.effective())
 }
 
 /// The topsoil depth at station `s`: the strip row with `from ≤ s < to` (the last row's end included); 0 off them.

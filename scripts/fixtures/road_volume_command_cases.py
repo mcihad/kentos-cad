@@ -87,6 +87,10 @@ def factors_at(v, m):
     rows = v.get("factors", [])
     for i, f in enumerate(rows):
         if f["from"] <= m and (m < f["to"] or (i + 1 == len(rows) and m <= f["to"])):
+            if "densities" in f:
+                # Docs/adr/0957: the cut's bank over loose, the fill's compacted over loose.
+                d = f["densities"]
+                return d["bank"] / d["loose"], d["compacted"] / d["loose"]
             return f.get("cut"), f.get("fill")
     return None, None
 
@@ -563,6 +567,10 @@ def edit_cases():
     ok("Yüzeyler arası yöntem", {**base, "method": "surfaces"}, START + [new("v-3", method="surfaces")], "v-3")
     f2 = [{"from": 0.0, "to": 150.0, "cut": 1.3, "fill": 0.85}, {"from": 150.0, "to": 600.0, "fill": 0.95}]
     ok("Katsayılar km aralıklarına", {**base, "factors": f2}, START + [new("v-3", factors=f2)], "v-3")
+    # Docs/adr/0957: a row's soil densities and its source.
+    fd = [{"from": 0.0, "to": 300.0, "densities": {"bank": 1.8, "loose": 1.45, "compacted": 1.95},
+           "source": "Zemin etüdü raporu, SK-3"}, {"from": 300.0, "to": 600.0, "cut": 1.2, "fill": 1.08, "source": "KGM tablosu"}]
+    ok("Yoğunluklar ve kaynaklar", {**base, "factors": fd}, START + [new("v-3", factors=fd)], "v-3")
     ok("Adı değişir", {"operation": "set", "volume": "v-1", "name": "Kübaj A"}, put(0, {**V1, "name": "Kübaj A", "revision": 2}), "v-1")
     ok("Yöntem değişir", {"operation": "set", "volume": "Ana kübaj", "method": "prismoidal"},
        put(0, {**V1, "method": "prismoidal", "revision": 2}), "v-1")
@@ -621,6 +629,14 @@ def edit_cases():
     no("Yeni kübajın yöntemi yok", {k: val for k, val in base.items() if k != "method"},
        failed("invalid_volume", "Yeni kübaj hesabı için name, corridor ve method verilmeli.", "method"))
     no("Aynı ad", {**base, "name": "YAN kübaj"}, rulefail("bu adda başka bir kübaj hesabı var", "name"))
+    no("Yoğunluklu satıra katsayı", {**base, "factors": [{"from": 0.0, "to": 100.0, "cut": 1.2,
+                                                         "densities": {"bank": 1.8, "loose": 1.45, "compacted": 1.95}}]},
+       rulefail("yoğunluk verilen satıra katsayı yazılmaz; katsayılar yoğunluklardan çıkar", "factors[0]"))
+    no("Aralık dışı yoğunluk", {**base, "factors": [{"from": 0.0, "to": 100.0,
+                                                    "densities": {"bank": 5.0, "loose": 1.45, "compacted": 1.95}}]},
+       rulefail("yoğunluk 0,5 ile 4 t/m³ arası olur", "factors[0]"))
+    no("Boş kaynak", {**base, "factors": [{"from": 0.0, "to": 100.0, "cut": 1.2, "source": " "}]},
+       rulefail("katsayının kaynağı boş olmaz, en çok 200 karakter", "factors[0]"))
     no("Sıfır katsayı", {**base, "factors": [{"from": 0.0, "to": 100.0, "cut": 0.0}]},
        rulefail("katsayı 0'dan büyük, en çok 10 olur", "factors[0]"))
     no("On'dan büyük katsayı", {**base, "factors": [{"from": 0.0, "to": 100.0, "fill": 12.0}]},

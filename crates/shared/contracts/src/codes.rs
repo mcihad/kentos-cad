@@ -790,6 +790,7 @@ codes! {
     VOLUME_UNCOVERED = "volume_uncovered", Warning, false, "Tasarım yüzeyinin bir kısmını arazi örtmüyor; o alanın hacmi yok.";
     /// A warning: stretches without factors are not converted (docs/adr/0906 §4).
     VOLUME_UNFACTORED = "volume_unfactored", Warning, false, "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir.";
+    VOLUME_FACTOR_PHYSICS = "volume_factor_physics", Warning, false, "Bir katsayı ya da yoğunluk zeminin yapamayacağını söylüyor (gevşek hacim yerindekinden ya da sıkışıktan az); kütle ordinatı karışık hallerle kurulmuş olabilir.";
     /// An approved earthwork volume's definition does not change (docs/adr/0906 §5).
     VOLUME_APPROVED = "volume_approved", Failed, false, "Bu kübaj onaylı; değiştirmek ya da silmek için önce onayı kaldırın.";
     /// Revoking the approval of a volume not approved.

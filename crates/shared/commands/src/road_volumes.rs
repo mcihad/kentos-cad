@@ -1012,3 +1012,117 @@ pub struct VolumeHistoryRead {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub since: Option<VolumeChange>,
 }
+
+pub const ROAD_VOLUMES_STATES: &str = "road.volumes.states";
+pub const ROAD_VOLUMES_STATES_VERSION: u32 = 1;
+
+/// Input of `road.volumes.states` v1 (plan/road.md Y51, docs/adr/0957; ROAD-VOL-10): a volume's earthwork in its three
+/// states, row by row of its factor table: the cut as measured in place (bank, yerinde) and loosened (as a truck
+/// carries it), the fill as measured compacted and loosened (what it asks), and where the row gives the soil's
+/// densities, the bank the fill asks, the compacted volume the cut makes and both masses (t). What a factor or a
+/// density says that the soil cannot do is told. Reads only.
+///
+/// Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (one that does not compute).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesStates {
+    pub volume: String,
+}
+
+/// A factor row's earthwork in its states.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeStateRow {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub densities: Option<crate::VolumeDensities>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut_factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill_factor: Option<f64>,
+    /// The cut in place and the fill compacted, as measured (m³).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    /// Loosened: the cut times its factor, what the fill asks times its factor (m³; the measured where none).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_loose: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_loose: f64,
+    /// With densities: the bank the fill asks, the compacted volume the cut makes (m³) and the masses (t).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_bank: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_compacted: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t")))]
+    pub cut_mass: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t")))]
+    pub fill_mass: Option<f64>,
+    /// What its factors or densities say that the soil cannot do, in words.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub checks: Vec<String>,
+}
+
+/// Output of `road.volumes.states` v1: the volume, each factor row in its states, the stretches no row covers (their
+/// cut and fill as measured), and the totals: in place and compacted as measured, loosened (the mass ordinate's end is
+/// their difference), and where every stretch has densities, the masses.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeStatesRead {
+    pub volume: String,
+    pub rows: Vec<VolumeStateRow>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub unfactored_cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub unfactored_fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_loose: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_loose: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub balance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t")))]
+    pub cut_mass: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "t")))]
+    pub fill_mass: Option<f64>,
+}

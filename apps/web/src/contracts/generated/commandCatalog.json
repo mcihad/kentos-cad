@@ -42551,6 +42551,221 @@
       ]
     },
     {
+      "id": "road.volumes.states",
+      "version": 1,
+      "title": "Hacim halleri",
+      "summary": "Bir kübajın toprağını katsayı satırı satırı üç halde verir; hiçbir şey yazmaz. Kütle korunur: yerinde V m³ kazı ρ_yerinde·V ton tartar, gevşeyince V·ρ_yerinde/ρ_gevşek, sıkışınca V·ρ_yerinde/ρ_sıkışık m³ olur; sıkışık V m³ dolgu yerinde V·ρ_sıkışık/ρ_yerinde, gevşek V·ρ_sıkışık/ρ_gevşek m³ ister. Kütle ordinatı kazıyı ve dolgunun istediğini gevşek hacimle karşılaştırır (katsayılar ya da yoğunluklardan çıkan yerinde/gevşek ve sıkışık/gevşek). Her satırın kaynağı, ölçülen kazı ve dolgu, gevşek hâlleri; yoğunluk verilmişse dolgunun istediği yerinde hacim, kazının yapacağı sıkışık hacim ve iki kütle. 1'den küçük katsayı ve zeminin yapamayacağı yoğunluklar söylenir. Uyarılar: volume_factor_physics, volume_unfactored, corridor_stale, volume_gap, volume_uncovered. Retler: not_a_road_project, unknown_volume, invalid_volume.",
+      "aliases": [
+        "hacimhalleri"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.volumes.states` v1 (plan/road.md Y51, docs/adr/0957; ROAD-VOL-10): a volume's earthwork in its three\nstates, row by row of its factor table: the cut as measured in place (bank, yerinde) and loosened (as a truck\ncarries it), the fill as measured compacted and loosened (what it asks), and where the row gives the soil's\ndensities, the bank the fill asks, the compacted volume the cut makes and both masses (t). What a factor or a\ndensity says that the soil cannot do is told. Reads only.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (one that does not compute).",
+        "properties": {
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume"
+        ],
+        "title": "VolumesStates",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.states` v1: the volume, each factor row in its states, the stretches no row covers (their\ncut and fill as measured), and the totals: in place and compacted as measured, loosened (the mass ordinate's end is\ntheir difference), and where every stretch has densities, the masses.",
+        "properties": {
+          "balance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cutLoose": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cutMass": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "t"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fillLoose": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fillMass": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "t"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/VolumeStateRow"
+            },
+            "type": "array"
+          },
+          "unfactoredCut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "unfactoredFill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "rows",
+          "unfactoredCut",
+          "unfactoredFill",
+          "cut",
+          "fill",
+          "cutLoose",
+          "fillLoose",
+          "balance"
+        ],
+        "title": "VolumeStatesRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.states` v1: the volume, each factor row in its states, the stretches no row covers (their\ncut and fill as measured), and the totals: in place and compacted as measured, loosened (the mass ordinate's end is\ntheir difference), and where every stretch has densities, the masses.",
+        "properties": {
+          "balance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cutLoose": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "cutMass": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "t"
+          },
+          "fill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fillLoose": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "fillMass": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "t"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/VolumeStateRow"
+            },
+            "type": "array"
+          },
+          "unfactoredCut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "unfactoredFill": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "volume"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "rows",
+          "unfactoredCut",
+          "unfactoredFill",
+          "cut",
+          "fill",
+          "cutLoose",
+          "fillLoose",
+          "balance"
+        ],
+        "title": "VolumeStatesRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_volume",
+          "invalid_volume"
+        ],
+        "warnings": [
+          "volume_factor_physics",
+          "volume_unfactored",
+          "corridor_stale",
+          "volume_gap",
+          "volume_uncovered"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana kübajın hacim halleri",
+          "input": {
+            "volume": "v-1"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.volumes.ledger",
       "version": 1,
       "title": "Kübaj defteri",
@@ -88900,6 +89115,12 @@
       "meaning": "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir."
     },
     {
+      "code": "volume_factor_physics",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir katsayı ya da yoğunluk zeminin yapamayacağını söylüyor (gevşek hacim yerindekinden ya da sıkışıktan az); kütle ordinatı karışık hallerle kurulmuş olabilir."
+    },
+    {
       "code": "volume_approved",
       "kind": "failed",
       "retryable": false,
@@ -94749,6 +94970,10 @@
     {
       "unit": "km/h",
       "meaning": "Kilometre bölü saat."
+    },
+    {
+      "unit": "t/m3",
+      "meaning": "Yoğunluk: ton bölü metreküp."
     },
     {
       "unit": "m2/s",
@@ -176434,6 +176659,33 @@
       ],
       "type": "object"
     },
+    "VolumeDensities": {
+      "additionalProperties": false,
+      "description": "A soil's densities (t/m³): in place (bank, yerinde), loosened (loose, gevşek) and compacted in the fill (sıkışık).",
+      "properties": {
+        "bank": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "t/m3"
+        },
+        "compacted": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "t/m3"
+        },
+        "loose": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "t/m3"
+        }
+      },
+      "required": [
+        "bank",
+        "loose",
+        "compacted"
+      ],
+      "type": "object"
+    },
     "VolumeFactorDef": {
       "additionalProperties": false,
       "description": "The factors over a stretch of stations (docs/adr/0906 §4): the cut's (bank to the volume it makes, kabarma) and the\nfill's (compacted to the volume it needs, sıkışma), each a multiplier; absent: not converted.",
@@ -176445,6 +176697,17 @@
             "null"
           ],
           "x-unit": "1"
+        },
+        "densities": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeDensities"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The soil's densities from the soil report (docs/adr/0957; KCAD schema 174): the factors follow from them, the\ncut's bank over loose, the fill's compacted over loose (both volumes in loose m³, as a truck carries them); a\nrow with densities writes no factor of its own."
         },
         "fill": {
           "format": "double",
@@ -176458,6 +176721,13 @@
           "format": "double",
           "type": "number",
           "x-unit": "m"
+        },
+        "source": {
+          "description": "Where its factors or densities come from (the soil report, its borehole or test), in words (docs/adr/0957).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "to": {
           "format": "double",
@@ -176964,6 +177234,132 @@
         "sigma",
         "bias",
         "bound"
+      ],
+      "type": "object"
+    },
+    "VolumeStateRow": {
+      "description": "A factor row's earthwork in its states.",
+      "properties": {
+        "checks": {
+          "description": "What its factors or densities say that the soil cannot do, in words.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cut": {
+          "description": "The cut in place and the fill compacted, as measured (m³).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutCompacted": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "cutFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "cutLoose": {
+          "description": "Loosened: the cut times its factor, what the fill asks times its factor (m³; the measured where none).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutMass": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "t"
+        },
+        "densities": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeDensities"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillBank": {
+          "description": "With densities: the bank the fill asks, the compacted volume the cut makes (m³) and the masses (t).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "fillFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "fillLoose": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillMass": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "t"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "cut",
+        "fill",
+        "cutLoose",
+        "fillLoose"
       ],
       "type": "object"
     },

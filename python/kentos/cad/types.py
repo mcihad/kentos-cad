@@ -80,6 +80,7 @@ UNITS: dict[str, str] = {
     "version": "Sürüm numarası.",
     "value": "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
     "km/h": "Kilometre bölü saat.",
+    "t/m3": "Yoğunluk: ton bölü metreküp.",
     "m2/s": "Metre başına debi: m³/s bölü metre, birim genişlikten geçen su (yolu aşan suyun metresi).",
     "m/s2": "Metre bölü saniye kare: ivme ve yavaşlama.",
     "m/s3": "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor).",
@@ -88689,6 +88690,34 @@ class VolumeDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeDensities(_Model):
+    """A soil's densities (t/m³): in place (bank, yerinde), loosened (loose, gevşek) and compacted in the fill (sıkışık).
+    Attributes:
+        bank: Unit: t/m3.
+        loose: Unit: t/m3.
+        compacted: Unit: t/m3.
+    """
+    bank: float
+    loose: float
+    compacted: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["bank"] = float(self.bank)
+        out["loose"] = float(self.loose)
+        out["compacted"] = float(self.compacted)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeDensities:
+        return cls(
+            bank=float(data["bank"]),
+            loose=float(data["loose"]),
+            compacted=float(data["compacted"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeFactorDef(_Model):
     """The factors over a stretch of stations (docs/adr/0906 §4): the cut's (bank to the volume it makes, kabarma) and the
     fill's (compacted to the volume it needs, sıkışma), each a multiplier; absent: not converted.
@@ -88696,12 +88725,18 @@ class VolumeFactorDef(_Model):
         from_: Unit: m.
         to: Unit: m.
         cut: Unit: 1.
+        densities: The soil's densities from the soil report (docs/adr/0957; KCAD schema 174): the factors follow from them, the
+            cut's bank over loose, the fill's compacted over loose (both volumes in loose m³, as a truck carries them); a
+            row with densities writes no factor of its own.
         fill: Unit: 1.
+        source: Where its factors or densities come from (the soil report, its borehole or test), in words (docs/adr/0957).
     """
     from_: float
     to: float
     cut: float | None | Unset = UNSET
+    densities: VolumeDensities | None | Unset = UNSET
     fill: float | None | Unset = UNSET
+    source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -88709,8 +88744,12 @@ class VolumeFactorDef(_Model):
         out["to"] = float(self.to)
         if self.cut is not UNSET:
             out["cut"] = None if self.cut is None else float(self.cut)
+        if self.densities is not UNSET:
+            out["densities"] = None if self.densities is None else self.densities.to_json()
         if self.fill is not UNSET:
             out["fill"] = None if self.fill is None else float(self.fill)
+        if self.source is not UNSET:
+            out["source"] = self.source
         return out
 
     @classmethod
@@ -88719,7 +88758,9 @@ class VolumeFactorDef(_Model):
             from_=float(data["from"]),
             to=float(data["to"]),
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
+            densities=UNSET if "densities" not in data else None if data["densities"] is None else VolumeDensities.from_json(data["densities"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+            source=data.get("source", UNSET),
         )
 
 
@@ -89243,6 +89284,157 @@ class VolumeSpread(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeStateRow(_Model):
+    """A factor row's earthwork in its states.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        cut: The cut in place and the fill compacted, as measured (m³). Unit: volume.
+        fill: Unit: volume.
+        cut_loose: Loosened: the cut times its factor, what the fill asks times its factor (m³; the measured where none). Unit: volume.
+        fill_loose: Unit: volume.
+        checks: What its factors or densities say that the soil cannot do, in words.
+        cut_compacted: Unit: volume.
+        cut_factor: Unit: 1.
+        cut_mass: Unit: t.
+        fill_bank: With densities: the bank the fill asks, the compacted volume the cut makes (m³) and the masses (t). Unit: volume.
+        fill_factor: Unit: 1.
+        fill_mass: Unit: t.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    cut: float
+    fill: float
+    cut_loose: float
+    fill_loose: float
+    checks: list[str] | Unset = UNSET
+    cut_compacted: float | None | Unset = UNSET
+    cut_factor: float | None | Unset = UNSET
+    cut_mass: float | None | Unset = UNSET
+    densities: VolumeDensities | None | Unset = UNSET
+    fill_bank: float | None | Unset = UNSET
+    fill_factor: float | None | Unset = UNSET
+    fill_mass: float | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["cutLoose"] = float(self.cut_loose)
+        out["fillLoose"] = float(self.fill_loose)
+        if self.checks is not UNSET:
+            out["checks"] = list(self.checks)
+        if self.cut_compacted is not UNSET:
+            out["cutCompacted"] = None if self.cut_compacted is None else float(self.cut_compacted)
+        if self.cut_factor is not UNSET:
+            out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
+        if self.cut_mass is not UNSET:
+            out["cutMass"] = None if self.cut_mass is None else float(self.cut_mass)
+        if self.densities is not UNSET:
+            out["densities"] = None if self.densities is None else self.densities.to_json()
+        if self.fill_bank is not UNSET:
+            out["fillBank"] = None if self.fill_bank is None else float(self.fill_bank)
+        if self.fill_factor is not UNSET:
+            out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
+        if self.fill_mass is not UNSET:
+            out["fillMass"] = None if self.fill_mass is None else float(self.fill_mass)
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeStateRow:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            cut_loose=float(data["cutLoose"]),
+            fill_loose=float(data["fillLoose"]),
+            checks=list(data["checks"]) if "checks" in data else UNSET,
+            cut_compacted=UNSET if "cutCompacted" not in data else None if data["cutCompacted"] is None else float(data["cutCompacted"]),
+            cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
+            cut_mass=UNSET if "cutMass" not in data else None if data["cutMass"] is None else float(data["cutMass"]),
+            densities=UNSET if "densities" not in data else None if data["densities"] is None else VolumeDensities.from_json(data["densities"]),
+            fill_bank=UNSET if "fillBank" not in data else None if data["fillBank"] is None else float(data["fillBank"]),
+            fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+            fill_mass=UNSET if "fillMass" not in data else None if data["fillMass"] is None else float(data["fillMass"]),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeStatesRead(_Model):
+    """Output of `road.volumes.states` v1: the volume, each factor row in its states, the stretches no row covers (their
+    cut and fill as measured), and the totals: in place and compacted as measured, loosened (the mass ordinate's end is
+    their difference), and where every stretch has densities, the masses.
+    Attributes:
+        unfactored_cut: Unit: volume.
+        unfactored_fill: Unit: volume.
+        cut: Unit: volume.
+        fill: Unit: volume.
+        cut_loose: Unit: volume.
+        fill_loose: Unit: volume.
+        balance: Unit: volume.
+        cut_mass: Unit: t.
+        fill_mass: Unit: t.
+    """
+    volume: str
+    rows: list[VolumeStateRow]
+    unfactored_cut: float
+    unfactored_fill: float
+    cut: float
+    fill: float
+    cut_loose: float
+    fill_loose: float
+    balance: float
+    cut_mass: float | None | Unset = UNSET
+    fill_mass: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["unfactoredCut"] = float(self.unfactored_cut)
+        out["unfactoredFill"] = float(self.unfactored_fill)
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["cutLoose"] = float(self.cut_loose)
+        out["fillLoose"] = float(self.fill_loose)
+        out["balance"] = float(self.balance)
+        if self.cut_mass is not UNSET:
+            out["cutMass"] = None if self.cut_mass is None else float(self.cut_mass)
+        if self.fill_mass is not UNSET:
+            out["fillMass"] = None if self.fill_mass is None else float(self.fill_mass)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeStatesRead:
+        return cls(
+            volume=data["volume"],
+            rows=[VolumeStateRow.from_json(e0) for e0 in data["rows"]],
+            unfactored_cut=float(data["unfactoredCut"]),
+            unfactored_fill=float(data["unfactoredFill"]),
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            cut_loose=float(data["cutLoose"]),
+            fill_loose=float(data["fillLoose"]),
+            balance=float(data["balance"]),
+            cut_mass=UNSET if "cutMass" not in data else None if data["cutMass"] is None else float(data["cutMass"]),
+            fill_mass=UNSET if "fillMass" not in data else None if data["fillMass"] is None else float(data["fillMass"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeStripDef(_Model):
     """The topsoil stripped over a stretch of stations (docs/adr/0906 §6): its depth (m) under the earthwork's footprint.
     Attributes:
@@ -89685,6 +89877,30 @@ class VolumesQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> VolumesQuery:
         return cls(
             volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesStates(_Model):
+    """Input of `road.volumes.states` v1 (plan/road.md Y51, docs/adr/0957; ROAD-VOL-10): a volume's earthwork in its three
+    states, row by row of its factor table: the cut as measured in place (bank, yerinde) and loosened (as a truck
+    carries it), the fill as measured compacted and loosened (what it asks), and where the row gives the soil's
+    densities, the bank the fill asks, the compacted volume the cut makes and both masses (t). What a factor or a
+    density says that the soil cannot do is told. Reads only.
+
+    Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume` (one that does not compute).
+    """
+    volume: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesStates:
+        return cls(
+            volume=data["volume"],
         )
 
 
@@ -114005,6 +114221,7 @@ __all__ = [
     "VolumeChange",
     "VolumeCurve",
     "VolumeDef",
+    "VolumeDensities",
     "VolumeFactorDef",
     "VolumeHistoryEntry",
     "VolumeHistoryRead",
@@ -114020,6 +114237,8 @@ __all__ = [
     "VolumeRule",
     "VolumeRuleName",
     "VolumeSpread",
+    "VolumeStateRow",
+    "VolumeStatesRead",
     "VolumeStripDef",
     "VolumeToday",
     "VolumeUncertaintyReport",
@@ -114032,6 +114251,7 @@ __all__ = [
     "VolumesProgress",
     "VolumesQueried",
     "VolumesQuery",
+    "VolumesStates",
     "VolumesUncertainty",
     "VolumesWritten",
     "WallAnchor",

@@ -123,7 +123,12 @@ fn ledger(
             .iter()
             .map(|f| {
                 let factor = |w: &str, v: Option<f64>| v.map_or_else(String::new, |v| format!(" · {w} {v}"));
-                ((f.from, f.to), format!("{} – {}{}{}", text(f.from), text(f.to), factor("kabarma", f.cut), factor("sıkışma", f.fill)))
+                let name = match &f.densities {
+                    // Docs/adr/0957: a row of densities is named by them.
+                    Some(d) => format!("{} – {} · yoğunluk {}/{}/{} t/m³", text(f.from), text(f.to), d.bank, d.loose, d.compacted),
+                    None => format!("{} – {}{}{}", text(f.from), text(f.to), factor("kabarma", f.cut), factor("sıkışma", f.fill)),
+                };
+                ((f.from, f.to), name)
             })
             .unzip(),
         LedgerBy::Regions => {

@@ -7762,6 +7762,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_VOLUMES_STATES.into(),
+            version: crate::ROAD_VOLUMES_STATES_VERSION,
+            title: "Hacim halleri".into(),
+            summary: "Bir kübajın toprağını katsayı satırı satırı üç halde verir; hiçbir şey yazmaz. Kütle korunur: yerinde V m³ kazı ρ_yerinde·V ton tartar, gevşeyince V·ρ_yerinde/ρ_gevşek, sıkışınca V·ρ_yerinde/ρ_sıkışık m³ olur; sıkışık V m³ dolgu yerinde V·ρ_sıkışık/ρ_yerinde, gevşek V·ρ_sıkışık/ρ_gevşek m³ ister. Kütle ordinatı kazıyı ve dolgunun istediğini gevşek hacimle karşılaştırır (katsayılar ya da yoğunluklardan çıkan yerinde/gevşek ve sıkışık/gevşek). Her satırın kaynağı, ölçülen kazı ve dolgu, gevşek hâlleri; yoğunluk verilmişse dolgunun istediği yerinde hacim, kazının yapacağı sıkışık hacim ve iki kütle. 1'den küçük katsayı ve zeminin yapamayacağı yoğunluklar söylenir. \
+                      Uyarılar: volume_factor_physics, volume_unfactored, corridor_stale, volume_gap, volume_uncovered. Retler: not_a_road_project, unknown_volume, invalid_volume."
+                .into(),
+            aliases: vec!["hacimhalleri".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesStates>(),
+            output: schema::<crate::VolumeStatesRead>(),
+            plan: Some(schema::<crate::VolumeStatesRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajın hacim halleri".into(),
+                input: json!({ "volume": "v-1" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_VOLUMES_LEDGER.into(),
             version: crate::ROAD_VOLUMES_LEDGER_VERSION,
             title: "Kübaj defteri".into(),
@@ -14933,6 +14958,9 @@ mod tests {
                     crate::ROAD_VOLUMES_LEDGER => {
                         serde_json::from_value::<crate::VolumesLedger>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_STATES => {
+                        serde_json::from_value::<crate::VolumesStates>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_HISTORY => {
                         serde_json::from_value::<crate::VolumesHistory>(e.input.clone()).map(|_| ())
                     }
@@ -15806,6 +15834,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_LEDGER => {
                             serde_json::from_value::<crate::VolumeLedgerRead>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_STATES => {
+                            serde_json::from_value::<crate::VolumeStatesRead>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_VOLUMES_HISTORY => {
                             serde_json::from_value::<crate::VolumeHistoryRead>(output.clone()).map(|_| ())

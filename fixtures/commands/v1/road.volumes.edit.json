@@ -6510,6 +6510,1059 @@
    ]
   },
   {
+   "name": "Yoğunluklar ve kaynaklar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni kübaj",
+      "corridor": "c-1",
+      "method": "endArea",
+      "factors": [
+       {
+        "from": 0.0,
+        "to": 300.0,
+        "densities": {
+         "bank": 1.8,
+         "loose": 1.45,
+         "compacted": 1.95
+        },
+        "source": "Zemin etüdü raporu, SK-3"
+       },
+       {
+        "from": 300.0,
+        "to": 600.0,
+        "cut": 1.2,
+        "fill": 1.08,
+        "source": "KGM tablosu"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "method": "endArea",
+         "revision": 1,
+         "approved": false
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "method": "surfaces",
+         "revision": 1,
+         "approved": false
+        },
+        {
+         "id": "v-3",
+         "name": "Yeni kübaj",
+         "corridor": "c-1",
+         "method": "endArea",
+         "revision": 1,
+         "approved": false
+        }
+       ],
+       "revision": "$current",
+       "volume": {
+        "id": "v-3",
+        "name": "Yeni kübaj",
+        "revision": 1,
+        "corridor": "c-1",
+        "method": "endArea",
+        "stale": false,
+        "rows": [
+         {
+          "from": 0.0,
+          "to": 25.0,
+          "fromText": "1+000.000",
+          "toText": "1+025.000",
+          "cut": 830.3180834649165,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 1030.739689818517,
+          "totalFill": 0.0,
+          "mass": 1030.739689818517
+         },
+         {
+          "from": 25.0,
+          "to": 50.0,
+          "fromText": "1+025.000",
+          "toText": "1+050.000",
+          "cut": 1682.9425134868288,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 3119.9097065607875,
+          "totalFill": 0.0,
+          "mass": 3119.9097065607875
+         },
+         {
+          "from": 50.0,
+          "to": 75.0,
+          "fromText": "1+050.000",
+          "toText": "1+075.000",
+          "cut": 1600.6993453965194,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 5106.984756018535,
+          "totalFill": 0.0,
+          "mass": 5106.984756018535
+         },
+         {
+          "from": 75.0,
+          "to": 100.0,
+          "fromText": "1+075.000",
+          "toText": "1+100.000",
+          "cut": 1196.716165183281,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 6592.563443832263,
+          "totalFill": 0.0,
+          "mass": 6592.563443832263
+         },
+         {
+          "from": 100.0,
+          "to": 125.0,
+          "fromText": "1+100.000",
+          "toText": "1+125.000",
+          "cut": 690.732303354783,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 7450.024234203718,
+          "totalFill": 0.0,
+          "mass": 7450.024234203718
+         },
+         {
+          "from": 125.0,
+          "to": 150.0,
+          "fromText": "1+125.000",
+          "toText": "1+150.000",
+          "cut": 277.5839053905673,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 7794.611151240284,
+          "totalFill": 0.0,
+          "mass": 7794.611151240284
+         },
+         {
+          "from": 150.0,
+          "to": 175.0,
+          "fromText": "1+150.000",
+          "toText": "1+175.000",
+          "cut": 35.492851844457995,
+          "fill": 66.62399602149243,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 7838.671243185128,
+          "totalFill": 89.59778775304154,
+          "mass": 7749.073455432087
+         },
+         {
+          "from": 175.0,
+          "to": 194.712598760949,
+          "fromText": "1+175.000",
+          "toText": "1+194.713",
+          "cut": 124.11882160170718,
+          "fill": 52.533284056909686,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 7992.749780345868,
+          "totalFill": 160.24599734681664,
+          "mass": 7832.5037829990515
+         },
+         {
+          "from": 194.712598760949,
+          "to": 204.712598760949,
+          "fromText": "1+194.713",
+          "toText": "1+204.713",
+          "cut": 172.646116323654,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 8207.069097161439,
+          "totalFill": 160.24599734681664,
+          "mass": 8046.823099814622
+         },
+         {
+          "from": 204.712598760949,
+          "to": 214.712598760949,
+          "fromText": "1+204.713",
+          "toText": "1+214.713",
+          "cut": 264.2585886556393,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 8535.114241699473,
+          "totalFill": 160.24599734681664,
+          "mass": 8374.868244352658
+         },
+         {
+          "from": 214.712598760949,
+          "to": 224.712598760949,
+          "fromText": "1+214.713",
+          "toText": "1+224.713",
+          "cut": 355.77270241536377,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 8976.763113663374,
+          "totalFill": 160.24599734681664,
+          "mass": 8816.517116316558
+         },
+         {
+          "from": 224.712598760949,
+          "to": 234.712598760949,
+          "fromText": "1+224.713",
+          "toText": "1+234.713",
+          "cut": 450.9990762070264,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 9536.624035851406,
+          "totalFill": 160.24599734681664,
+          "mass": 9376.37803850459
+         },
+         {
+          "from": 234.712598760949,
+          "to": 243.95159624156145,
+          "fromText": "1+234.713",
+          "toText": "1+243.952",
+          "cut": 491.41300460180327,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 10146.653972598473,
+          "totalFill": 160.24599734681664,
+          "mass": 9986.407975251657
+         },
+         {
+          "from": 243.95159624156145,
+          "to": 253.19059372217393,
+          "fromText": "1+243.952",
+          "toText": "1+253.191",
+          "cut": 542.5393553984381,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 10820.151103437913,
+          "totalFill": 160.24599734681664,
+          "mass": 10659.905106091097
+         },
+         {
+          "from": 253.19059372217393,
+          "to": 262.4295912027864,
+          "fromText": "1+253.191",
+          "toText": "1+262.430",
+          "cut": 576.7070903999205,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 11536.063353589538,
+          "totalFill": 160.24599734681664,
+          "mass": 11375.817356242722
+         },
+         {
+          "from": 262.4295912027864,
+          "to": 271.66858868339887,
+          "fromText": "1+262.430",
+          "toText": "1+271.669",
+          "cut": 593.3280970615705,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 12272.608577528039,
+          "totalFill": 160.24599734681664,
+          "mass": 12112.362580181223
+         },
+         {
+          "from": 271.66858868339887,
+          "to": 280.9075861640113,
+          "fromText": "1+271.669",
+          "toText": "1+280.908",
+          "cut": 548.5692307360441,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 12953.591070855542,
+          "totalFill": 160.24599734681664,
+          "mass": 12793.345073508726
+         },
+         {
+          "from": 280.9075861640113,
+          "to": 290.1465836446238,
+          "fromText": "1+280.908",
+          "toText": "1+290.147",
+          "cut": 424.85125631951854,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 13480.9926304246,
+          "totalFill": 160.24599734681664,
+          "mass": 13320.746633077784
+         },
+         {
+          "from": 290.1465836446238,
+          "to": 299.3855811252363,
+          "fromText": "1+290.147",
+          "toText": "1+299.386",
+          "cut": 283.9342701360498,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 13833.462758869351,
+          "totalFill": 160.24599734681664,
+          "mass": 13673.216761522535
+         },
+         {
+          "from": 299.3855811252363,
+          "to": 300.0,
+          "fromText": "1+299.386",
+          "toText": "1+300.000",
+          "cut": 14.24720106619386,
+          "fill": 0.0,
+          "cutFactor": 1.2413793103448276,
+          "fillFactor": 1.3448275862068966,
+          "totalCut": 13851.148939503248,
+          "totalFill": 160.24599734681664,
+          "mass": 13690.902942156432
+         },
+         {
+          "from": 300.0,
+          "to": 308.62457860584874,
+          "fromText": "1+300.000",
+          "toText": "1+308.625",
+          "cut": 131.19066059949236,
+          "fill": 0.0,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14008.577732222639,
+          "totalFill": 160.24599734681664,
+          "mass": 13848.331734875823
+         },
+         {
+          "from": 308.62457860584874,
+          "to": 317.8635760864612,
+          "fromText": "1+308.625",
+          "toText": "1+317.864",
+          "cut": 47.198715451970216,
+          "fill": 2.1555795581506976,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14065.216190765002,
+          "totalFill": 162.5740232696194,
+          "mass": 13902.642167495384
+         },
+         {
+          "from": 317.8635760864612,
+          "to": 327.8635760864612,
+          "fromText": "1+317.864",
+          "toText": "1+327.864",
+          "cut": 3.0649197407534983,
+          "fill": 47.40580725758967,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 213.77229510781626,
+          "mass": 13855.12179934609
+         },
+         {
+          "from": 327.8635760864612,
+          "to": 337.8635760864612,
+          "fromText": "1+327.864",
+          "toText": "1+337.864",
+          "cut": 0.0,
+          "fill": 135.39661574782625,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 360.0006401154686,
+          "mass": 13708.893454338438
+         },
+         {
+          "from": 337.8635760864612,
+          "to": 347.8635760864612,
+          "fromText": "1+337.864",
+          "toText": "1+347.864",
+          "cut": 0.0,
+          "fill": 223.90438790366653,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 601.8173790514285,
+          "mass": 13467.076715402478
+         },
+         {
+          "from": 347.8635760864612,
+          "to": 357.8635760864612,
+          "fromText": "1+347.864",
+          "toText": "1+357.864",
+          "cut": 0.0,
+          "fill": 301.1774759374853,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 927.0890530639126,
+          "mass": 13141.805041389995
+         },
+         {
+          "from": 357.8635760864612,
+          "to": 375.0,
+          "fromText": "1+357.864",
+          "toText": "1+375.000",
+          "cut": 0.0,
+          "fill": 603.3296970713396,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 1578.6851259009595,
+          "mass": 12490.208968552946
+         },
+         {
+          "from": 375.0,
+          "to": 400.0,
+          "fromText": "1+375.000",
+          "toText": "1+400.000",
+          "cut": 0.0,
+          "fill": 868.3480752321221,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 2516.5010471516516,
+          "mass": 11552.393047302256
+         },
+         {
+          "from": 400.0,
+          "to": 425.0,
+          "fromText": "1+400.000",
+          "toText": "1+425.000",
+          "cut": 0.0,
+          "fill": 743.5274723847514,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 3319.510717327183,
+          "mass": 10749.383377126724
+         },
+         {
+          "from": 425.0,
+          "to": 450.0,
+          "fromText": "1+425.000",
+          "toText": "1+450.000",
+          "cut": 0.0,
+          "fill": 399.67561877915927,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14068.894094453906,
+          "totalFill": 3751.160385608675,
+          "mass": 10317.733708845231
+         },
+         {
+          "from": 450.0,
+          "to": 475.0,
+          "fromText": "1+450.000",
+          "toText": "1+475.000",
+          "cut": 239.7602051149267,
+          "fill": 63.30267438122278,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 14356.606340591818,
+          "totalFill": 3819.5272739403954,
+          "mass": 10537.079066651422
+         },
+         {
+          "from": 475.0,
+          "to": 500.0,
+          "fromText": "1+475.000",
+          "toText": "1+500.000",
+          "cut": 1041.6047907563582,
+          "fill": 0.0,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 15606.532089499447,
+          "totalFill": 3819.5272739403954,
+          "mass": 11787.004815559052
+         },
+         {
+          "from": 500.0,
+          "to": 525.0,
+          "fromText": "1+500.000",
+          "toText": "1+525.000",
+          "cut": 2257.070276615331,
+          "fill": 0.0,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 18315.016421437846,
+          "totalFill": 3819.5272739403954,
+          "mass": 14495.48914749745
+         },
+         {
+          "from": 525.0,
+          "to": 550.0,
+          "fromText": "1+525.000",
+          "toText": "1+550.000",
+          "cut": 3376.129744276058,
+          "fill": 0.0,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 22366.372114569116,
+          "totalFill": 3819.5272739403954,
+          "mass": 18546.84484062872
+         },
+         {
+          "from": 550.0,
+          "to": 575.0,
+          "fromText": "1+550.000",
+          "toText": "1+575.000",
+          "cut": 3837.0273097559043,
+          "fill": 0.0,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 26970.8048862762,
+          "totalFill": 3819.5272739403954,
+          "mass": 23151.277612335805
+         },
+         {
+          "from": 575.0,
+          "to": 600.0,
+          "fromText": "1+575.000",
+          "toText": "1+600.000",
+          "cut": 3787.229329493317,
+          "fill": 0.0,
+          "cutFactor": 1.2,
+          "fillFactor": 1.08,
+          "totalCut": 31515.48008166818,
+          "totalFill": 3819.5272739403954,
+          "mass": 27695.952807727786
+         }
+        ],
+        "cut": 25878.14593084839,
+        "fill": 3507.380684331716,
+        "factoredCut": 31515.48008166818,
+        "factoredFill": 3819.5272739403954,
+        "gaps": []
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "cut": 1.25,
+           "fill": 0.9
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2
+          }
+         ]
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "revision": 1,
+         "method": "surfaces"
+        },
+        {
+         "id": "v-3",
+         "name": "Yeni kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "densities": {
+            "bank": 1.8,
+            "loose": 1.45,
+            "compacted": 1.95
+           },
+           "source": "Zemin etüdü raporu, SK-3"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2,
+           "fill": 1.08,
+           "source": "KGM tablosu"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
    "name": "Adı değişir",
    "steps": [
     {
@@ -30495,6 +31548,1537 @@
        "code": "invalid_volume",
        "message": "Kübaj hesabı kurallarına uymuyor: bu adda başka bir kübaj hesabı var.",
        "path": "name"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "cut": 1.25,
+           "fill": 0.9
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2
+          }
+         ]
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "revision": 1,
+         "method": "surfaces"
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yoğunluklu satıra katsayı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni kübaj",
+      "corridor": "c-1",
+      "method": "endArea",
+      "factors": [
+       {
+        "from": 0.0,
+        "to": 100.0,
+        "cut": 1.2,
+        "densities": {
+         "bank": 1.8,
+         "loose": 1.45,
+         "compacted": 1.95
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_volume",
+       "message": "Kübaj hesabı kurallarına uymuyor: yoğunluk verilen satıra katsayı yazılmaz; katsayılar yoğunluklardan çıkar.",
+       "path": "factors[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "cut": 1.25,
+           "fill": 0.9
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2
+          }
+         ]
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "revision": 1,
+         "method": "surfaces"
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aralık dışı yoğunluk",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni kübaj",
+      "corridor": "c-1",
+      "method": "endArea",
+      "factors": [
+       {
+        "from": 0.0,
+        "to": 100.0,
+        "densities": {
+         "bank": 5.0,
+         "loose": 1.45,
+         "compacted": 1.95
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_volume",
+       "message": "Kübaj hesabı kurallarına uymuyor: yoğunluk 0,5 ile 4 t/m³ arası olur.",
+       "path": "factors[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same",
+      "road": {
+       "surfaces": [
+        {
+         "id": "t-1",
+         "name": "Mevcut zemin",
+         "points": {
+          "layers": [
+           "zemin"
+          ]
+         }
+        },
+        {
+         "id": "t-2",
+         "name": "Kurulamaz",
+         "points": {
+          "layers": [
+           "bos"
+          ]
+         }
+        }
+       ],
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "stationing": {
+          "start": 1000.0
+         }
+        },
+        {
+         "id": "g-2",
+         "name": "Yan aks",
+         "revision": 3,
+         "pis": [
+          {
+           "id": "a",
+           "x": 30.0,
+           "y": 380.0
+          },
+          {
+           "id": "b",
+           "x": 580.0,
+           "y": 20.0
+          }
+         ]
+        },
+        {
+         "id": "g-3",
+         "name": "Sağ kenar",
+         "revision": 1,
+         "offsetOf": {
+          "alignment": "g-1",
+          "offset": 5.0
+         }
+        },
+        {
+         "id": "g-4",
+         "name": "Dar kurp",
+         "revision": 1,
+         "pis": [
+          {
+           "id": "a",
+           "x": 200.0,
+           "y": 180.0
+          },
+          {
+           "id": "p1",
+           "x": 240.0,
+           "y": 180.0,
+           "radius": 4.0
+          },
+          {
+           "id": "b",
+           "x": 240.0,
+           "y": 240.0
+          }
+         ]
+        }
+       ],
+       "profiles": [
+        {
+         "id": "b-1",
+         "name": "Proje kotu",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 102.0
+          },
+          {
+           "id": "v1",
+           "station": 170.0,
+           "elevation": 101.5,
+           "length": 80.0
+          },
+          {
+           "id": "v2",
+           "station": 340.0,
+           "elevation": 111.0,
+           "radius": 1200.0
+          },
+          {
+           "id": "v3",
+           "station": 520.0,
+           "elevation": 106.0,
+           "lengthIn": 50.0,
+           "lengthOut": 35.0
+          },
+          {
+           "id": "b",
+           "station": 669.0,
+           "elevation": 113.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-2",
+         "name": "Yan kot",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 4,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 110.0
+          },
+          {
+           "id": "v1",
+           "station": 300.0,
+           "elevation": 104.0,
+           "length": 120.0
+          },
+          {
+           "id": "b",
+           "station": 650.0,
+           "elevation": 112.0
+          }
+         ],
+         "surface": "t-1"
+        },
+        {
+         "id": "b-3",
+         "name": "Kısmi kot",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 100.0,
+           "elevation": 104.0
+          },
+          {
+           "id": "b",
+           "station": 400.0,
+           "elevation": 110.0
+          }
+         ]
+        },
+        {
+         "id": "b-4",
+         "name": "Dar kurbun kotu",
+         "alignment": "g-4",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "pvis": [
+          {
+           "id": "a",
+           "station": 0.0,
+           "elevation": 106.0
+          },
+          {
+           "id": "b",
+           "station": 97.783,
+           "elevation": 106.0
+          }
+         ]
+        }
+       ],
+       "templates": [
+        {
+         "id": "tk-1",
+         "name": "Tip 1",
+         "revision": 1,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5,
+          "ditch": {
+           "fore": 2.0,
+           "depth": 0.5,
+           "bottom": 0.5
+          }
+         }
+        },
+        {
+         "id": "tk-2",
+         "name": "Tip 2",
+         "revision": 2,
+         "left": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.0,
+            "slope": -2.0
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.5,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.5,
+          "fill": 2.0
+         },
+         "right": {
+          "components": [
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "lane",
+            "width": 3.5,
+            "slope": -2.5
+           },
+           {
+            "kind": "shoulder",
+            "width": 1.0,
+            "slope": -4.0
+           }
+          ],
+          "cut": 1.0,
+          "fill": 1.5
+         }
+        }
+       ],
+       "sections": [
+        {
+         "id": "k-1",
+         "name": "Enkesitler",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "template": "tk-1",
+         "surface": "t-1",
+         "left": 25.0,
+         "right": 25.0,
+         "stations": {
+          "method": "range",
+          "from": 100.0,
+          "to": 300.0,
+          "every": 50.0,
+          "geometry": true
+         }
+        },
+        {
+         "id": "k-2",
+         "name": "Yan kesitler",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 3,
+         "profile": "b-2",
+         "template": "tk-2",
+         "surface": "t-1",
+         "left": 20.0,
+         "right": 30.0,
+         "stations": {
+          "method": "stations",
+          "stations": [
+           50.0,
+           200.0,
+           400.0
+          ]
+         }
+        }
+       ],
+       "superelevations": [
+        {
+         "id": "d-1",
+         "name": "Ana aks deveri",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p1",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0,
+            "widening": 0.5
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-2",
+         "name": "Yan aks deveri",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "normalLeft": -2.0,
+         "normalRight": -2.0,
+         "method": {
+          "method": "stations",
+          "rows": [
+           {
+            "station": 100.0,
+            "left": -2.0,
+            "right": -2.0
+           },
+           {
+            "station": 200.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 400.0,
+            "left": 3.0,
+            "right": -3.0
+           },
+           {
+            "station": 500.0,
+            "left": -2.0,
+            "right": -2.0
+           }
+          ]
+         }
+        },
+        {
+         "id": "d-3",
+         "name": "Kurulamaz dever",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "normalLeft": -2.5,
+         "normalRight": -2.5,
+         "method": {
+          "method": "curves",
+          "curves": [
+           {
+            "pi": "p9",
+            "rate": 6.0,
+            "runoff": 40.0,
+            "onTangent": 0.0
+           }
+          ]
+         }
+        }
+       ],
+       "corridors": [
+        {
+         "id": "c-1",
+         "name": "Ana koridor",
+         "alignment": "g-1",
+         "alignmentRevision": 1,
+         "revision": 1,
+         "profile": "b-1",
+         "surface": "t-1",
+         "left": 30.0,
+         "right": 30.0,
+         "tangent": 25.0,
+         "curve": 10.0,
+         "regions": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "template": "tk-1"
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "template": "tk-2"
+          }
+         ]
+        },
+        {
+         "id": "c-2",
+         "name": "Yan koridor",
+         "alignment": "g-2",
+         "alignmentRevision": 2,
+         "revision": 2,
+         "profile": "b-2",
+         "surface": "t-1",
+         "superelevation": "d-2",
+         "left": 25.0,
+         "right": 25.0,
+         "tangent": 50.0,
+         "curve": 20.0,
+         "regions": [
+          {
+           "from": 50.0,
+           "to": 400.0,
+           "template": "tk-2"
+          }
+         ]
+        }
+       ],
+       "volumes": [
+        {
+         "id": "v-1",
+         "name": "Ana kübaj",
+         "corridor": "c-1",
+         "revision": 1,
+         "method": "endArea",
+         "factors": [
+          {
+           "from": 0.0,
+           "to": 300.0,
+           "cut": 1.25,
+           "fill": 0.9
+          },
+          {
+           "from": 300.0,
+           "to": 600.0,
+           "cut": 1.2
+          }
+         ]
+        },
+        {
+         "id": "v-2",
+         "name": "Yan kübaj",
+         "corridor": "c-2",
+         "revision": 1,
+         "method": "surfaces"
+        }
+       ]
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Boş kaynak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "set",
+      "name": "Yeni kübaj",
+      "corridor": "c-1",
+      "method": "endArea",
+      "factors": [
+       {
+        "from": 0.0,
+        "to": 100.0,
+        "cut": 1.2,
+        "source": " "
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_volume",
+       "message": "Kübaj hesabı kurallarına uymuyor: katsayının kaynağı boş olmaz, en çok 200 karakter.",
+       "path": "factors[0]"
       }
      },
      "expect": {

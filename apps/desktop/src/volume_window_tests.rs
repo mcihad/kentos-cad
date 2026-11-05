@@ -881,3 +881,83 @@ fn screens_history() {
         shot(&mut app, "kaldirildi");
     }
 }
+
+/// The states' shared cases' drawing for case `name` (its own setup, else the file's).
+fn states_app(name: &str) -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.states.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone();
+    let setup = case.get("setup").cloned().unwrap_or_else(|| cases["setup"].clone());
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// ROAD-VOL-10 (docs/adr/0957): the states' view reads `road.volumes.states` as its cases do; a fill factor below 1 is
+/// told; densities typed in the window make the factors and the masses.
+#[test]
+fn the_states_read_the_shared_cases_and_densities_are_typed() {
+    const NAME: &str = "Yoğunluklu iki satır: kütleler";
+    let mut app = states_app("Ana kübaj: sıkışma 0,9 zeminin yapamayacağını söylüyor");
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::View(crate::volume_window::Shown::States));
+    let w = app.volume_window.as_ref().expect("open");
+    let Some(Ok((st, warnings))) = &w.states else { panic!("the states read: {:?}", w.states) };
+    assert!(st.fill_loose < st.fill, "a fill factor of 0.9 asks less than the fill");
+    assert!(warnings.iter().any(|x| x.code == "volume_factor_physics"));
+    // The densities typed: the first row's in place, loose and compacted and its source.
+    for (k, v) in [(2, ""), (3, ""), (4, "1,8"), (5, "1,45"), (6, "1,95"), (7, "Zemin etüdü raporu, SK-3 sondajı")] {
+        send(&mut app, W::Factor(0, k, v.into()));
+    }
+    for (k, v) in [(2, ""), (3, ""), (4, "1,75"), (5, "1,3"), (6, "1,85"), (7, "Zemin etüdü raporu, SK-7 sondajı")] {
+        send(&mut app, W::Factor(1, k, v.into()));
+    }
+    let w = app.volume_window.as_ref().expect("open");
+    let Some(Ok((st, _))) = &w.states else { panic!("the states read: {:?}", w.states) };
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.states.json")).expect("cases");
+    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == NAME).expect("the case")["steps"][0]["result"]["output"].clone();
+    assert!((st.balance - want["balance"].as_f64().expect("a balance")).abs() < 1e-6);
+    assert!((st.cut_mass.expect("weighed") - want["cutMass"].as_f64().expect("a mass")).abs() < 1e-6);
+}
+
+/// The states: the sample's fill factor told, light and wide; densities with masses, dark and narrow.
+/// `.run/gui-evidence/yol-y51/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_states -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_states() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y51");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (case, theme, size, name) in [
+        ("Ana kübaj: sıkışma 0,9 zeminin yapamayacağını söylüyor", "light", Size::new(1440.0, 900.0), "katsayi-acik-genis"),
+        ("Yoğunluklu iki satır: kütleler", "light", Size::new(1440.0, 900.0), "yogunluk-acik-genis"),
+        ("Yoğunluk ve katsayı karışık", "dark", Size::new(1100.0, 650.0), "karisik-koyu-dar"),
+        ("Kaya: sıkışık yerindekinden hafif", "dark", Size::new(1440.0, 900.0), "kaya-koyu-genis"),
+    ] {
+        let mut app = states_app(case);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::View(crate::volume_window::Shown::States));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y51-hacim-halleri-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

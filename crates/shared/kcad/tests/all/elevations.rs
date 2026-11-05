@@ -354,7 +354,7 @@ fn the_readers_errors_name_their_places() {
     assert_eq!(e.code, Code::UnknownField);
     assert!(e.message.contains("document/entities/0/polyline/zs"), "{e}");
     // A schema newer than this codec's: the file is newer, not broken (docs/adr/0930 §2).
-    let e = refused("broken/schema-version-174.kcad");
+    let e = refused("broken/schema-version-175.kcad");
     assert_eq!(e.code, Code::SchemaVersion);
     let newest = kentos_kcad::SCHEMAS.last().copied().unwrap_or_default();
     assert!(e.message.contains("daha yeni bir sürümüyle yazılmış") && e.message.contains(&format!("en çok {newest}")), "{e}");

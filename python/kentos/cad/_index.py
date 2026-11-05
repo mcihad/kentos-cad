@@ -427,6 +427,7 @@ COMMANDS: dict[str, Any] = {
     "road.volumes.ledger": road.volumes.ledger,
     "road.volumes.progress": road.volumes.progress,
     "road.volumes.query": road.volumes.query,
+    "road.volumes.states": road.volumes.states,
     "road.volumes.uncertainty": road.volumes.uncertainty,
     "road.walls.draw": road.walls.draw,
     "road.walls.edit": road.walls.edit,
