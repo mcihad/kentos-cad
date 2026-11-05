@@ -108118,7 +108118,7 @@
       "type": "object"
     },
     "CorridorStation": {
-      "description": "A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,\n`user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between\nstrayed, docs/adr/0939).",
+      "description": "A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `widening`:\nwhere the superelevation's widening starts or reaches its target, `pivot`: where an inside- or outside-edge pivot\nchanges sides (docs/adr/0972), `profile`, `user`, `curve`, `interval`, `vertical`: a vertical curve's division,\n`refine`: added where the section between strayed, docs/adr/0939, `transition`: a slope transition's end, 0960).",
       "properties": {
         "kmText": {
           "type": "string"

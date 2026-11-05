@@ -576,3 +576,70 @@ fn screens_transition() {
         shot(&mut app, "bolgeler");
     }
 }
+
+/// A query case's own drawing (its setup), by its name.
+fn app_of_case(name: &str) -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.corridors.query.json")).expect("cases");
+    let c = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(c["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+const PIVOT_CASE: &str = "İç kenar dönme ekseni yan değiştirir: km olur";
+const WIDENING_CASE: &str = "Tek eğimli devere bağlı: genişlemenin başı km olur";
+
+/// The superelevation's stations said in the window (docs/adr/0972): the pivot's two changes between rows on the side
+/// corridor, the widening's start on the one-way crossfall.
+#[test]
+fn the_window_says_the_superelevation_s_stations() {
+    let said = |app: &App| {
+        let w = app.corridor_window.as_ref().expect("open");
+        let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("builds: {:?}", w.preview.why));
+        crate::corridor_window::superelevation_words(&rep.stations).unwrap_or_default()
+    };
+    let mut app = app_of_case(PIVOT_CASE);
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(1));
+    assert_eq!(said(&app), "Dever km'leri: 2 dönme ekseni yan değiştirir");
+    let mut app = app_of_case(WIDENING_CASE);
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(0));
+    assert_eq!(said(&app), "Dever km'leri: 2 kritik · 1 genişleme", "the exit is past the region (km 300)");
+}
+
+/// `.run/gui-evidence/yol-y67/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib corridor_window_tests::screens_superelevation -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_superelevation() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y67");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        for (case, chosen, file) in [(PIVOT_CASE, 1, "donme-ekseni"), (WIDENING_CASE, 0, "genisleme")] {
+            let mut app = app_of_case(case);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("corridor.editor"));
+            send(&mut app, W::Choose(chosen));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("y67-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

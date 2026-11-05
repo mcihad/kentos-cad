@@ -22,7 +22,8 @@ OUT = Path(__file__).resolve().parents[2] / "fixtures" / "road" / "v1" / "corrid
 P = al.pi
 SAME = 1e-3
 MAX_STATIONS = 20_000
-WHY = ["region", "geometry", "critical", "profile", "user", "curve", "interval", "vertical", "refine", "transition"]
+WHY = ["region", "geometry", "critical", "widening", "pivot", "profile", "user", "curve", "interval", "vertical", "refine",
+       "transition"]
 
 
 # ---- regions ------------------------------------------------------------------------------------------------------
@@ -58,21 +59,21 @@ def stations(els, region, tangent, curve, sag, events):
         return {"error": {"kind": "BadFrequency"}}
     a, b = region
     inside = lambda s: a - 1e-9 <= s <= b + 1e-9  # noqa: E731
-    out = [(a, 0), (b, 0)]
+    out = [(a, WHY.index("region")), (b, WHY.index("region"))]
     for e in els:
         e0, length = float(e.station), float(e.length)
         e1 = e0 + length
         if e1 < a - 1e-9 or e0 > b + 1e-9:
             continue
-        out += [(s, 1) for s in (e0, e1) if inside(s)]
+        out += [(s, WHY.index("geometry")) for s in (e0, e1) if inside(s)]
         if e.kind == "tangent":
             lo, hi = max(e0, a), min(e1, b)
-            out += [(k * tangent, 6) for k in range(math.ceil(lo / tangent), math.floor(hi / tangent) + 1)]
+            out += [(k * tangent, WHY.index("interval")) for k in range(math.ceil(lo / tangent), math.floor(hi / tangent) + 1)]
         else:
             k = max(abs(float(e.k0)), abs(float(e.k1)))
             st = step(curve, sag, 1 / k if k > 0 else math.inf)
             n = max(math.ceil(length / st - 1e-9), 1)
-            out += [(e0 + length * i / n, 5) for i in range(1, n) if inside(e0 + length * i / n)]
+            out += [(e0 + length * i / n, WHY.index("curve")) for i in range(1, n) if inside(e0 + length * i / n)]
     out += [(s, WHY.index(w)) for s, w in events if inside(s)]
     out = sorted(((min(max(s, a), b), w) for s, w in out if inside(s)))
     kept, anchor = [], -math.inf

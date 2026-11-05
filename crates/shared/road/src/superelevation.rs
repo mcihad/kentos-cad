@@ -100,6 +100,41 @@ fn along(points: &[[f64; 2]], s: f64, none: f64) -> f64 {
 }
 
 impl Schedule {
+    /// Where the edge an inside- or outside-edge pivot holds changes sides (docs/adr/0972; ROAD-DEVER-07): the stations
+    /// where left − right turns positive or comes back, exact on the piecewise linear slopes (a root between two break
+    /// points, or the break point where an equal stretch ends). None for the centreline or a fixed edge: they never
+    /// change.
+    pub fn pivot_changes(&self, normal: Crossfall) -> Vec<f64> {
+        use crate::superelevation_physics::Pivot;
+        if !matches!(self.pivot, Pivot::InsideEdge | Pivot::OutsideEdge) {
+            return Vec::new();
+        }
+        let mut stops: Vec<f64> = self.left.iter().chain(&self.right).map(|p| p[0]).collect();
+        stops.sort_by(f64::total_cmp);
+        stops.dedup();
+        let diff = |s: f64| {
+            let c = self.at(s, normal);
+            c.left - c.right
+        };
+        let mut out = Vec::new();
+        for w in stops.windows(2) {
+            let (p, q) = (w[0], w[1]);
+            let (dp, dq) = (diff(p), diff(q));
+            if (dp > 0.0) != (dq > 0.0) {
+                out.push(if dp == dq { q } else { p + (q - p) * dp / (dp - dq) });
+            }
+        }
+        out
+    }
+
+    /// Where a side's widening starts, reaches its target or ends (docs/adr/0972): every widening break point.
+    pub fn widening_stations(&self) -> Vec<f64> {
+        let mut out: Vec<f64> = self.left_widening.iter().chain(&self.right_widening).map(|p| p[0]).collect();
+        out.sort_by(f64::total_cmp);
+        out.dedup();
+        out
+    }
+
     /// The cross slopes at `s`; `normal` where a side has no break point.
     pub fn at(&self, s: f64, normal: Crossfall) -> Crossfall {
         Crossfall { left: along(&self.left, s, normal.left), right: along(&self.right, s, normal.right) }

@@ -64,6 +64,8 @@ fn why_word(w: Why) -> &'static str {
         Why::Region => "region",
         Why::Geometry => "geometry",
         Why::Critical => "critical",
+        Why::Widening => "widening",
+        Why::Pivot => "pivot",
         Why::Profile => "profile",
         Why::User => "user",
         Why::Curve => "curve",
@@ -255,6 +257,14 @@ pub(crate) fn make_with(
         && let Some((_, _, crit)) = &schedule
     {
         events.extend(crit.iter().map(|c| Station { station: c.station, why: Why::Critical }));
+    }
+    // The superelevation's other events (docs/adr/0972; ROAD-DEVER-07): where the widening starts or reaches its
+    // target, where an inside- or outside-edge pivot changes sides. Where one falls on a critical station that one stays.
+    if def.critical
+        && let Some((s, n, _)) = &schedule
+    {
+        events.extend(s.widening_stations().into_iter().map(|x| Station { station: x, why: Why::Widening }));
+        events.extend(s.pivot_changes(*n).into_iter().map(|x| Station { station: x, why: Why::Pivot }));
     }
     let surface = match terrains::surfaces(doc).iter().find(|s| s.id == def.surface) {
         None => None,

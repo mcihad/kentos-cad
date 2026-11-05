@@ -15,6 +15,7 @@ import copy
 import json
 import math
 import sys
+from fractions import Fraction as F
 from pathlib import Path
 
 import mpmath as mp
@@ -26,6 +27,7 @@ import road_sampling_cases as sref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_superelevation_command_cases as supcmd  # noqa: E402
+import road_superelevation_cases as supref  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
@@ -35,6 +37,19 @@ UNCHANGED, STEPPED, CONFLICT, BAD_REVISION = pcmd.UNCHANGED, pcmd.STEPPED, pcmd.
 NOT_ROAD = failed("not_a_road_project", "Koridor yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.")
 TEMPLATES = [scmd.TK1, scmd.TK2]
 SUPERS = [scmd.D1, scmd.D2, scmd.D_BAD]
+# Docs/adr/0972: a one-way crossfall on g-1 (the outside's normal rises outward: no level crown, so the widening's start
+# is no critical station) and rows on g-2 whose sides cross (an inside-edge pivot changes sides between rows).
+D_ONE = {"id": "d-4", "name": "Tek eğimli dever", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+         "normalLeft": -2.5, "normalRight": 2.5,
+         "method": {"method": "curves", "curves": [{"pi": "p1", "rate": 6.0, "runoff": 50.0, "onTangent": 0.3,
+                                                    "widening": 0.5}]}}
+D_PIV = {"id": "d-5", "name": "Kesişen yanlar", "alignment": "g-2", "alignmentRevision": 2, "revision": 1,
+         "normalLeft": -2.0, "normalRight": -2.0, "pivot": "insideEdge",
+         "method": {"method": "stations", "rows": [{"station": 100.0, "left": -3.0, "right": -2.0},
+                                                   {"station": 200.0, "left": 3.0, "right": -3.0},
+                                                   {"station": 400.0, "left": 3.0, "right": -3.0},
+                                                   {"station": 500.0, "left": -3.0, "right": -2.0}]}}
+EXTRA_SUPERS = [D_ONE, D_PIV]
 
 # A tight curve (R 4, inside the platform) for the folded strips: its alignment and a flat profile near the terrain.
 G4 = {"id": "g-4", "name": "Dar kurp", "revision": 1,
@@ -173,7 +188,7 @@ def make(c, points=False, templates=TEMPLATES):
     sup = None
     crit = []
     if c.get("superelevation"):
-        d = next(x for x in SUPERS if x["id"] == c["superelevation"])
+        d = next(x for x in SUPERS + EXTRA_SUPERS if x["id"] == c["superelevation"])
         got, why = supcmd.build(d)
         if why:
             warnings.append(warn("corridor_superelevation_gone",
@@ -181,6 +196,7 @@ def make(c, points=False, templates=TEMPLATES):
         else:
             sup = d
             crit = [float(x["station"]) for x in got[1]]
+            sched = got[0]
     events = [[s, "user"] for s in c.get("stations", [])]
     if c.get("profilePoints"):
         events += [[p["station"], "profile"] for p in prof["pvis"]]
@@ -192,6 +208,20 @@ def make(c, points=False, templates=TEMPLATES):
         events += [[s, "vertical"] for s in vertical_divisions(prof, c["verticalSag"])]
     if c.get("critical"):
         events += [[s, "critical"] for s in crit]
+    if c.get("critical") and sup is not None:
+        # Docs/adr/0972: the widening's break points; where an inside- or outside-edge pivot changes sides, the
+        # held side being the left where left ≤ right (insideEdge) or left > right (outsideEdge): the same set of
+        # changes, found exactly in fractions between the rows' and the rules' break points.
+        events += [[float(s), "widening"] for s in sorted({p[0] for p in sched["leftWidening"] + sched["rightWidening"]})]
+        if sup.get("pivot") in ("insideEdge", "outsideEdge"):
+            nl, nr = F(sup["normalLeft"]), F(sup["normalRight"])
+            val = lambda pts, s, n: n if not pts else supref.along(pts, s)  # noqa: E731
+            d_ = lambda s: val(sched["left"], s, nl) - val(sched["right"], s, nr)  # noqa: E731
+            stops = sorted({p[0] for p in sched["left"] + sched["right"]})
+            for p_, q_ in zip(stops, stops[1:]):
+                dp, dq = d_(p_), d_(q_)
+                if (dp > 0) != (dq > 0):
+                    events.append([float(p_ + (q_ - p_) * dp / (dp - dq)), "pivot"])
     if c["surface"] != "t-1":
         warnings.append(warn("corridor_surface_gone",
                              f"“{c['name']}” koridorunun yüzeyi ({c['surface']}) projede yok ya da kurulamıyor; "
@@ -226,7 +256,7 @@ def make(c, points=False, templates=TEMPLATES):
             if s in built_at:
                 return built_at[s]
             tid, tl = template_at(c, ri, s, templates)
-            row = scmd.sections({**fake, "template": tid}, [s], tl)[0][0]
+            row = scmd.sections({**fake, "template": tid}, [s], tl, EXTRA_SUPERS)[0][0]
             e, (x, y) = aref.place_at(b.els, mp.mpf(s))
             th = e.theta(mp.mpf(s) - e.station)
             sec = None
@@ -547,7 +577,7 @@ def edit_cases():
 def query_cases():
     cases = []
 
-    def q(name, input_, corridors=START, op="execute", templates=None):
+    def q(name, input_, corridors=START, op="execute", templates=None, supers=None):
         one = input_.get("corridor")
         tpls = templates or TEMPLATES
         if one is None:
@@ -567,8 +597,10 @@ def query_cases():
             if input_.get("triangles"):
                 out["triangles"] = tris
         result = completed(None, warns) if op == "validate" else completed(out, warns)
-        cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(corridors, templates=templates)})],
-                          None if corridors is START and templates is None else setup(corridors, templates=templates)))
+        sp = supers or SUPERS
+        cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(corridors, sp, templates=templates)})],
+                          None if corridors is START and templates is None and supers is None
+                          else setup(corridors, supers=sp, templates=templates)))
 
     def no(name, input_, result, corridors=START, setup_=None):
         road = None if setup_ is not None else road_of(corridors)
@@ -590,6 +622,14 @@ def query_cases():
     q("Üst yüzeyin üçgenleri", {"corridor": "c-2", "triangles": True})
     q("Devere bağlı, kritik km'lerle", {"corridor": "c-1"},
       [with_(C1, superelevation="d-1", critical=True, regions=[{"from": 100.0, "to": 300.0, "template": "tk-1"}]), C2])
+    # Docs/adr/0972: the widening's start where no level crown is (one-way crossfall), the inside-edge pivot's
+    # change between rows.
+    q("Tek eğimli devere bağlı: genişlemenin başı km olur", {"corridor": "c-1"},
+      [with_(C1, superelevation="d-4", critical=True, regions=[{"from": 100.0, "to": 300.0, "template": "tk-1"}]), C2],
+      supers=SUPERS + EXTRA_SUPERS)
+    q("İç kenar dönme ekseni yan değiştirir: km olur", {"corridor": "c-2"},
+      [C1, with_(C2, superelevation="d-5", critical=True, regions=[{"from": 50.0, "to": 550.0, "template": "tk-2"}])],
+      supers=SUPERS + EXTRA_SUPERS)
     q("Profil noktaları ve kullanıcı km'leri", {"corridor": "c-1"},
       [with_(C1, profilePoints=True, stations=[77.7, 412.5]), C2])
     q("Kurpta sapma toleransı", {"corridor": "c-1"},

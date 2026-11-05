@@ -21891,9 +21891,10 @@ class CorridorSeam(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class CorridorStation(_Model):
-    """A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `profile`,
-    `user`, `curve`, `interval`, `vertical`: a vertical curve's division, `refine`: added where the section between
-    strayed, docs/adr/0939).
+    """A station a corridor samples: the alignment's own, its km, and why (`region`, `geometry`, `critical`, `widening`:
+    where the superelevation's widening starts or reaches its target, `pivot`: where an inside- or outside-edge pivot
+    changes sides (docs/adr/0972), `profile`, `user`, `curve`, `interval`, `vertical`: a vertical curve's division,
+    `refine`: added where the section between strayed, docs/adr/0939, `transition`: a slope transition's end, 0960).
     Attributes:
         station: Unit: m.
         region: Unit: index.

@@ -113,3 +113,25 @@ fn every_schedule_is_what_the_reference_says() {
         }
     }
 }
+
+/// Where an inside- or outside-edge pivot changes sides (docs/adr/0972): between rows where left − right crosses 0,
+/// exactly; a fixed pivot never; the widening's break points (rows have none).
+#[test]
+fn the_pivot_changes_sides_where_the_slopes_cross() {
+    use kentos_road::superelevation_physics::Pivot;
+    let row = |station: f64, left: f64, right: f64| Row { station, left, right };
+    let mut s = from_rows(&[row(100.0, -3.0, -2.0), row(200.0, 3.0, -3.0), row(400.0, 3.0, -3.0), row(500.0, -3.0, -2.0)])
+        .expect("builds");
+    let normal = Crossfall { left: -2.0, right: -2.0 };
+    for pivot in [Pivot::InsideEdge, Pivot::OutsideEdge] {
+        s.pivot = pivot;
+        let got = s.pivot_changes(normal);
+        assert_eq!(got.len(), 2, "{got:?}");
+        assert!((got[0] - (100.0 + 100.0 / 7.0)).abs() < 1e-12 && (got[1] - (400.0 + 600.0 / 7.0)).abs() < 1e-12, "{got:?}");
+    }
+    for pivot in [Pivot::Centerline, Pivot::LeftEdge, Pivot::RightEdge] {
+        s.pivot = pivot;
+        assert!(s.pivot_changes(normal).is_empty());
+    }
+    assert!(s.widening_stations().is_empty());
+}

@@ -24,6 +24,10 @@ pub enum Why {
     Geometry,
     /// A superelevation critical station.
     Critical,
+    /// Where a superelevation's widening starts or reaches its target (docs/adr/0972).
+    Widening,
+    /// Where an inside- or outside-edge pivot changes sides (docs/adr/0972).
+    Pivot,
     /// A profile's PVI, a vertical curve's end, its high or low point.
     Profile,
     /// A station the user wrote.

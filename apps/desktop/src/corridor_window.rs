@@ -67,6 +67,21 @@ fn trimmed(v: f64) -> String {
     s.trim_end_matches('0').trim_end_matches('.').to_owned()
 }
 
+/// The superelevation's own stations among the sampled ones (docs/adr/0972; ROAD-DEVER-07): its critical stations,
+/// where the widening starts or reaches its target, where an inside- or outside-edge pivot changes sides. None when
+/// there is none. Where two fall on one station the stronger reason is said once.
+pub(crate) fn superelevation_words(stations: &[kentos_commands::CorridorStation]) -> Option<String> {
+    let count = |w: &str| stations.iter().filter(|s| s.why == w).count();
+    let parts: Vec<String> = [("critical", "kritik"), ("widening", "genişleme"), ("pivot", "dönme ekseni yan değiştirir")]
+        .iter()
+        .filter_map(|(w, words)| match count(w) {
+            0 => None,
+            n => Some(format!("{n} {words}")),
+        })
+        .collect();
+    (!parts.is_empty()).then(|| format!("Dever km'leri: {}", parts.join(" · ")))
+}
+
 fn comma(v: f64, digits: usize) -> String {
     format!("{v:.digits$}").replace('.', ",")
 }
@@ -937,6 +952,9 @@ impl App {
                 )));
                 if let Some(sm) = &rep.sampling {
                     col = col.push(label::caption(sampling_words(sm)));
+                }
+                if let Some(said) = superelevation_words(&rep.stations) {
+                    col = col.push(label::caption(said));
                 }
                 for wn in w.preview.warnings.iter().filter(|x| x.code != "corridor_stale") {
                     col = col.push(label::caption(wn.message.clone()).style(warn));

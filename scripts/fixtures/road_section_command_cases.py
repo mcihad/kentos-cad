@@ -336,7 +336,7 @@ def side_row(s):
     return out
 
 
-def sections(d, at, templates):
+def sections(d, at, templates, extra_supers=()):
     """The rows at the stations `at` and the warnings they give."""
     b = ALIGNED[d["alignment"]]
     warnings = []
@@ -350,7 +350,8 @@ def sections(d, at, templates):
     ev = pcmd.solve(prof)[1] if prof else None
     t = next((x for x in templates if x["id"] == d.get("template")), None) if d.get("template") else None
     template = None if t is None else {"left": t["left"], "right": t.get("right") or t["left"]}
-    sup = next((x for x in SUPERS + [D_BAD] if x["id"] == d.get("superelevation")), None) if d.get("superelevation") else None
+    sup = next((x for x in SUPERS + [D_BAD] + list(extra_supers) if x["id"] == d.get("superelevation")), None) \
+        if d.get("superelevation") else None
     if sup is D_BAD:
         warnings.append({"code": "section_superelevation_gone",
                          "message": f"“{d['name']}” kesit takımının dever çizelgesi kurulamıyor (“p9” PI'sinde kurp yok); "
