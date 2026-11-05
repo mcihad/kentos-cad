@@ -17,7 +17,126 @@ use crate::road_terrains::fail;
 use crate::road_volumes as volumes;
 
 /// The plan now, and its warnings.
+/// The plan now, and against its approval where the diagram has one (docs/adr/0954): the plan made again with the
+/// approved objective, its figures and sources against the approved ones.
 pub(crate) fn answer(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWarning>), Stop> {
+    let (mut out, mut warnings) = raw(doc, input)?;
+    let (_, def) = hauls::find(doc.road_hauls(), &input.haul, "haul")?;
+    if let Some(a) = &def.approved {
+        let objective = if a.cost { HaulObjective::Cost } else { HaulObjective::Moment };
+        let today = if objective == out.objective {
+            Some(out.clone())
+        } else {
+            raw(doc, &HaulsPlan { haul: def.id.clone(), objective: Some(objective) }).ok().map(|r| r.0)
+        };
+        let report = approval_against(doc, def, a, today.as_ref());
+        if report.stale {
+            warnings.push(CommandWarning {
+                code: codes::HAUL_PLAN_STALE.into(),
+                message: format!(
+                    "“{}” Brüknerinin {}. onaylı taşıma planı ({}) eskidi: {}.",
+                    def.name,
+                    a.number,
+                    a.at,
+                    report.reasons.join("; ")
+                ),
+                path: Some("haul".into()),
+            });
+        }
+        out.approval = Some(report);
+    }
+    Ok((out, warnings))
+}
+
+/// Within this share (of the larger, at least 1) two of a plan's figures are the same.
+const SAME: f64 = 1e-6;
+
+fn differ(a: f64, b: f64) -> bool {
+    (a - b).abs() > SAME * a.abs().max(b.abs()).max(1.0)
+}
+
+/// The approval `a` of `def` against today's plan made with its objective (none: it does not compute).
+pub(crate) fn approval_against(
+    doc: &Document,
+    def: &kentos_commands::HaulDef,
+    a: &kentos_commands::HaulApprovalDef,
+    today: Option<&HaulPlanned>,
+) -> kentos_commands::HaulPlanApproval {
+    use kentos_commands::HaulSiteChange;
+    let mut reasons = Vec::new();
+    if def.revision != a.revision {
+        reasons.push(format!("Brüknerin tanımı değişti (sürüm {} → {})", a.revision, def.revision));
+    }
+    let volume = doc.road_volumes().iter().find(|v| v.id == def.volume);
+    let (vrev, vnum) = volume.map_or((0, 0), |v| (v.revision, v.approved.as_ref().map_or(0, |x| x.number.max(1))));
+    if vrev != a.volume_revision {
+        reasons.push(format!("kübajın tanımı değişti (sürüm {} → {vrev})", a.volume_revision));
+    }
+    if vnum != a.volume_approval {
+        let words = |n: u32| if n == 0 { "onaysız".to_owned() } else { format!("{n}. onay") };
+        reasons.push(format!("kübajın onayı değişti ({} → {})", words(a.volume_approval), words(vnum)));
+    }
+    // The sites: capacities from the definition, uses from today's plan.
+    let mut sites = Vec::new();
+    for s in &a.sites {
+        let now = def.sites.iter().find(|d| d.name == s.name);
+        let used = today.and_then(|t| t.sites.iter().find(|x| x.name == s.name).map(|x| x.used));
+        let capacity = now.map(|d| d.volume);
+        let capacity_changed = capacity.is_none_or(|c| differ(c, s.capacity));
+        if capacity_changed {
+            reasons.push(match capacity {
+                Some(c) => format!("{} alanının kapasitesi değişti ({:.1} → {:.1} m³)", s.name, s.capacity, c),
+                None => format!("{} alanı kalktı", s.name),
+            });
+        }
+        if capacity_changed || used.is_none_or(|u| differ(u, s.used)) {
+            sites.push(HaulSiteChange {
+                name: s.name.clone(),
+                approved_capacity: Some(s.capacity),
+                capacity,
+                approved_used: Some(s.used),
+                used,
+            });
+        }
+    }
+    for d in def.sites.iter().filter(|d| !a.sites.iter().any(|s| s.name == d.name)) {
+        reasons.push(format!("{} alanı eklendi ({:.1} m³)", d.name, d.volume));
+        sites.push(HaulSiteChange {
+            name: d.name.clone(),
+            approved_capacity: None,
+            capacity: Some(d.volume),
+            approved_used: None,
+            used: today.and_then(|t| t.sites.iter().find(|x| x.name == d.name).map(|x| x.used)),
+        });
+    }
+    let moment_change = today.map(|t| t.moment - a.moment);
+    match today {
+        None => reasons.push("plan bugün kurulamıyor".into()),
+        Some(t) => {
+            // What of the plan's own figures changed: its moment, the volume moved, its cost.
+            let mut parts = Vec::new();
+            if differ(t.moment, a.moment) {
+                parts.push(format!("moment {:+.1} m³·m", t.moment - a.moment));
+            }
+            if differ(t.moved, a.moved) {
+                parts.push(format!("taşınan {:+.1} m³", t.moved - a.moved));
+            }
+            match (t.cost.as_ref(), a.total) {
+                (Some(c), Some(y)) if differ(c.total, y) => parts.push(format!("tutar {:+.0} {}", c.total - y, c.currency)),
+                (None, Some(_)) => parts.push("tutar bugün hesaplanamıyor".into()),
+                (Some(_), None) => parts.push("tutar onayda yoktu".into()),
+                _ => {}
+            }
+            if !parts.is_empty() {
+                reasons.push(format!("planın kendisi değişti ({})", parts.join(", ")));
+            }
+        }
+    }
+    kentos_commands::HaulPlanApproval { approved: a.clone(), stale: !reasons.is_empty(), reasons, moment_change, sites }
+}
+
+/// The plan now, without its approval.
+fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWarning>), Stop> {
     hauls::road_project(doc)?;
     let (_, def) = hauls::find(doc.road_hauls(), &input.haul, "haul")?;
     let vdef = doc.road_volumes().iter().find(|v| v.id == def.volume).ok_or_else(|| {
@@ -113,6 +232,7 @@ pub(crate) fn answer(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, 
     }
     Ok((
         HaulPlanned {
+            approval: None,
             haul: def.id.clone(),
             feasible: p.feasible,
             cut: p.cut,
@@ -195,6 +315,7 @@ fn sorted(
     }
     (
         HaulPlanned {
+            approval: None,
             haul: def.id.clone(),
             feasible: p.feasible,
             cut,
@@ -329,6 +450,19 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
         summary.push(row("Uygunsuz yarma", decimal(u), "m³"));
         summary.push(row("Dökülemeyen uygunsuz", planned.stranded.map_or_else(String::new, decimal), "m³"));
         summary.push(row("Uygunsuzun momenti", planned.unsuitable_moment.map_or_else(String::new, decimal), "m³·m"));
+    }
+    // The plan's approval (docs/adr/0954): its number and day, what it approved, and whether it went stale and why.
+    if let Some(a) = &planned.approval {
+        let x = &a.approved;
+        let note = x.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
+        summary.push(row("Taşıma planı onayı", format!("{}. onay · {}{note}", x.number, x.at), ""));
+        summary.push(row("Onaylı amaç", if x.cost { "En düşük maliyet" } else { "En küçük moment" }.into(), ""));
+        summary.push(row("Onaylı taşınan", decimal(x.moved), "m³"));
+        summary.push(row("Onaylı taşıma momenti", decimal(x.moment), "m³·m"));
+        if let Some(t) = x.total {
+            summary.push(row("Onaylı toplam", decimal(t), planned.cost.as_ref().map_or("", |c| c.currency.as_str())));
+        }
+        summary.push(row("Onay", if a.stale { format!("eskidi: {}", a.reasons.join("; ")) } else { "güncel".into() }, ""));
     }
     let sorted = planned.unsuitable.is_some();
     // A stretch's haul length is its stations' difference plus the detours of the barriers on it ([from, to)): the

@@ -430,6 +430,10 @@ pub struct HaulPlanned {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
     pub unsuitable_moment: Option<f64>,
+    /// The plan as approved against this one, where the diagram has an approved plan (docs/adr/0954).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approval: Option<HaulPlanApproval>,
     /// The barriers and what crosses each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulPlanBarrier>>", optional))]
@@ -668,4 +672,88 @@ pub struct HaulTrucked {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub trace: Option<TruckTrace>,
+}
+
+/// A borrow or waste site whose capacity or use differs from the approved plan's (docs/adr/0954): its name, the
+/// approved capacity and use (none: a new site), today's (none: a site gone).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulSiteChange {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub approved_capacity: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub capacity: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub approved_used: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub used: Option<f64>,
+}
+
+/// The approved plan against the plan made now with the approved objective (docs/adr/0954): the approval, whether it
+/// went stale, why (in words: the diagram's, the volume's or its approval's revision; a site's capacity; the plan's own
+/// figures), the moment's change and the sites that changed. None of today's plan where it does not compute.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulPlanApproval {
+    pub approved: crate::HaulApprovalDef,
+    pub stale: bool,
+    pub reasons: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
+    pub moment_change: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulSiteChange>>", optional))]
+    pub sites: Vec<HaulSiteChange>,
+}
+
+pub const ROAD_HAULS_APPROVE: &str = "road.hauls.approve";
+pub const ROAD_HAULS_APPROVE_VERSION: u32 = 1;
+
+/// Input of `road.hauls.approve` v1 (plan/road.md Y48, docs/adr/0954; ROAD-HAUL-08): a mass haul diagram's plan, as
+/// planned now with `objective` (absent: the least moment), approved on the day `at` with a note; or, with `revoke`,
+/// its approval taken off (`at` and `note` the day and why). An approval that ends goes to the diagram's history as it
+/// was. One undo step “Taşıma planı onayı”.
+///
+/// Refusals: `not_a_road_project`, `unknown_haul`, `haul_not_approved` (revoke one not approved), `invalid_haul` (no
+/// day, a plan that cannot place everything, one that does not compute, a day or note the rule refuses),
+/// `invalid_revision`, `revision_conflict`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulsApprove {
+    pub haul: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub revoke: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub objective: Option<HaulObjective>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
 }

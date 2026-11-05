@@ -96,6 +96,9 @@ pub struct Row {
     pub(crate) unsuitable: Vec<[String; 3]>,
     /// The barriers: name, station, detour (empty: closed).
     pub(crate) barriers: Vec<[String; 3]>,
+    /// Its approved plan and the history (docs/adr/0954), kept as they are: the window does not edit them.
+    approved: Option<kentos_commands::HaulApprovalDef>,
+    history: Vec<kentos_commands::HaulApprovalDef>,
 }
 
 impl Row {
@@ -120,6 +123,8 @@ impl Row {
             sites: d.sites.iter().map(|s| (s.name.clone(), s.kind, trimmed(s.station), trimmed(s.volume))).collect(),
             unsuitable: d.unsuitable.iter().map(|u| [trimmed(u.from), trimmed(u.to), trimmed(u.share)]).collect(),
             barriers: d.barriers.iter().map(|b| [b.name.clone(), trimmed(b.station), b.detour.map(trimmed).unwrap_or_default()]).collect(),
+            approved: d.approved.clone(),
+            history: d.history.clone(),
         }
     }
 
@@ -182,6 +187,8 @@ impl Row {
             cost,
             unsuitable,
             barriers,
+            approved: self.approved.clone(),
+            history: self.history.clone(),
         })
     }
 }
@@ -317,6 +324,8 @@ impl App {
                         sites: Vec::new(),
                         unsuitable: Vec::new(),
                         barriers: Vec::new(),
+                        approved: None,
+                        history: Vec::new(),
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.line = None;

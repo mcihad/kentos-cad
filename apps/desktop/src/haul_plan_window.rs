@@ -18,7 +18,8 @@
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{HaulObjective, HaulPlanned, HaulSiteKind, HaulsPlan};
-use kentos_native_application::road_hauls_plan;
+use kentos_interaction::Level;
+use kentos_native_application::{ExecutionContext, road_hauls_approve, road_hauls_plan};
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Form, Segmented};
@@ -36,6 +37,10 @@ pub(crate) const MOMENT: &str = "En küçük moment";
 pub(crate) const COST: &str = "En düşük maliyet";
 /// Planı yaz (ROAD-HAUL-12, docs/adr/0953): the plan as a workbook or a CSV.
 pub(crate) const WRITE: &str = "Planı yaz…";
+/// The plan's approval (ROAD-HAUL-08, docs/adr/0954): approve it as planned now, or take the approval off, with a note.
+pub(crate) const APPROVE: &str = "Onayla";
+pub(crate) const REVOKE: &str = "Onayı kaldır";
+pub(crate) const APPROVAL_NOTE: &str = "Onay notu";
 
 /// Which list the window shows.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -43,11 +48,17 @@ pub enum Listed {
     #[default]
     Sites,
     Costs,
+    /// The approved plan's sites against today's (docs/adr/0954).
+    Approval,
 }
 
 impl std::fmt::Display for Listed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if *self == Listed::Sites { "Alanlar" } else { "Maliyet" })
+        f.write_str(match self {
+            Listed::Sites => "Alanlar",
+            Listed::Costs => "Maliyet",
+            Listed::Approval => "Onay",
+        })
     }
 }
 
@@ -80,6 +91,8 @@ pub struct Window {
     pub(crate) fleet_kept: Option<crate::haul_fleet_window::Fleet>,
     /// The format Planı yaz writes (docs/adr/0953); none: the workbook.
     pub(crate) format: Option<kentos_commands::WorkbookFormat>,
+    /// The note the next approval or revocation is written with (docs/adr/0954).
+    pub(crate) approval_note: String,
 }
 
 #[derive(Debug, Clone)]
@@ -94,6 +107,9 @@ pub enum Event {
     /// Planı yaz's format, and the writing.
     Format(kentos_commands::WorkbookFormat),
     Write,
+    /// Approve the plan as planned now with the chosen objective (true), or take its approval off (false).
+    Approve(bool),
+    ApprovalNote(String),
     Close,
 }
 
@@ -164,6 +180,11 @@ impl App {
                 w.list = l;
                 return Task::none();
             }
+            Event::ApprovalNote(t) => {
+                w.approval_note = t;
+                return Task::none();
+            }
+            Event::Approve(on) => return self.approve_haul(on),
             Event::Preview => {
                 let Some(doc) = &self.document else { return Task::none() };
                 let read = match w.haul.clone() {
@@ -216,6 +237,36 @@ impl App {
         self.haul_plan_event(Event::Preview)
     }
 
+    /// The plan approved today as planned now with the window's objective, or its approval taken off (docs/adr/0954);
+    /// then the window reads it again.
+    fn approve_haul(&mut self, on: bool) -> Task<Message> {
+        let Some(w) = &self.haul_plan_window else { return Task::none() };
+        let Some(haul) = w.haul.clone() else { return Task::none() };
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+        let zone = crate::cloud::local_time::Zone::system();
+        let day: String = crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), zone).chars().take(10).collect();
+        let input = kentos_commands::HaulsApprove {
+            haul,
+            revoke: !on,
+            at: Some(day),
+            note: (!w.approval_note.trim().is_empty()).then(|| w.approval_note.trim().to_owned()),
+            objective: on.then_some(if w.aim == Aim::Cost { HaulObjective::Cost } else { HaulObjective::Moment }),
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let result = road_hauls_approve::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if self.answered(result).is_some() {
+            if let Some(w) = self.haul_plan_window.as_mut() {
+                w.approval_note.clear();
+            }
+            self.say(
+                Level::Success,
+                if on { "Taşıma planı onaylandı; önceki onayı varsa geçmişte." } else { "Taşıma planının onayı kaldırıldı; onay geçmişte." },
+            );
+        }
+        self.haul_plan_event(Event::Preview)
+    }
+
     pub(crate) fn haul_plan_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.haul_plan_window else {
             return iced::widget::text("").into();
@@ -236,10 +287,21 @@ impl App {
             .section("Girdi")
             .field("Brükner", pick)
             .field("Amaç", aim)
-            .help("En küçük moment taşıma uzaklığını, en düşük maliyet Brüknerin serbest taşımasını ve fiyatlarını okur.");
+            .help("En küçük moment taşıma uzaklığını, en düşük maliyet Brüknerin serbest taşımasını ve fiyatlarını okur.")
+            // The note of the next approval or revocation (docs/adr/0954).
+            .section("Onay")
+            .field(
+                APPROVAL_NOTE,
+                kentos_ui::widget::text_field("Şantiye şefiyle görüşüldü, döküm alanı değişti…", &w.approval_note)
+                    .on_input(|t| msg(Event::ApprovalNote(t))),
+            )
+            .help("Onayla planı seçili amaçla bugünkü hâliyle, bugünün günüyle yazar. Brükner, kübaj ya da alanlar değişince plan onaya göre okunur ve neyin değiştiği söylenir.");
         let feasible = matches!(&w.preview, Some(Ok(r)) if r.feasible);
+        let approved = matches!(&w.preview, Some(Ok(r)) if r.approval.is_some());
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Close))
             .ghost(FLEET, feasible.then(|| msg(Event::OpenFleet)))
+            .ghost(APPROVE, feasible.then(|| msg(Event::Approve(true))))
+            .ghost(REVOKE, approved.then(|| msg(Event::Approve(false))))
             .form_width(380.0)
             .empty("Her yarma yerleşir, her dolgu karşılanır; ödünç ve döküm alanları hacimleri kadar alır.");
         match &w.preview {
@@ -265,6 +327,28 @@ impl App {
                     d = d
                         .figure("Karşılanmayan dolgu", format!("{} m³", grouped(r.shortage, 1)))
                         .figure("Yerleşmeyen yarma", format!("{} m³", grouped(r.surplus, 1)));
+                }
+                // The approval (docs/adr/0954): stale with why, or still the plan approved.
+                if let Some(a) = &r.approval {
+                    let x = &a.approved;
+                    let note = x.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
+                    let aim = if x.cost { "en düşük maliyetle" } else { "en küçük momentle" };
+                    d = d.note(if a.stale {
+                        Banner::warning(format!(
+                            "{}. onaylı plan ({}{note}, {aim}) eskidi: {}. Yeniden onaylayın ya da onayı kaldırın.",
+                            x.number,
+                            x.at,
+                            a.reasons.join("; ")
+                        ))
+                    } else {
+                        Banner::info(format!(
+                            "{}. onaylı plan ({}{note}, {aim}): bugün de aynı; moment {} m³·m, taşınan {} m³.",
+                            x.number,
+                            x.at,
+                            grouped(x.moment, 0),
+                            grouped(x.moved, 0)
+                        ))
+                    });
                 }
                 // The unsuitable cut and the barriers (docs/adr/0944): each said only where there is one.
                 if let Some(u) = r.unsuitable.filter(|u| *u > 0.05) {
@@ -316,7 +400,57 @@ impl App {
                         .collect(),
                     "Ödünç ya da döküm alanı yok",
                 );
+                // The approved plan's sites against today's: each approved site, then the ones added since.
+                let approval = r.approval.as_ref().map(|a| {
+                    let mut rows: Vec<Vec<String>> = Vec::new();
+                    let m3 = |v: Option<f64>| v.map_or_else(|| "—".into(), |v| grouped(v, 1));
+                    for s in &a.approved.sites {
+                        let ch = a.sites.iter().find(|c| c.name == s.name && c.approved_capacity.is_some());
+                        let (cap, used) = ch.map_or((Some(s.capacity), Some(s.used)), |c| (c.capacity, c.used));
+                        let state = match ch {
+                            None => "aynı",
+                            Some(c) if c.capacity.is_none() => "kalktı",
+                            Some(_) => "değişti",
+                        };
+                        rows.push(vec![s.name.clone(), grouped(s.capacity, 1), m3(cap), grouped(s.used, 1), m3(used), state.to_owned()]);
+                    }
+                    for c in a.sites.iter().filter(|c| c.approved_capacity.is_none()) {
+                        rows.push(vec![c.name.clone(), "—".into(), m3(c.capacity), "—".into(), m3(c.used), "eklendi".to_owned()]);
+                    }
+                    rows.push(vec![
+                        "Taşıma momenti (m³·m)".into(),
+                        String::new(),
+                        String::new(),
+                        grouped(a.approved.moment, 0),
+                        a.moment_change.map_or_else(|| "—".into(), |c| grouped(a.approved.moment + c, 0)),
+                        if a.moment_change.is_some_and(|c| c.abs() > 1e-6 * a.approved.moment.abs().max(1.0)) { "değişti" } else { "aynı" }.to_owned(),
+                    ]);
+                    road_dialog::table(
+                        vec![
+                            col("Alan", 150.0),
+                            num("Onaylı kapasite", 115.0),
+                            num("Kapasite", 95.0),
+                            num("Onaylı kullanım", 120.0),
+                            num("Bugün", 95.0),
+                            col("Durum", 70.0),
+                        ],
+                        rows,
+                        "",
+                    )
+                });
+                let mut options = vec![Listed::Sites];
+                if r.cost.is_some() {
+                    options.push(Listed::Costs);
+                }
+                if approval.is_some() {
+                    options.push(Listed::Approval);
+                }
+                let list = if options.contains(&w.list) { w.list } else { Listed::Sites };
                 d = match &r.cost {
+                    _ if list == Listed::Approval => {
+                        let Some(t) = approval else { unreachable!() };
+                        d.detail(road_dialog::detail_choice(options, list, |l| msg(Event::List(l)), t))
+                    }
                     Some(c) => {
                         let money = |v: f64| format!("{} {}", grouped(v, 2), c.currency);
                         let mut rows = vec![
@@ -331,12 +465,10 @@ impl App {
                             rows.insert(1, vec!["Ekonomik taşıma sınırı".to_owned(), format!("{} m", grouped(e, 1))]);
                         }
                         let costs = road_dialog::table(vec![col("Kalem", 220.0), num("Değer", 200.0)], rows, "");
-                        let shown = match w.list {
-                            Listed::Sites => sites,
-                            Listed::Costs => costs,
-                        };
-                        d.detail(road_dialog::detail_choice([Listed::Sites, Listed::Costs], w.list, |l| msg(Event::List(l)), shown))
+                        let shown = if list == Listed::Costs { costs } else { sites };
+                        d.detail(road_dialog::detail_choice(options, list, |l| msg(Event::List(l)), shown))
                     }
+                    None if options.len() > 1 => d.detail(road_dialog::detail_choice(options, list, |l| msg(Event::List(l)), sites)),
                     None => d.detail(sites),
                 };
                 // Planı yaz (ROAD-HAUL-12): the summary with its units and the volume's revision and approval, the
@@ -384,6 +516,9 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
             Control::Press(WRITE) => Some(msg(Event::Write)),
+            Control::Press(APPROVE) => Some(msg(Event::Approve(true))),
+            Control::Press(REVOKE) => Some(msg(Event::Approve(false))),
+            Control::Fill(APPROVAL_NOTE, text) => Some(msg(Event::ApprovalNote(text.to_owned()))),
             Control::Press(MOMENT) => Some(msg(Event::Aim(Aim::Moment))),
             Control::Press(COST) => Some(msg(Event::Aim(Aim::Cost))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),

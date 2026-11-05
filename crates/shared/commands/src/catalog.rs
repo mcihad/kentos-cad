@@ -7837,6 +7837,30 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_HAULS_APPROVE.into(),
+            version: crate::ROAD_HAULS_APPROVE_VERSION,
+            title: "Taşıma planını onayla".into(),
+            summary: "Brüknerin taşıma planını objective amacıyla bugün kurulduğu gibi onaylar (at günü, note notu): momenti, taşınan hacmi, maliyeti, her alanın kapasitesi ve kullanılanı, Brüknerin ve kübajın sürümü, kübajın onayı. revoke ile onayı kaldırır. Biten onay geçmişe geçer, silinmez. Sonra okunan plan onaylıyla karşılaştırılır; kapasite, tanım, kübaj ya da plan değişince eskidi der. Tek geri alma adımı “Taşıma planı onayı”. Retler: not_a_road_project, unknown_haul, haul_not_approved, invalid_haul, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["tasimaplanionayla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsApprove>(),
+            output: schema::<crate::HaulsWritten>(),
+            plan: Some(schema::<crate::HaulsWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "1. hakediş planı".into(),
+                input: json!({ "haul": "h-1", "at": "2026-11-05", "note": "1. hakediş" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_TRUCKS.into(),
             version: crate::ROAD_HAULS_TRUCKS_VERSION,
             title: "Taşıma filosu".into(),
@@ -14862,6 +14886,7 @@ mod tests {
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_HAULS_APPROVE => serde_json::from_value::<crate::HaulsApprove>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_TRUCKS => serde_json::from_value::<crate::HaulsTrucks>(e.input.clone()).map(|_| ()),
                     crate::ROAD_GUARDRAILS_EDIT => {
                         serde_json::from_value::<crate::GuardrailsEdit>(e.input.clone()).map(|_| ())
@@ -15736,6 +15761,9 @@ mod tests {
                         }
                         crate::ROAD_HAULS_PLAN => {
                             serde_json::from_value::<crate::HaulPlanned>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_APPROVE => {
+                            serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_TRUCKS => {
                             serde_json::from_value::<crate::HaulTrucked>(output.clone()).map(|_| ())

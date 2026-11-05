@@ -1411,6 +1411,71 @@ pub struct HaulDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulBarrierDef>>", optional))]
     pub barriers: Vec<HaulBarrierDef>,
+    /// Its plan as approved (docs/adr/0954; KCAD schema 172): a plan read later against it says what changed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approved: Option<HaulApprovalDef>,
+    /// Its approvals that ended, oldest first, as they were (docs/adr/0954): never changed nor removed.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulApprovalDef>>", optional))]
+    pub history: Vec<HaulApprovalDef>,
+}
+
+/// A haul plan as approved (docs/adr/0954): its number from 1, the day and a note; what it was made from — the
+/// diagram's revision, its volume's revision and approval number (0: not approved), the objective (cost, else the least
+/// moment); what it was — the moment (m³·m), the volume moved (m³), the cost in all where priced, each site's capacity
+/// and use; how it ended, in the history.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulApprovalDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub number: u32,
+    pub at: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub volume_revision: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub volume_approval: u32,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub cost: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
+    pub moment: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub moved: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "money")))]
+    pub total: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulApprovedSite>>", optional))]
+    pub sites: Vec<HaulApprovedSite>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ended: Option<VolumeApprovalEnd>,
+}
+
+/// A borrow or waste site as a haul plan was approved: its name, capacity and use (m³).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulApprovedSite {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub capacity: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub used: f64,
 }
 
 /// The share of the cut unsuitable for fill between two stations (docs/adr/0944): percent, from the soil report;
@@ -2820,6 +2885,50 @@ fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
     let mut names = std::collections::BTreeSet::new();
     for (i, h) in list.iter().enumerate() {
         let at = |field: &str| format!("hauls[{i}].{field}");
+        // Its approvals (docs/adr/0954): days, notes, finite figures; the standing one not ended, the history's ended,
+        // the numbers rising.
+        let day = |d: &str| {
+            let b = d.as_bytes();
+            b.len() == 10 && b.iter().enumerate().all(|(k, c)| if k == 4 || k == 7 { *c == b'-' } else { c.is_ascii_digit() })
+        };
+        let approval = |a: &HaulApprovalDef, path: String| -> Option<(String, String)> {
+            if !day(&a.at) || a.ended.as_ref().and_then(|e| e.at.as_deref()).is_some_and(|d| !day(d)) {
+                return fail(path, "onay ve bitiş günleri YYYY-AA-GG biçiminde olmalı");
+            }
+            if a.note.as_ref().is_some_and(|n| n.chars().count() > 500) || a.ended.as_ref().and_then(|e| e.note.as_ref()).is_some_and(|n| n.chars().count() > 500) {
+                return fail(path, "onay ve bitiş notları en çok 500 karakter olur");
+            }
+            let figures = [a.moment, a.moved].into_iter().chain(a.total).chain(a.sites.iter().flat_map(|s| [s.capacity, s.used]));
+            if a.number == 0 || a.sites.len() > 1000 || !figures.into_iter().all(f64::is_finite) {
+                return fail(path, "onaylı planın numarası 1'den başlar, sayıları sonlu, en çok 1000 alanı olur");
+            }
+            None
+        };
+        if let Some(a) = &h.approved {
+            if let Some(p) = approval(a, at("approved")) {
+                return Some(p);
+            }
+            if a.ended.is_some() {
+                return fail(at("approved"), "geçerli onayın bitişi olmaz; biten onay geçmişe yazılır");
+            }
+        }
+        if h.history.len() > 200 {
+            return fail(at("history"), "onay geçmişi en çok 200 onay olur");
+        }
+        let mut last = 0;
+        for (j, a) in h.history.iter().enumerate() {
+            let path = at(&format!("history[{j}]"));
+            if let Some(p) = approval(a, path.clone()) {
+                return Some(p);
+            }
+            if a.ended.is_none() || a.number <= last {
+                return fail(path, "geçmişteki onayların bitişi yazılır, numaraları artarak gider");
+            }
+            last = a.number;
+        }
+        if h.approved.as_ref().is_some_and(|a| a.number <= last) {
+            return fail(at("approved"), "geçerli onayın numarası geçmiştekilerden büyük olur");
+        }
         if !word_ok(&h.id) {
             return fail(at("id"), "Brüknerin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
         }

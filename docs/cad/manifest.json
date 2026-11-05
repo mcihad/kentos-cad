@@ -4333,12 +4333,13 @@
    "level": "semantic",
    "via": [
     "road.hauls.plan",
-    "road.hauls.trucks"
+    "road.hauls.trucks",
+    "road.hauls.approve"
    ],
    "operation": null,
-   "python": "Connection: road.hauls.plan, Connection: road.hauls.trucks",
-   "mcp": "road.hauls.plan, road.hauls.trucks",
-   "note": "Önizle road.hauls.plan ile okur; Kamyon filosu road.hauls.trucks ile (plan/road.md Y23, Y32.3; ADR 0924 §3, 0936 §3); hiçbir şey yazmaz.",
+   "python": "Connection: road.hauls.plan, Connection: road.hauls.trucks, Connection: road.hauls.approve",
+   "mcp": "road.hauls.plan, road.hauls.trucks, road.hauls.approve",
+   "note": "Önizle road.hauls.plan ile okur; Kamyon filosu road.hauls.trucks ile (plan/road.md Y23, Y32.3; ADR 0924 §3, 0936 §3); Onayla ve Onayı kaldır road.hauls.approve ile yazar, plan onaylıyla karşılaştırılır (Y48, ADR 0954).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

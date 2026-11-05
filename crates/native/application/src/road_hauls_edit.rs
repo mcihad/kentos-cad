@@ -40,6 +40,13 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
         None => None,
     };
     let target = match (input.operation, found) {
+        (RoadEditOperation::Remove, Some((_, old))) if old.approved.is_some() || !old.history.is_empty() => {
+            return Err(fail(
+                codes::INVALID_HAUL,
+                format!("“{}” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez (ADR 0954). Brükneri bırakıp yenisini yazın.", old.name),
+                "haul",
+            ));
+        }
         (RoadEditOperation::Remove, Some((at, _))) => {
             list.remove(at);
             None
@@ -117,6 +124,8 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                 cost: input.cost.clone().flatten(),
                 unsuitable: input.unsuitable.clone().unwrap_or_default(),
                 barriers: input.barriers.clone().unwrap_or_default(),
+                approved: None,
+                history: Vec::new(),
             });
             Some(id)
         }

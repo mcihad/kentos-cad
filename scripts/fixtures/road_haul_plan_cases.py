@@ -292,7 +292,145 @@ def solve_priced(points, sites, prices):
             "borrow": float(borrow), "total": float(total)}
 
 
+# Docs/adr/0954: within this share (of the larger, at least 1) two of a plan's figures are the same.
+SAME = 1e-6
+
+
+def differ(a, b):
+    return abs(a - b) > SAME * max(abs(a), abs(b), 1.0)
+
+
+def find(name, hauls):
+    h = next((x for x in hauls if x["id"] == name), None) or next(
+        (x for x in hauls if x["name"].lower() == name.lower()), None)
+    if h is None:
+        raise hc.Refused("unknown_haul", f"“{name}” kimlikli ya da adlı Brükner projede yok.", "haul")
+    return h
+
+
+def volume_approval(h, volumes):
+    """The diagram's volume's revision and its approval's number (an unnumbered one counting as 1; 0: none)."""
+    v = next((x for x in volumes if x["id"] == h["volume"]), None)
+    if v is None:
+        return 0, 0
+    return v.get("revision", 0), (max(v["approved"].get("number", 0), 1) if v.get("approved") else 0)
+
+
+def approval_of(h, plan, at, volumes, number=1, note=None):
+    """A haul plan approved as planned now (docs/adr/0954): what it was made from and its figures."""
+    vrev, vnum = volume_approval(h, volumes)
+    out = {"number": number, "at": at}
+    if note is not None:
+        out["note"] = note
+    out.update({"revision": h.get("revision", 0), "volumeRevision": vrev})
+    if vnum:
+        out["volumeApproval"] = vnum
+    if plan["objective"] == "cost":
+        out["cost"] = True
+    out.update({"moment": plan["moment"], "moved": plan["moved"]})
+    if "cost" in plan:
+        out["total"] = plan["cost"]["total"]
+    if plan["sites"]:
+        out["sites"] = [{"name": x["name"], "capacity": x["capacity"], "used": x["used"]} for x in plan["sites"]]
+    return out
+
+
+def against(h, a, today, volumes):
+    """The approval `a` against today's plan made with its objective (none: it does not compute): why it went stale,
+    the moment's change and the sites that changed."""
+    reasons, sites = [], []
+    if h.get("revision", 0) != a["revision"]:
+        reasons.append(f"Brüknerin tanımı değişti (sürüm {a['revision']} → {h.get('revision', 0)})")
+    vrev, vnum = volume_approval(h, volumes)
+    if vrev != a["volumeRevision"]:
+        reasons.append(f"kübajın tanımı değişti (sürüm {a['volumeRevision']} → {vrev})")
+    if vnum != a.get("volumeApproval", 0):
+        words = lambda n: "onaysız" if n == 0 else f"{n}. onay"  # noqa: E731
+        reasons.append(f"kübajın onayı değişti ({words(a.get('volumeApproval', 0))} → {words(vnum)})")
+    defs = h.get("sites", [])
+    approved = a.get("sites", [])
+
+    def used_of(name):
+        if today is None:
+            return None
+        return next((x["used"] for x in today["sites"] if x["name"] == name), None)
+
+    for x in approved:
+        now = next((d for d in defs if d["name"] == x["name"]), None)
+        capacity = now["volume"] if now else None
+        used = used_of(x["name"])
+        changed = capacity is None or differ(capacity, x["capacity"])
+        if changed:
+            reasons.append(f"{x['name']} alanının kapasitesi değişti ({x['capacity']:.1f} → {capacity:.1f} m³)"
+                           if capacity is not None else f"{x['name']} alanı kalktı")
+        if changed or used is None or differ(used, x["used"]):
+            row = {"name": x["name"], "approvedCapacity": x["capacity"]}
+            if capacity is not None:
+                row["capacity"] = capacity
+            row["approvedUsed"] = x["used"]
+            if used is not None:
+                row["used"] = used
+            sites.append(row)
+    for d in defs:
+        if not any(x["name"] == d["name"] for x in approved):
+            reasons.append(f"{d['name']} alanı eklendi ({d['volume']:.1f} m³)")
+            row = {"name": d["name"], "capacity": d["volume"]}
+            used = used_of(d["name"])
+            if used is not None:
+                row["used"] = used
+            sites.append(row)
+    if today is None:
+        reasons.append("plan bugün kurulamıyor")
+    else:
+        parts = []
+        if differ(today["moment"], a["moment"]):
+            parts.append(f"moment {today['moment'] - a['moment']:+.1f} m³·m")
+        if differ(today["moved"], a["moved"]):
+            parts.append(f"taşınan {today['moved'] - a['moved']:+.1f} m³")
+        c = today.get("cost")
+        if c is not None and "total" in a:
+            if differ(c["total"], a["total"]):
+                parts.append(f"tutar {c['total'] - a['total']:+.0f} {c['currency']}")
+        elif c is None and "total" in a:
+            parts.append("tutar bugün hesaplanamıyor")
+        elif c is not None:
+            parts.append("tutar onayda yoktu")
+        if parts:
+            reasons.append(f"planın kendisi değişti ({', '.join(parts)})")
+    out = {"approved": a, "stale": bool(reasons), "reasons": reasons}
+    if today is not None:
+        out["momentChange"] = today["moment"] - a["moment"]
+    if sites:
+        out["sites"] = sites
+    return out
+
+
 def answer(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
+    """The plan now, and against its approval where the diagram has one (docs/adr/0954): the plan made again with the
+    approved objective, its figures and sources against the approved ones."""
+    out, warnings = raw(inp, hauls, volumes, corridors)
+    h = find(inp["haul"], hauls)
+    a = h.get("approved")
+    if a is not None:
+        objective = "cost" if a.get("cost") else "moment"
+        if objective == out["objective"]:
+            today = out
+        else:
+            try:
+                today = raw({"haul": h["id"], "objective": objective}, hauls, volumes, corridors)[0]
+            except hc.Refused:
+                today = None
+        report = against(h, a, today, volumes)
+        if report["stale"]:
+            warnings.append({"code": "haul_plan_stale", "path": "haul",
+                             "message": f"“{h['name']}” Brüknerinin {a['number']}. onaylı taşıma planı ({a['at']}) eskidi: "
+                                        f"{'; '.join(report['reasons'])}."})
+        out = {**out, "approval": report}
+    return out, warnings
+
+
+def raw(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
+    """The plan now, without its approval."""
     name = inp["haul"]
     h = next((x for x in hauls if x["id"] == name), None) or next(
         (x for x in hauls if x["name"].lower() == name.lower()), None)
@@ -530,6 +668,38 @@ def cases():
       [{**H1, **sorting, "barriers": [{"name": "Uzak dere", "station": 590.0, "detour": 50.0}]}, H2, H3], relative=True)
     q("Uygunsuzla ekonomik plan çözülmez", {"haul": "h-1", "objective": "cost"},
       [{**H1, **sorting, "cost": P, "unsuitable": [{"from": 0.0, "to": 300.0, "share": 40.0}]}, H2, H3])
+    # Docs/adr/0954: a plan read against its approval.
+    def signed(h, hauls_with, volumes=VOLUMES, objective="moment", at="2026-11-04", number=1, note=None):
+        """`h` approved as `hauls_with` (its own state then) planned with `volumes`."""
+        then = find(h["id"], hauls_with)
+        plan = raw({"haul": h["id"], "objective": objective}, hauls_with, volumes)[0]
+        return {**h, "approved": approval_of(then, plan, at, volumes, number, note)}
+
+    two = [site("D1", "waste", 40.0, 10000.0), site("D2", "waste", 590.0, 25000.0)]
+    ha = {**H1, "sites": two}
+    q("Onaylı plan değişmedi", {"haul": "h-1"}, [signed(ha, [ha, H2, H3]), H2, H3])
+    hb = {**H1, "revision": 2, "sites": [site("D1", "waste", 40.0, 14000.0), site("D2", "waste", 590.0, 25000.0)]}
+    q("Onaydan sonra alanın kapasitesi büyüdü", {"haul": "h-1"},
+      [{**hb, "approved": signed(ha, [ha, H2, H3])["approved"]}, H2, H3])
+    hc_ = {**H1, "revision": 3, "sites": [site("D1", "waste", 40.0, 10000.0), site("D3", "waste", 560.0, 25000.0)]}
+    q("Onaydan sonra alan kalktı, yenisi eklendi", {"haul": "Ana Brükner"},
+      [{**hc_, "approved": signed(ha, [ha, H2, H3], note="İlk plan")["approved"]}, H2, H3])
+    v1b = {**vcmd.V1, "revision": 2, "factors": [{"from": 0.0, "to": 600.0, "cut": 1.3, "fill": 0.9}]}
+    q("Onaydan sonra kübaj değişti", {"haul": "h-1"},
+      [signed(ha, [ha, H2, H3]), H2, H3], [v1b, vcmd.V2, V3])
+    q("Onaydan sonra kübaj onaylandı", {"haul": "h-1"},
+      [signed(ha, [ha, H2, H3]), H2, H3], [vcmd.approved(vcmd.V1), vcmd.V2, V3])
+    q("Onaylı kübajla onaylanan plan değişmedi", {"haul": "h-1"},
+      [signed(ha, [ha, H2, H3], [vcmd.approved(vcmd.V1), vcmd.V2, V3]), H2, H3], [vcmd.approved(vcmd.V1), vcmd.V2, V3])
+    hp = {**H1, "cost": P, "sites": two}
+    q("Ekonomik onay moment planıyla okunur", {"haul": "h-1"},
+      [signed(hp, [hp, H2, H3], objective="cost", number=3), H2, H3])
+    q("Ekonomik onay, fiyat değişti", {"haul": "h-1", "objective": "cost"},
+      [{**hp, "revision": 2, "cost": {**P, "overhaul": 5000.0},
+        "approved": signed(hp, [hp, H2, H3], objective="cost")["approved"]}, H2, H3])
+    hn = {**H1, "revision": 2, "sites": two}
+    q("Ekonomik onay, fiyatlar kalktı: plan bugün kurulamıyor", {"haul": "h-1"},
+      [{**hn, "approved": signed(hp, [hp, H2, H3], objective="cost")["approved"]}, H2, H3])
     # Refusals.
     q("Yol projesi değil", {"haul": "h-1"}, [H1, H2, H3], setup_=hc.setup(work="map"), result=hc.NOT_ROAD)
     q("Olmayan Brükner", {"haul": "yok"}, [H1, H2, H3])

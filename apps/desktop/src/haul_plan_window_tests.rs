@@ -252,3 +252,102 @@ fn screens_write() {
         }
     }
 }
+
+/// ROAD-HAUL-08 (docs/adr/0954): Onayla writes the plan as read with its note; the plan then reads against it, the
+/// same; Onayı kaldır sends it to the history.
+#[test]
+fn the_window_approves_and_takes_the_approval_off() {
+    let mut app = plan_app(Some("İki döküm alanı: yakın olan dolar"));
+    let _ = app.update(Message::Run("haul.plan"));
+    send(&mut app, W::Haul("h-1".into()));
+    send(&mut app, W::ApprovalNote("  Şantiye şefiyle görüşüldü ".into()));
+    send(&mut app, W::Approve(true));
+    let haul = |app: &App| app.document.as_ref().expect("a drawing").model.road_hauls()[0].clone();
+    let a = haul(&app).approved.expect("approved");
+    assert_eq!((a.number, a.note.as_deref(), a.cost), (1, Some("Şantiye şefiyle görüşüldü"), false));
+    let w = app.haul_plan_window.as_ref().expect("open");
+    assert!(w.approval_note.is_empty(), "the note is written once");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    let approval = r.approval.as_ref().expect("read against its approval");
+    assert!(!approval.stale && approval.reasons.is_empty());
+    assert!((a.moment - r.moment).abs() < 1e-9);
+    send(&mut app, W::Approve(false));
+    let h = haul(&app);
+    assert!(h.approved.is_none());
+    assert_eq!(h.history.len(), 1);
+    assert!(h.history[0].ended.as_ref().is_some_and(|e| e.revoked));
+    let w = app.haul_plan_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    assert!(r.approval.is_none());
+}
+
+/// A plan whose site grew after it was approved says what changed, in the warnings and against each site.
+#[test]
+fn a_stale_approval_says_why() {
+    const NAME: &str = "Onaydan sonra alanın kapasitesi büyüdü";
+    let mut app = plan_app(Some(NAME));
+    let _ = app.update(Message::Run("haul.plan"));
+    send(&mut app, W::Haul("h-1".into()));
+    send(&mut app, W::List(crate::haul_plan_window::Listed::Approval));
+    let w = app.haul_plan_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    let a = r.approval.as_ref().expect("an approval");
+    let want = &case(NAME)["steps"][0]["result"]["output"]["approval"];
+    assert!(a.stale);
+    assert_eq!(serde_json::to_value(&a.reasons).expect("reasons"), want["reasons"]);
+    assert!(w.warnings.iter().any(|x| x.contains("eskidi") && x.contains("D1 alanının kapasitesi değişti")));
+    assert!(a.sites.iter().any(|s| s.name == "D1" && s.capacity == Some(14000.0)));
+    // Planı yaz carries the approval and why it went stale.
+    let sheets = kentos_native_application::road_hauls_plan::sheets(&app.document.as_ref().expect("a drawing").model, r);
+    let value = |k: &str| sheets[0].rows.iter().find(|row| row[0] == k).unwrap_or_else(|| panic!("{k}"))[1].clone();
+    assert_eq!(value("Taşıma planı onayı"), "1. onay · 2026-11-04");
+    assert_eq!(value("Onaylı taşıma momenti"), format!("{:.3}", a.approved.moment));
+    assert!(value("Onay").starts_with("eskidi: Brüknerin tanımı değişti"));
+}
+
+/// The approval in the window: stale with why and the sites against today's, light and wide; still the same, dark and
+/// narrow. `.run/gui-evidence/yol-y48/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib haul_plan_window_tests::screens_approval -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_approval() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y48");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (case_name, theme, size, list, name) in [
+        ("Onaydan sonra alan kalktı, yenisi eklendi", "light", Size::new(1440.0, 900.0), true, "eskidi-acik-genis"),
+        ("Onaydan sonra alanın kapasitesi büyüdü", "light", Size::new(1440.0, 900.0), false, "eskidi-alanlar-acik"),
+        ("Ekonomik onay, fiyat değişti", "dark", Size::new(1440.0, 900.0), true, "tutar-koyu-genis"),
+        ("Onaylı plan değişmedi", "dark", Size::new(1100.0, 650.0), true, "ayni-koyu-dar"),
+        ("İki döküm alanı: yakın olan dolar", "light", Size::new(1440.0, 900.0), false, "onaysiz-acik"),
+    ] {
+        let mut app = plan_app(Some(case_name));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("haul.plan"));
+        send(&mut app, W::Haul("h-1".into()));
+        if case_name.starts_with("Ekonomik") {
+            send(&mut app, W::Aim(crate::haul_plan_window::Aim::Cost));
+        }
+        if list {
+            send(&mut app, W::List(crate::haul_plan_window::Listed::Approval));
+        }
+        if name == "onaysiz-acik" {
+            send(&mut app, W::ApprovalNote("Şantiye şefiyle görüşüldü".into()));
+        }
+        snapshot.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("y48-onay-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        println!("{}", path.display());
+    }
+}

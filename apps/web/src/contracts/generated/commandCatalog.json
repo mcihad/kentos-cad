@@ -42954,6 +42954,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the\nfill more than the cut over the stretches, what moves, the haul moment (m³·m) and its average (m; none where nothing\nmoves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets\nand the cut no waste takes.",
         "properties": {
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulPlanApproval"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The plan as approved against this one, where the diagram has an approved plan (docs/adr/0954)."
+          },
           "average": {
             "format": "double",
             "type": [
@@ -43086,6 +43097,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the\nfill more than the cut over the stretches, what moves, the haul moment (m³·m) and its average (m; none where nothing\nmoves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets\nand the cut no waste takes.",
         "properties": {
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulPlanApproval"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The plan as approved against this one, where the diagram has an approved plan (docs/adr/0954)."
+          },
           "average": {
             "format": "double",
             "type": [
@@ -43223,7 +43245,8 @@
         "warnings": [
           "haul_plan_infeasible",
           "corridor_stale",
-          "volume_gap"
+          "volume_gap",
+          "haul_plan_stale"
         ]
       },
       "examples": [
@@ -43231,6 +43254,157 @@
           "title": "Yan Brüknerin taşıma planı",
           "input": {
             "haul": "h-2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.hauls.approve",
+      "version": 1,
+      "title": "Taşıma planını onayla",
+      "summary": "Brüknerin taşıma planını objective amacıyla bugün kurulduğu gibi onaylar (at günü, note notu): momenti, taşınan hacmi, maliyeti, her alanın kapasitesi ve kullanılanı, Brüknerin ve kübajın sürümü, kübajın onayı. revoke ile onayı kaldırır. Biten onay geçmişe geçer, silinmez. Sonra okunan plan onaylıyla karşılaştırılır; kapasite, tanım, kübaj ya da plan değişince eskidi der. Tek geri alma adımı “Taşıma planı onayı”. Retler: not_a_road_project, unknown_haul, haul_not_approved, invalid_haul, invalid_revision, revision_conflict.",
+      "aliases": [
+        "tasimaplanionayla"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.hauls.approve` v1 (plan/road.md Y48, docs/adr/0954; ROAD-HAUL-08): a mass haul diagram's plan, as\nplanned now with `objective` (absent: the least moment), approved on the day `at` with a note; or, with `revoke`,\nits approval taken off (`at` and `note` the day and why). An approval that ends goes to the diagram's history as it\nwas. One undo step “Taşıma planı onayı”.\n\nRefusals: `not_a_road_project`, `unknown_haul`, `haul_not_approved` (revoke one not approved), `invalid_haul` (no\nday, a plan that cannot place everything, one that does not compute, a day or note the rule refuses),\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "haul": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulObjective"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revoke": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "haul"
+        ],
+        "title": "HaulsApprove",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.edit` v1.",
+        "properties": {
+          "haul": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The diagram written, read; absent when removed."
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/HaulListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hauls",
+          "revision"
+        ],
+        "title": "HaulsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.edit` v1.",
+        "properties": {
+          "haul": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The diagram written, read; absent when removed."
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/HaulListed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hauls",
+          "revision"
+        ],
+        "title": "HaulsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_haul",
+          "haul_not_approved",
+          "invalid_haul",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "1. hakediş planı",
+          "input": {
+            "at": "2026-11-05",
+            "haul": "h-1",
+            "note": "1. hakediş"
           }
         }
       ]
@@ -88286,6 +88460,18 @@
       "meaning": "Bu kübaj hesabını bir Brükner kullanıyor; önce Brükneri silin."
     },
     {
+      "code": "haul_not_approved",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Brüknerin onaylı taşıma planı yok; kaldırılacak onay yok."
+    },
+    {
+      "code": "haul_plan_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Onaylı taşıma planı eskidi; neyin değiştiği iletide."
+    },
+    {
       "code": "haul_plan_infeasible",
       "kind": "warning",
       "retryable": false,
@@ -122627,6 +122813,116 @@
         }
       ]
     },
+    "HaulApprovalDef": {
+      "additionalProperties": false,
+      "description": "A haul plan as approved (docs/adr/0954): its number from 1, the day and a note; what it was made from — the\ndiagram's revision, its volume's revision and approval number (0: not approved), the objective (cost, else the least\nmoment); what it was — the moment (m³·m), the volume moved (m³), the cost in all where priced, each site's capacity\nand use; how it ended, in the history.",
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "boolean"
+        },
+        "ended": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeApprovalEnd"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "moment": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume-m"
+        },
+        "moved": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "sites": {
+          "items": {
+            "$ref": "#/$defs/HaulApprovedSite"
+          },
+          "type": "array"
+        },
+        "total": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "money"
+        },
+        "volumeApproval": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "volumeRevision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "number",
+        "at",
+        "revision",
+        "volumeRevision",
+        "moment",
+        "moved"
+      ],
+      "type": "object"
+    },
+    "HaulApprovedSite": {
+      "additionalProperties": false,
+      "description": "A borrow or waste site as a haul plan was approved: its name, capacity and use (m³).",
+      "properties": {
+        "capacity": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "name": {
+          "type": "string"
+        },
+        "used": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "name",
+        "capacity",
+        "used"
+      ],
+      "type": "object"
+    },
     "HaulBarrierDef": {
       "additionalProperties": false,
       "description": "Something the haul road crosses (docs/adr/0944): its name, station, and the extra distance a load goes round it\n(m); absent: closed, nothing crosses.",
@@ -122753,6 +123049,17 @@
       "additionalProperties": false,
       "description": "A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free\nhaul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.",
       "properties": {
+        "approved": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HaulApprovalDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its plan as approved (docs/adr/0954; KCAD schema 172): a plan read later against it says what changed."
+        },
         "balance": {
           "format": "double",
           "type": "number",
@@ -122783,6 +123090,13 @@
             "null"
           ],
           "x-unit": "m"
+        },
+        "history": {
+          "description": "Its approvals that ended, oldest first, as they were (docs/adr/0954): never changed nor removed.",
+          "items": {
+            "$ref": "#/$defs/HaulApprovalDef"
+          },
+          "type": "array"
         },
         "id": {
           "type": "string"
@@ -122931,6 +123245,43 @@
           "type": "string"
         }
       ]
+    },
+    "HaulPlanApproval": {
+      "description": "The approved plan against the plan made now with the approved objective (docs/adr/0954): the approval, whether it\nwent stale, why (in words: the diagram's, the volume's or its approval's revision; a site's capacity; the plan's own\nfigures), the moment's change and the sites that changed. None of today's plan where it does not compute.",
+      "properties": {
+        "approved": {
+          "$ref": "#/$defs/HaulApprovalDef"
+        },
+        "momentChange": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume-m"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sites": {
+          "items": {
+            "$ref": "#/$defs/HaulSiteChange"
+          },
+          "type": "array"
+        },
+        "stale": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "approved",
+        "stale",
+        "reasons"
+      ],
+      "type": "object"
     },
     "HaulPlanBarrier": {
       "description": "A barrier in a haul plan (docs/adr/0944): its name, station, detour (none: closed) and what crosses it (m³, both\nways).",
@@ -123230,6 +123581,50 @@
         "from",
         "to",
         "flow"
+      ],
+      "type": "object"
+    },
+    "HaulSiteChange": {
+      "description": "A borrow or waste site whose capacity or use differs from the approved plan's (docs/adr/0954): its name, the\napproved capacity and use (none: a new site), today's (none: a site gone).",
+      "properties": {
+        "approvedCapacity": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "approvedUsed": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "capacity": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
+        "name": {
+          "type": "string"
+        },
+        "used": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "name"
       ],
       "type": "object"
     },

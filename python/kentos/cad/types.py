@@ -37405,6 +37405,101 @@ class HatchesPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulApprovalDef(_Model):
+    """A haul plan as approved (docs/adr/0954): its number from 1, the day and a note; what it was made from — the
+    diagram's revision, its volume's revision and approval number (0: not approved), the objective (cost, else the least
+    moment); what it was — the moment (m³·m), the volume moved (m³), the cost in all where priced, each site's capacity
+    and use; how it ended, in the history.
+    Attributes:
+        number: Unit: count.
+        revision: Unit: version.
+        volume_revision: Unit: version.
+        moment: Unit: volume-m.
+        moved: Unit: volume.
+        total: Unit: money.
+        volume_approval: Unit: count.
+    """
+    number: int
+    at: str
+    revision: int
+    volume_revision: int
+    moment: float
+    moved: float
+    cost: bool | Unset = UNSET
+    ended: VolumeApprovalEnd | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    sites: list[HaulApprovedSite] | Unset = UNSET
+    total: float | None | Unset = UNSET
+    volume_approval: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["at"] = self.at
+        out["revision"] = self.revision
+        out["volumeRevision"] = self.volume_revision
+        out["moment"] = float(self.moment)
+        out["moved"] = float(self.moved)
+        if self.cost is not UNSET:
+            out["cost"] = self.cost
+        if self.ended is not UNSET:
+            out["ended"] = None if self.ended is None else self.ended.to_json()
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.sites is not UNSET:
+            out["sites"] = [e0.to_json() for e0 in self.sites]
+        if self.total is not UNSET:
+            out["total"] = None if self.total is None else float(self.total)
+        if self.volume_approval is not UNSET:
+            out["volumeApproval"] = self.volume_approval
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulApprovalDef:
+        return cls(
+            number=data["number"],
+            at=data["at"],
+            revision=data["revision"],
+            volume_revision=data["volumeRevision"],
+            moment=float(data["moment"]),
+            moved=float(data["moved"]),
+            cost=data.get("cost", UNSET),
+            ended=UNSET if "ended" not in data else None if data["ended"] is None else VolumeApprovalEnd.from_json(data["ended"]),
+            note=data.get("note", UNSET),
+            sites=[HaulApprovedSite.from_json(e0) for e0 in data["sites"]] if "sites" in data else UNSET,
+            total=UNSET if "total" not in data else None if data["total"] is None else float(data["total"]),
+            volume_approval=data.get("volumeApproval", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulApprovedSite(_Model):
+    """A borrow or waste site as a haul plan was approved: its name, capacity and use (m³).
+    Attributes:
+        capacity: Unit: volume.
+        used: Unit: volume.
+    """
+    name: str
+    capacity: float
+    used: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["capacity"] = float(self.capacity)
+        out["used"] = float(self.used)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulApprovedSite:
+        return cls(
+            name=data["name"],
+            capacity=float(data["capacity"]),
+            used=float(data["used"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulBarrierDef(_Model):
     """Something the haul road crosses (docs/adr/0944): its name, station, and the extra distance a load goes round it
     (m); absent: closed, nothing crosses.
@@ -37524,20 +37619,24 @@ class HaulDef(_Model):
     """A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free
     haul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.
     Attributes:
+        approved: Its plan as approved (docs/adr/0954; KCAD schema 172): a plan read later against it says what changed.
         balance: Unit: volume.
         barriers: What the haul road crosses (docs/adr/0944; KCAD schema 169).
         cost: Its prices and the truck's payload.
         free: Unit: m.
+        history: Its approvals that ended, oldest first, as they were (docs/adr/0954): never changed nor removed.
         revision: Unit: version.
         unsuitable: The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).
     """
     id: str
     name: str
     volume: str
+    approved: HaulApprovalDef | None | Unset = UNSET
     balance: float | Unset = UNSET
     barriers: list[HaulBarrierDef] | Unset = UNSET
     cost: HaulCostDef | None | Unset = UNSET
     free: float | None | Unset = UNSET
+    history: list[HaulApprovalDef] | Unset = UNSET
     revision: int | Unset = UNSET
     sites: list[HaulSiteDef] | Unset = UNSET
     unsuitable: list[HaulUnsuitableDef] | Unset = UNSET
@@ -37547,6 +37646,8 @@ class HaulDef(_Model):
         out["id"] = self.id
         out["name"] = self.name
         out["volume"] = self.volume
+        if self.approved is not UNSET:
+            out["approved"] = None if self.approved is None else self.approved.to_json()
         if self.balance is not UNSET:
             out["balance"] = float(self.balance)
         if self.barriers is not UNSET:
@@ -37555,6 +37656,8 @@ class HaulDef(_Model):
             out["cost"] = None if self.cost is None else self.cost.to_json()
         if self.free is not UNSET:
             out["free"] = None if self.free is None else float(self.free)
+        if self.history is not UNSET:
+            out["history"] = [e0.to_json() for e0 in self.history]
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.sites is not UNSET:
@@ -37569,10 +37672,12 @@ class HaulDef(_Model):
             id=data["id"],
             name=data["name"],
             volume=data["volume"],
+            approved=UNSET if "approved" not in data else None if data["approved"] is None else HaulApprovalDef.from_json(data["approved"]),
             balance=float(data["balance"]) if "balance" in data else UNSET,
             barriers=[HaulBarrierDef.from_json(e0) for e0 in data["barriers"]] if "barriers" in data else UNSET,
             cost=UNSET if "cost" not in data else None if data["cost"] is None else HaulCostDef.from_json(data["cost"]),
             free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
+            history=[HaulApprovalDef.from_json(e0) for e0 in data["history"]] if "history" in data else UNSET,
             revision=data.get("revision", UNSET),
             sites=[HaulSiteDef.from_json(e0) for e0 in data["sites"]] if "sites" in data else UNSET,
             unsuitable=[HaulUnsuitableDef.from_json(e0) for e0 in data["unsuitable"]] if "unsuitable" in data else UNSET,
@@ -37665,6 +37770,42 @@ class HaulLoop(_Model):
             over_moment=float(data["overMoment"]),
             unbalanced=float(data["unbalanced"]),
             average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulPlanApproval(_Model):
+    """The approved plan against the plan made now with the approved objective (docs/adr/0954): the approval, whether it
+    went stale, why (in words: the diagram's, the volume's or its approval's revision; a site's capacity; the plan's own
+    figures), the moment's change and the sites that changed. None of today's plan where it does not compute.
+    Attributes:
+        moment_change: Unit: volume-m.
+    """
+    approved: HaulApprovalDef
+    stale: bool
+    reasons: list[str]
+    moment_change: float | None | Unset = UNSET
+    sites: list[HaulSiteChange] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["approved"] = self.approved.to_json()
+        out["stale"] = self.stale
+        out["reasons"] = list(self.reasons)
+        if self.moment_change is not UNSET:
+            out["momentChange"] = None if self.moment_change is None else float(self.moment_change)
+        if self.sites is not UNSET:
+            out["sites"] = [e0.to_json() for e0 in self.sites]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulPlanApproval:
+        return cls(
+            approved=HaulApprovalDef.from_json(data["approved"]),
+            stale=data["stale"],
+            reasons=list(data["reasons"]),
+            moment_change=UNSET if "momentChange" not in data else None if data["momentChange"] is None else float(data["momentChange"]),
+            sites=[HaulSiteChange.from_json(e0) for e0 in data["sites"]] if "sites" in data else UNSET,
         )
 
 
@@ -37800,6 +37941,7 @@ class HaulPlanned(_Model):
         moment: Unit: volume-m.
         shortage: Unit: volume.
         surplus: Unit: volume.
+        approval: The plan as approved against this one, where the diagram has an approved plan (docs/adr/0954).
         average: Unit: m.
         barriers: The barriers and what crosses each.
         cost: The cost, for the cost objective.
@@ -37820,6 +37962,7 @@ class HaulPlanned(_Model):
     shortage: float
     surplus: float
     objective: HaulObjective | HaulObjectiveName
+    approval: HaulPlanApproval | None | Unset = UNSET
     average: float | None | Unset = UNSET
     barriers: list[HaulPlanBarrier] | Unset = UNSET
     cost: HaulPlanCost | None | Unset = UNSET
@@ -37841,6 +37984,8 @@ class HaulPlanned(_Model):
         out["shortage"] = float(self.shortage)
         out["surplus"] = float(self.surplus)
         out["objective"] = _enum_out(self.objective)
+        if self.approval is not UNSET:
+            out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.average is not UNSET:
             out["average"] = None if self.average is None else float(self.average)
         if self.barriers is not UNSET:
@@ -37871,6 +38016,7 @@ class HaulPlanned(_Model):
             shortage=float(data["shortage"]),
             surplus=float(data["surplus"]),
             objective=_enum_in(HaulObjective, data["objective"]),
+            approval=UNSET if "approval" not in data else None if data["approval"] is None else HaulPlanApproval.from_json(data["approval"]),
             average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
             barriers=[HaulPlanBarrier.from_json(e0) for e0 in data["barriers"]] if "barriers" in data else UNSET,
             cost=UNSET if "cost" not in data else None if data["cost"] is None else HaulPlanCost.from_json(data["cost"]),
@@ -38008,6 +38154,46 @@ class HaulSegment(_Model):
             to=float(data["to"]),
             flow=float(data["flow"]),
             unsuitable_flow=UNSET if "unsuitableFlow" not in data else None if data["unsuitableFlow"] is None else float(data["unsuitableFlow"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulSiteChange(_Model):
+    """A borrow or waste site whose capacity or use differs from the approved plan's (docs/adr/0954): its name, the
+    approved capacity and use (none: a new site), today's (none: a site gone).
+    Attributes:
+        approved_capacity: Unit: volume.
+        approved_used: Unit: volume.
+        capacity: Unit: volume.
+        used: Unit: volume.
+    """
+    name: str
+    approved_capacity: float | None | Unset = UNSET
+    approved_used: float | None | Unset = UNSET
+    capacity: float | None | Unset = UNSET
+    used: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.approved_capacity is not UNSET:
+            out["approvedCapacity"] = None if self.approved_capacity is None else float(self.approved_capacity)
+        if self.approved_used is not UNSET:
+            out["approvedUsed"] = None if self.approved_used is None else float(self.approved_used)
+        if self.capacity is not UNSET:
+            out["capacity"] = None if self.capacity is None else float(self.capacity)
+        if self.used is not UNSET:
+            out["used"] = None if self.used is None else float(self.used)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulSiteChange:
+        return cls(
+            name=data["name"],
+            approved_capacity=UNSET if "approvedCapacity" not in data else None if data["approvedCapacity"] is None else float(data["approvedCapacity"]),
+            approved_used=UNSET if "approvedUsed" not in data else None if data["approvedUsed"] is None else float(data["approvedUsed"]),
+            capacity=UNSET if "capacity" not in data else None if data["capacity"] is None else float(data["capacity"]),
+            used=UNSET if "used" not in data else None if data["used"] is None else float(data["used"]),
         )
 
 
@@ -38187,6 +38373,51 @@ class HaulUnsuitableDef(_Model):
             from_=float(data["from"]),
             to=float(data["to"]),
             share=float(data["share"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsApprove(_Model):
+    """Input of `road.hauls.approve` v1 (plan/road.md Y48, docs/adr/0954; ROAD-HAUL-08): a mass haul diagram's plan, as
+    planned now with `objective` (absent: the least moment), approved on the day `at` with a note; or, with `revoke`,
+    its approval taken off (`at` and `note` the day and why). An approval that ends goes to the diagram's history as it
+    was. One undo step “Taşıma planı onayı”.
+
+    Refusals: `not_a_road_project`, `unknown_haul`, `haul_not_approved` (revoke one not approved), `invalid_haul` (no
+    day, a plan that cannot place everything, one that does not compute, a day or note the rule refuses),
+    `invalid_revision`, `revision_conflict`.
+    """
+    haul: str
+    at: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    objective: HaulObjective | HaulObjectiveName | None | Unset = UNSET
+    revoke: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.objective is not UNSET:
+            out["objective"] = None if self.objective is None else _enum_out(self.objective)
+        if self.revoke is not UNSET:
+            out["revoke"] = self.revoke
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsApprove:
+        return cls(
+            haul=data["haul"],
+            at=data.get("at", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            note=data.get("note", UNSET),
+            objective=UNSET if "objective" not in data else None if data["objective"] is None else _enum_in(HaulObjective, data["objective"]),
+            revoke=data.get("revoke", UNSET),
         )
 
 
@@ -110949,6 +111180,8 @@ __all__ = [
     "HatchesEdit",
     "HatchesEdited",
     "HatchesPlan",
+    "HaulApprovalDef",
+    "HaulApprovedSite",
     "HaulBarrierDef",
     "HaulCostDef",
     "HaulCostReport",
@@ -110957,12 +111190,14 @@ __all__ = [
     "HaulLoop",
     "HaulObjective",
     "HaulObjectiveName",
+    "HaulPlanApproval",
     "HaulPlanBarrier",
     "HaulPlanCost",
     "HaulPlanSite",
     "HaulPlanned",
     "HaulReport",
     "HaulSegment",
+    "HaulSiteChange",
     "HaulSiteDef",
     "HaulSiteKind",
     "HaulSiteKindName",
@@ -110971,6 +111206,7 @@ __all__ = [
     "HaulTruckDef",
     "HaulTrucked",
     "HaulUnsuitableDef",
+    "HaulsApprove",
     "HaulsEdit",
     "HaulsPlan",
     "HaulsQueried",

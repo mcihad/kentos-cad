@@ -1946,9 +1946,15 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.hauls.approve",
+        refusals: &[&["not_a_road_project", "unknown_haul", "haul_not_approved", "invalid_haul"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "road.hauls.plan",
         refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
-        warnings: &["haul_plan_infeasible", "corridor_stale", "volume_gap"],
+        warnings: &["haul_plan_infeasible", "corridor_stale", "volume_gap", "haul_plan_stale"],
         targets: none,
     },
     Entry {

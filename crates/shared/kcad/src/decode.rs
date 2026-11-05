@@ -681,6 +681,11 @@ pub(crate) fn road_has_volume_history(road: &kentos_contracts::RoadSettings) -> 
     })
 }
 
+/// Whether road settings carry schema 172's fields: a mass haul diagram's approved plan or its history (docs/adr/0954).
+pub(crate) fn road_has_haul_approval(road: &kentos_contracts::RoadSettings) -> bool {
+    road.hauls.iter().any(|h| h.approved.is_some() || !h.history.is_empty())
+}
+
 /// Whether road settings carry schema 170's field: a profile's crossings (docs/adr/0946).
 pub(crate) fn road_has_profile_crossings(road: &kentos_contracts::RoadSettings) -> bool {
     road.profiles.iter().any(|p| !p.crossings.is_empty())
@@ -1337,6 +1342,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.volume_history && road_has_volume_history(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "kübajın numaralı onayı ve onay geçmişi şema 171 ister"));
+                }
+                if !has.haul_approval && road_has_haul_approval(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "Brüknerin onaylı taşıma planı ve onay geçmişi şema 172 ister"));
                 }
                 if !has.section_breaks && road_has_section_breaks(&v) {
                     return Err(r.fail_at(

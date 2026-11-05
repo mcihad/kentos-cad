@@ -383,11 +383,11 @@ Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve eng
 - [x] **ROAD-HAUL-05:** Barriers, köprü geçişi, temporary road closure ve erişilebilirlik constraints taşıma planını ayırsın.
 - [ ] **ROAD-HAUL-06:** Haul network bağlantısı yalnız plan çizgilerinin ekranda kesişmesi sayılmasın; gerçek source/destination/topology gereksinimleri denetlensin.
 - [~] **ROAD-HAUL-07:** Min-cost-flow veya seçilen optimizer feasibility/optimality gap ve solver version ile raporlansın; heuristic optimum diye sunulmasın. (Y23, ADR 0924: tam en küçük maliyetli akış, kurulamazlık eksik dolgu ve artan yarmayla; algoritmanın adı ve sürümü cevapta açık.)
-- [ ] **ROAD-HAUL-08:** Borrow/waste kapasite ve iş takvimi değişince etkilenen taşıma planı stale olsun.
+- [x] **ROAD-HAUL-08:** Borrow/waste kapasite ve iş takvimi değişince etkilenen taşıma planı stale olsun. *(Y48, ADR 0954: onaylı plan; kapasite, alan, Brükner/kübaj sürümü, kübaj onayı ve planın sayıları değişince eskir; iş takvimi modelde olmadığından açık.)*
 - [~] **ROAD-HAUL-09:** Kısıtlı kapasite, one-way taşıma, malzeme dönüşüm verimi ve yeniden işleme cost'u alternatif analizde olsun. (Y23–Y24, ADR 0924, 0925: alanların kapasitesi, en küçük moment ya da en düşük maliyet planı; tek yön, dönüşüm verimi ve yeniden işleme açık.)
 - [ ] **ROAD-HAUL-10:** Maliyet/karbon/truck trip hesabı katsayı, taşıt payload ve varsayımlarını görünür tutsun; otomatik mevzuat/şantiye onayı üretmesin.
 - [ ] **ROAD-HAUL-11:** Brükner grafiği, plan ağı, station tables ve 3D materyal bölgeleri aynı HaulPlan'ı kullansın.
-- [x] **ROAD-HAUL-12:** CSV/XLSX/report çıktısı approved quantity/haul revisions ve aktarım birimlerini taşısın. *(Y47, ADR 0953: Taşıma planı → Planı yaz; PDF rapor ve planın onayı açık.)*
+- [x] **ROAD-HAUL-12:** CSV/XLSX/report çıktısı approved quantity/haul revisions ve aktarım birimlerini taşısın. *(Y47, ADR 0953: Taşıma planı → Planı yaz; planın onayı Y48 / ADR 0954; PDF rapor açık.)*
 
 ## 17. ROAD-JUNC — Kavşak, bağlantı, köprü/tünel ve araç zarfı — P1/P2
 
@@ -638,6 +638,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y45 | Şev uçlarının teşhisi | ROAD-COR-10 | Her yanın şev ucu, şevin araziyi kaç kez kestiği, duyarlılığı 1/|m − g|; buluşmazsa nedeni ayrı (menteşede arazi yok, arazi önce bitiyor, şerit yetmiyor); Koridor → Şev uçları (ADR 0951) |
 | Y46 | Korunan alanlar | ROAD-GRADE-06 | Koridorun izinin (üst yüzeyin üçgenleri) korunan alanlarla örtüşmesi, deliklerle; izi alana giren kesitler, km aralığı, en uzun giriş; Koridor → Korunan alanlar (ADR 0952) |
 | Y47 | Taşıma planının çalışma kitabı | ROAD-HAUL-12 | Özet (Brükner ve kübaj sürümleri, kübajın onayı, hacimlerin ne olduğu, birimler), taşımalar (uygun ve uygunsuz ayrı, engelin dolaşmasıyla taşıma boyu), alanlar, engeller; XLSX/ODS/CSV (ADR 0953) |
+| Y48 | Taşıma planının onayı ve eskimesi | ROAD-HAUL-08 | `road.hauls.approve` (numaralı onay, not, geçmiş; KCAD 172); plan onaya göre okunur: Brükner/kübaj sürümü, kübaj onayı, alan kapasitesi, planın momenti/hacmi/tutarı değişince `haul_plan_stale` gerekçeleriyle; pencerede Onayla/Onayı kaldır, Onay listesi; Planı yaz onayı taşır (ADR 0954) |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 

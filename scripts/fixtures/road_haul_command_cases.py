@@ -260,6 +260,22 @@ def edit_cases():
     ok("Doğrulama yazmaz", {"operation": "set", "haul": "h-1", "balance": -500.0}, put(0, {**H1, "balance": -500.0, "revision": 2}),
        "h-1", op="validate")
 
+    # Docs/adr/0954: an approved plan and its history stay; editing the diagram keeps them (a plan read later says
+    # what changed).
+    signed = {"number": 1, "at": "2026-11-04", "revision": 1, "volumeRevision": 1, "moment": 1500000.0, "moved": 9000.0}
+    ha = {**H1, "approved": signed}
+    hh = {**H1, "history": [{**signed, "ended": {"revoked": True, "at": "2026-11-05"}}]}
+    cases.append(case("Onaylı Brükner düzenlenir, onay durur", [step(
+        "execute", {"operation": "set", "haul": "h-1", "free": 250.0},
+        completed({"hauls": listed([{**ha, "free": 250.0, "revision": 2}, H2]), "revision": "$current",
+                   "haul": report({**ha, "free": 250.0, "revision": 2})}),
+        {**STEPPED, "road": road_of([{**ha, "free": 250.0, "revision": 2}, H2])})], setup([ha, H2])))
+    no("Onaylı Brükner silinmez", {"operation": "remove", "haul": "h-1"},
+       failed("invalid_haul", "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez "
+                              "(ADR 0954). Brükneri bırakıp yenisini yazın.", "haul"), setup([ha, H2]))
+    no("Onay geçmişi olan Brükner silinmez", {"operation": "remove", "haul": "Ana Brükner"},
+       failed("invalid_haul", "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez "
+                              "(ADR 0954). Brükneri bırakıp yenisini yazın.", "haul"), setup([hh, H2]))
     no("Yol projesi değil", {"operation": "remove", "haul": "h-1"}, NOT_ROAD, setup(work="map"))
     no("Yeniden bağlanmaz", {"operation": "rebind", "haul": "h-1"},
        failed("invalid_haul", "Brükner kübajını izler, yeniden bağlanmaz; kübajın koridorunu aksa yeniden bağlayın.", "operation"))
