@@ -10079,7 +10079,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_STANDARDS_CONFLICTS.into(),
             version: crate::CAD_STANDARDS_CONFLICTS_VERSION,
             title: "Bağlı standartlardaki farklı tanımları göster".into(),
-            summary: "Projeye bağlı standartlarda aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Genel kuralları karşılaştırmaz, standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.".into(),
+            summary: "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.".into(),
             aliases: vec![], effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
             requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::None,
             cost: CommandCost::Instant, input: schema::<crate::StandardsConflicts>(),

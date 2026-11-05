@@ -75556,7 +75556,7 @@ class StakeoutSent(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class StandardConflict(_Model):
-    """A later definition differs from the first definition of the same name."""
+    """A later document differs from the first on named definitions or global rules."""
     kind: str
     name: str
     first_id: str
@@ -75866,7 +75866,7 @@ class StandardsCheck(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class StandardsConflicts(_Model):
-    """Inspect named definitions in the project's ordered standard documents."""
+    """Inspect global rules and named definitions in ordered standard documents."""
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75879,8 +75879,8 @@ class StandardsConflicts(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class StandardsConflictsReport(_Model):
-    """This report covers named layer, text and dimension style definitions only;
-    it does not combine standards or resolve global rules.
+    """Compares global rules and named layer, text and dimension style definitions;
+    it does not combine standards or decide which rules should be applied.
     """
     conflicts: list[StandardConflict]
     revision: str

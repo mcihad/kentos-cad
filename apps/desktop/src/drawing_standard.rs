@@ -919,19 +919,19 @@ impl App {
                     let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
                         let item = &conflicts[i];
                         let kind = match item.kind.as_str() {
-                            "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", _ => "Tanım",
+                            "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural", _ => "Tanım",
                         };
                         let fields = item.fields.iter().map(|field| match field.as_str() {
-                            "color" => "renk", "lineType" => "çizgi tipi", "lineWeight" => "kalınlık", "plot" => "yazdırma", "from" => "kaynak eşlemesi", "font" => "yazı tipi", "height" => "yükseklik", _ => "özellik",
+                            "color" => "renk", "lineType" => "çizgi tipi", "lineWeight" => "kalınlık", "plot" => "yazdırma", "from" => "kaynak eşlemesi", "font" => "yazı tipi", "height" => "yükseklik", "naming" => "katman adlandırma", "fonts" => "yazı tipleri", "lineTypes" => "çizgi tipleri", "byLayer" => "katmana göre görünüş", _ => "özellik",
                         }).collect::<Vec<_>>().join(", ");
                         let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
                         container(Elided::new(line).size(typography::caption()).font(typography::ui()).width(Fill))
                             .padding([0, 8]).height(typography::scaled(ROW)).into()
                     }).height(typography::scaled(104.0));
                     body = body.push(words::field(
-                        "Aynı adlı farklı tanımlar",
+                        "Standartlar arasındaki farklar",
                         container(list).style(style::container::field_box).width(Fill),
-                        Some(format!("{count} fark. Yalnız katman, yazı ve ölçü stili tanımları karşılaştırılır; denetim seçili standardı kullanır.")),
+                        Some(format!("{count} fark. Genel kurallar ve aynı adlı tanımlar karşılaştırılır; denetim seçili standardı kullanır.")),
                     ));
                 }
                 _ => {}

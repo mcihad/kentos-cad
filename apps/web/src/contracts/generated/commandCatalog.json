@@ -57427,7 +57427,7 @@
       "id": "cad.standards.conflicts",
       "version": 1,
       "title": "Bağlı standartlardaki farklı tanımları göster",
-      "summary": "Projeye bağlı standartlarda aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Genel kuralları karşılaştırmaz, standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.",
+      "summary": "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -57443,13 +57443,13 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Inspect named definitions in the project's ordered standard documents.",
+        "description": "Inspect global rules and named definitions in ordered standard documents.",
         "title": "StandardsConflicts",
         "type": "object"
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "This report covers named layer, text and dimension style definitions only;\nit does not combine standards or resolve global rules.",
+        "description": "Compares global rules and named layer, text and dimension style definitions;\nit does not combine standards or decide which rules should be applied.",
         "properties": {
           "conflicts": {
             "items": {
@@ -57470,7 +57470,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "This report covers named layer, text and dimension style definitions only;\nit does not combine standards or resolve global rules.",
+        "description": "Compares global rules and named layer, text and dimension style definitions;\nit does not combine standards or decide which rules should be applied.",
         "properties": {
           "conflicts": {
             "items": {
@@ -159641,7 +159641,7 @@
       "type": "string"
     },
     "StandardConflict": {
-      "description": "A later definition differs from the first definition of the same name.",
+      "description": "A later document differs from the first on named definitions or global rules.",
       "properties": {
         "fields": {
           "items": {

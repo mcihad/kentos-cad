@@ -1865,9 +1865,10 @@ fazla standardın birlikte denetimi ve öncelik çözümü henüz yoktur.
 `cad.standards.conflicts`, bağlı standartlardaki aynı adlı katman, yazı ve
 ölçü stili tanımlarının farklı alanlarını ve iki kaynağı raporlar. Sıra
 değişince ilk kaynak yeniden belirlenir; okunamayan belge varsa eksik rapor
-üretilmez. Arayüz aynı sorguyu kullanır; genel kurallar karşılaştırılmaz,
+üretilmez. Arayüz aynı sorguyu kullanır; genel kural farklılıkları da bildirilir,
 birleştirme veya otomatik öncelik uygulaması henüz yapılmaz. Gerçek arayüzde
-üç fark ve sıra değişimi, komutta salt okunurluk ve hatalı belge reddi sınandı.
+genel kural ve üç adlandırılmış fark, sıra değişimi; komutta salt okunurluk ve
+hatalı belge reddi sınandı. Python bağlamasıyla genel ve katman farkı sınandı.
 Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden
 çıkarılabilir; kaynak dosya ve çizim geometrisi değiştirilmez. Eski ön izleme
 ile sıralama engellenir. Otomatik testler ve gerçek arayüzde sıralama,

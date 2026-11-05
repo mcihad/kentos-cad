@@ -96,6 +96,30 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
         BTreeMap::new();
     let mut conflicts = Vec::new();
     for package in &packages {
+        if let Some(first) = packages.first().filter(|first| first.id != package.id) {
+            let mut fields = Vec::new();
+            if first.standard.naming != package.standard.naming {
+                fields.push("naming".into());
+            }
+            if first.standard.fonts != package.standard.fonts {
+                fields.push("fonts".into());
+            }
+            if first.standard.line_types != package.standard.line_types {
+                fields.push("lineTypes".into());
+            }
+            if first.standard.by_layer != package.standard.by_layer {
+                fields.push("byLayer".into());
+            }
+            if !fields.is_empty() {
+                conflicts.push(StandardConflict {
+                    kind: "rules".into(),
+                    name: "Genel kurallar".into(),
+                    first_id: first.id.clone(),
+                    later_id: package.id.clone(),
+                    fields,
+                });
+            }
+        }
         for layer in &package.standard.layers {
             let key = fold_name(&layer.name);
             if let Some((first_id, first)) = layers.get(&key) {

@@ -2,7 +2,7 @@
 import type { StandardConflict } from "./StandardConflict";
 
 /**
- * This report covers named layer, text and dimension style definitions only;
- * it does not combine standards or resolve global rules.
+ * Compares global rules and named layer, text and dimension style definitions;
+ * it does not combine standards or decide which rules should be applied.
  */
 export type StandardsConflictsReport = { conflicts: Array<StandardConflict>, revision: string, };

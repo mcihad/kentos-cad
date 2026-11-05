@@ -23,7 +23,7 @@ pub const CAD_STANDARDS_APPLY_VERSION: u32 = 1;
 pub const CAD_STANDARDS_CONFLICTS: &str = "cad.standards.conflicts";
 pub const CAD_STANDARDS_CONFLICTS_VERSION: u32 = 1;
 
-/// Inspect named definitions in the project's ordered standard documents.
+/// Inspect global rules and named definitions in ordered standard documents.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -31,7 +31,7 @@ pub const CAD_STANDARDS_CONFLICTS_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsConflicts {}
 
-/// A later definition differs from the first definition of the same name.
+/// A later document differs from the first on named definitions or global rules.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -45,8 +45,8 @@ pub struct StandardConflict {
     pub fields: Vec<String>,
 }
 
-/// This report covers named layer, text and dimension style definitions only;
-/// it does not combine standards or resolve global rules.
+/// Compares global rules and named layer, text and dimension style definitions;
+/// it does not combine standards or decide which rules should be applied.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

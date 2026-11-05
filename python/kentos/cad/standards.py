@@ -333,10 +333,10 @@ check = _StandardsCheck()
 
 class _StandardsConflicts(LocalCommand[StandardsConflicts, StandardsConflictsReport, StandardsConflictsReport]):
     """``cad.standards.conflicts`` v1. Bağlı standartlardaki farklı tanımları göster:
-    Projeye bağlı standartlarda aynı adlı katman, yazı ve ölçü stili tanımlarını ilk
-    tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Genel
-    kuralları karşılaştırmaz, standartları birleştirmez ve çizimi değiştirmez.
-    Okunamayan bağlı belge varsa raporu reddeder.
+    Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili
+    tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini
+    gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge
+    varsa raporu reddeder.
     """
     __slots__ = ()
     id = "cad.standards.conflicts"
@@ -355,9 +355,9 @@ class _StandardsConflicts(LocalCommand[StandardsConflicts, StandardsConflictsRep
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> StandardsConflictsReport:
-        """Bağlı standartlardaki farklı tanımları göster: Projeye bağlı standartlarda aynı adlı
-        katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve
-        iki kaynağın kimliğini gösterir. Genel kuralları karşılaştırmaz, standartları
+        """Bağlı standartlardaki farklı tanımları göster: Projeye bağlı standartlarda genel
+        kuralları ve aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla
+        karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları
         birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.
 
         Args:

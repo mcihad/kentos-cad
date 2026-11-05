@@ -19,6 +19,7 @@ class ProjectStandardDocuments(unittest.TestCase):
         standard = json.loads((ROOT / "catalog/v1/standards/mimari-ofis.json").read_text())
         changed = json.loads(json.dumps(standard))
         changed["layers"][0]["color"] = "#ff0000"
+        changed["byLayer"] = not standard.get("byLayer", False)
         def package(identity, value):
             return cad.ProjectStandardDocument(text=json.dumps({
                 "format": "kentos.drawing-standard", "version": 1,
@@ -27,9 +28,10 @@ class ProjectStandardDocuments(unittest.TestCase):
         cad.settings.set(document, standard_docs=[package("first", standard), package("second", changed)])
         before = document.to_bytes()
         report = cad.standards.conflicts(document)
-        self.assertEqual(len(report.conflicts), 1)
+        self.assertEqual(len(report.conflicts), 2)
         self.assertEqual((report.conflicts[0].first_id, report.conflicts[0].later_id), ("first", "second"))
-        self.assertEqual(report.conflicts[0].fields, ["color"])
+        self.assertEqual(report.conflicts[0].fields, ["byLayer"])
+        self.assertEqual(report.conflicts[1].fields, ["color"])
         self.assertEqual(document.to_bytes(), before)
 
     def test_associate_save_reopen_and_remove(self):

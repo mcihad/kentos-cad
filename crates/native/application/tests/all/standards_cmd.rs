@@ -58,6 +58,7 @@ fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
     .unwrap();
     let first = kentos_commands::built_in_standard("mimari-ofis").unwrap();
     let mut second = first.clone();
+    second.by_layer = !first.by_layer;
     second.layers[0].color = "#ff0000".into();
     second.text_styles[0].height = Some(7.0);
     second.dimension_styles[0].height = 8.0;
@@ -84,9 +85,11 @@ fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
     .unwrap();
     assert_eq!(result["status"], "completed", "{result}");
     let rows = result["output"]["conflicts"].as_array().unwrap();
-    assert_eq!(rows.len(), 3, "{result}");
-    assert_eq!(rows[0]["kind"], "layer");
-    assert_eq!(rows[0]["fields"], json!(["color"]));
+    assert_eq!(rows.len(), 4, "{result}");
+    assert_eq!(rows[0]["kind"], "rules");
+    assert_eq!(rows[0]["fields"], json!(["byLayer"]));
+    assert_eq!(rows[1]["kind"], "layer");
+    assert_eq!(rows[1]["fields"], json!(["color"]));
     assert_eq!(rows[0]["firstId"], "first");
     assert_eq!(rows[0]["laterId"], "second");
     assert_eq!(doc.to_snapshot_v2(), before);
