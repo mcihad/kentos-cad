@@ -732,17 +732,23 @@ impl App {
                 Some(p) => meta.push(format!("“{p}” getirdi")),
                 None => meta.push(format!("{} yerleştirme", x.inserts)),
             }
-            let place = match x.via {
-                AssetVia::SearchPath => format!("{} · arama yolundan bulundu", x.path),
-                AssetVia::Relative => format!("{} · göreli yolundan bulundu", x.path),
-                _ if !x.tried.is_empty() => format!("Denenen: {}", x.tried.join("; ")),
-                _ => x.path.clone(),
+            let ambiguous = x.tried.iter().find(|p| p.contains("içerik özeti farklı"));
+            let place = if let Some(candidate) = ambiguous {
+                let path = candidate.split(" (").next().unwrap_or(candidate);
+                format!("Aynı adlı farklı dosya: {path}. Otomatik bağlanmadı; onaylamak için {REPATH} seçin.")
+            } else {
+                match x.via {
+                    AssetVia::SearchPath => format!("{} · arama yolundan bulundu", x.path),
+                    AssetVia::Relative => format!("{} · göreli yolundan bulundu", x.path),
+                    _ if !x.tried.is_empty() => format!("Denenen: {}", x.tried.join("; ")),
+                    _ => x.path.clone(),
+                }
             };
             let text = Column::new()
                 .spacing(2)
                 .push(label::body(x.name.clone()).wrapping(iced::widget::text::Wrapping::None))
                 .push(label::caption(meta.join(" · ")))
-                .push(label::caption(place).wrapping(iced::widget::text::Wrapping::None));
+                .push(label::caption(place).wrapping(iced::widget::text::Wrapping::WordOrGlyph));
             let glyph = match x.state {
                 XrefState::Loaded => "xrefAttach",
                 XrefState::Unloaded => "xrefManager",

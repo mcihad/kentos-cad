@@ -1,6 +1,6 @@
 //! `cad.assets.check` v1 (docs/adr/0349 §2; plan/cad.md `CAD-REF-19`): every file the drawing links to, where it was
 //! found and whether it changed since it was read. Read-only. External references, linked images and rasters are looked
-//! for with the project's search paths (`links::find`, docs/adr/0350 §2), the other links at their path and from the
+//! for with the project's search paths (xref fallbacks must match their saved digest), the other links at their path and from the
 //! drawing's folder, as their own loaders do.
 //! The shared cases are `fixtures/commands/v1/cad.assets.check.json`.
 
@@ -56,7 +56,11 @@ impl Walk<'_> {
         if !self.wants(kind) {
             return;
         }
-        let Found { at, via, tried } = find(path, relative, self.input.drawing.as_deref(), search);
+        let Found { at, via, tried } = if kind == AssetKind::Xref {
+            crate::xrefs::found_source(path, relative, digest.unwrap_or(""), self.input.drawing.as_deref(), search)
+        } else {
+            find(path, relative, self.input.drawing.as_deref(), search)
+        };
         let (state, current) = match (&at, digest) {
             (None, _) => (AssetState::Missing, None),
             (Some(p), Some(kept)) if self.digests() => match std::fs::File::open(p).and_then(sha256_reader_hex) {

@@ -2207,7 +2207,7 @@ gösterdi ve bağımsız XLSX okuması `Adet` sütununu sayı türünde `2, 1, 3
 olarak doğruladı. Ekran görüntüsü repo dışındadır. Genel metraj alanları ve ortak çıkarım tarifi
 açık kaldığından madde `[~]` durumundadır.
 
-### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
+### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [~]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].
 **Dayanak:** AutoCAD 2027 Connected References; kaynak bütünlüğü
@@ -2236,6 +2236,22 @@ açık kaldığından madde `[~]` durumundadır.
 altlığı kur. Dosyayı taşı/değiştir, sonra yeniden bağla/yenile; doğru
 kaynak bulunmalı, eski bağların durumu açıklanmalı. Paketi başka dizinde
 aç, kırpmayı ve iki paftadaki override'ları doğrula; tek Undo geçerli modeli geri getirsin.
+
+**Aynı adlı yanlış kaynağa bağlanmayı önleme (5 Kasım 2026):** Dış
+başvurunun saklı mutlak yolu kaybolduğunda, proje göreli yolunda veya
+arama klasörlerinde bulunan adayların SHA-256 özeti son yüklenen
+kaynakla karşılaştırılır. Aynı adlı başka çizim otomatik kaynak olmaz;
+başvuru eksik görünür ve aday ile `Yolu değiştir…` eylemi gösterilir.
+İlk yanlış adaydan sonra sonraki klasördeki doğru dosya da aranır.
+Kullanıcının açıkça bağladığı mutlak dosya yerinde değişirse mevcut
+`Değişti`/`Yeniden yükle` akışı korunur. `cad.xrefs.list`, yeniden
+yükleme ve `cad.assets.check` aynı bulma kuralını kullanır. Kaynak
+grafiği, değişim etkisi önizlemesi, paket ve çoklu pafta kabulü açık.
+Gerçek CAD penceresinde ilk arama klasöründeki aynı adlı farklı dosya
+`Bulunamadı` ve açık aday uyarısı olarak göründü; `Yeniden yükle`
+doğru olmayan dosyayı almadı. Doğru dosya ikinci arama klasörüne
+konunca `Yüklü · arama yolundan bulundu` durumu görüntülendi. İki
+durumun ekran görüntüleri repo dışında tutuldu.
 
 ### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [ ]
 
