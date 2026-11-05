@@ -785,6 +785,10 @@ def pattern_element(el):
     return cmap(fields(el, {"length": (f64, True), "text": (text_el, False), "shape": (shape_el, False)}, "patternElement"))
 
 
+# The most elements a stored pattern has (docs/adr/1001 §1); a broken sample lifts it for one call.
+MOST_STORED_ELEMENTS = [256]
+
+
 def line_types(types):
     """Schema 56's line types (docs/adr/0313 §1): not empty; names neither empty nor twice (case aside); at most 12
     elements, the first that draws not a gap; a unit, `paper` or `drawing`."""
@@ -795,7 +799,7 @@ def line_types(types):
         name = t["name"]
         assert name and name.strip() == name and name.lower() not in seen, "çizgi tipinin adı boş ya da iki kez"
         seen.add(name.lower())
-        assert len(t["elements"]) <= 12, "en çok 12 öğe"
+        assert len(t["elements"]) <= MOST_STORED_ELEMENTS[0], "en çok 256 öğe"
         drawn = [e["length"] for e in t["elements"] if "text" not in e and "shape" not in e]
         assert not drawn or drawn[0] >= 0, "desen bir çizgi ya da noktayla başlar"
         out.append(cmap(fields(t, {"name": (text, True), "description": (lambda s: text(s) if s else None, False),
@@ -2386,6 +2390,9 @@ def document(d):
         schema = max(schema, 131)
     if d["settings"].get("standardDocs"):
         schema = max(schema, 165)
+    if any(len(t["elements"]) > 12 for t in d["settings"].get("lineTypes", [])):
+        # A pattern past a LIN file's 12 elements (docs/adr/1001 §1).
+        schema = max(schema, 181)
     if d["settings"].get("reviewNotes"):
         # Review notes bound to objects, a sheet or a view (docs/adr/1000 §2).
         schema = max(schema, 180)
@@ -3329,7 +3336,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-181.kcad"] = container(root(cmap(parts), version=uint(181)))
+    files["schema-version-182.kcad"] = container(root(cmap(parts), version=uint(182)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5583,6 +5590,18 @@ def build():
     fixture_bad("phase", 1, lambda e: e["arch"].update(phase="sonra"))
     fixture_bad("field", 4, lambda e: e["source"]["columns"].append({"field": "brand"}))
     fixture_bad("of", 4, lambda e: e["source"].update(of="furniture"))
+    # Schema 181 (docs/adr/1001 §1): a 16-element pattern; schema 180 refuses it, 257 elements are a bad value.
+    long_patterns = load("long-patterns.json")
+    long_data = document(long_patterns)
+    assert long_data.count(b"\x67version\x18\xb5") == 1
+    out["long-patterns.kcad"] = container(long_data)
+    out["broken/long-patterns-in-schema-180.kcad"] = container(
+        long_data.replace(b"\x67version\x18\xb5", b"\x67version\x18\xb4"))
+    too_long = copy.deepcopy(long_patterns)
+    too_long["settings"]["lineTypes"][0]["elements"] = [{"length": 1.0}, {"length": -1.0}] * 128 + [{"length": 1.0}]
+    MOST_STORED_ELEMENTS[0] = 10**9
+    out["broken/long-patterns-257.kcad"] = container(document(too_long))
+    MOST_STORED_ELEMENTS[0] = 256
     # Schema 180 (docs/adr/1000 §2): two review notes, one bound to the point with its stamps and a reply, one resolved
     # with a sheet label; schema 179 refuses the field, a repeated id and an empty text are bad values.
     review = load("review-notes.json")

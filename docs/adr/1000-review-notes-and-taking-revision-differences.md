@@ -118,7 +118,7 @@ okuma kopyasında üretir ve beklenecek revizyonu verir.
 
 ## 6. Masaüstü
 
-- **İnceleme notları** penceresi (Açıklama sekmesi › Revizyon grubu, ikon `review_notes`): kitin veri tablosunda No,
+- **İnceleme notları** penceresi (Açıklama sekmesi › İşaretleme grubu, ikon `reviewNotes`): kitin veri tablosunda No,
   Durum, Metin, Bağ, Eskime sütunları; Açık/Yanıtlandı/Çözüldü/Eskimiş süzgeci; “Seçimden not ekle”, “Yanıtla”,
   durum seçimi, “Yeniden bağla”, “Nesneleri seç”, “Sil”. Eskimiş not uyarı renginde ve nedeniyle gösterilir.
   Pencere ve tablo `RoadDialog` iskeletinin genel CAD karşılığı olan kit `Dialog`'udur.

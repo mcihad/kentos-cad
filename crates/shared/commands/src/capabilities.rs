@@ -5125,7 +5125,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &[],
+        warnings: &["pattern_too_long_for_lin"],
         targets: none,
     },
     Entry {

@@ -210,3 +210,74 @@ fn notes_survive_a_save_and_an_opening_and_undo_takes_them_back() {
     assert_eq!(doc.revision(), before);
     let _ = Slot(0);
 }
+
+/// docs/adr/1001 §3: a 16-element pattern stays in the drawing and in a save–open (schema 181), and a LIN export
+/// leaves it out with `pattern_too_long_for_lin` while the 12-element one is written.
+#[test]
+fn a_long_pattern_is_kept_and_left_out_of_a_lin_file() {
+    use kentos_commands::{LineTypeDef, LineTypesEdit, LineTypesOperation, PatternElement, PatternUnit};
+    let mut doc = drawing();
+    let pattern = |name: &str, n: usize| LineTypeDef {
+        name: name.into(),
+        description: String::new(),
+        elements: (0..n)
+            .map(|i| PatternElement { length: if i % 2 == 0 { 2.0 } else { -1.0 }, text: None, shape: None })
+            .collect(),
+        unit: PatternUnit::Drawing,
+        source: Some("DXF".into()),
+    };
+    let mut settings = doc.settings().clone();
+    settings.line_types = vec![pattern("UZUN16", 16), pattern("KISA12", 12)];
+    doc.set_settings(settings);
+    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap();
+    let back = kentos_kcad::decode(&bytes).unwrap();
+    assert_eq!(back.settings.line_types[0].elements.len(), 16);
+    let input: LineTypesEdit =
+        serde_json::from_value(serde_json::json!({ "operation": "export" })).expect("an export");
+    assert!(matches!(input.operation, LineTypesOperation::Export));
+    let CommandResult::Completed { output, warnings } =
+        kentos_native_application::line_types_edit::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
+        panic!("the export")
+    };
+    assert_eq!(output.skipped, ["UZUN16"]);
+    let lin = output.lin.expect("a LIN text");
+    assert!(lin.contains("*KISA12") && !lin.contains("UZUN16"), "{lin}");
+    assert_eq!(warnings.len(), 1);
+    assert_eq!(warnings[0].code, "pattern_too_long_for_lin");
+}
+
+/// docs/adr/1001 §4: opening a metre DXF keeps a drawing-unit pattern in metres (a 1 m dash stays 1, not 1000), and a
+/// 300-element pattern comes cut to 256 with the report's note.
+#[test]
+fn an_opened_metre_dxf_keeps_its_pattern_lengths() {
+    let dash = |n: usize| -> String {
+        let mut out = format!("0\nLTYPE\n2\nU{n}\n70\n0\n3\n\n72\n65\n73\n{n}\n40\n{}\n", n as f64);
+        for i in 0..n {
+            out.push_str(if i % 2 == 0 { "49\n1.0\n74\n0\n" } else { "49\n-0.5\n74\n0\n" });
+        }
+        out
+    };
+    let text = format!(
+        "0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLTYPE\n{}{}0\nENDTAB\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\nA\n70\n0\n62\n1\n6\nU16\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nA\n10\n0\n20\n0\n30\n0\n11\n60\n21\n0\n31\n0\n0\nENDSEC\n0\nEOF\n",
+        dash(16),
+        dash(300)
+    );
+    let dir = std::env::temp_dir().join(format!("kentos-open-pattern-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("metre.dxf");
+    std::fs::write(&path, &text).unwrap();
+    let format = kentos_native_application::cad_open::Format::of(&path).unwrap();
+    let mut watch = kentos_formats::watch::Steps(|_, _| true);
+    let opened =
+        kentos_native_application::cad_open::read(&path, text.as_bytes(), format, &mut watch).expect("opens");
+    let s = opened.document.to_snapshot_v2();
+    let u16 = s.settings.line_types.iter().find(|t| t.name == "U16").expect("the 16-element type");
+    assert_eq!(u16.elements.len(), 16);
+    assert_eq!((u16.elements[0].length, u16.elements[1].length), (1.0, -0.5), "metres, as the drawing's unit");
+    let u300 = s.settings.line_types.iter().find(|t| t.name == "U300").expect("the long type");
+    assert_eq!(u300.elements.len(), kentos_commands::MAX_STORED_PATTERN_ELEMENTS);
+    assert!(opened.report.notes.iter().any(|n| n.what == "Çizgi tipi deseni" && n.reason.contains("U300")));
+    let layer = s.layers.iter().find(|l| l.name == "A").expect("the layer");
+    assert_eq!(layer.style.line_pattern.as_deref(), Some("U16"));
+}

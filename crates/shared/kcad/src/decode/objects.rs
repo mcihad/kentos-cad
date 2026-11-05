@@ -274,6 +274,8 @@ pub(super) struct Features {
     pub(super) standard_docs: bool,
     /// Schema 180 (docs/adr/1000 §2): review notes.
     pub(super) review_notes: bool,
+    /// Schema 181 (docs/adr/1001 §1): patterns past 12 elements.
+    pub(super) long_patterns: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -568,6 +570,7 @@ impl Features {
             profile_files: schema >= crate::SCHEMA_WITH_PROFILE_FILES,
             standard_docs: schema >= crate::SCHEMA_WITH_STANDARD_DOCS,
             review_notes: schema >= crate::SCHEMA_WITH_REVIEW_NOTES,
+            long_patterns: schema >= crate::SCHEMA_WITH_LONG_PATTERNS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

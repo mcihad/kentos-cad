@@ -137,9 +137,13 @@ pub fn read_in(
     } else {
         crate::opened_scale::opened_scale(&result.entities, unit, srid != 0)
     };
-    if format != Format::Ncz && plot_scale != 1.0 {
+    // The drawing is made in the source's unit; a line type's drawing-unit lengths are written in the reader's unit
+    // (docs/adr/1001 §4): read again in the drawing's own when the file declares another than the fallback, else
+    // a metre file's 1 m dash became 1000 m and its lines drew solid.
+    if format != Format::Ncz && (plot_scale != 1.0 || unit != DrawingUnit::Mm) {
         let options = DxfReadOptions {
             scale: Some(plot_scale),
+            unit: Some(unit),
             ..options.clone()
         };
         result = read_at(&options, watch)?;

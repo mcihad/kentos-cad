@@ -12,8 +12,16 @@ use ts_rs::TS;
 
 use crate::LineType;
 
-/// The most elements a pattern has (AutoCAD's LIN).
+/// The most elements a LIN file's pattern has (AutoCAD's LIN): a longer one is not written to a LIN file.
 pub const MAX_PATTERN_ELEMENTS: usize = 12;
+/// The most elements a pattern the drawing keeps has (docs/adr/1001 §1): a DXF/DWG LTYPE may hold more than a LIN
+/// file's 12; one past [`MAX_PATTERN_ELEMENTS`] needs `.kcad` schema 181.
+pub const MAX_STORED_PATTERN_ELEMENTS: usize = 256;
+
+/// Whether a type's pattern is longer than a LIN file's (docs/adr/1001 §1).
+pub fn has_long_patterns(types: &[LineTypeDef]) -> bool {
+    types.iter().any(|t| t.elements.len() > MAX_PATTERN_ELEMENTS)
+}
 /// The longest element, in its unit.
 pub const MAX_PATTERN_LENGTH: f64 = 1.0e6;
 
@@ -227,9 +235,9 @@ pub fn line_types_problem(types: &[LineTypeDef]) -> Option<String> {
         {
             return Some(format!("“{name}” çizgi tipi iki kez var"));
         }
-        if t.elements.len() > MAX_PATTERN_ELEMENTS {
+        if t.elements.len() > MAX_STORED_PATTERN_ELEMENTS {
             return Some(format!(
-                "“{name}” çizgi tipinin deseni en çok {MAX_PATTERN_ELEMENTS} öğe olur, {} var",
+                "“{name}” çizgi tipinin deseni en çok {MAX_STORED_PATTERN_ELEMENTS} öğe olur, {} var",
                 t.elements.len()
             ));
         }

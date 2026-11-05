@@ -1763,6 +1763,14 @@ azalmadı, 1000 yoğun yazılı çizginin mevcut 2 milyon nokta sınırına tak�
 açıkça kaydedildi; sınır artırılmadı. Genel release performansı ve diğer açık
 kapsam tamamlandı sayılmaz. Kanıt ve ölçüm sınırları ADR 0930 §22–23'te.
 
+**Uzun desen ve açılan DXF'in desen birimi (5 Kasım 2026, [ADR 1001](../docs/adr/1001-long-line-type-patterns-and-opened-pattern-units.md)):**
+Çizimin sakladığı desen 256 öğeye çıktı (`.kcad` şema 181; LIN'in 12 sınırı LIN'e özgü kaldı). DXF/DWG içe alma
+12'yi aşan deseni artık sessizce kesmez; 256'yı aşanı keser ve raporda söyler. LIN dışa aktarımı uzun deseni
+`pattern_too_long_for_lin` uyarısıyla atlar. Gerçek pencere kanıtında bulunan ayrı hata düzeltildi: metre birimli
+DXF açılınca çizim birimli desenler 1000 kat uzuyor ve çizgiler sürekli çiziliyordu. 16 öğeli desenin tire dizisi
+açılan çizimin ekranından piksel ölçümüyle doğrulandı. Unicode/Big Font SHX, noktalı bant, eğride analitik faz,
+çokgen viewport kırpma denetimi ve 2M nokta sınırının ötesi açık; madde `[~]`.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

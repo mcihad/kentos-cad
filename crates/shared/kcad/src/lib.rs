@@ -791,11 +791,13 @@ pub const SCHEMA_WITH_SLOPE_TRANSITIONS: u32 = 178;
 pub const SCHEMA_WITH_VOLUME_GRID: u32 = 179;
 /// Schema 180 (docs/adr/1000 §2): the review notes a drawing carries, `settings.reviewNotes`.
 pub const SCHEMA_WITH_REVIEW_NOTES: u32 = 180;
+/// Schema 181 (docs/adr/1001 §1): a line type's pattern longer than a LIN file's 12 elements (up to 256).
+pub const SCHEMA_WITH_LONG_PATTERNS: u32 = 181;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 178] = [
+pub const SCHEMAS: [u32; 179] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -974,6 +976,7 @@ pub const SCHEMAS: [u32; 178] = [
     SCHEMA_WITH_SLOPE_TRANSITIONS,
     SCHEMA_WITH_VOLUME_GRID,
     SCHEMA_WITH_REVIEW_NOTES,
+    SCHEMA_WITH_LONG_PATTERNS,
 ];
 
 /// The file a drawing is saved as.

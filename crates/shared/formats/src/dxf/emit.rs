@@ -84,6 +84,9 @@ pub struct Library {
     /// The LTYPE table's types with a pattern, in its order (docs/adr/0313 §6): lengths in the file's unit, a
     /// complex element's style its STYLE record's handle (`#2A`) until the table is read.
     pub patterns: Vec<kentos_contracts::LineTypeDef>,
+    /// The LTYPE patterns longer than a drawing keeps (docs/adr/1001 §2): their names and their element counts,
+    /// cut to [`kentos_contracts::MAX_STORED_PATTERN_ELEMENTS`] and said in the report, never silently.
+    pub cut_patterns: Vec<(String, usize)>,
     /// Upper-case layer name → the pattern its layer draws with, by name.
     pub layer_patterns: HashMap<String, String>,
     /// Upper-case layer name → the name as the LAYER table spells it (DXF layer names ignore case).

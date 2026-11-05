@@ -1183,6 +1183,21 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if let Some(problem) = kentos_contracts::line_types_problem(&types) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
+                // Before schema 181 (docs/adr/1001 §1) a pattern held at most a LIN file's 12 elements.
+                if !has.long_patterns
+                    && let Some(t) = types.iter().find(|t| t.elements.len() > kentos_contracts::MAX_PATTERN_ELEMENTS)
+                {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!(
+                            "“{}” çizgi tipinin deseni bu şemada en çok {} öğe olur, {} var",
+                            t.name,
+                            kentos_contracts::MAX_PATTERN_ELEMENTS,
+                            t.elements.len()
+                        ),
+                    ));
+                }
                 line_types = types;
             }
             // Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.

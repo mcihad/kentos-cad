@@ -470,9 +470,10 @@ def commands():
     out.append(refused("ekle: tip yok", {"operation": "add"}, "no_definition", "Eklenecek çizgi tipini verin (lineType).", "lineType"))
     out.append(refused("ekle: aynı adlı var", {"operation": "add", "lineType": kesik2}, "invalid_line_type",
                        "“Kesik” adlı çizgi tipi projede var. Değiştirmek için replace verin ya da başka bir ad seçin.", "lineType"))
-    long = {"name": "UZUN", "elements": [{"length": 1.0 if k % 2 == 0 else -1.0} for k in range(13)], "unit": "paper"}
-    out.append(refused("ekle: 13 öğe", {"operation": "add", "lineType": long}, "invalid_line_type",
-                       "Çizgi tipi geçersiz: “UZUN” çizgi tipinin deseni en çok 12 öğe olur, 13 var.", "lineType"))
+    # A drawing keeps up to 256 elements a pattern (docs/adr/1001 §1; a LIN file's 12 is the file's own limit).
+    long = {"name": "UZUN", "elements": [{"length": 1.0 if k % 2 == 0 else -1.0} for k in range(257)], "unit": "paper"}
+    out.append(refused("ekle: 257 öğe", {"operation": "add", "lineType": long}, "invalid_line_type",
+                       "Çizgi tipi geçersiz: “UZUN” çizgi tipinin deseni en çok 256 öğe olur, 257 var.", "lineType"))
     gap_first = {"name": "BOSLUK", "elements": [{"length": -1.0}, {"length": 1.0}], "unit": "paper"}
     out.append(refused("ekle: boşlukla başlayan", {"operation": "add", "lineType": gap_first}, "invalid_line_type",
                        "Çizgi tipi geçersiz: “BOSLUK” çizgi tipinin deseni bir çizgi ya da noktayla başlamalı.", "lineType"))

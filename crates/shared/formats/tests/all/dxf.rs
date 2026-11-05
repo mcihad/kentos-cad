@@ -2659,3 +2659,36 @@ fn autocad_constraint_groups_are_said_not_read() {
     let r = dxf::read(without.as_bytes(), &DxfReadOptions::default()).expect("reads");
     assert!(r.report.notes.iter().all(|n| n.what != "Kısıt"));
 }
+
+/// An LTYPE record of `n` alternating dashes and gaps, hand-written tags.
+fn long_ltype(name: &str, n: usize) -> String {
+    let mut out = format!("0\nLTYPE\n2\n{name}\n70\n0\n3\n{n} öğe\n72\n65\n73\n{n}\n40\n{}\n", n as f64);
+    for i in 0..n {
+        let len = if i % 2 == 0 { 1.5 } else { -0.5 };
+        out.push_str(&format!("49\n{len}\n74\n0\n"));
+    }
+    out
+}
+
+/// docs/adr/1001 §2: a pattern past a LIN file's 12 elements comes whole (16); past the 256 a drawing keeps it is cut
+/// to 256 and said in the report, never silently.
+#[test]
+fn long_ltype_patterns_are_kept_whole_or_cut_with_a_note() {
+    let text = format!(
+        "0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLTYPE\n{}{}0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nENDSEC\n0\nEOF\n",
+        long_ltype("UZUN16", 16),
+        long_ltype("UZUN300", 300)
+    );
+    let r = dxf::read(
+        text.as_bytes(),
+        &DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() },
+    )
+    .unwrap();
+    let elements = |name: &str| r.line_types.iter().find(|p| p.name == name).map(|p| p.elements.len());
+    assert_eq!(elements("UZUN16"), Some(16));
+    assert_eq!(elements("UZUN300"), Some(kentos_contracts::MAX_STORED_PATTERN_ELEMENTS));
+    assert_eq!(kentos_contracts::line_types_problem(&r.line_types), None);
+    let note = r.report.notes.iter().find(|n| n.what == "Çizgi tipi deseni").expect("the cut is said");
+    assert!(note.reason.contains("UZUN300") && note.reason.contains("300") && note.reason.contains("256"), "{}", note.reason);
+    assert!(!r.report.notes.iter().any(|n| n.reason.contains("UZUN16")), "a kept pattern is not a loss");
+}

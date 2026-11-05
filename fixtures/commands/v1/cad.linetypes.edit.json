@@ -6487,7 +6487,7 @@
       ]
     },
     {
-      "name": "ekle: 13 öğe",
+      "name": "ekle: 257 öğe",
       "setup": {
         "format": "kentos.document",
         "version": 1,
@@ -6719,6 +6719,738 @@
                 },
                 {
                   "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
+                },
+                {
+                  "length": -1.0
+                },
+                {
+                  "length": 1.0
                 }
               ],
               "unit": "paper"
@@ -6728,7 +7460,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_line_type",
-              "message": "Çizgi tipi geçersiz: “UZUN” çizgi tipinin deseni en çok 12 öğe olur, 13 var.",
+              "message": "Çizgi tipi geçersiz: “UZUN” çizgi tipinin deseni en çok 256 öğe olur, 257 var.",
               "path": "lineType"
             }
           },

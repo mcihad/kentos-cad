@@ -177,6 +177,7 @@ codes! {
     TOO_MANY_REVIEW_NOTES = "too_many_review_notes", Failed, false, "Bir çizim en çok 10 000 inceleme notu taşır.";
     TAKE_CONFLICT = "take_conflict", Failed, false, "Nesne ortak tabandan sonra iki tarafta da farklı değişmiş; üzerine yazmak açıkça seçilmeli.";
     BLOCK_DEFINITION_DIFFERS = "block_definition_differs", Warning, false, "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı.";
+    PATTERN_TOO_LONG_FOR_LIN = "pattern_too_long_for_lin", Warning, false, "Çizgi tipinin deseni LIN dosyasının 12 öğe sınırını aşıyor; LIN'e yazılmadı, çizimde korunur.";
     LAYER_STYLE_DIFFERS = "layer_style_differs", Warning, false, "Alınan nesnenin katman görünüşü iki sürümde farklı; katman görünüşü alınmadı.";
     INVALID_UID = "invalid_uid", Failed, false, "Kalıcı kimlik küçük harfli, tireli UUID metni değil.";
     /// A persistent id no object of the document has.

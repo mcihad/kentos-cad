@@ -153,12 +153,45 @@ fn check(doc: &Document, input: &LineTypesEdit) -> Result<(), Stop> {
     checks::revision(doc, input.expected_revision.as_deref())
 }
 
+/// The warning of an export whose chosen types hold a pattern longer than a LIN file's (docs/adr/1001 §3).
+fn lin_warnings(doc: &Document, input: &LineTypesEdit) -> Vec<kentos_commands::CommandWarning> {
+    if !matches!(input.operation, LineTypesOperation::Export) {
+        return Vec::new();
+    }
+    let long: Vec<&str> = doc
+        .settings()
+        .line_types
+        .iter()
+        .filter(|t| t.elements.len() > kentos_commands::MAX_PATTERN_ELEMENTS)
+        .filter(|t| {
+            input
+                .names
+                .as_ref()
+                .is_none_or(|names| names.iter().any(|n| same_line_type_name(n, &t.name)))
+        })
+        .map(|t| t.name.as_str())
+        .collect();
+    if long.is_empty() {
+        return Vec::new();
+    }
+    vec![kentos_commands::CommandWarning {
+        code: codes::PATTERN_TOO_LONG_FOR_LIN.into(),
+        message: format!(
+            "{} çizgi tipinin deseni LIN dosyasının {} öğe sınırını aşıyor; LIN'e yazılmadı (desen çizimde ve DXF/DWG aktarımında korunur): {}.",
+            long.len(),
+            kentos_commands::MAX_PATTERN_ELEMENTS,
+            long.join(", ")
+        ),
+        path: Some("names".into()),
+    }]
+}
+
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &LineTypesEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
         Ok(()) => CommandResult::Completed {
             output: (),
-            warnings: Vec::new(),
+            warnings: lin_warnings(cx.doc, input),
         },
         Err(stop) => stop.into(),
     }
@@ -174,7 +207,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LineTypesEdit) -> CommandResult<L
     out.revision = cx.doc.revision().to_string();
     CommandResult::Completed {
         output: out,
-        warnings: Vec::new(),
+        warnings: lin_warnings(cx.doc, input),
     }
 }
 
@@ -192,9 +225,10 @@ pub fn execute(
             if let Err(stop) = check(cx.doc, &input) {
                 return stop.into();
             }
+            let warnings = lin_warnings(cx.doc, &input);
             CommandResult::Completed {
                 output: write(cx.doc, &input),
-                warnings: Vec::new(),
+                warnings,
             }
         },
     )
@@ -296,7 +330,13 @@ fn write(doc: &mut Document, input: &LineTypesEdit) -> LineTypesEdited {
                 })
                 .cloned()
                 .collect();
-            out.lin = Some(kentos_formats::lin::write_lin(&chosen));
+            // A LIN file holds at most 12 elements a pattern (docs/adr/1001 §3): a longer one is not written, it is
+            // told (`skipped` and the warning `pattern_too_long_for_lin`), never cut.
+            let (fits, long): (Vec<_>, Vec<_>) = chosen
+                .into_iter()
+                .partition(|t| t.elements.len() <= kentos_commands::MAX_PATTERN_ELEMENTS);
+            out.skipped.extend(long.into_iter().map(|t| t.name));
+            out.lin = Some(kentos_formats::lin::write_lin(&fits));
         }
     }
     out.scale = settings.line_type_scale;

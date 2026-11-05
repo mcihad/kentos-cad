@@ -61646,6 +61646,9 @@
           "invalid_line_type_scale",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "pattern_too_long_for_lin"
         ]
       },
       "examples": [
@@ -88703,6 +88706,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı."
+    },
+    {
+      "code": "pattern_too_long_for_lin",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Çizgi tipinin deseni LIN dosyasının 12 öğe sınırını aşıyor; LIN'e yazılmadı, çizimde korunur."
     },
     {
       "code": "layer_style_differs",

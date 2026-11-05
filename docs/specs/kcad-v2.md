@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `180`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-181.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `181`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-182.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -2059,3 +2059,10 @@ basılmaz, ölçülmez. Alanı olmayan çizimler önceki şemalarını ve
 baytlarını korur. 179 ve altında yeni alan `unknown_field`; yinelenen
 kimlik/numara veya geçersiz metin `bad_value` olur. Bağımsız örnekler
 `review-notes.json/.kcad` ve `broken/review-notes-*` dosyalarıdır.
+
+### Şema 181 — uzun çizgi tipi desenleri
+
+Yalnız `settings.lineTypes` içinde 12'den çok öğeli bir desen varsa yazılır (ADR 1001 §1). Bir desen en çok
+256 öğe olur; LIN dosyasının 12 sınırı LIN'in kendi kuralıdır. 180 ve altında 12'yi aşan desen, her şemada
+256'yı aşan desen `bad_value` olur. Bağımsız örnekler `long-patterns.json/.kcad`,
+`broken/long-patterns-in-schema-180.kcad` ve `broken/long-patterns-257.kcad` dosyalarıdır.

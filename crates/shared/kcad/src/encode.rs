@@ -2135,6 +2135,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 181 (docs/adr/1001 §1): a pattern past a LIN file's 12 elements.
+    if kentos_contracts::has_long_patterns(&doc.settings.line_types) {
+        return crate::SCHEMA_WITH_LONG_PATTERNS;
+    }
     // Schema 180 (docs/adr/1000 §2): review notes.
     if !doc.settings.review_notes.is_empty() {
         return crate::SCHEMA_WITH_REVIEW_NOTES;

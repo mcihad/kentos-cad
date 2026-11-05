@@ -346,7 +346,8 @@ fn ltype_pattern(
             });
         }
     }
-    elements.truncate(kentos_contracts::MAX_PATTERN_ELEMENTS);
+    // A drawing keeps up to 256 elements (docs/adr/1001 §2); a longer pattern is cut and the caller says so.
+    elements.truncate(kentos_contracts::MAX_STORED_PATTERN_ELEMENTS);
     Some(kentos_contracts::LineTypeDef {
         name: name.to_owned(),
         description,
@@ -510,6 +511,10 @@ impl<'a> Reader<'a> {
                     self.lib.ltypes.insert(n.to_uppercase(), t);
                     // Its pattern as the project keeps it (docs/adr/0313 §6): a type with a gap, not a built-in name.
                     if let Some(p) = ltype_pattern(&groups, &n, self.dec) {
+                        let had = groups.iter().filter(|x| x.code == 49).count();
+                        if had > p.elements.len() {
+                            self.lib.cut_patterns.push((n.clone(), had));
+                        }
                         self.lib.patterns.push(p);
                     }
                     // By its handle too: a DIMSTYLE names its lines' types so (docs/adr/0205 §6).
@@ -836,6 +841,17 @@ fn read_once(
     em.closed_lines = !opts.closed_polylines.is_area();
     for (kind, reason, line) in block_skips {
         em.out.report.skip(&kind, &reason, line);
+    }
+    // A pattern longer than a drawing keeps (docs/adr/1001 §2): cut, and said.
+    for (name, had) in &lib.cut_patterns {
+        em.out.report.note(
+            "Çizgi tipi deseni",
+            &format!(
+                "“{name}” deseninin {had} öğesinden ilk {} öğesi alındı; geri kalanı çizilmez. Deseni kısaltın ya da bölün",
+                kentos_contracts::MAX_STORED_PATTERN_ELEMENTS
+            ),
+            0,
+        );
     }
     // AutoCAD's constraints (docs/adr/0338 §4): their objects are not read; the geometry comes as drawn.
     let groups = constraint_groups(bytes);
