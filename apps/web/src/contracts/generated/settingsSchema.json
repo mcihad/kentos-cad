@@ -1040,6 +1040,21 @@
       "apply": "live"
     },
     {
+      "key": "appearance.openHealthCheck",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Açılışta sağlık denetimi",
+      "description": "Bir CAD çizimi açılınca T birleşimi, eğik kenar, uzak nesne ve yinelenen blok adaylarını arka planda, en çok 2 saniye arar; çizimi değiştirmez. Sonuç CAD denetimi sekmesindedir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "display.geographic",
       "type": "enum",
       "default": "dms",

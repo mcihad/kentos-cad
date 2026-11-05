@@ -23,13 +23,17 @@ const EPS: f64 = 1e-6;
 struct Budget {
     work: u64,
     cut: bool,
+    /// When the time given runs out (docs/adr/1009): what is found by then is the answer, cut.
+    deadline: Option<std::time::Instant>,
 }
 impl Budget {
     fn tick(&mut self, stopped: &mut impl FnMut() -> bool) -> Result<bool, Stop> {
         if stopped() {
             return Err(Stop::Cancelled);
         }
-        if self.work >= WORK_MAX {
+        // The clock is read once every 1024 steps: a step is a comparison, far shorter than a reading's cost.
+        let late = self.work % 1024 == 0 && self.deadline.is_some_and(|d| std::time::Instant::now() >= d);
+        if self.work >= WORK_MAX || late || (self.cut && self.deadline.is_some()) {
             self.cut = true;
             return Ok(false);
         }
@@ -211,6 +215,7 @@ fn run(
     doc: &Document,
     input: &DrawingInspect,
     mut stopped: impl FnMut() -> bool,
+    deadline: Option<std::time::Instant>,
 ) -> Result<DrawingInspected, Stop> {
     if stopped() {
         return Err(Stop::Cancelled);
@@ -230,6 +235,7 @@ fn run(
     let mut budget = Budget {
         work: 0,
         cut: false,
+        deadline,
     };
     let mut health = health::Health::default();
     let mut edges = Vec::new();
@@ -299,7 +305,19 @@ pub fn inspect(
     input: &DrawingInspect,
     stopped: impl FnMut() -> bool,
 ) -> CommandResult<DrawingInspected> {
-    match run(doc, input, stopped) {
+    inspect_until(doc, input, stopped, None)
+}
+
+/// [`inspect`] within a time (docs/adr/1009, the desktop's check on opening): at `deadline` it stops and answers what
+/// it found, `truncated`, with the same warning as the work limit's. Not a contract field: Python and MCP keep the
+/// work limit alone, so the same input always answers the same.
+pub fn inspect_until(
+    doc: &Document,
+    input: &DrawingInspect,
+    stopped: impl FnMut() -> bool,
+    deadline: Option<std::time::Instant>,
+) -> CommandResult<DrawingInspected> {
+    match run(doc, input, stopped, deadline) {
         Ok(output) => {
             let warnings = if output.truncated {
                 vec![CommandWarning {code:"inspection_truncated".into(),message:"Denetim sınırına ulaşıldı; sonuç kısmi. Kapsamı daraltıp yeniden denetleyin.".into(),path:Some("uids".into())}]

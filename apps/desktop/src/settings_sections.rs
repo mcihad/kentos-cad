@@ -118,6 +118,7 @@ impl Section {
                 "drafting.pythonEcho",
                 "drafting.formOnCreate",
                 "appearance.startScreen",
+                "appearance.openHealthCheck",
             ],
             Self::Snap => &[
                 "snap.endpoint",
@@ -490,6 +491,8 @@ impl App {
         // The operations' Python in the console (docs/adr/0622 §7).
         let rest = f.switch_field(rest.section("Python konsolu"), "drafting.pythonEcho", None);
         let rest = f.switch_field(rest.section("Açılış"), "appearance.startScreen", None);
+        // A read-only health check of an opened CAD drawing (docs/adr/1009).
+        let rest = f.switch_field(rest, "appearance.openHealthCheck", None);
         column![theme, accent, typeface, rest].spacing(18).into()
     }
 

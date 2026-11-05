@@ -30,7 +30,7 @@ pub(crate) type Hole<'a> = (&'a [[f64; 2]], &'a [Option<f64>]);
 pub(crate) type Part<'a> = (&'a [[f64; 2]], &'a [&'a [[f64; 2]]]);
 
 /// One object of a scene: its kind's fields and its layer.
-pub(crate) struct Objects(Vec<Value>);
+pub(crate) struct Objects(pub(crate) Vec<Value>);
 
 impl Objects {
     pub(crate) fn new() -> Self {

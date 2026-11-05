@@ -50,6 +50,7 @@ mod tags_check;
 mod schedule_window;
 mod arch_audit;
 mod cad_inspection;
+mod open_health;
 mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;

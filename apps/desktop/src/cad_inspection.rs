@@ -40,6 +40,8 @@ pub(crate) struct Panel {
     output: Option<DrawingInspected>,
     selected: Option<usize>,
     message: Option<String>,
+    /// The check on opening and its kept answers (docs/adr/1009).
+    pub(crate) opening: crate::open_health::Opening,
 }
 impl Default for Panel {
     fn default() -> Self {
@@ -59,10 +61,33 @@ impl Default for Panel {
             output: None,
             selected: None,
             message: None,
+            opening: Default::default(),
         }
     }
 }
 impl Panel {
+    /// An answer found without the panel (the check on opening, docs/adr/1009) as its result, unless a check of its
+    /// own runs: the health group then stays asked for when it is run again.
+    /// The result shown, if any.
+    pub(crate) fn result(&self) -> Option<&DrawingInspected> {
+        self.output.as_ref()
+    }
+
+    pub(crate) fn adopt(&mut self, session: u64, generation: u64, output: DrawingInspected) {
+        if self.busy {
+            return;
+        }
+        self.session = session;
+        self.generation = generation;
+        // What was checked is what the panel shows asked for: the health group alone.
+        self.health = true;
+        self.boundaries = false;
+        self.hatches = false;
+        self.annotations = false;
+        self.output = Some(output);
+        self.selected = None;
+        self.message = None;
+    }
     fn invalidate(&mut self) {
         self.cancel.store(true, Ordering::Relaxed);
         self.token = self.token.wrapping_add(1);
@@ -90,6 +115,8 @@ pub enum Event {
     Sources,
     Hidden(bool),
     Ready(u64, u64, u64, Box<CommandResult<DrawingInspected>>),
+    /// The check on opening answered (docs/adr/1009).
+    Opened(u64, u64, u64, Option<crate::open_health::Key>, Box<CommandResult<DrawingInspected>>),
     Show(usize),
     Near,
     Repair,
@@ -172,6 +199,9 @@ impl App {
     }
     pub(crate) fn cad_inspection_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::Opened(token, session, generation, key, answer) => {
+                return self.open_health_ready(token, session, generation, key, *answer);
+            }
             Event::Run => {
                 let p = &self.cad_inspection;
                 if !p.boundaries && !p.hatches && !p.annotations && !p.health {

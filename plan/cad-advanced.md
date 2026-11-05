@@ -2515,7 +2515,13 @@ Test kendini alt süreç olarak başlatıp büyük, paftalı bir çizimi art ard
 paftalarını korur. Yazmayı reddeden klasörde çizim kaydedilmemiş kalır, önceki dosya ve Undo zinciri sağlamdır.
 Gerçek ENOSPC, ayrı onarım kopyası ve kısmi okuma açık.
 
-### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [ ]
+**Açılışta sağlık denetimi (6 Kasım 2026, [ADR 1009](../docs/adr/1009-health-check-on-opening.md)):** İsteğe bağlı,
+varsayılanı kapalı `appearance.openHealthCheck` ayarıyla CAD çizimi açılınca sağlık adayları arka planda, salt okunur
+ve en çok 2 saniye aranır; süre dolarsa sonuç kısmi olduğunu söyler. Aynı dosya aynı hâliyle yeniden açılınca önceki
+sonuç kullanılır. Sonuç CAD denetimi sekmesine, tek satır Komut geçmişine gider. Ayrı bellek sınırı, oturumlar arası
+önbellek, onarım tarifi kaydı, ayrı kurtarma kopyası ve kısmi okuma açık; madde `[~]`.
+
+### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [~]
 
 **Öncelik:** P0; diğer maddeler boyunca uygulanır. **Kod:** [C05], [C13], [C31].
 **Dayanak:** QCAD kaynak kodundaki blok başına uzamsal dizin ve işlem

@@ -2714,6 +2714,8 @@ impl App {
                 self.say_located(&located);
                 // A drawing opened from a file goes first in the recent files (a recovered one has none).
                 self.remember_file();
+                // The health check on opening, when asked for (docs/adr/1009).
+                return self.open_health_check();
             }
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
                 self.error(error)

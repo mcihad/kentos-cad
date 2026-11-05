@@ -125,6 +125,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::hatch_look_scenes::pointed());
     all.extend(crate::selection_scenes::pointed());
     all.extend(crate::point_calc_scenes::pointed());
+    all.extend(crate::open_health::pointed());
     all.extend(crate::raster_scenes::pointed());
     all.extend(crate::cloud_scenes::pointed());
     all.extend(crate::form_scenes::pointed());
@@ -546,6 +547,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::audit_scenes::scenes());
     all.extend(crate::multipart_scenes::scenes());
     all.extend(crate::explode_scenes::scenes());
+    all.extend(crate::open_health::scenes());
     all.extend(crate::clipboard_scenes::scenes());
     all.extend(crate::wipeout_scenes::scenes());
     all.extend(crate::wall_scenes::scenes());

@@ -505,6 +505,13 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Başlangıç ekranı",
                 "Uygulama açılınca yeni proje, dosya aç, bulut ve son dosyalar gösterilir.",
             ),
+        // A read-only health check of an opened CAD drawing (docs/adr/1009): off unless asked.
+        boolean("appearance.openHealthCheck", false)
+            .hosts(&[Desktop])
+            .text(
+                "Açılışta sağlık denetimi",
+                "Bir CAD çizimi açılınca T birleşimi, eğik kenar, uzak nesne ve yinelenen blok adaylarını arka planda, en çok 2 saniye arar; çizimi değiştirmez. Sonuç CAD denetimi sekmesindedir.",
+            ),
         // ── Display ─────────────────────────────────────────────────────
         // How a geographic second system's latitude and longitude are written
         // (docs/adr/0167 §1): fixed digits, not the project's angle digits.
