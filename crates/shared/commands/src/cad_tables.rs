@@ -187,6 +187,10 @@ pub enum TableEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         column: Option<u32>,
     },
+    /// What a linked file refresh does with hand-edited cells.
+    SourceRule {
+        rule: SourceOverrides,
+    },
     /// Kaynağı bırak: the table follows no source.
     Unlink,
 }

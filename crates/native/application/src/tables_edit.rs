@@ -543,6 +543,13 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             *key_column = *column;
             Ok(t)
         }
+        TableEdit::SourceRule { rule } => {
+            let Some(TableSource::File { overrides, .. }) = &mut t.source else {
+                return Err(invalid("Elle değişen hücre kuralı yalnız dosyaya bağlı tabloda seçilir.".into(), path));
+            };
+            *overrides = *rule;
+            Ok(t)
+        }
         TableEdit::Unlink => {
             t.source = None;
             Ok(t)
@@ -1376,10 +1383,14 @@ mod tests {
         assert_eq!(doc.to_snapshot_v2(), before);
         assert_eq!(doc.undo_labels(), history);
 
-        let Entity::Table(mut table) = doc.get(slot).unwrap().clone() else { panic!("table") };
-        let Some(TableSource::File { overrides, .. }) = &mut table.source else { panic!("file") };
-        *overrides = SourceOverrides::Replace;
-        doc.update_many(vec![(slot, Entity::Table(table))], "Choose replace");
+        let choose = TablesEdit {
+            operation: TablesOperation::Edit {
+                uid: uid.clone(),
+                edits: vec![TableEdit::SourceRule { rule: SourceOverrides::Replace }],
+            },
+            expected_revision: None,
+        };
+        assert!(matches!(execute(&mut ExecutionContext::new(&mut doc), choose), CommandResult::Completed { .. }));
         let result = execute(&mut ExecutionContext::new(&mut doc), refresh());
         let CommandResult::Completed { output, .. } = result else {
             panic!("explicit replace must refresh: {result:?}");

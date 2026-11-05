@@ -2140,6 +2140,16 @@ korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç 
 sayımı, satıra bağlı biçimlerin taşınması ve çok paftalı çıktı açık kaldığından
 madde `[~]` durumundadır.
 
+**Çakışma kuralı arayüzü (5 Kasım 2026):** Dosyaya bağlı tablonun
+düzenleyicisinde `Koru` veya `Dosyayla değiştir` seçimi artık görünürdür ve
+komutla aynı kaynağa kaydedilir. Seçim değiştirildiğinde uyarı metni elle
+yazılan değerlerin sonraki yenilemede silineceğini açıklar. Komut sınaması
+varsayılan korumada aynı hücre çatışmasını reddetti ve açık `Replace`
+seçiminden sonra güncellemeyi kabul etti. Gerçek CAD penceresinde `A/11`
+değeriyle açılan tablo için `Dosyayla değiştir` seçilip kaydedildi; `Tabloyu
+güncelle` sonrasında kaynak dosyadaki `A/12` görüntülendi. Ekran görüntüleri
+repo dışında tutuldu.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].
