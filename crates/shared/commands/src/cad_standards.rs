@@ -76,6 +76,7 @@ pub struct StandardProvenance {
     pub hatch_patterns: std::collections::BTreeMap<String, StandardOrigin>,
     pub blocks: std::collections::BTreeMap<String, StandardOrigin>,
     pub sheet_templates: std::collections::BTreeMap<String, StandardOrigin>,
+    pub leader_styles: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
@@ -258,6 +259,12 @@ pub struct StandardResources {
         ts(optional, as = "Option<Vec<StandardSheetTemplateReference>>")
     )]
     pub sheet_templates: Vec<StandardSheetTemplateReference>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::LeaderStyleDef>>")
+    )]
+    pub leader_styles: Vec<crate::LeaderStyleDef>,
 }
 
 /// Approved sheet-template origin. It identifies a template revision, not a
@@ -401,6 +408,9 @@ pub fn parse_standard_document(
                 {
                     return Err(format!("Pafta şablonu kaynağı geçersiz: {problem}."));
                 }
+                if let Some(problem) = crate::leader_styles_problem(&resources.leader_styles) {
+                    return Err(format!("Kılavuz stili kaynağı geçersiz: {problem}."));
+                }
             }
             _ => {}
         }
@@ -507,7 +517,13 @@ fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
     keys(
         resources,
         "resources",
-        &["lineTypes", "hatchPatterns", "blocks", "sheetTemplates"],
+        &[
+            "lineTypes",
+            "hatchPatterns",
+            "blocks",
+            "sheetTemplates",
+            "leaderStyles",
+        ],
     )?;
     let root = object(resources, "resources")?;
     if let Some(value) = root.get("blocks") {
@@ -535,6 +551,18 @@ fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
                 item,
                 &format!("resources.sheetTemplates[{i}]"),
                 &["templateId", "revision"],
+            )?;
+        }
+    }
+    if let Some(value) = root.get("leaderStyles") {
+        let styles = value
+            .as_array()
+            .ok_or("resources.leaderStyles bir dizi olmalı.")?;
+        for (i, item) in styles.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.leaderStyles[{i}]"),
+                &["id", "name", "height", "arrow", "arrowSize", "mask"],
             )?;
         }
     }
@@ -769,6 +797,8 @@ pub enum StandardIssueKind {
     MissingBlockReference,
     BlockPublication,
     SheetTemplateOrigin,
+    MissingLeaderStyleDefinition,
+    LeaderStyleDefinition,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.
@@ -995,6 +1025,7 @@ mod tests {
                 hatch_patterns: vec![hatch],
                 blocks: vec![],
                 sheet_templates: vec![],
+                leader_styles: vec![],
             }),
         };
         let mut value = serde_json::to_value(&package).unwrap();
@@ -1099,6 +1130,45 @@ mod tests {
             .unwrap()
             .push(serde_json::json!({"templateId":"OFFICE-A3","revision":3}));
         assert!(parse(&value).unwrap_err().contains("yineleniyor"));
+    }
+
+    #[test]
+    fn version_two_leader_styles_validate_content_and_unknown_fields() {
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                leader_styles: vec![
+                    serde_json::from_value(serde_json::json!({
+                        "id":"office-leader-1", "name":"A-NOT", "height":2.5,
+                        "arrow":"open", "arrowSize":1.5
+                    }))
+                    .unwrap(),
+                ],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["leaderStyles"][0]["unexpected"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["leaderStyles"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unexpected");
+        value["resources"]["leaderStyles"][0]["height"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("Kılavuz stili"));
+        value["resources"]["leaderStyles"][0]["height"] = 2.5.into();
+        value["resources"]["leaderStyles"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"id":"office-leader-2", "name":"a-not", "height":2.5}));
+        assert!(parse(&value).unwrap_err().contains("iki kez"));
     }
 
     #[test]

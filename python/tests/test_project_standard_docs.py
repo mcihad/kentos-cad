@@ -13,6 +13,22 @@ import kcad  # The independent KCAD reader.
 
 
 class ProjectStandardDocuments(unittest.TestCase):
+    def test_named_leader_style_check_is_available_through_python(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
+        document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        style = cad.LeaderStyleDef.from_json({
+            "id": "office-note", "name": "A-NOT", "height": 2.5,
+            "arrow": "open", "arrowSize": 1.5,
+        })
+        resources = cad.StandardResources(leader_styles=[style])
+        standard = cad.DrawingStandard.from_json({"name": "Ofis", "layers": []})
+        before = document.to_bytes()
+        report = cad.standards.check(document, standard=standard, resources=resources)
+        self.assertTrue(any(issue.kind == cad.StandardIssueKind.MISSING_LEADER_STYLE_DEFINITION
+                            and issue.subject == "A-NOT" and not issue.fixable
+                            for issue in report.issues))
+        self.assertEqual(document.to_bytes(), before)
+
     def test_sheet_template_revision_check_is_available_through_python(self):
         fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
         book = json.loads((ROOT / "fixtures/sheet/v1/drawing-set.json").read_text())["cases"][0]["book"]

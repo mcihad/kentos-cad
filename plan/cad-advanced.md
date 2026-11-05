@@ -1959,6 +1959,14 @@ ofis sürümü 2 karşısında ayrı bulgu olarak göründü; satır seçiminin 
 ve pasif Uygula düğmesi ekran görüntüsüyle doğrulandı (repo dışında).
 Şablon içeriğinin
 paketlenmesi/eşlenmesi ve palet akışı açık kaldığı için madde `[~]` kalır.
+Sürüm 2 paketine adlandırılmış kılavuz stilleri de eklendi. Çözümleme ilk
+kaynağı ve ofis revizyonunu, çakışma raporu aynı adlı farklı görünüş alanlarını
+gösterir; yerel stil kimliği farklı olsa da aynı ad ve görünüş uygun sayılır.
+Eksik veya farklı kılavuz stili denetimi salt okunurdur; mevcut liderleri
+sessizce değiştirmez. Paket/komut ve Python sınamaları geçti. Gerçek uygulamada
+eksik A-NOT stili bulgusu, satır seçimi ve pasif Uygula düğmesi ekran görüntüsüyle
+doğrulandı (repo dışında). Tablo stili, tam yazı/ölçü stili tarifi ve
+güvenli kaynak eşlemesi açık kaldığı için madde `[~]` kalır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

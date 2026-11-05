@@ -4,4 +4,4 @@ import type { StandardOrigin } from "./StandardOrigin";
 /**
  * Provenance of the global rules and each effective named definition.
  */
-export type StandardProvenance = { rules: StandardOrigin, layers: { [key in string]: StandardOrigin }, textStyles: { [key in string]: StandardOrigin }, dimensionStyles: { [key in string]: StandardOrigin }, lineTypes: { [key in string]: StandardOrigin }, hatchPatterns: { [key in string]: StandardOrigin }, blocks: { [key in string]: StandardOrigin }, sheetTemplates: { [key in string]: StandardOrigin }, };
+export type StandardProvenance = { rules: StandardOrigin, layers: { [key in string]: StandardOrigin }, textStyles: { [key in string]: StandardOrigin }, dimensionStyles: { [key in string]: StandardOrigin }, lineTypes: { [key in string]: StandardOrigin }, hatchPatterns: { [key in string]: StandardOrigin }, blocks: { [key in string]: StandardOrigin }, sheetTemplates: { [key in string]: StandardOrigin }, leaderStyles: { [key in string]: StandardOrigin }, };

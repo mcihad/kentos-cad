@@ -172,6 +172,8 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::MissingBlockReference => "Eksik kitaplık bloğu",
         K::BlockPublication => "Blok yayını",
         K::SheetTemplateOrigin => "Pafta şablonu",
+        K::MissingLeaderStyleDefinition => "Eksik kılavuz stili",
+        K::LeaderStyleDefinition => "Kılavuz stili",
         K::ObjectLineType => "Nesne çizgi tipi",
         K::OwnLook => "Nesne görünüşü",
     }
@@ -196,6 +198,9 @@ fn conflict_field(field: &str) -> &'static str {
         "description" => "Açıklama",
         "source" => "Kaynak dosya",
         "publication" => "Yayın kimliği/sürüm",
+        "arrow" => "Ok ucu",
+        "arrowSize" => "Ok boyu oranı",
+        "mask" => "Yazı maskesi",
         "byLayer" => "Katmana göre görünüş",
         _ => "Özellik",
     }
@@ -855,6 +860,8 @@ impl App {
                     StandardIssueKind::MissingBlockReference
                     | StandardIssueKind::BlockPublication => Some(&p.blocks),
                     StandardIssueKind::SheetTemplateOrigin => Some(&p.sheet_templates),
+                    StandardIssueKind::MissingLeaderStyleDefinition
+                    | StandardIssueKind::LeaderStyleDefinition => Some(&p.leader_styles),
                     _ => None,
                 });
                 let resource = matches!(
@@ -866,6 +873,8 @@ impl App {
                         | StandardIssueKind::MissingBlockReference
                         | StandardIssueKind::BlockPublication
                         | StandardIssueKind::SheetTemplateOrigin
+                        | StandardIssueKind::MissingLeaderStyleDefinition
+                        | StandardIssueKind::LeaderStyleDefinition
                 );
                 if let Some(origin) = definitions.and_then(|entries| {
                     entries
@@ -904,6 +913,8 @@ impl App {
                         | StandardIssueKind::MissingBlockReference
                         | StandardIssueKind::BlockPublication
                         | StandardIssueKind::SheetTemplateOrigin
+                        | StandardIssueKind::MissingLeaderStyleDefinition
+                        | StandardIssueKind::LeaderStyleDefinition
                 ) {
                     if let Some(found) = &issue.found {
                         if block {
@@ -1163,7 +1174,7 @@ impl App {
                         let item = &conflicts[i];
                         let kind = match item.kind.as_str() {
                             "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural",
-                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", "blockReference" => "Blok yayını", "sheetTemplateReference" => "Pafta şablonu", _ => "Tanım",
+                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", "blockReference" => "Blok yayını", "sheetTemplateReference" => "Pafta şablonu", "leaderStyleDefinition" => "Kılavuz stili", _ => "Tanım",
                         };
                         let fields = item.fields.iter().map(|field| conflict_field(field)).collect::<Vec<_>>().join(", ");
                         let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
@@ -1276,9 +1287,15 @@ fn change_words(issue: &StandardIssue) -> String {
         | StandardIssueKind::MissingBlockReference => {
             return "yok → standartta tanımlı".into();
         }
+        StandardIssueKind::MissingLeaderStyleDefinition => {
+            return "yok → standartta tanımlı".into();
+        }
         StandardIssueKind::LineTypeDefinition
         | StandardIssueKind::HatchPatternDefinition
         | StandardIssueKind::BlockPublication => {
+            return "tanım farklı → standart tanımı".into();
+        }
+        StandardIssueKind::LeaderStyleDefinition => {
             return "tanım farklı → standart tanımı".into();
         }
         StandardIssueKind::SheetTemplateOrigin => {

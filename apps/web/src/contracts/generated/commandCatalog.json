@@ -159907,7 +159907,9 @@
             "hatchPatternDefinition",
             "missingBlockReference",
             "blockPublication",
-            "sheetTemplateOrigin"
+            "sheetTemplateOrigin",
+            "missingLeaderStyleDefinition",
+            "leaderStyleDefinition"
           ],
           "type": "string"
         },
@@ -160045,6 +160047,12 @@
           },
           "type": "object"
         },
+        "leaderStyles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
         "lineTypes": {
           "additionalProperties": {
             "$ref": "#/$defs/StandardOrigin"
@@ -160075,7 +160083,8 @@
         "lineTypes",
         "hatchPatterns",
         "blocks",
-        "sheetTemplates"
+        "sheetTemplates",
+        "leaderStyles"
       ],
       "type": "object"
     },
@@ -160092,6 +160101,12 @@
         "hatchPatterns": {
           "items": {
             "$ref": "#/$defs/HatchPatternDef"
+          },
+          "type": "array"
+        },
+        "leaderStyles": {
+          "items": {
+            "$ref": "#/$defs/LeaderStyleDef"
           },
           "type": "array"
         },

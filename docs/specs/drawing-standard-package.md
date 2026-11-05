@@ -33,11 +33,12 @@ blocks, hatch definitions, templates, palette items or viewport overrides.
 
 Version 2 keeps the same `format`, `id`, `revision` and `standard` fields and
 requires a `resources` object. Its supported fields are `lineTypes`,
-`hatchPatterns`, `blocks` and `sheetTemplates`. The first two hold the corresponding KentOS
-project definitions. `blocks` holds a block name and its existing library
+`hatchPatterns`, `blocks`, `sheetTemplates` and `leaderStyles`. The first two
+hold the corresponding KentOS project definitions. `blocks` holds a block name and its existing library
 `publication` metadata (`familyId`, `typeId`, `typeName`, `release`), without
 embedding geometry. `sheetTemplates` holds approved template IDs and revision
-numbers; it does not embed or install a template. An empty resources object is valid. For example:
+numbers; it does not embed or install a template. An empty resources object is
+valid. For example:
 
 ```json
 {
@@ -50,7 +51,8 @@ numbers; it does not embed or install a template. An empty resources object is v
     "lineTypes": [{ "name": "OFFICE-DASH", "elements": [{ "length": 2 }, { "length": -1 }] }],
     "hatchPatterns": [{ "name": "OFFICE-HATCH", "lines": [{ "angle": 45, "origin": [0, 0], "offset": [0, 2] }] }],
     "blocks": [{ "name": "OFFICE-DOOR", "publication": { "familyId": "22222222-3333-4444-8555-666666666666", "typeId": "33333333-4444-4555-8666-777777777777", "typeName": "Standard door", "release": 2 } }],
-    "sheetTemplates": [{ "templateId": "office-a3", "revision": 2 }]
+    "sheetTemplates": [{ "templateId": "office-a3", "revision": 2 }],
+    "leaderStyles": [{ "id": "office-note", "name": "A-NOTE", "height": 2.5, "arrow": "open", "arrowSize": 1.5 }]
   }
 }
 ```
@@ -61,7 +63,10 @@ rules as project line types, hatch patterns and published block cards. Block
 names use the drawing's Turkish case folding, must be unique, and the
 publication identifiers and release must be valid. Template IDs must be unique
 without regard to case, must contain 1–128 bytes, and revisions must be
-positive. Version 1 rejects `resources`;
+positive. Named leader styles use the project's validated leader-style shape;
+their IDs are transported but a local style with the same name and appearance
+can satisfy the standard even if its local ID differs. Version 1 rejects
+`resources`;
 version 2 without `resources` and unsupported later versions are rejected.
 The project keeps the original JSON text, including the order and content of
 both versions. Attaching it through `cad.settings.set` remains revision checked
@@ -69,11 +74,11 @@ and does not replace, install, purge or rename a drawing resource.
 
 `cad.standards.resolve` returns the first definition of each resource name in
 binding order under `resources`, with its source document and revision in
-`provenance.lineTypes`, `provenance.hatchPatterns`, `provenance.blocks` or
-`provenance.sheetTemplates`.
+`provenance.lineTypes`, `provenance.hatchPatterns`, `provenance.blocks`,
+`provenance.sheetTemplates` or `provenance.leaderStyles`.
 Line and hatch names use the project resource tables' case insensitive
-comparison; block names use the block table's Turkish case folding. The standard's drawing
-rules still resolve as before. `cad.standards.conflicts` reports differing
+comparison; block names use the block table's Turkish case folding. The
+standard's drawing rules still resolve as before. `cad.standards.conflicts` reports differing
 fields and both values when two bound packages define the same resource name
 with different content; a case difference in the name alone is not a content
 conflict. Both queries are read only and available through the command
@@ -81,6 +86,9 @@ registry, Python SDK and MCP contract.
 Conflicting template revisions of the same ID are reported as
 `sheetTemplateReference` with both sources and values; binding order selects
 the first revision for checking.
+Leader-style conflicts compare appearance fields, excluding the local style ID
+and the case of its name. Numeric height and arrow-size differences use the
+standard check's 1e-9 tolerance. The first named definition wins for checking.
 
 `cad.standards.check` may receive the resolved or a single package's
 `resources` alongside its `standard`. It reports missing named line/hatch
@@ -102,12 +110,16 @@ from an unlisted template or an older/different revision gets a non-fixable
 not subject to this check. The finding neither rebuilds a sheet nor proves
 that its actual page content equals the template: `origin` is provenance
 metadata, not a content digest.
+Named leader styles are checked by name and their paper height, arrow type,
+arrow size and mask. A missing or different style is a non-fixable finding;
+the check never replaces an existing style or rewrites its leaders.
 
 Version 2 currently transports and checks definitions for explicit
 mapping work. It does not apply them to the drawing. In particular, named
 patterns in layers and objects, SHX shape files referenced by a line type,
-block geometry, text/leader/table styles, sheet-template contents, palette recipes and
-viewport overrides are not yet packaged or reconciled. An office standard
+block geometry, complete text/dimension/table style content, sheet-template
+contents, palette recipes and viewport overrides are not yet packaged or
+reconciled. An office standard
 must not be marked fully applied on the basis of these resource queries.
 
 The block reference is a KentOS extension: AutoCAD's [CHECKSTANDARDS](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-Core/files/GUID-F47E5F56-88BE-4FC2-A0D6-D35E8DFAC7A6.htm)

@@ -120,6 +120,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         hatch_patterns: Default::default(),
         blocks: Default::default(),
         sheet_templates: Default::default(),
+        leader_styles: Default::default(),
     };
     let mut layers: BTreeSet<_> = result
         .layers
@@ -140,6 +141,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
     let mut hatch_patterns = BTreeSet::new();
     let mut blocks = BTreeSet::new();
     let mut sheet_templates = BTreeSet::new();
+    let mut leader_styles = BTreeSet::new();
     for package in &packages {
         let Some(source) = &package.resources else {
             continue;
@@ -172,6 +174,14 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
                     .sheet_templates
                     .insert(item.template_id.clone(), origin(package));
                 resources.sheet_templates.push(item.clone());
+            }
+        }
+        for item in &source.leader_styles {
+            if leader_styles.insert(item.name.trim().to_lowercase()) {
+                provenance
+                    .leader_styles
+                    .insert(item.name.clone(), origin(package));
+                resources.leader_styles.push(item.clone());
             }
         }
     }
@@ -307,6 +317,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
         String,
         (&String, &kentos_commands::StandardSheetTemplateReference),
     > = BTreeMap::new();
+    let mut leader_styles: BTreeMap<String, (&String, &kentos_commands::LeaderStyleDef)> =
+        BTreeMap::new();
     let mut conflicts = Vec::new();
     for package in &packages {
         if let Some(first) = packages.first().filter(|first| first.id != package.id) {
@@ -518,6 +530,35 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     sheet_templates.insert(key, (&package.id, item));
                 }
             }
+            for item in &resources.leader_styles {
+                let key = item.name.trim().to_lowercase();
+                if let Some((first_id, first)) = leader_styles.get(&key) {
+                    let mut first_value =
+                        serde_json::to_value(first).expect("validated leader style");
+                    let mut later_value =
+                        serde_json::to_value(item).expect("validated leader style");
+                    for value in [&mut first_value, &mut later_value] {
+                        if let Some(map) = value.as_object_mut() {
+                            map.remove("id");
+                            map.remove("name");
+                        }
+                    }
+                    let fields = leader_style_differences(&first_value, &later_value);
+                    if !fields.is_empty() {
+                        conflicts.push(StandardConflict {
+                            kind: "leaderStyleDefinition".into(),
+                            name: item.name.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    leader_styles.insert(key, (&package.id, item));
+                }
+            }
         }
     }
     CommandResult::Completed {
@@ -539,6 +580,20 @@ fn resource_differences(first: &serde_json::Value, later: &serde_json::Value) ->
     fields
         .into_iter()
         .filter(|field| field != "name" && first.get(field) != later.get(field))
+        .collect()
+}
+
+fn leader_style_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
+    resource_differences(first, later)
+        .into_iter()
+        .filter(|field| {
+            if matches!(field.as_str(), "height" | "arrowSize") {
+                if let (Some(a), Some(b)) = (first[field].as_f64(), later[field].as_f64()) {
+                    return (a - b).abs() > 1e-9;
+                }
+            }
+            true
+        })
         .collect()
 }
 
@@ -1272,6 +1327,13 @@ fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Re
             "resources.sheetTemplates",
         ));
     }
+    if let Some(problem) = kentos_commands::leader_styles_problem(&resources.leader_styles) {
+        return Err(fail(
+            codes::INVALID_STANDARD,
+            problem,
+            "resources.leaderStyles",
+        ));
+    }
     Ok(())
 }
 
@@ -1282,7 +1344,7 @@ fn resource_issues(
     fn resource_geometry<T: serde::Serialize>(item: &T) -> serde_json::Value {
         let mut value = serde_json::to_value(item).expect("validated resource");
         let object = value.as_object_mut().expect("resource object");
-        for field in ["name", "description", "source"] {
+        for field in ["id", "name", "description", "source"] {
             object.remove(field);
         }
         value
@@ -1393,6 +1455,47 @@ fn resource_issues(
                     Some(actual.to_string()),
                 )
             }
+        };
+        issues.push(StandardIssue {
+            kind,
+            subject: expected.name.clone(),
+            layer: None,
+            expected: Some(expected_value.to_string()),
+            found: found_value,
+            objects: 0,
+            fixable: false,
+            message,
+        });
+    }
+    for expected in &resources.leader_styles {
+        let found =
+            doc.settings().leader_styles.iter().find(|item| {
+                item.name.trim().to_lowercase() == expected.name.trim().to_lowercase()
+            });
+        let expected_value = resource_geometry(expected);
+        let (kind, message, found_value) = match found {
+            None => (
+                StandardIssueKind::MissingLeaderStyleDefinition,
+                format!(
+                    "“{}” kılavuz stili çizimde yok; stili açıkça kurun.",
+                    expected.name
+                ),
+                None,
+            ),
+            Some(found)
+                if !leader_style_differences(&resource_geometry(found), &expected_value)
+                    .is_empty() =>
+            {
+                (
+                    StandardIssueKind::LeaderStyleDefinition,
+                    format!(
+                        "“{}” kılavuz stilinin görünüşü ofis standardından farklı; değişimi açıkça inceleyin.",
+                        expected.name
+                    ),
+                    Some(resource_geometry(found).to_string()),
+                )
+            }
+            Some(_) => continue,
         };
         issues.push(StandardIssue {
             kind,

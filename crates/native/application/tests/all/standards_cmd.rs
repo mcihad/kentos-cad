@@ -231,6 +231,7 @@ fn version_two_resource_definitions_resolve_by_order_and_report_content_conflict
                 hatch_patterns: vec![hatch],
                 blocks: vec![],
                 sheet_templates: vec![],
+                leader_styles: vec![],
             }),
         })
         .unwrap(),
@@ -348,6 +349,7 @@ fn named_resources_are_checked_without_installing_or_replacing_drawing_definitio
         hatch_patterns: vec![hatch],
         blocks: vec![],
         sheet_templates: vec![],
+        leader_styles: vec![],
     };
     let input = json!({"standard":kentos_commands::built_in_standard("mimari-ofis").unwrap(), "resources":resources});
     let kinds = |doc: &mut Document| {
@@ -526,6 +528,142 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
 }
 
 #[test]
+fn office_leader_style_checks_appearance_without_matching_local_ids() {
+    use kentos_commands::{
+        CallOp, LeaderStyleDef, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,
+        STANDARD_PACKAGE_RESOURCES_VERSION, StandardPackage, StandardResources,
+    };
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let local: LeaderStyleDef = serde_json::from_value(json!({
+        "id":"local-leader", "name":"A-NOT", "height":2.5,
+        "arrow":"open", "arrowSize":1.5
+    }))
+    .unwrap();
+    let mut settings = doc.settings().clone();
+    settings.leader_styles = vec![local.clone()];
+    doc.set_settings(settings);
+    let office: LeaderStyleDef = serde_json::from_value(json!({
+        "id":"office-leader", "name":"a-not", "height":2.5,
+        "arrow":"open", "arrowSize":1.5
+    }))
+    .unwrap();
+    let mut changed = office.clone();
+    changed.height = 3.0;
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let package = |id: &str, style: LeaderStyleDef| ProjectStandardDocument {
+        text: serde_json::to_string(&StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: id.into(),
+            revision: "2".into(),
+            standard: standard.clone(),
+            resources: Some(StandardResources {
+                leader_styles: vec![style],
+                ..Default::default()
+            }),
+        })
+        .unwrap(),
+    };
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![
+        package("office-a", office.clone()),
+        package("office-b", changed.clone()),
+    ];
+    doc.set_settings(settings);
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let resolved = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.resolve",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert_eq!(
+        resolved["output"]["resources"]["leaderStyles"][0]["id"],
+        "office-leader"
+    );
+    assert_eq!(
+        resolved["output"]["provenance"]["leaderStyles"]["a-not"]["id"],
+        "office-a"
+    );
+    let conflicts = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.conflicts",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert!(
+        conflicts["output"]["conflicts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["kind"] == "leaderStyleDefinition"
+                && item["fields"] == json!(["height"]))
+    );
+    let check = |doc: &mut Document, style: LeaderStyleDef| {
+        registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.standards.check",
+            CallOp::Execute,
+            json!({"standard":standard,"resources":StandardResources {
+                leader_styles: vec![style], ..Default::default()
+            }}),
+        )
+        .unwrap()
+    };
+    let equal = check(&mut doc, office.clone());
+    assert!(
+        !equal["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "leaderStyleDefinition"
+                || issue["kind"] == "missingLeaderStyleDefinition")
+    );
+    let mut within_tolerance = office.clone();
+    within_tolerance.height += 0.5e-9;
+    let near = check(&mut doc, within_tolerance);
+    assert!(
+        !near["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "leaderStyleDefinition")
+    );
+    let different = check(&mut doc, changed);
+    assert!(
+        different["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "leaderStyleDefinition"
+                && issue["expected"].as_str().unwrap().contains("height"))
+    );
+    let mut absent = office;
+    absent.name = "A-OK".into();
+    let missing = check(&mut doc, absent);
+    assert!(
+        missing["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "missingLeaderStyleDefinition")
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+}
+
+#[test]
 fn office_sheet_template_revision_is_checked_without_rebuilding_the_sheet() {
     use kentos_commands::{
         CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,
@@ -628,18 +766,20 @@ fn office_sheet_template_revision_is_checked_without_rebuilding_the_sheet() {
         "cad.standards.check",
         CallOp::Execute,
         json!({"standard":standard,
-            "resources": StandardResources {
-                sheet_templates: vec![StandardSheetTemplateReference {
-                    template_id: "office-a3".into(), revision: 1,
-                }], ..Default::default()
-            }}),
+        "resources": StandardResources {
+            sheet_templates: vec![StandardSheetTemplateReference {
+                template_id: "office-a3".into(), revision: 1,
+            }], ..Default::default()
+        }}),
     )
     .unwrap();
-    assert!(!matching["output"]["issues"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|issue| issue["kind"] == "sheetTemplateOrigin"));
+    assert!(
+        !matching["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "sheetTemplateOrigin")
+    );
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);
 }
