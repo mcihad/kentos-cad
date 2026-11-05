@@ -159645,6 +159645,16 @@
           "type": "string"
         },
         {
+          "const": "textStyleHeight",
+          "description": "A text style's paper height differs from the standard.",
+          "type": "string"
+        },
+        {
+          "const": "dimensionStyleHeight",
+          "description": "A dimension style's paper text height differs from the standard.",
+          "type": "string"
+        },
+        {
           "const": "objectLineType",
           "description": "Objects with a line type of their own the standard does not have.",
           "type": "string"

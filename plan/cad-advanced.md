@@ -1812,6 +1812,12 @@ Elle müdahale gerektiren bulgular standart penceresinde ilk sırada gösterilir
 satır seçimi rapordaki asıl bulguya bağlı kalır. Gerçek arayüzde ayrıntılar
 ve otomatik düzeltmeden sonra kalan iki bulgu doğrulandı; görüntü repo dışındadır.
 
+Yazı ve ölçü stillerinde standartta belirtilen kâğıt yükseklikleri artık
+denetlenir; farklar mm cinsinden ayrı bulgu olarak raporlanır ve çizimi
+kendiliğinden değiştirmez. Komut sınamaları ile gerçek arayüzde 4 → 2,5 mm
+yazı ve 3 → 2,5 mm ölçü yazısı farkları, uygulamadan sonra korunmalarıyla
+birlikte doğrulandı. Bu çalışma sürümlü standart paketinin tamamı değildir.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

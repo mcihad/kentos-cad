@@ -286,8 +286,12 @@ pub enum StandardIssueKind {
     MissingTextStyle,
     /// A text style the standard does not have.
     TextStyleName,
+    /// A text style's paper height differs from the standard.
+    TextStyleHeight,
     MissingDimensionStyle,
     DimensionStyleName,
+    /// A dimension style's paper text height differs from the standard.
+    DimensionStyleHeight,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.

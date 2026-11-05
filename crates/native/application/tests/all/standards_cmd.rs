@@ -4,8 +4,8 @@
 
 use std::time::Instant;
 
-use kentos_domain::Document;
 use kentos_commands::{CommandResult, DocumentSnapshotV1, StandardsApply, StandardsCheck};
+use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, standards};
 use serde_json::json;
 
@@ -151,4 +151,63 @@ fn named_entity_and_allowed_layer_patterns_are_not_mistaken_for_bylayer() {
             .any(|i| i.kind == kentos_commands::StandardIssueKind::OwnLook && i.objects == 1)
     );
     assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn differing_style_heights_are_reported_without_changing_the_drawing() {
+    let raw = json!({"format":"kentos.document","version":1,"name":"Standart","settings":{"srid":0,
+      "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100,
+      "textStyles":[{"id":"0192f5a0-0000-7000-8000-000000000001","name":"A-Yazı","font":"barlow","height":4}],
+      "dimensionStyles":[{"id":"0192f5a0-0000-7000-8000-000000000011","name":"A-Ölçü","height":3}]},
+      "origin":{"x":0,"y":0},"layers":[{"id":"a","name":"A-DUVAR","type":"layer","visible":true,
+      "locked":false,"expanded":true,"style":{"color":"ink","lineType":"continuous","lineWeight":0.5},"children":[]}],
+      "activeLayer":"a","entities":[],"styles":{"items":[],"categories":[]}});
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let findings = standards::issues(&doc, &standard);
+    for (kind, found) in [
+        (kentos_commands::StandardIssueKind::TextStyleHeight, "4 mm"),
+        (
+            kentos_commands::StandardIssueKind::DimensionStyleHeight,
+            "3 mm",
+        ),
+    ] {
+        let issue = findings.iter().find(|i| i.kind == kind).unwrap();
+        assert_eq!(issue.expected.as_deref(), Some("2.5 mm"));
+        assert_eq!(issue.found.as_deref(), Some(found));
+        assert!(!issue.fixable);
+    }
+    assert_eq!(doc.to_snapshot_v2(), before);
+
+    let mut matching = standard.clone();
+    matching
+        .text_styles
+        .iter_mut()
+        .find(|s| s.name == "A-Yazı")
+        .unwrap()
+        .height = Some(4.0);
+    matching
+        .dimension_styles
+        .iter_mut()
+        .find(|s| s.name == "A-Ölçü")
+        .unwrap()
+        .height = 3.0;
+    assert!(!standards::issues(&doc, &matching).iter().any(|i| matches!(
+        i.kind,
+        kentos_commands::StandardIssueKind::TextStyleHeight
+            | kentos_commands::StandardIssueKind::DimensionStyleHeight
+    )));
+    matching
+        .text_styles
+        .iter_mut()
+        .find(|s| s.name == "A-Yazı")
+        .unwrap()
+        .height = None;
+    assert!(
+        !standards::issues(&doc, &matching)
+            .iter()
+            .any(|i| i.kind == kentos_commands::StandardIssueKind::TextStyleHeight)
+    );
 }

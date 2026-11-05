@@ -76,8 +76,10 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::TextFont => "Stilin yazı tipi",
         K::MissingTextStyle => "Eksik yazı stili",
         K::TextStyleName => "Yazı stili",
+        K::TextStyleHeight => "Yazı yüksekliği",
         K::MissingDimensionStyle => "Eksik ölçü stili",
         K::DimensionStyleName => "Ölçü stili",
+        K::DimensionStyleHeight => "Ölçü yazısı yüksekliği",
         K::ObjectLineType => "Nesne çizgi tipi",
         K::OwnLook => "Nesne görünüşü",
     }

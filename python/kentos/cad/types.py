@@ -6445,6 +6445,8 @@ class StandardIssueKind(_StrEnum):
     - ``projectFont``: The project's drawing font is not one of the standard's.
     - ``textFont``: A text style written in a font the standard does not have.
     - ``textStyleName``: A text style the standard does not have.
+    - ``textStyleHeight``: A text style's paper height differs from the standard.
+    - ``dimensionStyleHeight``: A dimension style's paper text height differs from the standard.
     - ``objectLineType``: Objects with a line type of their own the standard does not have.
     - ``ownLook``: Objects with a look of their own when the standard has them take their layers'.
     """
@@ -6460,11 +6462,13 @@ class StandardIssueKind(_StrEnum):
     PROJECT_FONT = "projectFont"
     TEXT_FONT = "textFont"
     TEXT_STYLE_NAME = "textStyleName"
+    TEXT_STYLE_HEIGHT = "textStyleHeight"
+    DIMENSION_STYLE_HEIGHT = "dimensionStyleHeight"
     OBJECT_LINE_TYPE = "objectLineType"
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 

@@ -399,6 +399,27 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
                 ),
             );
         }
+        if let Some(height) = wanted.and_then(|t| t.height)
+            && s.height.is_none_or(|found| (found - height).abs() > 1e-9)
+        {
+            let found = s
+                .height
+                .map(|h| format!("{h} mm"))
+                .unwrap_or_else(|| "araç varsayılanı".to_owned());
+            issue(
+                StandardIssueKind::TextStyleHeight,
+                &s.name,
+                None,
+                Some(format!("{height} mm")),
+                Some(found.clone()),
+                0,
+                false,
+                format!(
+                    "“{}” yazı stilinin kâğıt yüksekliği {found}; standartta {height} mm. Stili elle düzenleyin.",
+                    s.name
+                ),
+            );
+        }
         if wanted.is_none() && !standard.text_styles.is_empty() {
             issue(
                 StandardIssueKind::TextStyleName,
@@ -435,6 +456,26 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
         }
     }
     for s in &settings.dimension_styles {
+        if let Some(wanted) = standard
+            .dimension_styles
+            .iter()
+            .find(|d| fold_name(d.name.trim()) == fold_name(s.name.trim()))
+            && (s.height - wanted.height).abs() > 1e-9
+        {
+            issue(
+                StandardIssueKind::DimensionStyleHeight,
+                &s.name,
+                None,
+                Some(format!("{} mm", wanted.height)),
+                Some(format!("{} mm", s.height)),
+                0,
+                false,
+                format!(
+                    "“{}” ölçü stilinin kâğıt yazı yüksekliği {} mm; standartta {} mm. Stili elle düzenleyin.",
+                    s.name, s.height, wanted.height
+                ),
+            );
+        }
         if !standard.dimension_styles.is_empty()
             && !standard
                 .dimension_styles
