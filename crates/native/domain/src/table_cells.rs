@@ -127,7 +127,7 @@ impl Document {
     }
 
     /// A block schedule's rows (docs/adr/0327 §4): a heading (Blok, the attribute, the further columns, Adet), a row
-    /// for each block named (none named: each block placed, in the drawing's order of definitions) and, with `by`, for
+    /// for each distinct block named (none named: each block placed, in the drawing's order of definitions) and, with `by`, for
     /// each of its values (in code point order; an insert without it counts under the empty value), then the total.
     /// A further column (docs/adr/0721 §4) holds its row's inserts' distinct values that are not empty, in the
     /// drawing's order, joined with “; ”; with them a schedule of one block named leaves out its Blok column.
@@ -135,15 +135,17 @@ impl Document {
         let defs: Vec<(Option<kentos_contracts::BlockId>, String)> = if names.is_empty() {
             self.blocks().iter().map(|b| (Some(b.id), b.name.clone())).collect()
         } else {
+            let mut seen = std::collections::HashSet::new();
             names
                 .iter()
+                .filter(|name| seen.insert(name.as_str()))
                 .map(|n| {
                     let id = self.blocks().iter().find(|b| &b.name == n).map(|b| b.id);
                     (id, n.clone())
                 })
                 .collect()
         };
-        let named = columns.is_empty() || names.len() != 1;
+        let named = columns.is_empty() || defs.len() != 1;
         let mut head = Vec::new();
         if named {
             head.push("Blok".to_owned());

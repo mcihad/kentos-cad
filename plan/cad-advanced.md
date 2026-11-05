@@ -2150,6 +2150,12 @@ değeriyle açılan tablo için `Dosyayla değiştir` seçilip kaydedildi; `Tabl
 güncelle` sonrasında kaynak dosyadaki `A/12` görüntülendi. Ekran görüntüleri
 repo dışında tutuldu.
 
+**Blok adları tekrarlandığında sayım (5 Kasım 2026):** Aynı blok adı bir
+çıkarım isteğinde birden çok kez verilirse blok artık iki kez sayılmaz;
+çizelgenin ek sütun düzeni de tek kez verilen adla aynı kalır. Yerel sınama
+satırları ve toplamı karşılaştırır. İç içe blok, xref ve dizi kapsamı için
+açık sayım seçimi ile izlenebilir örnek kimlikleri hâlâ gereklidir.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].

@@ -131,3 +131,16 @@ fn block_schedule_groups_effective_default_and_constant_attributes() {
         "schedule must only read the drawing"
     );
 }
+
+#[test]
+fn repeated_block_name_does_not_double_count_schedule() {
+    let doc = drawing();
+    let name = doc.blocks()[0].name.clone();
+    let once = doc.blocks_schedule(std::slice::from_ref(&name), None, &[]);
+    let repeated = doc.blocks_schedule(&[name.clone(), name], None, &[]);
+    assert_eq!(repeated, once);
+    let name = doc.blocks()[0].name.clone();
+    let once = doc.blocks_schedule(std::slice::from_ref(&name), None, &["TYPE".to_owned()]);
+    let repeated = doc.blocks_schedule(&[name.clone(), name], None, &["TYPE".to_owned()]);
+    assert_eq!(repeated, once, "column layout must not change when a name repeats");
+}
