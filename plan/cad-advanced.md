@@ -2131,13 +2131,12 @@ taşınır; başlık ve tüm tablo stili kapsamı korunur. Gerçek CAD penceresi
 `B/10` mavi, `A/11` kırmızı dolgusunu sıra değişiminden sonra korudu. Bu
 ekran kontrolü koyu dolguda tablo düzenleyicisinin varsayılan siyah yazısının
 okunmadığını da gösterdi; varsayılan yazı rengi arka planın karşıtlığına göre
-seçilecek biçimde düzeltildi. Birleşimler, formüller, field'lar ve kısmi çok
-satırlı stil aralıkları varsa yeniden sıralama henüz güvenle taşınamadığı için
-durdurulur.
+seçilecek biçimde düzeltildi. Birleşim, formül ve field konumu varsa yeniden
+sıralama henüz güvenle taşınamadığı için durdurulur.
 Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
 B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
 korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç içe blok
-sayımı, satıra bağlı biçimlerin taşınması ve çok paftalı çıktı açık kaldığından
+sayımı, konuma bağlı formül/birleşimlerin taşınması ve çok paftalı çıktı açık kaldığından
 madde `[~]` durumundadır.
 
 **Çakışma kuralı arayüzü (5 Kasım 2026):** Dosyaya bağlı tablonun
@@ -2155,6 +2154,15 @@ repo dışında tutuldu.
 çizelgenin ek sütun düzeni de tek kez verilen adla aynı kalır. Yerel sınama
 satırları ve toplamı karşılaştırır. İç içe blok, xref ve dizi kapsamı için
 açık sayım seçimi ile izlenebilir örnek kimlikleri hâlâ gereklidir.
+
+**Çok satırlı biçimlerin taşınması (5 Kasım 2026):** Birden fazla veri
+satırına uygulanmış hücre biçimi, anahtarlı satırlar araya yeni satır girerek
+ayrıldığında aynı biçim önceliğini koruyan aralıklara bölünür. Bütün tablo
+veya bütün veri satırları biçimi kapsamını korur; biçimli satır kaybolursa
+ya da biçim sınırı aşılırsa yenileme durur. Yerel sınama `A/B` biçimli,
+`C` biçimsiz kaynağı `A/C/B` sırasına taşıdı. Gerçek CAD penceresinde
+yenileme sonrası `A/11` ve `B/10` dolgusu kaldı, `C/30` biçimsiz kaldı;
+ekran görüntüsü repo dışında tutuldu.
 
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 

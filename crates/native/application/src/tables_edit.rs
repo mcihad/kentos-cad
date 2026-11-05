@@ -839,8 +839,8 @@ fn keyed_overrides(
     Ok((out, kept, replaced))
 }
 
-/// Preserve style order and move one-row styles with their keyed record. A header or a full-table
-/// style keeps its scope. Multi-row subsets cannot be split without changing style precedence.
+/// Preserve style precedence while moving row-scoped styles with keyed records.
+/// A range split into runs remains at the same position in the style stack.
 fn keyed_styles(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellStyle>, String> {
     let old_keys = row_keys(copy, column)?;
     let new_keys = row_keys(fresh, column)?;
@@ -848,27 +848,54 @@ fn keyed_styles(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], co
     if !reordered {
         return Ok(t.styles.clone());
     }
-    t.styles.iter().map(|style| {
-        let mut next = style.clone();
-        let range = &mut next.range;
+    let mut styles = Vec::new();
+    for style in &t.styles {
+        let range = &style.range;
         if range.row == 0 && range.rows == 1 {
-            return Ok(next);
+            styles.push(style.clone());
+            continue;
         }
-        if copy.len() == fresh.len()
-            && ((range.row == 0 && range.rows as usize == copy.len())
-                || (range.row == 1 && range.rows as usize == copy.len() - 1))
-        {
-            return Ok(next);
+        let whole = (range.row == 0 && range.rows as usize == copy.len())
+            || (range.row == 1 && range.rows as usize == copy.len() - 1);
+        if whole {
+            if fresh.len() <= range.row as usize {
+                return Err("Biçimli veri satırları kaynaktan silindi; tablo korunuyor.".to_owned());
+            }
+            let mut next = style.clone();
+            next.range.rows = (fresh.len() - range.row as usize) as u32;
+            styles.push(next);
+            continue;
         }
-        if range.rows != 1 || range.row == 0 {
-            return Err("Satır sırası değişti; çok satırlı hücre stili güvenle taşınamadığı için tablo korunuyor.".to_owned());
+        let mut positions = Vec::new();
+        for old_r in range.row as usize..range.row as usize + range.rows as usize {
+            if old_r == 0 {
+                positions.push(0);
+                continue;
+            }
+            let key = copy.get(old_r).and_then(|row| row.get(column))
+                .ok_or_else(|| "Biçimli satır kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned())?;
+            positions.push(*new_keys.get(key.as_str())
+                .ok_or_else(|| format!("“{key}” anahtarlı biçimli satır kaynaktan silindi; tablo korunuyor."))?);
         }
-        let key = copy.get(range.row as usize).and_then(|row| row.get(column))
-            .ok_or_else(|| "Biçimli satır kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned())?;
-        range.row = *new_keys.get(key.as_str())
-            .ok_or_else(|| format!("“{key}” anahtarlı biçimli satır kaynaktan silindi; tablo korunuyor."))? as u32;
-        Ok(next)
-    }).collect()
+        positions.sort_unstable();
+        let mut runs: Vec<(usize, usize)> = Vec::new();
+        for at in positions {
+            match runs.last_mut() {
+                Some((start, count)) if *start + *count == at => *count += 1,
+                _ => runs.push((at, 1)),
+            }
+        }
+        for (start, count) in runs {
+            let mut next = style.clone();
+            next.range.row = start as u32;
+            next.range.rows = count as u32;
+            styles.push(next);
+        }
+    }
+    if styles.len() > kentos_commands::MAX_CELL_STYLES {
+        return Err("Yenilenen tablo çok fazla hücre stili gerektiriyor; tablo korunuyor.".to_owned());
+    }
+    Ok(styles)
 }
 
 struct Checked {
@@ -1435,9 +1462,14 @@ mod tests {
         styled.styles = vec![serde_json::from_value(json!({
             "row":1,"col":0,"rows":2,"cols":1,"fill":"#ff0000"
         })).unwrap()];
+        assert!(keyed_styles(&styled, &copy, &copy[..1], 0)
+            .unwrap_err().contains("silindi"));
         let subset = vec![copy[0].clone(), copy[1].clone(), copy[2].clone(), vec!["C".into(), "30".into()]];
-        assert!(keyed_styles(&styled, &subset, &vec![subset[0].clone(), subset[2].clone(), subset[1].clone(), subset[3].clone()], 0)
-            .unwrap_err().contains("çok satırlı"));
+        let split = vec![subset[0].clone(), subset[1].clone(), subset[3].clone(), subset[2].clone()];
+        let moved = keyed_styles(&styled, &subset, &split, 0).unwrap();
+        assert_eq!(moved.iter().map(|s| (s.range.row, s.range.rows)).collect::<Vec<_>>(), vec![(1, 1), (3, 1)]);
+        assert_eq!(moved[0].fill, styled.styles[0].fill);
+        assert_eq!(moved[1].fill, styled.styles[0].fill);
         styled.styles[0].range.rows = 1;
         assert!(keyed_styles(&styled, &copy, &reordered[..2], 0)
             .unwrap_err().contains("silindi"));

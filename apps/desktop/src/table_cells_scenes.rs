@@ -314,6 +314,26 @@ mod qa {
         crate::document::write(&doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());
 
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-style-span.csv");
+        std::fs::write(&csv, "ID,Price\nA,10\nC,30\nB,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32,0.32],"columns":[2.0,2.0],
+            "cells":[["ID","Price"],["A","11"],["B","10"],["C","30"]],
+            "header":true,
+            "styles":[{"row":1,"col":0,"rows":2,"cols":2,"fill":"#543838"}],
+            "source":{"kind":"file","name":"styles.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Price"],["A","10"],["B","10"],["C","30"]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut span_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        span_doc.add(table).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-style-span.kcad");
+        crate::document::write(&span_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
         let csv = std::env::temp_dir().join("kentos-cad-adv13-cell-conflict.csv");
         std::fs::write(&csv, "ID,Price\nA,12\n").unwrap();
         let table: kentos_commands::Entity = serde_json::from_value(json!({
