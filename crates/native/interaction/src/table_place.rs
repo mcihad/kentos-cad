@@ -132,10 +132,11 @@ impl TablePlace {
             .cells
             .iter()
             .filter_map(|c| {
-                let words = t.cells.get(c.row)?.get(c.col)?;
+                // The line of its words this place stands for (docs/adr/1030 §7).
+                let words = kentos_geometry_core::geom::table::cell_line(t.cells.get(c.row)?.get(c.col)?, c.line);
                 (!words.is_empty()).then(|| CellGhost {
                     at: c.at,
-                    text: words.clone(),
+                    text: words.to_owned(),
                     height: t.height,
                     bold: c.bold,
                     face: t.face.clone(),

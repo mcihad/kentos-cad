@@ -161,6 +161,8 @@ struct Fields {
     grid: Option<TableGrid>,
     frame: Option<f64>,
     source: Option<TableSource>,
+    /// A table's parts (docs/adr/1030 §7).
+    breaks: Option<kentos_contracts::TableBreaks>,
     /// A NURBS curve's own fields (docs/adr/0259).
     degree: Option<u32>,
     ctrl: Option<Vec<Vec2>>,
@@ -496,6 +498,7 @@ impl Fields {
                     oblique: self.oblique,
                 },
                 source: self.source,
+                breaks: self.breaks,
             }),
             other => {
                 return Err(E::unknown_variant(

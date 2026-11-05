@@ -142,6 +142,9 @@ pub mod fonts_report;
 pub mod texts_check;
 pub mod table_schedule;
 pub mod tables_edit;
+/// Veri çıkarımı (docs/adr/1030).
+pub mod extract;
+pub use extract::{run as extract_run, table as extract_table};
 pub mod texts_edit;
 pub mod dimensions_reassociate;
 pub mod dimension_sets;
@@ -827,6 +830,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_SCHEDULES_CREATE,
         kentos_commands::CAD_SCHEDULES_CREATE_VERSION,
     ),
+    (kentos_commands::CAD_EXTRACT_RUN, kentos_commands::CAD_EXTRACT_RUN_VERSION),
+    (kentos_commands::CAD_EXTRACT_TABLE, kentos_commands::CAD_EXTRACT_TABLE_VERSION),
     (
         kentos_commands::CAD_SCHEDULES_EDIT,
         kentos_commands::CAD_SCHEDULES_EDIT_VERSION,

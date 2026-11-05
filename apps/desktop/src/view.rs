@@ -2111,6 +2111,7 @@ impl App {
             Asking::Cogo => self.cogo_view(),
             Asking::TableInsert => self.table_insert_view(),
             Asking::TableEditor => self.table_editor_view(),
+            Asking::Extract => self.extract_view(),
             Asking::PointBatch => self.point_batch_view(),
         }
     }

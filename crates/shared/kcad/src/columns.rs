@@ -1698,6 +1698,7 @@ impl Packer {
                 frame,
                 face,
                 source,
+                breaks,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*rotation, *height]);
@@ -1761,7 +1762,12 @@ impl Packer {
                 }
                 if let Some(source) = source
                     .as_ref()
-                    .filter(|s| !matches!(s, TableSource::Blocks { .. } | TableSource::Schedule { .. }))
+                    .filter(|s| {
+                        !matches!(
+                            s,
+                            TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_)
+                        )
+                    })
                 {
                     flags |= OPT[9];
                     match source {
@@ -1788,7 +1794,7 @@ impl Packer {
                     }
                 }
                 // Schema 68's styles, formulas, fields, linked file and block schedule (docs/adr/0327): one JSON object.
-                if let Some(j) = table_cells_json(styles, formulas, fields, source.as_ref()) {
+                if let Some(j) = table_cells_json(styles, formulas, fields, source.as_ref(), breaks.as_ref()) {
                     flags |= OPT[11];
                     self.text(&j);
                 }
@@ -3129,6 +3135,7 @@ fn geometry(
                 *key_column = l.key_column;
             }
             Entity::Table(TableEntity {
+                breaks: more.breaks,
                 styles: more.styles,
                 formulas: more.formulas,
                 fields: more.fields,
@@ -3775,6 +3782,9 @@ struct TableCells {
     link: Option<TableLink>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     schedule: Option<TableSource>,
+    /// Its parts (docs/adr/1030 §7).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    breaks: Option<kentos_contracts::TableBreaks>,
 }
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
@@ -3797,6 +3807,7 @@ fn table_cells_json(
     formulas: &[kentos_contracts::CellFormula],
     fields: &[kentos_contracts::CellField],
     source: Option<&TableSource>,
+    breaks: Option<&kentos_contracts::TableBreaks>,
 ) -> Option<String> {
     let link = match source {
         Some(TableSource::File {
@@ -3816,9 +3827,17 @@ fn table_cells_json(
         _ => None,
     };
     let schedule = source
-        .filter(|s| matches!(s, TableSource::Blocks { .. } | TableSource::Schedule { .. }))
+        .filter(|s| {
+            matches!(s, TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_))
+        })
         .cloned();
-    if styles.is_empty() && formulas.is_empty() && fields.is_empty() && link.is_none() && schedule.is_none() {
+    if styles.is_empty()
+        && formulas.is_empty()
+        && fields.is_empty()
+        && link.is_none()
+        && schedule.is_none()
+        && breaks.is_none()
+    {
         return None;
     }
     serde_json::to_string(&TableCells {
@@ -3827,6 +3846,7 @@ fn table_cells_json(
         fields: fields.to_vec(),
         link,
         schedule,
+        breaks: breaks.copied(),
     })
     .ok()
 }

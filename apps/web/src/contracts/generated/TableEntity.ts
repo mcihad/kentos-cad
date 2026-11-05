@@ -9,6 +9,7 @@ import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { TableAlign } from "./TableAlign";
+import type { TableBreaks } from "./TableBreaks";
 import type { TableGrid } from "./TableGrid";
 import type { TableSource } from "./TableSource";
 import type { Vec2 } from "./Vec2";
@@ -79,7 +80,11 @@ formulas?: Array<CellFormula>,
 /**
  * Its cells bound to a source: their words are its value (docs/adr/0327 §3).
  */
-fields?: Array<CellField>, id: number, layerId: string, 
+fields?: Array<CellField>, 
+/**
+ * Its parts (Tabloyu böl, docs/adr/1030 §7, `.kcad` schema 182); absent: one part.
+ */
+breaks?: TableBreaks, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

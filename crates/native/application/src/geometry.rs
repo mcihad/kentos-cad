@@ -159,6 +159,11 @@ pub fn core_table(t: &TableEntity) -> Shape {
         grid: t.grid.map(|g| g.name().to_owned()),
         frame: t.frame,
         source: core_source(t.source.as_ref()),
+        breaks: t.breaks.map(|b| kentos_geometry_core::entity::TableBreaks {
+            height: b.height,
+            gap: Some(b.gap),
+            once: b.once.then_some(true),
+        }),
         face: core_face(&t.face),
     }
 }
@@ -1299,10 +1304,17 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 grid,
                 frame,
                 source: _,
+                breaks,
                 face: _,
             },
         ) => {
-            // Its face and source are the object's own: the core carries them through unchanged.
+            // Its face and source are the object's own: the core carries them through unchanged; its parts' sizes
+            // as the core scaled them (docs/adr/1030 §7).
+            e.breaks = breaks.map(|b| kentos_commands::TableBreaks {
+                height: b.height,
+                gap: b.gap.unwrap_or(0.0),
+                once: b.once == Some(true),
+            });
             e.p = p(at);
             e.rotation = rotation;
             e.height = height;
@@ -1765,6 +1777,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             frame,
             face,
             source,
+            breaks: None,
         }),
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
         EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster }),
@@ -2037,6 +2050,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             grid,
             frame,
             source,
+            breaks: _,
             face,
         } => EntityGeometry::Table {
             styles: None,

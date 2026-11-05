@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-ADV-13 / ADR 1030: `cad.extract` işleyicisi, tablo parçaları ve satır sonu (`io/kcad.ts` şema 182, `columns.ts`, WASM
+  `tableLayout.line`), paket türü 38, `FORMATS_VERSION` 107, Veri çıkarımı penceresi.
 - CAD-ADV-17 / ADR 1061: 2B düzleme indir penceresi; dışa aktarmanın `replaceSource` seçeneği. TS türleri üretildi.
 - CAD-ADV-11/12 / ADR 1001–1002: `.kcad` şema 181 uzun desen codec'i ve web çizicisinin 12'den uzun deseni; Standart
   kaynaklarını kur penceresi `cad.standards.install`'a bağlanmalı.

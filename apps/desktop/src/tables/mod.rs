@@ -6,6 +6,7 @@
 
 pub mod editor;
 pub mod export;
+pub mod extract;
 pub mod insert;
 pub mod update;
 
@@ -39,6 +40,12 @@ pub fn source_words(t: &TableEntity) -> String {
         }
         Some(TableSource::Schedule { of, members, .. }) => {
             format!("{}: {} satır, nesnelerinden", of.label(), members.len())
+        }
+        // Veri çıkarımı (docs/adr/1030 §6): its recipe, the drawings it reads besides this one.
+        Some(TableSource::Extraction(x)) => {
+            let others = x.recipe.drawings.len();
+            let from = if others == 0 { "bu çizimden".to_owned() } else { format!("bu ve {others} başka çizimden") };
+            format!("Veri çıkarımı “{}”: {} satır, {from}", x.recipe.name, x.keys.len())
         }
         Some(s) => {
             let what = match s {

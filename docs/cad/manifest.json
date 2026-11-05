@@ -9688,6 +9688,23 @@
    "tests": 0
   },
   {
+   "id": "table.extract",
+   "kind": "command",
+   "title": "Veri çıkarımı",
+   "level": "semantic",
+   "via": [
+    "cad.extract.run",
+    "cad.extract.table"
+   ],
+   "operation": null,
+   "python": "kentos.cad.extract.run, kentos.cad.extract.table",
+   "mcp": "cad.extract.run, cad.extract.table",
+   "note": "Pencere tarifin satırlarını cad.extract.run ile yazısız gösterir; Tabloyu yerleştir tabloyu cad.extract.table'ın planından imlece asar ve aynı komutla yazar (ADR 1030).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.insert",
    "kind": "command",
    "title": "Tablo ekle",

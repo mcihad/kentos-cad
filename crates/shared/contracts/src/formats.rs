@@ -229,7 +229,9 @@ use crate::layer::LineType;
 /// 104: optional block publication family/type/release metadata, KCAD schema 158 (ADR 0856).
 /// 105: ordered user-defined dynamic block parameter groups, KCAD schema 159 (ADR 0858).
 /// 106: drawing-type dynamic block parameter scope and values, KCAD160 (ADR 0863).
-pub const FORMATS_VERSION: u32 = 106;
+/// 107: a table's parts, cells of several lines and data extraction tables, KCAD182 (ADR 1030; temporary on the
+/// CAD-ADV-13 branch).
+pub const FORMATS_VERSION: u32 = 107;
 
 // ── Every import ────────────────────────────────────────────────────────
 

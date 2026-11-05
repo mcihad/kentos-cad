@@ -257,6 +257,11 @@ pub fn core_table(t: &TableEntity) -> Shape {
         frame: t.frame,
         // Its corners and lines are what these formats ask of the core.
         source: None,
+        breaks: t.breaks.map(|b| kentos_geometry_core::entity::TableBreaks {
+            height: b.height,
+            gap: Some(b.gap),
+            once: b.once.then_some(true),
+        }),
         face: core_face(&t.face),
     }
 }

@@ -1637,6 +1637,11 @@
       ],
       "note": "Seçili tablonun kimliği, seçilen dosyanın yolu (çizimin klasöründeyse göreli) ve klasör link işlemine verilir (ADR 0327)."
     },
+    "table.extract": {
+      "level": "semantic",
+      "via": ["cad.extract.run", "cad.extract.table"],
+      "note": "Pencere tarifin satırlarını cad.extract.run ile yazısız gösterir; Tabloyu yerleştir tabloyu cad.extract.table'ın planından imlece asar ve aynı komutla yazar (ADR 1030)."
+    },
     "table.export": {
       "level": "semantic",
       "via": ["file.export.table"],

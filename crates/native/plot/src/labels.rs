@@ -489,6 +489,7 @@ pub fn labels_in_view(
                     row,
                     col,
                     bold,
+                    line,
                     ..
                 },
                 Entity::Table(t),
@@ -508,7 +509,8 @@ pub fn labels_in_view(
                 let Some(text) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
                     continue;
                 };
-                l.text = text.clone();
+                // The line of its words this place stands for (docs/adr/1030 §7).
+                l.text = kentos_geometry_core::geom::table::cell_line(text, *line).to_owned();
                 l.at = *at;
                 l.rotation = *rotation;
                 ground_height = t.height;

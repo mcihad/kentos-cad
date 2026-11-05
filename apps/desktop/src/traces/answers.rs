@@ -151,6 +151,7 @@ impl App {
             Dialog::DataCompare => crate::data_compare::COMPARE_TITLE.to_owned(),
             Dialog::TableInsert => crate::tables::insert::INSERT_TITLE.to_owned(),
             Dialog::TableEditor => crate::tables::editor::EDITOR_TITLE.to_owned(),
+            Dialog::Extract => crate::tables::extract::TITLE.to_owned(),
             Dialog::Cogo => crate::cogo::COGO_TITLE.to_owned(),
             Dialog::Project if self.asking_type() => crate::project::TYPE_TITLE.to_owned(),
             Dialog::LayerStyle => self.layer_style_title(),

@@ -1469,6 +1469,7 @@
       "overflow": [
        "table.link",
        "table.export",
+       "table.extract",
        "table.blockSchedule"
       ]
      },

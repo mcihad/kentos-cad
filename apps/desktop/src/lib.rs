@@ -313,6 +313,8 @@ mod drainage_window_tests;
 #[cfg(test)]
 mod design_check_window_tests;
 #[cfg(test)]
+mod extract_window_tests;
+#[cfg(test)]
 mod platform_water_window_tests;
 #[cfg(test)]
 mod haul_fleet_window_tests;

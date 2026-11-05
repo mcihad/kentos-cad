@@ -356,6 +356,8 @@ pub(super) struct Features {
     pub(super) slope_transitions: bool,
     /// Schema 179: an earthwork volume on a grid and its cell (docs/adr/0974).
     pub(super) volume_grid: bool,
+    /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
+    pub(super) extraction: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -616,6 +618,7 @@ impl Features {
             cut_benches: schema >= crate::SCHEMA_WITH_CUT_BENCHES,
             slope_transitions: schema >= crate::SCHEMA_WITH_SLOPE_TRANSITIONS,
             volume_grid: schema >= crate::SCHEMA_WITH_VOLUME_GRID,
+            extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,
@@ -813,6 +816,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                         | "oblique"
                 ) || (has.table_cells
                     && matches!(key, "styles" | "formulas" | "fields" | "link" | "schedule"))
+                    || (has.extraction && key == "breaks")
             }
             Kind::Image => matches!(
                 key,
@@ -1045,6 +1049,7 @@ struct Fields {
     table_formulas: Vec<kentos_contracts::CellFormula>,
     table_fields: Vec<kentos_contracts::CellField>,
     table_link: Option<Link>,
+    table_breaks: Option<kentos_contracts::TableBreaks>,
 }
 
 /// A linked file's path, digest, copy and rule, as a table's `link` holds them (schema 68, docs/adr/0327 §5).
@@ -1413,7 +1418,23 @@ pub(super) fn object(
             }
             "cells" => {
                 f.table_at.cells = r.position();
-                f.cells = Some(list(r, |r, _| list(r, |r, _| text(r)))?);
+                let cells: Vec<Vec<String>> = list(r, |r, _| list(r, |r, _| text(r)))?;
+                // Schema 182 (docs/adr/1030 §7): a cell's words of several lines.
+                if !has.extraction && cells.iter().flatten().any(|w| w.contains('\n')) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        f.table_at.cells,
+                        "hücrede satır sonu var; çok satırlı hücre şema 182'den beri yazılır",
+                    ));
+                }
+                f.cells = Some(cells);
+            }
+            "breaks" if kind == Kind::Table => {
+                let (v, at): (kentos_contracts::TableBreaks, usize) = json_part(r, "tablonun parçaları")?;
+                if let Some(words) = v.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.table_breaks = Some(v);
             }
             "merges" => {
                 f.table_at.merges = r.position();
@@ -1859,7 +1880,9 @@ pub(super) fn object(
                 let (v, at): (TableSource, usize) = json_part(r, "tablonun blok çizelgesi")?;
                 // Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects too.
                 let schedule = matches!(v, TableSource::Blocks { .. })
-                    || (has.tags && matches!(v, TableSource::Schedule { .. }));
+                    || (has.tags && matches!(v, TableSource::Schedule { .. }))
+                    // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
+                    || (has.extraction && matches!(v, TableSource::Extraction(_)));
                 // Schema 131 (docs/adr/0733): a schedule's fixtures, new fields, type filter, headings and subtotals.
                 if !has.fixtures
                     && matches!(&v, TableSource::Schedule { of, columns, filter, sort, .. }
@@ -1869,6 +1892,14 @@ pub(super) fn object(
                         Code::UnknownField,
                         at,
                         "çizelgenin donatısı, yeni alanları, tür süzgeci, başlığı ve ara toplamı şema 131'den beri yazılır",
+                    ));
+                }
+                // Schema 182 (docs/adr/1030 §6): a data extraction table.
+                if !has.extraction && matches!(v, TableSource::Extraction(_)) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "veri çıkarımı tablosunun kaynağı şema 182'den beri yazılır",
                     ));
                 }
                 // Schema 122 (docs/adr/0721 §4): a block schedule's further columns.
@@ -2930,6 +2961,7 @@ fn build(
                 frame: f.frame,
                 face: std::mem::take(&mut f.face),
                 source,
+                breaks: f.table_breaks.take(),
             };
             // Its rows, columns, cells and ranges hold together (docs/adr/0184 §1).
             if let Some((field, words)) = table.problem() {

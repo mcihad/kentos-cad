@@ -1087,7 +1087,8 @@ impl<'d> Encoder<'d> {
                     match source {
                         // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON; schema 80's
                         // schedule of the drawing's objects too (docs/adr/0344 §3).
-                        TableSource::Blocks { .. } | TableSource::Schedule { .. } => {
+                        // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
+                        TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_) => {
                             f.push(("schedule", Val::Json(serde_json::to_value(source).unwrap_or_default())));
                         }
                         TableSource::File {
@@ -1132,6 +1133,10 @@ impl<'d> Encoder<'d> {
                 }
                 if !e.fields.is_empty() {
                     f.push(("fields", Val::Json(serde_json::to_value(&e.fields).unwrap_or_default())));
+                }
+                // Schema 182 (docs/adr/1030 §7): its parts, as their JSON.
+                if let Some(b) = &e.breaks {
+                    f.push(("breaks", Val::Json(serde_json::to_value(b).unwrap_or_default())));
                 }
             }
             Entity::Image(e) => {

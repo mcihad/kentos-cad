@@ -1349,6 +1349,7 @@ impl App {
                         kentos_commands::ScheduleOf::Units => "scheduleUnits",
                         _ => "scheduleOpenings",
                     },
+                    kentos_commands::TableSource::Extraction(_) => "dataExtraction",
                 };
                 let head = row![
                     icon(crate::icons::from_web(Some(name))).size(16.0),

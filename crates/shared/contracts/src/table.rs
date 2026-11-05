@@ -18,6 +18,8 @@ pub const MAX_TABLE_COLUMNS: usize = 100;
 pub const MAX_TABLE_CELLS: usize = 100_000;
 /// The most letters a cell may hold.
 pub const MAX_CELL_LETTERS: usize = 1000;
+/// The most lines a cell's words may run to (docs/adr/1030 §7).
+pub const MAX_CELL_LINES: usize = 20;
 /// The longest a row or a column may be, and the largest text height, metres.
 pub const MAX_TABLE_SIZE: f64 = 1.0e6;
 /// The most objects a table's source may name.
@@ -95,6 +97,48 @@ pub struct TableEntity {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CellField>>", optional))]
     pub fields: Vec<crate::CellField>,
+    /// Its parts (Tabloyu böl, docs/adr/1030 §7, `.kcad` schema 182); absent: one part.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub breaks: Option<TableBreaks>,
+}
+
+/// A table drawn in parts (docs/adr/1030 §7): each part at most `height` metres deep (it takes rows while they fit,
+/// at least one, the first the heading row and one more, never cutting a merged range), the next `gap` metres along
+/// its rows from the one before, the heading row drawn again at the top of each unless `once`.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TableBreaks {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gap: f64,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub once: bool,
+}
+
+impl TableBreaks {
+    /// What is wrong with it: a depth not over zero, not finite or past [`MAX_TABLE_SIZE`]; a gap below zero.
+    pub fn problem(&self) -> Option<String> {
+        if !size_holds(self.height) {
+            return Some(format!(
+                "Tablo parçasının en büyük derinliği {}; sıfırdan büyük, sonlu ve en çok {MAX_TABLE_SIZE} m olmalı.",
+                self.height
+            ));
+        }
+        if !(self.gap.is_finite() && self.gap >= 0.0 && self.gap <= MAX_TABLE_SIZE) {
+            return Some(format!(
+                "Tablo parçaları arasındaki aralık {}; sıfır ya da daha büyük ve sonlu olmalı.",
+                self.gap
+            ));
+        }
+        None
+    }
 }
 
 /// A merged range: `rows` × `cols` cells from row `row`, column `col`.
@@ -267,6 +311,10 @@ pub enum TableSource {
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
         units: Vec<Vec<String>>,
     },
+    /// Veri çıkarımı (docs/adr/1030): a recipe's rows from the open drawing and other drawings read only, with what
+    /// they were written from (the sources' digests, the rows' keys, the cells last extracted); written again by
+    /// Tabloyu güncelle, never at every step (a drawing it reads is a file).
+    Extraction(Box<crate::extraction::ExtractionSource>),
 }
 
 impl TableSource {
@@ -279,6 +327,7 @@ impl TableSource {
             TableSource::File { .. } => "file",
             TableSource::Blocks { .. } => "blocks",
             TableSource::Schedule { .. } => "schedule",
+            TableSource::Extraction(_) => "extraction",
         }
     }
 
@@ -288,7 +337,10 @@ impl TableSource {
             TableSource::Coordinates { objects }
             | TableSource::Areas { objects }
             | TableSource::Attributes { objects } => objects,
-            TableSource::File { .. } | TableSource::Blocks { .. } | TableSource::Schedule { .. } => &[],
+            TableSource::File { .. }
+            | TableSource::Blocks { .. }
+            | TableSource::Schedule { .. }
+            | TableSource::Extraction(_) => &[],
         }
     }
 }
@@ -298,14 +350,27 @@ fn size_holds(x: f64) -> bool {
     x.is_finite() && x > 0.0 && x <= MAX_TABLE_SIZE
 }
 
-/// What is wrong with a cell's words, if anything: a line break or control
-/// character, too many letters.
+/// What is wrong with a cell's words, if anything: a control character but a line break (`\n`, docs/adr/1030 §7),
+/// more than [`MAX_CELL_LINES`] lines, too many letters.
 pub fn cell_problem(words: &str) -> Option<String> {
-    if words.chars().any(char::is_control) {
-        return Some("satır sonu ya da denetim karakteri var; hücre tek satırdır".to_owned());
+    if words.chars().any(|c| c.is_control() && c != '\n') {
+        return Some("satır sonu (\\n) dışında bir denetim karakteri var".to_owned());
+    }
+    let lines = words.split('\n').count();
+    if lines > MAX_CELL_LINES {
+        return Some(format!("{lines} satır; bir hücre en çok {MAX_CELL_LINES} satırdır"));
     }
     let n = words.chars().count();
     (n > MAX_CELL_LETTERS).then(|| format!("{n} harf; en çok {MAX_CELL_LETTERS}"))
+}
+
+/// What is wrong with a cell's words as one line, if anything (a file's copy, a key, docs/adr/0327 §5): a line break
+/// or control character, too many letters.
+pub fn line_problem(words: &str) -> Option<String> {
+    if words.contains('\n') {
+        return Some("satır sonu var; bu hücre tek satırdır".to_owned());
+    }
+    cell_problem(words)
 }
 
 /// The table's shape as the fields say it (docs/adr/0184 §1), for `problem`.
@@ -318,6 +383,7 @@ pub struct TableShape<'a> {
     pub aligns: Option<&'a [TableAlign]>,
     pub frame: Option<f64>,
     pub source: Option<&'a TableSource>,
+    pub breaks: Option<&'a TableBreaks>,
 }
 
 impl TableShape<'_> {
@@ -471,6 +537,9 @@ impl TableShape<'_> {
                 ));
             }
         }
+        if let Some(words) = self.breaks.and_then(TableBreaks::problem) {
+            return Some(("breaks", words));
+        }
         if let Some(a) = self.aligns
             && a.len() != m
         {
@@ -564,7 +633,7 @@ impl TableShape<'_> {
                 }
                 if let Some(copy) = copy
                     && (copy.len() > MAX_TABLE_ROWS
-                        || copy.iter().any(|r| r.len() > MAX_TABLE_COLUMNS || r.iter().any(|w| cell_problem(w).is_some())))
+                        || copy.iter().any(|r| r.len() > MAX_TABLE_COLUMNS || r.iter().any(|w| line_problem(w).is_some())))
                 {
                     return Some((
                         "source",
@@ -582,6 +651,12 @@ impl TableShape<'_> {
                         "source",
                         "Tablonun kaynağı olan sayfanın adı boş olamaz.".to_owned(),
                     ));
+                }
+            }
+            Some(TableSource::Extraction(x)) => {
+                if let Some((at, words)) = crate::extraction::extraction_source_problem(x, self.columns.len()) {
+                    let _ = at;
+                    return Some(("source", words));
                 }
             }
             Some(s) if s.objects().is_empty() || s.objects().len() > MAX_SOURCE_OBJECTS => {
@@ -611,6 +686,7 @@ impl TableEntity {
             aligns: self.aligns.as_deref(),
             frame: self.frame,
             source: self.source.as_ref(),
+            breaks: self.breaks.as_ref(),
         }
     }
 
@@ -618,6 +694,9 @@ impl TableEntity {
     pub fn problem(&self) -> Option<(&'static str, String)> {
         if matches!(&self.source, Some(TableSource::File { key_column: Some(_), .. })) && !self.header {
             return Some(("source", "Satır anahtarı için başlık satırı açık olmalı.".to_owned()));
+        }
+        if matches!(&self.source, Some(TableSource::Extraction(_))) && !self.header {
+            return Some(("source", "Çıkarım tablosunun ilk satırı başlıktır; başlık satırı açık olmalı.".to_owned()));
         }
         self.shape()
             .problem()

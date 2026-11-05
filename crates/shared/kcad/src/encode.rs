@@ -2135,6 +2135,16 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 182 (docs/adr/1030): a table's parts, a cell of several lines or a data extraction table.
+    let extracted = |e: &Entity| {
+        matches!(e, Entity::Table(t)
+            if t.breaks.is_some()
+                || matches!(t.source, Some(kentos_contracts::TableSource::Extraction(_)))
+                || t.cells.iter().flatten().any(|w| w.contains('\n')))
+    };
+    if objs.iter().any(extracted) || doc.blocks.iter().flat_map(|b| &b.entities).any(extracted) {
+        return crate::SCHEMA_WITH_EXTRACTION;
+    }
     // Schema 181 (docs/adr/1001 §1): a pattern past a LIN file's 12 elements.
     if kentos_contracts::has_long_patterns(&doc.settings.line_types) {
         return crate::SCHEMA_WITH_LONG_PATTERNS;

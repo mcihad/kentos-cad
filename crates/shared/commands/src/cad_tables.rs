@@ -23,8 +23,8 @@ pub const CAD_TABLES_EDIT_VERSION: u32 = 1;
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum TableEdit {
-    /// The cell's words (one line); words beginning with `=` are its formula, its words then its result. A cell
-    /// inside a merged range is its top left's.
+    /// The cell's words (at most 20 lines, `\n` between them; docs/adr/1030 §7); words beginning with `=` are its
+    /// formula, its words then its result. A cell inside a merged range is its top left's.
     SetCell {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         row: u32,
@@ -152,7 +152,8 @@ pub enum TableEdit {
         width: f64,
     },
     /// Sığdır: `count` columns from `from` as wide as their words ask, in the drawing's typeface; with `grow` only
-    /// those narrower get wider; with `rows` every row `ROW` text heights high too (Yazıya sığdır).
+    /// those narrower get wider; with `rows` every row `ROW` text heights high too, and `LINE` heights more for each
+    /// further line of its cells (Yazıya sığdır).
     Fit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         from: u32,
@@ -182,6 +183,9 @@ pub enum TableEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         width: Option<f64>,
     },
+    /// Tabloyu böl (docs/adr/1030 §7): the table drawn in parts at most `breaks.height` deep, the heading row again
+    /// atop each (null: one part).
+    Breaks { breaks: Option<crate::table::TableBreaks> },
     /// A linked file's unique, nonempty row-key column (null: position-based legacy refresh).
     SourceKey {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]

@@ -1686,6 +1686,7 @@ impl Labels<'_> {
                             row,
                             col,
                             bold,
+                            line,
                             ..
                         },
                         Entity::Table(t),
@@ -1693,6 +1694,8 @@ impl Labels<'_> {
                         let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
                             continue;
                         };
+                        // The line of its words this place stands for (docs/adr/1030 §7).
+                        let words = kentos_geometry_core::geom::table::cell_line(words, *line);
                         // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
                         if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
                             let shape = kentos_native_application::geometry::shape(entity);
@@ -2155,10 +2158,10 @@ impl Labels<'_> {
             });
         let mut h = Fx(look);
         for (spot, _) in part {
-            let LabelSpot::Cell { row, col, .. } = spot else {
+            let LabelSpot::Cell { row, col, line, .. } = spot else {
                 return None;
             };
-            (row, col, t.cells.get(*row).and_then(|r| r.get(*col))).hash(&mut h);
+            (row, col, line, t.cells.get(*row).and_then(|r| r.get(*col))).hash(&mut h);
         }
         Some(h.finish())
     }

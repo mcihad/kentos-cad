@@ -2224,6 +2224,18 @@ gösterdi ve bağımsız XLSX okuması `Adet` sütununu sayı türünde `2, 1, 3
 olarak doğruladı. Ekran görüntüsü repo dışındadır. Genel metraj alanları ve ortak çıkarım tarifi
 açık kaldığından madde `[~]` durumundadır.
 
+**Veri çıkarımı tarifi ve parçalı tablo (5 Kasım 2026, [ADR 1030](../docs/adr/1030-data-extraction-recipes-and-table-parts.md)):**
+Yeniden kullanılabilir veri çıkarımı tarifi (`cad.extract.run/table`, `.kxtarif`). Kapsam ve sayım: açık çizim ile
+salt okunur başka çizimler; iç içe blok, dinamik varyant, dizi, görünmeyen parça ve dış referans için açık sayım
+kapsamı; her oluşum izlenebilir yoluyla bir kez sayılır. Değerler: birimli miktarlar (adet, uzunluk, alan, gerçek
+ölçü, katsayılı hesaplanan sütun); ölçü yazısı toplanmaz; toplam yuvarlamadan önce alınır. Dış tablo anahtarla eşlenir;
+Tabloyu güncelle elle düzeltmeleri, kullanıcı sütunlarını ve formülleri anahtarla korur. Tablo: çok satırlı hücre,
+sığmayan hücre bildirimi, başlığı yinelenen parçalara bölme (`.kcad` 182). Bağımsız başvurular
+`extract_command_cases.py` (78 durum) ve `table_parts_cases.py`. Kabul: iki çizimden iç içe blok ve dizili parça
+listesi (31 adet), override'lı ölçü toplanmaz, dış açıklama tablosu anahtarla yenilenir, 43/128 m'lik üç çizgi
+1,01. Sınır: pafta kitabında tablonun başka paftaya devamı CAD-ADV-16'ya; masaüstü tablo düzenleyicide satır sonu
+yazma, görünürlük dışı dinamik eylemle gizlenen parça ve büyük çizimde önizleme ölçümü açık. Madde `[~]`.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [~]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].

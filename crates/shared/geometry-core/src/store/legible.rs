@@ -305,7 +305,7 @@ impl Store {
                         c.row as f64,
                         c.col as f64,
                         if c.bold { 1.0 } else { 0.0 },
-                        0.0,
+                        c.line as f64,
                     ]);
                     records.extend(grow);
                 }

@@ -241,6 +241,7 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
                 | TableEdit::Fit { .. }
                 | TableEdit::Grid { .. }
                 | TableEdit::Frame { .. }
+                | TableEdit::Breaks { .. }
         )
     {
         return Err(fail(
@@ -276,6 +277,15 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
                 words: words.clone(),
             };
             let mut out = core_applied(&t, &edit, path)?;
+            // Words of several lines (docs/adr/1030 §7): the core writes a cell's words as one line (ADR 0184 §6);
+            // their line breaks are kept in the cell it wrote them to (a merged range's top left), the table's rule
+            // (at most 20 lines, no other control character) holding them.
+            if words.contains('\n') {
+                let (tr, tc) = t.merge_at(r, c).map_or((r, c), |m| (m.row as usize, m.col as usize));
+                if let Some(cell) = out.cells.get_mut(tr).and_then(|row| row.get_mut(tc)) {
+                    *cell = words.clone();
+                }
+            }
             out.formulas = t.formulas;
             out.fields = t.fields;
             Ok(out)
@@ -482,8 +492,10 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
                 *w = if *grow { w.max(*fit) } else { *fit };
             }
             if *rows {
-                let h = kentos_geometry_core::ops::table::ROW * t.height;
-                t.rows = vec![h; t.rows.len()];
+                // Each row as deep as its cells' lines ask (docs/adr/1030 §7).
+                t.rows = (0..t.rows.len())
+                    .map(|i| kentos_geometry_core::geom::table::fit_depth(&g, i, kentos_geometry_core::ops::table::ROW))
+                    .collect();
             }
             Ok(t)
         }
@@ -519,6 +531,18 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
                 }
             }
             t.frame = *width;
+            Ok(t)
+        }
+        TableEdit::Breaks { breaks } => {
+            if let Some(b) = breaks {
+                if !(b.height.is_finite() && b.gap.is_finite()) {
+                    return Err(fail(codes::NOT_FINITE, "Parça derinliği ve aralığı sonlu sayılar olmalı.".into(), path));
+                }
+                if let Some(words) = b.problem() {
+                    return Err(invalid(words, path));
+                }
+            }
+            t.breaks = *breaks;
             Ok(t)
         }
         TableEdit::SourceKey { column } => {
@@ -1137,6 +1161,29 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                     }
                                 }
                             }
+                        }
+                    },
+                    // Veri çıkarımı (docs/adr/1030 §6): its recipe worked out again from the drawings it reads.
+                    Some(TableSource::Extraction(x)) => match crate::extract::refresh(doc, &t, x, base.as_deref(), None) {
+                        crate::extract::Refreshed::Changed { table, kept: k, replaced: r, warnings: w } => {
+                            (kept, replaced) = (k, r);
+                            warnings.extend(w);
+                            Some(*table)
+                        }
+                        crate::extract::Refreshed::Unchanged { warnings: w } => {
+                            status = TableRefresh::Unchanged;
+                            warnings.extend(w);
+                            None
+                        }
+                        crate::extract::Refreshed::Missing(w) => {
+                            status = TableRefresh::Missing;
+                            warnings.push(w);
+                            None
+                        }
+                        crate::extract::Refreshed::Kept(w) => {
+                            status = TableRefresh::Unreadable;
+                            warnings.push(w);
+                            None
                         }
                     },
                     Some(schedule) => {
