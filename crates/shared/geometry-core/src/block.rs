@@ -599,7 +599,8 @@ impl Blocks {
 
     /// A block path through an insert under these definitions, made a path through `after_insert` under `after`
     /// (docs/adr/0315 §1): each step's object found again by its local id, which a definition keeps through its
-    /// edits; a step whose id is not once in both definitions keeps its place. None when a step leaves either.
+    /// edits; a step whose id is not once in the old definition, or more than once in the new, keeps its place. None
+    /// when a step leaves either, or its object's id is not in the new definition (the object is gone).
     pub fn path_in(
         &self,
         insert: &Shape,
@@ -624,10 +625,17 @@ impl Blocks {
             let (old, _, _) = self.placed(&was)?;
             let (new, _, _) = after.placed(&now)?;
             let e = old.entities.get(i as usize)?;
-            let j = local(e)
-                .filter(|&id| once(&old.entities, id) == Some(i as usize))
-                .and_then(|id| once(&new.entities, id))
-                .unwrap_or(i as usize);
+            // An object known by its local id (once in its definition) is found by it; the new definition without
+            // that id has it no more, and its place is another object's: none, never that other one
+            // (docs/adr/1060 §3). An id there more than once cannot say which: the place stays.
+            let j = match local(e).filter(|&id| once(&old.entities, id) == Some(i as usize)) {
+                Some(id) => match new.entities.iter().filter(|n| local(n) == Some(id)).count() {
+                    0 => return None,
+                    1 => once(&new.entities, id).unwrap_or(i as usize),
+                    _ => i as usize,
+                },
+                None => i as usize,
+            };
             let next = new.entities.get(j)?;
             out.push(j as u32);
             was = e.shape.clone();

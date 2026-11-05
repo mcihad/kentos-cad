@@ -257,9 +257,15 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
             .map(|e| map_object(e, &layer_of, &block_of, &styles))
             .collect();
         b["entities"] = Value::Array(entities);
-        // A nested reference keeps its source; this one brought it; its group is ours now.
+        // A nested reference keeps its source; this one brought it, or the reference that brought it in the source
+        // when that one came along too (the network keeps its depth, docs/adr/1060 §1); its group is ours now.
         if let Some(x) = b.get_mut("xref").and_then(Value::as_object_mut) {
-            x.insert("parent".into(), json!(id));
+            let parent = x
+                .get("parent")
+                .and_then(Value::as_str)
+                .and_then(|p| block_of.get(p).cloned())
+                .unwrap_or_else(|| id.to_owned());
+            x.insert("parent".into(), json!(parent));
             match x.get("group").and_then(Value::as_str).and_then(group_of) {
                 Some(g) => {
                     x.insert("group".into(), json!(g));
@@ -273,17 +279,41 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
         mine.push(b);
     }
     // Numbered from 1 as a file numbers them; on a reload an object the definition had keeps its id and a new one
-    // takes the next after the highest.
-    let mut next = old_ids.values().copied().max().unwrap_or(0);
+    // takes the next after the highest the definition had (a removed object's id is never given to another).
+    let old_entities: Vec<Value> = ours_by_id.get(id).map(|old| arr(old, "entities").to_vec()).unwrap_or_default();
+    let mut next = old_entities.iter().filter_map(|e| e.get("id").and_then(Value::as_u64)).max().unwrap_or(0);
+    next = next.max(old_ids.values().copied().max().unwrap_or(0));
+    // An object whose persistent id the old definition does not know (a source that gives none, or gives new ones
+    // every time: a PDF page, a v1 drawing, a DXF object without a handle) is found again by its content: the same
+    // object as the definition holds it, its local id aside, the first not yet taken in the definition's order
+    // (docs/adr/1060 §3). An object found neither way is new; one of the old found neither way is gone, and the ties
+    // into it break instead of moving to whatever now has its place.
+    let new_uids: HashSet<&str> = kept_uids.iter().filter_map(Value::as_str).collect();
+    let old_objects = ours_by_id.get(id).map(|old| old.get("xref").map(|x| arr(x, "objects")).unwrap_or_default().to_vec());
+    let old_objects = old_objects.unwrap_or_default();
+    let mut unmatched: Vec<(Value, u64, bool)> = old_entities
+        .iter()
+        .enumerate()
+        .filter(|(k, _)| old_objects.get(*k).and_then(Value::as_str).is_none_or(|u| !new_uids.contains(u)))
+        .filter_map(|(_, e)| Some((content_of(e), e.get("id")?.as_u64()?, false)))
+        .collect();
     let entities: Vec<Value> = kept
         .iter()
         .zip(&kept_uids)
         .map(|(e, u)| {
             let mut m = map_object(e, &layer_of, &block_of, &styles);
-            let local = u.as_str().and_then(|u| old_ids.get(u).copied()).unwrap_or_else(|| {
-                next += 1;
-                next
-            });
+            let by_uid = u.as_str().and_then(|u| old_ids.get(u).copied());
+            let local = by_uid
+                .or_else(|| {
+                    let content = content_of(&m);
+                    let hit = unmatched.iter_mut().find(|(c, _, used)| !*used && *c == content)?;
+                    hit.2 = true;
+                    Some(hit.1)
+                })
+                .unwrap_or_else(|| {
+                    next += 1;
+                    next
+                });
             m["id"] = json!(local);
             m
         })
@@ -317,6 +347,47 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
     block.insert("xref".into(), x);
     mine.push(Value::Object(block));
     Some((ours, LoadInfo { objects, left, nested, group: group_id }))
+}
+
+/// An object's content as a definition holds it: its JSON without its local id (docs/adr/1060 §3).
+pub fn content_of(e: &Value) -> Value {
+    let mut c = e.clone();
+    if let Some(o) = c.as_object_mut() {
+        o.remove("id");
+    }
+    c
+}
+
+/// Each node of the source `theirs` (layers and groups) as the reference `name` brings it, with our node at its path
+/// under the reference's group (docs/adr/1060 §5): our node's id and theirs as the source has it (its children
+/// left out), in the source's tree order. A node of theirs the drawing does not have is passed over.
+pub fn source_layers(
+    ours: &DocumentSnapshotV2,
+    theirs: &DocumentSnapshotV2,
+    name: &str,
+) -> Result<Vec<(String, kentos_contracts::LayerNode)>, String> {
+    let ours_json = to_json(ours)?;
+    let theirs_json = to_json(theirs)?;
+    let wrapped = json!([{
+        "id": "xref-group", "name": xref_group_name(name), "type": "group", "visible": true, "locked": false,
+        "expanded": true, "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+        "children": arr(&theirs_json, "layers"),
+    }]);
+    let tree = wrapped.as_array().cloned().unwrap_or_default();
+    let paths = path_of(&tree);
+    let mut out = Vec::new();
+    for (n, _) in walked(&tree) {
+        let their = str_of(&n, "id");
+        if their == "xref-group" {
+            continue;
+        }
+        let Some(our) = our_node_for(&ours_json, &paths, their, true) else { continue };
+        let mut node = n.clone();
+        node["children"] = json!([]);
+        let node: kentos_contracts::LayerNode = serde_json::from_value(node).map_err(|e| e.to_string())?;
+        out.push((our, node));
+    }
+    Ok(out)
 }
 
 /// A definition one reference brought (its `parent`), or a block named `ref|…` it brought.

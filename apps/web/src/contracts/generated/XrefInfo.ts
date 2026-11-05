@@ -2,6 +2,8 @@
 import type { AssetVia } from "./AssetVia";
 import type { BlockId } from "./BlockId";
 import type { UnderlayLook } from "./UnderlayLook";
+import type { XrefCandidate } from "./XrefCandidate";
+import type { XrefContent } from "./XrefContent";
 import type { XrefKind } from "./XrefKind";
 import type { XrefState } from "./XrefState";
 
@@ -44,4 +46,32 @@ page?: number,
 /**
  * A PDF underlay's look when it is not the default.
  */
-underlay?: UnderlayLook, };
+underlay?: UnderlayLook, 
+/**
+ * `review`: the SHA-256 of the content as last loaded (the revision the drawing uses).
+ */
+digest?: string, 
+/**
+ * `review`: its file's SHA-256 now, when it is another revision (`changed`).
+ */
+current?: string, 
+/**
+ * `review`: how deep in the network it is: 0 for one the drawing attached, 1 for one another brought, and so on.
+ */
+depth?: number, 
+/**
+ * `review`: what the drawing shows of it.
+ */
+content?: XrefContent, 
+/**
+ * `review`: the references it brought, by name, in the drawing's block order.
+ */
+brings?: Array<string>, 
+/**
+ * `review`: the project's layer states that name its layers (a sheet's or a view's own look of them), by name.
+ */
+layerStates?: Array<string>, 
+/**
+ * `review`, one missing or changed: the files that may be it, those of the same content first.
+ */
+candidates?: Array<XrefCandidate>, };

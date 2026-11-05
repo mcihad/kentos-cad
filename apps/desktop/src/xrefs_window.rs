@@ -38,6 +38,7 @@ const ADD_PATH: &str = "Klasör ekle…";
 const IN_PLACE: &str = "Yerinde ekle";
 const ON_SCREEN: &str = "Noktayı seç";
 const CANCEL: &str = "Vazgeç";
+const RESET_LAYERS: &str = "Katmanları sıfırla";
 
 /// Ekle or Bindir, as the segmented choice shows them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -107,6 +108,8 @@ pub struct State {
     /// The drawing's other linked files: pictures, rasters, point clouds, tables, attachments, sources.
     pub others: Vec<AssetStatus>,
     pub section: Section,
+    /// A reload or a repath previewed (docs/adr/1060 §9), written only on Uygula.
+    pub pending: Option<crate::xrefs_review_view::Pending>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -149,6 +152,13 @@ pub enum Event {
     Plot(bool),
     /// Kaynağı aç: the chosen reference's drawing in a tab of its own, to edit (docs/adr/0351 §5).
     OpenSource,
+    /// Bu dosyaya bağla… for the chosen reference's candidate (docs/adr/1060 §2): its repath previewed.
+    Candidate(usize),
+    /// The previewed reload or repath written (Uygula), or let go (Vazgeç).
+    Apply,
+    Discard,
+    /// Katmanları sıfırla: the reference's layers as its source has them (docs/adr/1060 §5).
+    ResetLayers,
     Close,
 }
 
@@ -184,9 +194,11 @@ impl App {
 
     fn xrefs_listed(&self) -> Option<Vec<XrefInfo>> {
         let doc = self.document.as_ref()?;
+        // The window reviews the network (docs/adr/1060 §1): revisions, depth, sheets, layer states, candidates.
         let input = XrefsList {
             drawing: self.drawing_path(),
-            affected: false,
+            affected: true,
+            review: true,
         };
         match xrefs_list::plan(&ExecutionContext::new(&mut doc.model.clone()), &input) {
             CommandResult::Completed { output, .. } => Some(nested_under(output.xrefs)),
@@ -281,6 +293,31 @@ impl App {
 
     /// Runs `operation` as one step; the answer said, the list read again.
     pub(crate) fn xref_run(&mut self, operation: XrefsOperation) -> Option<XrefsEdited> {
+        self.xref_run_with(operation, false)
+    }
+
+    /// A reload or a repath planned with its diff (docs/adr/1060 §4): the preview card, nothing written.
+    pub(crate) fn xref_preview(&mut self, operation: XrefsOperation, title: String) {
+        let drawing = self.drawing_path();
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let input = XrefsEdit { operation: operation.clone(), drawing, expected_revision: None, diff: true };
+        match xrefs_edit::plan(&ExecutionContext::new(&mut doc.model), &input) {
+            CommandResult::Completed { output, warnings } => {
+                self.xrefs.pending = Some(crate::xrefs_review_view::Pending { operation, title, output, warnings });
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                self.xrefs.pending = None;
+                self.warn(format!("{TITLE}: {}", error.message));
+            }
+            _ => {}
+        }
+    }
+
+    fn xref_run_with(&mut self, operation: XrefsOperation, diff: bool) -> Option<XrefsEdited> {
         let locked = self.tree_locked();
         let drawing = self.drawing_path();
         let doc = self.document.as_mut()?;
@@ -288,6 +325,7 @@ impl App {
             operation,
             drawing,
             expected_revision: None,
+            diff,
         };
         // A project whose layer tree is not ours to change takes no new layer.
         if let Some(locked) = locked
@@ -469,9 +507,16 @@ impl App {
             .map(|d| d.model.settings().xref_paths.clone())
             .unwrap_or_default();
         let drawing = self.drawing_path();
-        let found = kentos_native_application::links::find(
-            &x.path,
-            x.relative.as_deref(),
+        // The source as every face finds it (docs/adr/1060 §6): a fallback of the same name is opened only when its
+        // bytes are the ones loaded, never another drawing that shares the name.
+        let kept = self.document.as_ref().and_then(|d| d.model.block(x.block)).and_then(|b| b.xref.clone());
+        let Some(kept) = kept else {
+            return Task::none();
+        };
+        let found = kentos_native_application::xrefs::found_source(
+            &kept.path,
+            kept.relative.as_deref(),
+            &kept.digest,
             drawing.as_deref(),
             &search,
         );
@@ -531,21 +576,54 @@ impl App {
             Event::RelinkImage(slot) => return self.pick_xref_file(Purpose::Image(slot)),
             Event::Picked(Purpose::Repath, Some(path)) => {
                 if let Some(name) = self.chosen_name() {
+                    let title = format!("Yolu değiştir: {name} → {}", file_name(&path));
                     let path = path.display().to_string();
-                    if let Some(done) = self.xref_run(XrefsOperation::Repath {
-                        name,
-                        path: path.clone(),
-                    }) {
-                        self.say(
-                            Level::Success,
+                    self.xref_preview(XrefsOperation::Repath { name, path }, title);
+                }
+            }
+            Event::Candidate(k) => {
+                let listed = self.xrefs.listed.as_deref().unwrap_or_default();
+                let picked = self
+                    .xrefs
+                    .chosen
+                    .and_then(|c| listed.get(c))
+                    .and_then(|x| x.candidates.get(k).map(|c| (x.name.clone(), c.path.clone())));
+                if let Some((name, path)) = picked {
+                    let title = format!("Yolu değiştir: {name} → {}", file_name(Path::new(&path)));
+                    self.xref_preview(XrefsOperation::Repath { name, path }, title);
+                }
+            }
+            Event::Apply => {
+                if let Some(p) = self.xrefs.pending.take()
+                    && let Some(done) = self.xref_run_with(p.operation, true)
+                {
+                    let changed = done.diff.as_ref().map_or(0, |d| d.changed + d.added + d.removed);
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "{}: {} nesne, {changed} parça değişti (tek adımda geri alınır).",
+                            p.title, done.objects
+                        ),
+                    );
+                }
+            }
+            Event::Discard => self.xrefs.pending = None,
+            Event::ResetLayers => {
+                if let Some(name) = self.chosen_name()
+                    && let Some(done) = self.xref_run(XrefsOperation::ResetLayers { name })
+                {
+                    self.say(
+                        Level::Success,
+                        if done.reset.is_empty() {
+                            format!("“{}” katmanları zaten kaynağınki gibi.", done.name)
+                        } else {
                             format!(
-                                "“{}” artık {} dosyasından: {} nesne.",
+                                "“{}” katmanları kaynağa döndü: {}. Katman durumları (paftaların görünüşü) değişmedi.",
                                 done.name,
-                                file_name(Path::new(&path)),
-                                done.objects
-                            ),
-                        );
-                    }
+                                done.reset.join(", ")
+                            )
+                        },
+                    );
                 }
             }
             Event::Name(t) => {
@@ -602,15 +680,13 @@ impl App {
             Event::Choose(k) => {
                 self.xrefs.chosen = Some(k);
                 self.xrefs.bind_menu = false;
+                self.xrefs.pending = None;
             }
             Event::Reload => {
-                if let Some(name) = self.chosen_name()
-                    && let Some(done) = self.xref_run(XrefsOperation::Reload { name })
-                {
-                    self.say(
-                        Level::Success,
-                        format!("“{}” yeniden yüklendi: {} nesne.", done.name, done.objects),
-                    );
+                // Previewed first (docs/adr/1060 §4): Uygula writes it.
+                if let Some(name) = self.chosen_name() {
+                    let title = format!("Yeniden yükle: {name}");
+                    self.xref_preview(XrefsOperation::Reload { name }, title);
                 }
             }
             Event::Unload => {
@@ -732,6 +808,12 @@ impl App {
                 Some(p) => meta.push(format!("“{p}” getirdi")),
                 None => meta.push(format!("{} yerleştirme", x.inserts)),
             }
+            if let Some(d) = &x.digest {
+                meta.push(format!("rev. {}", crate::xrefs_review_view::short(d)));
+            }
+            if x.content == Some(kentos_commands::XrefContent::Cached) {
+                meta.push("son yüklenen kopya".to_owned());
+            }
             let ambiguous = x.tried.iter().find(|p| p.contains("içerik özeti farklı"));
             let place = if let Some(candidate) = ambiguous {
                 let path = candidate.split(" (").next().unwrap_or(candidate);
@@ -757,7 +839,8 @@ impl App {
             let face = row![
                 container(icon(crate::icons::from_web(Some(glyph))).size(18.0)).padding(
                     iced::Padding {
-                        left: if x.parent.is_some() { 18.0 } else { 0.0 },
+                        // As deep as it is in the network (docs/adr/1060 §1).
+                        left: 18.0 * x.depth.map_or(if x.parent.is_some() { 1.0 } else { 0.0 }, f64::from) as f32,
                         ..Default::default()
                     }
                 ),
@@ -783,6 +866,7 @@ impl App {
             .push(words::secondary(REPATH, on(Event::Repath)))
             .push(words::secondary(DETACH, on(Event::Detach)))
             .push(words::secondary(OPEN_SOURCE, on(Event::OpenSource)))
+            .push(words::secondary(RESET_LAYERS, on(Event::ResetLayers)))
             .push(words::secondary(
                 if self.xrefs.bind_menu {
                     "Bağla ▴"
@@ -798,10 +882,22 @@ impl App {
         let mut body = Column::new().spacing(12).push(sections);
         match self.xrefs.section {
             Section::References => {
+                // The list shorter when the review below it shows (the window fits 1100 × 650).
+                let below: Option<Element<'_, Message>> = match (&self.xrefs.pending, chosen) {
+                    (Some(p), _) => Some(self.xref_pending_view(p)),
+                    (None, Some(x)) => Some(self.xref_detail_view(x)),
+                    (None, None) => None,
+                };
                 body = body
                     .push(words::summary(vec![line]))
-                    .push(iced::widget::scrollable(list).height(300.0))
-                    .push(actions);
+                    .push(
+                        iced::widget::scrollable(list.padding(iced::Padding { right: 14.0, ..Default::default() }))
+                            .height(if below.is_some() { 150.0 } else { 300.0 }),
+                    );
+                if let Some(b) = below {
+                    body = body.push(iced::widget::scrollable(b).height(150.0));
+                }
+                body = body.push(actions);
                 // A PDF underlay's look (docs/adr/0351 §2).
                 if let Some(x) = chosen.filter(|x| top && x.page.is_some()) {
                     let look = x.underlay.clone().unwrap_or_default();
@@ -855,7 +951,7 @@ impl App {
             .push(body)
             .aside(words::ghost(ADD, Some(msg(Event::Add))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
-            .width(720.0)
+            .width(860.0)
             .modal(msg(Event::Close))
     }
 
@@ -1076,7 +1172,10 @@ impl App {
             Control::Press(BIND_INSERT) => Some(msg(Event::Bind(XrefBindMode::Insert))),
             Control::Press(IN_PLACE) => Some(msg(Event::InPlace)),
             Control::Press(ON_SCREEN) => Some(msg(Event::OnScreen)),
+            Control::Press(CANCEL) if self.xrefs.pending.is_some() => Some(msg(Event::Discard)),
             Control::Press(CANCEL) => Some(msg(Event::CancelAttach)),
+            Control::Press(crate::xrefs_review_view::APPLY) => Some(msg(Event::Apply)),
+            Control::Press(RESET_LAYERS) => Some(msg(Event::ResetLayers)),
             Control::Press(ADD_PATH) => Some(msg(Event::AddPath)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
@@ -1110,7 +1209,7 @@ fn nested_under(all: Vec<XrefInfo>) -> Vec<XrefInfo> {
 }
 
 /// A reference's state: its mark and word, at the row's end.
-fn state_chip<'a>(kind: Kind, words: &'a str) -> Element<'a, Message> {
+pub(crate) fn state_chip<'a>(kind: Kind, words: &'a str) -> Element<'a, Message> {
     let (glyph, tone) = match kind {
         Kind::Ok => (Icon::Success, Tone::Success),
         Kind::Warn => (Icon::Warning, Tone::Warning),

@@ -2668,6 +2668,8 @@ codes! {
     INVALID_PDF_REGION = "invalid_pdf_region", Failed, false, "PDF'ten alınacak bölge sayfaya değen, eni ve boyu sıfırdan büyük bir dikdörtgen olmalı.";
     /// What a PDF page holds that an underlay does not take (pictures, shadings, texts it cannot read).
     PDF_LEFT_OUT = "pdf_left_out", Warning, false, "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar).";
+    /// Ties into an external reference's pieces that a reload or a repath breaks (docs/adr/1060 §4).
+    TIES_BREAK = "ties_break", Warning, false, "Yeniden yükleme dış başvurunun parçalarına bağlı bazı ölçü, kılavuz, tarama ya da alan bağlarını koparıyor; iletisi kaçını söyler.";
     /// A question answered from a bound layer's part (docs/adr/0581 §5).
     PARTIAL_SCOPE = "partial_scope", Warning, false, "Yanıt bağlı katmanın yüklenen parçasından; bütün veri kümesi için kapsamı kaynak yapın (scope: source).";
     /// Records a source handed over that could not be read (docs/adr/0581 §4).

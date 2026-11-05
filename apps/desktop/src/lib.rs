@@ -53,6 +53,7 @@ mod cad_inspection;
 mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;
+mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
 mod arch_project;

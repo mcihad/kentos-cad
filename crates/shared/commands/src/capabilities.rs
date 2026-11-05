@@ -3616,7 +3616,7 @@ const ENTRIES: &[Entry] = &[
             &["not_an_underlay", "invalid_underlay"],
             REVISION,
         ],
-        warnings: &["objects_left_out", "layer_hidden", "pdf_left_out"],
+        warnings: &["objects_left_out", "layer_hidden", "pdf_left_out", "ties_break"],
         targets: none,
     },
     Entry {

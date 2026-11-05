@@ -3113,7 +3113,8 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_XREFS_EDIT.into(),
             version: crate::CAD_XREFS_EDIT_VERSION,
             title: "Dış başvuru".into(),
-            summary: "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad ya da .pdf yolu; page PDF'in sayfası, 1'den, yoksa 1; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır); underlay PDF altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome tek renk, plot false yazdırılmaz). \
+            summary: "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad ya da .pdf yolu; page PDF'in sayfası, 1'den, yoksa 1; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır); underlay PDF altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome tek renk, plot false yazdırılmaz); resetLayers bu çizimde dış başvurunun katmanlarına yapılan değişiklikleri (renk, çizgi tipi, kalınlık tek geri alma adımı; görünürlük, kilit, dondurma ve yazdırma katman bayrağı) kaynağınkine döndürür, katman durumları (paftaların kendi görünüşü) kalır. \
+                      diff: true ile reload ve repath (planı önizlemedir) değişeni söyler: parçalar yerel kimlikleriyle same, changed, added, removed; getirdiği tanımlardan gelen ve giden; parçalara bağlı ölçü, kılavuz, tarama, yazı alanı ve tablo hücreleri followers'ta (follows, breaks, unties); kopan bağ ties_break uyarısıyla söylenir. Kaynağın kalıcı kimliğini tanımadığı nesne içeriğiyle bulunur; kaynakta silinen parçanın yeri ve yerel kimliği başka nesneye geçmez. \
                       PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur, katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur, kanıtlanmış CAD geometrisi değildir (underlay_measure). \
                       Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler."
                 .into(),
@@ -3140,13 +3141,28 @@ pub fn catalog() -> CommandCatalog {
                     input: json!({ "operation": { "kind": "reload", "name": "plan" } }),
                     output: None,
                 },
+                CommandExample {
+                    title: "Yeniden yüklemenin farkı (plan ile önizleme)".into(),
+                    input: json!({ "operation": { "kind": "reload", "name": "plan" }, "drawing": "/proje/ofis.kcad", "diff": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Taşınan kaynağı içerikle bulunan adaya bağla".into(),
+                    input: json!({ "operation": { "kind": "repath", "name": "plan", "path": "/arsiv/plan-tasindi.kcad" }, "diff": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Katmanları kaynağa döndür".into(),
+                    input: json!({ "operation": { "kind": "resetLayers", "name": "plan" } }),
+                    output: None,
+                },
             ],
         },
         CommandDescriptor {
             id: crate::CAD_XREFS_LIST.into(),
             version: crate::CAD_XREFS_LIST_VERSION,
             title: "Dış başvurular".into(),
-            summary: "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir."
+            summary: "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir. review: true kaynak ağını inceler: kullanılan revizyon (digest, değiştiyse dosyanınki current), ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın kendisi, cached kaynak yok ya da başka revizyon, son yüklenen kopya; none boşaltılmış), getirdikleri (brings), katmanlarını adlandıran katman durumları (layerStates) ve bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun, göreli yolun ve çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512 dosya, dosya başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış ya da yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,
@@ -3169,6 +3185,11 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Etkilenen paftalar ve görünümlerle".into(),
                     input: json!({ "drawing": "/proje/ofis.kcad", "affected": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kaynak ağının incelemesi ve taşınan kaynağın adayları".into(),
+                    input: json!({ "drawing": "/proje/ofis.kcad", "affected": true, "review": true }),
                     output: None,
                 },
             ],

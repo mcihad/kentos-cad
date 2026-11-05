@@ -197,14 +197,55 @@ fn found(doc: &Document, x: &XrefSource, drawing: Option<&str>) -> crate::links:
 /// A search folder may contain a different drawing with the same file name. The kept path (or the saved relative
 /// path) names an intentional source and may have a new revision; a fallback found only by a search folder must
 /// match the last loaded bytes. Repath is the explicit way to approve a different source.
-pub(crate) fn found_source(
+pub fn found_source(
     path: &str,
     relative: Option<&str>,
     digest: &str,
     drawing: Option<&str>,
     search: &[String],
 ) -> crate::links::Found {
-    let mut direct = crate::links::find(path, relative, drawing, &[]);
+    found_source_in(path, relative, digest, drawing.and_then(|d| Path::new(d).parent()), search)
+}
+
+/// [`found_source`] from the drawing's folder itself (Paketle's `from`, docs/adr/1060 §6). Last, the folder itself is
+/// looked in by the file's name, and what is there must match the last loaded bytes: a package's `veri/` holds a
+/// source beside the one that brought it, whatever folders they had (docs/adr/1060 §6).
+pub fn found_source_in(
+    path: &str,
+    relative: Option<&str>,
+    digest: &str,
+    folder: Option<&Path>,
+    search: &[String],
+) -> crate::links::Found {
+    let mut found = found_by_search(path, relative, digest, folder, search);
+    if found.at.is_some() {
+        return found;
+    }
+    if let (Some(folder), Some(name)) = (folder, Path::new(path).file_name()) {
+        let beside = folder.join(name);
+        let label = beside.display().to_string();
+        if !found.tried.iter().any(|s| s == &label || s.starts_with(&format!("{label} ("))) {
+            if beside.is_file() {
+                if std::fs::read(&beside).is_ok_and(|bytes| sha256_hex(&bytes) == digest) {
+                    return crate::links::Found { at: Some(beside), via: AssetVia::Relative, tried: Vec::new() };
+                }
+                found.tried.push(format!("{label} (içerik özeti farklı)"));
+            } else {
+                found.tried.push(label);
+            }
+        }
+    }
+    found
+}
+
+fn found_by_search(
+    path: &str,
+    relative: Option<&str>,
+    digest: &str,
+    folder: Option<&Path>,
+    search: &[String],
+) -> crate::links::Found {
+    let mut direct = crate::links::find_in(path, relative, folder, &[]);
     if let Some(at) = &direct.at {
         // An absolute path that still exists is the intentionally attached file. A saved relative path becomes a
         // fallback when that path has gone away, and must prove that it names the same bytes before being accepted.
@@ -213,14 +254,11 @@ pub(crate) fn found_source(
         {
             return direct;
         }
-        direct.tried.push(format!(
-            "{} (içerik özeti farklı)",
-            at.display()
-        ));
+        // The kept path was looked at first; then the relative path's file, passed over.
+        direct.tried = vec![path.to_owned(), format!("{} (içerik özeti farklı)", at.display())];
         direct.at = None;
         direct.via = AssetVia::None;
     }
-    let folder = drawing.and_then(|d| Path::new(d).parent());
     let saved = Path::new(path);
     let rel = relative.map(str::to_owned).or_else(|| {
         (!saved.is_absolute() && !path.trim().is_empty()).then(|| path.replace('\\', "/"))
@@ -283,7 +321,7 @@ fn inserts_of(doc: &Document, block: BlockId) -> Vec<Slot> {
 }
 
 /// The definitions `block` brought (its nested references and the blocks its content places), deepest last.
-fn brought(doc: &Document, block: BlockId) -> Vec<BlockId> {
+pub(crate) fn brought(doc: &Document, block: BlockId) -> Vec<BlockId> {
     let mut out: Vec<BlockId> = Vec::new();
     let mut todo = vec![block];
     while let Some(b) = todo.pop() {
@@ -329,6 +367,8 @@ enum Plan {
     Bind { id: BlockId, name: String, mode: XrefBindMode },
     Paths(Vec<String>),
     Underlay { id: BlockId, name: String, look: Option<UnderlayLook> },
+    /// Each of our nodes with its source's look (docs/adr/1060 §5).
+    ResetLayers { id: BlockId, name: String, looks: Vec<(String, kentos_commands::LayerNode)> },
 }
 
 fn numbers(at: Option<Vec2>, scale: Option<f64>, rotation: Option<f64>) -> Result<(), Stop> {
@@ -504,6 +544,26 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
             }
             Plan::Underlay { id: def.id, name: def.name.clone(), look: look.kept() }
         }
+        XrefsOperation::ResetLayers { name } => {
+            let (def, x) = find(doc, name)?;
+            top(def, &x, doc)?;
+            // The source as found (docs/adr/0349 §1, its fallbacks matched by content): its layers' looks.
+            let Some(at) = found(doc, &x, drawing).at else {
+                return Err(fail(
+                    codes::FILE_NOT_FOUND,
+                    format!(
+                        "“{}” dış başvurusunun kaynağı bulunamadı; katmanları kaynağa döndürmek için önce Yolu değiştir… ile bağlayın.",
+                        def.name
+                    ),
+                    "operation.name",
+                ));
+            };
+            let source = read(&at.to_string_lossy(), x.page, "operation.name")?;
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            let looks = kentos_domain::xref::source_layers(&doc.to_snapshot_v2(), &source.drawing, &def.name)
+                .map_err(|why| fail(codes::IMPORT_UNREADABLE, why, "operation.name"))?;
+            Plan::ResetLayers { id: def.id, name: def.name.clone(), looks }
+        }
     };
     Ok((plan, warnings))
 }
@@ -514,8 +574,20 @@ fn write(doc: &mut Document, input: &XrefsEdit) -> Result<(XrefsEdited, Vec<Comm
     match plan {
         Plan::Load { name, id, source, drawing: theirs, insert, label } => {
             let ours = doc.to_snapshot_v2();
-            let loaded = kentos_domain::xref::load(&ours, &theirs, &name, id, source)
+            let source_file = source.path.clone();
+            let mut loaded = kentos_domain::xref::load(&ours, &theirs, &name, id, source)
                 .map_err(|why| fail(codes::XREF_EMPTY, why, "operation.path"))?;
+            // The references it brought are found from its own folder, as it found them (docs/adr/1060 §6).
+            crate::xrefs_review::relocate_nested(
+                &mut loaded.drawing.blocks,
+                id,
+                &source_file,
+                input.drawing.as_deref(),
+                &doc.settings().xref_paths,
+            );
+            // A reload's or a repath's preview (docs/adr/1060 §4): the definition, what it brought and the ties
+            // into its pieces as they are before.
+            let before = (input.diff && insert.is_none()).then(|| crate::xrefs_review::Before::of(doc, id));
             let before_blocks: Vec<BlockId> = doc.blocks().iter().map(|b| b.id).collect();
             let group = doc.begin_group(&format!("{label}: {name}"));
             let mut counts = Counts::default();
@@ -548,6 +620,10 @@ fn write(doc: &mut Document, input: &XrefsEdit) -> Result<(XrefsEdited, Vec<Comm
                     path: Some("operation".into()),
                 });
             }
+            let diff = before.map(|b| b.diff(doc, id));
+            if let Some(w) = diff.as_ref().and_then(|d| crate::xrefs_review::breaking_words(d, &name)) {
+                warnings.push(CommandWarning { code: codes::TIES_BREAK.into(), message: w, path: Some("operation".into()) });
+            }
             Ok((
                 XrefsEdited {
                     name,
@@ -559,10 +635,18 @@ fn write(doc: &mut Document, input: &XrefsEdit) -> Result<(XrefsEdited, Vec<Comm
                     removed: 0,
                     merged: Vec::new(),
                     paths: Vec::new(),
+                    reset: Vec::new(),
+                    diff,
                     revision: doc.revision().to_string(),
                 },
                 warnings,
             ))
+        }
+        Plan::ResetLayers { id, name, looks } => {
+            let group = doc.begin_group(&format!("Katmanları kaynağa döndür: {name}"));
+            let reset = crate::xrefs_review::reset_layers(doc, &looks);
+            doc.end_group(group);
+            Ok((XrefsEdited { name, block: Some(id), reset, revision: doc.revision().to_string(), ..Default::default() }, warnings))
         }
         Plan::Unload { id, name } => {
             let Some(mut def) = doc.block(id).cloned() else {
@@ -698,9 +782,22 @@ pub mod edit {
     }
 
     pub fn execute(cx: &mut ExecutionContext<'_>, input: XrefsEdit) -> CommandResult<XrefsEdited> {
+        // The ties into the pieces follow at the step's end, after the command's own changes (the recorded call's
+        // step closes after `write`): a diff is the preview's, made on a copy whose step closes in `write`.
+        let preview = input.diff.then(|| {
+            let mut copy = cx.doc.clone();
+            write(&mut copy, &input).ok()
+        });
         crate::call::recorded(cx, kentos_commands::CAD_XREFS_EDIT, kentos_commands::CAD_XREFS_EDIT_VERSION, input, |cx, input| {
             match write(cx.doc, &input) {
-                Ok((output, warnings)) => CommandResult::Completed { output, warnings },
+                Ok((mut output, mut warnings)) => {
+                    if let Some(Some((seen, said))) = preview {
+                        output.diff = seen.diff;
+                        warnings.retain(|w| w.code != codes::TIES_BREAK);
+                        warnings.extend(said.into_iter().filter(|w| w.code == codes::TIES_BREAK));
+                    }
+                    CommandResult::Completed { output, warnings }
+                }
                 Err(stop) => stop.into(),
             }
         })
@@ -776,6 +873,8 @@ fn affected_by(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<String>) {
 pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
     let drawing = input.drawing.as_deref();
     let names: HashMap<BlockId, String> = doc.blocks().iter().map(|b| (b.id, b.name.clone())).collect();
+    // A review reads at most this many files to find candidates, over all the references (docs/adr/1060 §2).
+    let mut budget = kentos_commands::MAX_CANDIDATE_FILES;
     let xrefs = doc
         .blocks()
         .iter()
@@ -787,6 +886,7 @@ pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
             } else {
                 found(doc, x, drawing)
             };
+            let mut current = None;
             let state = if x.unloaded {
                 XrefState::Unloaded
             } else {
@@ -794,11 +894,17 @@ pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
                     None => XrefState::Missing,
                     Some(p) => match std::fs::read(p) {
                         Ok(bytes) if sha256_hex(&bytes) == x.digest => XrefState::Loaded,
-                        Ok(_) => XrefState::Changed,
+                        Ok(bytes) => {
+                            current = Some(sha256_hex(&bytes));
+                            XrefState::Changed
+                        }
                         Err(_) => XrefState::Missing,
                     },
                 }
             };
+            let review = input
+                .review
+                .then(|| crate::xrefs_review::review(doc, b, x, state, look.at.as_deref(), drawing, &mut budget));
             let (sheets, views) = if input.affected { affected_by(doc, &showing(doc, b.id)) } else { Default::default() };
             Some(XrefInfo {
                 name: b.name.clone(),
@@ -817,6 +923,13 @@ pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
                 views,
                 page: x.page,
                 underlay: x.underlay.clone(),
+                digest: review.is_some().then(|| x.digest.clone()),
+                current: current.filter(|_| review.is_some()),
+                depth: review.as_ref().map(|r| r.depth),
+                content: review.as_ref().map(|r| r.content),
+                brings: review.as_ref().map(|r| r.brings.clone()).unwrap_or_default(),
+                layer_states: review.as_ref().map(|r| r.layer_states.clone()).unwrap_or_default(),
+                candidates: review.map(|r| r.candidates).unwrap_or_default(),
             })
         })
         .collect();

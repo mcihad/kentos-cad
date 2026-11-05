@@ -126,6 +126,73 @@ fn notice(app: &mut App) {
     let _ = app.update(Message::XrefWatch(crate::xrefs_watch::Event::Tick));
 }
 
+/// A scene folder of its own under the system's temporary one.
+fn folder(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("kentos-xref-shots-{}-{name}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let _ = std::fs::create_dir_all(&dir);
+    dir
+}
+
+/// docs/adr/1060: a network three deep (Zincir brought Bina, which brought Kat) and the plan moved and renamed into
+/// one search folder while another drawing of its old name sits in the other; Dış başvurular with the plan chosen:
+/// its candidates, the one of the same content first.
+fn network(app: &mut App) {
+    opened(app, crate::tools_scenes::Objects::new(), 50.0);
+    app.tab = "insert";
+    let dir = folder("ag");
+    attached(app, fixture("zincir.kcad"), "Zincir", Mode::Attach);
+    let plan = dir.join("mimari/plan.kcad");
+    let _ = std::fs::create_dir_all(dir.join("mimari"));
+    let _ = std::fs::copy(fixture("plan.kcad"), &plan);
+    attached(app, plan.clone(), "Plan", Mode::Attach);
+    let _ = std::fs::create_dir_all(dir.join("arsiv"));
+    let _ = std::fs::create_dir_all(dir.join("ortak"));
+    let _ = std::fs::rename(&plan, dir.join("arsiv/plan-2026-11.kcad"));
+    let _ = std::fs::copy(fixture("plan2.kcad"), dir.join("ortak/plan.kcad"));
+    send(app, Event::PathPicked(Some(dir.join("ortak"))));
+    send(app, Event::PathPicked(Some(dir.join("arsiv"))));
+    on_inserts(app);
+    let _ = app.run("xref.manager");
+    let k = app.xrefs.listed.as_ref().and_then(|l| l.iter().position(|x| x.name == "Plan"));
+    if let Some(k) = k {
+        send(app, Event::Choose(k));
+    }
+}
+
+/// docs/adr/1060 §4: the plan attached from a copy, a dimension tied to its second wall's end and the third piece's
+/// place; the copy then the next revision (the wall gone): Yeniden yükle shows the preview card first.
+fn preview(app: &mut App) {
+    opened(app, crate::tools_scenes::Objects::new(), 50.0);
+    app.tab = "insert";
+    let dir = folder("onizleme");
+    let plan = dir.join("plan.kcad");
+    let _ = std::fs::copy(fixture("plan.kcad"), &plan);
+    attached(app, plan.clone(), "Plan", Mode::Attach);
+    if let Some(doc) = app.document.as_mut() {
+        let layer = doc.model.layers().active().to_owned();
+        let insert = doc
+            .model
+            .entities()
+            .find(|e| matches!(e, kentos_commands::Entity::Insert(_)))
+            .and_then(|e| doc.model.uid(kentos_domain::Slot(e.base().id)))
+            .map(|u| u.to_string());
+        if let Some(insert) = insert
+            && let Ok(dim) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!({
+                "kind": "dimension", "id": 0, "layerId": layer, "attrs": {}, "a": { "x": 10.0, "y": 8.0 },
+                "b": { "x": 2.0, "y": 1.0 }, "offset": 1.0, "height": 0.25,
+                "refs": { "a": { "uid": insert, "place": { "kind": "end" }, "path": [1] },
+                          "b": { "uid": insert, "place": { "kind": "center" }, "path": [2] } } }))
+        {
+            let _ = doc.model.add(dim);
+        }
+    }
+    let _ = std::fs::copy(fixture("plan2.kcad"), &plan);
+    on_inserts(app);
+    let _ = app.run("xref.manager");
+    send(app, Event::Reload);
+}
+
 /// Dış başvurular › Arama yolları with two folders.
 fn paths(app: &mut App) {
     three(app);
@@ -233,5 +300,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("dis-basvuru", attached_plan),
         ("dis-basvuru-pencere", manager),
         ("dis-basvuru-degisti", opened_changed),
+        ("dis-basvuru-ag", network),
+        ("dis-basvuru-onizleme", preview),
     ]
 }

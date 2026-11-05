@@ -36,14 +36,23 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
     insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin
     arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde
     aranır); underlay PDF altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome
-    tek renk, plot false yazdırılmaz). PDF altlığı: sayfanın çizgileri, dolguları ve
-    yazıları kâğıt metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak
-    okunur, katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler
-    alınmaz (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan
-    okunmuştur, kanıtlanmış CAD geometrisi değildir (underlay_measure). Kaynağın attach
-    dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık
-    çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına
-    değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.
+    tek renk, plot false yazdırılmaz); resetLayers bu çizimde dış başvurunun
+    katmanlarına yapılan değişiklikleri (renk, çizgi tipi, kalınlık tek geri alma adımı;
+    görünürlük, kilit, dondurma ve yazdırma katman bayrağı) kaynağınkine döndürür,
+    katman durumları (paftaların kendi görünüşü) kalır. diff: true ile reload ve repath
+    (planı önizlemedir) değişeni söyler: parçalar yerel kimlikleriyle same, changed,
+    added, removed; getirdiği tanımlardan gelen ve giden; parçalara bağlı ölçü, kılavuz,
+    tarama, yazı alanı ve tablo hücreleri followers'ta (follows, breaks, unties); kopan
+    bağ ties_break uyarısıyla söylenir. Kaynağın kalıcı kimliğini tanımadığı nesne
+    içeriğiyle bulunur; kaynakta silinen parçanın yeri ve yerel kimliği başka nesneye
+    geçmez. PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt metresinde (1
+    pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur, katmanları PDF'in
+    isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz (pdf_left_out); kenet
+    ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur, kanıtlanmış CAD
+    geometrisi değildir (underlay_measure). Kaynağın attach dış başvuruları iç içe
+    gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu:
+    göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez
+    (nested_xref). Plan yazmadan ne olacağını söyler.
     """
     __slots__ = ()
     id = "cad.xrefs.edit"
@@ -60,6 +69,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         /,
         *,
         operation: XrefsOperation,
+        diff: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -78,18 +88,29 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar
         (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır); underlay PDF
         altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome tek renk, plot false
-        yazdırılmaz). PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt
-        metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur,
-        katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz
-        (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur,
-        kanıtlanmış CAD geometrisi değildir (underlay_measure). Kaynağın attach dış
-        başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık
-        çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına
-        değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.
+        yazdırılmaz); resetLayers bu çizimde dış başvurunun katmanlarına yapılan
+        değişiklikleri (renk, çizgi tipi, kalınlık tek geri alma adımı; görünürlük, kilit,
+        dondurma ve yazdırma katman bayrağı) kaynağınkine döndürür, katman durumları
+        (paftaların kendi görünüşü) kalır. diff: true ile reload ve repath (planı
+        önizlemedir) değişeni söyler: parçalar yerel kimlikleriyle same, changed, added,
+        removed; getirdiği tanımlardan gelen ve giden; parçalara bağlı ölçü, kılavuz,
+        tarama, yazı alanı ve tablo hücreleri followers'ta (follows, breaks, unties); kopan
+        bağ ties_break uyarısıyla söylenir. Kaynağın kalıcı kimliğini tanımadığı nesne
+        içeriğiyle bulunur; kaynakta silinen parçanın yeri ve yerel kimliği başka nesneye
+        geçmez. PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt metresinde (1
+        pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur, katmanları PDF'in
+        isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz (pdf_left_out); kenet
+        ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur, kanıtlanmış CAD
+        geometrisi değildir (underlay_measure). Kaynağın attach dış başvuruları iç içe
+        gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu:
+        göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez
+        (nested_xref). Plan yazmadan ne olacağını söyler.
 
         Args:
             doc: The drawing it works on.
             operation:
+            diff: Whether a reload or a repath says what it changes (`diff`, docs/adr/1060 §4): the pieces kept, changed, new
+                and gone, and the objects tied into them that follow or break. A plan with it is the preview.
             drawing: The open drawing's own file, an absolute path, when it has one: a reference to it (or through it) is a cycle.
             expected_revision:
             request_id: Names this write: sent again with the same call it is answered as
@@ -106,6 +127,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         """
         return self.execute_input(doc, XrefsEdit(
             operation=operation,
+            diff=diff,
             drawing=drawing,
             expected_revision=expected_revision,
         ), request_id=request_id, expected=expected)
@@ -116,6 +138,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         /,
         *,
         operation: XrefsOperation,
+        diff: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> XrefsEdited:
@@ -124,6 +147,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         """
         return self.plan_input(doc, XrefsEdit(
             operation=operation,
+            diff=diff,
             drawing=drawing,
             expected_revision=expected_revision,
         ))
@@ -134,6 +158,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         /,
         *,
         operation: XrefsOperation,
+        diff: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -142,6 +167,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         """
         return self.validate_input(doc, XrefsEdit(
             operation=operation,
+            diff=diff,
             drawing=drawing,
             expected_revision=expected_revision,
         ))
@@ -152,6 +178,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         /,
         *,
         operation: XrefsOperation,
+        diff: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         op: str = "execute",
@@ -165,6 +192,7 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         """
         return self.answer_input(doc, XrefsEdit(
             operation=operation,
+            diff=diff,
             drawing=drawing,
             expected_revision=expected_revision,
         ), op=op, request_id=request_id, expected=expected)
@@ -181,7 +209,18 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
     missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır),
     onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path,
     relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her
-    birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir.
+    birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir. review:
+    true kaynak ağını inceler: kullanılan revizyon (digest, değiştiyse dosyanınki
+    current), ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın
+    kendisi, cached kaynak yok ya da başka revizyon, son yüklenen kopya; none
+    boşaltılmış), getirdikleri (brings), katmanlarını adlandıran katman durumları
+    (layerStates) ve bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun,
+    göreli yolun ve çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512
+    dosya, dosya başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış
+    ya da yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday
+    kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu
+    olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe
+    dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.
     """
     __slots__ = ()
     id = "cad.xrefs.list"
@@ -199,6 +238,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         *,
         affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        review: bool | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> XrefsListed:
@@ -208,12 +248,26 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren,
         yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative,
         searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin
-        yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir.
+        yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir. review: true
+        kaynak ağını inceler: kullanılan revizyon (digest, değiştiyse dosyanınki current),
+        ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın kendisi,
+        cached kaynak yok ya da başka revizyon, son yüklenen kopya; none boşaltılmış),
+        getirdikleri (brings), katmanlarını adlandıran katman durumları (layerStates) ve
+        bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun, göreli yolun ve
+        çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512 dosya, dosya
+        başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış ya da
+        yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday
+        kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu
+        olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe
+        dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.
 
         Args:
             doc: The drawing it works on.
             affected: Whether to say each reference's sheets and named views its inserts show (docs/adr/0349 §3).
             drawing: The open drawing's own file, an absolute path, when it has one: a relative path is found from its folder.
+            review: Whether to review each reference (docs/adr/1060 §1): its revision as used, its depth in the network, what the
+                drawing shows of it, the references it brought, the layer states naming its layers and, for one missing or
+                changed, the files in the allowed places that may be it (`candidates`).
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -229,6 +283,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         return self.execute_input(doc, XrefsList(
             affected=affected,
             drawing=drawing,
+            review=review,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -238,6 +293,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         *,
         affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        review: bool | Unset = UNSET,
     ) -> XrefsListed:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -245,6 +301,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         return self.plan_input(doc, XrefsList(
             affected=affected,
             drawing=drawing,
+            review=review,
         ))
 
     def validate(
@@ -254,6 +311,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         *,
         affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        review: bool | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -261,6 +319,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         return self.validate_input(doc, XrefsList(
             affected=affected,
             drawing=drawing,
+            review=review,
         ))
 
     def answer(
@@ -270,6 +329,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         *,
         affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        review: bool | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -282,6 +342,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         return self.answer_input(doc, XrefsList(
             affected=affected,
             drawing=drawing,
+            review=review,
         ), op=op, request_id=request_id, expected=expected)
 
 

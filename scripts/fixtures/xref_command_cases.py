@@ -136,12 +136,40 @@ def empty_source():
             "styles": {"items": [], "categories": []}, "uids": [uid(301)]}
 
 
-PLAN, PLAN2, EMPTY = source("Plan"), source("Plan", moved=True), empty_source()
-FILES = {name: k.container(k.document(d)) for name, d in (("plan.kcad", PLAN), ("plan2.kcad", PLAN2), ("bos.kcad", EMPTY))}
+BINA = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7104"
+KAT = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7105"
+
+
+def chain_source():
+    """ADR 1060 §1: a drawing whose reference Bina brought its own reference Kat (a network three deep with the
+    drawing that attaches it)."""
+    return {"format": "kentos.document", "version": 2, "name": "Zincir", "settings": SETTINGS, "origin": P(0, 0),
+            "layers": [layer("0", "0", st("fg")),
+                       layer("xr-b", "Dış başvuru: Bina", st("fg"), [layer("xr-b-d", "Duvar", st("#888888"))], kind="group"),
+                       layer("xr-k", "Dış başvuru: Bina|Kat", st("fg"), [layer("xr-k-k", "Kat", st("#448844"))],
+                             kind="group")],
+            "activeLayer": "0",
+            "entities": [line(1, "0", (0, 0), (5, 0)), insert(2, "0", BINA, (0, 0))],
+            "styles": {"items": [], "categories": []},
+            "blocks": [
+                {"id": BINA, "name": "Bina", "base": P(0, 0),
+                 "xref": {"path": "/proje/bina.kcad", "digest": "b1" * 32, "group": "xr-b", "objects": [uid(401), uid(402)]},
+                 "units": "m", "entities": [line(1, "xr-b-d", (0, 0), (1, 0)), insert(2, "0", KAT, (0, 0))]},
+                {"id": KAT, "name": "Bina|Kat", "base": P(0, 0),
+                 "xref": {"path": "/proje/kat.kcad", "digest": "c1" * 32, "group": "xr-k", "parent": BINA,
+                          "objects": [uid(501)]},
+                 "units": "m", "entities": [line(1, "xr-k-k", (0, 0), (0, 1))]},
+            ],
+            "uids": [uid(601), uid(602)]}
+
+
+PLAN, PLAN2, EMPTY, CHAIN = source("Plan"), source("Plan", moved=True), empty_source(), chain_source()
+FILES = {name: k.container(k.document(d)) for name, d in (("plan.kcad", PLAN), ("plan2.kcad", PLAN2), ("bos.kcad", EMPTY),
+                                                         ("zincir.kcad", CHAIN))}
 DIGEST = {name: hashlib.sha256(b).hexdigest() for name, b in FILES.items()}
 F = {name: f"$fixture:xref/v1/{name}" for name in FILES}
 DRAWING = "$fixture:xref/v1/ana.kcad"  # the open drawing's file (it need not be there)
-THEIRS = {"plan.kcad": PLAN, "plan2.kcad": PLAN2}
+THEIRS = {"plan.kcad": PLAN, "plan2.kcad": PLAN2, "zincir.kcad": CHAIN}
 
 # ── The drawing they go into ─────────────────────────────────────────────
 
@@ -170,6 +198,11 @@ def blocks_of(doc):
 
 def by_id(doc):
     return {b["id"]: b for b in doc.get("blocks", [])}
+
+
+def content_of(e):
+    """An object as a definition holds it, its local id aside (ADR 1060 §3)."""
+    return {k_: v for k_, v in e.items() if k_ != "id"}
 
 
 def load(ours, theirs, name, ident, xref):
@@ -213,7 +246,9 @@ def load(ours, theirs, name, ident, xref):
     placed = x.placed_blocks(kept, theirs_by_id) - skip
     brought = [b for b in theirs.get("blocks", []) if b["id"] in placed]
     names = x.unique_names([b["name"] for b in ours.get("blocks", [])], [f"{name}|{b['name']}" for b in brought])
-    block_of = {b["id"]: "$blockOf:" + n for b, n in zip(brought, names)}
+    # A block the reference brought before keeps its id when it comes again under the same name (ADR 0349 §5).
+    kept_by_name = {x.fold(mine[b]["name"]): b for b in old if b in mine}
+    block_of = {b["id"]: kept_by_name.get(x.fold(n), "$blockOf:" + n) for b, n in zip(brought, names)}
 
     def layer_of(i):
         return x.our_node_for(ours, their_paths, i) or ""
@@ -229,7 +264,8 @@ def load(ours, theirs, name, ident, xref):
         b["entities"] = [x.map_object(e, layer_of, block_of, {}) for e in b["entities"]
                          if not (e["kind"] == "insert" and e["block"] in skip)]
         if "xref" in b:
-            b["xref"]["parent"] = ident
+            # The reference that brought it in the source, when that one came along too; else this one (ADR 1060 §1).
+            b["xref"]["parent"] = block_of.get(b["xref"].get("parent"), ident)
             g = group_of(b["xref"].get("group"))
             if g is None:
                 b["xref"].pop("group", None)
@@ -237,14 +273,28 @@ def load(ours, theirs, name, ident, xref):
                 b["xref"]["group"] = g
         nested.append(bname)
         blocks_of(ours).append(b)
-    entities, top = [], max(old_ids.values(), default=0)
+    # ADR 1060 §3: an object the old definition does not know by its persistent id is found by its content (its JSON
+    # but its local id), the first old one not yet taken in the definition's order; found neither way it is new and
+    # takes the next after the highest local id the definition had.
+    old_entities = mine[ident]["entities"] if ident in mine else []
+    old_objects = mine[ident].get("xref", {}).get("objects", []) if ident in mine else []
+    new_uids = {u for u in kept_uids if isinstance(u, str)}
+    unmatched = [[content_of(e), e["id"], False] for k_, e in enumerate(old_entities)
+                 if not (k_ < len(old_objects) and old_objects[k_] in new_uids)]
+    entities, top = [], max([e["id"] for e in old_entities] + list(old_ids.values()), default=0)
     for e, u in zip(kept, kept_uids):
         m = x.map_object(e, layer_of, block_of, {})
         if u in old_ids:
             m["id"] = old_ids[u]
         else:
-            top += 1
-            m["id"] = top
+            c = content_of(m)
+            hit = next((h for h in unmatched if not h[2] and h[0] == c), None)
+            if hit is not None:
+                hit[2] = True
+                m["id"] = hit[1]
+            else:
+                top += 1
+                m["id"] = top
         entities.append(m)
     source = {k_: v for k_, v in xref.items() if v is not None}
     source["group"] = group_id
@@ -382,8 +432,13 @@ LEFT = {"code": "objects_left_out", "message": "1 resim, raster ya da tablo blo�
 PLAN_ID = "$blockOf:Plan"
 
 
-def edited(name, *, block=None, insert=False, objects=0, layers=(), nested=(), removed=0, merged=()):
+def edited(name, *, block=None, insert=False, objects=0, layers=(), nested=(), removed=0, merged=(), reset=(),
+           diff=None):
     out = {"name": name, "objects": objects, "removed": removed, "revision": "$current"}
+    if reset:
+        out["reset"] = list(reset)
+    if diff is not None:
+        out["diff"] = diff
     if block is not None:
         out["block"] = block
     if insert:
@@ -881,6 +936,209 @@ add(edit_cases, "yeniden yükle: arama yollarında da yoksa dosya bulunamadı", 
      "result": failed("file_not_found", "$any", "operation.name"), "expect": {"canUndo": False, "revision": "same"}},
 ], setup=MISSING)
 
+
+# ── ADR 1060: what a reload changes, identity by content, layers back to the source's ─────────────
+
+
+def pieces_of(doc, ident):
+    b = by_id(doc).get(ident)
+    return {e["id"]: content_of(e) for e in b["entities"]} if b else {}
+
+
+def nested_of(doc, ident):
+    if ident not in by_id(doc):
+        return []
+    br = brought_by(doc, ident)
+    return [b["name"] for b in doc.get("blocks", []) if b["id"] in br]
+
+
+def diff_of(before, after, ident, followers=()):
+    """ADR 1060 §4: the definition's pieces by local id (the same when id and content are), what it brings."""
+    old, new = pieces_of(before, ident), pieces_of(after, ident)
+    d = {"same": sum(1 for k_ in new if k_ in old and old[k_] == new[k_]),
+         "changed": sum(1 for k_ in new if k_ in old and old[k_] != new[k_]),
+         "added": sum(1 for k_ in new if k_ not in old),
+         "removed": sum(1 for k_ in old if k_ not in new)}
+    nb, na = nested_of(before, ident), nested_of(after, ident)
+    if [n for n in na if n not in nb]:
+        d["nestedAdded"] = [n for n in na if n not in nb]
+    if [n for n in nb if n not in na]:
+        d["nestedRemoved"] = [n for n in nb if n not in na]
+    if followers:
+        d["followers"] = list(followers)
+    return d
+
+
+def ties_break(name, d):
+    broken = sum(1 for f in d.get("followers", []) if f["effect"] == "breaks")
+    untied = sum(1 for f in d.get("followers", []) if f["effect"] == "unties")
+    parts = ([f"{broken} nesnenin bağı kopuyor"] if broken else []) + ([f"{untied} tarama sınırını bırakıyor"] if untied else [])
+    return {"code": "ties_break", "path": "operation",
+            "message": f"“{name}” kaynağında {d['removed'] + d['changed']} parça artık yok ya da değişti: {', '.join(parts)}. "
+                       "Kopan bağ yerinde kalır ve nedenini söyler; başka nesneye geçmez."}
+
+
+same_d = diff_of(ATTACHED, reloaded, PLAN_ID)
+assert same_d == {"same": 6, "changed": 0, "added": 0, "removed": 0}, same_d
+add(edit_cases, "yeniden yükle, fark: dosya değişmediyse bütün parçalar aynı", [
+    ATTACH,
+    {"op": "execute", "input": {"operation": {"kind": "reload", "name": "Plan"}, "diff": True},
+     "result": done(edited("Plan", block=PLAN_ID, objects=info_r["objects"], nested=info_r["nested"], diff=same_d), [LEFT]),
+     "expect": expect(reloaded, revision="same")},
+])
+moved_d = diff_of(ATTACHED, repathed, PLAN_ID)
+assert moved_d == {"same": 4, "changed": 1, "added": 1, "removed": 1}, moved_d
+add(edit_cases, "yolu değiştir, fark: aynı, değişen, yeni ve giden parçalar yerel kimlikleriyle sayılır", [
+    ATTACH,
+    {"op": "execute", "input": {"operation": {"kind": "repath", "name": "Plan", "path": F["plan2.kcad"]}, "diff": True},
+     "result": done(edited("Plan", block=PLAN_ID, objects=info_p["objects"], layers=info_p["layers"],
+                           nested=info_p["nested"], diff=moved_d)),
+     "expect": expect(repathed)},
+    {"op": "undo", "returns": "Dış başvurunun yolunu değiştir: Plan", "expect": expect(ATTACHED)},
+], note="Duvar 2 gitti, kapının yayı (3) değişti, merdiven (7) geldi; 1, 4, 5 ve 6 aynı.")
+add(edit_cases, "yolu değiştir, önizleme: plan farkı söyler, hiçbir şey yazmaz", [
+    ATTACH,
+    {"op": "plan", "input": {"operation": {"kind": "repath", "name": "Plan", "path": F["plan2.kcad"]}, "diff": True},
+     "result": done(edited("Plan", block=PLAN_ID, objects=info_p["objects"], layers=info_p["layers"],
+                           nested=info_p["nested"], diff=moved_d)),
+     "expect": expect(ATTACHED, revision="same")},
+])
+add(edit_cases, "fark istenmezse söylenmez", [
+    ATTACH,
+    {"op": "execute", "input": {"operation": {"kind": "repath", "name": "Plan", "path": F["plan2.kcad"]}, "diff": False},
+     "result": done(edited("Plan", block=PLAN_ID, objects=info_p["objects"], layers=info_p["layers"],
+                           nested=info_p["nested"])),
+     "expect": expect(repathed)},
+])
+
+# A drawing with the reference and a dimension tied into two of its pieces (a block path is the piece's place in the
+# definition, ADR 0263 §3, followed by its local id, ADR 0315 §1): the door's circle (place 2, id 3) and the end of the
+# second wall (place 1, id 2), its points where the insert puts them.
+INSERT_UID, LINE_UID, DIM_UID = uid(9001), uid(9002), uid(9003)
+TIED = with_ids(copy.deepcopy(ATTACHED))
+TIED["version"] = 2
+TIED["entities"].append(obj("dimension", 3, "cizim", a=P(2, 1), b=P(10, 8), offset=1.0, height=0.25,
+                            refs={"a": {"uid": INSERT_UID, "place": {"kind": "center"}, "path": [2]},
+                                  "b": {"uid": INSERT_UID, "place": {"kind": "end"}, "path": [1]}}))
+TIED["uids"] = [LINE_UID, INSERT_UID, DIM_UID]
+tied_after, tied_info = load(TIED, PLAN2, "Plan", SETUP_IDS[PLAN_ID], xref_of("plan2.kcad"))
+old_order = [e["id"] for e in by_id(TIED)[SETUP_IDS[PLAN_ID]]["entities"]]
+new_order = [e["id"] for e in by_id(tied_after)[SETUP_IDS[PLAN_ID]]["entities"]]
+
+
+def followed(ref):
+    """A tie into a piece after the step: at its local id's new place, or broken there (piece_gone) when it is gone."""
+    local = old_order[ref["path"][0]]
+    if local in new_order:
+        return {**ref, "path": [new_order.index(local)]}
+    return {**ref, "broken": "piece_gone"}
+
+
+TIED_DIM = TIED["entities"][2]
+TIED_AFTER = {**TIED_DIM, "refs": {k_: followed(r) for k_, r in TIED_DIM["refs"].items()}}
+assert TIED_AFTER["refs"]["a"]["path"] == [1] and TIED_AFTER["refs"]["b"]["broken"] == "piece_gone", TIED_AFTER
+tied_d = diff_of(TIED, tied_after, SETUP_IDS[PLAN_ID],
+                 followers=[{"uid": DIM_UID, "kind": "dimension", "effect": "breaks"}])
+assert {k_: tied_d[k_] for k_ in ("same", "changed", "added", "removed")} == moved_d, tied_d
+add(edit_cases, "yolu değiştir, fark: gidecek parçaya bağlı ölçü kopar, başka parçaya geçmez", [
+    {"op": "plan", "input": {"operation": {"kind": "repath", "name": "Plan", "path": F["plan2.kcad"]}, "diff": True},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID], objects=tied_info["objects"], layers=tied_info["layers"],
+                           nested=tied_info["nested"], diff=tied_d), [ties_break("Plan", tied_d)]),
+     "expect": {"revision": "same", "canUndo": False}},
+    {"op": "execute", "input": {"operation": {"kind": "repath", "name": "Plan", "path": F["plan2.kcad"]}, "diff": True},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID], objects=tied_info["objects"], layers=tied_info["layers"],
+                           nested=tied_info["nested"], diff=tied_d), [ties_break("Plan", tied_d)]),
+     "expect": {"entities": {"3": TIED_AFTER}, "canUndo": True}},
+    {"op": "undo", "returns": "Dış başvurunun yolunu değiştir: Plan", "expect": {"entities": {"3": TIED_DIM}}},
+], setup=TIED, note="Kapının merkezi (2, 1) yerinde kalır, yeri 1 olur: ölçünün a ucu onu izler. Duvar 2 yok: b ucu "
+                    "yerinde kalır ve piece_gone der (ADR 0315 §1); duvar 2'nin yeri ve yerel kimliği başka parçaya geçmez.")
+
+# The definition's persistent ids not the source's (a source giving none, or new ones every time): found by content.
+UNKNOWN = with_ids(copy.deepcopy(ATTACHED))
+for b in UNKNOWN["blocks"]:
+    if b["name"] == "Plan":
+        b["xref"]["objects"] = [uid(7001 + k_) for k_ in range(len(b["entities"]))]
+unknown_r, unknown_ri = load(UNKNOWN, PLAN, "Plan", SETUP_IDS[PLAN_ID], xref_of("plan.kcad"))
+unknown_rd = diff_of(UNKNOWN, unknown_r, SETUP_IDS[PLAN_ID])
+assert unknown_rd == {"same": 6, "changed": 0, "added": 0, "removed": 0}, unknown_rd
+assert [e["id"] for e in by_id(unknown_r)[SETUP_IDS[PLAN_ID]]["entities"]] == [1, 2, 3, 4, 5, 6]
+add(edit_cases, "kimliği tanınmayan nesneler içerikleriyle bulunur: yerel kimlikleri kalır", [
+    {"op": "execute", "input": {"operation": {"kind": "reload", "name": "Plan"}, "diff": True},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID], objects=unknown_ri["objects"], nested=unknown_ri["nested"],
+                           diff=unknown_rd), [LEFT]),
+     "expect": expect(unknown_r, canUndo=True)},
+], setup=UNKNOWN, note="Kaynağın kalıcı kimlikleri tanımınkilerle eşleşmiyor (kimlik vermeyen ya da her okumada yenisini "
+                       "veren kaynak); her nesne aynı içerikli eski parçanın yerel kimliğini alır, kimlikler kaynağınki olur.")
+unknown_p, unknown_pi = load(UNKNOWN, PLAN2, "Plan", SETUP_IDS[PLAN_ID], xref_of("plan2.kcad"))
+unknown_pd = diff_of(UNKNOWN, unknown_p, SETUP_IDS[PLAN_ID])
+assert unknown_pd == {"same": 4, "changed": 0, "added": 2, "removed": 2}, unknown_pd
+assert [e["id"] for e in by_id(unknown_p)[SETUP_IDS[PLAN_ID]]["entities"]] == [1, 7, 4, 5, 6, 8]
+add(edit_cases, "kimliği tanınmayan nesneler: değişen nesne yeni sayılır, eskisinin kimliği kimseye verilmez", [
+    {"op": "execute", "input": {"operation": {"kind": "repath", "name": "Plan", "path": F["plan2.kcad"]}, "diff": True},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID], objects=unknown_pi["objects"], layers=unknown_pi["layers"],
+                           nested=unknown_pi["nested"], diff=unknown_pd)),
+     "expect": expect(unknown_p)},
+], setup=UNKNOWN, note="Kalıcı kimlik olmadan değişen kapı yayı ile giden duvar ayırt edilemez: ikisi de gitmiş (2, 3), "
+                       "yeni yay 7, merdiven 8 sayılır; onlara bağlı bağlar kopar, sessizce başkasına geçmez.")
+
+# A reference three deep: the drawing attaches Zincir, which brought Bina, which brought Kat.
+chained, chain_answer, chain_info = attached(OURS, key="zincir.kcad", name="Zincir", ident="$blockOf:Zincir")
+assert chain_info["nested"] == ["Zincir|Bina", "Zincir|Bina|Kat"], chain_info
+assert by_id(chained)["$blockOf:Zincir|Bina|Kat"]["xref"]["parent"] == "$blockOf:Zincir|Bina"
+add(edit_cases, "iç içe üç düzey: getiren zinciri korunur", [
+    {"op": "execute", "input": {"operation": attach_op("zincir.kcad", name="Zincir")}, "result": done(chain_answer),
+     "expect": expect(chained, canUndo=True)},
+], note="Kat'ı kaynağında Bina getirmişti; burada da Bina'nın kopyası getirir (derinlik 2), Zincir değil.")
+
+# ── layers back to the source's (ADR 1060 §5) ─────────────────────────
+
+
+def node_at(doc, *names):
+    return next(n for n, here in x.walk(doc["layers"]) if here == names)
+
+
+LOOKED = with_ids(copy.deepcopy(ATTACHED))
+node_at(LOOKED, "Dış başvuru: Plan", "Mimari", "Duvar")["style"] = st("#FF0000", 0.7)
+node_at(LOOKED, "Dış başvuru: Plan", "Mimari", "Kapı")["visible"] = False
+node_at(LOOKED, "Dış başvuru: Plan", "Yazı")["locked"] = True
+RESET_BACK = with_ids(copy.deepcopy(ATTACHED))
+STYLE_UNDONE = copy.deepcopy(RESET_BACK)
+node_at(STYLE_UNDONE, "Dış başvuru: Plan", "Mimari", "Duvar")["style"] = st("#FF0000", 0.7)
+add(edit_cases, "katmanları kaynağa döndür: rengi, görünürlüğü ve kilidi kaynağınki olur; rengi tek adımda geri alınır", [
+    {"op": "execute", "input": {"operation": {"kind": "resetLayers", "name": "Plan"}},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID], reset=["Duvar", "Kapı", "Yazı"])),
+     "expect": {"layers": RESET_BACK["layers"], "canUndo": True}},
+    {"op": "undo", "returns": "Katmanları kaynağa döndür: Plan", "expect": {"layers": STYLE_UNDONE["layers"]}},
+], setup=LOOKED, note="Görünürlük, kilit, dondurma ve yazdırma katman ağacının kendi bayraklarıdır, geri alma adımı "
+                      "değildir (ADR 0248 §2); renk, çizgi tipi ve kalınlık adımdır.")
+add(edit_cases, "katmanları kaynağa döndür: plan söyler, yazmaz", [
+    {"op": "plan", "input": {"operation": {"kind": "resetLayers", "name": "Plan"}},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID], reset=["Duvar", "Kapı", "Yazı"])),
+     "expect": {"layers": LOOKED["layers"], "canUndo": False, "revision": "same"}},
+], setup=LOOKED)
+add(edit_cases, "katmanları kaynağa döndür: zaten kaynağınki gibiyse hiçbir şey yazılmaz", [
+    {"op": "execute", "input": {"operation": {"kind": "resetLayers", "name": "Plan"}},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID])),
+     "expect": {"layers": RESET_BACK["layers"], "canUndo": False, "revision": "same"}},
+], setup=with_ids(copy.deepcopy(ATTACHED)))
+add(edit_cases, "katmanları kaynağa döndür: iç içe gelen kendi başına değil", [
+    {"op": "execute", "input": {"operation": {"kind": "resetLayers", "name": "Plan|Detay"}},
+     "result": failed("nested_xref", "“Plan|Detay” dış başvurusunu “Plan” getirdi; kendi başına değiştirilemez. Onu getireni yeniden yükleyin, boşaltın ya da kaldırın.",
+                      "operation.name"),
+     "expect": {"revision": "same", "canUndo": False}},
+], setup=LOOKED)
+add(edit_cases, "katmanları kaynağa döndür: kaynak bulunamazsa", [
+    {"op": "execute", "input": {"operation": {"kind": "resetLayers", "name": "Plan"}},
+     "result": failed("file_not_found", "“Plan” dış başvurusunun kaynağı bulunamadı; katmanları kaynağa döndürmek için önce Yolu değiştir… ile bağlayın.",
+                      "operation.name"),
+     "expect": {"revision": "same", "canUndo": False}},
+], setup=MISSING)
+add(edit_cases, "katmanları kaynağa döndür: olmayan dış başvuru", [
+    {"op": "execute", "input": {"operation": {"kind": "resetLayers", "name": "Yok"}},
+     "result": failed("xref_not_found", "“Yok” adlı dış başvuru yok. Dış başvurular penceresindeki adı verin.", "operation.name"),
+     "expect": NOTHING},
+])
+
 # ── list ─────────────────────────────────────────────────────────────────
 
 
@@ -1020,11 +1278,14 @@ add(list_cases, "değişen yolun göreli yolu varken dosyanın kendisi önce", [
                            relative="plan.kcad", inserts=1, objects=1))},
 ], setup=setup_with([("Plan", {"path": F["plan2.kcad"], "relative": "plan.kcad", "digest": DIGEST["plan.kcad"]})]))
 
-add(list_cases, "değişti: göreli yolda bulunan dosya da özetiyle denetlenir", [
+add(list_cases, "göreli yolda bulunan başka içerikli dosya bağlanmaz: bulunamadı, özeti farklı diye söylenir", [
     {"op": "execute", "input": {"drawing": DRAWING},
-     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan2.kcad"], "changed",
-                           relative="plan2.kcad", inserts=1, objects=1, via="relative"))},
-], setup=setup_with([("Plan", {"path": "/yok/plan2.kcad", "relative": "plan2.kcad", "digest": DIGEST["plan.kcad"]})]))
+     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", "/yok/plan2.kcad", "missing",
+                           relative="plan2.kcad", inserts=1, objects=1,
+                           tried=["/yok/plan2.kcad", "$fixture:xref/v1/plan2.kcad (içerik özeti farklı)"]))},
+], setup=setup_with([("Plan", {"path": "/yok/plan2.kcad", "relative": "plan2.kcad", "digest": DIGEST["plan.kcad"]})]),
+   note="Kayıtlı mutlak yol yokken göreli yoldaki dosya yalnız son yüklenen baytlarsa kaynaktır (CAD-ADV-14, 5 Kasım); "
+        "başka revizyonu incelemede adıyla aday olur, Yolu değiştir ile bağlanır.")
 UNPLACED = setup_with([("Plan", {"path": F["plan.kcad"], "digest": DIGEST["plan.kcad"]})])
 UNPLACED["entities"] = UNPLACED["entities"][:1]
 add(list_cases, "yerleştirmesi silinmiş dış başvuru sıfır yerleştirmeyle kalır", [
@@ -1079,6 +1340,106 @@ add(list_cases, "etkilenenler: yerleştirmesi olmayanın görünümü yok", [
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
                            inserts=0, objects=1))},
 ], setup={**UNPLACED, "settings": VIEWS["settings"]})
+
+
+# ── review (ADR 1060 §1, §2) ────────────────────────────────────────────
+
+
+def reviewed(item, digest, *, depth=0, content="source", current=None, brings=(), states=(), candidates=()):
+    """A listed reference with what `review` adds."""
+    out = {**item, "digest": digest, "depth": depth, "content": content}
+    if current is not None:
+        out["current"] = current
+    if brings:
+        out["brings"] = list(brings)
+    if states:
+        out["layerStates"] = list(states)
+    if candidates:
+        out["candidates"] = list(candidates)
+    return out
+
+
+def candidate(key, match):
+    return {"path": F[key], "match": match, "digest": DIGEST[key]}
+
+
+B0, B1, B2 = ("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7401",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7402")
+add(list_cases, "inceleme: yüklü dış başvurunun kullanılan revizyonu, derinliği ve içeriği", [
+    {"op": "execute", "input": {"review": True},
+     "result": listed(reviewed(info("Plan", B0, "attach", F["plan.kcad"], "loaded", inserts=1, objects=1),
+                               DIGEST["plan.kcad"]))},
+], setup=LOADED)
+add(list_cases, "inceleme: değişen kaynağın şimdiki özeti; çizim son yüklenen kopyayı gösterir, aynı içerikli dosya aday", [
+    {"op": "execute", "input": {"review": True},
+     "result": listed(reviewed(info("Plan", B0, "attach", F["plan2.kcad"], "changed", inserts=1, objects=1),
+                               DIGEST["plan.kcad"], content="cached", current=DIGEST["plan2.kcad"],
+                               candidates=[candidate("plan.kcad", "content")]))},
+], setup=setup_with([("Plan", {"path": F["plan2.kcad"], "digest": DIGEST["plan.kcad"]})]),
+   note="Kayıtlı yolun klasöründe plan.kcad son yüklenen baytlarla aynı: taşınmış ya da eski revizyonun kopyası; "
+        "bağlanan dosya (plan2.kcad) aday değildir.")
+add(list_cases, "inceleme: yeniden adlandırılan kaynak arama yolunda içeriğiyle aday olur, kendiliğinden bağlanmaz", [
+    {"op": "execute", "input": {"review": True},
+     "result": listed(reviewed(info("Plan", B0, "attach", "/yok/eski-plan.kcad", "missing", inserts=1, objects=1,
+                                    tried=["/yok/eski-plan.kcad", "$fixture:xref/v1/eski-plan.kcad"]),
+                               DIGEST["plan.kcad"], content="cached", candidates=[candidate("plan.kcad", "content")]))},
+], setup={**setup_with([("Plan", {"path": "/yok/eski-plan.kcad", "digest": DIGEST["plan.kcad"]})]),
+          "settings": {**SETTINGS, "xrefPaths": ["$fixture:xref/v1"]}})
+add(list_cases, "inceleme: aynı adlı başka dosya adla, aynı içerikli dosya içerikle aday; önce içerik", [
+    {"op": "execute", "input": {"review": True},
+     "result": listed(reviewed(info("Plan", B0, "attach", "/yok/plan.kcad", "missing", inserts=1, objects=1,
+                                    tried=["/yok/plan.kcad", "$fixture:xref/v1/plan.kcad (içerik özeti farklı)"]),
+                               DIGEST["plan2.kcad"], content="cached",
+                               candidates=[candidate("plan2.kcad", "content"), candidate("plan.kcad", "name")]))},
+], setup={**setup_with([("Plan", {"path": "/yok/plan.kcad", "digest": DIGEST["plan2.kcad"]})]),
+          "settings": {**SETTINGS, "xrefPaths": ["$fixture:xref/v1"]}},
+   note="Arama yolundaki plan.kcad aynı adlı ama başka çizim: bağlanmaz, adayların sonunda adıyla söylenir.")
+add(list_cases, "inceleme: göreli yolun ve açık çizimin klasörü aranır, her klasör bir kez", [
+    {"op": "execute", "input": {"review": True, "drawing": DRAWING},
+     "result": listed(reviewed(info("Plan", B0, "attach", "/yok/eski-plan.kcad", "missing", relative="eski-plan.kcad",
+                                    inserts=1, objects=1, tried=["/yok/eski-plan.kcad", "$fixture:xref/v1/eski-plan.kcad"]),
+                               DIGEST["plan.kcad"], content="cached", candidates=[candidate("plan.kcad", "content")]))},
+], setup=setup_with([("Plan", {"path": "/yok/eski-plan.kcad", "relative": "eski-plan.kcad", "digest": DIGEST["plan.kcad"]})]))
+add(list_cases, "inceleme: boşaltılmışın içeriği yok, dosyasına bakılmaz", [
+    {"op": "execute", "input": {"review": True},
+     "result": listed(reviewed(info("Plan", B0, "attach", "/yok/plan.kcad", "unloaded", inserts=1, objects=0),
+                               DIGEST["plan.kcad"], content="none"))},
+], setup=setup_with([("Plan", {"path": "/yok/plan.kcad", "digest": DIGEST["plan.kcad"], "unloaded": True})]))
+add(list_cases, "inceleme: yüklü olanın adayı aranmaz", [
+    {"op": "execute", "input": {"review": True, "drawing": DRAWING},
+     "result": listed(reviewed(info("Plan", B0, "attach", F["plan.kcad"], "loaded", inserts=1, objects=1),
+                               DIGEST["plan.kcad"]))},
+], setup=LOADED)
+CHAIN3 = setup_with([("Zincir", {"path": F["zincir.kcad"], "digest": DIGEST["zincir.kcad"]}),
+                     ("Zincir|Bina", {"path": "/proje/bina.kcad", "digest": "b1" * 32, "parent": B0}),
+                     ("Zincir|Bina|Kat", {"path": "/proje/kat.kcad", "digest": "c1" * 32, "parent": B1})])
+add(list_cases, "inceleme: üç düzeyli ağ; her biri derinliği ve getirdikleriyle", [
+    {"op": "execute", "input": {"review": True},
+     "result": listed(
+         reviewed(info("Zincir", B0, "attach", F["zincir.kcad"], "loaded", inserts=1, objects=1), DIGEST["zincir.kcad"],
+                  brings=["Zincir|Bina"]),
+         reviewed(info("Zincir|Bina", B1, "attach", "/proje/bina.kcad", "missing", parent="Zincir", objects=1,
+                       tried=["/proje/bina.kcad"]), "b1" * 32, depth=1, content="cached", brings=["Zincir|Bina|Kat"]),
+         reviewed(info("Zincir|Bina|Kat", B2, "attach", "/proje/kat.kcad", "missing", parent="Zincir|Bina", objects=1,
+                       tried=["/proje/kat.kcad"]), "c1" * 32, depth=2, content="cached"))},
+], setup=CHAIN3, note="İç içe olanların içeriği getirenin dosyasından gelmiştir; kendi dosyaları olmasa da çizimde son "
+                      "yüklenen hâlleri vardır (cached).")
+STATES = copy.deepcopy(GROUPED)
+STATES["settings"] = {**SETTINGS, "layerStates": [
+    {"id": "durum-1", "name": "Pafta A", "nodes": [{"node": "xr-d", "visible": False}]},
+    {"id": "durum-2", "name": "Pafta B", "nodes": [{"node": "cizim", "visible": True}]},
+    {"id": "durum-3", "name": "Pafta C", "nodes": [{"node": "xr", "visible": True}, {"node": "cizim", "visible": False}]}]}
+add(list_cases, "inceleme: dış başvurunun katmanlarını adlandıran katman durumları (paftanın kendi görünüşü)", [
+    {"op": "execute", "input": {"review": True},
+     "result": listed(reviewed(info("Plan", B0, "attach", F["plan.kcad"], "loaded", inserts=1, objects=1,
+                                    group="Dış başvuru: Plan"), DIGEST["plan.kcad"], states=["Pafta A", "Pafta C"]))},
+], setup=STATES)
+add(list_cases, "inceleme: plan aynı cevabı verir", [
+    {"op": "plan", "input": {"review": True},
+     "result": listed(reviewed(info("Plan", B0, "attach", F["plan.kcad"], "loaded", inserts=1, objects=1),
+                               DIGEST["plan.kcad"])),
+     "expect": {"canUndo": False, "revision": "same"}},
+], setup=LOADED)
 
 
 def resolved(v):

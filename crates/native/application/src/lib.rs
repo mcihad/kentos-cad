@@ -452,6 +452,7 @@ pub mod sheets_set;
 pub mod pdf_underlay;
 pub mod xrefs;
 mod xrefs_bind;
+pub mod xrefs_review;
 pub mod links;
 pub mod assets_check;
 pub mod images_edit;

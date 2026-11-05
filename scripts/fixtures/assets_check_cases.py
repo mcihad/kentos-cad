@@ -96,9 +96,64 @@ def find(path, relative, drawing, search):
     return None, "none", tried
 
 
+DIFFERENT = " (içerik özeti farklı)"
+
+
+def find_xref(path, relative, drawing, search, digest):
+    """An external reference's source (ADR 0349 §1 with the content rule of plan/cad-advanced.md CAD-ADV-14 and ADR 1060
+    §6): its kept absolute path as it is (an intended source may be a new revision); a fallback (its relative path when
+    the kept path is absolute, the search paths, last the drawing's own folder by the file's name) only when its
+    SHA-256 is the one kept, else said with “içerik özeti farklı” and passed over."""
+    tried = []
+
+    def seen(p):
+        return any(t == p or t.startswith(p + " (") for t in tried)
+
+    absolute = path.startswith("/") or path.startswith("$fixture:")
+    if absolute:
+        tried.append(path)
+        if is_file(path):
+            return path, "path", []
+    folder = posixpath.dirname(drawing) if drawing else None
+    rel = relative if relative is not None else (None if absolute or not path.strip() else path)
+    if folder and rel:
+        p = join(folder, rel)
+        if not seen(p):
+            if is_file(p) and (not absolute or sha(p) == digest):
+                return p, "relative", []
+            tried.append(p + DIFFERENT if is_file(p) else p)
+    name = posixpath.basename(path)
+    for root in search:
+        base = root if (root.startswith("/") or root.startswith("$fixture:")) else (join(folder, root) if folder else None)
+        if base is None:
+            continue
+        for p in ([join(base, rel)] if rel else []) + [f"{base}/{name}"]:
+            if seen(p):
+                continue
+            if is_file(p):
+                if sha(p) == digest:
+                    return p, "searchPath", []
+                tried.append(p + DIFFERENT)
+            else:
+                tried.append(p)
+    if folder:
+        p = f"{folder}/{name}"
+        if not seen(p):
+            if is_file(p):
+                if sha(p) == digest:
+                    return p, "relative", []
+                tried.append(p + DIFFERENT)
+            else:
+                tried.append(p)
+    return None, "none", tried
+
+
 def status(kind, path, *, relative=None, drawing=None, search=(), digest=None, digests=True, uid=None, block=None,
            source=None, name=None):
-    found, via, tried = find(path, relative, drawing, list(search))
+    if kind == "xref":
+        found, via, tried = find_xref(path, relative, drawing, list(search), digest)
+    else:
+        found, via, tried = find(path, relative, drawing, list(search))
     current = None
     if found is None:
         state = "missing"
@@ -291,12 +346,25 @@ add("değişmiş dış başvuru", drawing([insert(XREF_ID)], blocks=[xref_block(
 add("boşaltılmış dış başvurunun dosyasına bakılmaz", drawing([insert(XREF_ID)], blocks=[xref_block("/yok/plan.kcad", PLAN_SHA, unloaded=True)]), {},
     [{"kind": "xref", "block": XREF_ID, "name": "Plan", "path": "/yok/plan.kcad", "via": "none", "state": "unloaded",
       "digest": PLAN_SHA}])
-add("bulunamayan dış başvuru: kayıtlı yol, göreli yol ve arama yolları denenir",
-    drawing([insert(XREF_ID)], blocks=[xref_block("/yok/plan.kcad", PLAN_SHA, relative="mimari/plan.kcad")],
+add("bulunamayan dış başvuru: kayıtlı yol, göreli yol, arama yolları ve açık çizimin klasörü denenir",
+    drawing([insert(XREF_ID)], blocks=[xref_block("/yok/plan.kcad", "2" * 64, relative="mimari/plan.kcad")],
             settings={"xrefPaths": ["/ortak", "eski"]}),
     {"drawing": fx("xref/v1/ana.kcad")},
     [status("xref", "/yok/plan.kcad", relative="mimari/plan.kcad", drawing=fx("xref/v1/ana.kcad"), search=["/ortak", "eski"],
+            digest="2" * 64, block=XREF_ID, name="Plan")],
+    note="Açık çizimin klasöründeki plan.kcad aynı adlı başka içerik: bağlanmaz, denenenlerde söylenir (ADR 1060 §6).")
+add("dış başvuru açık çizimin klasöründe adıyla, içeriği son yüklenenle aynıysa bulunur (paketin veri klasörü)",
+    drawing([insert(XREF_ID)], blocks=[xref_block("/yok/plan.kcad", PLAN_SHA, relative="mimari/plan.kcad")],
+            settings={"xrefPaths": ["/ortak"]}),
+    {"drawing": fx("xref/v1/ana.kcad")},
+    [status("xref", "/yok/plan.kcad", relative="mimari/plan.kcad", drawing=fx("xref/v1/ana.kcad"), search=["/ortak"],
             digest=PLAN_SHA, block=XREF_ID, name="Plan")])
+add("dış başvurunun göreli yolundaki başka içerikli dosya bağlanmaz",
+    drawing([insert(XREF_ID)], blocks=[xref_block("/yok/plan2.kcad", PLAN_SHA, relative="plan2.kcad")]),
+    {"drawing": fx("xref/v1/ana.kcad")},
+    [status("xref", "/yok/plan2.kcad", relative="plan2.kcad", drawing=fx("xref/v1/ana.kcad"), digest=PLAN_SHA,
+            block=XREF_ID, name="Plan")],
+    note="Kayıtlı mutlak yol yokken göreli yoldaki dosya bir yedektir: özeti son yüklenenle aynı olmalı (CAD-ADV-14).")
 add("dış başvuru mutlak arama yolunda adıyla bulunur",
     drawing([insert(XREF_ID)], blocks=[xref_block("/yok/plan.kcad", PLAN_SHA)], settings={"xrefPaths": [fx("xref/v1")]}), {},
     [status("xref", "/yok/plan.kcad", search=[fx("xref/v1")], digest=PLAN_SHA, block=XREF_ID, name="Plan")])

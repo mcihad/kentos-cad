@@ -38,4 +38,4 @@ layerId: string,
 /**
  * A PDF file's page to underlay, from 1 (docs/adr/0351 §2); absent for a PDF: its first page.
  */
-page?: number, } | { "kind": "reload", name: string, } | { "kind": "unload", name: string, } | { "kind": "repath", name: string, path: string, } | { "kind": "detach", name: string, } | { "kind": "paths", paths: Array<string>, } | { "kind": "underlay", name: string, fade?: number, monochrome?: boolean, plot?: boolean, } | { "kind": "bind", name: string, mode?: XrefBindMode, };
+page?: number, } | { "kind": "reload", name: string, } | { "kind": "unload", name: string, } | { "kind": "repath", name: string, path: string, } | { "kind": "detach", name: string, } | { "kind": "paths", paths: Array<string>, } | { "kind": "underlay", name: string, fade?: number, monochrome?: boolean, plot?: boolean, } | { "kind": "resetLayers", name: string, } | { "kind": "bind", name: string, mode?: XrefBindMode, };
