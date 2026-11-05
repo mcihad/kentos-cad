@@ -68,6 +68,14 @@ pub(crate) const PREVIOUS: &str = "Önceki ölçü";
 /// The comparison's list and form section (docs/adr/0943).
 pub(crate) const COMPARE: &str = "Karşılaştırma";
 pub(crate) const ALTERNATIVES: &str = "Alternatifler";
+/// The ledger's lists and form fields (docs/adr/0949).
+pub(crate) const LEDGER: &str = "Defter";
+pub(crate) const LARGEST: &str = "En büyük aralıklar";
+pub(crate) const LEDGER_STEP: &str = "Dilim (m)";
+pub(crate) const LEDGER_BY: &str = "Gruplama";
+pub(crate) const ROUNDING: &str = "Yuvarlama";
+const GROUPINGS: [&str; 2] = ["Km dilimleri", "Bölgeler"];
+const DECIMALS: [&str; 4] = ["Tam sayı", "1 basamak", "2 basamak", "3 basamak"];
 /// The previous survey's “none”.
 const NO_PREVIOUS: &str = "Yok (ilk araziden bu yana)";
 
@@ -96,6 +104,9 @@ pub enum Shown {
     Progress,
     /// The chosen volume against its alternatives (docs/adr/0943).
     Compare,
+    /// The total by km, region and material, and the largest stretches (docs/adr/0949).
+    Ledger,
+    Largest,
 }
 
 impl std::fmt::Display for Shown {
@@ -107,6 +118,8 @@ impl std::fmt::Display for Shown {
             Shown::Budget => BUDGET,
             Shown::Progress => PROGRESS,
             Shown::Compare => COMPARE,
+            Shown::Ledger => LEDGER,
+            Shown::Largest => LARGEST,
         })
     }
 }
@@ -275,6 +288,11 @@ pub struct Window {
     pub(crate) alternatives: Vec<String>,
     pub(crate) comparison: Option<Result<(kentos_commands::VolumesCompared, Vec<CommandWarning>), String>>,
     pub(crate) traces: Vec<kentos_native_application::road_volumes_compare::Trace>,
+    /// The ledger asked (docs/adr/0949): the km step, by regions instead, the rounding's decimals; read while shown.
+    pub(crate) ledger_step: String,
+    pub(crate) ledger_regions: bool,
+    pub(crate) ledger_decimals: u32,
+    pub(crate) ledger: Option<Result<(kentos_commands::VolumeLedgerRead, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -299,6 +317,10 @@ pub enum Event {
     Previous(Option<String>),
     /// A saved volume compared with the chosen one, or not (docs/adr/0943).
     Alternative(String, bool),
+    /// The ledger's step, grouping and decimals (docs/adr/0949).
+    LedgerStep(String),
+    LedgerRegions(bool),
+    LedgerDecimals(u32),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
     Factor(usize, usize, String),
     /// A strip row's from (0), to (1) or depth (2).
@@ -359,6 +381,10 @@ impl App {
             alternatives: Vec::new(),
             comparison: None,
             traces: Vec::new(),
+            ledger_step: "100".into(),
+            ledger_regions: false,
+            ledger_decimals: 2,
+            ledger: None,
         }));
         self.dialog = Some(Dialog::Volumes);
         self.refresh_volume();
@@ -430,6 +456,27 @@ impl App {
         w.traces = match &w.comparison {
             Some(Ok(_)) => kentos_native_application::road_volumes_compare::traces(&doc.model, &input),
             _ => Vec::new(),
+        };
+        // The ledger, while it is shown: it computes the volume once more.
+        let shown = matches!(w.shown, Shown::Ledger | Shown::Largest);
+        w.ledger = match (shown, &w.preview.report, r.def()) {
+            (true, Some(_), Ok(def)) => Some(match number(&w.ledger_step) {
+                Err(()) => Err(format!("{LEDGER_STEP} bir sayı olmalı.")),
+                Ok(step) => {
+                    let input = kentos_commands::VolumesLedger {
+                        volume: def.id.clone(),
+                        by: if w.ledger_regions {
+                            kentos_commands::LedgerBy::Regions
+                        } else {
+                            kentos_commands::LedgerBy::Stations { step: step.unwrap_or(100.0) }
+                        },
+                        top: Some(10),
+                        decimals: Some(w.ledger_decimals),
+                    };
+                    kentos_native_application::road_volumes_ledger::preview_of(&doc.model, &def, &input)
+                }
+            }),
+            _ => None,
         };
     }
 
@@ -593,6 +640,18 @@ impl App {
                 w.survey = id;
             }
             Event::Previous(id) => w.previous = id,
+            Event::LedgerStep(t) => {
+                w.ledger_step = t;
+                w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
+            }
+            Event::LedgerRegions(on) => {
+                w.ledger_regions = on;
+                w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
+            }
+            Event::LedgerDecimals(d) => {
+                w.ledger_decimals = d.min(3);
+                w.shown = Shown::Ledger;
+            }
             Event::Alternative(id, on) => {
                 w.alternatives.retain(|a| *a != id);
                 if on {
@@ -785,8 +844,13 @@ impl App {
             .ghost(REVOKE, approved.then(|| msg(Event::Approve(false))));
         let works = w.progress.as_ref().and_then(|p| p.as_ref().ok()).filter(|_| w.shown == Shown::Progress);
         let plans = (w.shown == Shown::Compare && !w.traces.is_empty()).then_some(&w.traces);
+        let book = w.ledger.as_ref().and_then(|l| l.as_ref().ok()).filter(|_| matches!(w.shown, Shown::Ledger | Shown::Largest));
         if chosen.is_some() {
             d = match (works, plans) {
+                _ if book.is_some() => {
+                    let (read, _) = book.expect("checked");
+                    d.picture(iced::widget::canvas(Book { read }).width(Fill).height(Fill), 190.0)
+                }
                 (Some((p, _)), _) => d.picture(iced::widget::canvas(Works { report: p }).width(Fill).height(Fill), 190.0),
                 (None, Some(tr)) => d.picture(iced::widget::canvas(Departures { traces: tr }).width(Fill).height(Fill), 190.0),
                 _ => d.picture(iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(Fill), 190.0),
@@ -865,6 +929,11 @@ impl App {
                         }
                         None => {}
                     }
+                    match &w.ledger {
+                        Some(Err(e)) => d = d.note(Banner::error(e.clone())),
+                        Some(Ok((l, _))) => d = d.note(Banner::info(ledger_words(l))),
+                        None => {}
+                    }
                     let mut options = vec![Shown::Sheet];
                     if !rep.layers.is_empty() {
                         options.push(Shown::Layers);
@@ -878,8 +947,15 @@ impl App {
                     if comparison.is_some() {
                         options.push(Shown::Compare);
                     }
+                    options.push(Shown::Ledger);
+                    options.push(Shown::Largest);
                     let now = if options.contains(&w.shown) { w.shown } else { Shown::Sheet };
                     let list: Element<'_, Message> = match (now, budget, progress, comparison) {
+                        (Shown::Ledger | Shown::Largest, _, _, _) => match &w.ledger {
+                            Some(Ok((l, _))) if now == Shown::Ledger => ledger_table(l),
+                            Some(Ok((l, _))) => largest_table(l),
+                            _ => label::caption("Defter okunamadı; nedeni yukarıda.").into(),
+                        },
                         (Shown::Layers, _, _, _) => layers_table(rep),
                         (Shown::Budget, Some((b, _)), _, _) => budget_table(b),
                         (Shown::Progress, _, Some((p, _)), _) => progress_table(p),
@@ -1032,6 +1108,20 @@ impl App {
                 .field(PREVIOUS, on_previous)
                 .help("Bir önceki hakedişin ölçüsü: dönemin işi iki ölçünün birikmiş işlerinin farkıdır.")
         };
+        // The ledger (docs/adr/0949): how the total is taken apart.
+        let on_by = Select::new(GROUPINGS.map(Choice::new), Some(usize::from(w.ledger_regions)), |i| msg(Event::LedgerRegions(i == 1)));
+        let on_decimals =
+            Select::new(DECIMALS.map(Choice::new), Some(w.ledger_decimals as usize), |i| msg(Event::LedgerDecimals(i as u32)));
+        form = form.section(LEDGER).field(LEDGER_BY, on_by);
+        if !w.ledger_regions {
+            form = form.field(
+                LEDGER_STEP,
+                kentos_ui::widget::text_field("100", &w.ledger_step).on_input(|t| msg(Event::LedgerStep(t))),
+            );
+        }
+        form = form
+            .field(ROUNDING, on_decimals)
+            .help("Toplamı km dilimine, bölgeye ve malzemeye göre döker; aralıklar ortalarından bütün alınır, gruplar toplamı tam verir. Rapor toplamı yuvarlanmamış değerden yazılır.");
         // The alternatives: the other saved volumes, each with a switch.
         form = form.section(ALTERNATIVES);
         let saved = w.kept.iter().any(|k| k.id == r.id);
@@ -1077,6 +1167,14 @@ impl App {
             Control::Press(BUDGET) => Some(msg(Event::View(Shown::Budget))),
             Control::Press(PROGRESS) => Some(msg(Event::View(Shown::Progress))),
             Control::Press(COMPARE) => Some(msg(Event::View(Shown::Compare))),
+            Control::Press(LEDGER) => Some(msg(Event::View(Shown::Ledger))),
+            Control::Press(LARGEST) => Some(msg(Event::View(Shown::Largest))),
+            Control::Fill(LEDGER_STEP, text) => Some(msg(Event::LedgerStep(text.to_owned()))),
+            Control::Pick(LEDGER_BY, words) => Some(msg(Event::LedgerRegions(words == GROUPINGS[1]))),
+            Control::Pick(ROUNDING, words) => {
+                let k = DECIMALS.iter().position(|d| *d == words).ok_or_else(|| format!("“{words}” diye bir yuvarlama yok"))?;
+                Some(msg(Event::LedgerDecimals(k as u32)))
+            }
             Control::Fill(name, on) if w.kept.iter().any(|k| k.name == name) => {
                 let id = w.kept.iter().find(|k| k.name == name).map(|k| k.id.clone()).unwrap_or_default();
                 Some(msg(Event::Alternative(id, on == "açık")))
@@ -1655,6 +1753,227 @@ impl canvas::Program<Message> for Departures<'_> {
             lx += 18.0 + 6.4 * r.name.chars().count() as f32 + 24.0;
         }
         caption(&mut frame, "Kesikli: 1 cm tolerans · yatay: alternatifin istasyonu".into(), Point::new(lx, base), t.muted);
+        vec![frame.into_geometry()]
+    }
+}
+
+/// A residue in m³ with its sign at `decimals`: “0”, “+1”, “−0,01”.
+fn residue(v: f64, decimals: u32) -> String {
+    let d = decimals as usize;
+    if v.abs() < 0.5 * 10f64.powi(-(decimals as i32)) {
+        "0".into()
+    } else if v < 0.0 {
+        format!("−{}", grouped(-v, d))
+    } else {
+        format!("+{}", grouped(v, d))
+    }
+}
+
+/// The ledger in a sentence (docs/adr/0949): the heaviest group of the cut and the fill, how the cut crowds, the
+/// largest stretch and why, the rounding's residue.
+fn ledger_words(l: &kentos_commands::VolumeLedgerRead) -> String {
+    let mut out = String::new();
+    for (k, word) in [(0usize, "Kazının"), (1, "Dolgunun")] {
+        if let Some(g) = l.groups.iter().filter(|g| g.shares[k].is_some()).max_by(|a, b| a.values[k].total_cmp(&b.values[k])) {
+            out += &format!("{word} %{} kadarı {} grubunda. ", grouped(100.0 * g.shares[k].unwrap_or(0.0), 1), g.label);
+        }
+    }
+    if let Some(c) = l.concentration.iter().find(|c| c.column == "cut") {
+        out += &format!(
+            "Yolun %{}'i kazının yarısını taşıyor (Gini {}). ",
+            grouped(100.0 * c.half, 1),
+            grouped(c.gini, 2)
+        );
+    }
+    if let Some(s) = l.top.iter().find(|t| t.column == "cut").and_then(|t| t.stretches.first()) {
+        let why = if s.reason == "section" {
+            format!("kesiti medyanın {} katı", grouped(s.area_factor, 1))
+        } else {
+            format!("boyu medyanın {} katı", grouped(s.length_factor, 1))
+        };
+        out += &format!("En büyük kazı aralığı {} – {}: %{}, {why}. ", s.from_text, s.to_text, grouped(100.0 * s.share, 1));
+    }
+    let off: Vec<String> = l
+        .columns
+        .iter()
+        .filter(|c| c.residue.abs() >= 0.5 * 10f64.powi(-(l.decimals as i32)))
+        .map(|c| format!("{} {} m³", c.words.to_lowercase(), residue(c.residue, l.decimals)))
+        .collect();
+    if off.is_empty() {
+        out += "Yuvarlanmış satırlar yuvarlanmış toplamı tutuyor.";
+    } else {
+        out += &format!("Yuvarlanmış satırlar toplamdan farklı: {}; toplam yuvarlanmamış değerden yazılır.", off.join(", "));
+    }
+    out
+}
+
+/// The groups: each column's sum and share; the totals; the rounded rows' residue.
+fn ledger_table(l: &kentos_commands::VolumeLedgerRead) -> Element<'_, Message> {
+    use road_dialog::{col, num};
+    let d = l.decimals as usize;
+    let extra: Vec<usize> = (4..l.columns.len()).collect();
+    let mut cols = vec![col("Grup", 150.0), num("Kazı (m³)", 96.0), num("Pay", 56.0), num("Dolgu (m³)", 96.0), num("Pay", 56.0)];
+    for &k in &extra {
+        cols.push(num(&l.columns[k].words, 110.0));
+    }
+    let share = |v: Option<f64>| v.map_or_else(|| "—".into(), |s| format!("%{}", grouped(100.0 * s, 1)));
+    let mut rows: Vec<Vec<String>> = l
+        .groups
+        .iter()
+        .map(|g| {
+            let mut r = vec![g.label.clone(), grouped(g.values[0], d), share(g.shares[0]), grouped(g.values[1], d), share(g.shares[1])];
+            for &k in &extra {
+                r.push(grouped(g.values[k], d));
+            }
+            r
+        })
+        .collect();
+    let mut total = vec!["Toplam".into(), grouped(l.columns[0].total, d), "%100".into(), grouped(l.columns[1].total, d), "%100".into()];
+    let mut off = vec!["Yuvarlanmış satırlar farkı".into(), residue(l.columns[0].residue, l.decimals), String::new(), residue(l.columns[1].residue, l.decimals), String::new()];
+    for &k in &extra {
+        total.push(grouped(l.columns[k].total, d));
+        off.push(residue(l.columns[k].residue, l.decimals));
+    }
+    rows.push(total);
+    rows.push(off);
+    road_dialog::sheet_fill(cols, rows, "Grup yok")
+}
+
+/// The cut's and the fill's largest stretches, with why each is large.
+fn largest_table(l: &kentos_commands::VolumeLedgerRead) -> Element<'_, Message> {
+    use road_dialog::{col, num};
+    let rows: Vec<Vec<String>> = l
+        .top
+        .iter()
+        .flat_map(|t| {
+            let word = if t.column == "cut" { "Kazı" } else { "Dolgu" };
+            t.stretches.iter().map(move |s| {
+                vec![
+                    word.to_owned(),
+                    format!("{} – {}", s.from_text, s.to_text),
+                    grouped(s.volume, 1),
+                    format!("%{}", grouped(100.0 * s.share, 1)),
+                    format!("%{}", grouped(100.0 * s.cumulative, 1)),
+                    grouped(s.length, 1),
+                    grouped(s.mean_area, 1),
+                    format!("{}×", grouped(s.length_factor, 2)),
+                    format!("{}×", grouped(s.area_factor, 2)),
+                    if s.reason == "section" { "kesit" } else { "boy" }.to_owned(),
+                ]
+            })
+        })
+        .collect();
+    road_dialog::sheet_fill(
+        vec![
+            col("Sütun", 58.0),
+            col("Aralık", 170.0),
+            num("Hacim (m³)", 90.0),
+            num("Pay", 56.0),
+            num("Birikimli", 70.0),
+            num("Boy (m)", 64.0),
+            num("Ort. alan (m²)", 92.0),
+            num("Boy / medyan", 92.0),
+            num("Alan / medyan", 96.0),
+            col("Neden", 56.0),
+        ],
+        rows,
+        "Hacimli aralık yok",
+    )
+}
+
+/// The ledger drawn (docs/adr/0949): each group's cut above and fill below the axis with their shares; beside, the cut's
+/// and the fill's concentration along the road against the even spread.
+struct Book<'a> {
+    read: &'a kentos_commands::VolumeLedgerRead,
+}
+
+impl canvas::Program<Message> for Book<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let t = Tokens::of(theme);
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let l = self.read;
+        let small = Pixels(typography::caption());
+        let text = |frame: &mut canvas::Frame, words: String, at: Point, color: Color, center: bool| {
+            frame.fill_text(Text {
+                content: words,
+                position: at,
+                color,
+                size: small,
+                font: typography::ui(),
+                align_x: if center { iced::alignment::Horizontal::Center.into() } else { iced::alignment::Horizontal::Left.into() },
+                ..Text::default()
+            });
+        };
+        let split = bounds.width * 0.62;
+        // The groups' bars.
+        let n = l.groups.len().max(1);
+        let top = l.groups.iter().map(|g| g.values[0]).fold(0.0, f64::max);
+        let bottom = l.groups.iter().map(|g| g.values[1]).fold(0.0, f64::max);
+        let whole = (top + bottom).max(1e-9);
+        let (left, pad, foot) = (12.0_f32, 22.0_f32, 18.0_f32);
+        let h = bounds.height - 2.0 * pad - foot;
+        let axis = pad + h * (top / whole) as f32;
+        let slot = (split - left - 8.0) / n as f32;
+        let bar = (slot * 0.7).min(56.0);
+        frame.stroke(&Path::line(Point::new(left, axis), Point::new(split - 8.0, axis)), Stroke::default().with_color(t.muted).with_width(1.0));
+        for (i, g) in l.groups.iter().enumerate() {
+            let x = left + slot * (i as f32 + 0.5);
+            for (k, color, up) in [(0usize, t.danger, true), (1, t.accent, false)] {
+                let v = g.values[k];
+                if v <= 0.0 {
+                    continue;
+                }
+                let len = h * (v / whole) as f32;
+                let y = if up { axis - len } else { axis };
+                frame.fill_rectangle(Point::new(x - bar / 2.0, y), iced::Size::new(bar, len), Color { a: 0.85, ..color });
+                if let Some(s) = g.shares[k].filter(|s| *s >= 0.05) {
+                    let at = if up { Point::new(x, y - 15.0) } else { Point::new(x, y + len + 2.0) };
+                    text(&mut frame, format!("%{}", grouped(100.0 * s, 0)), at, color, true);
+                }
+            }
+            // The group's first km under the chart, thinned so they do not run together.
+            let every = ((n as f32 * 70.0 / (split - left)).ceil() as usize).max(1);
+            if i % every == 0 {
+                // A km step's own first km (its first section may lie past it), a region's name.
+                let words = if g.label.starts_with("Bölge") { g.label.clone() } else { g.label.split(" – ").next().unwrap_or(&g.from_text).to_owned() };
+                text(&mut frame, words, Point::new(x, bounds.height - foot), t.muted, true);
+            }
+        }
+        text(&mut frame, "Kazı ↑ · Dolgu ↓ (m³)".into(), Point::new(left, 4.0), t.muted, false);
+        // The concentration: the share of the volume against the share of the road, densest first.
+        let (cx0, cy0) = (split + 34.0, pad);
+        let side = (bounds.width - cx0 - 14.0).min(bounds.height - pad - foot - 8.0).max(40.0);
+        let at = |p: [f64; 2]| Point::new(cx0 + side * p[0] as f32, cy0 + side * (1.0 - p[1]) as f32);
+        frame.stroke(&Path::rectangle(Point::new(cx0, cy0), iced::Size::new(side, side)), Stroke::default().with_color(t.border).with_width(1.0));
+        frame.stroke(
+            &Path::line(at([0.0, 0.0]), at([1.0, 1.0])),
+            Stroke { line_dash: canvas::LineDash { segments: &[4.0, 4.0], offset: 0 }, ..Stroke::default().with_color(t.muted).with_width(1.0) },
+        );
+        let half = at([0.0, 0.5]);
+        frame.stroke(&Path::line(half, Point::new(cx0 + side, half.y)), Stroke::default().with_color(t.faint).with_width(1.0));
+        let mut legend = Vec::new();
+        for c in &l.concentration {
+            let color = if c.column == "cut" { t.danger } else { t.accent };
+            let line = Path::new(|b| {
+                for (j, p) in c.curve.iter().enumerate() {
+                    if j == 0 { b.move_to(at(*p)) } else { b.line_to(at(*p)) }
+                }
+            });
+            frame.stroke(&line, Stroke::default().with_color(color).with_width(2.0));
+            let mark = at([c.half, 0.5]);
+            frame.stroke(&Path::line(mark, at([c.half, 0.0])), Stroke::default().with_color(color).with_width(1.0));
+            frame.fill(&Path::circle(mark, 3.5), color);
+            legend.push((format!("{} {}", if c.column == "cut" { "Kazı" } else { "Dolgu" }, grouped(c.gini, 2)), color));
+        }
+        // The axes in words would not fit a narrow window: the title names the measure, the banner says the shares.
+        text(&mut frame, "Yoğunlaşma (Gini)".into(), Point::new(cx0, 4.0), t.muted, false);
+        for (j, (words, color)) in legend.into_iter().enumerate() {
+            let at = Point::new(cx0 + side - 74.0, cy0 + side - 34.0 + 15.0 * j as f32);
+            frame.fill_rectangle(Point::new(at.x - 10.0, at.y + 6.0), iced::Size::new(8.0, 3.0), color);
+            text(&mut frame, words, at, t.text, false);
+        }
         vec![frame.into_geometry()]
     }
 }

@@ -24,6 +24,13 @@ fn bad(path: &str, words: &str) -> Stop {
 
 fn answer(doc: &Document, input: &VolumesLedger) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
+    let (top, decimals) = judged(input)?;
+    let (_, def) = common::find(doc.road_volumes(), &input.volume, "volume")?;
+    ledger(doc, def, input, top, decimals)
+}
+
+/// The question's own rules: its step, top and decimals; the top and decimals.
+fn judged(input: &VolumesLedger) -> Result<(u32, u32), Stop> {
     if let LedgerBy::Stations { step } = input.by
         && !(step.is_finite() && (1.0..=100_000.0).contains(&step))
     {
@@ -37,7 +44,17 @@ fn answer(doc: &Document, input: &VolumesLedger) -> Result<(VolumeLedgerRead, Ve
     if decimals > 3 {
         return Err(bad("decimals", "yuvarlama en çok 3 basamak olur"));
     }
-    let (_, def) = common::find(doc.road_volumes(), &input.volume, "volume")?;
+    Ok((top, decimals))
+}
+
+/// The ledger of `def` (saved or as typed).
+fn ledger(
+    doc: &Document,
+    def: &kentos_commands::VolumeDef,
+    input: &VolumesLedger,
+    top: u32,
+    decimals: u32,
+) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), Stop> {
     let (report, warnings, alignment) = common::compute_on(doc, def)?;
     let text = |s: f64| km_text(alignment.km(s), 3);
     // The columns: the cut and fill, factored, then the materials the volume has.
@@ -226,4 +243,13 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: VolumesLedger) -> CommandRe
 /// The ledger for a window, or why it does not read.
 pub fn preview(doc: &Document, input: &VolumesLedger) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
+}
+
+/// The ledger of a volume as typed (the desktop's Kübaj window, before it is saved).
+pub fn preview_of(
+    doc: &Document,
+    def: &kentos_commands::VolumeDef,
+    input: &VolumesLedger,
+) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), String> {
+    judged(input).and_then(|(top, decimals)| ledger(doc, def, input, top, decimals)).map_err(crate::road_corridors::words)
 }

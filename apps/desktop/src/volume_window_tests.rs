@@ -668,3 +668,115 @@ fn screens_compare() {
         }
     }
 }
+
+/// The ledger reads the volume as `road.volumes.ledger` does: the shared cases “100 m'lik dilimler”, “Bölgelere göre”
+/// and “Tam sayıya yuvarlama”.
+#[test]
+fn the_window_reads_the_ledger_as_the_shared_cases_do() {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.ledger.json")).expect("cases");
+    let want = |name: &str| {
+        let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).expect("the case");
+        case["steps"][0]["result"]["output"].clone()
+    };
+    let check = |app: &App, name: &str| {
+        let w = app.volume_window.as_ref().unwrap();
+        let (l, _) = w.ledger.clone().expect("asked").expect("reads");
+        let o = want(name);
+        let groups = o["groups"].as_array().unwrap();
+        assert_eq!(l.groups.len(), groups.len(), "{name}");
+        for (g, e) in l.groups.iter().zip(groups) {
+            assert_eq!(g.label, e["label"].as_str().unwrap(), "{name}");
+            for (a, b) in g.values.iter().zip(e["values"].as_array().unwrap()) {
+                assert!((a - b.as_f64().unwrap()).abs() < 1e-6, "{name}: {a} vs {b}");
+            }
+        }
+        for (c, e) in l.columns.iter().zip(o["columns"].as_array().unwrap()) {
+            assert!((c.residue - e["residue"].as_f64().unwrap()).abs() < 1e-9, "{name}: residue");
+        }
+    };
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    assert!(app.volume_window.as_ref().unwrap().ledger.is_none(), "not read until shown");
+    send(&mut app, W::View(crate::volume_window::Shown::Ledger));
+    check(&app, "100 m'lik dilimler");
+    send(&mut app, W::LedgerRegions(true));
+    check(&app, "Bölgelere göre");
+    send(&mut app, W::LedgerRegions(false));
+    send(&mut app, W::LedgerDecimals(0));
+    check(&app, "Tam sayıya yuvarlama");
+    send(&mut app, W::LedgerStep("dilim".into()));
+    let why = match app.volume_window.as_ref().unwrap().ledger.clone() {
+        Some(Err(why)) => why,
+        other => panic!("a step that is no number: {other:?}"),
+    };
+    assert!(why.contains("Dilim"), "{why}");
+}
+
+/// The ledger in Kübaj, light and dark: by 100 m with its bars and concentration, the largest stretches, by regions;
+/// `.run/gui-evidence/yol-y43/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_ledger -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_ledger() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y43");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y43-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        send(&mut app, W::View(crate::volume_window::Shown::Ledger));
+        shot(&mut app, "defter");
+        send(&mut app, W::View(crate::volume_window::Shown::Largest));
+        shot(&mut app, "en-buyuk");
+        send(&mut app, W::View(crate::volume_window::Shown::Ledger));
+        send(&mut app, W::LedgerDecimals(0));
+        send(&mut app, W::LedgerRegions(true));
+        shot(&mut app, "bolgeler");
+    }
+}
+
+/// ROAD-VOL-16 (docs/adr/0949): the sheet's total is the volume's, rounded once, not its rounded rows summed. With
+/// three decimals the main volume's rows add up to the total, but the ledger's whole-m³ case shows they need not.
+#[test]
+fn the_sheet_totals_are_rounded_once() {
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let report = app.volume_window.as_ref().unwrap().preview.report.clone().expect("computes");
+    let sheet = kentos_native_application::road_volumes::sheet(&report);
+    let total = sheet.rows.last().expect("the totals");
+    assert_eq!(total[3], format!("{:.3}", report.cut), "the cut's total is the volume's");
+    assert_eq!(total[4], format!("{:.3}", report.fill), "the fill's total is the volume's");
+    // Rounded to whole m³ the rows' sum is off the total by one: summing them would have been a wrong total.
+    send(&mut app, W::View(crate::volume_window::Shown::Ledger));
+    send(&mut app, W::LedgerDecimals(0));
+    let (l, _) = app.volume_window.as_ref().unwrap().ledger.clone().expect("asked").expect("reads");
+    let rows: f64 = report.rows.iter().filter_map(|r| r.cut).map(f64::round).sum();
+    assert_eq!(rows, l.columns[0].rows_rounded);
+    assert_eq!(l.columns[0].total_rounded, report.cut.round());
+    assert_eq!(l.columns[0].residue, 1.0);
+}

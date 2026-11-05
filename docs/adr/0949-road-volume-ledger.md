@@ -1,6 +1,6 @@
 # 0949 — Kübaj defteri: toplamın nereden geldiği
 
-Tarih: 2026-11-05. Durum: kabul (Y43.1 çekirdek, Y43.2 komut). Kapsam ROAD-VOL-18, ROAD-VOL-16.
+Tarih: 2026-11-05. Durum: kabul (Y43.1 çekirdek, Y43.2 komut, Y43.3 pencere). Kapsam ROAD-VOL-18, ROAD-VOL-16.
 
 ## Sorun
 
@@ -88,8 +88,26 @@ Ortak çizimin ana kübajı (uç alan, 36 aralık), 100 m'lik dilimler:
 
   Satırlardan toplam kurulsaydı hakediş cetveli 1 m³ yanlış olurdu.
 
-## Açık
+## Pencere: Kübaj → Defter ve En büyük aralıklar (Y43.3)
 
-- Pencere (Y43.3).
+- **Form:** "Defter" bölümünde gruplama (km dilimleri ya da bölgeler), dilim boyu (100 m) ve yuvarlama (tam sayı – 3
+  basamak).
+- **Okuma:** Defter yalnız gösterilirken okunur, çünkü kübajı bir kez daha hesaplar. Pencere yazılan (kaydedilmemiş)
+  kübajı okur (`road_volumes_ledger::preview_of`), öbür okumalar gibi.
+- **Resim:**
+  - solda her grubun kazısı eksenin üstünde, dolgusu altında, %5'ten büyük payları yazılı;
+  - sağda kazının ve dolgunun yoğunlaşma eğrisi, düzgün dağılım çizgisi ve yarısını taşıyan boyun işareti.
+- **Bant:** en ağır kazı ve dolgu grubu, kazının yoğunlaşması, en büyük kazı aralığı ve nedeni, yuvarlama farkı tek
+  cümlede.
+- **Tablolar:**
+  - Defter: grup, kazı, pay, dolgu, pay, öbür malzemeler, sonra toplam ve "yuvarlanmış satırlar farkı";
+  - En büyük aralıklar: hacim, pay, birikimli pay, boy, ortalama alan, iki çarpan, neden.
+- İlk sürümde yoğunlaşma göstergesi ("Kazı · Gini 0,57 · yarısı yolun %16'ında") 1100 px'lik pencerede
+  kırpılıyordu. Gösterge "Kazı 0,57"ye indi; paylar bantta.
+- Dilim etiketleri, dilimin ilk kesitini (1+204.713) değil dilimin kendi km'sini (1+200) yazar.
+- **Bekçi:** `the_sheet_totals_are_rounded_once`. Cetvelin toplamı kübajın toplamıdır. Tam sayıda kazı satırlarının
+  toplamı 25879, toplam 25878: satırları toplamak 1 m³ yanlış verirdi.
+
+## Açık
 - Pafta sınırına göre gruplama (OpenRoads'un sheet clipping'i) ve yanlara (sol/sağ) göre bölüş; ikincisi kesitin
   alanını eksenin iki yanına ayırmayı ister.
