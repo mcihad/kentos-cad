@@ -1862,6 +1862,10 @@ projeye bağlayabilir ve bağlı belgelerden birini seçip denetleyebilir; ilk
 belge pencere açıldığında seçilir. Gerçek arayüzde üç belgeyle bağlama,
 kaydetme, yeniden açma, seçim ve küçük pencerede kaydırma doğrulandı. Birden
 fazla standardın birlikte denetimi ve öncelik çözümü henüz yoktur.
+Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden
+çıkarılabilir; kaynak dosya ve çizim geometrisi değiştirilmez. Eski ön izleme
+ile sıralama engellenir. Otomatik testler ve gerçek arayüzde sıralama,
+çıkarma iptali, onay ve kaydedilen dosyanın bağımsız okunması doğrulandı.
 Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
 komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
 tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve

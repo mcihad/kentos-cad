@@ -41,6 +41,7 @@ pub struct Window {
     custom: Option<SelectedStandard>,
     choices: Vec<ProjectChoice>,
     load_error: Option<String>,
+    confirm_remove: bool,
     pub layers: bool,
     pub restyle: bool,
     pub rename: bool,
@@ -58,6 +59,10 @@ pub enum Event {
     BuiltIn,
     Project(String),
     Attach,
+    Move(i8),
+    RemoveAsk,
+    RemoveCancel,
+    RemoveConfirm,
     Layers(bool),
     Restyle(bool),
     Rename(bool),
@@ -194,6 +199,7 @@ impl App {
             custom,
             choices: Vec::new(),
             load_error,
+            confirm_remove: false,
             layers: true,
             restyle: true,
             rename: true,
@@ -328,13 +334,16 @@ impl App {
                 w.custom = Some(standard);
                 w.load_error = None;
                 w.chosen = None;
+                w.confirm_remove = false;
             }
             Event::BuiltIn => {
                 w.custom = None;
                 w.load_error = None;
                 w.chosen = None;
+                w.confirm_remove = false;
             }
             Event::Project(id) => {
+                w.confirm_remove = false;
                 let selected = self.document.as_ref().and_then(|doc| {
                     doc.model
                         .settings()
@@ -366,6 +375,10 @@ impl App {
             Event::Attach => {
                 self.attach_standard();
             }
+            Event::Move(direction) => self.edit_bound_standard(Some(direction)),
+            Event::RemoveAsk => w.confirm_remove = true,
+            Event::RemoveCancel => w.confirm_remove = false,
+            Event::RemoveConfirm => self.edit_bound_standard(None),
             Event::Layers(v) => w.layers = v,
             Event::Restyle(v) => w.restyle = v,
             Event::Rename(v) => w.rename = v,
@@ -462,6 +475,92 @@ impl App {
             self.say(
                 Level::Success,
                 "Standart projeye bağlandı; çizimi kaydedin.".to_owned(),
+            );
+        }
+    }
+
+    /// Reorder or explicitly remove the selected embedded document through
+    /// the same revision-checked command as Python and MCP.
+    fn edit_bound_standard(&mut self, direction: Option<i8>) {
+        let Some(window) = self.drawing_standard.as_ref() else {
+            return;
+        };
+        if window.load_error.is_some() || (direction.is_none() && !window.confirm_remove) {
+            return;
+        }
+        let Some(selected) = window.custom.as_ref() else {
+            return;
+        };
+        if selected.bound_id.is_none() {
+            return;
+        }
+        let Some(text) = selected.document.as_deref() else {
+            return;
+        };
+        let Some(revision) = window
+            .report
+            .as_ref()
+            .ok()
+            .map(|report| report.revision.clone())
+        else {
+            return;
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let mut documents = doc.model.settings().standard_docs.clone();
+        let Some(index) = documents.iter().position(|entry| entry.text == text) else {
+            return;
+        };
+        if let Some(direction) = direction {
+            let other = match direction {
+                -1 if index > 0 => index - 1,
+                1 if index + 1 < documents.len() => index + 1,
+                _ => return,
+            };
+            documents.swap(index, other);
+        } else {
+            documents.remove(index);
+        }
+        let next = direction
+            .is_none()
+            .then(|| documents.first().map(selected_project));
+        let result = settings_set::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            SettingsSet {
+                standard_docs: Some(documents),
+                expected_revision: Some(revision),
+                ..SettingsSet::default()
+            },
+        );
+        if self.answered(result).is_some() {
+            if let Some(w) = self.drawing_standard.as_mut() {
+                w.confirm_remove = false;
+                if let Some(next) = next {
+                    match next {
+                        Some(Ok(selected)) => {
+                            w.custom = Some(selected);
+                            w.load_error = None;
+                        }
+                        Some(Err(why)) => {
+                            w.custom = None;
+                            w.load_error = Some(format!("İlk bağlı standart geçersiz: {why}"));
+                        }
+                        None => {
+                            w.custom = None;
+                            w.load_error = None;
+                        }
+                    }
+                }
+            }
+            self.say(
+                Level::Success,
+                if direction.is_some() {
+                    "Standart sırası değiştirildi; çizimi kaydedin."
+                } else {
+                    "Standart proje listesinden çıkarıldı; çizimi kaydedin."
+                }
+                .to_owned(),
             );
         }
     }
@@ -657,6 +756,11 @@ impl App {
             .and_then(|selected| selected.bound_id.as_ref())
             .and_then(|id| choices.iter().find(|choice| &choice.id == id))
             .cloned();
+        let position = current
+            .as_ref()
+            .and_then(|selected| choices.iter().position(|choice| choice.id == selected.id));
+        let count = choices.len();
+        let editable = w.load_error.is_none() && w.report.is_ok();
         let attach = w.custom.as_ref().is_some_and(|selected| {
             selected.document.is_some()
                 && selected.bound_id.is_none()
@@ -696,10 +800,47 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
                 Some(
-                    "Denetim yalnız seçilen standardı inceler; bağlamak kuralları uygulamaz."
+                    "İlk standart pencere açılınca seçilir. Denetim yalnız seçili standardı inceler; bağlamak kuralları uygulamaz."
                         .into(),
                 ),
-            ))
+            ));
+        if let Some(index) = position {
+            body = if w.confirm_remove {
+                body.push(words::text_line(
+                    Kind::Warn,
+                    "Bu standart çizimden çıkarılacak; kaynak dosya değiştirilmez.".to_owned(),
+                ))
+                .push(
+                    row![
+                        words::secondary("Vazgeç", Some(msg(Event::RemoveCancel))),
+                        words::secondary(
+                            "Çıkarmayı onayla",
+                            editable.then(|| msg(Event::RemoveConfirm))
+                        ),
+                    ]
+                    .spacing(8),
+                )
+            } else {
+                body.push(
+                    row![
+                        words::secondary(
+                            "Yukarı taşı",
+                            (editable && index > 0).then(|| msg(Event::Move(-1)))
+                        ),
+                        words::secondary(
+                            "Aşağı taşı",
+                            (editable && index + 1 < count).then(|| msg(Event::Move(1)))
+                        ),
+                        words::secondary(
+                            "Projeden çıkar…",
+                            editable.then(|| msg(Event::RemoveAsk))
+                        ),
+                    ]
+                    .spacing(8),
+                )
+            };
+        }
+        body = body
             .push(words::summary(lines))
             .push(words::field("Bulgular", table, Some(hint)))
             .push(words::field("Düzeltme", parts, None))
@@ -821,6 +962,93 @@ fn applied_words(p: &StandardsApplied) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn project_standards_can_be_reordered_and_removed_only_after_confirmation() {
+        use super::Event;
+        use kentos_commands::{
+            ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,
+            StandardPackage, built_in_standard,
+        };
+        let mut app = crate::selecting::tests::objects();
+        crate::files_testing::make_cad(&mut app);
+        let item = |id: &str| ProjectStandardDocument {
+            text: serde_json::to_string(&StandardPackage {
+                format: STANDARD_PACKAGE_FORMAT.into(),
+                version: STANDARD_PACKAGE_VERSION,
+                id: id.into(),
+                revision: "1".into(),
+                standard: built_in_standard("mimari-ofis").unwrap(),
+            })
+            .unwrap(),
+        };
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.standard_docs = vec![item("a"), item("b")];
+        doc.set_settings(settings);
+        app.open_drawing_standard();
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let layer = doc.layers().active().to_owned();
+        let line = serde_json::from_value(serde_json::json!({"kind":"line","id":0,"layerId":layer,
+            "attrs":{},"a":{"x":0,"y":0},"b":{"x":1,"y":0}}))
+        .unwrap();
+        doc.add(line).unwrap();
+        let changed = doc.to_snapshot_v2();
+        // A stale preview cannot reorder a document changed by another action.
+        let _ = app.drawing_standard_event(Event::Move(1));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            changed
+        );
+        // The failed attempt refreshes the report; the explicit next request succeeds.
+        let _ = app.drawing_standard_event(Event::Move(1));
+        let docs = &app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .settings()
+            .standard_docs;
+        let ids: Vec<String> = docs
+            .iter()
+            .map(|d| {
+                serde_json::from_str::<serde_json::Value>(&d.text).unwrap()["id"]
+                    .as_str()
+                    .unwrap()
+                    .to_owned()
+            })
+            .collect();
+        assert_eq!(ids, ["b", "a"]);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let _ = app.drawing_standard_event(Event::RemoveConfirm);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        let _ = app.drawing_standard_event(Event::RemoveAsk);
+        let _ = app.drawing_standard_event(Event::RemoveCancel);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        let _ = app.drawing_standard_event(Event::RemoveAsk);
+        let _ = app.drawing_standard_event(Event::RemoveConfirm);
+        let after = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert_eq!(after.settings.standard_docs.len(), 1);
+        assert_eq!(after.entities, before.entities);
+        assert_eq!(after.layers, before.layers);
+        assert_eq!(
+            app.drawing_standard
+                .as_ref()
+                .unwrap()
+                .custom
+                .as_ref()
+                .unwrap()
+                .bound_id
+                .as_deref(),
+            Some("b")
+        );
+    }
+
     #[test]
     fn versioned_standard_attaches_and_selects_without_applying_changes() {
         use super::{Event, SelectedStandard};
