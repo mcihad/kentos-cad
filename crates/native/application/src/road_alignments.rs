@@ -389,6 +389,18 @@ pub(crate) fn report(doc: &Document, def: &AlignmentDef, built: &Built) -> Align
             .collect(),
         residual: c.residual.place,
         residual_direction: c.residual.direction,
+        seams: c
+            .seams()
+            .into_iter()
+            .map(|s| kentos_commands::AlignmentSeam {
+                station: s.station,
+                before: s.before,
+                after: s.after,
+                place: s.place,
+                direction: s.direction,
+                curvature: s.curvature,
+            })
+            .collect(),
         algorithm: core::ALGORITHM.into(),
     }
 }

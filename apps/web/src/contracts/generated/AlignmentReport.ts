@@ -3,6 +3,7 @@ import type { AlignmentCurveRow } from "./AlignmentCurveRow";
 import type { AlignmentElementRow } from "./AlignmentElementRow";
 import type { AlignmentJoinRow } from "./AlignmentJoinRow";
 import type { AlignmentOffset } from "./AlignmentOffset";
+import type { AlignmentSeam } from "./AlignmentSeam";
 
 /**
  * An alignment as it builds now.
@@ -37,6 +38,10 @@ residual: number,
  * … and direction, rad.
  */
 residualDirection: number, 
+/**
+ * Every join of two elements and how far they part there in place, direction and curvature (docs/adr/0967).
+ */
+seams?: Array<AlignmentSeam>, 
 /**
  * `kentos.alignment/1`.
  */

@@ -201,6 +201,16 @@ def report(alignments, d, height=None):
            "ground": gw, "kmStart": float(ref.km_of(b.regions, 0)), "kmEnd": float(ref.km_of(b.regions, b.length)),
            "elements": els, "curves": curves, "joins": b.joins, "residual": 0.0, "residualDirection": 0.0,
            "algorithm": ALGORITHM}
+    # Docs/adr/0967: where two elements meet, how far they part in place, direction and curvature (G0, G1, G2).
+    seams = []
+    for e0, e1 in zip(b.els, b.els[1:]):
+        end = e0.end()
+        seams.append({"station": float(e1.station), "before": e0.id, "after": e1.id,
+                      "place": float(mp.hypot(end[0] - e1.start[0], end[1] - e1.start[1])),
+                      "direction": float(abs(ref.wrap(e0.theta(e0.length) - e1.theta0))),
+                      "curvature": float(abs(e0.curvature(e0.length) - e1.k0))})
+    if seams:
+        out["seams"] = seams
     if "offsetOf" in d:
         out["offsetOf"] = d["offsetOf"]
     if gl is not None:
@@ -504,6 +514,12 @@ def edit_cases():
     wider = {**MAIN, "revision": 2, "pis": [MAIN_PIS[0], {**MAIN_PIS[1], "radius": 300.0}, MAIN_PIS[2]]}
     ok("Yarıçap küçülür, sol kenar izler", {"alignment": "g-1", "operation": "set", "pis": wider["pis"]}, put(0, wider),
        "g-1", mapping(main_b, build(put(0, wider), wider)))
+    # Docs/adr/0967: without clothoids the circular curve meets its tangents with a curvature jump of 1/R (G2 broken,
+    # G0 and G1 kept). A PI without a curve is a kink, a direction jump of its deflection: g-3's p1 in the queries.
+    bare = {**MAIN, "revision": 2, "pis": [MAIN_PIS[0], {k: v for k, v in MAIN_PIS[1].items() if k not in ("spiralIn", "spiralOut")},
+                                         MAIN_PIS[2]]}
+    ok("Klotoidler kaldırılır: eğrilik 1/R sıçrar", {"alignment": "g-1", "operation": "set", "pis": bare["pis"]},
+       put(0, bare), "g-1", mapping(main_b, build(put(0, bare), bare)))
     eq = {**MAIN, "revision": 2, "stationing": {"start": 2000.0, "equations": [{"back": 2200.0, "ahead": 2500.0}]}}
     ok("Km eşitliği eklenir: geometri yerinde", {"alignment": "g-1", "operation": "set", "stationing": eq["stationing"]},
        put(0, eq), "g-1", mapping(main_b, build(put(0, eq), eq)))

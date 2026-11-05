@@ -284,8 +284,32 @@ pub struct AlignmentReport {
     /// … and direction, rad.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub residual_direction: f64,
+    /// Every join of two elements and how far they part there in place, direction and curvature (docs/adr/0967).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AlignmentSeam>>", optional))]
+    pub seams: Vec<AlignmentSeam>,
     /// `kentos.alignment/1`.
     pub algorithm: String,
+}
+
+/// Where two elements meet (docs/adr/0967): the later one's start and the gaps, G0 place (m), G1 direction (rad) and
+/// G2 curvature (1/m). A circular curve without a clothoid meets its tangent with a curvature jump of 1/R.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentSeam {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub before: String,
+    pub after: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub place: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub direction: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m")))]
+    pub curvature: f64,
 }
 
 /// A place on an alignment.

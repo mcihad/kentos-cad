@@ -12619,6 +12619,7 @@ class AlignmentReport(_Model):
         ground_length: The length on the ground (the grid length over each piece's scale and height factor), m; absent without a
             system that has one scale at a point or without the project's mean ellipsoidal height. Unit: m.
         offset_of: A parallel axis's source and offset.
+        seams: Every join of two elements and how far they part there in place, direction and curvature (docs/adr/0967).
     """
     id: str
     name: str
@@ -12635,6 +12636,7 @@ class AlignmentReport(_Model):
     algorithm: str
     ground_length: float | None | Unset = UNSET
     offset_of: AlignmentOffset | None | Unset = UNSET
+    seams: list[AlignmentSeam] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -12655,6 +12657,8 @@ class AlignmentReport(_Model):
             out["groundLength"] = None if self.ground_length is None else float(self.ground_length)
         if self.offset_of is not UNSET:
             out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
+        if self.seams is not UNSET:
+            out["seams"] = [e0.to_json() for e0 in self.seams]
         return out
 
     @classmethod
@@ -12675,6 +12679,7 @@ class AlignmentReport(_Model):
             algorithm=data["algorithm"],
             ground_length=UNSET if "groundLength" not in data else None if data["groundLength"] is None else float(data["groundLength"]),
             offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
+            seams=[AlignmentSeam.from_json(e0) for e0 in data["seams"]] if "seams" in data else UNSET,
         )
 
 
@@ -12713,6 +12718,45 @@ class AlignmentRun(_Model):
             to_text=data["toText"],
             shift_from=float(data["shiftFrom"]),
             shift_to=float(data["shiftTo"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentSeam(_Model):
+    """Where two elements meet (docs/adr/0967): the later one's start and the gaps, G0 place (m), G1 direction (rad) and
+    G2 curvature (1/m). A circular curve without a clothoid meets its tangent with a curvature jump of 1/R.
+    Attributes:
+        station: Unit: m.
+        place: Unit: m.
+        direction: Unit: rad.
+        curvature: Unit: 1/m.
+    """
+    station: float
+    before: str
+    after: str
+    place: float
+    direction: float
+    curvature: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["before"] = self.before
+        out["after"] = self.after
+        out["place"] = float(self.place)
+        out["direction"] = float(self.direction)
+        out["curvature"] = float(self.curvature)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentSeam:
+        return cls(
+            station=float(data["station"]),
+            before=data["before"],
+            after=data["after"],
+            place=float(data["place"]),
+            direction=float(data["direction"]),
+            curvature=float(data["curvature"]),
         )
 
 
@@ -111453,6 +111497,7 @@ __all__ = [
     "AlignmentPlace",
     "AlignmentReport",
     "AlignmentRun",
+    "AlignmentSeam",
     "AlignmentStationing",
     "AlignmentStretch",
     "AlignmentsCheck",

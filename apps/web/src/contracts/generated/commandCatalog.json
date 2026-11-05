@@ -97405,6 +97405,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "version"
+        },
+        "seams": {
+          "description": "Every join of two elements and how far they part there in place, direction and curvature (docs/adr/0967).",
+          "items": {
+            "$ref": "#/$defs/AlignmentSeam"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -97461,6 +97468,46 @@
         "toText",
         "shiftFrom",
         "shiftTo"
+      ],
+      "type": "object"
+    },
+    "AlignmentSeam": {
+      "description": "Where two elements meet (docs/adr/0967): the later one's start and the gaps, G0 place (m), G1 direction (rad) and\nG2 curvature (1/m). A circular curve without a clothoid meets its tangent with a curvature jump of 1/R.",
+      "properties": {
+        "after": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "curvature": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1/m"
+        },
+        "direction": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "place": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "before",
+        "after",
+        "place",
+        "direction",
+        "curvature"
       ],
       "type": "object"
     },

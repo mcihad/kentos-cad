@@ -55,6 +55,41 @@ pub struct Residual {
     pub direction: f64,
 }
 
+/// Where two elements meet (docs/adr/0967; ROAD-ALIGN-05): the later one's start, its station, and how far the two
+/// part there in place (m), direction (rad) and curvature (1/m), G0, G1 and G2 in CAD's terms. The chain starts each
+/// element where the one before ends, so the place and direction are 0 by construction; a clothoid meets its curve
+/// and its tangent at their curvatures (0), a circular curve without one meets the tangent with a jump of 1/R.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Seam {
+    pub station: f64,
+    pub before: String,
+    pub after: String,
+    pub place: f64,
+    pub direction: f64,
+    pub curvature: f64,
+}
+
+impl Alignment {
+    /// Every join of two elements, in order.
+    pub fn seams(&self) -> Vec<Seam> {
+        self.elements
+            .windows(2)
+            .map(|w| {
+                let (a, b) = (&w[0], &w[1]);
+                let end = a.end();
+                Seam {
+                    station: b.station,
+                    before: a.id.clone(),
+                    after: b.id.clone(),
+                    place: (end[0] - b.start[0]).hypot(end[1] - b.start[1]),
+                    direction: wrap(a.theta(a.length) - b.theta0).abs(),
+                    curvature: (a.curvature(a.length) - b.k0).abs(),
+                }
+            })
+            .collect()
+    }
+}
+
 /// An alignment: its elements in order, its length (the last station), its curves and joins, the residual.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Alignment {

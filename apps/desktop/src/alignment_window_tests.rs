@@ -402,3 +402,61 @@ fn screens_reverse_profile() {
         shot(&mut app, "boykesit-sonra");
     }
 }
+
+/// Süreklilik (Y61, docs/adr/0967; ROAD-ALIGN-05): the window says the chain is continuous with clothoids, the
+/// curvature jumps without them; the report carries the seams the shared case has.
+#[test]
+fn the_window_says_the_chain_s_continuity() {
+    let mut app = impact_app();
+    let _ = app.update(Message::Run("alignment.editor"));
+    send(&mut app, W::Choose(0));
+    let said = |app: &App| -> String { app.alignment_window.as_ref().map(crate::alignment_window::status_of).unwrap_or_default() };
+    assert!(said(&app).contains("konum, doğrultu ve eğrilik sürekli"), "{}", said(&app));
+    send(&mut app, W::Pi(1, 3, "0".into()));
+    send(&mut app, W::Pi(1, 4, "0".into()));
+    assert!(said(&app).contains("2 yerde eğrilik sıçrar"), "{}", said(&app));
+}
+
+/// The continuity said in the window, with and without clothoids, wide and narrow; `.run/gui-evidence/yol-y61/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib alignment_window_tests::screens_continuity -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_continuity() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y61");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = impact_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y61-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        shot(&mut app, "klotoidli");
+        send(&mut app, W::Pi(1, 3, "0".into()));
+        send(&mut app, W::Pi(1, 4, "0".into()));
+        shot(&mut app, "klotoidsiz");
+        // The link of the edit's drawing: a PI without a curve, a kink.
+        let mut app = reverse_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(2));
+        shot(&mut app, "kirik");
+    }
+}

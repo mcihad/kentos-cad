@@ -388,7 +388,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 394.05186090744627,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 474.05186090744627,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 708.2111262664256,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 788.2111262664256,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []
@@ -690,7 +724,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 431.5715654936644,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 511.5715654936644,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 766.7640554970204,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 846.7640554970204,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []
@@ -992,7 +1060,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 435.3916671396385,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 515.3916671396386,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 671.011116158873,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 751.011116158873,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []
@@ -1021,6 +1123,284 @@
                       "radius": 300.0,
                       "spiralIn": 80.0,
                       "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Klotoidler kaldırılır: eğrilik 1/R sıçrar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "operation": "set",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4420000.0,
+                "radius": 400.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4420500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "changed",
+                  "before": [
+                    0.0,
+                    394.05186090744627
+                  ],
+                  "after": [
+                    0.0,
+                    434.31457505076196
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "changed",
+                  "before": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ],
+                  "after": [
+                    434.31457505076196,
+                    748.4738404097413
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "changed",
+                  "before": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ],
+                  "after": [
+                    748.4738404097413,
+                    1289.8951966470509
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "removed",
+                  "before": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "removed",
+                  "before": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ]
+                }
+              ],
+              "dependents": [
+                "g-2"
+              ],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 2
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": "g-1"
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 2,
+                "length": 1289.8951966470509,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 2000.0,
+                "kmEnd": 3289.895196647051,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 434.31457505076196,
+                    "km": 2000.0,
+                    "start": [
+                      485000.0,
+                      4420000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 434.31457505076196,
+                    "length": 314.1592653589793,
+                    "km": 2434.314575050762,
+                    "start": [
+                      485434.3145750508,
+                      4420000.0
+                    ],
+                    "direction": 0.0,
+                    "k0": 0.0025,
+                    "k1": 0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 748.4738404097413,
+                    "length": 541.4213562373095,
+                    "km": 2748.473840409741,
+                    "start": [
+                      485717.15728752536,
+                      4420117.157287525
+                    ],
+                    "direction": 0.7853981633974483,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 0.0,
+                    "spiralOut": 0.0,
+                    "tIn": 165.685424949238,
+                    "tOut": 165.685424949238,
+                    "arc": 314.1592653589793,
+                    "stations": [
+                      434.31457505076196,
+                      434.31457505076196,
+                      748.4738404097413,
+                      748.4738404097413
+                    ],
+                    "centre": [
+                      485434.3145750508,
+                      4420400.0
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 434.31457505076196,
+                    "before": "a/aliyman",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0025
+                  },
+                  {
+                    "station": 748.4738404097413,
+                    "before": "p1/kurp",
+                    "after": "p1/aliyman",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0025
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 2,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0
                     },
                     {
                       "id": "b",
@@ -1283,7 +1663,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 394.05186090744627,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 474.05186090744627,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 708.2111262664256,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 788.2111262664256,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []
@@ -1572,7 +1986,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 394.05186090744627,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 474.05186090744627,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 708.2111262664256,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 788.2111262664256,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []
@@ -1790,6 +2238,40 @@
                 "residual": 0.0,
                 "residualDirection": 0.0,
                 "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 394.05186090744627,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 474.05186090744627,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 708.2111262664256,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 788.2111262664256,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ],
                 "offsetOf": {
                   "alignment": "g-1",
                   "offset": -10.0
@@ -2076,7 +2558,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 394.05186090744627,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 474.05186090744627,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 708.2111262664256,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 788.2111262664256,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []
@@ -2358,7 +2874,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 501.1586420939938,
+                    "before": "b/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 581.1586420939938,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 815.3179074529731,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 895.3179074529731,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []
@@ -2960,7 +3510,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 501.1586420939938,
+                    "before": "b/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 581.1586420939938,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 815.3179074529731,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 895.3179074529731,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               },
               "superelevations": [
                 "d-1",
@@ -3712,7 +4296,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 501.1586420939938,
+                    "before": "b/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 581.1586420939938,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 815.3179074529731,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 895.3179074529731,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               },
               "superelevations": [
                 "d-1",
@@ -4370,7 +4988,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 501.1586420939938,
+                    "before": "b/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 581.1586420939938,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 815.3179074529731,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 895.3179074529731,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               },
               "superelevations": [
                 "d-1",
@@ -4869,7 +5521,17 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 100.0,
+                    "before": "b/aliyman",
+                    "after": "p1/aliyman",
+                    "place": 0.0,
+                    "direction": 1.5707963267948966,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": [
@@ -5610,7 +6272,41 @@
                 "joins": [],
                 "residual": 0.0,
                 "residualDirection": 0.0,
-                "algorithm": "kentos.alignment/1"
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 394.05186090744627,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 474.05186090744627,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 708.2111262664256,
+                    "before": "p1/kurp",
+                    "after": "p1/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 788.2111262664256,
+                    "before": "p1/cikis",
+                    "after": "p1/aliyman",
+                    "place": 6.018531076210112e-36,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  }
+                ]
               }
             },
             "warnings": []

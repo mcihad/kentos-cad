@@ -278,6 +278,11 @@ fn impact_words(imp: &kentos_commands::AlignmentImpact) -> String {
     said
 }
 
+/// The chosen alignment's status line, as the window writes it (for the tests).
+pub(crate) fn status_of(w: &Window) -> String {
+    w.chosen.and_then(|i| w.rows.get(i)).map_or_else(String::new, |r| status(&w.rows, r))
+}
+
 fn status(rows: &[Row], r: &Row) -> String {
     let defs: Result<Vec<AlignmentDef>, String> = rows.iter().map(Row::def).collect();
     let (defs, def) = match (defs, r.def()) {
@@ -330,6 +335,24 @@ fn status(rows: &[Row], r: &Row) -> String {
     );
     if joins > 0 {
         words.push_str(&format!(" · {joins} ters kurp"));
+    }
+    // Continuity (docs/adr/0967): kinks (a direction jump) and curvature jumps (a circular curve without a clothoid),
+    // else G2 throughout.
+    let seams = al.seams();
+    let kinks: Vec<String> = seams
+        .iter()
+        .filter(|s| s.direction > 1e-9)
+        .map(|s| format!("{} kırık {}°", s.after.split('/').next().unwrap_or(""), comma(s.direction.to_degrees())))
+        .collect();
+    let jumps = seams.iter().filter(|s| s.curvature > 1e-9).count();
+    if !kinks.is_empty() {
+        words.push_str(&format!(" · {}", kinks.join(", ")));
+    }
+    if jumps > 0 {
+        words.push_str(&format!(" · {jumps} yerde eğrilik sıçrar (klotoidsiz kurp)"));
+    }
+    if kinks.is_empty() && jumps == 0 && !seams.is_empty() {
+        words.push_str(" · konum, doğrultu ve eğrilik sürekli");
     }
     words
 }

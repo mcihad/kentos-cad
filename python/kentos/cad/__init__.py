@@ -123,6 +123,7 @@ __all__ = [
     "AlignmentPlace",
     "AlignmentReport",
     "AlignmentRun",
+    "AlignmentSeam",
     "AlignmentStationing",
     "AlignmentStretch",
     "AlignmentsCheck",
