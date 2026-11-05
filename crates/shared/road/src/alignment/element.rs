@@ -67,6 +67,11 @@ fn sinc(x: f64) -> f64 {
 }
 
 /// ∫₀ˢ (cos θ(t), sin θ(t)) dt for θ(t) = θ0 + k0·t + c·t²/2.
+///
+/// The error is bounded (docs/adr/0969): on a piece the code's turn rule keeps θ′·h/2 ≤ 0.2 and |c|·h²/8 ≤ 0.05, so
+/// cos θ and sin θ stay under e^{3.49} on the Bernstein ellipse ρ = 10, and Gauss's error with 10 nodes,
+/// (64/15)·M·ρ⁻²⁰/(ρ² − 1) (Trefethen 2008, Thm 4.5), comes to at most 10⁻²⁰·|s| for the whole integral. What is left is
+/// rounding: against the Fresnel integrals at 60 digits at most 2.5·10⁻¹³ m (fixtures/road/v1/clothoid-integrals.json).
 pub fn integral(theta0: f64, k0: f64, c: f64, s: f64) -> [f64; 2] {
     if s == 0.0 {
         return [0.0, 0.0];

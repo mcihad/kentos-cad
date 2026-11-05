@@ -33,7 +33,7 @@ Tarih: 2026-11-02. plan/road.md Y3 (ROAD-ALIGN-01…10, 15, 16; ROAD-NUM-05). Du
    klotoid (eğrilik k0'dan k1'e doğrusal). Hepsi aynı biçimle tanımlanır: başlangıç noktası, başlangıç doğrultusu
    θ0, boy L, k0, k1; θ(s) = θ0 + k0·s + (k1−k0)·s²/(2L). Aliyman ve kurpun noktası kapalı biçimle, klotoidinki
    θ'nın en çok 0,2 rad döndüğü eşit parçalarda 10 noktalı Gauss–Legendre ile; parça sayısı eğriliğin en büyüğü ve
-   boydan belirlenir, tahmin edilmez. Çizimdeki görsel yol kaynak değildir; her sorgu elemanlardan hesaplanır.
+   boydan belirlenir, tahmin edilmez. Kesme hatası en çok 1·10⁻²⁰·s'dir (türetme ve ölçüm ADR 0969). Çizimdeki görsel yol kaynak değildir; her sorgu elemanlardan hesaplanır.
 2. **PI zinciri (ROAD-ALIGN-02, 05).** Kaynak tanım PI'lardır: başlangıç, ara PI'lar (kalıcı kimlik, yer, yarıçap,
    giriş ve çıkış klotoid boyları) ve bitiş. Simetrik olmayan klotoidler: τ = L/(2R), kaydırma p ve k klotoidin
    ucundan; teğet boyları T1 = k1 + (R+p1)·tan(Δ/2) + (p2−p1)/sin Δ ve T2 = k2 + (R+p2)·tan(Δ/2) − (p2−p1)/sin Δ.

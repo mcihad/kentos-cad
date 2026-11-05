@@ -2,6 +2,7 @@
 
 mod accuracy;
 mod alignments;
+mod clothoid_integrals;
 mod alternatives;
 mod analysis;
 mod cloud_ground;
