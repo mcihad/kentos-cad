@@ -779,8 +779,8 @@ fn keyed_overrides(
         return Err("Satır anahtarı hücresi elle değiştirildi; kaynak satırı güvenle eşlenemiyor.".to_owned());
     }
     let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
-    if reordered && (!t.formulas.is_empty() || !t.fields.is_empty()) {
-        return Err("Satır sırası değişti; formül veya field konumu güvenle taşınamadığı için tablo korunuyor.".to_owned());
+    if reordered && !t.formulas.is_empty() {
+        return Err("Satır sırası değişti; formül konumu güvenle taşınamadığı için tablo korunuyor.".to_owned());
     }
     for (key, old_r) in &old_keys {
         if new_keys.contains_key(key) {
@@ -922,6 +922,29 @@ fn keyed_merges(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], co
     }).collect()
 }
 
+/// Field sources use persistent object or project identity, so only the
+/// field's cell address changes when its keyed row moves.
+fn keyed_fields(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellField>, String> {
+    let old_keys = row_keys(copy, column)?;
+    let new_keys = row_keys(fresh, column)?;
+    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    if !reordered {
+        return Ok(t.fields.clone());
+    }
+    t.fields.iter().map(|field| {
+        if field.row == 0 {
+            return Ok(field.clone());
+        }
+        let key = copy.get(field.row as usize).and_then(|row| row.get(column))
+            .ok_or_else(|| "Field satırı kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned())?;
+        let row = *new_keys.get(key.as_str())
+            .ok_or_else(|| format!("“{key}” anahtarlı field satırı kaynaktan silindi; tablo korunuyor."))? as u32;
+        let mut next = field.clone();
+        next.row = row;
+        Ok(next)
+    }).collect()
+}
+
 struct Checked {
     changed: Vec<(Slot, Uuid, TableEntity)>,
     report: Vec<TableReport>,
@@ -1023,7 +1046,8 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                                 Some(old) => keyed_overrides(&t, old, &fresh, *column as usize, *overrides)
                                                     .and_then(|(cells, kept, replaced)| keyed_styles(&t, old, &fresh, *column as usize)
                                                         .and_then(|styles| keyed_merges(&t, old, &fresh, *column as usize)
-                                                            .map(|merges| (cells, kept, replaced, Some((styles, merges)))))),
+                                                            .and_then(|merges| keyed_fields(&t, old, &fresh, *column as usize)
+                                                                .map(|fields| (cells, kept, replaced, Some((styles, merges, fields))))))),
                                                 None => Err("Anahtarlı tablonun son kaynak kopyası yok; elle düzeltmeler güvenle eşlenemiyor.".to_owned()),
                                             }
                                         } else if *overrides == SourceOverrides::Keep
@@ -1055,9 +1079,10 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                             Ok((cells, k, r, placement)) => {
                                                 (kept, replaced) = (k, r);
                                                 refreshed(doc, &t, &cells, &aligns).map(|mut n| {
-                                                    if let Some((styles, merges)) = placement {
+                                                    if let Some((styles, merges, fields)) = placement {
                                                         n.styles = styles;
                                                         n.merges = merges;
+                                                        n.fields = fields;
                                                     }
                                                     if let (Some(column), Some(old)) = (key_column, copy.as_ref()) {
                                                         if let Ok(old_keys) = row_keys(old, *column as usize) {
@@ -1490,6 +1515,13 @@ mod tests {
         merged.merges[0].rows = 2;
         assert!(keyed_merges(&merged, &copy, &reordered, 0)
             .unwrap_err().contains("birden çok satıra"));
+        let mut fielded = table.clone();
+        fielded.fields = vec![serde_json::from_value(json!({
+            "row":1,"col":1,"source":{"kind":"project","value":"name"}
+        })).unwrap()];
+        assert_eq!(keyed_fields(&fielded, &copy, &reordered, 0).unwrap()[0].row, 2);
+        assert!(keyed_fields(&fielded, &copy, &reordered[..2], 0)
+            .unwrap_err().contains("silindi"));
         let mut styled = table.clone();
         styled.styles = vec![serde_json::from_value(json!({
             "row":1,"col":0,"rows":2,"cols":1,"fill":"#ff0000"

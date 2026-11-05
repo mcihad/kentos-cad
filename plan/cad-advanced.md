@@ -2131,7 +2131,7 @@ taşınır; başlık ve tüm tablo stili kapsamı korunur. Gerçek CAD penceresi
 `B/10` mavi, `A/11` kırmızı dolgusunu sıra değişiminden sonra korudu. Bu
 ekran kontrolü koyu dolguda tablo düzenleyicisinin varsayılan siyah yazısının
 okunmadığını da gösterdi; varsayılan yazı rengi arka planın karşıtlığına göre
-seçilecek biçimde düzeltildi. Çok satıra yayılan birleşim, formül ve field konumu varsa yeniden
+seçilecek biçimde düzeltildi. Çok satıra yayılan birleşim veya formül konumu varsa yeniden
 sıralama henüz güvenle taşınamadığı için durdurulur.
 Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
 B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
@@ -2171,6 +2171,14 @@ yayılan birleşim hâlâ güvenli biçimde reddedilir. Yerel sınama `A` satır
 birleşimini 1. veri satırından 2. veri satırına taşıdı. Gerçek CAD
 penceresinde `A / First 10` birleşik satırı `B / Second / 20` satırının
 altına taşındı; hücre sınırı ve yazı korundu. Görüntü repo dışındadır.
+
+**Alan hücrelerinin taşınması (5 Kasım 2026):** Proje veya nesne kimliğine
+bağlanan field hücresi, anahtarlı dış kaynak satırı yeniden sıralandığında
+aynı kaydın yeni satırına taşınır. Alanın kaydı kaynaktan silindiyse yenileme
+reddedilir. Yerel sınamada `A` satırındaki field adresi 1'den 2'ye taşındı;
+gerçek CAD penceresinde `B/20, A/Dinamik bloklar` sırası ve başarılı yenileme
+görüldü. Ekran görüntüsü repo dışında tutuldu. Konuma bağlı formüller ve
+birden çok satıra yayılan birleşimler için güvenli taşıma hâlâ açıktır.
 
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 

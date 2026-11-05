@@ -353,6 +353,28 @@ mod qa {
         crate::document::write(&merge_doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());
 
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-field-row.csv");
+        std::fs::write(&csv, "ID,Value\nB,20\nA,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32],"columns":[1.0,3.0],
+            "cells":[["ID","Value"],["A",""],["B","20"]],
+            "header":true,
+            "fields":[{"row":1,"col":1,"source":{"kind":"project","value":"name"}}],
+            "source":{"kind":"file","name":"fields.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Value"],["A","10"],["B","20"]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut field_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        let kentos_commands::Entity::Table(table) = table else { unreachable!() };
+        let table = field_doc.table_worked_out(&table);
+        field_doc.add(kentos_commands::Entity::Table(table)).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-field-row.kcad");
+        crate::document::write(&field_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
         let csv = std::env::temp_dir().join("kentos-cad-adv13-cell-conflict.csv");
         std::fs::write(&csv, "ID,Price\nA,12\n").unwrap();
         let table: kentos_commands::Entity = serde_json::from_value(json!({
