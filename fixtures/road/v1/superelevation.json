@@ -1839,6 +1839,332 @@
    }
   },
   {
+   "name": "Çok kısa ters kurp: geçişler arasında 1 mm kalır",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 300,
+     "y": 0,
+     "radius": 200,
+     "spiralIn": 40,
+     "spiralOut": 40
+    },
+    {
+     "id": "p2",
+     "x": 520,
+     "y": 120,
+     "radius": 200,
+     "spiralIn": 40,
+     "spiralOut": 40
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": 120,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 38.274378,
+     "onTangent": 1.0,
+     "widening": 0.0
+    },
+    {
+     "pi": "p2",
+     "rate": 6.0,
+     "runoff": 38.274378,
+     "onTangent": 1.0,
+     "widening": 0.0
+    }
+   ],
+   "schedule": {
+    "left": [
+     [
+      206.59617378893734,
+      -2.5
+     ],
+     [
+      228.92289428893733,
+      -6.0
+     ],
+     [
+      368.7922386249634,
+      -6.0
+     ],
+     [
+      391.1189591249634,
+      -2.5
+     ],
+     [
+      423.0152734256714,
+      -2.5
+     ],
+     [
+      477.2373089256714,
+      6.0
+     ],
+     [
+      617.1066532616974,
+      6.0
+     ],
+     [
+      671.3286887616973,
+      -2.5
+     ]
+    ],
+    "right": [
+     [
+      174.70085878893732,
+      -2.5
+     ],
+     [
+      228.92289428893733,
+      6.0
+     ],
+     [
+      368.7922386249634,
+      6.0
+     ],
+     [
+      423.0142741249634,
+      -2.5
+     ],
+     [
+      454.9105884256714,
+      -2.5
+     ],
+     [
+      477.2373089256714,
+      -6.0
+     ],
+     [
+      617.1066532616974,
+      -6.0
+     ],
+     [
+      639.4333737616973,
+      -2.5
+     ]
+    ],
+    "leftWidening": [],
+    "rightWidening": []
+   },
+   "critical": [
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 174.70085878893732,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 190.64851628893734,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 206.59617378893734,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 228.92289428893733,
+     "exit": false
+    },
+    {
+     "pi": "p1",
+     "mark": "full",
+     "station": 368.7922386249634,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "reverseCrown",
+     "station": 391.1189591249634,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "levelCrown",
+     "station": 407.0666166249634,
+     "exit": true
+    },
+    {
+     "pi": "p1",
+     "mark": "normalCrown",
+     "station": 423.0142741249634,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "normalCrown",
+     "station": 423.0152734256714,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "levelCrown",
+     "station": 438.9629309256714,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "reverseCrown",
+     "station": 454.9105884256714,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "full",
+     "station": 477.2373089256714,
+     "exit": false
+    },
+    {
+     "pi": "p2",
+     "mark": "full",
+     "station": 617.1066532616974,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "reverseCrown",
+     "station": 639.4333737616973,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "levelCrown",
+     "station": 655.3810312616973,
+     "exit": true
+    },
+    {
+     "pi": "p2",
+     "mark": "normalCrown",
+     "station": 671.3286887616973,
+     "exit": true
+    }
+   ],
+   "at": [
+    {
+     "station": 300.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 330.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 345.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 360.0,
+     "left": -6.0,
+     "right": 6.0,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    },
+    {
+     "station": 400.0,
+     "left": -2.5,
+     "right": 1.1077828554073497,
+     "leftWidening": 0.0,
+     "rightWidening": 0.0
+    }
+   ]
+  },
+  {
+   "name": "Çok kısa ters kurp: geçişler 1 mm biner",
+   "pis": [
+    {
+     "id": "a",
+     "x": 0,
+     "y": 0,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    },
+    {
+     "id": "p1",
+     "x": 300,
+     "y": 0,
+     "radius": 200,
+     "spiralIn": 40,
+     "spiralOut": 40
+    },
+    {
+     "id": "p2",
+     "x": 520,
+     "y": 120,
+     "radius": 200,
+     "spiralIn": 40,
+     "spiralOut": 40
+    },
+    {
+     "id": "b",
+     "x": 800,
+     "y": 120,
+     "radius": 0,
+     "spiralIn": 0,
+     "spiralOut": 0
+    }
+   ],
+   "normal": [
+    -2.5,
+    -2.5
+   ],
+   "rules": [
+    {
+     "pi": "p1",
+     "rate": 6.0,
+     "runoff": 38.275084,
+     "onTangent": 1.0,
+     "widening": 0.0
+    },
+    {
+     "pi": "p2",
+     "rate": 6.0,
+     "runoff": 38.275084,
+     "onTangent": 1.0,
+     "widening": 0.0
+    }
+   ],
+   "error": {
+    "kind": "Overlap",
+    "a": "p1",
+    "b": "p2"
+   }
+  },
+  {
    "name": "Geçiş aksın başından taşıyor",
    "pis": [
     {

@@ -694,19 +694,8 @@ impl App {
                         d = d.note(Banner::error(e.clone()));
                     }
                     let critical = road_dialog::table(
-                        vec![col("PI", 80.0), col("Nokta", 160.0), num("Km (m)", 120.0), col("Yer", 80.0)],
-                        rep.critical
-                            .iter()
-                            .map(|c| {
-                                let mark = match c.mark.as_str() {
-                                    "normalCrown" => "NC normal bombe",
-                                    "levelCrown" => "LC düz dış yan",
-                                    "reverseCrown" => "RC ters bombe",
-                                    _ => "FS tam dever",
-                                };
-                                vec![c.pi.clone(), mark.into(), comma(c.station, 2), if c.exit { "çıkış" } else { "giriş" }.into()]
-                            })
-                            .collect(),
+                        vec![col("PI", 80.0), col("Nokta", 160.0), num("Km", 120.0), col("Yer", 80.0)],
+                        critical_rows(&rep.critical),
                         "Kritik km yok (km satırlarından)",
                     );
                     let table = match (w.list, ch) {
@@ -881,6 +870,23 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// The critical stations' rows: PI, mark, the km as written (its equations applied: docs/adr/0973, an equation inside
+/// a transition gives the stations on its two sides different bases) and in or out.
+pub(crate) fn critical_rows(critical: &[kentos_commands::SuperCritical]) -> Vec<Vec<String>> {
+    critical
+        .iter()
+        .map(|c| {
+            let mark = match c.mark.as_str() {
+                "normalCrown" => "NC normal bombe",
+                "levelCrown" => "LC düz dış yan",
+                "reverseCrown" => "RC ters bombe",
+                _ => "FS tam dever",
+            };
+            vec![c.pi.clone(), mark.into(), c.km_text.replace('.', ","), if c.exit { "çıkış" } else { "giriş" }.into()]
+        })
+        .collect()
 }
 
 /// The diagram: both sides' slopes along the alignment, the curves' extents, the critical stations, the widening.

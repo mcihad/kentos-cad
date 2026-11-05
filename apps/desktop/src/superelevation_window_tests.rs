@@ -221,3 +221,64 @@ fn screens() {
         }
     }
 }
+
+const EQUATION_CASE: &str = "Km eşitliği geçişin içinde: kritik km'ler iki yanında";
+
+/// The query case's own drawing: the main alignment with a km equation inside the transition.
+fn equation_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.superelevations.query.json")).expect("cases");
+    let c = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == EQUATION_CASE).expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(c["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// The critical stations' table writes the km as written (docs/adr/0973): before the equation (internal 200, back
+/// 1+200, ahead 1+500) the start's base, after it the ahead one; the internal station is not the km.
+#[test]
+fn the_critical_table_writes_the_km_across_an_equation() {
+    let mut app = equation_app();
+    let input = kentos_commands::SuperelevationsQuery { superelevation: Some("d-1".into()), stations: vec![] };
+    let kentos_commands::CommandResult::Completed { output, .. } =
+        kentos_native_application::road_superelevations_query::execute(&mut kentos_native_application::ExecutionContext::new(model(&mut app)), input)
+    else {
+        panic!("the query reads")
+    };
+    let rows = crate::superelevation_window::critical_rows(&output.superelevations[0].critical);
+    let kms: Vec<&str> = rows.iter().map(|r| r[2].as_str()).collect();
+    assert_eq!(&kms[..4], &["1+178,046", "1+194,713", "1+511,379", "1+534,713"]);
+}
+
+/// `.run/gui-evidence/yol-y68/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib superelevation_window_tests::screens_equation -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_equation() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y68");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = equation_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("superelevation.editor"));
+        send(&mut app, W::Choose(0));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y68-km-esitligi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

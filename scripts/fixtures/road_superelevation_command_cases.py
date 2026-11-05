@@ -96,8 +96,9 @@ def fl(v):
     return [[float(a), float(b)] for a, b in v]
 
 
-def report(d):
+def report(d, regions=None):
     b = pcmd.ALIGNED[d["alignment"]]
+    regions = regions or b.regions
     out = {"id": d["id"], "name": d["name"], "revision": d.get("revision", 0), "alignment": d["alignment"],
            "stale": REV[d["alignment"]] != d.get("alignmentRevision", 0), "normalLeft": d["normalLeft"],
            "normalRight": d["normalRight"], "left": [], "right": [], "leftWidening": [], "rightWidening": [],
@@ -109,16 +110,16 @@ def report(d):
     sch, crit = got
     out.update({k: fl(sch[k]) for k in ("left", "right", "leftWidening", "rightWidening")})
     for c in crit:
-        km = aref.km_of(b.regions, mp.mpf(float(c["station"])))
+        km = aref.km_of(regions, mp.mpf(float(c["station"])))
         out["critical"].append({"pi": c["pi"], "mark": c["mark"], "station": float(c["station"]), "km": float(km),
                                 "kmText": pcmd.acmd.km_text(km), "exit": c["exit"]})
     return out
 
 
-def at(d, s):
+def at(d, s, regions=None):
     (sch, _), _ = build(d)
     b = pcmd.ALIGNED[d["alignment"]]
-    km = aref.km_of(b.regions, mp.mpf(s))
+    km = aref.km_of(regions or b.regions, mp.mpf(s))
     v = lambda k, n: supref.along(sch[k], F(s)) if sch[k] else n  # noqa: E731
     return {"station": float(s), "km": float(km), "kmText": pcmd.acmd.km_text(km),
             "left": float(v("left", F(d["normalLeft"]))), "right": float(v("right", F(d["normalRight"]))),
@@ -309,6 +310,22 @@ def query_cases():
     broken = {**D1, "method": curves(rule("p9", 6.0, 40.0, 0.0))}
     q("Kurulamayan çizelge raporda nedeniyle", {}, {"superelevations": [report(broken), report(D2)], "at": []},
       [stale_warning(D2)], supers=[broken, D2])
+    # Docs/adr/0973: a km equation inside the transition (internal 200: back 1+200, ahead 1+500). The critical
+    # stations before it keep the start's km, those after take the ahead one; at the equation itself the ahead km.
+    eq = {"start": 1000.0, "equations": [{"back": 1200.0, "ahead": 1500.0}]}
+    g1 = next(a for a in pcmd.ALIGNMENTS if a["id"] == "g-1")
+    regions = aref.regions({**eq, "equations": [{**q, "increasing": True} for q in eq["equations"]]},
+                           pcmd.ALIGNED["g-1"].length)
+    eq_setup = setup(supers=start)
+    eq_road = road_of(start)
+    for road in (eq_setup["settings"]["road"], eq_road):
+        next(a for a in road["alignments"] if a["id"] == "g-1")["stationing"] = copy.deepcopy(eq)
+    near = [199.999, 200.0, 200.001]
+    cases.append(case("Km eşitliği geçişin içinde: kritik km'ler iki yanında", [step(
+        "execute", {"superelevation": "d-1", "stations": near},
+        completed({"superelevations": [report(D1, regions)], "at": [at(D1, x, regions) for x in near]}),
+        {**UNCHANGED, "road": eq_road})], eq_setup))
+    assert g1["stationing"] == {"start": 1000.0}, "the shared alignment untouched"
     q("Plan cevabı verir", {"superelevation": "d-1", "stations": [200.0]}, one(D1, [200.0]), op="plan")
     q("Doğrulama uyarıları verir", {"superelevation": "d-2"}, None, [stale_warning(D2)], op="validate")
     q("Çizelge yok: boş liste", {}, {"superelevations": [], "at": []}, supers=[])

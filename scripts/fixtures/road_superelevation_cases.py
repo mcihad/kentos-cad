@@ -146,6 +146,20 @@ ROUND = [P("a", 0, 0), P("p1", 400, 0, 350), P("b", 800, -250)]
 TWO = [P("a", 0, 0), P("p1", 400, 0, 250, 50, 50), P("p2", 900, 350, 250, 50, 50), P("b", 1400, 350)]
 REVERSE = [P("a", 0, 0), P("p1", 300, 0, 200, 40, 40), P("p2", 520, 120, 200, 40, 40), P("b", 800, 120)]
 SAMPLES = [0, 150, 300, 330, 345, 360, 400, 450, 500, 600, 700]
+
+
+def touching_runoffs():
+    """Docs/adr/0973: the reverse curves' common runoff whose transitions stand 1 mm apart and 1 mm over each other.
+    With the whole runoff on the tangent the full rate is at the curve's end, the transition reaching (e − n)/e·L
+    past it (n = −2.5, e = 6: 8.5/6·L) at the normal crown: the gap between the two is (TS₂ − ST₁) − 2·8.5/6·L."""
+    _, _, reports, _ = al.build(REVERSE)
+    st1 = F(float(next(c for c in reports if c["pi"] == "p1")["stations"][3]))
+    ts2 = F(float(next(c for c in reports if c["pi"] == "p2")["stations"][0]))
+    reach = F(85, 60)
+    return [round(float((ts2 - st1 - gap) / (2 * reach)), 6) for gap in (F(1, 1000), F(-1, 1000))]
+
+
+APART, OVER = touching_runoffs()
 CASES = [
     make("Sağa dönen kurp, klotoidli, geçiş klotoidde", RIGHT, [-2.5, -2.5], [rule("p1", 6.0, 60.0, 0.0)], at=SAMPLES),
     make("Sola dönen kurp: sağ yan dışta", LEFT, [-2.5, -2.5], [rule("p1", 6.0, 60.0, 0.0)], at=SAMPLES),
@@ -161,6 +175,10 @@ CASES = [
     make("Oran normal eğimden küçük", RIGHT, [-2.5, -2.5], [rule("p1", 2.0, 60.0, 0.0)]),
     make("Tam dever kurba sığmıyor", ROUND, [-2.5, -2.5], [rule("p1", 6.0, 400.0, 0.0)]),
     make("Ters kurplarda geçişler biniyor", REVERSE, [-2.5, -2.5], [rule("p1", 6.0, 80.0, 1.0), rule("p2", 6.0, 80.0, 1.0)]),
+    make("Çok kısa ters kurp: geçişler arasında 1 mm kalır", REVERSE, [-2.5, -2.5],
+         [rule("p1", 6.0, APART, 1.0), rule("p2", 6.0, APART, 1.0)], at=[300, 330, 345, 360, 400]),
+    make("Çok kısa ters kurp: geçişler 1 mm biner", REVERSE, [-2.5, -2.5],
+         [rule("p1", 6.0, OVER, 1.0), rule("p2", 6.0, OVER, 1.0)]),
     make("Geçiş aksın başından taşıyor", RIGHT, [-2.5, -2.5], [rule("p1", 6.0, 300.0, 1.0)]),
     make("Aynı PI iki kez", RIGHT, [-2.5, -2.5], [rule("p1", 6.0, 60.0, 0.0), rule("p1", 5.0, 60.0, 0.0)]),
     make("Yazılan km satırları", RIGHT, [-2.5, -2.5], rows=[
