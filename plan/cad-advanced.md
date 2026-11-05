@@ -2043,6 +2043,12 @@ klavye akışı korunur. Panel sınamaları ve dosyadan yeniden okuma geçti;
 gerçek CAD penceresinde sağ menü, yıldız ve yeni uygulama oturumunda favorinin
 geri gelmesi ekran görüntüleriyle doğrulandı (repo dışında). Bu, tüm komutları
 kapsayan genel araç tarifi ve ofis paleti yayını değildir; madde `[~]` kalır.
+Kişisel favori/geçmiş anahtarları kitaplık kaynağına, proje şablonunda ayrıca
+kalıcı proje kimliğine bağlandı. Aynı şablon ID'si başka çizimde geçse bile
+yanlış favori olarak görünmez; eski, kaynak belirtmeyen proje favorisi
+güvenle gizlenir. Farklı proje kimliği sınaması eklendi. Gerçek uygulamada
+favori satırı ve `project:<kimlik>:<şablon>` kaydı doğrulandı; ekran görüntüsü
+repo dışındadır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

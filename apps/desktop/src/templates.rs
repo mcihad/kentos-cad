@@ -190,8 +190,10 @@ impl App {
         self.template = Some(run);
         self.last_template = Some(id.to_owned());
         // The Şablonlar panel's first groups are personal to this device.
-        if let Err(error) = self.templates_panel.used(id) {
-            self.warn(format!("Şablon geçmişi kaydedilemedi: {error}"));
+        if let Some(key) = self.personal_template_key(id) {
+            if let Err(error) = self.templates_panel.used(&key) {
+                self.warn(format!("Şablon geçmişi kaydedilemedi: {error}"));
+            }
         }
         let title = catalog()
             .get(&format!("tool.{}", recipe.tool))

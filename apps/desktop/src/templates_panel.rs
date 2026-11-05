@@ -43,8 +43,8 @@ const FAVORITES_KEY: &str = "\u{1}favoriler";
 const PERSONAL_FILE: &str = "sablon-paleti.json";
 const FAVORITE_LIMIT: usize = 100;
 
-/// The user's palette choices. They are device preferences, not drawing or
-/// office standard data; absent project templates remain here until reopened.
+/// The user's palette choices. Keys include the library source, and project
+/// templates include the project id so another drawing cannot reuse its id.
 #[derive(Debug, Default)]
 struct Personal {
     path: Option<PathBuf>,
@@ -108,7 +108,7 @@ impl Personal {
                 .into_iter()
                 .flatten()
                 .filter_map(Value::as_str)
-                .filter(|id| !id.is_empty() && id.len() <= 256)
+                .filter(|id| !id.is_empty() && id.len() <= 512)
                 .filter(|id| found.insert((*id).to_owned()))
                 .take(limit)
                 .map(str::to_owned)
@@ -253,6 +253,40 @@ fn source_text(source: Source) -> &'static str {
 }
 
 impl App {
+    /// Stable key for a template in its source. A project template is scoped
+    /// to the persistent drawing id, even when the file moves on disk.
+    pub(crate) fn personal_template_key(&self, id: &str) -> Option<String> {
+        let (item, source) = self.styles.library.get(id)?;
+        if item.kind() != ItemKind::Template {
+            return None;
+        }
+        Some(match source {
+            Source::System => format!("system:{id}"),
+            Source::User => format!("user:{id}"),
+            Source::Project => format!(
+                "project:{}:{id}",
+                self.document.as_ref()?.model.project_id()?
+            ),
+        })
+    }
+
+    /// Resolve a saved key only in its original source. Old unscoped entries
+    /// can follow system/user templates, never an ambiguous project item.
+    pub(crate) fn personal_template_id<'a>(&self, key: &'a str) -> Option<&'a str> {
+        let id = if let Some(id) = key
+            .strip_prefix("system:")
+            .or_else(|| key.strip_prefix("user:"))
+        {
+            id
+        } else if let Some(rest) = key.strip_prefix("project:") {
+            rest.split_once(':')?.1
+        } else {
+            let (item, source) = self.styles.library.get(key)?;
+            return (source != Source::Project && item.kind() == ItemKind::Template).then_some(key);
+        };
+        (self.personal_template_key(id).as_deref() == Some(key)).then_some(id)
+    }
+
     /// The rows as listed now: the last used templates while nothing is
     /// searched, then the groups the library's list gives, each followed by
     /// its templates when it is open.
@@ -280,25 +314,16 @@ impl App {
                 .personal
                 .favorites
                 .iter()
-                .filter(|id| {
-                    lib.get(id)
-                        .is_some_and(|(item, _)| item.kind() == ItemKind::Template)
-                })
-                .cloned()
+                .filter_map(|key| self.personal_template_id(key).map(str::to_owned))
                 .collect();
             if !favorites.is_empty() {
                 push(FAVORITES_KEY.to_owned(), "Favoriler".to_owned(), favorites);
             }
-            let recent: Vec<String> = self
-                .templates_panel
+            let recent: Vec<String> = state
                 .personal
                 .recent
                 .iter()
-                .filter(|id| {
-                    lib.get(id)
-                        .is_some_and(|(item, _)| item.kind() == ItemKind::Template)
-                })
-                .cloned()
+                .filter_map(|key| self.personal_template_id(key).map(str::to_owned))
                 .collect();
             if !recent.is_empty() {
                 push(
@@ -367,14 +392,10 @@ impl App {
             Event::Copy(id, to) => self.copy_template(&id, to),
             Event::Remove(id) => self.ask_remove_template(&id),
             Event::Favorite(id) => {
-                if self
-                    .styles
-                    .library
-                    .get(&id)
-                    .is_some_and(|(item, _)| item.kind() == ItemKind::Template)
-                    && let Err(error) = self.templates_panel.personal.toggle(&id)
-                {
-                    self.warn(format!("Şablon favorileri kaydedilemedi: {error}"));
+                if let Some(key) = self.personal_template_key(&id) {
+                    if let Err(error) = self.templates_panel.personal.toggle(&key) {
+                        self.warn(format!("Şablon favorileri kaydedilemedi: {error}"));
+                    }
                 }
             }
         }
@@ -651,10 +672,8 @@ impl App {
                     }),
             );
         let favorite = self
-            .templates_panel
-            .favorites()
-            .iter()
-            .any(|favorite| favorite == id);
+            .personal_template_key(id)
+            .is_some_and(|key| self.templates_panel.favorites().contains(&key));
         let mut face = row![picture, words];
         if favorite {
             face = face.push(icon(crate::icons::from_web(Some("starOn"))).size(14.0));
@@ -704,10 +723,8 @@ impl App {
             menu = menu.detail("Önce çizimde nesne seçin.");
         }
         let favorite = self
-            .templates_panel
-            .favorites()
-            .iter()
-            .any(|saved| saved == id);
+            .personal_template_key(id)
+            .is_some_and(|key| self.templates_panel.favorites().contains(&key));
         menu = menu
             .item(
                 if favorite {
@@ -935,11 +952,8 @@ mod tests {
         let mut app = app();
         send(&mut app, Event::Favorite("p-parsel".into()));
         assert_eq!(rows(&app)[..2], ["» Favoriler (1)", "p-parsel"]);
-        assert!(
-            app.templates_panel
-                .favorites()
-                .contains(&"p-parsel".to_owned())
-        );
+        let key = app.personal_template_key("p-parsel").unwrap();
+        assert!(app.templates_panel.favorites().contains(&key));
         send(&mut app, Event::Search("poligon".into()));
         assert_eq!(rows(&app), ["» Kategorisiz (1)", "p-nokta"]);
         send(&mut app, Event::Search(String::new()));
@@ -969,8 +983,14 @@ mod tests {
         assert_eq!(app.document.as_ref().unwrap().model.revision(), before);
         let (loaded, problem) = Personal::open(&folder);
         assert!(problem.is_none());
-        assert_eq!(loaded.favorites, ["p-ada"]);
-        assert_eq!(loaded.recent, ["p-parsel"]);
+        assert_eq!(
+            loaded.favorites,
+            [app.personal_template_key("p-ada").unwrap()]
+        );
+        assert_eq!(
+            loaded.recent,
+            [app.personal_template_key("p-parsel").unwrap()]
+        );
         assert_eq!(
             Personal::read(r#"{"version":1,"favorites":["a","a",3],"recent":["b"]}"#).0,
             ["a"]
@@ -988,6 +1008,24 @@ mod tests {
             "invalid"
         );
         std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn project_favorite_never_follows_another_project_with_the_same_template_id() {
+        let first = app();
+        let key = first.personal_template_key("p-ada").unwrap();
+        assert_eq!(first.personal_template_id(&key), Some("p-ada"));
+        let mut second = app();
+        let mut snapshot = second.document.as_ref().unwrap().model.to_snapshot_v2();
+        snapshot.project_id = Some(kentos_commands::ProjectId([0x71; 16]));
+        let other = crate::document::Document::from_v2(snapshot, None).unwrap();
+        let _ = second.update(Message::Opened(Some(Ok(Box::new(other)))));
+        assert_ne!(
+            first.personal_template_key("p-ada"),
+            second.personal_template_key("p-ada")
+        );
+        assert_eq!(second.personal_template_id(&key), None);
+        assert_eq!(second.personal_template_id("p-ada"), None);
     }
 
     #[test]

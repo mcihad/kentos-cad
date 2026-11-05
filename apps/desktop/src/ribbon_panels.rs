@@ -350,7 +350,7 @@ impl App {
             .templates_panel
             .favorites()
             .iter()
-            .filter_map(|id| line(id))
+            .filter_map(|key| self.personal_template_id(key).and_then(&line))
             .collect();
         if !favorites.is_empty() {
             out.push(TemplateLine::Header("Favoriler".to_owned()));
@@ -360,7 +360,7 @@ impl App {
             .templates_panel
             .recent()
             .iter()
-            .filter_map(|id| line(id))
+            .filter_map(|key| self.personal_template_id(key).and_then(&line))
             .collect();
         if !recent.is_empty() {
             out.push(TemplateLine::Header("Son kullanılanlar".to_owned()));
