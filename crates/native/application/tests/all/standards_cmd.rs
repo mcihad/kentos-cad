@@ -473,6 +473,7 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
     let reference = StandardBlockReference {
         name: block_name.clone(),
         publication: publication.clone(),
+        units: None,
     };
     let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
     let resources = |reference: StandardBlockReference| StandardResources {
@@ -521,6 +522,31 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
             .iter()
             .any(|i| i["kind"] == "missingBlockReference" && i["fixable"] == false)
     );
+    let mut unit_only = reference.clone();
+    unit_only.units = Some(kentos_commands::BlockUnits::Mm);
+    let wrong_unit = run_check(&mut doc, unit_only.clone());
+    assert!(wrong_unit["output"]["issues"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|i| i["kind"] == "blockUnit"
+            && i["expected"] == "mm"
+            && i["found"] == "m"
+            && i["objects"] == 3
+            && i["fixable"] == false));
+    assert!(!wrong_unit["output"]["issues"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|i| i["kind"] == "blockPublication"));
+    let mut correct_unit = reference.clone();
+    correct_unit.units = Some(kentos_commands::BlockUnits::M);
+    let equal_unit = run_check(&mut doc, correct_unit);
+    assert!(!equal_unit["output"]["issues"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|i| i["kind"] == "blockUnit"));
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);
 
@@ -536,7 +562,11 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
         .unwrap(),
     };
     let mut settings = doc.settings().clone();
-    settings.standard_docs = vec![package("ofis-a", reference), package("ofis-b", wrong)];
+    settings.standard_docs = vec![
+        package("ofis-a", reference),
+        package("ofis-b", wrong),
+        package("ofis-c", unit_only),
+    ];
     doc.set_settings(settings);
     let bound = doc.to_snapshot_v2();
     let resolved = registry::run(
@@ -568,6 +598,11 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
             .iter()
             .any(|c| c["kind"] == "blockReference" && c["fields"] == json!(["publication"]))
     );
+    assert!(conflicts["output"]["conflicts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|c| c["kind"] == "blockReference" && c["fields"] == json!(["units"])));
     assert_eq!(doc.to_snapshot_v2(), bound);
     assert_eq!(doc.undo_labels(), undo);
 }

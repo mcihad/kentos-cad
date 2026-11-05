@@ -171,6 +171,7 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::HatchPatternDefinition => "Tarama tanımı",
         K::MissingBlockReference => "Eksik kitaplık bloğu",
         K::BlockPublication => "Blok yayını",
+        K::BlockUnit => "Blok birimi",
         K::SheetTemplateOrigin => "Pafta şablonu",
         K::MissingLeaderStyleDefinition => "Eksik kılavuz stili",
         K::LeaderStyleDefinition => "Kılavuz stili",
@@ -202,6 +203,7 @@ fn conflict_field(field: &str) -> &'static str {
         "description" => "Açıklama",
         "source" => "Kaynak dosya",
         "publication" => "Yayın kimliği/sürüm",
+        "units" => "Blok birimi",
         "arrow" => "Ok ucu",
         "arrowSize" => "Ok boyu oranı",
         "mask" => "Yazı maskesi",
@@ -868,7 +870,8 @@ impl App {
                     StandardIssueKind::MissingHatchPatternDefinition
                     | StandardIssueKind::HatchPatternDefinition => Some(&p.hatch_patterns),
                     StandardIssueKind::MissingBlockReference
-                    | StandardIssueKind::BlockPublication => Some(&p.blocks),
+                    | StandardIssueKind::BlockPublication
+                    | StandardIssueKind::BlockUnit => Some(&p.blocks),
                     StandardIssueKind::SheetTemplateOrigin => Some(&p.sheet_templates),
                     StandardIssueKind::MissingLeaderStyleDefinition
                     | StandardIssueKind::LeaderStyleDefinition => Some(&p.leader_styles),
@@ -888,6 +891,7 @@ impl App {
                         | StandardIssueKind::HatchPatternDefinition
                         | StandardIssueKind::MissingBlockReference
                         | StandardIssueKind::BlockPublication
+                        | StandardIssueKind::BlockUnit
                         | StandardIssueKind::SheetTemplateOrigin
                         | StandardIssueKind::MissingLeaderStyleDefinition
                         | StandardIssueKind::LeaderStyleDefinition
@@ -905,6 +909,7 @@ impl App {
                                     issue.kind,
                                     StandardIssueKind::MissingBlockReference
                                         | StandardIssueKind::BlockPublication
+                                        | StandardIssueKind::BlockUnit
                                 )
                             {
                                 name.trim().to_lowercase() == issue.subject.trim().to_lowercase()
@@ -932,6 +937,7 @@ impl App {
                         | StandardIssueKind::HatchPatternDefinition
                         | StandardIssueKind::MissingBlockReference
                         | StandardIssueKind::BlockPublication
+                        | StandardIssueKind::BlockUnit
                         | StandardIssueKind::SheetTemplateOrigin
                         | StandardIssueKind::MissingLeaderStyleDefinition
                         | StandardIssueKind::LeaderStyleDefinition
@@ -1317,6 +1323,13 @@ fn block_publication_words(raw: &str) -> String {
 /// A finding's change in a few words: what the drawing has and what the standard asks, or how many objects.
 fn change_words(issue: &StandardIssue) -> String {
     match issue.kind {
+        StandardIssueKind::BlockUnit => {
+            return format!(
+                "{} → {}",
+                issue.found.as_deref().unwrap_or("?"),
+                issue.expected.as_deref().unwrap_or("?")
+            );
+        }
         StandardIssueKind::MissingLineTypeDefinition
         | StandardIssueKind::MissingHatchPatternDefinition
         | StandardIssueKind::MissingBlockReference => {

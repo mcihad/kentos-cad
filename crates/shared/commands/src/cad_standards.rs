@@ -321,6 +321,10 @@ pub fn standard_sheet_templates_problem(
 pub struct StandardBlockReference {
     pub name: String,
     pub publication: crate::BlockPublication,
+    /// Optional approved authored unit. Checking it never rescales a local block.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<crate::BlockUnits>,
 }
 
 pub fn standard_blocks_problem(blocks: &[StandardBlockReference]) -> Option<String> {
@@ -554,7 +558,7 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
             .ok_or("resources.blocks bir dizi olmalı.")?;
         for (i, block) in blocks.iter().enumerate() {
             let path = format!("resources.blocks[{i}]");
-            keys(block, &path, &["name", "publication"])?;
+            keys(block, &path, &["name", "publication", "units"])?;
             if let Some(publication) = object(block, &path)?.get("publication") {
                 keys(
                     publication,
@@ -875,6 +879,7 @@ pub enum StandardIssueKind {
     HatchPatternDefinition,
     MissingBlockReference,
     BlockPublication,
+    BlockUnit,
     SheetTemplateOrigin,
     MissingLeaderStyleDefinition,
     LeaderStyleDefinition,
@@ -911,8 +916,8 @@ pub struct StandardIssue {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub found: Option<String>,
     /// The objects it is about (ObjectLineType, OwnLook), or direct placements
-    /// of a mismatched published block (BlockPublication). Nested references
-    /// are described separately in that finding's message.
+    /// of a mismatched published block (BlockPublication or BlockUnit).
+    /// Nested references are described separately in that finding's message.
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -1164,6 +1169,14 @@ mod tests {
         let parse =
             |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
         assert!(parse(&value).is_ok());
+        value["resources"]["blocks"][0]["units"] = "mm".into();
+        assert_eq!(
+            parse(&value).unwrap().1.unwrap().resources.unwrap().blocks[0].units,
+            Some(crate::BlockUnits::Mm)
+        );
+        value["resources"]["blocks"][0]["units"] = "mile".into();
+        assert!(parse(&value).is_err());
+        value["resources"]["blocks"][0].as_object_mut().unwrap().remove("units");
         value["resources"]["blocks"][0]["publication"]["unsupported"] = true.into();
         assert!(parse(&value).is_err());
         value["resources"]["blocks"][0]["publication"]

@@ -1458,6 +1458,17 @@ fn resource_issues(
     doc: &Document,
     resources: &kentos_commands::StandardResources,
 ) -> Result<Vec<StandardIssue>, Stop> {
+    fn unit_name(unit: kentos_commands::BlockUnits) -> &'static str {
+        use kentos_commands::BlockUnits as U;
+        match unit {
+            U::Mm => "mm",
+            U::Cm => "cm",
+            U::M => "m",
+            U::In => "in",
+            U::Ft => "ft",
+            U::Unitless => "Birimsiz",
+        }
+    }
     fn resource_geometry<T: serde::Serialize>(item: &T) -> serde_json::Value {
         let mut value = serde_json::to_value(item).expect("validated resource");
         let object = value.as_object_mut().expect("resource object");
@@ -1558,45 +1569,55 @@ fn resource_issues(
         let impact = format!(
             " Çizimde {direct_placements} doğrudan yerleştirme ve blok tanımlarında {nested_references} iç başvuru var."
         );
-        let expected_value = resource_geometry(expected);
-        let (kind, message, found_value) = match found {
-            None => (
-                StandardIssueKind::MissingBlockReference,
-                format!(
+        let expected_publication = serde_json::json!({"publication": &expected.publication});
+        let Some(found) = found else {
+            issues.push(StandardIssue {
+                kind: StandardIssueKind::MissingBlockReference,
+                subject: expected.name.clone(),
+                layer: None,
+                expected: Some(resource_geometry(expected).to_string()),
+                found: None,
+                objects: 0,
+                fixable: false,
+                message: format!(
                     "“{}” yayımlanmış bloğu çizimde yok; kitaplıktan açıkça yükleyin.{impact}",
                     expected.name,
                 ),
-                None,
-            ),
-            Some(found) => {
-                let publication = found
-                    .card
-                    .as_ref()
-                    .and_then(|card| card.publication.as_ref());
-                let actual = serde_json::json!({"publication": publication});
-                if actual == expected_value {
-                    continue;
-                }
-                (
-                    StandardIssueKind::BlockPublication,
-                    format!(
-                        "“{}” bloğunun yayın kimliği veya sürümü ofis standardından farklı; eşlemeyi inceleyin.{impact}",
-                        expected.name,
-                    ),
-                    Some(actual.to_string()),
-                )
-            }
+            });
+            continue;
         };
-        issues.push(StandardIssue {
-            kind,
-            subject: expected.name.clone(),
-            layer: None,
-            expected: Some(expected_value.to_string()),
-            found: found_value,
-            objects: count(direct_placements),
-            fixable: false,
-            message,
-        });
+        let publication = found.card.as_ref().and_then(|card| card.publication.as_ref());
+        let actual_publication = serde_json::json!({"publication": publication});
+        if actual_publication != expected_publication {
+            issues.push(StandardIssue {
+                kind: StandardIssueKind::BlockPublication,
+                subject: expected.name.clone(),
+                layer: None,
+                expected: Some(expected_publication.to_string()),
+                found: Some(actual_publication.to_string()),
+                objects: count(direct_placements),
+                fixable: false,
+                message: format!(
+                    "“{}” bloğunun yayın kimliği veya sürümü ofis standardından farklı; eşlemeyi inceleyin.{impact}",
+                    expected.name,
+                ),
+            });
+        }
+        if let Some(unit) = expected.units.filter(|unit| found.units != Some(*unit)) {
+            issues.push(StandardIssue {
+                kind: StandardIssueKind::BlockUnit,
+                subject: expected.name.clone(),
+                layer: None,
+                expected: Some(unit_name(unit).to_owned()),
+                found: Some(found.units.map_or("Belirtilmemiş", unit_name).to_owned()),
+                objects: count(direct_placements),
+                fixable: false,
+                message: format!(
+                    "“{}” bloğunun çizim birimi ofis standardından farklı; ölçeği veya bloğu kendiliğinden değiştirmeyin.{impact}",
+                    expected.name,
+                ),
+            });
+        }
     }
     for expected in &resources.leader_styles {
         let found =

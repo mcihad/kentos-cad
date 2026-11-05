@@ -6446,6 +6446,7 @@ class StandardIssueKind(_StrEnum):
     - ``hatchPatternDefinition``
     - ``missingBlockReference``
     - ``blockPublication``
+    - ``blockUnit``
     - ``sheetTemplateOrigin``
     - ``missingLeaderStyleDefinition``
     - ``leaderStyleDefinition``
@@ -6476,6 +6477,7 @@ class StandardIssueKind(_StrEnum):
     HATCH_PATTERN_DEFINITION = "hatchPatternDefinition"
     MISSING_BLOCK_REFERENCE = "missingBlockReference"
     BLOCK_PUBLICATION = "blockPublication"
+    BLOCK_UNIT = "blockUnit"
     SHEET_TEMPLATE_ORIGIN = "sheetTemplateOrigin"
     MISSING_LEADER_STYLE_DEFINITION = "missingLeaderStyleDefinition"
     LEADER_STYLE_DEFINITION = "leaderStyleDefinition"
@@ -6494,7 +6496,7 @@ class StandardIssueKind(_StrEnum):
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "blockUnit", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
@@ -75584,14 +75586,19 @@ class StakeoutSent(_Model):
 class StandardBlockReference(_Model):
     """A named block library release required by an office standard. The
     publication identifies a reusable type; geometry stays in its library.
+    Attributes:
+        units: Optional approved authored unit. Checking it never rescales a local block.
     """
     name: str
     publication: BlockPublication
+    units: BlockUnits | BlockUnitsName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
         out["publication"] = self.publication.to_json()
+        if self.units is not UNSET:
+            out["units"] = None if self.units is None else _enum_out(self.units)
         return out
 
     @classmethod
@@ -75599,6 +75606,7 @@ class StandardBlockReference(_Model):
         return cls(
             name=data["name"],
             publication=BlockPublication.from_json(data["publication"]),
+            units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
         )
 
 
@@ -75670,7 +75678,9 @@ class StandardIssue(_Model):
         expected: What the standard asks for.
         found: What the drawing has.
         layer: The layer's id, when it is about one of the drawing's layers.
-        objects: The objects it is about (ObjectLineType, OwnLook). Unit: count.
+        objects: The objects it is about (ObjectLineType, OwnLook), or direct placements
+            of a mismatched published block (BlockPublication or BlockUnit).
+            Nested references are described separately in that finding's message. Unit: count.
     """
     kind: StandardIssueKind | StandardIssueKindName
     subject: str

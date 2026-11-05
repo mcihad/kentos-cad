@@ -1951,6 +1951,14 @@ tanımındaki iç başvuru sayılarını ayrı verir; `objects` alanı doğrudan
 yerleştirmeyi taşır. Üç yerleştirmeli komut sınaması ve tek yerleştirmeli gerçek
 CAD penceresinde seçili bulgunun tam metni doğrulandı. Bu yalnız salt okunur
 etki bilgisidir; blok tanımını veya yerleştirmeleri değiştirmez.
+Ofis blok referansı isteğe bağlı çizim birimi de taşıyabilir. Beklenen ve yerel
+birim ayrışırsa, yayın bilgisi aynı olsa dahi ayrı ve otomatik düzeltilemeyen
+`blockUnit` bulgusu çıkar; birim veya ölçek sessizce değiştirilmez. Paketler
+arasındaki birim farkı da kaynaklarıyla raporlanır. Eski paketlerde birim alanı
+yoksa bu denetim yapılmaz. Paket, Rust komutu ve Python SDK sınamaları
+geçti. Gerçek CAD penceresinde `m → mm` bulgusu, bir doğrudan yerleştirme,
+tam ayrıntı ve pasif Uygula düğmesi ekran görüntüsüyle doğrulandı; görüntü
+repo dışında tutuldu.
 Pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
 tam görünüş kökeni ile kabul senaryosu hâlâ açıktır.
 Sürüm 2 paketine `sheetTemplates` altında onaylı pafta şablonu kimliği ve

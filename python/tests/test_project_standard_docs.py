@@ -89,6 +89,24 @@ class ProjectStandardDocuments(unittest.TestCase):
                             for issue in report.issues))
         self.assertEqual(document.to_bytes(), before)
 
+    def test_office_block_unit_reports_scale_risk_without_changing_geometry(self):
+        document = cad.Document.open(ROOT / "fixtures/kcad/v2/block-publication.kcad")
+        block = document.blocks()[0]
+        self.assertEqual(block.units, cad.BlockUnits.M)
+        publication = block.card.publication.to_json()
+        resource = cad.StandardBlockReference.from_json({
+            "name": block.name, "publication": publication, "units": "mm",
+        })
+        standard = cad.DrawingStandard.from_json({"name": "Ofis", "layers": []})
+        before = document.to_bytes()
+        report = cad.standards.check(document, standard=standard,
+                                     resources=cad.StandardResources(blocks=[resource]))
+        self.assertTrue(any(issue.kind == cad.StandardIssueKind.BLOCK_UNIT
+                            and issue.expected == "mm" and issue.found == "m"
+                            and issue.objects == 3 and not issue.fixable
+                            for issue in report.issues))
+        self.assertEqual(document.to_bytes(), before)
+
     def test_conflicts_are_available_in_python_without_changing_the_drawing(self):
         fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
         document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())

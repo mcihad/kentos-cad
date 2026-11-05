@@ -159765,6 +159765,17 @@
         },
         "publication": {
           "$ref": "#/$defs/BlockPublication"
+        },
+        "units": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockUnits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional approved authored unit. Checking it never rescales a local block."
         }
       },
       "required": [
@@ -159870,7 +159881,7 @@
           "type": "string"
         },
         "objects": {
-          "description": "The objects it is about (ObjectLineType, OwnLook).",
+          "description": "The objects it is about (ObjectLineType, OwnLook), or direct placements\nof a mismatched published block (BlockPublication or BlockUnit).\nNested references are described separately in that finding's message.",
           "format": "uint32",
           "minimum": 0,
           "type": "integer",
@@ -159907,6 +159918,7 @@
             "hatchPatternDefinition",
             "missingBlockReference",
             "blockPublication",
+            "blockUnit",
             "sheetTemplateOrigin",
             "missingLeaderStyleDefinition",
             "leaderStyleDefinition",

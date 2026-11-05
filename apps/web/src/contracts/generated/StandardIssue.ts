@@ -4,31 +4,33 @@ import type { StandardIssueKind } from "./StandardIssueKind";
 /**
  * A finding.
  */
-export type StandardIssue = { kind: StandardIssueKind, 
+export type StandardIssue = { kind: StandardIssueKind,
 /**
  * What it is about: a layer's, a style's or a line type's name.
  */
-subject: string, 
+subject: string,
 /**
  * The layer's id, when it is about one of the drawing's layers.
  */
-layer?: string, 
+layer?: string,
 /**
  * What the standard asks for.
  */
-expected?: string, 
+expected?: string,
 /**
  * What the drawing has.
  */
-found?: string, 
+found?: string,
 /**
- * The objects it is about (ObjectLineType, OwnLook).
+ * The objects it is about (ObjectLineType, OwnLook), or direct placements
+ * of a mismatched published block (BlockPublication or BlockUnit).
+ * Nested references are described separately in that finding's message.
  */
-objects?: number, 
+objects?: number,
 /**
  * Whether `cad.standards.apply` fixes it.
  */
-fixable: boolean, 
+fixable: boolean,
 /**
  * For people: what is wrong and what fixes it.
  */

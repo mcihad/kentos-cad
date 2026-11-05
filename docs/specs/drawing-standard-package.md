@@ -51,7 +51,7 @@ valid. For example:
   "resources": {
     "lineTypes": [{ "name": "OFFICE-DASH", "elements": [{ "length": 2 }, { "length": -1 }] }],
     "hatchPatterns": [{ "name": "OFFICE-HATCH", "lines": [{ "angle": 45, "origin": [0, 0], "offset": [0, 2] }] }],
-    "blocks": [{ "name": "OFFICE-DOOR", "publication": { "familyId": "22222222-3333-4444-8555-666666666666", "typeId": "33333333-4444-4555-8666-777777777777", "typeName": "Standard door", "release": 2 } }],
+    "blocks": [{ "name": "OFFICE-DOOR", "publication": { "familyId": "22222222-3333-4444-8555-666666666666", "typeId": "33333333-4444-4555-8666-777777777777", "typeName": "Standard door", "release": 2 }, "units": "mm" }],
     "sheetTemplates": [{ "templateId": "office-a3", "revision": 2 }],
     "leaderStyles": [{ "id": "office-note", "name": "A-NOTE", "height": 2.5, "arrow": "open", "arrowSize": 1.5 }],
     "textStyleDefinitions": [{ "id": "office-text", "name": "A-TEXT", "font": "arimo", "height": 2.5, "widthFactor": 0.9 }],
@@ -64,7 +64,9 @@ Package loading rejects unknown resource fields, including nested definition
 and pattern fields. Definition validity and duplicate names are checked using the same
 rules as project line types, hatch patterns and published block cards. Block
 names use the drawing's Turkish case folding, must be unique, and the
-publication identifiers and release must be valid. Template IDs must be unique
+publication identifiers and release must be valid. Optional `units` records
+the authored block unit (`mm`, `cm`, `m`, `in`, `ft` or `unitless`). Omitting it
+leaves the unit check disabled for existing packages. Template IDs must be unique
 without regard to case, must contain 1–128 bytes, and revisions must be
 positive. Named leader styles use the project's validated leader-style shape;
 their IDs are transported but a local style with the same name and appearance
@@ -117,6 +119,10 @@ For a publication mismatch, the finding reports direct placements in its
 `objects` count and states separately how many references occur inside block
 definitions. These counts are an impact hint; they do not authorize replacing
 the definition or prove that equal publication metadata means equal geometry.
+If a block reference specifies `units`, a different or unspecified local unit
+gets a separate, non-fixable `blockUnit` finding even when publication metadata
+matches. This helps identify scale risks without rescaling inserts or replacing
+the definition. Conflicts between office packages report `units` separately.
 Names are compared case insensitively; source path and description do not
 change geometric equality. The command and the desktop standard window
 perform this check without installing or replacing a definition. The full
