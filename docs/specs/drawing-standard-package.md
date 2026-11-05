@@ -40,6 +40,13 @@ Use `expectedRevision` to protect the edit from intervening changes. The same
 field is available through the generated Python SDK and MCP command contract.
 Association does not apply a standard. The standard-check window selects one
 project binding at a time; it does not yet combine multiple standards.
+`cad.standards.conflicts` reports differences between identically named layer,
+text-style and dimension-style definitions in the ordered documents. It
+identifies the first and later document and the differing fields. It does not
+compare global rules, merge the documents, or decide which definition to
+apply. An unreadable document makes the query fail instead of giving a partial
+report. The desktop uses the same query; it is also available through Python
+and the local command registry.
 
 This format is a starting point for CAD-ADV-12, not the complete office
 package. Future resource packaging and the complete association workflow

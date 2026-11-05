@@ -1862,6 +1862,12 @@ projeye bağlayabilir ve bağlı belgelerden birini seçip denetleyebilir; ilk
 belge pencere açıldığında seçilir. Gerçek arayüzde üç belgeyle bağlama,
 kaydetme, yeniden açma, seçim ve küçük pencerede kaydırma doğrulandı. Birden
 fazla standardın birlikte denetimi ve öncelik çözümü henüz yoktur.
+`cad.standards.conflicts`, bağlı standartlardaki aynı adlı katman, yazı ve
+ölçü stili tanımlarının farklı alanlarını ve iki kaynağı raporlar. Sıra
+değişince ilk kaynak yeniden belirlenir; okunamayan belge varsa eksik rapor
+üretilmez. Arayüz aynı sorguyu kullanır; genel kurallar karşılaştırılmaz,
+birleştirme veya otomatik öncelik uygulaması henüz yapılmaz. Gerçek arayüzde
+üç fark ve sıra değişimi, komutta salt okunurluk ve hatalı belge reddi sınandı.
 Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden
 çıkarılabilir; kaynak dosya ve çizim geometrisi değiştirilmez. Eski ön izleme
 ile sıralama engellenir. Otomatik testler ve gerçek arayüzde sıralama,

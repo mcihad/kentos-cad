@@ -13,6 +13,25 @@ import kcad  # The independent KCAD reader.
 
 
 class ProjectStandardDocuments(unittest.TestCase):
+    def test_conflicts_are_available_in_python_without_changing_the_drawing(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
+        document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        standard = json.loads((ROOT / "catalog/v1/standards/mimari-ofis.json").read_text())
+        changed = json.loads(json.dumps(standard))
+        changed["layers"][0]["color"] = "#ff0000"
+        def package(identity, value):
+            return cad.ProjectStandardDocument(text=json.dumps({
+                "format": "kentos.drawing-standard", "version": 1,
+                "id": identity, "revision": "1", "standard": value,
+            }))
+        cad.settings.set(document, standard_docs=[package("first", standard), package("second", changed)])
+        before = document.to_bytes()
+        report = cad.standards.conflicts(document)
+        self.assertEqual(len(report.conflicts), 1)
+        self.assertEqual((report.conflicts[0].first_id, report.conflicts[0].later_id), ("first", "second"))
+        self.assertEqual(report.conflicts[0].fields, ["color"])
+        self.assertEqual(document.to_bytes(), before)
+
     def test_associate_save_reopen_and_remove(self):
         fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
         document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())

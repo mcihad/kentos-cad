@@ -1584,6 +1584,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_STANDARDS_CHECK_VERSION,
     ),
     (
+        kentos_commands::CAD_STANDARDS_CONFLICTS,
+        kentos_commands::CAD_STANDARDS_CONFLICTS_VERSION,
+    ),
+    (
         kentos_commands::CAD_STANDARDS_APPLY,
         kentos_commands::CAD_STANDARDS_APPLY_VERSION,
     ),

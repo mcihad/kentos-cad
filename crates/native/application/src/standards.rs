@@ -12,10 +12,10 @@
 
 use kentos_commands::{
     CommandResult, CommandWarning, DimensionStyleDef, DrawingFont, DrawingStandard, LayerNode,
-    LayerNodeType, LayerStyle, LayersTranslate, LineType, StandardIssue, StandardIssueKind,
-    StandardsApplied, StandardsApply, StandardsCheck, StandardsReport, TextStyleDef, TranslateRule,
-    built_in_standard, built_in_standards, fold_name, font_id, font_label, pattern_matches,
-    standard_problem,
+    LayerNodeType, LayerStyle, LayersTranslate, LineType, StandardConflict, StandardIssue,
+    StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsConflicts,
+    StandardsConflictsReport, StandardsReport, TextStyleDef, TranslateRule, built_in_standard,
+    built_in_standards, fold_name, font_id, font_label, pattern_matches, standard_problem,
 };
 use kentos_domain::{Document, NewLayer, Uuid};
 
@@ -33,6 +33,151 @@ pub mod check {
 /// `cad.standards.apply`'s operations as the registry calls them.
 pub mod apply {
     pub use super::{execute_apply as execute, plan_apply as plan, validate_apply as validate};
+}
+
+pub mod conflicts {
+    pub use super::{
+        execute_conflicts as execute, plan_conflicts as plan, validate_conflicts as validate,
+    };
+}
+
+pub fn validate_conflicts(
+    _cx: &ExecutionContext<'_>,
+    _input: &StandardsConflicts,
+) -> CommandResult<()> {
+    CommandResult::Completed {
+        output: (),
+        warnings: Vec::new(),
+    }
+}
+
+pub fn plan_conflicts(
+    cx: &ExecutionContext<'_>,
+    _input: &StandardsConflicts,
+) -> CommandResult<StandardsConflictsReport> {
+    project_conflicts(cx.doc)
+}
+
+pub fn execute_conflicts(
+    cx: &mut ExecutionContext<'_>,
+    _input: StandardsConflicts,
+) -> CommandResult<StandardsConflictsReport> {
+    project_conflicts(cx.doc)
+}
+
+fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> {
+    use std::collections::BTreeMap;
+    let mut packages = Vec::new();
+    for (index, document) in doc.settings().standard_docs.iter().enumerate() {
+        match kentos_commands::parse_standard_document(document.text.as_bytes()) {
+            Ok((_, Some(package))) => packages.push(package),
+            Ok((_, None)) => {
+                return fail(
+                    codes::INVALID_STANDARD,
+                    "Bağlı standart sürümlü değil.".into(),
+                    &format!("standardDocs[{index}]"),
+                )
+                .into();
+            }
+            Err(why) => {
+                return fail(
+                    codes::INVALID_STANDARD,
+                    why,
+                    &format!("standardDocs[{index}]"),
+                )
+                .into();
+            }
+        }
+    }
+    let mut layers: BTreeMap<String, (&String, &kentos_commands::StandardLayer)> = BTreeMap::new();
+    let mut texts: BTreeMap<String, (&String, &kentos_commands::StandardTextStyle)> =
+        BTreeMap::new();
+    let mut dimensions: BTreeMap<String, (&String, &kentos_commands::StandardDimensionStyle)> =
+        BTreeMap::new();
+    let mut conflicts = Vec::new();
+    for package in &packages {
+        for layer in &package.standard.layers {
+            let key = fold_name(&layer.name);
+            if let Some((first_id, first)) = layers.get(&key) {
+                let first: &kentos_commands::StandardLayer = first;
+                let mut fields = Vec::new();
+                if !first.color.eq_ignore_ascii_case(&layer.color) {
+                    fields.push("color".into());
+                }
+                if first.line_type != layer.line_type {
+                    fields.push("lineType".into());
+                }
+                if first.line_weight != layer.line_weight {
+                    fields.push("lineWeight".into());
+                }
+                if first.plot != layer.plot {
+                    fields.push("plot".into());
+                }
+                if first.from != layer.from {
+                    fields.push("from".into());
+                }
+                if !fields.is_empty() {
+                    conflicts.push(StandardConflict {
+                        kind: "layer".into(),
+                        name: layer.name.clone(),
+                        first_id: (*first_id).clone(),
+                        later_id: package.id.clone(),
+                        fields,
+                    });
+                }
+            } else {
+                layers.insert(key, (&package.id, layer));
+            }
+        }
+        for style in &package.standard.text_styles {
+            let key = fold_name(&style.name);
+            if let Some((first_id, first)) = texts.get(&key) {
+                let first: &kentos_commands::StandardTextStyle = first;
+                let mut fields = Vec::new();
+                if first.font != style.font {
+                    fields.push("font".into());
+                }
+                if first.height != style.height {
+                    fields.push("height".into());
+                }
+                if !fields.is_empty() {
+                    conflicts.push(StandardConflict {
+                        kind: "textStyle".into(),
+                        name: style.name.clone(),
+                        first_id: (*first_id).clone(),
+                        later_id: package.id.clone(),
+                        fields,
+                    });
+                }
+            } else {
+                texts.insert(key, (&package.id, style));
+            }
+        }
+        for style in &package.standard.dimension_styles {
+            let key = fold_name(&style.name);
+            if let Some((first_id, first)) = dimensions.get(&key) {
+                let first: &kentos_commands::StandardDimensionStyle = first;
+                if first.height != style.height {
+                    conflicts.push(StandardConflict {
+                        kind: "dimensionStyle".into(),
+                        name: style.name.clone(),
+                        first_id: (*first_id).clone(),
+                        later_id: package.id.clone(),
+                        fields: vec!["height".into()],
+                    });
+                }
+            } else {
+                dimensions.insert(key, (&package.id, style));
+            }
+        }
+    }
+    CommandResult::Completed {
+        output: StandardsConflictsReport {
+            conflicts,
+            revision: doc.revision().to_string(),
+        },
+        warnings: Vec::new(),
+    }
 }
 
 fn fail(code: &str, message: String, path: &str) -> Stop {

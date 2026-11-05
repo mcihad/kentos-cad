@@ -9,8 +9,9 @@ use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DrawingStandard, ProjectStandardDocument, SettingsSet, StandardIssue,
-    StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsReport,
-    built_in_standard, built_in_standards, parse_standard_document,
+    StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsConflicts,
+    StandardsConflictsReport, StandardsReport, built_in_standard, built_in_standards,
+    parse_standard_document,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, settings_set, standards};
@@ -50,6 +51,7 @@ pub struct Window {
     pub styles: bool,
     report: Result<StandardsReport, String>,
     preview: Result<StandardsApplied, String>,
+    conflicts: Result<StandardsConflictsReport, String>,
     /// The finding pressed: its whole message shown under the table.
     chosen: Option<usize>,
 }
@@ -220,6 +222,7 @@ impl App {
             styles: true,
             report: Err(String::new()),
             preview: Err(String::new()),
+            conflicts: Err(String::new()),
             chosen: None,
         });
         self.dialog = Some(Dialog::DrawingStandard);
@@ -240,6 +243,16 @@ impl App {
                     })
             });
         let mut copy = doc.model.reading_copy();
+        let conflicts = match standards::plan_conflicts(
+            &ExecutionContext::new(&mut copy),
+            &StandardsConflicts {},
+        ) {
+            CommandResult::Completed { output, .. } => Ok(output),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
+            _ => Err("Standartlar karşılaştırılamadı.".into()),
+        };
         let report = match standards::plan_check(
             &ExecutionContext::new(&mut copy),
             &StandardsCheck {
@@ -270,6 +283,7 @@ impl App {
         };
         if let Some(w) = self.drawing_standard.as_mut() {
             w.choices = choices;
+            w.conflicts = conflicts;
             if bound_changed {
                 w.load_error =
                     Some("Bağlı standart değişti veya kaldırıldı; projeden yeniden seçin.".into());
@@ -894,6 +908,34 @@ impl App {
                     .spacing(8),
                 )
             };
+        }
+        if count > 1 {
+            match &w.conflicts {
+                Err(_) => body = body.push(words::text_line(Kind::Warn,
+                    "Bağlı standartların tamamı okunamadığı için farklı tanımlar karşılaştırılamıyor.")),
+                Ok(report) if !report.conflicts.is_empty() => {
+                    let conflicts = report.conflicts.clone();
+                    let count = conflicts.len();
+                    let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
+                        let item = &conflicts[i];
+                        let kind = match item.kind.as_str() {
+                            "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", _ => "Tanım",
+                        };
+                        let fields = item.fields.iter().map(|field| match field.as_str() {
+                            "color" => "renk", "lineType" => "çizgi tipi", "lineWeight" => "kalınlık", "plot" => "yazdırma", "from" => "kaynak eşlemesi", "font" => "yazı tipi", "height" => "yükseklik", _ => "özellik",
+                        }).collect::<Vec<_>>().join(", ");
+                        let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
+                        container(Elided::new(line).size(typography::caption()).font(typography::ui()).width(Fill))
+                            .padding([0, 8]).height(typography::scaled(ROW)).into()
+                    }).height(typography::scaled(104.0));
+                    body = body.push(words::field(
+                        "Aynı adlı farklı tanımlar",
+                        container(list).style(style::container::field_box).width(Fill),
+                        Some(format!("{count} fark. Yalnız katman, yazı ve ölçü stili tanımları karşılaştırılır; denetim seçili standardı kullanır.")),
+                    ));
+                }
+                _ => {}
+            }
         }
         body = body
             .push(words::summary(lines))

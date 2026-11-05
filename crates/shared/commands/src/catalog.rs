@@ -10075,6 +10075,17 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_CONFLICTS.into(),
+            version: crate::CAD_STANDARDS_CONFLICTS_VERSION,
+            title: "Bağlı standartlardaki farklı tanımları göster".into(),
+            summary: "Projeye bağlı standartlarda aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Genel kuralları karşılaştırmaz, standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.".into(),
+            aliases: vec![], effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::None,
+            cost: CommandCost::Instant, input: schema::<crate::StandardsConflicts>(),
+            output: schema::<crate::StandardsConflictsReport>(), plan: Some(schema::<crate::StandardsConflictsReport>()),
+            capabilities: None, examples: vec![CommandExample { title: "Bağlı standartları karşılaştır".into(), input: json!({}), output: None }],
+        },
         // Standardı denetle (docs/adr/0312 §2), held together by fixtures/commands/v1/cad.standards.check.json.
         CommandDescriptor {
             id: crate::CAD_STANDARDS_CHECK.into(),
@@ -14640,6 +14651,9 @@ mod tests {
                     crate::CAD_LAYERS_TRANSLATE => {
                         serde_json::from_value::<crate::LayersTranslate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_CONFLICTS => {
+                        serde_json::from_value::<crate::StandardsConflicts>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_STANDARDS_CHECK => {
                         serde_json::from_value::<crate::StandardsCheck>(e.input.clone()).map(|_| ())

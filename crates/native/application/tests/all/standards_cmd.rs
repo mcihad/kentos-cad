@@ -42,6 +42,70 @@ fn unknown_standard_rules_are_refused_by_command_registry_without_mutation() {
 }
 
 #[test]
+fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
+    use kentos_commands::{
+        CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,
+        StandardPackage,
+    };
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let first = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let mut second = first.clone();
+    second.layers[0].color = "#ff0000".into();
+    second.text_styles[0].height = Some(7.0);
+    second.dimension_styles[0].height = 8.0;
+    let package = |id: &str, standard| ProjectStandardDocument {
+        text: serde_json::to_string(&StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_VERSION,
+            id: id.into(),
+            revision: "1".into(),
+            standard,
+        })
+        .unwrap(),
+    };
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![package("first", first), package("second", second)];
+    doc.set_settings(settings);
+    let before = doc.to_snapshot_v2();
+    let result = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.conflicts",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert_eq!(result["status"], "completed", "{result}");
+    let rows = result["output"]["conflicts"].as_array().unwrap();
+    assert_eq!(rows.len(), 3, "{result}");
+    assert_eq!(rows[0]["kind"], "layer");
+    assert_eq!(rows[0]["fields"], json!(["color"]));
+    assert_eq!(rows[0]["firstId"], "first");
+    assert_eq!(rows[0]["laterId"], "second");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let mut settings = doc.settings().clone();
+    settings.standard_docs.reverse();
+    doc.set_settings(settings);
+    let result = registry::run(&mut ExecutionContext::new(&mut doc), "cad.standards.conflicts", CallOp::Plan, json!({})).unwrap();
+    assert_eq!(result["output"]["conflicts"][0]["firstId"], "second");
+    assert_eq!(result["output"]["conflicts"][0]["laterId"], "first");
+    let mut settings = doc.settings().clone();
+    settings.standard_docs[0].text = settings.standard_docs[0].text.replace("\"layers\":", "\"badkey\":");
+    doc.set_settings(settings);
+    let before_invalid = doc.to_snapshot_v2();
+    let result = registry::run(&mut ExecutionContext::new(&mut doc), "cad.standards.conflicts", CallOp::Execute, json!({})).unwrap();
+    assert_eq!(result["status"], "failed");
+    assert_eq!(doc.to_snapshot_v2(), before_invalid);
+}
+
+#[test]
 fn removing_unsupported_standards_preserves_only_existing_bytes_and_order() {
     use kentos_commands::{CallOp, ProjectStandardDocument};
     use kentos_native_application::registry;

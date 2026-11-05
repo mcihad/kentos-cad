@@ -4969,6 +4969,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.standards.conflicts",
+        refusals: &[&["invalid_standard"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.standards.check",
         refusals: &[&["no_standard", "standard_not_found", "invalid_standard"]],
         warnings: &[],

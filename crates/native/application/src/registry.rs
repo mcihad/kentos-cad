@@ -80,7 +80,7 @@ use crate::sources::{
     relate as sources_relate, sync as sources_sync,
 };
 use crate::sources_query;
-use crate::standards::{apply as standards_apply, check as standards_check};
+use crate::standards::{apply as standards_apply, check as standards_check, conflicts as standards_conflicts};
 use crate::time_query;
 use crate::{sensors_ingest, sensors_latest};
 use crate::spaces_separators;
@@ -722,6 +722,7 @@ macro_rules! by_command {
             kentos_commands::CAD_FIELDS_USAGE => $then!(fields_usage, FieldsUsage),
             kentos_commands::CAD_LAYERS_TRANSLATE => $then!(layers_translate, LayersTranslate),
             kentos_commands::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
+            kentos_commands::CAD_STANDARDS_CONFLICTS => $then!(standards_conflicts, kentos_commands::StandardsConflicts),
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_commands::CAD_PROFILES_APPLY => {
                 $then!(profiles_apply, kentos_commands::ProfilesApply)

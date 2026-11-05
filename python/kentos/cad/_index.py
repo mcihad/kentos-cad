@@ -245,6 +245,7 @@ COMMANDS: dict[str, Any] = {
     "cad.stairs.create": stairs.create,
     "cad.standards.apply": standards.apply,
     "cad.standards.check": standards.check,
+    "cad.standards.conflicts": standards.conflicts,
     "cad.styles.edit": styles.edit,
     "cad.styles.impact": styles.impact,
     "cad.subnetworks.find": subnetworks.find,

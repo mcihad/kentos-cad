@@ -69821,6 +69821,8 @@ class SettingsSet(_Model):
     - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
     - `standardDocs`: the entire ordered list of versioned drawing-standard
       documents retained by the project; an empty list removes all bindings.
+      An ordered, byte-identical subset may remove unsupported existing
+      documents for recovery; new or changed documents are validated.
       This changes the association only and does not apply the standards.
 
     Settings are an edit of the project, no undo step (docs/adr/0049).
@@ -75553,6 +75555,35 @@ class StakeoutSent(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardConflict(_Model):
+    """A later definition differs from the first definition of the same name."""
+    kind: str
+    name: str
+    first_id: str
+    later_id: str
+    fields: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["name"] = self.name
+        out["firstId"] = self.first_id
+        out["laterId"] = self.later_id
+        out["fields"] = list(self.fields)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardConflict:
+        return cls(
+            kind=data["kind"],
+            name=data["name"],
+            first_id=data["firstId"],
+            later_id=data["laterId"],
+            fields=list(data["fields"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StandardDimensionStyle(_Model):
     """A dimension style the standard asks for.
     Attributes:
@@ -75830,6 +75861,41 @@ class StandardsCheck(_Model):
         return cls(
             name=data.get("name", UNSET),
             standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsConflicts(_Model):
+    """Inspect named definitions in the project's ordered standard documents."""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsConflicts:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsConflictsReport(_Model):
+    """This report covers named layer, text and dimension style definitions only;
+    it does not combine standards or resolve global rules.
+    """
+    conflicts: list[StandardConflict]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["conflicts"] = [e0.to_json() for e0 in self.conflicts]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsConflictsReport:
+        return cls(
+            conflicts=[StandardConflict.from_json(e0) for e0 in data["conflicts"]],
+            revision=data["revision"],
         )
 
 
@@ -108488,6 +108554,7 @@ __all__ = [
     "StakeoutSendFormat",
     "StakeoutSendFormatName",
     "StakeoutSent",
+    "StandardConflict",
     "StandardDimensionStyle",
     "StandardIssue",
     "StandardIssueKind",
@@ -108497,6 +108564,8 @@ __all__ = [
     "StandardsApplied",
     "StandardsApply",
     "StandardsCheck",
+    "StandardsConflicts",
+    "StandardsConflictsReport",
     "StandardsReport",
     "StartSubPlace",
     "StationEquationDef",

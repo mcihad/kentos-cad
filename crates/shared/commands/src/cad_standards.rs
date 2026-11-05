@@ -20,6 +20,42 @@ pub const CAD_STANDARDS_CHECK: &str = "cad.standards.check";
 pub const CAD_STANDARDS_CHECK_VERSION: u32 = 1;
 pub const CAD_STANDARDS_APPLY: &str = "cad.standards.apply";
 pub const CAD_STANDARDS_APPLY_VERSION: u32 = 1;
+pub const CAD_STANDARDS_CONFLICTS: &str = "cad.standards.conflicts";
+pub const CAD_STANDARDS_CONFLICTS_VERSION: u32 = 1;
+
+/// Inspect named definitions in the project's ordered standard documents.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsConflicts {}
+
+/// A later definition differs from the first definition of the same name.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardConflict {
+    pub kind: String,
+    pub name: String,
+    pub first_id: String,
+    pub later_id: String,
+    pub fields: Vec<String>,
+}
+
+/// This report covers named layer, text and dimension style definitions only;
+/// it does not combine standards or resolve global rules.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsConflictsReport {
+    pub conflicts: Vec<StandardConflict>,
+    pub revision: String,
+}
 
 fn yes() -> bool {
     true
