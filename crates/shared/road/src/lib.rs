@@ -56,6 +56,7 @@ pub mod superelevation_transition;
 pub mod swept;
 pub mod surface;
 pub mod volume;
+pub mod volume_ledger;
 pub mod volume_uncertainty;
 pub mod wall;
 pub mod widening;

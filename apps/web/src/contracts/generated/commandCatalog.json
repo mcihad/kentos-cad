@@ -42023,6 +42023,243 @@
       ]
     },
     {
+      "id": "road.volumes.ledger",
+      "version": 1,
+      "title": "Kübaj defteri",
+      "summary": "Kübajın toplamını parçalarına ayırır: aralıkları km'ye (by.step metrelik dilimler) ya da koridorun bölgelerine göre, ortalarından, bütün olarak toplar; gruplar toplamı tam verir. Her malzeme (kazı, dolgu, düzeltilmişleri, bitkisel toprak, diş kazısı, üstyapı tabakaları) bir sütundur. Kazının ve dolgunun en büyük top aralığı payları, boyları ve ortalama alanlarıyla (medyana oranla: büyüklük kesitten mi boydan mı); hacmin yol boyunca yoğunlaşması (Gini, hacmin yarısını ve beşte dördünü taşıyan boy payı); decimals basamağa yuvarlanmış aralıkların toplamı ile yuvarlanmış toplamın farkı. Yalnız okur. Uyarılar: kübajın kendi uyarıları. Retler: not_a_road_project, unknown_volume, invalid_volume_ledger, invalid_volume.",
+      "aliases": [
+        "kubajdefteri"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.volumes.ledger` v1 (plan/road.md Y43, docs/adr/0949; ROAD-VOL-16, 18): an earthwork volume's total\ntaken apart — its stretches grouped by km or by region, each material's column; the `top` largest stretches of the\ncut and of the fill (1 to 100; absent: 10) with why they are large; how the cut and the fill crowd along the road;\nand the figures rounded to `decimals` (0 to 3; absent: 2), the rounded stretches' sum against the rounded total.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_ledger` (a step out of 1–100000 m, a top out of\n1–100, decimals over 3), and the volume's own (`invalid_volume`).",
+        "properties": {
+          "by": {
+            "$ref": "#/$defs/LedgerBy"
+          },
+          "decimals": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "top": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "by"
+        ],
+        "title": "VolumesLedger",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.ledger` v1 (docs/adr/0949): the volume, the rounding's decimals, the columns, the groups,\neach column's groups' sum less its total (0 but for the last bits), the largest stretches and the concentration of\nthe cut and of the fill, and the stretches without volume.",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/LedgerColumn"
+            },
+            "type": "array"
+          },
+          "concentration": {
+            "items": {
+              "$ref": "#/$defs/LedgerConcentration"
+            },
+            "type": "array"
+          },
+          "decimals": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "gaps": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "m"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/$defs/LedgerGroup"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "residual": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "volume"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/$defs/LedgerTop"
+            },
+            "type": "array"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "name",
+          "decimals",
+          "columns",
+          "groups",
+          "residual",
+          "top",
+          "concentration",
+          "gaps"
+        ],
+        "title": "VolumeLedgerRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.ledger` v1 (docs/adr/0949): the volume, the rounding's decimals, the columns, the groups,\neach column's groups' sum less its total (0 but for the last bits), the largest stretches and the concentration of\nthe cut and of the fill, and the stretches without volume.",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/LedgerColumn"
+            },
+            "type": "array"
+          },
+          "concentration": {
+            "items": {
+              "$ref": "#/$defs/LedgerConcentration"
+            },
+            "type": "array"
+          },
+          "decimals": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "gaps": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "m"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/$defs/LedgerGroup"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "residual": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "volume"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/$defs/LedgerTop"
+            },
+            "type": "array"
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "name",
+          "decimals",
+          "columns",
+          "groups",
+          "residual",
+          "top",
+          "concentration",
+          "gaps"
+        ],
+        "title": "VolumeLedgerRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_volume_ledger",
+          "not_a_road_project",
+          "unknown_volume",
+          "invalid_volume"
+        ],
+        "warnings": [
+          "corridor_stale",
+          "volume_gap",
+          "volume_uncovered",
+          "volume_unfactored",
+          "volume_changed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "100 m'lik dilimler",
+          "input": {
+            "by": {
+              "kind": "stations",
+              "step": 100.0
+            },
+            "top": 5,
+            "volume": "v-1"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.hauls.edit",
       "version": 1,
       "title": "Brükneri düzenle",
@@ -87439,6 +87676,12 @@
       "meaning": "Kübaj hesabının tanımı geçerli değil ya da koridoru kurulamıyor; ileti nedenini söyler."
     },
     {
+      "code": "invalid_volume_ledger",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kübaj defteri sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
       "code": "invalid_volume_uncertainty",
       "kind": "failed",
       "retryable": false,
@@ -127878,6 +128121,280 @@
         "id",
         "name",
         "height"
+      ],
+      "type": "object"
+    },
+    "LedgerBy": {
+      "description": "How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; or by the\ncorridor's regions.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "stations",
+              "type": "string"
+            },
+            "step": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            }
+          },
+          "required": [
+            "kind",
+            "step"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "regions",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "LedgerColumn": {
+      "description": "A ledger's column (a material): `cut`, `fill`, `factoredCut`, `factoredFill`, `strip`, `bench` or `layer:<name>`; its\nwords; its compensated total; its stretches rounded and summed, its total rounded, and their difference.",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "residue": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "rowsRounded": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "total": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "totalRounded": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "words": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "words",
+        "total",
+        "rowsRounded",
+        "totalRounded",
+        "residue"
+      ],
+      "type": "object"
+    },
+    "LedgerConcentration": {
+      "description": "How a column crowds along the road: its Gini index, the shares of the length holding half and four fifths of it,\nand its densest-first curve (length share, volume share).",
+      "properties": {
+        "column": {
+          "type": "string"
+        },
+        "curve": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "1"
+        },
+        "gini": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "half": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "most": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "column",
+        "gini",
+        "half",
+        "most",
+        "curve"
+      ],
+      "type": "object"
+    },
+    "LedgerGroup": {
+      "description": "A group of stretches: its words, its range between sections, how many stretches, each column's sum and share of the\ncolumn's total (none where the total is 0).",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "shares": {
+          "items": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": "array",
+          "x-unit": "1"
+        },
+        "stretches": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "label",
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "stretches",
+        "values",
+        "shares"
+      ],
+      "type": "object"
+    },
+    "LedgerStretch": {
+      "description": "One of the largest stretches: its range, volume, share and running share of the column's total, its length and\nmean area, each over the stretches' median, and which is larger: `section` or `length`.",
+      "properties": {
+        "areaFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "cumulative": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "lengthFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "meanArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "share": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        },
+        "volume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "volume",
+        "share",
+        "cumulative",
+        "length",
+        "meanArea",
+        "lengthFactor",
+        "areaFactor",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "LedgerTop": {
+      "description": "A column's largest stretches.",
+      "properties": {
+        "column": {
+          "type": "string"
+        },
+        "stretches": {
+          "items": {
+            "$ref": "#/$defs/LedgerStretch"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "column",
+        "stretches"
       ],
       "type": "object"
     },

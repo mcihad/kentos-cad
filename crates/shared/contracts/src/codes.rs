@@ -737,6 +737,8 @@ codes! {
     UNKNOWN_VOLUME = "unknown_volume", Failed, false, "Bu kimlikte ya da adda kübaj hesabı yok.";
     /// An earthwork volume's definition, or one its corridor no longer builds (docs/adr/0906).
     INVALID_VOLUME = "invalid_volume", Failed, false, "Kübaj hesabının tanımı geçerli değil ya da koridoru kurulamıyor; ileti nedenini söyler.";
+    /// A volume's ledger asked that is not right: its step, top or decimals (docs/adr/0949).
+    INVALID_VOLUME_LEDGER = "invalid_volume_ledger", Failed, false, "Kübaj defteri sorusu geçerli değil; ileti nedenini söyler.";
     /// An uncertainty asked that is not right: σ, the shift or the share accepted (docs/adr/0941).
     INVALID_VOLUME_UNCERTAINTY = "invalid_volume_uncertainty", Failed, false, "Kübaj belirsizliği sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: much of the area lies near the zero line; the cut's and fill's σ apart are approximate (docs/adr/0941).

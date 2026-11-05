@@ -356,6 +356,7 @@ pub mod road_volumes_approve;
 pub mod road_volumes_uncertainty;
 pub mod road_volumes_progress;
 pub mod road_volumes_compare;
+pub mod road_volumes_ledger;
 pub mod road_volumes_edit;
 pub mod road_volumes_query;
 pub mod road_sections;
@@ -1315,6 +1316,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_VOLUMES_UNCERTAINTY, kentos_commands::ROAD_VOLUMES_UNCERTAINTY_VERSION),
     (kentos_commands::ROAD_VOLUMES_PROGRESS, kentos_commands::ROAD_VOLUMES_PROGRESS_VERSION),
     (kentos_commands::ROAD_VOLUMES_COMPARE, kentos_commands::ROAD_VOLUMES_COMPARE_VERSION),
+    (kentos_commands::ROAD_VOLUMES_LEDGER, kentos_commands::ROAD_VOLUMES_LEDGER_VERSION),
     (kentos_commands::ROAD_HAULS_EDIT, kentos_commands::ROAD_HAULS_EDIT_VERSION),
     (kentos_commands::ROAD_HAULS_QUERY, kentos_commands::ROAD_HAULS_QUERY_VERSION),
     (kentos_commands::ROAD_HAULS_PLAN, kentos_commands::ROAD_HAULS_PLAN_VERSION),

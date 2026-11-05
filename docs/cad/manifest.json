@@ -15392,12 +15392,13 @@
     "road.volumes.approve",
     "road.volumes.uncertainty",
     "road.volumes.progress",
-    "road.volumes.compare"
+    "road.volumes.compare",
+    "road.volumes.ledger"
    ],
    "operation": null,
-   "python": "Connection: road.volumes.edit, Connection: road.volumes.query, Connection: road.volumes.approve, Connection: road.volumes.uncertainty, Connection: road.volumes.progress, Connection: road.volumes.compare",
-   "mcp": "road.volumes.edit, road.volumes.query, road.volumes.approve, road.volumes.uncertainty, road.volumes.progress, road.volumes.compare",
-   "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile, Onayla ve Onayı kaldır road.volumes.approve ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906); belirsizliği road.volumes.uncertainty ile okur (Y35, ADR 0941); dönem metrajını road.volumes.progress ile okur (Y36, ADR 0942); alternatifleri road.volumes.compare ile karşılaştırır (Y37, ADR 0943).",
+   "python": "Connection: road.volumes.edit, Connection: road.volumes.query, Connection: road.volumes.approve, Connection: road.volumes.uncertainty, Connection: road.volumes.progress, Connection: road.volumes.compare, Connection: road.volumes.ledger",
+   "mcp": "road.volumes.edit, road.volumes.query, road.volumes.approve, road.volumes.uncertainty, road.volumes.progress, road.volumes.compare, road.volumes.ledger",
+   "note": "Kübaj penceresi kübajı yazdıkça çekirdekle hesaplar, kütle diyagramını ve cetveli gösterir; Kaydet road.volumes.edit ile, Onayla ve Onayı kaldır road.volumes.approve ile yazar, Cetveli yaz road.volumes.query'nin cetvelini dosyaya yazar (plan/road.md Y8, ADR 0906); belirsizliği road.volumes.uncertainty ile okur (Y35, ADR 0941); dönem metrajını road.volumes.progress ile okur (Y36, ADR 0942); alternatifleri road.volumes.compare ile karşılaştırır (Y37, ADR 0943); toplamı road.volumes.ledger ile km'ye, bölgeye ve malzemeye göre döker (Y43, ADR 0949).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

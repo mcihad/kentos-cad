@@ -2378,6 +2378,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.volumes.ledger",
+        refusals: &[&["invalid_volume_ledger", "not_a_road_project", "unknown_volume", "invalid_volume"]],
+        warnings: &["corridor_stale", "volume_gap", "volume_uncovered", "volume_unfactored", "volume_changed"],
+        targets: none,
+    },
+    Entry {
         id: "road.volumes.uncertainty",
         refusals: &[&["invalid_volume_uncertainty", "not_a_road_project", "unknown_volume", "invalid_volume"]],
         warnings: &[

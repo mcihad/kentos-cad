@@ -7688,6 +7688,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_VOLUMES_LEDGER.into(),
+            version: crate::ROAD_VOLUMES_LEDGER_VERSION,
+            title: "Kübaj defteri".into(),
+            summary: "Kübajın toplamını parçalarına ayırır: aralıkları km'ye (by.step metrelik dilimler) ya da koridorun bölgelerine göre, ortalarından, bütün olarak toplar; gruplar toplamı tam verir. Her malzeme (kazı, dolgu, düzeltilmişleri, bitkisel toprak, diş kazısı, üstyapı tabakaları) bir sütundur. Kazının ve dolgunun en büyük top aralığı payları, boyları ve ortalama alanlarıyla (medyana oranla: büyüklük kesitten mi boydan mı); hacmin yol boyunca yoğunlaşması (Gini, hacmin yarısını ve beşte dördünü taşıyan boy payı); decimals basamağa yuvarlanmış aralıkların toplamı ile yuvarlanmış toplamın farkı. Yalnız okur. \
+                      Uyarılar: kübajın kendi uyarıları. Retler: not_a_road_project, unknown_volume, invalid_volume_ledger, invalid_volume."
+                .into(),
+            aliases: vec!["kubajdefteri".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesLedger>(),
+            output: schema::<crate::VolumeLedgerRead>(),
+            plan: Some(schema::<crate::VolumeLedgerRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "100 m'lik dilimler".into(),
+                input: json!({ "volume": "v-1", "by": { "kind": "stations", "step": 100.0 }, "top": 5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_EDIT.into(),
             version: crate::ROAD_HAULS_EDIT_VERSION,
             title: "Brükneri düzenle".into(),
@@ -14749,6 +14774,9 @@ mod tests {
                     crate::ROAD_VOLUMES_COMPARE => {
                         serde_json::from_value::<crate::VolumesCompare>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_LEDGER => {
+                        serde_json::from_value::<crate::VolumesLedger>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
@@ -15605,6 +15633,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_COMPARE => {
                             serde_json::from_value::<crate::VolumesCompared>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_LEDGER => {
+                            serde_json::from_value::<crate::VolumeLedgerRead>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_EDIT => {
                             serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())

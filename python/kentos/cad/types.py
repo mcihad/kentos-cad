@@ -8966,6 +8966,28 @@ class LeaderEdit(_Union):
         return _variant(_LEADER_EDIT, "LeaderEdit", "kind", data).from_json(data)
 
 
+class LedgerBy(_Union):
+    """How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; or by the
+    corridor's regions.
+
+    One of:
+
+    - :class:`StationsLedgerBy` (``kind: stations``)
+    - :class:`RegionsLedgerBy` (``kind: regions``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LedgerBy:
+        return _variant(_LEDGER_BY, "LedgerBy", "kind", data).from_json(data)
+
+
 class LengthenChange(_Union):
     """How the length changes (AutoCAD LENGTHEN's DElta, Percent, Total and DYnamic).
 
@@ -45566,6 +45588,209 @@ class LeadersPlan(_Model):
             leaders=[Entity.from_json(e0) for e0 in data["leaders"]],
             revision=data["revision"],
             removed=list(data["removed"]) if "removed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LedgerColumn(_Model):
+    """A ledger's column (a material): `cut`, `fill`, `factoredCut`, `factoredFill`, `strip`, `bench` or `layer:<name>`; its
+    words; its compensated total; its stretches rounded and summed, its total rounded, and their difference.
+    Attributes:
+        total: Unit: volume.
+        rows_rounded: Unit: volume.
+        total_rounded: Unit: volume.
+        residue: Unit: volume.
+    """
+    key: str
+    words: str
+    total: float
+    rows_rounded: float
+    total_rounded: float
+    residue: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["words"] = self.words
+        out["total"] = float(self.total)
+        out["rowsRounded"] = float(self.rows_rounded)
+        out["totalRounded"] = float(self.total_rounded)
+        out["residue"] = float(self.residue)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LedgerColumn:
+        return cls(
+            key=data["key"],
+            words=data["words"],
+            total=float(data["total"]),
+            rows_rounded=float(data["rowsRounded"]),
+            total_rounded=float(data["totalRounded"]),
+            residue=float(data["residue"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LedgerConcentration(_Model):
+    """How a column crowds along the road: its Gini index, the shares of the length holding half and four fifths of it,
+    and its densest-first curve (length share, volume share).
+    Attributes:
+        gini: Unit: 1.
+        half: Unit: 1.
+        most: Unit: 1.
+        curve: Unit: 1.
+    """
+    column: str
+    gini: float
+    half: float
+    most: float
+    curve: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        out["gini"] = float(self.gini)
+        out["half"] = float(self.half)
+        out["most"] = float(self.most)
+        out["curve"] = [[float(e1) for e1 in e0] for e0 in self.curve]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LedgerConcentration:
+        return cls(
+            column=data["column"],
+            gini=float(data["gini"]),
+            half=float(data["half"]),
+            most=float(data["most"]),
+            curve=[[float(e1) for e1 in e0] for e0 in data["curve"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LedgerGroup(_Model):
+    """A group of stretches: its words, its range between sections, how many stretches, each column's sum and share of the
+    column's total (none where the total is 0).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        stretches: Unit: count.
+        values: Unit: volume.
+        shares: Unit: 1.
+    """
+    label: str
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    stretches: int
+    values: list[float]
+    shares: list[float | None]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["stretches"] = self.stretches
+        out["values"] = [float(e0) for e0 in self.values]
+        out["shares"] = [None if e0 is None else float(e0) for e0 in self.shares]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LedgerGroup:
+        return cls(
+            label=data["label"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            stretches=data["stretches"],
+            values=[float(e0) for e0 in data["values"]],
+            shares=[None if e0 is None else float(e0) for e0 in data["shares"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LedgerStretch(_Model):
+    """One of the largest stretches: its range, volume, share and running share of the column's total, its length and
+    mean area, each over the stretches' median, and which is larger: `section` or `length`.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        volume: Unit: volume.
+        share: Unit: 1.
+        cumulative: Unit: 1.
+        length: Unit: m.
+        mean_area: Unit: area.
+        length_factor: Unit: 1.
+        area_factor: Unit: 1.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    volume: float
+    share: float
+    cumulative: float
+    length: float
+    mean_area: float
+    length_factor: float
+    area_factor: float
+    reason: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["volume"] = float(self.volume)
+        out["share"] = float(self.share)
+        out["cumulative"] = float(self.cumulative)
+        out["length"] = float(self.length)
+        out["meanArea"] = float(self.mean_area)
+        out["lengthFactor"] = float(self.length_factor)
+        out["areaFactor"] = float(self.area_factor)
+        out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LedgerStretch:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            volume=float(data["volume"]),
+            share=float(data["share"]),
+            cumulative=float(data["cumulative"]),
+            length=float(data["length"]),
+            mean_area=float(data["meanArea"]),
+            length_factor=float(data["lengthFactor"]),
+            area_factor=float(data["areaFactor"]),
+            reason=data["reason"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LedgerTop(_Model):
+    """A column's largest stretches."""
+    column: str
+    stretches: list[LedgerStretch]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        out["stretches"] = [e0.to_json() for e0 in self.stretches]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LedgerTop:
+        return cls(
+            column=data["column"],
+            stretches=[LedgerStretch.from_json(e0) for e0 in data["stretches"]],
         )
 
 
@@ -87260,6 +87485,54 @@ class VolumeLayer(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeLedgerRead(_Model):
+    """Output of `road.volumes.ledger` v1 (docs/adr/0949): the volume, the rounding's decimals, the columns, the groups,
+    each column's groups' sum less its total (0 but for the last bits), the largest stretches and the concentration of
+    the cut and of the fill, and the stretches without volume.
+    Attributes:
+        decimals: Unit: count.
+        residual: Unit: volume.
+        gaps: Unit: m.
+    """
+    volume: str
+    name: str
+    decimals: int
+    columns: list[LedgerColumn]
+    groups: list[LedgerGroup]
+    residual: list[float]
+    top: list[LedgerTop]
+    concentration: list[LedgerConcentration]
+    gaps: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["name"] = self.name
+        out["decimals"] = self.decimals
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["groups"] = [e0.to_json() for e0 in self.groups]
+        out["residual"] = [float(e0) for e0 in self.residual]
+        out["top"] = [e0.to_json() for e0 in self.top]
+        out["concentration"] = [e0.to_json() for e0 in self.concentration]
+        out["gaps"] = [[float(e1) for e1 in e0] for e0 in self.gaps]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeLedgerRead:
+        return cls(
+            volume=data["volume"],
+            name=data["name"],
+            decimals=data["decimals"],
+            columns=[LedgerColumn.from_json(e0) for e0 in data["columns"]],
+            groups=[LedgerGroup.from_json(e0) for e0 in data["groups"]],
+            residual=[float(e0) for e0 in data["residual"]],
+            top=[LedgerTop.from_json(e0) for e0 in data["top"]],
+            concentration=[LedgerConcentration.from_json(e0) for e0 in data["concentration"]],
+            gaps=[[float(e1) for e1 in e0] for e0 in data["gaps"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeListed(_Model):
     """An earthwork volume in a list.
     Attributes:
@@ -87919,6 +88192,44 @@ class VolumesEdit(_Model):
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else [VolumeStripDef.from_json(e0) for e0 in data["strip"]],
             volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesLedger(_Model):
+    """Input of `road.volumes.ledger` v1 (plan/road.md Y43, docs/adr/0949; ROAD-VOL-16, 18): an earthwork volume's total
+    taken apart — its stretches grouped by km or by region, each material's column; the `top` largest stretches of the
+    cut and of the fill (1 to 100; absent: 10) with why they are large; how the cut and the fill crowd along the road;
+    and the figures rounded to `decimals` (0 to 3; absent: 2), the rounded stretches' sum against the rounded total.
+
+    Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_ledger` (a step out of 1–100000 m, a top out of
+    1–100, decimals over 3), and the volume's own (`invalid_volume`).
+    Attributes:
+        decimals: Unit: count.
+        top: Unit: count.
+    """
+    volume: str
+    by: LedgerBy
+    decimals: int | None | Unset = UNSET
+    top: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["by"] = self.by.to_json()
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        if self.top is not UNSET:
+            out["top"] = self.top
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesLedger:
+        return cls(
+            volume=data["volume"],
+            by=LedgerBy.from_json(data["by"]),
+            decimals=data.get("decimals", UNSET),
+            top=data.get("top", UNSET),
         )
 
 
@@ -98205,6 +98516,40 @@ class BindLeaderEdit(LeaderEdit):
             arm=data["arm"],
             tip=UNSET if "tip" not in data else None if data["tip"] is None else SubRef.from_json(data["tip"]),
         )
+
+
+@dataclass(kw_only=True, slots=True)
+class StationsLedgerBy(LedgerBy):
+    """
+    Attributes:
+        step: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "stations"
+    step: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "stations"}
+        out["step"] = float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StationsLedgerBy:
+        return cls(
+            step=float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegionsLedgerBy(LedgerBy):
+    TAG_VALUE: ClassVar[str] = "regions"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "regions"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegionsLedgerBy:
+        return cls()
 
 
 @dataclass(kw_only=True, slots=True)
@@ -108571,6 +108916,9 @@ _KNOWN_POINT: dict[str, type[KnownPoint]] = {"named": NamedKnownPoint, "at": AtK
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
+_LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions": RegionsLedgerBy}
+
+
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
@@ -110331,6 +110679,12 @@ __all__ = [
     "LeadersEdit",
     "LeadersEdited",
     "LeadersPlan",
+    "LedgerBy",
+    "LedgerColumn",
+    "LedgerConcentration",
+    "LedgerGroup",
+    "LedgerStretch",
+    "LedgerTop",
     "LeftWhy",
     "LeftWhyName",
     "LegendMade",
@@ -111301,6 +111655,7 @@ __all__ = [
     "RefreshElevationsOperation",
     "RefreshOpeningsOperation",
     "RefreshTablesOperation",
+    "RegionsLedgerBy",
     "RegisteredArea",
     "RegistryDatum",
     "RegistryDatumName",
@@ -111829,6 +112184,7 @@ __all__ = [
     "StationText",
     "StationTextName",
     "StationsAnnotationWork",
+    "StationsLedgerBy",
     "StationsSectionStations",
     "StationsSuperelevationMethod",
     "StepDivision",
@@ -112221,6 +112577,7 @@ __all__ = [
     "VolumeDef",
     "VolumeFactorDef",
     "VolumeLayer",
+    "VolumeLedgerRead",
     "VolumeListed",
     "VolumeMethod",
     "VolumeMethodName",
@@ -112237,6 +112594,7 @@ __all__ = [
     "VolumesCompare",
     "VolumesCompared",
     "VolumesEdit",
+    "VolumesLedger",
     "VolumesProgress",
     "VolumesQueried",
     "VolumesQuery",

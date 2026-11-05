@@ -747,3 +747,173 @@ pub struct VolumesCompared {
     pub height: f64,
     pub alternatives: Vec<AlternativeReport>,
 }
+
+pub const ROAD_VOLUMES_LEDGER: &str = "road.volumes.ledger";
+pub const ROAD_VOLUMES_LEDGER_VERSION: u32 = 1;
+
+/// How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; or by the
+/// corridor's regions.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LedgerBy {
+    Stations {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        step: f64,
+    },
+    Regions,
+}
+
+/// Input of `road.volumes.ledger` v1 (plan/road.md Y43, docs/adr/0949; ROAD-VOL-16, 18): an earthwork volume's total
+/// taken apart — its stretches grouped by km or by region, each material's column; the `top` largest stretches of the
+/// cut and of the fill (1 to 100; absent: 10) with why they are large; how the cut and the fill crowd along the road;
+/// and the figures rounded to `decimals` (0 to 3; absent: 2), the rounded stretches' sum against the rounded total.
+///
+/// Refusals: `not_a_road_project`, `unknown_volume`, `invalid_volume_ledger` (a step out of 1–100000 m, a top out of
+/// 1–100, decimals over 3), and the volume's own (`invalid_volume`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesLedger {
+    pub volume: String,
+    pub by: LedgerBy,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub top: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub decimals: Option<u32>,
+}
+
+/// A ledger's column (a material): `cut`, `fill`, `factoredCut`, `factoredFill`, `strip`, `bench` or `layer:<name>`; its
+/// words; its compensated total; its stretches rounded and summed, its total rounded, and their difference.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LedgerColumn {
+    pub key: String,
+    pub words: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub total: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub rows_rounded: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub total_rounded: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub residue: f64,
+}
+
+/// A group of stretches: its words, its range between sections, how many stretches, each column's sum and share of the
+/// column's total (none where the total is 0).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LedgerGroup {
+    pub label: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub stretches: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub values: Vec<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub shares: Vec<Option<f64>>,
+}
+
+/// One of the largest stretches: its range, volume, share and running share of the column's total, its length and
+/// mean area, each over the stretches' median, and which is larger: `section` or `length`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LedgerStretch {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub share: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cumulative: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub mean_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub length_factor: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub area_factor: f64,
+    pub reason: String,
+}
+
+/// A column's largest stretches.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LedgerTop {
+    pub column: String,
+    pub stretches: Vec<LedgerStretch>,
+}
+
+/// How a column crowds along the road: its Gini index, the shares of the length holding half and four fifths of it,
+/// and its densest-first curve (length share, volume share).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LedgerConcentration {
+    pub column: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub gini: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub half: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub most: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub curve: Vec<[f64; 2]>,
+}
+
+/// Output of `road.volumes.ledger` v1 (docs/adr/0949): the volume, the rounding's decimals, the columns, the groups,
+/// each column's groups' sum less its total (0 but for the last bits), the largest stretches and the concentration of
+/// the cut and of the fill, and the stretches without volume.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeLedgerRead {
+    pub volume: String,
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub decimals: u32,
+    pub columns: Vec<LedgerColumn>,
+    pub groups: Vec<LedgerGroup>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub residual: Vec<f64>,
+    pub top: Vec<LedgerTop>,
+    pub concentration: Vec<LedgerConcentration>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub gaps: Vec<[f64; 2]>,
+}
