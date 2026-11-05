@@ -2641,9 +2641,10 @@
         "road.profiles.edit",
         "road.profiles.query",
         "road.profiles.draw",
-        "road.profiles.lengths"
+        "road.profiles.lengths",
+        "road.profiles.impact"
       ],
-      "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile, Çizime yaz road.profiles.draw ile yazar (plan/road.md Y4, ADR 0902); kurp boyu önerisini road.profiles.lengths ile okur (Y31, ADR 0935)."
+      "note": "Boykesit penceresi PVI'leri yazdıkça çekirdekle kurar ve arazi boykesitini yüzeyden çizer; Kaydet ve Aksa yeniden bağla road.profiles.create ve .edit ile, Çizime yaz road.profiles.draw ile yazar (plan/road.md Y4, ADR 0902); kurp boyu önerisini road.profiles.lengths ile okur (Y31, ADR 0935); kaydedilmemiş PVI'ların neyi eskiteceğini road.profiles.impact ile okur (Y56, ADR 0962)."
     },
     "section.editor": {
       "level": "semantic",

@@ -2,6 +2,7 @@
 //! alignment. The algorithm's id is `kentos.profile/1`.
 
 pub mod checks;
+pub mod compare;
 pub mod crossings;
 pub mod propose;
 pub mod sight;

@@ -715,3 +715,141 @@ pub struct CrossingMargin {
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub holds: bool,
 }
+
+pub const ROAD_PROFILES_IMPACT: &str = "road.profiles.impact";
+pub const ROAD_PROFILES_IMPACT_VERSION: u32 = 1;
+
+/// `road.profiles.impact` (plan/road.md Y56, docs/adr/0962; ROAD-PROFILE-09): what a profile's new PVIs would make
+/// stale before they are written. The stations where the new grade line leaves the saved one by more than
+/// `tolerance` (m; absent: 1 mm), and over them: each corridor's regions on this profile, each section set's stations,
+/// the volumes on those corridors and the haul plans on those volumes, an approval among them told. Reads only.
+///
+/// Refusals: `not_a_road_project`, `unknown_road_profile`, `invalid_road_profile` (PVIs that make no line),
+/// `profile_curves_overlap`, `invalid_profile_impact` (a tolerance not above 0 or above 1 m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfilesImpact {
+    /// The profile's id or name.
+    pub profile: String,
+    /// The PVIs it would have.
+    pub pvis: Vec<ProfilePvi>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tolerance: Option<f64>,
+}
+
+/// How a stretch of the grade line differs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ProfileChangeKind {
+    /// Both lines there, apart by more than the tolerance.
+    Changed,
+    /// Only the new line there: the profile lengthened.
+    Added,
+    /// Only the saved line there: the profile shortened.
+    Removed,
+}
+
+/// A stretch of stations where the grade line changes; for a changed one the greatest elevation difference and where.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileChange {
+    pub kind: ProfileChangeKind,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub most: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub at: Option<f64>,
+}
+
+/// A corridor region over a change: the region's index and the stations of it that change.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactRegion {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+}
+
+/// A corridor on the profile and its regions that change.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactCorridor {
+    pub corridor: String,
+    pub name: String,
+    pub regions: Vec<ImpactRegion>,
+}
+
+/// A section set on the profile: how many of its stations fall in a change, of how many.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactSections {
+    pub set: String,
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub stations: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub of: u32,
+}
+
+/// A volume or a haul plan on a corridor that changes, and whether it is approved (its approval would go stale).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactDerived {
+    pub id: String,
+    pub name: String,
+    pub approved: bool,
+}
+
+/// What a profile's new PVIs would make stale.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileImpact {
+    pub profile: String,
+    pub changes: Vec<ProfileChange>,
+    pub corridors: Vec<ImpactCorridor>,
+    pub sections: Vec<ImpactSections>,
+    pub volumes: Vec<ImpactDerived>,
+    pub hauls: Vec<ImpactDerived>,
+    /// Nothing changes by more than the tolerance.
+    pub clear: bool,
+}

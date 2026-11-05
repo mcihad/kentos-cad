@@ -352,6 +352,8 @@ pub struct Window {
     pub(crate) lengths: Option<Box<crate::profile_lengths_window::Lengths>>,
     /// The values typed there, kept while the program runs when it is closed.
     pub(crate) lengths_kept: Option<([String; 11], bool)>,
+    /// What the PVIs typed would make stale (docs/adr/0962): read while they differ from the saved ones.
+    pub(crate) impact: Option<Result<(kentos_commands::ProfileImpact, Vec<kentos_commands::CommandWarning>), String>>,
 }
 
 impl Window {
@@ -483,6 +485,40 @@ pub enum Event {
 
 fn msg(event: Event) -> Message {
     Message::Profiles(event)
+}
+
+/// The impact in words (docs/adr/0962): the stretches that change and by how much at most, and what stands on them.
+fn impact_words(imp: &kentos_commands::ProfileImpact) -> String {
+    if imp.clear {
+        return "Kırmızı kot kaydedilenden 1 mm'den çok ayrılmıyor: hiçbir şey eskimez.".into();
+    }
+    let stretches: Vec<String> = imp
+        .changes
+        .iter()
+        .map(|c| match c.kind {
+            kentos_commands::ProfileChangeKind::Changed => {
+                format!("km {} – {} (en çok {} m)", c.from_text, c.to_text, comma(c.most.unwrap_or(0.0), 3))
+            }
+            kentos_commands::ProfileChangeKind::Added => format!("km {} – {} eklenir", c.from_text, c.to_text),
+            kentos_commands::ProfileChangeKind::Removed => format!("km {} – {} kalkar", c.from_text, c.to_text),
+        })
+        .collect();
+    let mut said = format!("Kaydedilirse kırmızı kot değişir: {}.", stretches.join("; "));
+    let mut stale: Vec<String> = Vec::new();
+    for c in &imp.corridors {
+        let mut regions: Vec<u32> = c.regions.iter().map(|r| r.region + 1).collect();
+        regions.dedup();
+        let regions: Vec<String> = regions.iter().map(|r| format!("{r}.")).collect();
+        stale.push(format!("{} ({} bölge)", c.name, regions.join(", ")));
+    }
+    stale.extend(imp.sections.iter().map(|s| format!("{} ({}/{} kesit)", s.name, s.stations, s.of)));
+    let with = |d: &kentos_commands::ImpactDerived| if d.approved { format!("{} (onaylı)", d.name) } else { d.name.clone() };
+    stale.extend(imp.volumes.iter().map(with));
+    stale.extend(imp.hauls.iter().map(with));
+    if !stale.is_empty() {
+        said.push_str(&format!(" Eskiyecekler: {}.", stale.join(", ")));
+    }
+    said
 }
 
 /// What the row builds to now, or why it does not build.
@@ -804,7 +840,22 @@ impl App {
         if regrounded {
             self.refresh_ground();
         }
+        self.refresh_profile_impact();
         Task::none()
+    }
+
+    /// The impact of the chosen profile's PVIs as typed against the saved ones (`road.profiles.impact`, docs/adr/0962):
+    /// none for a new profile, for PVIs that do not read or are the saved ones.
+    fn refresh_profile_impact(&mut self) {
+        let Some(doc) = &self.document else { return };
+        let Some(w) = self.profile_window.as_mut() else { return };
+        w.impact = w.chosen.and_then(|i| w.rows.get(i)).and_then(|r| r.def().ok()).and_then(|d| {
+            let kept = w.kept.iter().find(|k| k.id == d.id)?;
+            (kept.pvis != d.pvis).then(|| {
+                let input = kentos_commands::ProfilesImpact { profile: d.id.clone(), pvis: d.pvis.clone(), tolerance: None };
+                kentos_native_application::road_profiles_impact::preview(&doc.model, &input)
+            })
+        });
     }
 
     /// Aksa yeniden bağla: the chosen saved profile takes its alignment's present revision (`road.profiles.edit
@@ -951,6 +1002,7 @@ impl App {
         self.profile_window = None;
         self.dialog = None;
         self.say(Level::Success, "Boykesitler kaydedildi.");
+        self.refresh_profile_impact();
         Task::none()
     }
 
@@ -1097,6 +1149,10 @@ impl App {
             on_station: None,
             compact: false,
             crossings: r.def().ok().map_or_else(Vec::new, |d| chart_crossings(&d)),
+            changed: match &w.impact {
+                Some(Ok((imp, _))) => imp.changes.iter().map(|c| (c.from, c.to)).collect(),
+                _ => Vec::new(),
+            },
         };
         col = col.push_grow(
             crate::picture::picture(canvas(chart).width(Fill).height(Fill), format!("Boykesit — {}", r.name)),
@@ -1115,6 +1171,14 @@ impl App {
         });
         if let Some(why) = &w.ground.why {
             col = col.push(label::caption(why.clone()).style(muted));
+        }
+        // What saving the PVIs typed would make stale (docs/adr/0962).
+        if let Some(Ok((imp, warnings))) = &w.impact {
+            let said = impact_words(imp);
+            col = col.push(if !warnings.is_empty() { label::caption(said).style(warn) } else { label::caption(said).style(muted) });
+            for x in warnings {
+                col = col.push(label::caption(x.message.clone()).style(warn));
+            }
         }
         let pvis = &r.pvis;
         let table = road_dialog::edit_table(
@@ -1289,6 +1353,8 @@ pub(crate) struct Chart<'a> {
     compact: bool,
     /// The crossings (docs/adr/0946): name, station, over the road, elevation, the grade line's limit.
     crossings: Vec<(String, f64, bool, f64, f64)>,
+    /// The stretches the PVIs typed change (docs/adr/0962), shaded.
+    changed: Vec<(f64, f64)>,
 }
 
 /// Where the chart draws: the plot, its horizontal scale (px per m) and the length shown.
@@ -1321,6 +1387,7 @@ impl<'a> Chart<'a> {
             on_station: Some(on_station),
             compact: false,
             crossings: def.map_or_else(Vec::new, chart_crossings),
+            changed: Vec::new(),
         }
     }
 
@@ -1445,6 +1512,11 @@ impl canvas::Program<Message> for Chart<'_> {
         let x = |s: f64| plot.x + (s * sx) as f32;
         let y = |z: f64| plot.y + plot.height - ((z - lo) * sy) as f32;
         let thin = |c: Color| Stroke::default().with_color(c).with_width(1.0);
+        // The stretches the PVIs typed change, under everything (docs/adr/0962).
+        for (a, b) in &self.changed {
+            let (xa, xb) = (x(*a), x(*b).max(x(*a) + 1.0));
+            frame.fill_rectangle(Point::new(xa, plot.y), Size::new(xb - xa, plot.height), Color { a: 0.16, ..t.warning });
+        }
         let word = |frame: &mut canvas::Frame, s: String, at: Point, color: Color, centred: bool| {
             frame.fill_text(Text {
                 content: s,

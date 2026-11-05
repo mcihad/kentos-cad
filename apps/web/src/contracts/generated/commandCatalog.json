@@ -42569,6 +42569,198 @@
       ]
     },
     {
+      "id": "road.profiles.impact",
+      "version": 1,
+      "title": "Boykesit değişikliğinin etkisi",
+      "summary": "Bir boykesitin yeni PVI'ları yazılmadan neyi eskiteceğini söyler; hiçbir şey yazmaz. Yeni kırmızı kotun kayıtlı olandan toleranstan (öntanımlı 1 mm) çok ayrıldığı km aralıkları ve en büyük kot farkı; boykesit uzayıp kısalınca yalnız bir çizginin olduğu aralıklar. Bu aralıkların üstündeki koridor bölgeleri, kesit takımlarının km'leri, o koridorlardaki kübajlar ve o kübajlardaki taşıma planları; onaylı olan söylenir, çünkü yazılınca onayı eskir. Uyarılar: profile_impact_approved. Retler: not_a_road_project, unknown_road_profile, invalid_road_profile, profile_curves_overlap, invalid_profile_impact.",
+      "aliases": [
+        "boykesitetkisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "`road.profiles.impact` (plan/road.md Y56, docs/adr/0962; ROAD-PROFILE-09): what a profile's new PVIs would make\nstale before they are written. The stations where the new grade line leaves the saved one by more than\n`tolerance` (m; absent: 1 mm), and over them: each corridor's regions on this profile, each section set's stations,\nthe volumes on those corridors and the haul plans on those volumes, an approval among them told. Reads only.\n\nRefusals: `not_a_road_project`, `unknown_road_profile`, `invalid_road_profile` (PVIs that make no line),\n`profile_curves_overlap`, `invalid_profile_impact` (a tolerance not above 0 or above 1 m).",
+        "properties": {
+          "profile": {
+            "description": "The profile's id or name.",
+            "type": "string"
+          },
+          "pvis": {
+            "description": "The PVIs it would have.",
+            "items": {
+              "$ref": "#/$defs/ProfilePvi"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "profile",
+          "pvis"
+        ],
+        "title": "ProfilesImpact",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a profile's new PVIs would make stale.",
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/ProfileChange"
+            },
+            "type": "array"
+          },
+          "clear": {
+            "description": "Nothing changes by more than the tolerance.",
+            "type": "boolean"
+          },
+          "corridors": {
+            "items": {
+              "$ref": "#/$defs/ImpactCorridor"
+            },
+            "type": "array"
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/$defs/ImpactSections"
+            },
+            "type": "array"
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile",
+          "changes",
+          "corridors",
+          "sections",
+          "volumes",
+          "hauls",
+          "clear"
+        ],
+        "title": "ProfileImpact",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a profile's new PVIs would make stale.",
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/ProfileChange"
+            },
+            "type": "array"
+          },
+          "clear": {
+            "description": "Nothing changes by more than the tolerance.",
+            "type": "boolean"
+          },
+          "corridors": {
+            "items": {
+              "$ref": "#/$defs/ImpactCorridor"
+            },
+            "type": "array"
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/$defs/ImpactSections"
+            },
+            "type": "array"
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile",
+          "changes",
+          "corridors",
+          "sections",
+          "volumes",
+          "hauls",
+          "clear"
+        ],
+        "title": "ProfileImpact",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_road_profile",
+          "invalid_road_profile",
+          "profile_curves_overlap",
+          "invalid_profile_impact"
+        ],
+        "warnings": [
+          "profile_impact_approved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana boykesitin bir PVI'sı 1 m yükselirse",
+          "input": {
+            "profile": "b-1",
+            "pvis": [
+              {
+                "elevation": 102.0,
+                "id": "a",
+                "station": 0.0
+              },
+              {
+                "elevation": 114.0,
+                "id": "b",
+                "station": 669.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "road.volumes.states",
       "version": 1,
       "title": "Hacim halleri",
@@ -88995,6 +89187,12 @@
       "meaning": "Koridor ön denetimi sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "invalid_profile_impact",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Boykesit etkisi sorusu geçerli değil (tolerans 0'dan büyük, en çok 1 m); ileti nedenini söyler."
+    },
+    {
       "code": "corridor_gap",
       "kind": "warning",
       "retryable": false,
@@ -89131,6 +89329,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir."
+    },
+    {
+      "code": "profile_impact_approved",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Boykesitin yeni PVI'ları onaylı bir kübajı ya da taşıma planını değiştirir; yazılınca onayları eskir."
     },
     {
       "code": "volume_factor_physics",
@@ -125633,6 +125837,49 @@
         }
       ]
     },
+    "ImpactCorridor": {
+      "description": "A corridor on the profile and its regions that change.",
+      "properties": {
+        "corridor": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "regions": {
+          "items": {
+            "$ref": "#/$defs/ImpactRegion"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "corridor",
+        "name",
+        "regions"
+      ],
+      "type": "object"
+    },
+    "ImpactDerived": {
+      "description": "A volume or a haul plan on a corridor that changes, and whether it is approved (its approval would go stale).",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "approved"
+      ],
+      "type": "object"
+    },
     "ImpactOwn": {
       "description": "Objects keeping one property of their own.",
       "properties": {
@@ -125650,6 +125897,71 @@
       "required": [
         "property",
         "count"
+      ],
+      "type": "object"
+    },
+    "ImpactRegion": {
+      "description": "A corridor region over a change: the region's index and the stations of it that change.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "region",
+        "from",
+        "to",
+        "fromText",
+        "toText"
+      ],
+      "type": "object"
+    },
+    "ImpactSections": {
+      "description": "A section set on the profile: how many of its stations fall in a change, of how many.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "of": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "set": {
+          "type": "string"
+        },
+        "stations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "set",
+        "name",
+        "stations",
+        "of"
       ],
       "type": "object"
     },
@@ -151445,6 +151757,74 @@
         "count"
       ],
       "type": "object"
+    },
+    "ProfileChange": {
+      "description": "A stretch of stations where the grade line changes; for a changed one the greatest elevation difference and where.",
+      "properties": {
+        "at": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ProfileChangeKind"
+        },
+        "most": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "from",
+        "to",
+        "fromText",
+        "toText"
+      ],
+      "type": "object"
+    },
+    "ProfileChangeKind": {
+      "description": "How a stretch of the grade line differs.",
+      "oneOf": [
+        {
+          "const": "changed",
+          "description": "Both lines there, apart by more than the tolerance.",
+          "type": "string"
+        },
+        {
+          "const": "added",
+          "description": "Only the new line there: the profile lengthened.",
+          "type": "string"
+        },
+        {
+          "const": "removed",
+          "description": "Only the saved line there: the profile shortened.",
+          "type": "string"
+        }
+      ]
     },
     "ProfileClass": {
       "additionalProperties": false,

@@ -163,3 +163,83 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// `road.profiles.impact`'s drawing: the profiles, corridors, section sets, the main volume and the main haul plan
+/// approved (docs/adr/0962).
+fn impact_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.profiles.impact.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Boykesit değişikliğinin etkisi (Y56, docs/adr/0962; ROAD-PROFILE-09): v1 typed 1 m higher, the window reads what
+/// saving it would make stale as the shared case does; typed back, nothing; saved, nothing more to tell.
+#[test]
+fn typing_a_pvi_tells_what_saving_it_makes_stale() {
+    let mut app = impact_app();
+    let _ = app.update(Message::Run("profile.editor"));
+    assert!(app.profile_window.as_ref().expect("open").impact.is_none(), "nothing typed yet");
+    send(&mut app, W::Pvi(1, 2, "102,5".into()));
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.profiles.impact.json")).expect("cases");
+    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "v1 1 m yükselir").expect("the case")["steps"][0]
+        ["result"]["output"]
+        .clone();
+    let Some(Ok((imp, warnings))) = app.profile_window.as_ref().expect("open").impact.clone() else { panic!("the impact reads") };
+    assert_eq!(imp.changes.len(), 1);
+    assert!((imp.changes[0].from - want["changes"][0]["from"].as_f64().expect("from")).abs() < 1e-6);
+    assert!((imp.changes[0].to - want["changes"][0]["to"].as_f64().expect("to")).abs() < 1e-6);
+    assert_eq!(imp.corridors.len(), 1);
+    assert!(imp.volumes.iter().any(|v| v.approved) && imp.hauls.iter().any(|h| h.approved));
+    assert!(warnings.iter().any(|w| w.code == "profile_impact_approved"));
+    // Typed back to the saved elevation: the line does not change.
+    send(&mut app, W::Pvi(1, 2, "101,5".into()));
+    assert!(app.profile_window.as_ref().expect("open").impact.is_none());
+    // Saved: the saved line is the typed one.
+    send(&mut app, W::Pvi(1, 2, "102,5".into()));
+    send(&mut app, W::Save);
+    let _ = app.update(Message::Run("profile.editor"));
+    assert!(app.profile_window.as_ref().expect("open").impact.is_none());
+}
+
+/// The impact over the profile and under it, wide and narrow, light and dark; `.run/gui-evidence/yol-y56/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib profile_window_tests::screens_impact -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_impact() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y56");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = impact_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y56-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("profile.editor"));
+        send(&mut app, W::Pvi(1, 2, "102,5".into()));
+        shot(&mut app, "v1-yukselir");
+        send(&mut app, W::Pvi(1, 2, "101,5".into()));
+        send(&mut app, W::Pvi(3, 3, "35".into()));
+        send(&mut app, W::Pvi(3, 4, "50".into()));
+        shot(&mut app, "asimetrik");
+    }
+}

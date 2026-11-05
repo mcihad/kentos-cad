@@ -7762,6 +7762,34 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_PROFILES_IMPACT.into(),
+            version: crate::ROAD_PROFILES_IMPACT_VERSION,
+            title: "Boykesit değişikliğinin etkisi".into(),
+            summary: "Bir boykesitin yeni PVI'ları yazılmadan neyi eskiteceğini söyler; hiçbir şey yazmaz. Yeni kırmızı kotun kayıtlı olandan toleranstan (öntanımlı 1 mm) çok ayrıldığı km aralıkları ve en büyük kot farkı; boykesit uzayıp kısalınca yalnız bir çizginin olduğu aralıklar. Bu aralıkların üstündeki koridor bölgeleri, kesit takımlarının km'leri, o koridorlardaki kübajlar ve o kübajlardaki taşıma planları; onaylı olan söylenir, çünkü yazılınca onayı eskir. \
+                      Uyarılar: profile_impact_approved. Retler: not_a_road_project, unknown_road_profile, invalid_road_profile, profile_curves_overlap, invalid_profile_impact."
+                .into(),
+            aliases: vec!["boykesitetkisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesImpact>(),
+            output: schema::<crate::ProfileImpact>(),
+            plan: Some(schema::<crate::ProfileImpact>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana boykesitin bir PVI'sı 1 m yükselirse".into(),
+                input: json!({ "profile": "b-1", "pvis": [
+                    { "id": "a", "station": 0.0, "elevation": 102.0 },
+                    { "id": "b", "station": 669.0, "elevation": 114.0 }
+                ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_VOLUMES_STATES.into(),
             version: crate::ROAD_VOLUMES_STATES_VERSION,
             title: "Hacim halleri".into(),
@@ -14961,6 +14989,9 @@ mod tests {
                     crate::ROAD_VOLUMES_STATES => {
                         serde_json::from_value::<crate::VolumesStates>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_PROFILES_IMPACT => {
+                        serde_json::from_value::<crate::ProfilesImpact>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_HISTORY => {
                         serde_json::from_value::<crate::VolumesHistory>(e.input.clone()).map(|_| ())
                     }
@@ -15837,6 +15868,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_STATES => {
                             serde_json::from_value::<crate::VolumeStatesRead>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_PROFILES_IMPACT => {
+                            serde_json::from_value::<crate::ProfileImpact>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_VOLUMES_HISTORY => {
                             serde_json::from_value::<crate::VolumeHistoryRead>(output.clone()).map(|_| ())

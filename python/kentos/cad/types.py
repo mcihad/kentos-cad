@@ -5071,6 +5071,22 @@ PolygonSelectModeName = Literal["inside", "crossing", "outside"]
 """The names of :class:`PolygonSelectMode`, for a plain string."""
 
 
+class ProfileChangeKind(_StrEnum):
+    """How a stretch of the grade line differs.
+
+    - ``changed``: Both lines there, apart by more than the tolerance.
+    - ``added``: Only the new line there: the profile lengthened.
+    - ``removed``: Only the saved line there: the profile shortened.
+    """
+    CHANGED = "changed"
+    ADDED = "added"
+    REMOVED = "removed"
+
+
+ProfileChangeKindName = Literal["changed", "added", "removed"]
+"""The names of :class:`ProfileChangeKind`, for a plain string."""
+
+
 class ProfileFileKind(_StrEnum):
     """What a project's profile file is: a data profile or a mapping of one."""
     PROFILE = "profile"
@@ -39835,6 +39851,52 @@ class ImagesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactCorridor(_Model):
+    """A corridor on the profile and its regions that change."""
+    corridor: str
+    name: str
+    regions: list[ImpactRegion]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["name"] = self.name
+        out["regions"] = [e0.to_json() for e0 in self.regions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactCorridor:
+        return cls(
+            corridor=data["corridor"],
+            name=data["name"],
+            regions=[ImpactRegion.from_json(e0) for e0 in data["regions"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactDerived(_Model):
+    """A volume or a haul plan on a corridor that changes, and whether it is approved (its approval would go stale)."""
+    id: str
+    name: str
+    approved: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["approved"] = self.approved
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactDerived:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            approved=data["approved"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactOwn(_Model):
     """Objects keeping one property of their own.
     Attributes:
@@ -39855,6 +39917,70 @@ class ImpactOwn(_Model):
         return cls(
             property=data["property"],
             count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactRegion(_Model):
+    """A corridor region over a change: the region's index and the stations of it that change.
+    Attributes:
+        region: Unit: index.
+        from_: Unit: m.
+        to: Unit: m.
+    """
+    region: int
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactRegion:
+        return cls(
+            region=data["region"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactSections(_Model):
+    """A section set on the profile: how many of its stations fall in a change, of how many.
+    Attributes:
+        stations: Unit: count.
+        of: Unit: count.
+    """
+    set: str
+    name: str
+    stations: int
+    of: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["name"] = self.name
+        out["stations"] = self.stations
+        out["of"] = self.of
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactSections:
+        return cls(
+            set=data["set"],
+            name=data["name"],
+            stations=data["stations"],
+            of=data["of"],
         )
 
 
@@ -60939,6 +61065,49 @@ class ProfileBin(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileChange(_Model):
+    """A stretch of stations where the grade line changes; for a changed one the greatest elevation difference and where.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        at: Unit: m.
+        most: Unit: m.
+    """
+    kind: ProfileChangeKind | ProfileChangeKindName
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    at: float | None | Unset = UNSET
+    most: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else float(self.at)
+        if self.most is not UNSET:
+            out["most"] = None if self.most is None else float(self.most)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileChange:
+        return cls(
+            kind=_enum_in(ProfileChangeKind, data["kind"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
+            most=UNSET if "most" not in data else None if data["most"] is None else float(data["most"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileClass(_Model):
     """A class of the profile: a layer by its path, its objects' geometry, its fields.
     Attributes:
@@ -61381,6 +61550,44 @@ class ProfileGroundRow(_Model):
             gap=data["gap"],
             crossing=data["crossing"],
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileImpact(_Model):
+    """What a profile's new PVIs would make stale.
+    Attributes:
+        clear: Nothing changes by more than the tolerance.
+    """
+    profile: str
+    changes: list[ProfileChange]
+    corridors: list[ImpactCorridor]
+    sections: list[ImpactSections]
+    volumes: list[ImpactDerived]
+    hauls: list[ImpactDerived]
+    clear: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        out["corridors"] = [e0.to_json() for e0 in self.corridors]
+        out["sections"] = [e0.to_json() for e0 in self.sections]
+        out["volumes"] = [e0.to_json() for e0 in self.volumes]
+        out["hauls"] = [e0.to_json() for e0 in self.hauls]
+        out["clear"] = self.clear
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileImpact:
+        return cls(
+            profile=data["profile"],
+            changes=[ProfileChange.from_json(e0) for e0 in data["changes"]],
+            corridors=[ImpactCorridor.from_json(e0) for e0 in data["corridors"]],
+            sections=[ImpactSections.from_json(e0) for e0 in data["sections"]],
+            volumes=[ImpactDerived.from_json(e0) for e0 in data["volumes"]],
+            hauls=[ImpactDerived.from_json(e0) for e0 in data["hauls"]],
+            clear=data["clear"],
         )
 
 
@@ -62306,6 +62513,41 @@ class ProfilesFit(_Model):
             name=data.get("name", UNSET),
             station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
             surface=data.get("surface", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesImpact(_Model):
+    """`road.profiles.impact` (plan/road.md Y56, docs/adr/0962; ROAD-PROFILE-09): what a profile's new PVIs would make
+    stale before they are written. The stations where the new grade line leaves the saved one by more than
+    `tolerance` (m; absent: 1 mm), and over them: each corridor's regions on this profile, each section set's stations,
+    the volumes on those corridors and the haul plans on those volumes, an approval among them told. Reads only.
+
+    Refusals: `not_a_road_project`, `unknown_road_profile`, `invalid_road_profile` (PVIs that make no line),
+    `profile_curves_overlap`, `invalid_profile_impact` (a tolerance not above 0 or above 1 m).
+    Attributes:
+        profile: The profile's id or name.
+        pvis: The PVIs it would have.
+        tolerance: Unit: m.
+    """
+    profile: str
+    pvis: list[ProfilePvi]
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["pvis"] = [e0.to_json() for e0 in self.pvis]
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesImpact:
+        return cls(
+            profile=data["profile"],
+            pvis=[ProfilePvi.from_json(e0) for e0 in data["pvis"]],
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -112136,7 +112378,11 @@ __all__ = [
     "ImagesEdit",
     "ImagesEdited",
     "ImagesOperation",
+    "ImpactCorridor",
+    "ImpactDerived",
     "ImpactOwn",
+    "ImpactRegion",
+    "ImpactSections",
     "ImpactTarget",
     "ImpactTargetName",
     "ImportBlock",
@@ -113141,6 +113387,9 @@ __all__ = [
     "ProfileAddress",
     "ProfileAt",
     "ProfileBin",
+    "ProfileChange",
+    "ProfileChangeKind",
+    "ProfileChangeKindName",
     "ProfileClass",
     "ProfileClassSummary",
     "ProfileCrossingDef",
@@ -113157,6 +113406,7 @@ __all__ = [
     "ProfileGeometryName",
     "ProfileGradeRow",
     "ProfileGroundRow",
+    "ProfileImpact",
     "ProfileImported",
     "ProfileLimit",
     "ProfileListed",
@@ -113182,6 +113432,7 @@ __all__ = [
     "ProfilesEditOperation",
     "ProfilesEditOperationName",
     "ProfilesFit",
+    "ProfilesImpact",
     "ProfilesImport",
     "ProfilesList",
     "ProfilesListed",

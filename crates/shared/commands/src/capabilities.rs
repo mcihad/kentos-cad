@@ -2414,6 +2414,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.profiles.impact",
+        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_road_profile", "profile_curves_overlap", "invalid_profile_impact"]],
+        warnings: &["profile_impact_approved"],
+        targets: none,
+    },
+    Entry {
         id: "road.volumes.states",
         refusals: &[&["not_a_road_project", "unknown_volume", "invalid_volume"]],
         warnings: &["volume_factor_physics", "volume_unfactored", "corridor_stale", "volume_gap", "volume_uncovered"],
