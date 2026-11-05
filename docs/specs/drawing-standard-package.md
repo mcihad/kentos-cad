@@ -22,6 +22,8 @@ not trusted as file paths and carry no access permissions.
 The `standard` object uses the existing `DrawingStandard` command contract.
 The desktop also accepts the previous unwrapped standard JSON. Unknown fields
 and unsupported versions are rejected instead of silently dropping rules.
+Duplicate fields in the original JSON are rejected at the package, standard
+and supported definition levels, rather than silently taking the last value.
 The file is limited to 1 MiB by the desktop file picker.
 
 Version 1 contains drawing-standard rules only. It does not package styles,

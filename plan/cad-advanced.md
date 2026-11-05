@@ -1902,6 +1902,10 @@ Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğ
 komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
 tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve
 ilgili otomatik testler güncellendi.
+JSON dosyasında aynı alanın birden fazla yazılması da reddedilir; aksi hâlde
+son değerin sessizce seçilmesi farklı denetim sonuçlarına yol açabilirdi.
+Paket, standart ve katman örnekleri otomatik testte; uyarı ve uygulamanın
+devre dışı kalması gerçek dosya seçicisinde doğrulandı.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

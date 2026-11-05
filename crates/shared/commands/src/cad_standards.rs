@@ -253,8 +253,12 @@ pub fn parse_standard_document(
     let (standard_value, package) = if object.contains_key("format")
         || object.contains_key("version")
     {
-        let package: StandardPackage = serde_json::from_value(value.clone())
-            .map_err(|e| format!("Standart paketi okunamadı: {e}"))?;
+        let package: StandardPackage = serde_json::from_slice(bytes).map_err(|e| {
+            format!(
+                "Standart paketi okunamadı: {}",
+                e.to_string().replace("duplicate field", "yinelenen alan")
+            )
+        })?;
         if package.format != STANDARD_PACKAGE_FORMAT || package.version != STANDARD_PACKAGE_VERSION
         {
             return Err("Standart paketinin biçimi veya sürümü desteklenmiyor.".into());
@@ -322,8 +326,17 @@ pub fn parse_standard_document(
             }
         }
     }
-    let standard: DrawingStandard = serde_json::from_value(standard_value.clone())
-        .map_err(|e| format!("Standart okunamadı: {e}"))?;
+    // Deserialize the original bytes, not the intermediate JSON value: a
+    // Value silently keeps only the last occurrence of a duplicate key.
+    let standard: DrawingStandard = match &package {
+        Some(package) => package.standard.clone(),
+        None => serde_json::from_slice(bytes).map_err(|e| {
+            format!(
+                "Standart okunamadı: {}",
+                e.to_string().replace("duplicate field", "yinelenen alan")
+            )
+        })?,
+    };
     if let Some(problem) = standard_problem(&standard) {
         return Err(format!("Standart geçersiz: {problem}."));
     }
@@ -677,6 +690,18 @@ mod tests {
             .remove("unsupportedRule");
         value["id"] = " ".into();
         assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+    }
+
+    #[test]
+    fn standard_documents_reject_duplicate_rule_keys() {
+        let legacy = br#"{"name":"A","layers":[],"byLayer":true,"byLayer":false}"#;
+        let envelope = br#"{"format":"kentos.drawing-standard","version":1,"id":"a","id":"b","revision":"1","standard":{"name":"A","layers":[]}}"#;
+        let nested = br#"{"format":"kentos.drawing-standard","version":1,"id":"a","revision":"1","standard":{"name":"A","layers":[],"byLayer":true,"byLayer":false}}"#;
+        let layer = br##"{"name":"A","layers":[{"name":"A-WALL","color":"ink","color":"#ff0000","lineType":"continuous","lineWeight":0.2}]}"##;
+        for raw in [&legacy[..], &envelope[..], &nested[..], &layer[..]] {
+            let error = parse_standard_document(raw).unwrap_err();
+            assert!(error.contains("yinelenen alan"), "{error}");
+        }
     }
 
     #[test]

@@ -392,6 +392,16 @@ fn project_standard_associations_are_validated_and_revision_checked() {
     .unwrap();
     assert_eq!(refused["status"], "failed", "{refused}");
     assert_eq!(doc.to_snapshot_v2(), saved);
+    let duplicate = r#"{"format":"kentos.drawing-standard","version":1,"id":"duplicate","revision":"1","standard":{"name":"A","layers":[],"byLayer":true,"byLayer":false}}"#;
+    let refused = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        json!({"standardDocs":[{"text":duplicate}]}),
+    )
+    .unwrap();
+    assert_eq!(refused["status"], "failed", "{refused}");
+    assert_eq!(doc.to_snapshot_v2(), saved);
     let mut unrecognized = serde_json::to_value(package("unknown-rule")).unwrap();
     unrecognized["standard"]["unsupportedRule"] = json!(true);
     let refused = registry::run(
