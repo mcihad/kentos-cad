@@ -532,6 +532,62 @@ def edit_cases():
              "after": [float(e.station), float(e.station + e.length)]} for e in rb.els]
     ok("Ters çevrilir: sol kenar sağa geçer", {"alignment": "g-1", "operation": "reverse"}, [rmain, rleft, LINK], "g-1",
        rows, undo=True)
+    # Docs/adr/0964 (ROAD-DEVER-03): the superelevation schedules on the alignment turn round with it, one step. A
+    # station s becomes L − s and the left side the old right; each side's slope is written outward, so it moves to the
+    # other column unchanged. A rule on a curve stays: checked here against the superelevation reference, the reversed
+    # alignment with the swapped normals gives every physical edge the same slope at the same place.
+    length = float(rb.length)
+    d_rows = {"id": "d-1", "name": "Satırlı dever", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+              "normalLeft": -2.5, "normalRight": -3.0, "pivot": "leftEdge",
+              "method": {"method": "stations", "rows": [{"station": 100.0, "left": -2.5, "right": -3.0},
+                                                        {"station": 400.0, "left": 4.0, "right": -4.0},
+                                                        {"station": 900.0, "left": 6.0, "right": -6.0}]}}
+    d_curve = {"id": "d-2", "name": "Kurplu dever", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+               "normalLeft": -2.5, "normalRight": -3.0, "pivot": "insideEdge",
+               "method": {"method": "curves", "curves": [{"pi": "p1", "rate": 6.0, "runoff": 100.0, "onTangent": 0.6,
+                                                          "widening": 0.8}]}}
+    d_link = {"id": "d-3", "name": "Bağlantı deveri", "alignment": "g-3", "alignmentRevision": 1, "revision": 1,
+              "normalLeft": -2.0, "normalRight": -2.0,
+              "method": {"method": "stations", "rows": [{"station": 10.0, "left": -2.0, "right": -2.0}]}}
+
+    def turned(d):
+        out = {**d, "normalLeft": d["normalRight"], "normalRight": d["normalLeft"], "alignmentRevision": 2,
+               "revision": d["revision"] + 1}
+        if "pivot" in d:
+            out["pivot"] = {"leftEdge": "rightEdge", "rightEdge": "leftEdge"}.get(d["pivot"], d["pivot"])
+        if d["method"]["method"] == "stations":
+            out["method"] = {"method": "stations", "rows": [
+                {"station": length - r["station"], "left": r["right"], "right": r["left"]}
+                for r in reversed(d["method"]["rows"])]}
+        return out
+
+    import road_superelevation_cases as supref
+    from fractions import Fraction as Fr
+    curve_rules = d_curve["method"]["curves"]
+    was = supref.curves([full(p) for p in MAIN_PIS], [-2.5, -3.0], curve_rules)["schedule"]
+    now = supref.curves([full(p) for p in rmain["pis"]], [-3.0, -2.5], curve_rules)["schedule"]
+    for k in range(401):
+        s_ = Fr(k, 400) * Fr(str(length))
+        for ka, kr, n in [("left", "right", -2.5), ("right", "left", -3.0), ("leftWidening", "rightWidening", 0),
+                          ("rightWidening", "leftWidening", 0)]:
+            va = supref.along(was[ka], s_) if was[ka] else n
+            vr = supref.along(now[kr], Fr(str(length)) - s_) if now[kr] else n
+            assert abs(float(va) - float(vr)) < 1e-9, ("a curve's rule does not hold when reversed", float(s_), ka)
+    supers = [d_rows, d_curve, d_link]
+    supers_after = [turned(d_rows), turned(d_curve), d_link]
+    with_supers = setup(start)
+    with_supers["settings"]["road"]["superelevations"] = copy.deepcopy(supers)
+    out = written([rmain, rleft, LINK], "g-1", rows)
+    out["superelevations"] = ["d-1", "d-2"]
+    road_before = {**road_of(start), "superelevations": supers}
+    road_after = {**road_of([rmain, rleft, LINK]), "superelevations": supers_after}
+    cases.append({"name": "Ters çevrilir: dever çizelgeleri de döner", "setup": with_supers, "steps": [
+        step("execute", {"alignment": "g-1", "operation": "reverse"}, completed(out), {**STEPPED, "road": road_after}),
+        {"op": "undo", "returns": "Aksı düzenle", "expect": {"road": road_before, "canRedo": True}}]})
+    plan_out = dict(out)
+    cases.append({"name": "Ters çevirmenin planı devere de bakar", "setup": with_supers, "steps": [
+        step("plan", {"alignment": "g-1", "operation": "reverse"}, completed(plan_out),
+             {**UNCHANGED, "road": road_before})]})
     link_eq = {**LINK, "stationing": {"start": 500.0, "equations": [{"back": 550.0, "ahead": 600.0}]}}
     lr_pis = list(reversed(LINK_PIS))
     rlink = {**LINK, "revision": 2, "pis": lr_pis, "stationing": {"start": 500.0}}

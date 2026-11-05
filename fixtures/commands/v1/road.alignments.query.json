@@ -3269,7 +3269,7 @@
                   "residual": 0.0,
                   "residualDirection": 0.0,
                   "algorithm": "kentos.alignment/1",
-                  "groundLength": 1289.61907403861
+                  "groundLength": 1289.619074038563
                 }
               ],
               "at": [],
@@ -3679,7 +3679,7 @@
                     "alignment": "g-1",
                     "offset": -7.5
                   },
-                  "groundLength": 1283.7274479077587
+                  "groundLength": 1283.7274479076564
                 }
               ],
               "at": [],

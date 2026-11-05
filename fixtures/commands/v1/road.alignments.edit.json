@@ -2507,6 +2507,1367 @@
       ]
     },
     {
+      "name": "Ters çevrilir: dever çizelgeleri de döner",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol aksları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "alignments": [
+              {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 485000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 485600.0,
+                    "y": 4420000.0,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 486100.0,
+                    "y": 4420500.0
+                  }
+                ],
+                "stationing": {
+                  "start": 2000.0
+                }
+              },
+              {
+                "id": "g-2",
+                "name": "Sol kenar",
+                "revision": 1,
+                "offsetOf": {
+                  "alignment": "g-1",
+                  "offset": -7.5
+                }
+              },
+              {
+                "id": "g-3",
+                "name": "Bağlantı",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 484000.0,
+                    "y": 4419000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 484100.0,
+                    "y": 4419000.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 484100.0,
+                    "y": 4419100.0
+                  }
+                ]
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Satırlı dever",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -3.0,
+                "pivot": "leftEdge",
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.5,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 4.0,
+                      "right": -4.0
+                    },
+                    {
+                      "station": 900.0,
+                      "left": 6.0,
+                      "right": -6.0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Kurplu dever",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -3.0,
+                "pivot": "insideEdge",
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 100.0,
+                      "onTangent": 0.6,
+                      "widening": 0.8
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-3",
+                "name": "Bağlantı deveri",
+                "alignment": "g-3",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 10.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "km",
+            "name": "Km",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Yol",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "yol-km",
+                "name": "Yol km",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "operation": "reverse"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "b/aliyman",
+                  "change": "reversed",
+                  "before": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ],
+                  "after": [
+                    0.0,
+                    501.1586420939938
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "reversed",
+                  "before": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ],
+                  "after": [
+                    501.1586420939938,
+                    581.1586420939938
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "reversed",
+                  "before": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ],
+                  "after": [
+                    581.1586420939938,
+                    815.3179074529731
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "reversed",
+                  "before": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ],
+                  "after": [
+                    815.3179074529731,
+                    895.3179074529731
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "reversed",
+                  "before": [
+                    1.1754943508222875e-38,
+                    394.05186090744627
+                  ],
+                  "after": [
+                    895.3179074529731,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [
+                "g-2"
+              ],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 2
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 2,
+                  "offsetOf": "g-1"
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 2,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 2000.0,
+                "kmEnd": 3289.3697683604196,
+                "elements": [
+                  {
+                    "id": "b/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 501.1586420939938,
+                    "km": 2000.0,
+                    "start": [
+                      486100.0,
+                      4420500.0
+                    ],
+                    "direction": -2.356194490192345,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 501.1586420939938,
+                    "length": 80.0,
+                    "km": 2501.158642093994,
+                    "start": [
+                      485745.6273257251,
+                      4420145.627325725
+                    ],
+                    "direction": -2.356194490192345,
+                    "k0": 0.0,
+                    "k1": -0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 581.1586420939938,
+                    "length": 234.15926535897933,
+                    "km": 2581.158642093994,
+                    "start": [
+                      485687.231053948,
+                      4420090.999597231
+                    ],
+                    "direction": -2.456194490192345,
+                    "k0": -0.0025,
+                    "k1": -0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 815.3179074529731,
+                    "length": 80.0,
+                    "km": 2815.317907452973,
+                    "start": [
+                      485473.97189793596,
+                      4420002.664762511
+                    ],
+                    "direction": -3.041592653589793,
+                    "k0": -0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 895.3179074529731,
+                    "length": 394.05186090744627,
+                    "km": 2895.317907452973,
+                    "start": [
+                      485394.05186090746,
+                      4420000.0
+                    ],
+                    "direction": 3.141592653589793,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": -0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      501.1586420939938,
+                      581.1586420939938,
+                      815.3179074529731,
+                      895.3179074529731
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4420400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              },
+              "superelevations": [
+                "d-1",
+                "d-2"
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 2,
+                  "pis": [
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 2,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": 7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Satırlı dever",
+                  "alignment": "g-1",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -3.0,
+                  "normalRight": -2.5,
+                  "pivot": "rightEdge",
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 389.36976836041936,
+                        "left": -6.0,
+                        "right": 6.0
+                      },
+                      {
+                        "station": 889.3697683604194,
+                        "left": -4.0,
+                        "right": 4.0
+                      },
+                      {
+                        "station": 1189.3697683604194,
+                        "left": -3.0,
+                        "right": -2.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Kurplu dever",
+                  "alignment": "g-1",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -3.0,
+                  "normalRight": -2.5,
+                  "pivot": "insideEdge",
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 100.0,
+                        "onTangent": 0.6,
+                        "widening": 0.8
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-3",
+                  "name": "Bağlantı deveri",
+                  "alignment": "g-3",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 10.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        },
+        {
+          "op": "undo",
+          "returns": "Aksı düzenle",
+          "expect": {
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Satırlı dever",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -3.0,
+                  "pivot": "leftEdge",
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.5,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 4.0,
+                        "right": -4.0
+                      },
+                      {
+                        "station": 900.0,
+                        "left": 6.0,
+                        "right": -6.0
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Kurplu dever",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -3.0,
+                  "pivot": "insideEdge",
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 100.0,
+                        "onTangent": 0.6,
+                        "widening": 0.8
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-3",
+                  "name": "Bağlantı deveri",
+                  "alignment": "g-3",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 10.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ters çevirmenin planı devere de bakar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol aksları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "alignments": [
+              {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 485000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 485600.0,
+                    "y": 4420000.0,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 486100.0,
+                    "y": 4420500.0
+                  }
+                ],
+                "stationing": {
+                  "start": 2000.0
+                }
+              },
+              {
+                "id": "g-2",
+                "name": "Sol kenar",
+                "revision": 1,
+                "offsetOf": {
+                  "alignment": "g-1",
+                  "offset": -7.5
+                }
+              },
+              {
+                "id": "g-3",
+                "name": "Bağlantı",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 484000.0,
+                    "y": 4419000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 484100.0,
+                    "y": 4419000.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 484100.0,
+                    "y": 4419100.0
+                  }
+                ]
+              }
+            ],
+            "superelevations": [
+              {
+                "id": "d-1",
+                "name": "Satırlı dever",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -3.0,
+                "pivot": "leftEdge",
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 100.0,
+                      "left": -2.5,
+                      "right": -3.0
+                    },
+                    {
+                      "station": 400.0,
+                      "left": 4.0,
+                      "right": -4.0
+                    },
+                    {
+                      "station": 900.0,
+                      "left": 6.0,
+                      "right": -6.0
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-2",
+                "name": "Kurplu dever",
+                "alignment": "g-1",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.5,
+                "normalRight": -3.0,
+                "pivot": "insideEdge",
+                "method": {
+                  "method": "curves",
+                  "curves": [
+                    {
+                      "pi": "p1",
+                      "rate": 6.0,
+                      "runoff": 100.0,
+                      "onTangent": 0.6,
+                      "widening": 0.8
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "d-3",
+                "name": "Bağlantı deveri",
+                "alignment": "g-3",
+                "alignmentRevision": 1,
+                "revision": 1,
+                "normalLeft": -2.0,
+                "normalRight": -2.0,
+                "method": {
+                  "method": "stations",
+                  "rows": [
+                    {
+                      "station": 10.0,
+                      "left": -2.0,
+                      "right": -2.0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "km",
+            "name": "Km",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Yol",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "yol-km",
+                "name": "Yol km",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "alignment": "g-1",
+            "operation": "reverse"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "b/aliyman",
+                  "change": "reversed",
+                  "before": [
+                    788.2111262664256,
+                    1289.3697683604194
+                  ],
+                  "after": [
+                    0.0,
+                    501.1586420939938
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "reversed",
+                  "before": [
+                    708.2111262664256,
+                    788.2111262664256
+                  ],
+                  "after": [
+                    501.1586420939938,
+                    581.1586420939938
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "reversed",
+                  "before": [
+                    474.05186090744627,
+                    708.2111262664256
+                  ],
+                  "after": [
+                    581.1586420939938,
+                    815.3179074529731
+                  ]
+                },
+                {
+                  "element": "p1/cikis",
+                  "change": "reversed",
+                  "before": [
+                    394.05186090744627,
+                    474.05186090744627
+                  ],
+                  "after": [
+                    815.3179074529731,
+                    895.3179074529731
+                  ]
+                },
+                {
+                  "element": "p1/aliyman",
+                  "change": "reversed",
+                  "before": [
+                    1.1754943508222875e-38,
+                    394.05186090744627
+                  ],
+                  "after": [
+                    895.3179074529731,
+                    1289.3697683604194
+                  ]
+                }
+              ],
+              "dependents": [
+                "g-2"
+              ],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 2
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 2,
+                  "offsetOf": "g-1"
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 2,
+                "length": 1289.3697683604194,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 2000.0,
+                "kmEnd": 3289.3697683604196,
+                "elements": [
+                  {
+                    "id": "b/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 501.1586420939938,
+                    "km": 2000.0,
+                    "start": [
+                      486100.0,
+                      4420500.0
+                    ],
+                    "direction": -2.356194490192345,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 501.1586420939938,
+                    "length": 80.0,
+                    "km": 2501.158642093994,
+                    "start": [
+                      485745.6273257251,
+                      4420145.627325725
+                    ],
+                    "direction": -2.356194490192345,
+                    "k0": 0.0,
+                    "k1": -0.0025,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 581.1586420939938,
+                    "length": 234.15926535897933,
+                    "km": 2581.158642093994,
+                    "start": [
+                      485687.231053948,
+                      4420090.999597231
+                    ],
+                    "direction": -2.456194490192345,
+                    "k0": -0.0025,
+                    "k1": -0.0025,
+                    "radius": 400.0
+                  },
+                  {
+                    "id": "p1/cikis",
+                    "kind": "spiral",
+                    "station": 815.3179074529731,
+                    "length": 80.0,
+                    "km": 2815.317907452973,
+                    "start": [
+                      485473.97189793596,
+                      4420002.664762511
+                    ],
+                    "direction": -3.041592653589793,
+                    "k0": -0.0025,
+                    "k1": 0.0,
+                    "a": 178.88543819998318
+                  },
+                  {
+                    "id": "p1/aliyman",
+                    "kind": "tangent",
+                    "station": 895.3179074529731,
+                    "length": 394.05186090744627,
+                    "km": 2895.317907452973,
+                    "start": [
+                      485394.05186090746,
+                      4420000.0
+                    ],
+                    "direction": 3.141592653589793,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": -0.7853981633974483,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0,
+                    "tIn": 205.94813909255373,
+                    "tOut": 205.94813909255373,
+                    "arc": 234.15926535897933,
+                    "stations": [
+                      501.1586420939938,
+                      581.1586420939938,
+                      815.3179074529731,
+                      895.3179074529731
+                    ],
+                    "centre": [
+                      485434.0385312772,
+                      4420400.666428622
+                    ]
+                  }
+                ],
+                "joins": [],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1"
+              },
+              "superelevations": [
+                "d-1",
+                "d-2"
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Satırlı dever",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -3.0,
+                  "pivot": "leftEdge",
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.5,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 4.0,
+                        "right": -4.0
+                      },
+                      {
+                        "station": 900.0,
+                        "left": 6.0,
+                        "right": -6.0
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Kurplu dever",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -3.0,
+                  "pivot": "insideEdge",
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 100.0,
+                        "onTangent": 0.6,
+                        "widening": 0.8
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-3",
+                  "name": "Bağlantı deveri",
+                  "alignment": "g-3",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 10.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
       "name": "Eşitlikli aks ters çevrilir: eşitlikler gider",
       "steps": [
         {

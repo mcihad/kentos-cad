@@ -18,4 +18,9 @@ mapping: Array<StationMapRow>,
 /**
  * The parallel axes that follow it.
  */
-dependents: Array<string>, alignments: Array<AlignmentListed>, revision: string, };
+dependents: Array<string>, 
+/**
+ * The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and
+ * pivot read from the new start.
+ */
+superelevations?: Array<string>, alignments: Array<AlignmentListed>, revision: string, };

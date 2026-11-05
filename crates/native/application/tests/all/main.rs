@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod blocks_find;
+mod superelevation_reverse;
 mod ifc_files;
 mod gltf_files;
 mod landxml_files;

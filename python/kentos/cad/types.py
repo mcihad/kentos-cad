@@ -13270,12 +13270,15 @@ class AlignmentsWritten(_Model):
         mapping: What the edit did to the stations, by element.
         dependents: The parallel axes that follow it.
         alignment: The alignment written; absent when removed.
+        superelevations: The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and
+            pivot read from the new start.
     """
     mapping: list[StationMapRow]
     dependents: list[str]
     alignments: list[AlignmentListed]
     revision: str
     alignment: AlignmentReport | None | Unset = UNSET
+    superelevations: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -13285,6 +13288,8 @@ class AlignmentsWritten(_Model):
         out["revision"] = self.revision
         if self.alignment is not UNSET:
             out["alignment"] = None if self.alignment is None else self.alignment.to_json()
+        if self.superelevations is not UNSET:
+            out["superelevations"] = list(self.superelevations)
         return out
 
     @classmethod
@@ -13295,6 +13300,7 @@ class AlignmentsWritten(_Model):
             alignments=[AlignmentListed.from_json(e0) for e0 in data["alignments"]],
             revision=data["revision"],
             alignment=UNSET if "alignment" not in data else None if data["alignment"] is None else AlignmentReport.from_json(data["alignment"]),
+            superelevations=list(data["superelevations"]) if "superelevations" in data else UNSET,
         )
 
 

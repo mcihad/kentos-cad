@@ -476,6 +476,7 @@ pub(crate) fn write(
     CommandResult::Completed {
         output: AlignmentsWritten {
             dependents: target.map(|id| dependents(&next, id)).unwrap_or_default(),
+            superelevations: Vec::new(),
             alignment,
             mapping,
             alignments: listed(&next),

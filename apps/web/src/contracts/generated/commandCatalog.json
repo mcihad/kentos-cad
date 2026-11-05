@@ -36158,6 +36158,13 @@
           },
           "revision": {
             "type": "string"
+          },
+          "superelevations": {
+            "description": "The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and\npivot read from the new start.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -36206,6 +36213,13 @@
           },
           "revision": {
             "type": "string"
+          },
+          "superelevations": {
+            "description": "The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and\npivot read from the new start.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -36385,6 +36399,13 @@
           },
           "revision": {
             "type": "string"
+          },
+          "superelevations": {
+            "description": "The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and\npivot read from the new start.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -36433,6 +36454,13 @@
           },
           "revision": {
             "type": "string"
+          },
+          "superelevations": {
+            "description": "The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and\npivot read from the new start.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [

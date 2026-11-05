@@ -252,3 +252,84 @@ fn screens_impact() {
         shot(&mut app, "baslangic");
     }
 }
+
+/// `road.alignments.edit`'s drawing with superelevation schedules on the main alignment (docs/adr/0964).
+fn reverse_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.alignments.edit.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ters çevrilir: dever çizelgeleri de döner").expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Ters çevir carries the schedules (Y58, docs/adr/0964; ROAD-DEVER-03): one undo step, said by name; the rows read
+/// from the new start, their sides swapped, the pivot on the other edge.
+#[test]
+fn reversing_carries_the_superelevation_schedules() {
+    let mut app = reverse_app();
+    let _ = app.update(Message::Run("alignment.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Reverse);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let d1 = doc.road_superelevations().iter().find(|d| d.id == "d-1").expect("d-1");
+    assert_eq!((d1.normal_left, d1.normal_right), (-3.0, -2.5));
+    assert_eq!(d1.pivot, Some(kentos_commands::SuperelevationPivot::RightEdge));
+    let kentos_commands::SuperelevationMethod::Stations { rows } = &d1.method else { panic!("rows") };
+    assert_eq!((rows[0].left, rows[0].right), (-6.0, 6.0));
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    assert_eq!(doc.undo().as_deref(), Some("Aksı düzenle"), "one step undoes both");
+    let d1 = doc.road_superelevations().iter().find(|d| d.id == "d-1").expect("d-1");
+    assert_eq!((d1.normal_left, d1.normal_right), (-2.5, -3.0), "undone together");
+}
+
+/// The schedule's diagram before and after the alignment is turned round, wide and narrow, light and dark;
+/// `.run/gui-evidence/yol-y58/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib alignment_window_tests::screens_reverse -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_reverse() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y58");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = reverse_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y58-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        for (k, label) in [(0usize, "satirli"), (1, "kurplu")] {
+            let _ = app.update(Message::Run("superelevation.editor"));
+            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Choose(k)));
+            shot(&mut app, &format!("{label}-once"));
+            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Cancel));
+        }
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Reverse);
+        shot(&mut app, "ters-cevrildi");
+        let _ = app.update(Message::Alignments(crate::alignment_window::Event::Cancel));
+        for (k, label) in [(0usize, "satirli"), (1, "kurplu")] {
+            let _ = app.update(Message::Run("superelevation.editor"));
+            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Choose(k)));
+            shot(&mut app, &format!("{label}-sonra"));
+            let _ = app.update(Message::Superelevations(crate::superelevation_window::Event::Cancel));
+        }
+    }
+}

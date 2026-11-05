@@ -414,6 +414,11 @@ pub struct AlignmentsWritten {
     pub mapping: Vec<StationMapRow>,
     /// The parallel axes that follow it.
     pub dependents: Vec<String>,
+    /// The superelevation schedules turned round with it in the same step (docs/adr/0964): their stations, sides and
+    /// pivot read from the new start.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub superelevations: Vec<String>,
     pub alignments: Vec<AlignmentListed>,
     pub revision: String,
 }

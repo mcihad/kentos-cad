@@ -137,6 +137,45 @@ fn schedule_slopes(def: &SuperelevationDef, built: &Built) -> Result<(Schedule, 
     }
 }
 
+/// `def` on its alignment turned round (docs/adr/0964; ROAD-DEVER-03): the same physical road, read from the other end.
+/// The alignment of length `length` now runs the other way, so a station s becomes `length` − s and the left side is
+/// the old right. Every cross slope is written outward on its own side (ADR 0904), so a side's value moves to the other
+/// column unchanged, never negated:
+///
+/// - the normal slopes swap;
+/// - rows written by station go to `length` − s, in the reversed order, their left and right swapped;
+/// - a rule written on a curve follows its PI: the curve turns the other way but its outside is the same edge, and a
+///   rule is the same at the curve's two ends, so it stays as written;
+/// - a pivot on the left edge is now on the right edge and back; the centreline, the inside and the outside stay.
+///
+/// It is bound to the alignment's new revision `revision`.
+pub(crate) fn reversed(def: &SuperelevationDef, length: f64, revision: u32) -> SuperelevationDef {
+    use kentos_commands::{SuperelevationMethod, SuperelevationPivot as P};
+    let method = match &def.method {
+        SuperelevationMethod::Stations { rows } => SuperelevationMethod::Stations {
+            rows: rows
+                .iter()
+                .rev()
+                .map(|r| kentos_commands::SuperRowDef { station: length - r.station, left: r.right, right: r.left })
+                .collect(),
+        },
+        m @ SuperelevationMethod::Curves { .. } => m.clone(),
+    };
+    SuperelevationDef {
+        normal_left: def.normal_right,
+        normal_right: def.normal_left,
+        method,
+        pivot: def.pivot.map(|p| match p {
+            P::LeftEdge => P::RightEdge,
+            P::RightEdge => P::LeftEdge,
+            other => other,
+        }),
+        alignment_revision: revision,
+        revision: def.revision.saturating_add(1),
+        ..def.clone()
+    }
+}
+
 pub(crate) fn stale(doc: &Document, def: &SuperelevationDef) -> bool {
     doc.road_alignments().iter().find(|a| a.id == def.alignment).is_some_and(|a| a.revision != def.alignment_revision)
 }

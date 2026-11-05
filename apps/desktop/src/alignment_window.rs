@@ -688,9 +688,27 @@ impl App {
             offset: None,
             expected_revision: None,
         };
-        if self.alignment_write(|cx| road_alignments_edit::execute(cx, edit)) {
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result = road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
+        if let Some(out) = self.answered(result) {
+            // Its superelevation schedules turned round with it (docs/adr/0964): said by name.
+            let names: Vec<String> = self.document.as_ref().map_or_else(Vec::new, |d| {
+                out.superelevations
+                    .iter()
+                    .filter_map(|id| d.model.road_superelevations().iter().find(|s| s.id == *id).map(|s| format!("“{}”", s.name)))
+                    .collect()
+            });
             self.reload_alignments();
-            self.say(Level::Success, "Aks ters çevrildi.");
+            if names.is_empty() {
+                self.say(Level::Success, "Aks ters çevrildi.");
+            } else {
+                self.say(
+                    Level::Success,
+                    format!("Aks ters çevrildi; {} dever çizelgesi de km'leri ve yanlarıyla döndü.", names.join(", ")),
+                );
+            }
         }
         Task::none()
     }
