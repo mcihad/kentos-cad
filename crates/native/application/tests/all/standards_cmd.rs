@@ -42,6 +42,64 @@ fn unknown_standard_rules_are_refused_by_command_registry_without_mutation() {
 }
 
 #[test]
+fn standard_conflicts_use_the_same_numeric_tolerance_as_the_checker() {
+    use kentos_commands::{
+        CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,
+        StandardPackage,
+    };
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let mut a = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    a.text_styles[0].height = Some(2.5);
+    let mut b = a.clone();
+    b.layers[0].line_weight += 0.5e-9;
+    b.text_styles[0].height = Some(2.5 + 0.5e-9);
+    b.dimension_styles[0].height += 0.5e-9;
+    let item = |id: &str, standard| ProjectStandardDocument {
+        text: serde_json::to_string(&StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_VERSION,
+            id: id.into(),
+            revision: "1".into(),
+            standard,
+        })
+        .unwrap(),
+    };
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![item("a", a.clone()), item("b", b.clone())];
+    doc.set_settings(settings);
+    let report = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.conflicts",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert_eq!(report["output"]["conflicts"], json!([]));
+    b.layers[0].line_weight += 2e-9;
+    b.text_styles[0].height = Some(2.5 + 2e-9);
+    b.dimension_styles[0].height += 2e-9;
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![item("a", a), item("b", b)];
+    doc.set_settings(settings);
+    let report = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.conflicts",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert_eq!(report["output"]["conflicts"].as_array().unwrap().len(), 3);
+}
+
+#[test]
 fn project_standards_resolve_by_order() {
     use kentos_commands::{
         CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,

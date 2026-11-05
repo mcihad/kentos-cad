@@ -239,7 +239,7 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                 if first.line_type != layer.line_type {
                     fields.push("lineType".into());
                 }
-                if first.line_weight != layer.line_weight {
+                if (first.line_weight - layer.line_weight).abs() > 1e-9 {
                     fields.push("lineWeight".into());
                 }
                 if first.plot != layer.plot {
@@ -269,7 +269,12 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                 if first.font != style.font {
                     fields.push("font".into());
                 }
-                if first.height != style.height {
+                let height_differs = match (first.height, style.height) {
+                    (Some(a), Some(b)) => (a - b).abs() > 1e-9,
+                    (None, None) => false,
+                    _ => true,
+                };
+                if height_differs {
                     fields.push("height".into());
                 }
                 if !fields.is_empty() {
@@ -289,7 +294,7 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             let key = fold_name(style.name.trim());
             if let Some((first_id, first)) = dimensions.get(&key) {
                 let first: &kentos_commands::StandardDimensionStyle = first;
-                if first.height != style.height {
+                if (first.height - style.height).abs() > 1e-9 {
                     conflicts.push(StandardConflict {
                         kind: "dimensionStyle".into(),
                         name: style.name.clone(),

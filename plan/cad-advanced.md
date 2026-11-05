@@ -1876,6 +1876,9 @@ değişince ilk kaynak yeniden belirlenir; okunamayan belge varsa eksik rapor
 Karşılaştırma sorgusu kendiliğinden çizimi değiştirmez. Gerçek arayüzde
 genel kural ve üç adlandırılmış fark, sıra değişimi; komutta salt okunurluk ve
 hatalı belge reddi sınandı. Python bağlamasıyla genel ve katman farkı sınandı.
+Çizgi kalınlığı ve yazı/ölçü yüksekliğindeki sayısal farklılıklar, standart
+denetiminin kullandığı 1e-9 toleransıyla karşılaştırılır. Sınırın altı ve üstü
+otomatik testte ve gerçek pencerede iki ayrı çizimle doğrulandı.
 Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden
 çıkarılabilir; kaynak dosya ve çizim geometrisi değiştirilmez. Eski ön izleme
 ile sıralama engellenir. Otomatik testler ve gerçek arayüzde sıralama,
