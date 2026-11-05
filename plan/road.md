@@ -65,11 +65,11 @@ Yol, Mimari ve Harita'dan ayrı bir iştir; kullanıcı yol programını açtı�
 - [x] **ROAD-MOD-01:** `Module::Road` (`yol`), `kentos-yol` program bağlantısı (`scripts/desktop/module_links.py`), kendi pencere kimliği, `.desktop` kaydı, ajan soketi (`masaustu-yol.sock`), yerleşim dosyası (`yerlesim-yol.json`); Launcher'da `kentos-yol` kartı “Yakında”dan çıkar ve modülü başlatır.
 - [~] **ROAD-MOD-02:** Yol projesinin türü: yeni proje sihirbazında koordinat sistemi (yerel değil; il ve dilim), düşey datum (ortometrik, geoit modeli), birim (metre) ve standart profili sorulur. `.kcad`'de projenin işi `road` (ADR 0800'in `cadWork`'ü gibi opt-in alan); başka modülün dosyası o modülün programına devredilir.
 - [~] **ROAD-MOD-03:** Şerit: **Dosya, Arazi, Güzergâh, Boykesit, Enkesit, Koridor, Kübaj, Aplikasyon, Çıktı, Görünüm**. Her düğme 1440 px'te yazılı, 1100 px'te kademeli daralır; bir komut ana sekmelerde bir kez geçer; seçili kaynağa göre bağlamsal sekme (Yüzey, Aks, Profil, Tip kesit, Koridor) açılır (ADR 0622'nin kuralları; `catalog/v1/ribbon.json`'da modülün `modules`'ü).
-- [ ] **ROAD-MOD-04:** Proje ağacı paneli: Arazi yüzeyleri, Ölçüm ve bulutlar, Güzergâhlar (her birinin altında profilleri, kesit hattı takımları, dever çizelgesi), Tip kesitler, Koridorlar, Kübaj hesapları, Paftalar. Her satır kaynağın durumunu söyler: güncel, eskimiş (kaynağı değişti), çözülemeyen aralık var, onaylı. Satırdan seç, göster, düzenleyiciyi aç, yeniden üret.
-- [ ] **ROAD-MOD-05:** Görünüşler: plan (ana çizim alanı), boykesit ve enkesit görünüşü aynı pencerede bölünmüş görünüm olarak (ADR 0523/0637'nin görünüm yerleri); km kaydırıcısı seçili istasyonu üç görünüşte birlikte gösterir; boykesitte düşey abartma yalnız görünüştür (ROAD-PROFILE-06).
-- [ ] **ROAD-MOD-06:** Dinamik revizyonun kullanıcıya görünen yüzü: değişiklikten sonra etkilenen km aralıkları, kesitler, şevli kotlu plan ve kübaj “eskidi” olur; “Yeniden üret” tek geri alma adımıdır; isteğe bağlı “Kendiliğinden yeniden üret” (Netpro 12'deki seçenek gibi) yalnız taslak hesaplarda çalışır, onaylı kübajı yeni hesap ve fark olmadan değiştirmez.
-- [ ] **ROAD-MOD-07:** Modülün komutları `road.*` ailesindedir (§21); her biri ürün komutu, Python (`kentos.road`) ve MCP aracıdır; manifestte (`catalog/v1/operations.json`) `semantic` düzeyindedir (CLAUDE.md §9.2).
-- [ ] **ROAD-MOD-08:** Ortak çekirdek sınırı (sahibin 2 Kasım kararı: ayrı olabilecek iş ayrı crate'tir): yol hesabı kendi crate'i `crates/shared/road` (`kentos-road`; yüzey modeli, güzergâh, istasyon, profil, kesit, hacim), `kentos-geometry-core`'un öngörüleri ve Delaunay'ı üstünde; ürün komutları `crates/native/application`'da onu çağırır, WASM bağlayıcısı gerekirse ayrı `crates/wasm/road-wasm`. Crate DOM, Iced ve modül bilmez; Harita CAD (imar yolu ekseni ve kesiti) ile Mimari (vaziyet planı kotu) aynı çekirdeği komut üzerinden kullanabilir. Modülün arayüzü `apps/desktop` içinde kendi klasöründe (`apps/desktop/src/road/`) durur.
+- [~] **ROAD-MOD-04:** Proje ağacı paneli: Arazi yüzeyleri, Ölçüm ve bulutlar, Güzergâhlar (her birinin altında profilleri, kesit hattı takımları, dever çizelgesi), Tip kesitler, Koridorlar, Kübaj hesapları, Paftalar. Her satır kaynağın durumunu söyler: güncel, eskimiş (kaynağı değişti), çözülemeyen aralık var, onaylı. Satırdan seç, göster, düzenleyiciyi aç, yeniden üret. *(denetim 2026-11-05: proje ağacı satırları ve durumları; ölçüm/bulut satırı yok.)*
+- [~] **ROAD-MOD-05:** Görünüşler: plan (ana çizim alanı), boykesit ve enkesit görünüşü aynı pencerede bölünmüş görünüm olarak (ADR 0523/0637'nin görünüm yerleri); km kaydırıcısı seçili istasyonu üç görünüşte birlikte gösterir; boykesitte düşey abartma yalnız görünüştür (ROAD-PROFILE-06). *(denetim 2026-11-05: Görünüşler penceresi km'yi üç görünüşte eşler; plan ana çizim alanı değil.)*
+- [~] **ROAD-MOD-06:** Dinamik revizyonun kullanıcıya görünen yüzü: değişiklikten sonra etkilenen km aralıkları, kesitler, şevli kotlu plan ve kübaj “eskidi” olur; “Yeniden üret” tek geri alma adımıdır; isteğe bağlı “Kendiliğinden yeniden üret” (Netpro 12'deki seçenek gibi) yalnız taslak hesaplarda çalışır, onaylı kübajı yeni hesap ve fark olmadan değiştirmez. *(denetim 2026-11-05: tek adımlı yeniden üret, kendiliğinden üretme; eskiyen km aralıkları planda gösterilmez.)*
+- [~] **ROAD-MOD-07:** Modülün komutları `road.*` ailesindedir (§21); her biri ürün komutu, Python (`kentos.road`) ve MCP aracıdır; manifestte (`catalog/v1/operations.json`) `semantic` düzeyindedir (CLAUDE.md §9.2). *(denetim 2026-11-05: 97 road.* komutunun Python ve MCP karşılığı; değişim file.export.*, görünüşler query düzeyinde.)*
+- [~] **ROAD-MOD-08:** Ortak çekirdek sınırı (sahibin 2 Kasım kararı: ayrı olabilecek iş ayrı crate'tir): yol hesabı kendi crate'i `crates/shared/road` (`kentos-road`; yüzey modeli, güzergâh, istasyon, profil, kesit, hacim), `kentos-geometry-core`'un öngörüleri ve Delaunay'ı üstünde; ürün komutları `crates/native/application`'da onu çağırır, WASM bağlayıcısı gerekirse ayrı `crates/wasm/road-wasm`. Crate DOM, Iced ve modül bilmez; Harita CAD (imar yolu ekseni ve kesiti) ile Mimari (vaziyet planı kotu) aynı çekirdeği komut üzerinden kullanabilir. Modülün arayüzü `apps/desktop` içinde kendi klasöründe (`apps/desktop/src/road/`) durur. *(denetim 2026-11-05: crates/shared/road ayrı ve Iced'siz; apps/desktop/src/road/ klasörü yok.)*
 
 **Kabul:** `kentos-yol` açılır, yalnız yol şeridini ve komutlarını sunar; Mimari ve Harita'nın komutları aramada çıkmaz; Launcher kartı programı başlatır; boş yol projesi kaydedilip açılır; dar (1100×650) ve geniş pencerede, açık ve koyu temada şerit yazıları kesilmez.
 
@@ -141,18 +141,18 @@ KentOS'un hedeflediği farklar: kaynak kalitesiyle birlikte doğruluk raporu; do
 
 Render origin/hi-lo/depth politikasının ayrıntısı [3d.md](3d.md)'dedir. Yol hesabında kaynak FP64 kalır; görünüş mesh'inin quantization ve LOD hatası raporlanan mühendislik hacmine taşınmaz. KGM/AASHTO gibi limit tabloları sabit rastgele değerler yerine **kaynağı, baskısı ve yürürlük kapsamı belirli DesignStandard** ile seçilir. [KGM yayın listesi](https://www.kgm.gov.tr/Sayfalar/KGM/SiteTr/Yayinlar/Yayinlar.aspx)
 
-- [ ] **ROAD-NUM-01:** Canonical yatay eksen x=doğu, y=kuzey, z=yukarı olsun; eski CAD X/Y gösterim etiketleri açık presentation mapping ile korunmalı.
-- [ ] **ROAD-NUM-02:** Her Survey/Terrain/Alignment kaynakta yatay CRS, düşey CRS/datum, metre/ayak, epoch, geoid dönüşüm referansı ve dönüşüm zinciri taşısın.
-- [ ] **ROAD-NUM-03:** Yükseklik h ellipsoidal ile H ortometrik ayrımı açık olsun; geoid N için H=h−N dönüşümü yalnız doğru model/datum/epoch ile uygulansın.
+- [~] **ROAD-NUM-01:** Canonical yatay eksen x=doğu, y=kuzey, z=yukarı olsun; eski CAD X/Y gösterim etiketleri açık presentation mapping ile korunmalı. *(denetim 2026-11-05: x doğu, y kuzey var; z yukarı ve Yol pencerelerinde etiket eşlemesi yok.)*
+- [~] **ROAD-NUM-02:** Her Survey/Terrain/Alignment kaynakta yatay CRS, düşey CRS/datum, metre/ayak, epoch, geoid dönüşüm referansı ve dönüşüm zinciri taşısın. *(denetim 2026-11-05: proje geneli kot ve epok var; kaynak başına CRS/datum yok.)*
+- [~] **ROAD-NUM-03:** Yükseklik h ellipsoidal ile H ortometrik ayrımı açık olsun; geoid N için H=h−N dönüşümü yalnız doğru model/datum/epoch ile uygulansın. *(denetim 2026-11-05: geoid dönüşümü CAD genelinde; yol komutları kullanmıyor.)*
 - [ ] **ROAD-NUM-04:** Bilinmeyen düşey datum veya unit olduğunda karşılaştırmalı hacmi bloke et ya da açık taslak varsayım profiline bağla; sessiz sıfır kot veya geoid tahmini yapma.
-- [ ] **ROAD-NUM-05:** Grid chainage, ground mesafe ve gerçek 3D uzunluk ayrı ölçü türleri olsun; scale factor ve ellipsoid/geoid hesabı nerede kullanıldığıyla kaydedilsin.
-- [ ] **ROAD-NUM-06:** Analitik aks, profile, TIN ve final miktar kaynakları FP64/robust topoloji kullansın; GPU render kopyası kaynağa FP32 değer yazmasın.
+- [~] **ROAD-NUM-05:** Grid chainage, ground mesafe ve gerçek 3D uzunluk ayrı ölçü türleri olsun; scale factor ve ellipsoid/geoid hesabı nerede kullanıldığıyla kaydedilsin. *(denetim 2026-11-05: grid ve zemin boyu ayrı; 3B boy ve ölçek faktörünün yeri kaydı yok.)*
+- [~] **ROAD-NUM-06:** Analitik aks, profile, TIN ve final miktar kaynakları FP64/robust topoloji kullansın; GPU render kopyası kaynağa FP32 değer yazmasın. *(denetim 2026-11-05: her yer f64, kesin önermeler; GPU kopyası yazmama kuralı test edilmiyor.)*
 - [ ] **ROAD-NUM-07:** Projeyi ortalayarak yapılan sayısal normalizasyonun dönüşümünü sakla; EPSG/datum ya da ölçü kaynak değerleri değişmiş gibi kaydetme.
-- [ ] **ROAD-NUM-08:** Hata bütçesi survey, CRS/vertical transform, modelleme, örnekleme, GPU encoding ve integration olarak ayrışsın; ekran hassasiyeti kaynak ölçme kalitesi sayılmasın.
-- [ ] **ROAD-NUM-09:** Final miktarda reduction sırası ve compensated/pairwise sum tanımlansın; native/WASM/worker farkı tolerans ve algoritma sürümüyle ölçülsün.
-- [ ] **ROAD-NUM-10:** Non-finite, aşırı kapsam, çok kısa eleman, eş/çok yakın XY ve tutarsız Z girişlerini alan/record path ile reddet veya açık çözüm politikası iste.
-- [ ] **ROAD-NUM-11:** Station/offset/elevation, angle, slope, crossfall ve volume wire birimleri schema'da bulunsun; yüzde ile oran, derece ile radyan karışmasın.
-- [ ] **ROAD-NUM-12:** Yol/3D precision korpusunu projeksiyonlu büyük koordinat, negatif koordinat, yerel küçük detay ve kilometre uzunluğunda aksla kur.
+- [~] **ROAD-NUM-08:** Hata bütçesi survey, CRS/vertical transform, modelleme, örnekleme, GPU encoding ve integration olarak ayrışsın; ekran hassasiyeti kaynak ölçme kalitesi sayılmasın. *(denetim 2026-11-05: kübaj belirsizliği ayrışık; CRS, örnekleme, GPU terimleri yok.)*
+- [~] **ROAD-NUM-09:** Final miktarda reduction sırası ve compensated/pairwise sum tanımlansın; native/WASM/worker farkı tolerans ve algoritma sürümüyle ölçülsün. *(denetim 2026-11-05: Neumaier toplamı yalnız defterde; native/WASM farkı ölçülmedi.)*
+- [~] **ROAD-NUM-10:** Non-finite, aşırı kapsam, çok kısa eleman, eş/çok yakın XY ve tutarsız Z girişlerini alan/record path ile reddet veya açık çözüm politikası iste. *(denetim 2026-11-05: sonsuz/eş XY/kot belirsizliği reddedilir; kapsam sınırı yok.)*
+- [~] **ROAD-NUM-11:** Station/offset/elevation, angle, slope, crossfall ve volume wire birimleri schema'da bulunsun; yüzde ile oran, derece ile radyan karışmasın. *(denetim 2026-11-05: her sayının birimi şemada; aynı adlı eğim alanları kimi komutta yüzde kimide oran.)*
+- [~] **ROAD-NUM-12:** Yol/3D precision korpusunu projeksiyonlu büyük koordinat, negatif koordinat, yerel küçük detay ve kilometre uzunluğunda aksla kur. *(denetim 2026-11-05: büyük koordinat durumları var; ayrı yol hassasiyet korpusu yok.)*
 
 ## 5. Kalıcı kaynak modeli ve bağımlılık grafı
 
@@ -176,15 +176,15 @@ Kamera, LOD, GPU buffer ve geçici triangle index bu kalıcı grafın kimliği d
 
 ## 6. ROAD-SURVEY — Ölçme, kaynak QA ve proje hazırlığı — P0/P1
 
-- [ ] **ROAD-SURVEY-01:** Ölçü noktası, feature code, breakline, control point, kalite ve survey epoch'u kalıcı typed kaynağa al.
+- [~] **ROAD-SURVEY-01:** Ölçü noktası, feature code, breakline, control point, kalite ve survey epoch'u kalıcı typed kaynağa al. *(denetim 2026-11-05: çizim noktaları ve kırık hatlar kaynak; nitelik kodu, kalite, epok yok.)*
 - [ ] **ROAD-SURVEY-02:** Yerel/gerçek CRS seçimi ve yatay/düşey dönüşüm önizlemesi control residual ve coverage raporuyla sunulsun.
-- [ ] **ROAD-SURVEY-03:** LandXML/CSV/XYZ/LAS girişlerinde unit, eksen sırası, delimiter, precision ve class mapping inspect aşamasında doğrulansın.
-- [ ] **ROAD-SURVEY-04:** Tekrarlı XY, aykırı Z, noise, flight-strip farkı ve eksik coverage raporlarını ayrı QA job yap; ham kayıt korunmalı.
+- [~] **ROAD-SURVEY-03:** LandXML/CSV/XYZ/LAS girişlerinde unit, eksen sırası, delimiter, precision ve class mapping inspect aşamasında doğrulansın. *(denetim 2026-11-05: CSV önizleme var; birim/hassasiyet denetimi ve LAS sınıf eşlemesi yok.)*
+- [~] **ROAD-SURVEY-04:** Tekrarlı XY, aykırı Z, noise, flight-strip farkı ve eksik coverage raporlarını ayrı QA job yap; ham kayıt korunmalı. *(denetim 2026-11-05: yakın çift, sivri kot, boşluk denetimi; şerit farkı ve gürültü yok.)*
 - [x] **ROAD-SURVEY-05:** Sert zemin ve bitki kaplı alan için uygun checkpoint sınıfları/istatistikleri ayrı göster; yalnız tek RMSE sayısına dayanma.
 - [ ] **ROAD-SURVEY-06:** Ölçülmüş breakline ile algoritmanın çıkardığı öneri ayrışsın; kullanıcı onayından sonra civil source'a bağlansın.
-- [ ] **ROAD-SURVEY-07:** Kontrol ağı ve koordinat dönüşümü sonrasında original→normalized kaynak eşlemesi ve dönüşüm grid digest'i korunsun.
+- [~] **ROAD-SURVEY-07:** Kontrol ağı ve koordinat dönüşümü sonrasında original→normalized kaynak eşlemesi ve dönüşüm grid digest'i korunsun. *(denetim 2026-11-05: geoid SHA tutulur; özgün→normalize eşleme yok.)*
 - [~] **ROAD-SURVEY-08:** Proje sınırı, survey acceptance mask, no-data bölgeleri ve tahmini/ölçülmüş veri işaretleri açık olsun. (Y19.1–3, ADR 0920: proje sınırında örtülen, verisiz ve dışarıdaki alan, kenarı kullanıcının sınırını aşan üçgen tahmin, düşük güvenli alanlar çizime, nokta yoğunluğu ızgarası ve seyrek alanlar; buluttaki zemin noktalarının yoğunluğu açık.)
-- [ ] **ROAD-SURVEY-09:** Saha ölçüsü revisyonu mevcut terrain'i sessiz değiştirip onaylı miktarı yenilemesin; impact plan ve yeni run üret.
+- [~] **ROAD-SURVEY-09:** Saha ölçüsü revisyonu mevcut terrain'i sessiz değiştirip onaylı miktarı yenilemesin; impact plan ve yeni run üret. *(denetim 2026-11-05: yüzey özetiyle eskime; etki planı ve yeni çalıştırma yok.)*
 - [ ] **ROAD-SURVEY-10:** Survey kontrol, ölçüm kayıtları ve revizyon girişi için [form.md](form.md) field/row/task yetkilerini kullan.
 
 **Kabul:** İki datumdaki bulut/ölçü ayrı görünür; onaylı dönüşüm ve kontrol raporu olmadan ortak kazı/dolgu çalışmaz. Survey doğruluğu kontrol noktalarıyla değerlendirilir. [USGS geometrik doğruluk çalışması](https://pubs.usgs.gov/publication/ofr20251017/full)
@@ -193,44 +193,44 @@ Kamera, LOD, GPU buffer ve geçici triangle index bu kalıcı grafın kimliği d
 
 COPC 1.0, LAZ 1.4 verisini octree hierarchy ve erişilebilir chunk'larla düzenler; parçalı tüketim için doğal bir temeldir. [COPC şartnamesi](https://copc.io/). Zemin algoritması seçimi ayrı doğruluk işidir; [PDAL SMRF](https://pdal.org/en/stable/stages/filters.smrf.html) ve [zemin iş akışı](https://pdal.org/en/stable/tutorial/ground-filters.html) kıyas kaynağıdır. Bu plan PDAL kurulumunu veya kullanıcıya Python zorunluluğunu varsaymaz.
 
-- [ ] **ROAD-PC-01:** Mevcut LAS/LAZ/COPC/text/VPC reader ve Need/range adapter'larını genişlet; tüm dosyayı parse eden ikinci bağımsız reader kurma.
+- [~] **ROAD-PC-01:** Mevcut LAS/LAZ/COPC/text/VPC reader ve Need/range adapter'larını genişlet; tüm dosyayı parse eden ikinci bağımsız reader kurma. *(denetim 2026-11-05: aynı bulut okuyucusu; aralık/Need bağdaştırıcısı yok.)*
 - [ ] **ROAD-PC-02:** COPC node hierarchy, source digest/ETag, range cache ve gerekli dimensions seçimini ortak 3D streaming scheduler'a bağla.
-- [ ] **ROAD-PC-03:** Ham LAS integer scale/offset ve source record identity korunmalı; ekran FP32 noktalarından LAS export veya survey edit üretme.
-- [ ] **ROAD-PC-04:** Ground/classification/return/intensity/RGB/scan-angle/time için typed filtre ve histogram/query arayüzü kur.
+- [~] **ROAD-PC-03:** Ham LAS integer scale/offset ve source record identity korunmalı; ekran FP32 noktalarından LAS export veya survey edit üretme. *(denetim 2026-11-05: kot LAS ölçeğinden; kayıt kimliği tutulmuyor.)*
+- [~] **ROAD-PC-04:** Ground/classification/return/intensity/RGB/scan-angle/time için typed filtre ve histogram/query arayüzü kur. *(denetim 2026-11-05: sınıf ve dönüş süzgeci; yoğunluk, RGB, açı, zaman süzgeci ve histogram yok.)*
 - [ ] **ROAD-PC-05:** Mevcut zemin filtresini referans CPU yolu olarak koru; GPU grid/min/morphology adaylarını aynı girdiler ve halo sınırlarıyla karşılaştır.
 - [ ] **ROAD-PC-06:** PMF/SMRF, progressive TIN densification ve cloth-based adaylarını ayrı profiller olarak dene; yöntem adını mevcut filtreden farklıysa doğru koy.
-- [ ] **ROAD-PC-07:** Şerit uyumsuzluğu, outlier, duvar/bitki ve köprü tabliyesi durumlarını kontrol edilebilir QA katmanı olarak üret.
+- [~] **ROAD-PC-07:** Şerit uyumsuzluğu, outlier, duvar/bitki ve köprü tabliyesi durumlarını kontrol edilebilir QA katmanı olarak üret. *(denetim 2026-11-05: 17/19 ret, bitki/bina uyarısı; şerit, aykırı, duvar QA katmanı yok.)*
 - [ ] **ROAD-PC-08:** Classification değişikliklerini original point ID→class patch olarak sakla; kullanıcı düzeltmesi ve original class geçmişini koru.
-- [ ] **ROAD-PC-09:** Kesit bandı sorgusu radius/width/CRS/station kapsamını alsın; yalnız ekranda resident node'ları tarayıp tamamlandı demesin.
-- [ ] **ROAD-PC-10:** Arazi için ground subset çıkarırken density/coverage ve thinning hatasını kaydet; bridge/overpass noktalarını yer yüzeyiyle birleştirme.
-- [ ] **ROAD-PC-11:** Adaptive thinning breakline, curb ve sharp slope çevresinde ayrıntıyı korusun; voxel size/density yalnız görüntü LOD'u olmasın.
-- [ ] **ROAD-PC-12:** Point→DEM/TIN, contours, height-above-ground ve as-built değişim araçları built-in Processing descriptor kullansın.
+- [~] **ROAD-PC-09:** Kesit bandı sorgusu radius/width/CRS/station kapsamını alsın; yalnız ekranda resident node'ları tarayıp tamamlandı demesin. *(denetim 2026-11-05: bulut profili var; aksa, yarıçapa, CRS'e bağlı değil.)*
+- [x] **ROAD-PC-10:** Arazi için ground subset çıkarırken density/coverage ve thinning hatasını kaydet; bridge/overpass noktalarını yer yüzeyiyle birleştirme. *(denetim 2026-11-05: bulut zemininde okunan/kalan, kapsam, yoğunluk, seyreltme hatası kaydı; köprü sınıfları (17, 19) ret; yol-y15-bulut-*.)*
+- [x] **ROAD-PC-11:** Adaptive thinning breakline, curb ve sharp slope çevresinde ayrıntıyı korusun; voxel size/density yalnız görüntü LOD'u olmasın. *(denetim 2026-11-05: dik hücrede en alçak ve en yüksek nokta, kırık hat erimindeki her nokta tutulur; yol-y15-bulut-uyari-*.)*
+- [~] **ROAD-PC-12:** Point→DEM/TIN, contours, height-above-ground ve as-built değişim araçları built-in Processing descriptor kullansın. *(denetim 2026-11-05: bulut→DEM var; TIN, eş yükselti, zeminden yükseklik yok.)*
 - [ ] **ROAD-PC-13:** Bulk point edit için undo delta, chunk provenance, staged write ve cancel/recovery sınırı tanımla.
 - [ ] **ROAD-PC-14:** Milyarlarca kayıtta full-source job bounded RAM ile çalışsın; node/partition sınırında görünmeyen gap ve duplicated point üretmesin.
-- [ ] **ROAD-PC-15:** Render point pick önce aday olur; exact source point/cluster ve uncertainty ile refine et. Tam kayıt hazır değilse pending göster.
+- [~] **ROAD-PC-15:** Render point pick önce aday olur; exact source point/cluster ve uncertainty ile refine et. Tam kayıt hazır değilse pending göster. *(denetim 2026-11-05: kesin en yakın kayıt; aday→inceltme ve belirsizlik yok.)*
 - [ ] **ROAD-PC-16:** Nokta bulutu yetkisi ve private class/attribute projection'ı metadata/range/export/AI'da da uygulansın.
 
 ## 8. ROAD-TIN — Mühendislik yüzeyi ve constrained üçgenleme — P0/P1
 
 Constrained Delaunay, sıradan Delaunay'dan farklı olarak korunan kenarları modele dahil eder. Robust karar ve intersection handling ayrı konulardır. [CGAL 2D triangulations](https://doc.cgal.org/latest/Triangulation_2/index.html), [Shewchuk robust predicates](https://www.cs.cmu.edu/~quake/robust.html). KentOS'un mevcut exact-sign çekirdeği genişletilmelidir; harici kütüphane seçimi bağımlılık/lisans/prototip kararıdır.
 
-- [ ] **ROAD-TIN-01:** Mevcut Delaunay/predicates'i persistent TerrainSurface, topology ve elevation query sözleşmesine bağla.
-- [ ] **ROAD-TIN-02:** Delaunay, constrained Delaunay ve fill ear-clipping ayrı algorithm IDs olsun; yanlış algoritma adıyla sonuç yayınlama.
-- [ ] **ROAD-TIN-03:** Breakline hard/soft, boundary/hole, island ve maximum edge length kuralları modelde sürümlensin.
-- [ ] **ROAD-TIN-04:** Intersecting breakline için split/ret/priority ve çelişkili Z politikası açık olsun; yatay kesişimi olan farklı kotlu bridge çizgileri otomatik birleştirilmesin.
-- [ ] **ROAD-TIN-05:** Aynı XY ve farklı Z tek-valued terrain için ambiguity'dir; onaylı selection/aggregation veya ayrı surface patch/3D mesh gerekir.
-- [ ] **ROAD-TIN-06:** Constraint endpoints ve korunan terrain feature IDs kararlı olsun; tasarım revision'ı triangle index'e kör bağlanmasın.
-- [ ] **ROAD-TIN-07:** Nearly collinear/cocircular/duplicate noktaları mevcut adaptive exact-sign kararlarıyla sınayarak topology üret.
-- [ ] **ROAD-TIN-08:** Exact predicate yalnız determinantın işaretini doğrular; intersection coordinates/areas için ayrıca construction error ve degeneracy politikası tanımla.
+- [x] **ROAD-TIN-01:** Mevcut Delaunay/predicates'i persistent TerrainSurface, topology ve elevation query sözleşmesine bağla. *(denetim 2026-11-05: `TerrainSurfaceDef` kalıcı, Delaunay/predicates çekirdekte, road.terrains.query kot sözleşmesi; y2-4-yuzey-*.)*
+- [~] **ROAD-TIN-02:** Delaunay, constrained Delaunay ve fill ear-clipping ayrı algorithm IDs olsun; yanlış algoritma adıyla sonuç yayınlama. *(denetim 2026-11-05: tek algoritma kimliği `kentos.cdt/1`; diğerleri ve çıktıda kimlik yok.)*
+- [~] **ROAD-TIN-03:** Breakline hard/soft, boundary/hole, island ve maximum edge length kuralları modelde sürümlensin. *(denetim 2026-11-05: sınır, boşluk, en uzun kenar; sert/yumuşak kırık hat, ada, sürüm yok.)*
+- [~] **ROAD-TIN-04:** Intersecting breakline için split/ret/priority ve çelişkili Z politikası açık olsun; yatay kesişimi olan farklı kotlu bridge çizgileri otomatik birleştirilmesin. *(denetim 2026-11-05: kesişen kırık hat yeriyle reddedilir; bölme/öncelik seçeneği yok.)*
+- [~] **ROAD-TIN-05:** Aynı XY ve farklı Z tek-valued terrain için ambiguity'dir; onaylı selection/aggregation veya ayrı surface patch/3D mesh gerekir. *(denetim 2026-11-05: `height_ambiguous` ret; onaylı seçim/birleştirme yok.)*
+- [~] **ROAD-TIN-06:** Constraint endpoints ve korunan terrain feature IDs kararlı olsun; tasarım revision'ı triangle index'e kör bağlanmasın. *(denetim 2026-11-05: köşe kaynağı tutulur; kararlı kısıt kimliği yok.)*
+- [~] **ROAD-TIN-07:** Nearly collinear/cocircular/duplicate noktaları mevcut adaptive exact-sign kararlarıyla sınayarak topology üret. *(denetim 2026-11-05: çekirdek dejenere kümeler test edilir; kısıtlı üçgenlemede korpus yok.)*
+- [~] **ROAD-TIN-08:** Exact predicate yalnız determinantın işaretini doğrular; intersection coordinates/areas için ayrıca construction error ve degeneracy politikası tanımla. *(denetim 2026-11-05: inşa sayı üretmez; inşa hatası politikası yok.)*
 - [ ] **ROAD-TIN-09:** Point insert/remove/move, edge flip, triangle remove, hole edit ve breakline ekleme local rebuild/impact plan kullansın.
-- [ ] **ROAD-TIN-10:** Elevation query result z, triangle/source revision, interpolation method, no-data/extrapolation ve quality taşısın.
-- [ ] **ROAD-TIN-11:** Extrapolation varsayılan kapalı olsun; dış kabuk veya hole içinde nokta için tahmini kot ancak açık parametreyle üret.
-- [ ] **ROAD-TIN-12:** TIN tiles için shared border ownership ve seam reconciliation kur; sıradan sabit halo'nun global Delaunay garantisi vermediğini hesaba kat.
-- [ ] **ROAD-TIN-13:** Partition sınırında empty-circle/constraint etkileşimi için proven merge veya adaptive genişleme kullan; aynı kaynak monolithic referansla karşılaştırılsın.
-- [ ] **ROAD-TIN-14:** Analiz topology ve display simplification ayrı olsun; decimation sonucu final volume veya aplikasyon query'si olmasın.
-- [ ] **ROAD-TIN-15:** Kontur üretimi vertex/edge eşitlik kuralı, plateau, hole ve snapping toleransıyla deterministic olsun.
+- [~] **ROAD-TIN-10:** Elevation query result z, triangle/source revision, interpolation method, no-data/extrapolation ve quality taşısın. *(denetim 2026-11-05: kot, yer, üçgen; enterpolasyon yöntemi ve kalite yok, üçgen telde yok.)*
+- [x] **ROAD-TIN-11:** Extrapolation varsayılan kapalı olsun; dış kabuk veya hole içinde nokta için tahmini kot ancak açık parametreyle üret. *(denetim 2026-11-05: dış kabukta ve boşlukta kot yok (`a_void_is_said_and_the_outside_too`); dışa uzatma yok.)*
+- [~] **ROAD-TIN-12:** TIN tiles için shared border ownership ve seam reconciliation kur; sıradan sabit halo'nun global Delaunay garantisi vermediğini hesaba kat. *(denetim 2026-11-05: tiled.rs sahiplik ve dikiş; yalnız nokta, komut kullanmıyor.)*
+- [~] **ROAD-TIN-13:** Partition sınırında empty-circle/constraint etkileşimi için proven merge veya adaptive genişleme kullan; aynı kaynak monolithic referansla karşılaştırılsın. *(denetim 2026-11-05: uyarlanır hale, tek parça kurulumla karşılaştırılır; kısıt etkileşimi yok.)*
+- [~] **ROAD-TIN-14:** Analiz topology ve display simplification ayrı olsun; decimation sonucu final volume veya aplikasyon query'si olmasın. *(denetim 2026-11-05: analiz yüzeyi seyreltilmiş bulut; görüntü LOD'u ayrımı açık değil.)*
+- [~] **ROAD-TIN-15:** Kontur üretimi vertex/edge eşitlik kuralı, plateau, hole ve snapping toleransıyla deterministic olsun. *(denetim 2026-11-05: köşe-seviye kuralı, sabit sıra; yaslama toleransı ve plato/boşluk durumları yok.)*
 - [x] **ROAD-TIN-16:** Slope/aspect ve surface roughness değerlerini yüzey türü/metot/units ile döndür; DEM raster yaklaşımıyla TIN'in farklı sonucunu açıklayabilsin. *(ADR 0916: eğim ve bakı bantları, pürüzlülük, rasterin eğiminin TIN'den farkı ve en büyük farkın yeri; denetim 5 Kasım 2026.)*
-- [ ] **ROAD-TIN-17:** Surface smoothing/repair rollback ve diff sunsun; tasarım noktası veya breakline otomatik kaydırılmasın.
+- [~] **ROAD-TIN-17:** Surface smoothing/repair rollback ve diff sunsun; tasarım noktası veya breakline otomatik kaydırılmasın. *(denetim 2026-11-05: onarımda geri alma ve fark var, kırık hat köşesi reddedilir; yumuşatma aracı yok.)*
 - [ ] **ROAD-TIN-18:** İleri hedefte GPU broad phase/sorting/triangle candidates kullan; uncertified FP32 incircle ile authoritative topology yayınlama.
 
 **Kabul:** Breakline triangle kenarı olarak korunur; hole kapanmaz; tile sınırındaki kotlar birleşir; yüzey editinden sonra revision-aware query ve volume önceki sonuçları güncelmiş gibi göstermez.
@@ -239,106 +239,106 @@ Constrained Delaunay, sıradan Delaunay'dan farklı olarak korunan kenarları mo
 
 OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/düşey geometriyi; 12d ise referansla bağlı alignment tasarımını gösterir. KentOS v1'de line/arc/clothoid'i bağımsız doğrular, diğer spiral türlerini capability matrisiyle genişletir. [OpenRoads](https://www.bentley.com/en/products/openroads-designer/), [12d](https://12d.com/product/12d_model_alignment.html)
 
-- [ ] **ROAD-ALIGN-01:** Alignment ID/revision ve line/arc/spiral analitik segment IDs tanımla; görsel spline kaynak tasarım geometrisi olmasın.
-- [ ] **ROAD-ALIGN-02:** IP/PI tabanlı ve fixed/floating/free element tabanlı düzenlemeyi aynı analitik kaynakla ilişkilendir.
-- [ ] **ROAD-ALIGN-03:** Line, circular arc ve clothoid'in point/tangent/curvature/length query'lerini FP64 çekirdekte kur.
-- [ ] **ROAD-ALIGN-04:** Clothoid için k(s)=k0+(k1−k0)s/L ve theta(s)=theta0+k0s+(k1−k0)s²/(2L) tanımını kullan; Fresnel veya hata sınırlı integration yöntemi ADR'de seçilsin.
-- [ ] **ROAD-ALIGN-05:** Doğru→spiral→kurp→spiral→doğru zincirinde konum/teğet/eğrilik süreklilik koşulları ve kalan residual raporlansın.
-- [ ] **ROAD-ALIGN-06:** Station, başlangıçtan analitik yatay uzunluk olsun; 3D uzunluk ve kullanıcıya gösterilen km label'ı ayrı query olsun.
-- [ ] **ROAD-ALIGN-07:** Station equations back/ahead, direction ve label discontinuity'yi taşısın; aynı label birden fazla yere karşılık gelirse branch/element ID istenmeli.
+- [x] **ROAD-ALIGN-01:** Alignment ID/revision ve line/arc/spiral analitik segment IDs tanımla; görsel spline kaynak tasarım geometrisi olmasın. *(denetim 2026-11-05: aks kimliği ve revizyonu, eleman kimlikleri `PI/aliyman|giris|kurp|cikis`, analitik elemanlar.)*
+- [~] **ROAD-ALIGN-02:** IP/PI tabanlı ve fixed/floating/free element tabanlı düzenlemeyi aynı analitik kaynakla ilişkilendir. *(denetim 2026-11-05: yalnız PI zinciri; sabit/yüzer/serbest eleman düzenlemesi yok.)*
+- [x] **ROAD-ALIGN-03:** Line, circular arc ve clothoid'in point/tangent/curvature/length query'lerini FP64 çekirdekte kur. *(denetim 2026-11-05: element.rs point/theta/curvature/length FP64; fixtures/road/v1 alignments.)*
+- [~] **ROAD-ALIGN-04:** Clothoid için k(s)=k0+(k1−k0)s/L ve theta(s)=theta0+k0s+(k1−k0)s²/(2L) tanımını kullan; Fresnel veya hata sınırlı integration yöntemi ADR'de seçilsin. *(denetim 2026-11-05: tam formül, Gauss–Legendre 1e-10 test; ADR'de hata sınırı yazılı değil.)*
+- [~] **ROAD-ALIGN-05:** Doğru→spiral→kurp→spiral→doğru zincirinde konum/teğet/eğrilik süreklilik koşulları ve kalan residual raporlansın. *(denetim 2026-11-05: konum ve doğrultu artığı raporlanır; eğrilik sürekliliği raporlanmaz.)*
+- [~] **ROAD-ALIGN-06:** Station, başlangıçtan analitik yatay uzunluk olsun; 3D uzunluk ve kullanıcıya gösterilen km label'ı ayrı query olsun. *(denetim 2026-11-05: km yatay boy, km yazısı ayrı, zemin boyu; 3B boy sorgusu yok.)*
+- [x] **ROAD-ALIGN-07:** Station equations back/ahead, direction ve label discontinuity'yi taşısın; aynı label birden fazla yere karşılık gelirse branch/element ID istenmeli. *(denetim 2026-11-05: stationing.rs geri/ileri/yön; iki yere düşen km bölge ister (`station_ambiguous`).)*
 - [x] **ROAD-ALIGN-08:** Station→point ve point→station/offset dönüşümünde çoklu yakın çözüm, eğri üzerinde minimum ve tie-break politikası açık olsun. *(Y3.1, ADR 0901 §7: her elemanda bütün ayaklar kapalı biçimde ya da klotoidde ikiye bölme ve Newton'la, en yakını; 1e-9 m içinde eşit uzaklıklarda küçük km; denetim 5 Kasım 2026.)*
-- [ ] **ROAD-ALIGN-09:** Offset alignment'ı kaynak aksla kalıcı ilişkilendir; keskin/ters kurpta cusp/self-intersection detect ve ret/explicit çözüm sun.
+- [~] **ROAD-ALIGN-09:** Offset alignment'ı kaynak aksla kalıcı ilişkilendir; keskin/ters kurpta cusp/self-intersection detect ve ret/explicit çözüm sun. *(denetim 2026-11-05: paralel aks bağlı, sivri uç reddedilir; kendini kesme testsiz, çözüm önerisi yok.)*
 - [~] **ROAD-ALIGN-10:** Alignment edit ve reverse için segment/station mapping üret; ölçü, profil, corridor region ve stakeout refs'e impact raporu ver. *(Y57, ADR 0963: `road.alignments.impact` geometrik km eşlemesi, kayan ve yeni aralıklar, km kayması; profil PVI, kesit takımı, koridor bölgesi ve dever km'leri taşınır ya da çözülmez; ters çevirmenin km dönüşümü ve aplikasyon/duvar km'leri açık.)*
 - [~] **ROAD-ALIGN-11:** DesignStandard speed/radius/spiral length/visibility kontrolünü sürümlü kurallar olarak uygula; kendi ilk sayılarımızı mevzuat limiti sayma. (Y21, ADR 0922: yarıçap, kurp ve klotoid boyu, aliyman kuralları kullanıcının değerleriyle; hıza bağlı ve sürümlü standart profili ROAD-DEC-01'i bekler.)
 - [x] **ROAD-ALIGN-12:** Alternative alignment ve compare için parent/source digest ve değişen kilometre aralığı korunsun.
 - [x] **ROAD-ALIGN-13:** Ön tasarım için mevcut GIS suitability/cost path kullanılabilir; ortaya çıkan raster path teknik aks olarak ayrıca fit/QA/onaydan geçsin. (Y12.1, ADR 0910 §1: `road.routes.find` ve `.draw` arazi yüzeyinde eğim sınırlı, yasak alanlardan kaçan en düşük maliyetli yol; çizgi `road.alignments.fit` ile aks olur ve aksın denetimlerinden geçer.)
-- [ ] **ROAD-ALIGN-14:** LandXML/IFC'den gelen unsupported spiral türlerini analitik kayıpla düz spline'a sessiz dönüştürme; source preserve ve loss report üret.
+- [~] **ROAD-ALIGN-14:** LandXML/IFC'den gelen unsupported spiral türlerini analitik kayıpla düz spline'a sessiz dönüştürme; source preserve ve loss report üret. *(denetim 2026-11-05: klotoid dışı geçiş nedeniyle reddedilir; kaynak korunmaz, kayıp raporu yok.)*
 - [~] **ROAD-ALIGN-15:** Ove spiral (iki kurp arası klotoid parçası), ters kurp (zıt yönlü ardışık kurplar, araya aliyman konmadan) ve kesişen kurpların çakışma denetimi ayrı eleman ve kural olsun; Netpro'nun AASHTO hız–yarıçap ile kurp çakışmasını kaldırması gibi öneri ayrı taslaktır, kaynak aksı sessiz değiştirmez. (Y21, ADR 0922: ters, kırık sırtlı ve bitişik kurp çiftleri sınıflanır ve aradaki aliyman, bitişik çiftin yarıçap oranı denetlenir; kurp çakışması zaten kurulmaz; ove klotoidin PI'dan kurulması ve önerili düzeltme açık.)
-- [ ] **ROAD-ALIGN-16:** Ripaj (aksı yatay kaydırma/yeniden konumlandırma) ve km eşitliği ekleme kayıtlı düzenleme olayıdır; profil, kesit hattı takımı, dever çizelgesi ve kübaj km'leri eşleme tablosuyla izler ya da çözülemeyen aralık olarak işaretlenir (ROAD-MOD-06).
+- [~] **ROAD-ALIGN-16:** Ripaj (aksı yatay kaydırma/yeniden konumlandırma) ve km eşitliği ekleme kayıtlı düzenleme olayıdır; profil, kesit hattı takımı, dever çizelgesi ve kübaj km'leri eşleme tablosuyla izler ya da çözülemeyen aralık olarak işaretlenir (ROAD-MOD-06). *(denetim 2026-11-05: eşleme ve etki (Y57) var; ripaj işlemi ve kayıtlı olay yok.)*
 
 ## 10. ROAD-PROFILE — Düşey güzergâh ve boykesit — P1
 
-- [ ] **ROAD-PROFILE-01:** VerticalAlignment, horizontal revision'a bağlansın; PVI, tangent grades, parabolic crest/sag ve ileride circular curve türlerini saklasın.
-- [ ] **ROAD-PROFILE-02:** Yatay station t boyunca parabolic kurbu z(t)=z0+g1·t+(g2−g1)t²/(2L) ile tanımla; g oran, L yatay metre olsun.
-- [ ] **ROAD-PROFILE-03:** PVI/kurp uzunluğu, başlangıç/son station, kot ve grade constraint solver çıktısını residual ile doğrula.
+- [x] **ROAD-PROFILE-01:** VerticalAlignment, horizontal revision'a bağlansın; PVI, tangent grades, parabolic crest/sag ve ileride circular curve türlerini saklasın. *(denetim 2026-11-05: `ProfileDef` aksın revizyonunu tutar; PVI, parabol, asimetrik, daire; eskime.)*
+- [x] **ROAD-PROFILE-02:** Yatay station t boyunca parabolic kurbu z(t)=z0+g1·t+(g2−g1)t²/(2L) ile tanımla; g oran, L yatay metre olsun. *(denetim 2026-11-05: vertical.rs parabol z0+g·t+r·t²/2, r=(g2−g1)/L, eğim oran.)*
+- [~] **ROAD-PROFILE-03:** PVI/kurp uzunluğu, başlangıç/son station, kot ve grade constraint solver çıktısını residual ile doğrula. *(denetim 2026-11-05: kurulum çakışma ve uçları reddeder; kısıt çözücüsü ve artık yok.)*
 - [x] **ROAD-PROFILE-04:** K=L/|g2−g1| raporunda grade yüzde mi oran mı açık olsun; standarttaki K birimiyle doğru çevir. *(Y55, ADR 0961: K m/% iletide birimiyle, kurbun yarıçapı H = 100·K raporda ve denetimde; asimetrik kurbun keskin kolu.)*
 - [x] **ROAD-PROFILE-05:** Mevcut arazi profili TIN triangle edge geçişlerinde exact parçalı kesit olarak çıkarılsın; yalnız sabit aralıklı ekran örneklemesi olmasın. *(ADR 0902 §1, `profile/terrain.rs`: üçgen kenarlarını kestiği her yerde kesin, kurpta kiriş sapmasıyla bölünmüş; denetim 5 Kasım 2026.)*
-- [ ] **ROAD-PROFILE-06:** Boykesitte yatay/düşey çizim ölçekleri ayrı; exaggeration veri kotunu, slope veya hacmi değiştirmesin.
+- [x] **ROAD-PROFILE-06:** Boykesitte yatay/düşey çizim ölçekleri ayrı; exaggeration veri kotunu, slope veya hacmi değiştirmesin. *(denetim 2026-11-05: abartma yalnız görünüş; road.profiles.draw/fit "Abartmasız görünümde aynı çizgi".)*
 - [x] **ROAD-PROFILE-07:** Bridge/tunnel/culvert/utility crossing ve clearance constraints profile'a referansla bağlansın.
 - [~] **ROAD-PROFILE-08:** Görüş mesafesi kontrolü araç/engel/göz yüksekliği, standart, terrain/corridor revision ve örnekleme hatasını açık alsın. (Y20, ADR 0921: boykesitte göz ve nesne yüksekliği, bakılan uzaklık ve adım kullanıcının, kapanma parça parça kesin, adım ve 1 mm çözünürlük cevapta; arazi ve koridor üstünden 3B ve yatay görüş açık.)
 - [x] **ROAD-PROFILE-09:** Aks profilini değiştirirken yeniden üretilecek corridor/quantity/section aralıklarını göster; stale derived kaynaklar işaretlensin. *(Y56, ADR 0962: `road.profiles.impact` değişen km aralıkları ve en büyük fark, üstlerindeki koridor bölgeleri, kesit km'leri, kübaj ve taşıma planları; onaylı olan uyarılır; Boykesit penceresi yazarken tarar ve söyler.)*
-- [ ] **ROAD-PROFILE-10:** Terrain missing region, gap, override ve measured/proposed profile ayrı görünüş/provenance taşısın.
-- [ ] **ROAD-PROFILE-11:** Profil edit/drag için responsive GPU preview ile authoritative solve farklı durum olsun; final save exact validator'dan geçsin.
-- [ ] **ROAD-PROFILE-12:** Analitik point/grade/curvature query, profile report ve sheet üretimi aynı komutlardan çalışsın.
+- [~] **ROAD-PROFILE-10:** Terrain missing region, gap, override ve measured/proposed profile ayrı görünüş/provenance taşısın. *(denetim 2026-11-05: arazi boşluğu işaretli; ölçülen/önerilen profil ve köken yok.)*
+- [~] **ROAD-PROFILE-11:** Profil edit/drag için responsive GPU preview ile authoritative solve farklı durum olsun; final save exact validator'dan geçsin. *(denetim 2026-11-05: yazdıkça kurulur, kayıt doğrulayıcıdan geçer; sürükleme ve GPU önizlemesi yok.)*
+- [~] **ROAD-PROFILE-12:** Analitik point/grade/curvature query, profile report ve sheet üretimi aynı komutlardan çalışsın. *(denetim 2026-11-05: kot ve eğim sorgusu, kurp raporu, pafta aynı komuttan; noktada eğrilik yok.)*
 - [~] **ROAD-PROFILE-13:** Düşey kurp boyu bisektris, açık/kapalı kurp katsayısı, DGM ve GGM ölçütlerinden önerilsin; ölçütün kaynağı standart profilidir (ROAD-DEC-01), profil yoksa öneri yapılmaz, yalnız elle boy girilir. (Y21, ADR 0922: tepe ve çukur K, düşey kurp boyu, eğimler ve kurplar arası eğim kullanıcının sınırlarıyla denetlenir; standart profilinden öneri ROAD-DEC-01'i bekler.)
 - [x] **ROAD-PROFILE-14:** Kırmızı kot önerisi (en az kazı/dolgu ya da dengeli kütle veren düşey güzergâh) ayrı taslak alternatif olsun; amaç işlevi, kısıtlar (en büyük/en küçük eğim, kontrol kotları, köprü/menfez açıklığı) ve çözücünün durumu raporlansın (ROAD-GRADE-08/09 ile aynı kural). (Y25, ADR 0926: PVI kotları araziye en küçük karelerle, kilitler, en büyük eğim ve dengeyle; öneri yeni boykesit olarak yazılır; zarf, K ve km'lerin değişmesi açık.)
 
 ## 11. ROAD-DEVER — Dever, enine eğim, genişletme ve geçişler — P1
 
-- [ ] **ROAD-DEVER-01:** Lane/side ID, normal crossfall, maximum/minimum e, transition rules ve pivot/rotation axis tanımla.
-- [ ] **ROAD-DEVER-02:** Dever schedule station aralıkları, interpolation, station equations ve source curve refs taşısın.
-- [ ] **ROAD-DEVER-03:** Sol/sağ ve forward/reverse sign convention tek sözleşmede olsun; alignment reverse planı schedule'ı doğru remap etsin.
+- [~] **ROAD-DEVER-01:** Lane/side ID, normal crossfall, maximum/minimum e, transition rules ve pivot/rotation axis tanımla. *(denetim 2026-11-05: normal enine eğim, dönme ekseni; şerit kimliği ve en büyük/küçük e yok.)*
+- [~] **ROAD-DEVER-02:** Dever schedule station aralıkları, interpolation, station equations ve source curve refs taşısın. *(denetim 2026-11-05: satırlar ve PI'lı kurp kuralı; km eşitliği ve enterpolasyon seçimi yok.)*
+- [~] **ROAD-DEVER-03:** Sol/sağ ve forward/reverse sign convention tek sözleşmede olsun; alignment reverse planı schedule'ı doğru remap etsin. *(denetim 2026-11-05: işaret kuralı tek yerde; aks ters çevrilince çizelge dönüştürülmez.)*
 - [~] **ROAD-DEVER-04:** Crown removal, runoff/runout ve kesintisiz geçiş için standard-profile rules ve kullanıcı override reason saklansın.
 - [~] **ROAD-DEVER-05:** Widening lane/component bazlı width function olsun; otomatik öneri design vehicle/speed/radius standardına bağlansın. (Y28, ADR 0932: tasarım taşıtı, hız ve yarıçaptan AASHTO önerisi; şerit ve bileşen bazlı genişlik açık.)
-- [ ] **ROAD-DEVER-06:** Aynı station'da width/crossfall/height modifier çakışması priority/merge ile çözülsün; sessiz son satır kazanmasın.
+- [~] **ROAD-DEVER-06:** Aynı station'da width/crossfall/height modifier çakışması priority/merge ile çözülsün; sessiz son satır kazanmasın. *(denetim 2026-11-05: aynı km ve çakışma reddedilir; değiştiricilerin önceliği/birleştirmesi yok.)*
 - [ ] **ROAD-DEVER-07:** Pivot reference değişimi, widening target ve median split durumları corridor sampling event listesine eklensin.
 - [ ] **ROAD-DEVER-08:** Grade/crossfall kaynakları oran biriminde canonical olsun; UI yüzde gösterimi açık çevrilsin.
 - [~] **ROAD-DEVER-09:** Drainage için reverse crossfall, zero-slope pockets ve low-point warnings ortak corridor modelinden üret. (Y22, ADR 0923: koridorun üst yüzeyinden yatık yerler kullanıcının en küçük eğimiyle, enine eğimin sıfırı ve platform kenarlarının alçak noktaları; ters enine eğim açık.)
-- [ ] **ROAD-DEVER-10:** Dever profile editor, tables, curves ve 3D section sweep aynı kaynak schedule'ı gösterip değiştirir.
-- [ ] **ROAD-DEVER-11:** Limit kontrolünün sonucu standard ID/version, checked parameters ve override actor/reason taşısın.
+- [~] **ROAD-DEVER-10:** Dever profile editor, tables, curves ve 3D section sweep aynı kaynak schedule'ı gösterip değiştirir. *(denetim 2026-11-05: tablo ve diyagram; diyagram düzenlenmez, 3B tarama yok.)*
+- [~] **ROAD-DEVER-11:** Limit kontrolünün sonucu standard ID/version, checked parameters ve override actor/reason taşısın. *(denetim 2026-11-05: bulgu tür/değer/sınır; standart kimliği ve geçersiz kılma nedeni yok.)*
 - [~] **ROAD-DEVER-12:** Çok kısa ters kurp/transition overlap ve station-equation sınırları bağımsız kabul korpusunda olsun.
 
 ## 12. ROAD-COR — Tip enkesit, parametrik bileşen ve koridor — P1
 
-- [ ] **ROAD-COR-01:** Template point/link/closed-shape kodlarını stable ID ile tanımla; lane, shoulder, median, sidewalk, ditch, cut/fill slope ve pavement layer bileşenleri olsun.
-- [ ] **ROAD-COR-02:** Bileşen geometry/constraint ile material/cost/quantity code ve style ayrı fields olsun; yalnız çizgi rengi malzeme kimliği olmasın.
+- [~] **ROAD-COR-01:** Template point/link/closed-shape kodlarını stable ID ile tanımla; lane, shoulder, median, sidewalk, ditch, cut/fill slope ve pavement layer bileşenleri olsun. *(denetim 2026-11-05: şerit, banket, hendek, şev, üstyapı; kararlı nokta/bağ kimliği, orta refüj ve kaldırım yok.)*
+- [~] **ROAD-COR-02:** Bileşen geometry/constraint ile material/cost/quantity code ve style ayrı fields olsun; yalnız çizgi rengi malzeme kimliği olmasın. *(denetim 2026-11-05: yalnız tabakada malzeme; bileşende maliyet/miktar/stil alanı yok.)*
 - [ ] **ROAD-COR-03:** Parametric dependency graph unit/type checked expressions kullansın; raw Python callback temel template için zorunlu olmasın.
-- [ ] **ROAD-COR-04:** Width/slope/elevation/target station fonksiyonları ve right/left mirroring semantiği açık olsun.
+- [~] **ROAD-COR-04:** Width/slope/elevation/target station fonksiyonları ve right/left mirroring semantiği açık olsun. *(denetim 2026-11-05: sağ yan solun aynası, şev geçişi (Y54); genişlik/kot/hedef fonksiyonu yok.)*
 - [ ] **ROAD-COR-05:** Component libraries owner/version/compatibility ve import/remap taşısın; template güncellemesi approved corridor'u sessiz değiştirmesin.
-- [ ] **ROAD-COR-06:** Corridor baselines, regions ve template drops gap/overlap/priority kontrolüyle saklansın.
+- [~] **ROAD-COR-06:** Corridor baselines, regions ve template drops gap/overlap/priority kontrolüyle saklansın. *(denetim 2026-11-05: bölge boşluğu söylenir, kesişme reddedilir; çok taban ve öncelik yok.)*
 - [ ] **ROAD-COR-07:** Target alias; alignment, terrain, feature string, offset/elevation function ve intersection control kaynaklarını typed referansla alsın.
-- [ ] **ROAD-COR-08:** Station sample listesi başlangıç/son, geometry events, template/target/dever değişimi ve kullanıcı critical station'ları kapsasın.
+- [~] **ROAD-COR-08:** Station sample listesi başlangıç/son, geometry events, template/target/dever değişimi ve kullanıcı critical station'ları kapsasın. *(denetim 2026-11-05: bölge, geometri, kritik, profil, kullanıcı, geçiş olayları; hedef değişimi yok.)*
 - [~] **ROAD-COR-09:** Adaptive sampling position/tangent/crossfall/surface sag toleransını doğrulasın; yalnız sabit 20 m aralık tasarım garantisi sayılmasın.
 - [x] **ROAD-COR-10:** Daylight solver hangi terrain branch/sidewall aradığını açık alsın; no-hit, multiple-hit, iteration limit ve missing terrain ayrı sonuç olsun.
-- [ ] **ROAD-COR-11:** İmalat feature strings ve top/datum/subgrade/material surfaces stable lineage ile oluşsun.
+- [~] **ROAD-COR-11:** İmalat feature strings ve top/datum/subgrade/material surfaces stable lineage ile oluşsun. *(denetim 2026-11-05: kodlu öznitelik çizgileri; kararlı soy kimliği ve malzeme yüzeyleri yok.)*
 - [ ] **ROAD-COR-12:** Bridge/tunnel/retaining wall gibi çok katlı/overhang geometriyi 2.5D TIN'e zorla bastırma; 3D mesh/solid capability gerekir.
 - [x] **ROAD-COR-13:** Koridor self-intersection, region seam, inverted triangles ve material shape closure preflight'ı çalışsın. *(Y50, ADR 0956: katlanma payı 1 + κ·o, ardışık kesitlerin kesişmesi, üst yüzeyin kendi üstüne binmesi, bölge dikişleri; malzeme şekli kapanması kesit çiziminde açık.)*
 - [ ] **ROAD-COR-14:** Preview GPU buffers ve source solve result revision/generation ile bağlansın; geç sonuç yeni tasarımı ezmesin.
 - [ ] **ROAD-COR-15:** Küçük edit yalnız etkilenen station/region/terrain tiles ve halo'sunu rebuild etsin; downstream quantities stale işaretlensin.
-- [ ] **ROAD-COR-16:** Build result solved/unsolved ranges, source refs, quality/error bound, generated feature/material IDs ve warnings taşısın.
-- [ ] **ROAD-COR-17:** Create/update/rebuild/delete corridor ortak semantic komut ve tek commit/undo politikası kullansın.
+- [~] **ROAD-COR-16:** Build result solved/unsolved ranges, source refs, quality/error bound, generated feature/material IDs ve warnings taşısın. *(denetim 2026-11-05: çözülmeyen, boşluk, katlanma, öznitelik; kaynak revizyonları ve hata sınırı yok.)*
+- [x] **ROAD-COR-17:** Create/update/rebuild/delete corridor ortak semantic komut ve tek commit/undo politikası kullansın. *(denetim 2026-11-05: road.corridors.edit set/rebind/remove tek geri alma adımı; road.project.rebuild.)*
 - [ ] **ROAD-COR-18:** İleri aşamada 3D constructive solids ve intersection templates ayrı profille eklenir; v1 shape-code miktarlarını eksik solid gibi sunma.
 
 **Kabul:** Profilin 100 m'lik parçası değiştiğinde ilgili koridor/kesit/miktar aralığı yeniden oluşur. Template, source terrain ve çözülemeyen daylight bölgeleri görülebilir; eski sonucu yeni revision sonucu diye yazmaz.
 
 ## 13. ROAD-SEC — Enkesit, boykesit ve aplikasyon — P1
 
-- [ ] **ROAD-SEC-01:** SampleLineSet station/direction/skew/left-right offsets ve source list taşısın; station label yerine alignment identity kullan.
-- [ ] **ROAD-SEC-02:** TIN section triangle-edge kesişimleriyle exact parçalı doğru olsun; breakline, hole ve no-data sınırlarını koru.
+- [~] **ROAD-SEC-01:** SampleLineSet station/direction/skew/left-right offsets ve source list taşısın; station label yerine alignment identity kullan. *(denetim 2026-11-05: aks kimliği ve revizyonu, genişlik, km yöntemi; yön/çarpıklık alanı yok.)*
+- [~] **ROAD-SEC-02:** TIN section triangle-edge kesişimleriyle exact parçalı doğru olsun; breakline, hole ve no-data sınırlarını koru. *(denetim 2026-11-05: kesin kenar kesişimi ve boşluk işareti; delik/kırık hatlı durum yok.)*
 - [ ] **ROAD-SEC-03:** Cloud strip section full-resolution query ile paralel çalışsın; çizim amacı için decimation ayrıca belirtilsin.
-- [ ] **ROAD-SEC-04:** Mevcut/tasarım/material/geology sections ayrı çizgiler ve source revisions ile aynı istasyonda gösterilsin.
-- [ ] **ROAD-SEC-05:** Oblique/skew sections ile normal sections farklı tip olsun; komşu kesit arası hacimde geometric footprint açık hesaplansın.
-- [ ] **ROAD-SEC-06:** Yatay/düşey view scales, graph offsets ve labels gerçek hesap koordinatlarını değiştirmesin.
+- [~] **ROAD-SEC-04:** Mevcut/tasarım/material/geology sections ayrı çizgiler ve source revisions ile aynı istasyonda gösterilsin. *(denetim 2026-11-05: arazi, tasarım, üstyapı; jeoloji ve kaynak revizyonu yok.)*
+- [~] **ROAD-SEC-05:** Oblique/skew sections ile normal sections farklı tip olsun; komşu kesit arası hacimde geometric footprint açık hesaplansın. *(denetim 2026-11-05: kurp kübajı izi; çarpık kesit türü yok.)*
+- [~] **ROAD-SEC-06:** Yatay/düşey view scales, graph offsets ve labels gerçek hesap koordinatlarını değiştirmesin. *(denetim 2026-11-05: abartma yalnız çizimde; ölçekler arası değişmezlik durumu yok.)*
 - [ ] **ROAD-SEC-07:** Cross-section edit source mı override mı olduğu açık komut olsun; tek görünüşte sessiz bağımsız geometri kopması oluşmasın.
-- [ ] **ROAD-SEC-08:** Missing surface range ve extrapolated z gösterimi actual cut/fill area'ya onaysız alınmasın.
+- [~] **ROAD-SEC-08:** Missing surface range ve extrapolated z gösterimi actual cut/fill area'ya onaysız alınmasın. *(denetim 2026-11-05: boşluklu arazide alan atlanır; eksik aralık sorguda raporlanmaz.)*
 - [x] **ROAD-SEC-09:** Stakeout table station/offset/x/y/z/side/component/code ve grid/ground policy ile export edilsin.
 - [ ] **ROAD-SEC-10:** Machine control/as-built çıktısında valid vertical datum, project localization ve quality acceptance şartları olsun.
 - [x] **ROAD-SEC-11:** Plan/profile/section sheet set [cad.md](cad.md) pafta motoruna bağlı kaynaklarla üretilsin; cache görseli yerine kaynak revision saklansın. (Y10.5, ADR 0908 §10: `road.sheets.plan` plan–boykesit paftaları, takım aks ve boykesit revizyonlarıyla `sheetSets`'te; Y10.5b `road.sheets.sections` enkesit paftaları; harita içinde aksın kendisi ve eşleşme çizgileri açık.)
 - [ ] **ROAD-SEC-12:** Form/twin'den gelen saha ölçüsünü station/source point lineage ile eşle; yanlış aks branch'ına otomatik kabul yapma.
-- [~] **ROAD-SEC-13:** Kesit hattı takımı üç yöntemle üretilsin: sabit aralık, km esaslı liste ve **üçgen kenarlarını kesen noktalar** (arazinin her kırığında kesit); kurp, spiral ve tasarım olaylarında sıklaştırma; dar kurpta komşu kesit kollarının kesişmesi kırpma ya da çarpık kesitle açıkça çözülsün.
+- [x] **ROAD-SEC-13:** Kesit hattı takımı üç yöntemle üretilsin: sabit aralık, km esaslı liste ve **üçgen kenarlarını kesen noktalar** (arazinin her kırığında kesit); kurp, spiral ve tasarım olaylarında sıklaştırma; dar kurpta komşu kesit kollarının kesişmesi kırpma ya da çarpık kesitle açıkça çözülsün. *(denetim 2026-11-05: aralık/km listesi/arazi kırıkları, kurp ve PVI sıklaştırması, kesişen kolları kırp (Y29).)*
 
 ## 14. ROAD-GRADE — Şev, platform, saha ve arazi düzenleme — P1/P2
 
-- [ ] **ROAD-GRADE-01:** Platform boundary, target grade, cut/fill slope, bench, ditch ve retaining feature kaynaklarını ayrı tanımla.
-- [ ] **ROAD-GRADE-02:** Şev daylight rule'u soil/material/geotechnical profile'dan gelsin; örnek bir şev oranı gerçek saha kararı gibi varsayılmasın.
+- [~] **ROAD-GRADE-01:** Platform boundary, target grade, cut/fill slope, bench, ditch ve retaining feature kaynaklarını ayrı tanımla. *(denetim 2026-11-05: platform sınır, eğim, şevler; platformda basamak/hendek/istinat yok.)*
+- [~] **ROAD-GRADE-02:** Şev daylight rule'u soil/material/geotechnical profile'dan gelsin; örnek bir şev oranı gerçek saha kararı gibi varsayılmasın. *(denetim 2026-11-05: şevler kullanıcıdan, öntanım yok; zemin profilinden kural yok.)*
 - [x] **ROAD-GRADE-03:** Cut/fill bench ve slope transitions bölgesel hedef/surface karşılaşma koşullarıyla üret. *(Y52–Y54, ADR 0958–0960: yarma ve dolgu şevinde basamak, bölgeler arası doğrusal şev geçişi; bileşen geçişi ve ofset/kot hedefleri ROAD-COR-04/07'de.)*
 - [ ] **ROAD-GRADE-04:** Platform/road surface merge için overlap ownership ve seam/breakline policy iste; ilk surface sessiz kazanmasın.
-- [ ] **ROAD-GRADE-05:** Water drainage basin, low point, ponding ve slope-direction görselleştirmesi verified terrain sürümünden gelsin.
+- [~] **ROAD-GRADE-05:** Water drainage basin, low point, ponding ve slope-direction görselleştirmesi verified terrain sürümünden gelsin. *(denetim 2026-11-05: havza, gölet, su düşüşü; doğrulanmış arazi sürümüne bağlı değil.)*
 - [~] **ROAD-GRADE-06:** Boundary/hole ve protected/no-earthwork bölgeleri terrain/quantity clip'e birlikte yansısın. *(Y46, ADR 0952: korunan alanlar deliklerle, izin örtüşmesi ve kesit girişi; hacmin kırpılması açık.)*
 - [ ] **ROAD-GRADE-07:** 3D grading edit aynı exact source constraint ile plan/profil/section görünüşünü yenilesin.
-- [ ] **ROAD-GRADE-08:** Optimization objective cut/fill/cost/land-use kısıtlarını ve bound'ları açık alsın; öneri ayrı alternative draft olsun.
-- [ ] **ROAD-GRADE-09:** Aykırı solution, bounds ihlali ve optimizer convergence state kullanıcıya görünsün; minimum bulundu diye global optimum iddia etme.
-- [ ] **ROAD-GRADE-10:** Platform, trench ve road grading volume sonuçları aynı QuantityRun standardını kullansın.
+- [~] **ROAD-GRADE-08:** Optimization objective cut/fill/cost/land-use kısıtlarını ve bound'ları açık alsın; öneri ayrı alternative draft olsun. *(denetim 2026-11-05: net=0 dengeleme; maliyet amacı ve ayrı taslak yok.)*
+- [~] **ROAD-GRADE-09:** Aykırı solution, bounds ihlali ve optimizer convergence state kullanıcıya görünsün; minimum bulundu diye global optimum iddia etme. *(denetim 2026-11-05: yineleme ve yakınsama bayrağı; yakınsamayan yol testsiz.)*
+- [~] **ROAD-GRADE-10:** Platform, trench ve road grading volume sonuçları aynı QuantityRun standardını kullansın. *(denetim 2026-11-05: aynı çekirdek; platform kübajı yolun raporunu kullanmıyor, hendek yok.)*
 
 ## 15. ROAD-VOL — Kazı/dolgu, malzeme hacmi ve hesap sertifikası — P0/P1
 
@@ -348,26 +348,26 @@ Kesit yöntemleri: `V_AEA=L(A0+A1)/2`; gerçek orta kesit alınırsa `V_prismoid
 
 **Kontrol örneği:** 10×10 m AOI'de `d=x−5` ise 125 m³ fill ve 125 m³ cut vardır; net sıfırdır. Neti veya `abs(net)`i toplam kazı/dolgu diye kullanmak yanlıştır.
 
-- [ ] **ROAD-VOL-01:** QuantityRun source original/design surfaces, AOI, overlap/no-data coverage, method, tolerance, algorithm version ve units taşısın.
-- [ ] **ROAD-VOL-02:** Cut ve fill gross ayrı hesaplansın; net=fill−cut tek başına hakediş veya taşınacak malzeme miktarı olmasın.
+- [~] **ROAD-VOL-01:** QuantityRun source original/design surfaces, AOI, overlap/no-data coverage, method, tolerance, algorithm version ve units taşısın. *(denetim 2026-11-05: yöntem, revizyon, koridor, örtülmeyen; kaynak özetleri, AOI, tolerans, algoritma sürümü yok.)*
+- [x] **ROAD-VOL-02:** Cut ve fill gross ayrı hesaplansın; net=fill−cut tek başına hakediş veya taşınacak malzeme miktarı olmasın. *(denetim 2026-11-05: volume.rs brüt kazı ve dolgu ayrı; hakediş net ile yapılmaz.)*
 - [~] **ROAD-VOL-03:** AEA, prismoidal, TIN overlay ve raster integration ayrı methods olsun; rapor hangi yaklaşım ve örnekleme adımını kullandığını söylesin.
 - [x] **ROAD-VOL-04:** TIN overlay iki source triangulation kenarlarını ve AOI/hole sınırlarını ortak planar subdivision'a bölsün. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
 - [x] **ROAD-VOL-05:** Height difference sıfır çizgisinde alt poligonları split et; işaret değiştiren üçgende signed average'ın mutlak değeri gross miktar değildir. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
 - [ ] **ROAD-VOL-06:** Adaptive exact predicates ve construction error controls sliver/near-coincident edge/zero-area durumlarını güvenle çözsün.
 - [x] **ROAD-VOL-07:** Her overlay alt üçgende integral signed area·(d0+d1+d2)/3 olarak hesapla; aynı sign region'ları cut/fill'e ayrı ekle. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
 - [x] **ROAD-VOL-08:** Tam ortak domain dışında veri olmayan alanı sıfır kazı/dolgu sayma; excluded area/coverage ve blocked final durumunu raporla. *(Y8, ADR 0906 §3: yüzeyler arası yöntem; plan denetimi 2026-11-05.)*
-- [ ] **ROAD-VOL-09:** Material layers ve geology strata için karşılaştırılan top/bottom/shape'ın ownership ve units'ini kontrol et; aynı excavation iki malzemeye çift yazılmasın.
+- [~] **ROAD-VOL-09:** Material layers ve geology strata için karşılaştırılan top/bottom/shape'ın ownership ve units'ini kontrol et; aynı excavation iki malzemeye çift yazılmasın. *(denetim 2026-11-05: üstyapı tabakaları, formasyon kuralları; jeoloji ve çift sayma koruması yok.)*
 - [x] **ROAD-VOL-10:** Bank/in-situ, loose ve compacted hacimler açık volume-state conversion ile taşınsın; swell/shrink/compaction faktörleri kaynak ve onay taşısın. *(Y51, ADR 0957: yoğunluklarla yerinde/gevşek/sıkışık dönüşüm, kaynak, kütle ordinatının hali gevşek; onay kübaj onayıyla; zeminin yapamayacağı katsayı uyarılır.)*
 - [ ] **ROAD-VOL-11:** Solid/overhang yapı miktarı watertight oriented topology gerektirsin; kapalı olmayan mesh'e güvenilir solid volume verme.
 - [ ] **ROAD-VOL-12:** GPU candidate intersection/clip/reduction ile preview hesap üret; final commit error budget/CPU robust doğrulama kapısından geçsin.
-- [ ] **ROAD-VOL-13:** Final miktar için sabit reduction order veya deterministic CPU sum kullan; nondeterministic float atomics nedeniyle farklı cihazda farklı hakediş çıkmasın.
+- [~] **ROAD-VOL-13:** Final miktar için sabit reduction order veya deterministic CPU sum kullan; nondeterministic float atomics nedeniyle farklı cihazda farklı hakediş çıkmasın. *(denetim 2026-11-05: CPU sabit sıra; açık garanti ve cihazlar arası test yok.)*
 - [~] **ROAD-VOL-14:** Quantity report numeric/mesh/measurement error bileşenleri ve kabul edilen bounds taşısın; FP64 hesap survey kalitesini artırmış sayılmasın.
 - [x] **ROAD-VOL-15:** Alternative/as-built/period quantity kaynak digests ve önceki approved run'a referansla karşılaştırılsın.
 - [x] **ROAD-VOL-16:** Raporu oluştururken yuvarlama sona bırakılsın; kesit başına gösterim yuvarlamasını tekrar toplayıp final hacim yapma.
 - [x] **ROAD-VOL-17:** Approved quantity revision immutable olsun; kaynak değişince yeni run ve diff üret, önceki hesap/audit silinmesin.
 - [x] **ROAD-VOL-18:** Hesap kaynak parçaları ve contribution ledger drill-down ile incelenebilsin; station/material/AOI bazında büyük toplamın nedeni görülsün. *(Y43, ADR 0949: km dilimi, bölge ve malzeme; en büyük aralıklar ve nedeni; yol boyunca yoğunlaşma. Yanlara ve paftaya göre döküm açık.)*
-- [ ] **ROAD-VOL-19:** Kübaj kuralları adlı ve sürümlü olsun: Yol–Zemin, Formasyon–Zemin, Yol–Bitkisel Toprak, Formasyon–Bitkisel Toprak, Sıyırma Kazısı (Netpro'nun adları); her kural hangi iki yüzeyi, hangi sınırları (yatay ve düşey) ve hangi malzeme durumunu kullandığını söylesin.
-- [ ] **ROAD-VOL-20:** Sıyırma kazısı (bitkisel toprak kalınlığı) ve diş kazısı (eğimli zeminde dolgu oturma basamakları) ayrı kesit kaynakları olsun; kalınlık, basamak boyu ve eşik eğim parametreleri ölçme ya da zemin raporundan gelir, örnek değer saha kararı sayılmaz.
+- [~] **ROAD-VOL-19:** Kübaj kuralları adlı ve sürümlü olsun: Yol–Zemin, Formasyon–Zemin, Yol–Bitkisel Toprak, Formasyon–Bitkisel Toprak, Sıyırma Kazısı (Netpro'nun adları); her kural hangi iki yüzeyi, hangi sınırları (yatay ve düşey) ve hangi malzeme durumunu kullandığını söylesin. *(denetim 2026-11-05: NETPRO adlı kurallar, bitkisel toprak ayrı; kural sürümü ve sınırlar raporda yok.)*
+- [~] **ROAD-VOL-20:** Sıyırma kazısı (bitkisel toprak kalınlığı) ve diş kazısı (eğimli zeminde dolgu oturma basamakları) ayrı kesit kaynakları olsun; kalınlık, basamak boyu ve eşik eğim parametreleri ölçme ya da zemin raporundan gelir, örnek değer saha kararı sayılmaz. *(denetim 2026-11-05: sıyırma km'ye göre, diş eğim ve yükseklik; basamak boyu ve kaynak yok.)*
 - [x] **ROAD-VOL-21:** Km aralıklarına göre kabarma ve sıkışma katsayıları tablo olarak verilebilsin; hangi katsayının hangi aralıkta hangi hacme uygulandığı defterde görünsün; XLSX/ODS/CSV kübaj cetveli ADR 0223'ün yazıcısıyla. *(Y8 tablo ve cetvel (ADR 0906, ADR 0223'ün yazıcısı); Y43 defterin katsayı satırlarına göre gruplaması: hangi satırın hangi aralıklara ve hacme uygulandığı, katsayısızlar ayrı (ADR 0949).)*
 
 **Kabul:** Düz prizma, eğik düzlem, işaret değiştiren yüzey, hole/no-data ve material katman örnekleri bağımsız analitik sonuçlarla geçer; kamera/LOD/GPU tier değişimi final miktarı değiştirmez.
@@ -386,7 +386,7 @@ Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve eng
 - [x] **ROAD-HAUL-08:** Borrow/waste kapasite ve iş takvimi değişince etkilenen taşıma planı stale olsun. *(Y48, ADR 0954: onaylı plan; kapasite, alan, Brükner/kübaj sürümü, kübaj onayı ve planın sayıları değişince eskir; iş takvimi modelde olmadığından açık.)*
 - [~] **ROAD-HAUL-09:** Kısıtlı kapasite, one-way taşıma, malzeme dönüşüm verimi ve yeniden işleme cost'u alternatif analizde olsun. (Y23–Y24, ADR 0924, 0925: alanların kapasitesi, en küçük moment ya da en düşük maliyet planı; tek yön, dönüşüm verimi ve yeniden işleme açık.)
 - [x] **ROAD-HAUL-10:** Maliyet/karbon/truck trip hesabı katsayı, taşıt payload ve varsayımlarını görünür tutsun; otomatik mevzuat/şantiye onayı üretmesin. *(Y24, Y32; ADR 0925, 0936: fiyat, yük, yakıt, rölanti ve CO₂ katsayıları kullanıcının, KentOS öntanımlı sayı vermez; onay yalnız kullanıcının Onayla'sıyla, ADR 0954.)*
-- [ ] **ROAD-HAUL-11:** Brükner grafiği, plan ağı, station tables ve 3D materyal bölgeleri aynı HaulPlan'ı kullansın.
+- [~] **ROAD-HAUL-11:** Brükner grafiği, plan ağı, station tables ve 3D materyal bölgeleri aynı HaulPlan'ı kullansın. *(denetim 2026-11-05: plan penceresi, ağ, iş kitabı, onay; Brükner penceresi planı okumaz, 3B malzeme zonu yok.)*
 - [x] **ROAD-HAUL-12:** CSV/XLSX/report çıktısı approved quantity/haul revisions ve aktarım birimlerini taşısın. *(Y47, ADR 0953: Taşıma planı → Planı yaz; planın onayı Y48 / ADR 0954; PDF rapor açık.)*
 
 ## 17. ROAD-JUNC — Kavşak, bağlantı, köprü/tünel ve araç zarfı — P1/P2
@@ -408,7 +408,7 @@ Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve eng
 
 - [~] **ROAD-DRAIN-01:** Ditch/gutter/inlet/pipe/manhole/culvert asset IDs ve topology'yi corridor point/link code'larına bağla. (Y11.2, ADR 0909 §2: menfez kalıcı kimlikli, koridora ve sürümüne bağlı, kesitin şev başı ve topuk kodlarından okunur; hendek, ızgara, baca ve boru şebekesinin topolojisi açık.)
 - [~] **ROAD-DRAIN-02:** Invert/crown/ground elevation, diameter/section, roughness, material ve cover/crossing constraints typed olsun. (Y11.2, ADR 0909 §2: menfezin akış kotu, eğimi, çapı ya da kutu kesiti, Manning pürüzlülüğü, malzemesi ve en az örtüsü tipli, örtü denetlenir; şebekenin kesişme kuralları açık.)
-- [ ] **ROAD-DRAIN-03:** Surface watershed/flow accumulation kaynak çözünürlükte çalışsın; terrain hole/no-data ve conditioning işlemi ayrı provenance taşısın.
+- [~] **ROAD-DRAIN-03:** Surface watershed/flow accumulation kaynak çözünürlükte çalışsın; terrain hole/no-data ve conditioning işlemi ayrı provenance taşısın. *(denetim 2026-11-05: su düşüşü, gölet, havza; akış birikimi ve köken yok.)*
 - [ ] **ROAD-DRAIN-04:** Road embankment, bridge/culvert ve drainage links sonraki flood domain hazırlığında barrier/opening olarak export edilebilsin.
 - [ ] **ROAD-DRAIN-05:** Hydraulic solver adapter girdi/sonuç units, CRS, time, boundary conditions ve solver version taşısın.
 - [ ] **ROAD-DRAIN-06:** İlk aşamada HEC-RAS/SWMM gibi harici doğrulanmış iş akışlarının input/output bağlantısını araştır; renderer'ın su göstermesini analiz sayma.
@@ -448,15 +448,15 @@ Taşınabilir shader sayısal zemini FP32'dir; `f16` ayrı yetenek ve doğruluk 
 
 ## 20. ROAD-UX — Plan/profil/kesit/3D çalışma deneyimi — P1
 
-- [ ] **ROAD-UX-01:** Senkron plan, profile, cross-section ve 3D viewport aynı selection/engineering source ID'lerini kullansın.
-- [ ] **ROAD-UX-02:** Station scrubber ve cross-section plane görünüşle bağımsız state taşısın; data mutation ayrı komut olsun.
+- [~] **ROAD-UX-01:** Senkron plan, profile, cross-section ve 3D viewport aynı selection/engineering source ID'lerini kullansın. *(denetim 2026-11-05: km üç görünüşte eşlenir; 3B ve ortak seçim kimliği yok.)*
+- [~] **ROAD-UX-02:** Station scrubber ve cross-section plane görünüşle bağımsız state taşısın; data mutation ayrı komut olsun. *(denetim 2026-11-05: km durumu pencereye ait; 3B kesit düzlemi yok.)*
 - [ ] **ROAD-UX-03:** Aks/template/dever edits drag sırasında düşük gecikmeli preview; pending/solved/invalid/stale state açık olsun.
-- [ ] **ROAD-UX-04:** 3D orbit/pan/fly, cut plane, isolate, x-ray ve exaggeration [3d.md](3d.md) camera/presentation API'sinden gelsin.
+- [~] **ROAD-UX-04:** 3D orbit/pan/fly, cut plane, isolate, x-ray ve exaggeration [3d.md](3d.md) camera/presentation API'sinden gelsin. *(denetim 2026-11-05: yörünge, kaydırma, abartma, saydam arazi; uçuş, kesit düzlemi, ayırma yok.)*
 - [ ] **ROAD-UX-05:** Nokta/TIN/koridor ölçümünde snap source type, coordinate frame, unit ve accuracy bilgisi gösterilsin.
-- [ ] **ROAD-UX-06:** Değişiklik planı etkilenen stations/surfaces/materials/sheets ve final quantity invalidation'ı anlaşılır sunsun.
+- [~] **ROAD-UX-06:** Değişiklik planı etkilenen stations/surfaces/materials/sheets ve final quantity invalidation'ı anlaşılır sunsun. *(denetim 2026-11-05: boykesit ve aks etkisi (Y56–Y57); yüzey, malzeme, pafta listelenmez.)*
 - [~] **ROAD-UX-07:** Büyük cloud veya terrain eksikken gösterilen yüzeyin LOD/coverage bilgisi görülsün; unresolved region normal boş arazi gibi sunulmasın. (Y19.1, ADR 0920: verisiz yer `terrain_no_data` ile “arazisi bilinmiyor”, Kapsam kipinde ölçülen ve tahmin edilen üçgenler; ana çizimde işaret ve bulutun LOD kapsamı açık.)
 - [ ] **ROAD-UX-08:** Geometri, metraj, malzeme, source revision ve hesap ledger'ı aynı nesneden açılabilsin.
-- [ ] **ROAD-UX-09:** View preset/style/theme ve GPU settings kaynak tasarım/volume sonucunu değiştirmesin.
+- [~] **ROAD-UX-09:** View preset/style/theme ve GPU settings kaynak tasarım/volume sonucunu değiştirmesin. *(denetim 2026-11-05: abartma yalnız görünüş testli; tema ve GPU ayarları testsiz.)*
 - [ ] **ROAD-UX-10:** Tasarım standardı ve kullanıcı override farkını inspector/rule summary'de göster; debug implementation ayrıntısını normal kullanıcı iş akışına taşıma.
 
 ## 21. ROAD-API — UI/komut/Python/AI ve Processing tamlığı — P0/P1
@@ -509,17 +509,17 @@ Taşınabilir shader sayısal zemini FP32'dir; `f16` ayrı yetenek ve doğruluk 
 
 IFC 4.3 resmi şeması yol ve alignment nesnelerini kapsar; reader/exporter profilinin gerçek desteği yine ayrı yapılmalıdır. [IfcRoadDomain](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/ifcroaddomain/content.html), [IfcAlignment](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcAlignment.htm)
 
-- [ ] **ROAD-IO-01:** Civil sources/relations/standards ve result refs için `.kcad` manifest sürümü ve eski reader ret/yeni reader migration politikası yaz.
+- [~] **ROAD-IO-01:** Civil sources/relations/standards ve result refs için `.kcad` manifest sürümü ve eski reader ret/yeni reader migration politikası yaz. *(denetim 2026-11-05: KCAD yol şemaları ve göç örneği; manifest sürümü ve standart başvuruları yok.)*
 - [ ] **ROAD-IO-02:** Çok büyük point/TIN/corridor verileri chunked asset store'da; projede digest/source/coverage manifest'leri olsun. Portable bundle ve external reference mode ayrı seçilsin.
-- [ ] **ROAD-IO-03:** Save/export/duplicate/checkpoint/restore aynı kaynak grafını, CRS/datum ve material standard refs'i korusun.
+- [~] **ROAD-IO-03:** Save/export/duplicate/checkpoint/restore aynı kaynak grafını, CRS/datum ve material standard refs'i korusun. *(denetim 2026-11-05: yol ayarları KCAD gidiş-dönüş; kopya, nokta, geri yükleme yok.)*
 - [ ] **ROAD-IO-04:** Cloud worker digest/tenant/grant ile yalnız ilgili source subsets'i alsın; private raw survey gereksiz paylaşılmasın.
 - [x] **ROAD-IO-05:** LandXML round-trip'te line/arc/spiral/profile/surface/units destek matrisi ve bağımsız tüketici kabulü kur.
 - [x] **ROAD-IO-06:** IFC 4.3 alignment/road ve coordinate referencing adaylarını metadata/segment loss report ile dene; yalnız mesh export'u parametrik road exchange sayma.
 - [ ] **ROAD-IO-07:** DGN/DWG/native Netcad proje biçimlerini lisans ve publicly documented codec durumuyla araştır; destek verilmemiş formatı mevcut ithalat gibi listeleme.
 - [ ] **ROAD-IO-08:** LAS/LAZ/COPC export original dimensions, scale/offset, CRS ve class edits'i korusun; density/display LOD yalnız explicit export seçeneği olsun.
-- [ ] **ROAD-IO-09:** DEM/COG/mesh/UGRID result export units/nodata/time/domain metadata'yı taşısın; 3D display exaggeration kaynağa yazılmasın.
-- [ ] **ROAD-IO-10:** Asset dependency ledger ve missing-source repair/remap akışı olsun; proje adı/dosya adı gerçek source digest'in yerine geçmesin.
-- [ ] **ROAD-IO-11:** Staged files, atomic replace, job checkpoints ve resume source-revision kontrolüyle kurtarma yap.
+- [~] **ROAD-IO-09:** DEM/COG/mesh/UGRID result export units/nodata/time/domain metadata'yı taşısın; 3D display exaggeration kaynağa yazılmasın. *(denetim 2026-11-05: glTF dışa aktarımı; DEM/COG/UGRID yok.)*
+- [~] **ROAD-IO-10:** Asset dependency ledger ve missing-source repair/remap akışı olsun; proje adı/dosya adı gerçek source digest'in yerine geçmesin. *(denetim 2026-11-05: çizim kaynak damgaları, kaybolan durumu; onarım/yeniden eşleme yok.)*
+- [~] **ROAD-IO-11:** Staged files, atomic replace, job checkpoints ve resume source-revision kontrolüyle kurtarma yap. *(denetim 2026-11-05: dışa aktarım ya hep ya hiç; iş noktası ve sürdürme yok.)*
 - [ ] **ROAD-IO-12:** Şantiye/aplikasyon raporunda template/alignment/terrain/quantity revisions ve üretim zamanı bulunmalı.
 - [x] **ROAD-IO-13:** Aplikasyon için güzergâh, profil ve kesit bilgisini ölçüm cihazlarına (Leica, Topcon, Trimble, Nikon) yazmak mevcut Cihaza gönder yolunu (ADR 0169) genişletsin; her biçimin desteklediği eleman türleri belgeden çıkarılsın, taşınamayan eleman (ör. ove spiral) neden ile söylensin. (Y10.4, ADR 0908 §9: `road.stakeout.send`; LandXML string yol aks, tek boykesit ve kod dizileriyle; GSI-16, GSI-8, GTS-7, JobXML, Nikon RAW ve CSV yalnız noktadır, taşınamayan kod ve nokta nedeniyle söylenir.)
 - [x] **ROAD-IO-14:** DWG/DGN'deki yol projelerinin (polyline aks, profil çizimi) KentOS aksına dönüştürülmesi ayrı araçtır: aliyman ve kurplar uydurularak çıkarılır, sapma raporlanır; Netpro'nun bu yönde bir aracı vardır, KentOS'ta kaynak çizgi korunur. (Y10.6, ADR 0908 §12: `road.alignments.fit` eleman eleman ve en iyi uyumla aks, sapma ve yeri; Y10.6b, §13: `road.profiles.fit` boykesit görünümünde çizilmiş çizgiden PVI, eğim ve düşey kurplar, sapma ve yeri.)
