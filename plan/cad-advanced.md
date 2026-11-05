@@ -2101,6 +2101,12 @@ geçmişindeki "Çizimde değişiklik yok" kaydı doğrulandı. Bu yalnız
 belirlenebilen satır kaymalarını korur; kalıcı satır anahtarıyla eşleme ve
 uyuşmazlık çözümü hâlâ açık kabul işidir.
 
+Ek sınamada elle düzeltme içeren satırın silinmesi veya tekil ilk veri alanının
+değişmesi de güvenli olmayan eşleme sayıldı. Tekil `ID` aynı kalırken kaynak
+açıklamasının değişmesi güncellemeyi gereksiz yere engellemez. Tekil alan
+frekansları yalnız gerekirse ve tek geçişte çıkarılır; çok satırlı tabloda
+her satır için tüm kaynak tekrar taranmaz.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].

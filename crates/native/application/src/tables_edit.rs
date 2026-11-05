@@ -5,7 +5,7 @@
 //! (`table_formula::shift`); a table's computed cells are written by the document's rule (`table_worked_out`). The web
 //! is paused (docs/adr/0228): the desktop's handler alone, passing `fixtures/commands/v1/cad.tables.edit.json`.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use kentos_commands::table_formula::{self, Axis};
@@ -611,10 +611,12 @@ fn with_overrides(
 }
 
 /// Without an explicit row key, a hand edit belongs to a position only. If the old row is
-/// identifiable from its unedited cells at a different position, applying it at the old position
-/// would silently attach that edit to another item. Leave the linked table untouched instead.
+/// identifiable from its unedited cells at a different position, or a unique unchanged column
+/// no longer identifies it in that position, applying it by row index could attach the edit to
+/// another item. Leave the linked table untouched instead.
 fn moved_hand_edit(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>]) -> bool {
     let first = usize::from(t.header);
+    let mut frequencies: Option<HashMap<(usize, &str), usize>> = None;
     for (r, was) in copy.iter().enumerate().skip(first) {
         let Some(own) = t.cells.get(r) else { continue };
         let changed = was.iter().enumerate().any(|(c, value)| {
@@ -639,8 +641,30 @@ fn moved_hand_edit(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>])
                 .iter()
                 .all(|(c, value)| row.get(*c).is_some_and(|v| v == value))
         };
-        if fresh.get(r).is_some_and(|row| !matches(row))
-            && fresh
+        let changed_position = fresh.get(r).is_none_or(|row| !matches(row));
+        if !changed_position {
+            continue;
+        }
+        if fresh.get(r).is_none() {
+            return true;
+        }
+        let counts = frequencies.get_or_insert_with(|| {
+            let mut counts = HashMap::new();
+            for row in copy.iter().skip(first) {
+                for (c, value) in row.iter().enumerate().filter(|(_, value)| !value.is_empty()) {
+                    *counts.entry((c, value.as_str())).or_insert(0) += 1;
+                }
+            }
+            counts
+        });
+        let unique_anchor = stable.iter().find(|(c, value)| {
+            counts.get(&(*c, *value)) == Some(&1)
+        });
+        let unique_anchor_changed = unique_anchor.is_some_and(|(c, value)| {
+            fresh.get(r).and_then(|row| row.get(*c)).is_none_or(|v| v != value)
+        });
+        if unique_anchor_changed
+            || fresh
                 .iter()
                 .enumerate()
                 .skip(first)
@@ -753,7 +777,7 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                             status = TableRefresh::Unreadable;
                                             warnings.push(warning(
                                                 codes::SOURCE_UNREADABLE,
-                                                format!("“{path}” dosyasında elle düzeltilmiş bir satır başka sıraya taşındı. Satır anahtarı tanımlı olmadığı için düzeltme başka kaleme aktarılmadı; tablo olduğu gibi kaldı."),
+                                                format!("“{path}” dosyasında elle düzeltilmiş bir satırın sırası veya kimliği değişti. Satır anahtarı tanımlı olmadığı için düzeltme başka kaleme aktarılmadı; tablo olduğu gibi kaldı."),
                                             ));
                                             None
                                         } else {
@@ -1013,6 +1037,28 @@ mod tests {
         }))
         .unwrap();
         let fresh = vec![copy[0].clone(), vec!["A".into(), "12".into()]];
+        assert!(!moved_hand_edit(&table, &copy, &fresh));
+        assert!(moved_hand_edit(&table, &copy, &copy[..1]));
+        assert!(moved_hand_edit(
+            &table,
+            &copy,
+            &[copy[0].clone(), vec!["B".into(), "10".into()]]
+        ));
+    }
+
+    #[test]
+    fn a_stable_unique_id_allows_other_source_fields_to_change() {
+        let copy = vec![
+            vec!["ID".into(), "Description".into(), "Price".into()],
+            vec!["A".into(), "Old".into(), "10".into()],
+        ];
+        let table: TableEntity = serde_json::from_value(json!({
+            "id":0,"layerId":"duvar","attrs":{},"p":{"x":0,"y":0},
+            "rotation":0,"height":0.1,"rows":[0.3,0.3],"columns":[1.0,1.0,1.0],
+            "cells":[copy[0].clone(), ["A","Old","11"]],"header":true
+        }))
+        .unwrap();
+        let fresh = vec![copy[0].clone(), vec!["A".into(), "New".into(), "10".into()]];
         assert!(!moved_hand_edit(&table, &copy, &fresh));
     }
 }
