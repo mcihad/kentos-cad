@@ -22,8 +22,50 @@ use crate::checks::{Stop, error};
 use crate::codes;
 use crate::file_import_block::read_drawing;
 
+mod candidates;
 mod project;
 pub use project::diff as project_diff;
+
+/// A background UI search uses the same proposal engine as the command.
+#[derive(Clone, Debug)]
+pub struct MatchSuggestions {
+    pub candidates: Vec<kentos_commands::DrawingMatchCandidate>,
+    pub truncated: bool,
+}
+
+pub fn suggest_matches(
+    old: &Document,
+    new: &Document,
+    ask: &kentos_commands::DrawingMatchSearch,
+    mut stopped: impl FnMut() -> bool,
+) -> CommandResult<MatchSuggestions> {
+    let mut run = || -> Result<MatchSuggestions, Stop> {
+        candidates::validate(ask)?;
+        if stopped() {
+            return Err(Stop::Cancelled);
+        }
+        let changes = diff(old, new, COMPARE_TOLERANCE);
+        let (candidates, truncated) = candidates::search(
+            (old, new),
+            (&changes.removed, &changes.added),
+            ask,
+            COMPARE_TOLERANCE,
+            COMPARE_LIMIT as usize,
+            &mut stopped,
+        )?;
+        Ok(MatchSuggestions {
+            candidates,
+            truncated,
+        })
+    };
+    match run() {
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
+        Err(stop) => stop.into(),
+    }
+}
 
 /// The attribute names the pairing and the layer are carried by: no user attribute has a NUL in its name.
 const UID: &str = "\0uid";
@@ -377,7 +419,11 @@ fn uids(doc: &Document, slots: &[Slot], limit: usize) -> (Vec<String>, bool) {
 }
 
 /// What the command answers; why not.
-pub(crate) fn compare_in(doc: &Document, input: &DrawingCompare) -> Result<DrawingCompared, Stop> {
+pub(crate) fn compare_in(
+    doc: &Document,
+    input: &DrawingCompare,
+    mut stopped: impl FnMut() -> bool,
+) -> Result<DrawingCompared, Stop> {
     let tolerance = input.tolerance.unwrap_or(COMPARE_TOLERANCE);
     if !(tolerance.is_finite() && (0.0..=MAX_COMPARE_TOLERANCE).contains(&tolerance)) {
         return Err(Stop::failed(error(
@@ -395,8 +441,28 @@ pub(crate) fn compare_in(doc: &Document, input: &DrawingCompare) -> Result<Drawi
         )));
     }
     let limit = limit as usize;
+    if let Some(ask) = &input.match_search {
+        candidates::validate(ask)?;
+    }
+    if stopped() {
+        return Err(Stop::Cancelled);
+    }
     let (old, against) = other(doc, &input.against)?;
     let d = diff(&old, doc, tolerance);
+    if stopped() {
+        return Err(Stop::Cancelled);
+    }
+    let (match_candidates, cut_candidates) = match &input.match_search {
+        Some(ask) => candidates::search(
+            (&old, doc),
+            (&d.removed, &d.added),
+            ask,
+            tolerance,
+            limit,
+            &mut stopped,
+        )?,
+        None => (Vec::new(), false),
+    };
     let (added_uids, cut_added) = uids(doc, &d.added, limit);
     let (removed_uids, cut_removed) = uids(&old, &d.removed, limit);
     let changed_objects: Vec<ChangedObject> = d
@@ -425,13 +491,18 @@ pub(crate) fn compare_in(doc: &Document, input: &DrawingCompare) -> Result<Drawi
         removed_uids,
         changed_objects,
         project_changes,
-        truncated: cut_added || cut_removed || d.changed.len() > limit || cut_project,
+        match_candidates,
+        truncated: cut_added
+            || cut_removed
+            || d.changed.len() > limit
+            || cut_project
+            || cut_candidates,
         revision: doc.revision().to_string(),
     })
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &DrawingCompare) -> CommandResult<()> {
-    match compare_in(cx.doc, input) {
+    match compare_in(cx.doc, input, || cx.stopped()) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -441,7 +512,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &DrawingCompare) -> CommandRes
 }
 
 pub fn plan(cx: &ExecutionContext<'_>, input: &DrawingCompare) -> CommandResult<DrawingCompared> {
-    match compare_in(cx.doc, input) {
+    match compare_in(cx.doc, input, || cx.stopped()) {
         Ok(output) => CommandResult::Completed {
             output,
             warnings: Vec::new(),

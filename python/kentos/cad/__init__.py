@@ -826,6 +826,8 @@ __all__ = [
     "DrawingFontName",
     "DrawingInspect",
     "DrawingInspected",
+    "DrawingMatchCandidate",
+    "DrawingMatchSearch",
     "DrawingPaperViewportSource",
     "DrawingProjectChange",
     "DrawingSetPaperTableSource",

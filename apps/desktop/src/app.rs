@@ -125,6 +125,8 @@ impl Panel {
 /// What waits for an answer in the middle of the window.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dialog {
+    /// Read-only candidate identity review for one split revision.
+    RevisionMatches(usize),
     About,
     Shortcuts,
     /// The drawing has unsaved changes; asked before `then` throws them away.

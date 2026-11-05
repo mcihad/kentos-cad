@@ -166,6 +166,7 @@ impl Split {
 /// one that is not.
 #[derive(Debug, Clone)]
 pub enum Event {
+    Candidates(crate::split_revision::CandidateEvent),
     /// A view's time chosen (docs/adr/0576 §1).
     Time {
         view: Option<usize>,
@@ -292,6 +293,13 @@ impl App {
             return;
         }
         let gone = split.others.remove(i);
+        if let Some(crate::app::Dialog::RevisionMatches(at)) = self.dialog.as_mut() {
+            if *at == i {
+                self.dialog = None;
+            } else if *at > i {
+                *at -= 1;
+            }
+        }
         if split.others.is_empty() {
             self.split = None;
             self.viewport.theme = None;
@@ -500,6 +508,7 @@ impl App {
     /// What the views' controls ask.
     pub(crate) fn split_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::Candidates(event) => return self.revision_candidates_event(event),
             Event::Time { view, ask } => {
                 let s = &self.time.slider;
                 let (anchor, step, last, moment) = (s.anchor, s.step, s.last, s.moment());
@@ -775,6 +784,18 @@ impl App {
                 ))
                 .into(),
             ));
+            col = col.push(
+                button(label::caption(if r.candidate_stop.is_some() {
+                    "Eşleme adayları · aranıyor…"
+                } else {
+                    "Eşleme adaylarını incele"
+                }))
+                .padding([3, 8])
+                .style(style::button::flat)
+                .on_press(Message::Split(Event::Candidates(
+                    crate::split_revision::CandidateEvent::Open(i),
+                ))),
+            );
             if !r.project_changes.is_empty() {
                 let details = r
                     .project_changes

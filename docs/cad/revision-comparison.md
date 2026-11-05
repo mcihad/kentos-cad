@@ -57,6 +57,41 @@ ve viewport'ların ayrı karşılaştırılması CAD-ADV-15'in üretim gereğidi
 Bu rapor PDF piksel farkı veya paftanın görsel olarak aynı olduğuna dair
 kanıt değildir; kaynaktaki yapılandırılmış değişiklikleri gösterir.
 
-Farklı UUID taşıyan dosyalar için aday eşleme, inceleme notlarının yaşam
-döngüsü ve seçilmiş farkı alma ayrı açık işlerdir. Bu teslim CAD-ADV-15'in
+## Farklı kimlikler için aday eşleme
+
+`matchSearch` açıkça verilirse yalnız UUID ile eşlenmemiş eski/yeni nesneler
+arasında öneri aranır. `search` metre cinsinden 0–10 aralığındadır.
+`oldUids` ve `newUids` aday kapsamını daraltır; boş liste o taraftan hiçbir
+nesne almaz, verilmemesi bütün eşlenmemiş nesneleri kapsar. Aynı UUID iki
+kez veya eşlenmemiş kapsam dışında verilirse `invalid_input` döner.
+
+`key`, kaynak dosyası içinde anlamlı kimlik/handle tutan bir öznitelik
+adı olabilir. Eşit, boş olmayan anahtarlar uzakta taşınmış nesneler için
+de öneri üretir; iki dolu anahtar farklıysa yakınlık önerisi üretilmez.
+Anahtar yoksa veya boşsa ortak karşılaştırma çekirdeğinin geometri
+uzaklığı kullanılır. Girdide bulunmayan kaynak handle'ı uydurulmaz;
+kullanıcı aynı kaynak kapsamındaki özniteliği açıkça seçer.
+
+`matchCandidates` öğeleri eski/yeni UUID, `evidence` (`sourceKey` veya
+`geometry`), `distance` (metre), `sameGeometry` ve `ambiguous` taşır.
+Bir nesnenin birden çok önerisi varsa ilgili satırlar belirsizdir.
+`limit` nedeniyle döndürülmeyen öneriler de bu belirsizlik hesabına
+katılır. Çıktı eski/yeni belge sırasındadır. Bunlar kimlik garantisi veya
+otomatik eşleme değildir: `added`/`removed` sayıları ve çizim değişmez.
+
+Her tarafta en çok 5000 aday nesne ve iki milyon tarama/hizalama iş birimi
+işlenir. Sınır aşılırsa `invalid_limit` veya `too_many_pairs` ile arama
+reddedilir; eksik incelenmiş bir öneri kesin eşleme diye sunulmaz.
+`truncated` yalnız çıktı listesinin kesildiğini belirtir. Native Job'un
+durdurma isteği arama sırasında kontrol edilir.
+
+Masaüstünde bölünmüş revizyonun **Eşleme adaylarını incele** düğmesi,
+KentOS UI penceresinde 1/10/100 mm arama ve öneri tablosunu açar. Hesap
+okuma kopyaları üzerinde arka planda çalışır ve **Durdur** ile kesilir.
+Belge değişince sonuç eskir ve çalışan arama iptal edilir. Revizyon
+görünümü kapanınca da iptal istenir. Önceki iş gerçekten sonlanana kadar
+tek iş kilidi yeni bir aday işçisi başlatılmasını engeller.
+
+İnceleme notlarının yaşam döngüsü ve seçilmiş farkı alma ayrı açık
+işlerdir. Bu teslim CAD-ADV-15'in
 bütününün tamamlandığı anlamına gelmez.

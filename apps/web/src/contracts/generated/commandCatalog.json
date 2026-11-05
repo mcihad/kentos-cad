@@ -7071,7 +7071,7 @@
       "id": "cad.drawing.compare",
       "version": 1,
       "title": "Revizyonları karşılaştır",
-      "summary": "Çizimin şimdiki hâliyle aynı çizimin başka bir hâli arasında ne değiştiğini söyler; çizimi değiştirmez. Öbür hâl (against) açık çizimin geri alma geçmişinde steps adım gerisi (history) ya da bir çizim dosyasıdır (file: mutlak yol, .kcad v2 ya da v1 JSON). Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable.",
+      "summary": "Çizimin şimdiki hâliyle aynı çizimin başka bir hâli arasında ne değiştiğini söyler; çizimi değiştirmez. Öbür hâl (against) açık çizimin geri alma geçmişinde steps adım gerisi (history) ya da bir çizim dosyasıdır (file: mutlak yol, .kcad v2 ya da v1 JSON). Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. Pafta, viewport, kayıtlı görünüş ve şablon farkları model sayılarından ayrı projectChanges listesindedir. matchSearch verilirse farklı UUID'li eşlenmemiş nesneler için matchCandidates önerilir; kimlikler ve model sayıları değişmez. search metre, key kaynak kimliği özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok karşılık ambiguous olarak kalır; liste kesilse de belirsizlik bütün aramadan hesaplanır. Arama her tarafta en çok 5000 nesne ve iki milyon hesap birimiyle sınırlı, native Job'da durdurulabilir. Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable.",
       "aliases": [
         "revizyonkarsilastir",
         "farkbul"
@@ -7104,6 +7104,17 @@
               "null"
             ],
             "x-unit": "count"
+          },
+          "matchSearch": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingMatchSearch"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional suggestions for unmatched objects with different UUIDs. Suggestions never change identity or counts."
           },
           "tolerance": {
             "description": "How far points may lie apart and the geometry still be the same, metres, 0 to 10; absent: `COMPARE_TOLERANCE`.",
@@ -7154,6 +7165,13 @@
             "description": "The changed objects, in the drawing's order.",
             "items": {
               "$ref": "#/$defs/ChangedObject"
+            },
+            "type": "array"
+          },
+          "matchCandidates": {
+            "description": "Proposed identities, in old/new document order. Original added/removed counts remain unchanged.",
+            "items": {
+              "$ref": "#/$defs/DrawingMatchCandidate"
             },
             "type": "array"
           },
@@ -7242,6 +7260,13 @@
             "description": "The changed objects, in the drawing's order.",
             "items": {
               "$ref": "#/$defs/ChangedObject"
+            },
+            "type": "array"
+          },
+          "matchCandidates": {
+            "description": "Proposed identities, in old/new document order. Original added/removed counts remain unchanged.",
+            "items": {
+              "$ref": "#/$defs/DrawingMatchCandidate"
             },
             "type": "array"
           },
@@ -109162,6 +109187,88 @@
         "plex-mono"
       ],
       "type": "string"
+    },
+    "DrawingMatchCandidate": {
+      "description": "An explicit proposal between two unmatched UUIDs. Neither evidence type guarantees identity.",
+      "properties": {
+        "ambiguous": {
+          "description": "Either object has more than one proposal, including proposals cut from the output by `limit`.",
+          "type": "boolean"
+        },
+        "distance": {
+          "description": "The existing comparison core's location difference, metres; absent for different geometry kinds.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "evidence": {
+          "description": "`sourceKey` for an equal nonempty attribute, otherwise `geometry`.",
+          "type": "string"
+        },
+        "newUid": {
+          "type": "string"
+        },
+        "oldUid": {
+          "type": "string"
+        },
+        "sameGeometry": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "oldUid",
+        "newUid",
+        "evidence",
+        "ambiguous",
+        "sameGeometry"
+      ],
+      "type": "object"
+    },
+    "DrawingMatchSearch": {
+      "additionalProperties": false,
+      "description": "Explicit search for identity candidates, not automatic pairing.",
+      "properties": {
+        "key": {
+          "description": "Attribute containing a source-scoped id/handle. Unequal nonempty keys never match by proximity.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "newUids": {
+          "description": "New-side unmatched UUID scope. Absent: all added objects; empty: none.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "oldUids": {
+          "description": "Old-side unmatched UUID scope. Absent: all removed objects; empty: none. At most 5000 objects per side.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "search": {
+          "description": "Maximum geometric location difference, metres, 0 to 10. Equal source keys may suggest a moved object beyond it.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "search"
+      ],
+      "type": "object"
     },
     "DrawingProjectChange": {
       "description": "A non-model change, compared by the sheet/view's stable id rather than an entity slot.",

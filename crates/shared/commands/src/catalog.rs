@@ -1660,6 +1660,8 @@ pub fn catalog() -> CommandCatalog {
                       Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). \
                       Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). \
                       Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. \
+                      Pafta, viewport, kayıtlı görünüş ve şablon farkları model sayılarından ayrı projectChanges listesindedir. \
+                      matchSearch verilirse farklı UUID'li eşlenmemiş nesneler için matchCandidates önerilir; kimlikler ve model sayıları değişmez. search metre, key kaynak kimliği özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok karşılık ambiguous olarak kalır; liste kesilse de belirsizlik bütün aramadan hesaplanır. Arama her tarafta en çok 5000 nesne ve iki milyon hesap birimiyle sınırlı, native Job'da durdurulabilir. \
                       Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable."
                 .into(),
             aliases: vec!["revizyonkarsilastir".into(), "farkbul".into()],

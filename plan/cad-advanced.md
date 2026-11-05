@@ -2317,8 +2317,22 @@ görünüş: 1 fark` gösterdi. API ve kapsam ayrıntıları
 Genel `clippy -D warnings` kapısı, bu teslimin dışındaki mevcut
 `standards.rs`, `table_export.rs`, `registry.rs` ve `tables_edit.rs`
 uyarıları nedeniyle geçmedi; başarılı kontrol olarak sayılmadı.
-Görüntüler repo dışında tutuldu. Farklı UUID
-eşleme adayları, inceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
+Farklı UUID'ler için açık `matchSearch` ile kaynak kimliği özniteliği veya
+geometri yakınlığına dayalı `matchCandidates` önerileri eklendi. Öneriler
+eklenen/silinen sayısını ve kimlikleri değiştirmiyor; çıktı sınırında
+gizlenen alternatifler de belirsizlik hesabına katılıyor. Aday kapsamı
+her tarafta 5000 nesne, hesap iki milyon iş birimiyle sınırlı; native Job
+iptali var. Masaüstünde KentOS UI penceresi, seçim bileşeni ve tabloyla
+1/10/100 mm arama sunuluyor. Okuma kopyasında çalışan tek arka plan işçisi
+belge değişince veya revizyon kapanınca iptal ediliyor; önceki iş gerçekten
+sonlanmadan başka işçi başlayamıyor. Gerçek fare testinde 10 mm'de
+`2 öneri · 2 belirsiz`, 1 mm'de `1 öneri · 0 belirsiz` görüldü. 21 native,
+3 işçi yaşam döngüsü, 8 bölünmüş görünüm ve 5 Python API testi geçti;
+ortak geometri çekirdeğinin bağımsız karşılaştırma örnekleri de geçti.
+Python'da kaynak kimliğiyle uzakta taşınmış nesne önerisi, salt okunurluk,
+liste sınırındaki belirsizlik ve Job sonucu doğrulandı. GUI testi tek
+KentOS süreciyle yapıldı ve test süreci kapatıldı. Görüntüler Git'e eklenmedi.
+İnceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
 tamamlandı olarak işaretlenmedi.
 
 ### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [ ]

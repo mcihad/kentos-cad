@@ -291,7 +291,9 @@ mod tests {
                 },
                 tolerance: None,
                 limit: Some(1),
+                match_search: None,
             },
+            || false,
         )
         .unwrap_or_else(|_| panic!("comparison failed"));
         assert_eq!((got.changed, got.added, got.removed), (0, 0, 0));

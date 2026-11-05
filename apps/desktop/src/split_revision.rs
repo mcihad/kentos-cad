@@ -25,6 +25,9 @@ use crate::app::{App, Message};
 use crate::document::Document;
 use crate::split_view::Source;
 
+mod candidates;
+pub use candidates::Event as CandidateEvent;
+
 /// How far points may lie apart and be one (the command's default), metres.
 pub(crate) const TOLERANCE: f64 = kentos_commands::COMPARE_TOLERANCE;
 
@@ -51,6 +54,10 @@ pub(crate) struct Revision {
     pub counts: Counts,
     /// Sheet/view differences are separate from model entities and their highlights.
     pub project_changes: Vec<kentos_commands::DrawingProjectChange>,
+    pub candidate_radius: f64,
+    pub candidate_result: Option<Result<drawing_compare::MatchSuggestions, String>>,
+    pub candidate_stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    candidate_epoch: u64,
     project_sheets: Option<std::sync::Arc<kentos_commands::ProjectSheets>>,
     project_views: Vec<kentos_commands::NamedView>,
     project_templates: Vec<kentos_commands::ViewTemplate>,
@@ -101,6 +108,10 @@ impl Revision {
             chosen_for: None,
             counts: Counts::default(),
             project_changes: Vec::new(),
+            candidate_radius: 0.01,
+            candidate_result: None,
+            candidate_stop: None,
+            candidate_epoch: 0,
             project_sheets: None,
             project_views: Vec::new(),
             project_templates: Vec::new(),
@@ -121,6 +132,7 @@ impl Revision {
         if self.for_doc == Some(key) {
             return;
         }
+        self.clear_candidates();
         let same_drawing = self
             .for_doc
             .is_some_and(|(session, _)| session == now.session);

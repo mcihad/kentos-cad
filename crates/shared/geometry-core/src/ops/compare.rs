@@ -544,14 +544,24 @@ fn defs(shape: &Shape) -> Defs {
         }
         Shape::Stair { pts, stair } => {
             comps.push(path(pts, None));
-            lengths.extend([stair.width, stair.riser_height, stair.tread, stair.landing()]);
+            lengths.extend([
+                stair.width,
+                stair.riser_height,
+                stair.tread,
+                stair.landing(),
+            ]);
             others.push(Other::Num(stair.risers));
             others.push(Other::Num(stair.cut.unwrap_or(0.0)));
             others.push(Other::Flag(stair.numbering));
         }
         Shape::Ramp { pts, ramp } => {
             comps.push(path(pts, None));
-            lengths.extend([ramp.width, ramp.rise, ramp.landing(), ramp.base.unwrap_or(0.0)]);
+            lengths.extend([
+                ramp.width,
+                ramp.rise,
+                ramp.landing(),
+                ramp.base.unwrap_or(0.0),
+            ]);
             others.push(Other::Num(ramp.slope.unwrap_or(-1.0)));
         }
         // Its jambs, its place along its wall, its width and what it is (docs/adr/0341).
@@ -782,6 +792,40 @@ fn same_geometry(a: &Shape, da: &Defs, b: &Shape, db: &Defs, tol: f64) -> bool {
                 && da.others == db.others
         }
         _ => false,
+    }
+}
+
+/// A shape prepared once for repeated, explicitly reviewed identity suggestions. It uses exactly the
+/// same point/structure rules as `compare`; it never chooses a pairing.
+pub struct Prepared<'a> {
+    shape: &'a Shape,
+    defs: Defs,
+}
+
+impl<'a> Prepared<'a> {
+    pub fn new(shape: &'a Shape) -> Self {
+        Self {
+            shape,
+            defs: defs(shape),
+        }
+    }
+
+    /// Defining-point bounds, without drawing-style expansion.
+    pub fn bounds(&self) -> (f64, f64, f64, f64) {
+        grown(&self.defs, 0.0)
+    }
+
+    /// Conservative work estimate for the path/ring alignment, used by a host's bounded search.
+    pub fn complexity(&self) -> u64 {
+        points(&self.defs).count().max(1) as u64
+    }
+
+    /// Location difference and geometry equality, by the existing comparison rule.
+    pub fn difference(&self, other: &Self, tolerance: f64) -> (Option<f64>, bool) {
+        (
+            difference(self.shape, &self.defs, other.shape, &other.defs).map(|(d, _)| d.sqrt()),
+            same_geometry(self.shape, &self.defs, other.shape, &other.defs, tolerance),
+        )
     }
 }
 
@@ -1028,6 +1072,22 @@ mod tests {
                 }
                 let fields = Vec::<String>::from_json(w.get("fields")).expect("fields");
                 assert_eq!(got.fields, fields, "{name}");
+                if let (Some(i), Some(j)) = (got.old, got.new) {
+                    let (distance, equal) = Prepared::new(&old[i].shape)
+                        .difference(&Prepared::new(&new[j].shape), settings.tolerance);
+                    assert_eq!(
+                        equal,
+                        matches!(w.get("status"), Json::Str(s) if s == "same" || s == "attributes"),
+                        "{name}: prepared geometry"
+                    );
+                    match (distance, w.get("distance")) {
+                        (Some(d), Json::Num(e)) => {
+                            assert!((d - e).abs() <= 1e-9, "{name}: prepared distance")
+                        }
+                        (None, Json::Null) => {}
+                        other => panic!("{name}: prepared {other:?}"),
+                    }
+                }
             }
         }
     }

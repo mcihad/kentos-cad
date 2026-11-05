@@ -25580,10 +25580,12 @@ class DrawingCompare(_Model):
     `file_not_found`, `import_unreadable`, `invalid_limit`.
     Attributes:
         limit: The most ids each list holds, 1 to 1 000 000; absent: `COMPARE_LIMIT`. A cut list says so (`truncated`). Unit: count.
+        match_search: Optional suggestions for unmatched objects with different UUIDs. Suggestions never change identity or counts.
         tolerance: How far points may lie apart and the geometry still be the same, metres, 0 to 10; absent: `COMPARE_TOLERANCE`. Unit: length.
     """
     against: CompareAgainst
     limit: int | None | Unset = UNSET
+    match_search: DrawingMatchSearch | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -25591,6 +25593,8 @@ class DrawingCompare(_Model):
         out["against"] = self.against.to_json()
         if self.limit is not UNSET:
             out["limit"] = self.limit
+        if self.match_search is not UNSET:
+            out["matchSearch"] = None if self.match_search is None else self.match_search.to_json()
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         return out
@@ -25600,6 +25604,7 @@ class DrawingCompare(_Model):
         return cls(
             against=CompareAgainst.from_json(data["against"]),
             limit=data.get("limit", UNSET),
+            match_search=UNSET if "matchSearch" not in data else None if data["matchSearch"] is None else DrawingMatchSearch.from_json(data["matchSearch"]),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -25618,6 +25623,7 @@ class DrawingCompared(_Model):
         changed_objects: The changed objects, in the drawing's order.
         truncated: A list was cut at `limit`.
         revision: ^(0|[1-9][0-9]*)$
+        match_candidates: Proposed identities, in old/new document order. Original added/removed counts remain unchanged.
         project_changes: Non-model differences: sheets, viewports, named views, view templates and book settings.
             These are counted separately from model entities and do not create false geometry highlights.
     """
@@ -25631,6 +25637,7 @@ class DrawingCompared(_Model):
     changed_objects: list[ChangedObject]
     truncated: bool
     revision: str
+    match_candidates: list[DrawingMatchCandidate] | Unset = UNSET
     project_changes: list[DrawingProjectChange] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -25645,6 +25652,8 @@ class DrawingCompared(_Model):
         out["changedObjects"] = [e0.to_json() for e0 in self.changed_objects]
         out["truncated"] = self.truncated
         out["revision"] = self.revision
+        if self.match_candidates is not UNSET:
+            out["matchCandidates"] = [e0.to_json() for e0 in self.match_candidates]
         if self.project_changes is not UNSET:
             out["projectChanges"] = [e0.to_json() for e0 in self.project_changes]
         return out
@@ -25662,6 +25671,7 @@ class DrawingCompared(_Model):
             changed_objects=[ChangedObject.from_json(e0) for e0 in data["changedObjects"]],
             truncated=data["truncated"],
             revision=data["revision"],
+            match_candidates=[DrawingMatchCandidate.from_json(e0) for e0 in data["matchCandidates"]] if "matchCandidates" in data else UNSET,
             project_changes=[DrawingProjectChange.from_json(e0) for e0 in data["projectChanges"]] if "projectChanges" in data else UNSET,
         )
 
@@ -25753,6 +25763,79 @@ class DrawingInspected(_Model):
             truncated=data["truncated"],
             revision=data["revision"],
             dimensions=[DimensionRead.from_json(e0) for e0 in data["dimensions"]] if "dimensions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingMatchCandidate(_Model):
+    """An explicit proposal between two unmatched UUIDs. Neither evidence type guarantees identity.
+    Attributes:
+        evidence: `sourceKey` for an equal nonempty attribute, otherwise `geometry`.
+        ambiguous: Either object has more than one proposal, including proposals cut from the output by `limit`.
+        distance: The existing comparison core's location difference, metres; absent for different geometry kinds. Unit: length.
+    """
+    old_uid: str
+    new_uid: str
+    evidence: str
+    ambiguous: bool
+    same_geometry: bool
+    distance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["oldUid"] = self.old_uid
+        out["newUid"] = self.new_uid
+        out["evidence"] = self.evidence
+        out["ambiguous"] = self.ambiguous
+        out["sameGeometry"] = self.same_geometry
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingMatchCandidate:
+        return cls(
+            old_uid=data["oldUid"],
+            new_uid=data["newUid"],
+            evidence=data["evidence"],
+            ambiguous=data["ambiguous"],
+            same_geometry=data["sameGeometry"],
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingMatchSearch(_Model):
+    """Explicit search for identity candidates, not automatic pairing.
+    Attributes:
+        search: Maximum geometric location difference, metres, 0 to 10. Equal source keys may suggest a moved object beyond it. Unit: length.
+        key: Attribute containing a source-scoped id/handle. Unequal nonempty keys never match by proximity.
+        new_uids: New-side unmatched UUID scope. Absent: all added objects; empty: none.
+        old_uids: Old-side unmatched UUID scope. Absent: all removed objects; empty: none. At most 5000 objects per side.
+    """
+    search: float
+    key: str | None | Unset = UNSET
+    new_uids: list[str] | None | Unset = UNSET
+    old_uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["search"] = float(self.search)
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.new_uids is not UNSET:
+            out["newUids"] = None if self.new_uids is None else list(self.new_uids)
+        if self.old_uids is not UNSET:
+            out["oldUids"] = None if self.old_uids is None else list(self.old_uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingMatchSearch:
+        return cls(
+            search=float(data["search"]),
+            key=data.get("key", UNSET),
+            new_uids=UNSET if "newUids" not in data else None if data["newUids"] is None else list(data["newUids"]),
+            old_uids=UNSET if "oldUids" not in data else None if data["oldUids"] is None else list(data["oldUids"]),
         )
 
 
@@ -106721,6 +106804,8 @@ __all__ = [
     "DrawingFontName",
     "DrawingInspect",
     "DrawingInspected",
+    "DrawingMatchCandidate",
+    "DrawingMatchSearch",
     "DrawingPaperViewportSource",
     "DrawingProjectChange",
     "DrawingSetPaperTableSource",
