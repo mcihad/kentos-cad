@@ -193,6 +193,25 @@ fn read_project_packages(doc: &Document) -> Result<Vec<kentos_commands::Standard
 
 fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> {
     use std::collections::BTreeMap;
+    fn values(fields: &[String], value: serde_json::Value) -> BTreeMap<String, serde_json::Value> {
+        fields
+            .iter()
+            .map(|field| {
+                (
+                    field.clone(),
+                    value.get(field).cloned().unwrap_or(serde_json::Value::Null),
+                )
+            })
+            .collect()
+    }
+    fn global_rules(standard: &DrawingStandard) -> serde_json::Value {
+        serde_json::json!({"naming":standard.naming, "fonts":standard.fonts,
+            "lineTypes":standard.line_types, "byLayer":standard.by_layer})
+    }
+    fn layer_values(layer: &kentos_commands::StandardLayer) -> serde_json::Value {
+        serde_json::json!({"color":layer.color, "lineType":layer.line_type,
+            "lineWeight":layer.line_weight, "plot":layer.plot, "from":layer.from})
+    }
     let packages = match read_project_packages(doc) {
         Ok(packages) => packages,
         Err(stop) => return stop.into(),
@@ -219,12 +238,16 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                 fields.push("byLayer".into());
             }
             if !fields.is_empty() {
+                let first_values = values(&fields, global_rules(&first.standard));
+                let later_values = values(&fields, global_rules(&package.standard));
                 conflicts.push(StandardConflict {
                     kind: "rules".into(),
                     name: "Genel kurallar".into(),
                     first_id: first.id.clone(),
                     later_id: package.id.clone(),
                     fields,
+                    first_values,
+                    later_values,
                 });
             }
         }
@@ -249,12 +272,16 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     fields.push("from".into());
                 }
                 if !fields.is_empty() {
+                    let first_values = values(&fields, layer_values(first));
+                    let later_values = values(&fields, layer_values(layer));
                     conflicts.push(StandardConflict {
                         kind: "layer".into(),
                         name: layer.name.clone(),
                         first_id: (*first_id).clone(),
                         later_id: package.id.clone(),
                         fields,
+                        first_values,
+                        later_values,
                     });
                 }
             } else {
@@ -278,12 +305,16 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     fields.push("height".into());
                 }
                 if !fields.is_empty() {
+                    let first_values = values(&fields, serde_json::json!(first));
+                    let later_values = values(&fields, serde_json::json!(style));
                     conflicts.push(StandardConflict {
                         kind: "textStyle".into(),
                         name: style.name.clone(),
                         first_id: (*first_id).clone(),
                         later_id: package.id.clone(),
                         fields,
+                        first_values,
+                        later_values,
                     });
                 }
             } else {
@@ -295,12 +326,17 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             if let Some((first_id, first)) = dimensions.get(&key) {
                 let first: &kentos_commands::StandardDimensionStyle = first;
                 if (first.height - style.height).abs() > 1e-9 {
+                    let fields = vec!["height".into()];
+                    let first_values = values(&fields, serde_json::json!(first));
+                    let later_values = values(&fields, serde_json::json!(style));
                     conflicts.push(StandardConflict {
                         kind: "dimensionStyle".into(),
                         name: style.name.clone(),
                         first_id: (*first_id).clone(),
                         later_id: package.id.clone(),
-                        fields: vec!["height".into()],
+                        fields,
+                        first_values,
+                        later_values,
                     });
                 }
             } else {

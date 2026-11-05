@@ -32,6 +32,8 @@ class ProjectStandardDocuments(unittest.TestCase):
         self.assertEqual((report.conflicts[0].first_id, report.conflicts[0].later_id), ("first", "second"))
         self.assertEqual(report.conflicts[0].fields, ["byLayer"])
         self.assertEqual(report.conflicts[1].fields, ["color"])
+        self.assertEqual(report.conflicts[0].first_values["byLayer"], standard.get("byLayer", False))
+        self.assertEqual(report.conflicts[1].later_values["color"], "#ff0000")
         resolved = cad.standards.resolve(document)
         self.assertEqual(resolved.sources, ["first", "second"])
         self.assertEqual(resolved.standard.layers[0].color, standard["layers"][0]["color"])

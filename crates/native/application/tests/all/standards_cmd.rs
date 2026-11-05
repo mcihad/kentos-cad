@@ -202,6 +202,7 @@ fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
     second.text_styles[0].name = format!(" {} ", second.text_styles[0].name);
     second.dimension_styles[0].name = format!(" {} ", second.dimension_styles[0].name);
     second.layers[0].color = "#ff0000".into();
+    second.layers[0].plot = !first.layers[0].plot;
     second.text_styles[0].height = Some(7.0);
     second.dimension_styles[0].height = 8.0;
     let package = |id: &str, standard| ProjectStandardDocument {
@@ -215,7 +216,10 @@ fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
         .unwrap(),
     };
     let mut settings = doc.settings().clone();
-    settings.standard_docs = vec![package("first", first), package("second", second)];
+    settings.standard_docs = vec![
+        package("first", first.clone()),
+        package("second", second.clone()),
+    ];
     doc.set_settings(settings);
     let before = doc.to_snapshot_v2();
     let result = registry::run(
@@ -230,8 +234,17 @@ fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
     assert_eq!(rows.len(), 4, "{result}");
     assert_eq!(rows[0]["kind"], "rules");
     assert_eq!(rows[0]["fields"], json!(["byLayer"]));
+    assert_eq!(rows[0]["firstValues"]["byLayer"], json!(first.by_layer));
+    assert_eq!(rows[0]["laterValues"]["byLayer"], json!(second.by_layer));
     assert_eq!(rows[1]["kind"], "layer");
-    assert_eq!(rows[1]["fields"], json!(["color"]));
+    assert_eq!(rows[1]["fields"], json!(["color", "plot"]));
+    assert_eq!(
+        rows[1]["firstValues"]["color"],
+        json!(first.layers[0].color)
+    );
+    assert_eq!(rows[1]["laterValues"]["color"], "#ff0000");
+    assert_eq!(rows[1]["firstValues"]["plot"], json!(first.layers[0].plot));
+    assert_eq!(rows[1]["laterValues"]["plot"], json!(second.layers[0].plot));
     assert_eq!(rows[0]["firstId"], "first");
     assert_eq!(rows[0]["laterId"], "second");
     assert_eq!(doc.to_snapshot_v2(), before);

@@ -75556,12 +75556,17 @@ class StakeoutSent(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class StandardConflict(_Model):
-    """A later document differs from the first on named definitions or global rules."""
+    """A later document differs from the first on named definitions or global rules.
+    Attributes:
+        first_values: Values for exactly the fields that differ; missing optional values are null.
+    """
     kind: str
     name: str
     first_id: str
     later_id: str
     fields: list[str]
+    first_values: dict[str, Any]
+    later_values: dict[str, Any]
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75570,6 +75575,8 @@ class StandardConflict(_Model):
         out["firstId"] = self.first_id
         out["laterId"] = self.later_id
         out["fields"] = list(self.fields)
+        out["firstValues"] = dict(self.first_values)
+        out["laterValues"] = dict(self.later_values)
         return out
 
     @classmethod
@@ -75580,6 +75587,8 @@ class StandardConflict(_Model):
             first_id=data["firstId"],
             later_id=data["laterId"],
             fields=list(data["fields"]),
+            first_values=dict(data["firstValues"]),
+            later_values=dict(data["laterValues"]),
         )
 
 

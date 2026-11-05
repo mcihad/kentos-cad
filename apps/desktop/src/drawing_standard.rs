@@ -54,6 +54,7 @@ pub struct Window {
     report: Result<StandardsReport, String>,
     preview: Result<StandardsApplied, String>,
     conflicts: Result<StandardsConflictsReport, String>,
+    chosen_conflict: Option<usize>,
     /// The finding pressed: its whole message shown under the table.
     chosen: Option<usize>,
 }
@@ -76,6 +77,7 @@ pub enum Event {
     Styles(bool),
     /// A finding's row pressed: its layer chosen in Katmanlar.
     Pick(usize),
+    PickConflict(usize),
     Apply,
     Close,
 }
@@ -164,6 +166,32 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
     }
 }
 
+fn conflict_field(field: &str) -> &'static str {
+    match field {
+        "color" => "Renk",
+        "lineType" => "Çizgi tipi",
+        "lineWeight" => "Kalınlık (mm)",
+        "plot" => "Yazdırma",
+        "from" => "Kaynak eşlemesi",
+        "font" => "Yazı tipi",
+        "height" => "Yükseklik (mm)",
+        "naming" => "Katman adlandırma",
+        "fonts" => "Yazı tipleri",
+        "lineTypes" => "Çizgi tipleri",
+        "byLayer" => "Katmana göre görünüş",
+        _ => "Özellik",
+    }
+}
+
+fn conflict_value(value: Option<&serde_json::Value>) -> String {
+    match value {
+        None | Some(serde_json::Value::Null) => "Belirtilmemiş".into(),
+        Some(serde_json::Value::Bool(value)) => if *value { "Açık" } else { "Kapalı" }.into(),
+        Some(serde_json::Value::String(value)) => value.clone(),
+        Some(value) => value.to_string(),
+    }
+}
+
 impl Window {
     fn apply_input(&self) -> StandardsApply {
         StandardsApply {
@@ -227,6 +255,7 @@ impl App {
             report: Err(String::new()),
             preview: Err(String::new()),
             conflicts: Err(String::new()),
+            chosen_conflict: None,
             chosen: None,
         });
         self.dialog = Some(Dialog::DrawingStandard);
@@ -295,6 +324,13 @@ impl App {
         };
         if let Some(w) = self.drawing_standard.as_mut() {
             w.choices = choices;
+            let same_conflicts = match (&w.conflicts, &conflicts) {
+                (Ok(previous), Ok(next)) => previous.conflicts == next.conflicts,
+                _ => false,
+            };
+            if !same_conflicts {
+                w.chosen_conflict = None;
+            }
             w.conflicts = conflicts;
             if bound_changed {
                 w.load_error =
@@ -491,6 +527,15 @@ impl App {
                     self.layers_follow = false;
                     self.layer_reveal = Some(id);
                 }
+                return Task::none();
+            }
+            Event::PickConflict(i) => {
+                w.chosen_conflict = w
+                    .conflicts
+                    .as_ref()
+                    .ok()
+                    .filter(|report| i < report.conflicts.len())
+                    .map(|_| i);
                 return Task::none();
             }
             Event::Apply => {
@@ -980,23 +1025,36 @@ impl App {
                 Ok(report) if !report.conflicts.is_empty() => {
                     let conflicts = report.conflicts.clone();
                     let count = conflicts.len();
+                    let chosen = w.chosen_conflict;
+                    let detail = chosen.and_then(|i| report.conflicts.get(i)).map(|item| {
+                        let mut lines = Column::new().spacing(4);
+                        for field in &item.fields {
+                            let line = format!("{}: {} · {} → {} · {}", conflict_field(field), item.first_id,
+                                conflict_value(item.first_values.get(field)), item.later_id, conflict_value(item.later_values.get(field)));
+                            lines = lines.push(label::body(line));
+                        }
+                        lines
+                    });
                     let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
                         let item = &conflicts[i];
                         let kind = match item.kind.as_str() {
                             "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural", _ => "Tanım",
                         };
-                        let fields = item.fields.iter().map(|field| match field.as_str() {
-                            "color" => "renk", "lineType" => "çizgi tipi", "lineWeight" => "kalınlık", "plot" => "yazdırma", "from" => "kaynak eşlemesi", "font" => "yazı tipi", "height" => "yükseklik", "naming" => "katman adlandırma", "fonts" => "yazı tipleri", "lineTypes" => "çizgi tipleri", "byLayer" => "katmana göre görünüş", _ => "özellik",
-                        }).collect::<Vec<_>>().join(", ");
+                        let fields = item.fields.iter().map(|field| conflict_field(field)).collect::<Vec<_>>().join(", ");
                         let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
-                        container(Elided::new(line).size(typography::caption()).font(typography::ui()).width(Fill))
-                            .padding([0, 8]).height(typography::scaled(ROW)).into()
+                        iced::widget::button(container(Elided::new(line).size(typography::caption()).font(typography::ui()).width(Fill))
+                            .padding([0, 8]).height(typography::scaled(ROW)))
+                            .on_press(msg(Event::PickConflict(i))).padding(0).width(Fill)
+                            .style(style::button::row(chosen == Some(i))).into()
                     }).height(typography::scaled(104.0));
                     body = body.push(words::field(
                         "Standartlar arasındaki farklar",
                         container(list).style(style::container::field_box).width(Fill),
-                        Some(format!("{count} fark. Genel kurallar ve aynı adlı tanımlar karşılaştırılır; denetim seçili standardı kullanır.")),
+                        Some(format!("{count} fark. Değerleri görmek için bir satır seçin; denetim seçili standardı kullanır.")),
                     ));
+                    if let Some(detail) = detail {
+                        body = body.push(words::field("Farkın ayrıntısı", detail, None));
+                    }
                 }
                 _ => {}
             }
@@ -1148,9 +1206,18 @@ mod tests {
         };
         let doc = &mut app.document.as_mut().unwrap().model;
         let mut settings = doc.settings().clone();
-        settings.standard_docs = vec![package("a"), package("b")];
+        let mut other = package("b");
+        let mut value: serde_json::Value = serde_json::from_str(&other.text).unwrap();
+        value["standard"]["byLayer"] = serde_json::json!(!standard.by_layer);
+        other.text = value.to_string();
+        settings.standard_docs = vec![package("a"), other];
         doc.set_settings(settings);
         app.open_drawing_standard();
+        let _ = app.drawing_standard_event(Event::PickConflict(0));
+        assert_eq!(
+            app.drawing_standard.as_ref().unwrap().chosen_conflict,
+            Some(0)
+        );
         let _ = app.drawing_standard_event(Event::Resolve);
         assert!(
             app.drawing_standard
@@ -1165,6 +1232,7 @@ mod tests {
         settings.standard_docs.reverse();
         doc.set_settings(settings);
         app.refresh_standard();
+        assert_eq!(app.drawing_standard.as_ref().unwrap().chosen_conflict, None);
         assert!(app.drawing_standard.as_ref().unwrap().load_error.is_some());
         assert!(!app.apply_standard());
         let _ = app.drawing_standard_event(Event::Resolve);

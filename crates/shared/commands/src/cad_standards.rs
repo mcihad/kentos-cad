@@ -66,6 +66,9 @@ pub struct StandardConflict {
     pub first_id: String,
     pub later_id: String,
     pub fields: Vec<String>,
+    // Values for exactly the fields that differ; missing optional values are null.
+    pub first_values: std::collections::BTreeMap<String, serde_json::Value>,
+    pub later_values: std::collections::BTreeMap<String, serde_json::Value>,
 }
 
 /// Compares global rules and named layer, text and dimension style definitions;

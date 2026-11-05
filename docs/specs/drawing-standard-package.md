@@ -54,6 +54,10 @@ merge the documents or decide which definition to
 apply. An unreadable document makes the query fail instead of giving a partial
 report. The desktop uses the same query; it is also available through Python
 and the local command registry.
+Each difference includes the first and later values of the differing fields;
+an absent optional value is represented as null. The desktop exposes these
+values when the user selects a difference, and clears the selection whenever
+the comparison changes.
 
 This format is a starting point for CAD-ADV-12, not the complete office
 package. Future resource packaging and the complete association workflow

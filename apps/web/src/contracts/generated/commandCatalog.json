@@ -159739,11 +159739,20 @@
         "firstId": {
           "type": "string"
         },
+        "firstValues": {
+          "additionalProperties": true,
+          "description": "Values for exactly the fields that differ; missing optional values are null.",
+          "type": "object"
+        },
         "kind": {
           "type": "string"
         },
         "laterId": {
           "type": "string"
+        },
+        "laterValues": {
+          "additionalProperties": true,
+          "type": "object"
         },
         "name": {
           "type": "string"
@@ -159754,7 +159763,9 @@
         "name",
         "firstId",
         "laterId",
-        "fields"
+        "fields",
+        "firstValues",
+        "laterValues"
       ],
       "type": "object"
     },
