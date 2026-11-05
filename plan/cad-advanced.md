@@ -2190,6 +2190,12 @@ B/20/40` tablosu `B/20/40, A/10/20` sırasına yenilendi. Ekran görüntüsü
 repo dışında tutuldu. Aralıkların bitişik ve parçalanmış durumları ayrıca
 yerel testlerle denetlendi.
 
+**Blok adetlerinin dışa aktarımı (5 Kasım 2026):** `file.export.table`,
+blok çizelgesi kaynağındaki adetleri çizimden yeniden sayar ve son sütunu
+çalışma kitabına sayı türünde yazar. Önbellekteki yanlış `999` hücreleri
+varken yerel sınama dışa aktarılan toplamı `3` buldu. Kaynak çizim salt okunur
+kalır. Birim taşıyan genel metraj alanları ve ortak çıkarım tarifi açık kalır.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].
