@@ -173,3 +173,82 @@ fn screens_sorted() {
         }
     }
 }
+
+/// ROAD-HAUL-12 (docs/adr/0953): Planı yaz's sheets carry the plan as read — its summary with units and the volume's
+/// revision, the flows whose volume times length adds up to the moment, the sites, the barriers.
+#[test]
+fn the_plan_sheets_carry_the_plan() {
+    const NAME: &str = "Uygunsuz yarma ve engel birlikte";
+    let mut app = plan_app(Some(NAME));
+    let _ = app.update(Message::Run("haul.plan"));
+    send(&mut app, W::Haul("h-1".into()));
+    send(&mut app, W::Preview);
+    let w = app.haul_plan_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    let sheets = kentos_native_application::road_hauls_plan::sheets(&app.document.as_ref().expect("a drawing").model, r);
+    let names: Vec<&str> = sheets.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(names, ["Özet", "Taşımalar", "Alanlar", "Engeller"]);
+    let summary = &sheets[0].rows;
+    let value = |k: &str| summary.iter().find(|row| row[0] == k).unwrap_or_else(|| panic!("{k}")).clone();
+    assert_eq!(value("Taşıma momenti")[2], "m³·m");
+    assert_eq!(value("Taşıma momenti")[1], format!("{:.3}", r.moment));
+    assert!(value("Kübaj sürümü")[1].parse::<u32>().is_ok(), "the volume's revision is written");
+    assert!(value("Hacimler")[1].contains("düzeltilmiş"), "what the volumes are is said");
+    // Σ (|suitable| + |unsuitable|) × haul length over the flows is the moment (the sheet's three decimals per row).
+    let flows = &sheets[1];
+    let at = |name: &str| flows.columns.iter().position(|c| c.name == name).unwrap_or_else(|| panic!("{name}"));
+    let (len_at, good_at, bad_at) = (at("Taşıma boyu (m)"), at("Uygun (m³, + ileri)"), at("Uygunsuz (m³, + ileri)"));
+    let num = |v: &String| v.parse::<f64>().unwrap();
+    let moment: f64 = flows.rows.iter().map(|row| num(&row[len_at]) * (num(&row[good_at]).abs() + num(&row[bad_at]).abs())).sum();
+    // Each figure is written to the half millimetre (or half litre): a row's product is off by at most
+    // L·(δg + δb) + (|g| + |b|)·δL + δL·(δg + δb), δ = 0.0005.
+    let d = 0.0005;
+    let bound: f64 = flows.rows.iter().map(|row| num(&row[len_at]) * 2.0 * d + (num(&row[good_at]).abs() + num(&row[bad_at]).abs()) * d + 2.0 * d * d).sum();
+    assert!((moment - r.moment).abs() <= bound, "{moment} vs {} (bound {bound})", r.moment);
+    assert_eq!(sheets[2].rows.len(), r.sites.len());
+    assert_eq!(sheets[3].rows[0][3], format!("{:.3}", r.barriers[0].crossed));
+}
+
+/// Planı yaz's row under the plan, light; `.run/gui-evidence/yol-y47/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib haul_plan_window_tests::screens_write -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_write() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y47");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = plan_app(Some("Uygunsuz yarma ve engel birlikte"));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("haul.plan"));
+        send(&mut app, W::Haul("h-1".into()));
+        send(&mut app, W::Preview);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("y47-plan-yaz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        println!("{}", path.display());
+        if theme == "light" {
+            // The workbook Planı yaz writes, for the owner to open.
+            let w = app.haul_plan_window.as_ref().expect("open");
+            let Some(Ok(r)) = &w.preview else { panic!("a read") };
+            let sheets = kentos_native_application::road_hauls_plan::sheets(&app.document.as_ref().expect("a drawing").model, r);
+            let book = out.join("y47-tasima-plani.xlsx");
+            let _ = crate::table_write::write(sheets, kentos_commands::WorkbookFormat::Xlsx, &book);
+            println!("{}", book.display());
+        }
+    }
+}

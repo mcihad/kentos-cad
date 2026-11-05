@@ -264,3 +264,150 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: HaulsPlan) -> CommandResult
 pub fn preview(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }
+
+/// A number as a sheet writes it: three decimals, a dot.
+fn decimal(v: f64) -> String {
+    format!("{v:.3}")
+}
+
+/// The plan as a workbook's sheets (plan/road.md ROAD-HAUL-12, docs/adr/0953; docs/adr/0223's writer): Özet — the
+/// diagram, its volume with the volume's revision and approval, the objective, the figures each with its unit and what
+/// its volumes are (the volume's factored ones, cut loose and fill compacted); Taşımalar — each stretch's flow, its
+/// direction and length; Alanlar — the borrow and waste sites; Engeller where there are barriers.
+pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::WorkbookSheet> {
+    use kentos_commands::{CellKind, WorkbookColumn, WorkbookSheet};
+    let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn { name: name.into(), kind, decimals };
+    let text = |name: &str| column(name, CellKind::Text, None);
+    let n = |name: &str| column(name, CellKind::Number, Some(3));
+    let haul = doc.road_hauls().iter().find(|h| h.id == planned.haul);
+    let volume = haul.and_then(|h| doc.road_volumes().iter().find(|v| v.id == h.volume));
+    let alignment = volume.and_then(|v| volumes::compute_on(doc, v).ok()).map(|(_, _, a)| a);
+    let km = |s: f64| alignment.as_ref().map_or_else(|| decimal(s), |a| km_text(a.km(s), 3));
+    let row = |k: &str, v: String, unit: &str| vec![k.to_owned(), v, unit.to_owned()];
+    let mut summary = vec![
+        row("Brükner", haul.map_or(planned.haul.clone(), |h| h.name.clone()), ""),
+        row("Brükner sürümü", haul.map_or_else(String::new, |h| h.revision.to_string()), ""),
+        row("Kübaj", volume.map_or_else(String::new, |v| v.name.clone()), ""),
+        row("Kübaj sürümü", volume.map_or_else(String::new, |v| v.revision.to_string()), ""),
+        row(
+            "Kübaj onayı",
+            volume.and_then(|v| v.approved.as_ref()).map_or_else(
+                || "onaysız".into(),
+                |a| if a.number > 0 { format!("{}. onay · {}", a.number, a.at) } else { format!("onaylı · {}", a.at) },
+            ),
+            "",
+        ),
+        row("Hacimler", "kübajın düzeltilmiş hacmi: yarma gevşek, dolgu sıkışık".into(), ""),
+        row(
+            "Amaç",
+            match planned.objective {
+                HaulObjective::Moment => "En küçük taşıma momenti",
+                HaulObjective::Cost => "En düşük maliyet",
+            }
+            .into(),
+            "",
+        ),
+        row("Durum", if planned.feasible { "Kurulur" } else { "Kurulamaz" }.into(), ""),
+        row("Yarma fazlası", decimal(planned.cut), "m³"),
+        row("Dolgu fazlası", decimal(planned.fill), "m³"),
+        row("Taşınan", decimal(planned.moved), "m³"),
+        row("Taşıma momenti", decimal(planned.moment), "m³·m"),
+        row("Ortalama uzaklık", planned.average.map_or_else(String::new, decimal), "m"),
+        row("Karşılanmayan dolgu", decimal(planned.shortage), "m³"),
+        row("Yerleşmeyen yarma", decimal(planned.surplus), "m³"),
+    ];
+    if let Some(f) = planned.free {
+        summary.push(row("Serbest taşıma", decimal(f), "m"));
+    }
+    if let Some(c) = &planned.cost {
+        summary.push(row("Fazla taşıma momenti", decimal(c.over_moment), "m³·m"));
+        for (k, v) in [("Fazla taşıma", c.overhaul), ("Döküm", c.waste), ("Ödünç", c.borrow), ("Toplam maliyet", c.total)] {
+            summary.push(row(k, decimal(v), &c.currency));
+        }
+    }
+    if let Some(u) = planned.unsuitable {
+        summary.push(row("Uygunsuz yarma", decimal(u), "m³"));
+        summary.push(row("Dökülemeyen uygunsuz", planned.stranded.map_or_else(String::new, decimal), "m³"));
+        summary.push(row("Uygunsuzun momenti", planned.unsuitable_moment.map_or_else(String::new, decimal), "m³·m"));
+    }
+    let sorted = planned.unsuitable.is_some();
+    // A stretch's haul length is its stations' difference plus the detours of the barriers on it ([from, to)): the
+    // plan's moment is Σ (|suitable| + |unsuitable|) × that length; the net flow alone would undercount where the two
+    // run opposite ways (docs/adr/0944).
+    let detour = |s: &HaulSegment| -> f64 {
+        // Folded from +0: an empty f64 sum is −0, which a sheet writes as “-0.0”.
+        planned.barriers.iter().filter(|b| s.from <= b.station && b.station < s.to).filter_map(|b| b.detour).fold(0.0, |a, d| a + d)
+    };
+    let barriers = !planned.barriers.is_empty();
+    let mut flow_columns = vec![text("Başlangıç km"), text("Bitiş km"), n("Uzunluk (m)")];
+    if barriers {
+        flow_columns.push(n("Dolaşma (m)"));
+        flow_columns.push(n("Taşıma boyu (m)"));
+    }
+    if sorted {
+        flow_columns.push(n("Uygun (m³, + ileri)"));
+        flow_columns.push(n("Uygunsuz (m³, + ileri)"));
+    } else {
+        flow_columns.push(text("Yön"));
+        flow_columns.push(n("Hacim (m³)"));
+    }
+    let flows = planned
+        .segments
+        .iter()
+        .filter(|s| s.flow.abs() > 1e-9 || s.unsuitable_flow.is_some_and(|u| u.abs() > 1e-9))
+        .map(|s| {
+            let mut r = vec![km(s.from), km(s.to), decimal(s.to - s.from)];
+            if barriers {
+                r.push(decimal(detour(s)));
+                r.push(decimal(s.to - s.from + detour(s)));
+            }
+            if sorted {
+                let bad = s.unsuitable_flow.unwrap_or(0.0);
+                r.push(decimal(s.flow - bad));
+                r.push(decimal(bad));
+            } else {
+                r.push(if s.flow > 0.0 { "ileri" } else { "geri" }.to_owned());
+                r.push(decimal(s.flow.abs()));
+            }
+            r
+        })
+        .collect();
+    let mut site_columns = vec![text("Alan"), text("Tür"), text("Km"), n("Kapasite (m³)"), n("Kullanılan (m³)")];
+    if sorted {
+        site_columns.push(n("Uygunsuz (m³)"));
+    }
+    let sites = planned
+        .sites
+        .iter()
+        .map(|s| {
+            let mut r = vec![
+                s.name.clone(),
+                if s.kind == kentos_commands::HaulSiteKind::Borrow { "ödünç" } else { "döküm" }.to_owned(),
+                km(s.station),
+                decimal(s.capacity),
+                decimal(s.used),
+            ];
+            if sorted {
+                r.push(s.used_unsuitable.map_or_else(String::new, decimal));
+            }
+            r
+        })
+        .collect();
+    let mut out = vec![
+        WorkbookSheet { name: "Özet".into(), columns: vec![text("Kalem"), text("Değer"), text("Birim")], rows: summary },
+        WorkbookSheet { name: "Taşımalar".into(), columns: flow_columns, rows: flows },
+        WorkbookSheet { name: "Alanlar".into(), columns: site_columns, rows: sites },
+    ];
+    if !planned.barriers.is_empty() {
+        out.push(WorkbookSheet {
+            name: "Engeller".into(),
+            columns: vec![text("Engel"), text("Km"), text("Dolaşma (m)"), n("Geçen (m³)")],
+            rows: planned
+                .barriers
+                .iter()
+                .map(|b| vec![b.name.clone(), km(b.station), b.detour.map_or_else(|| "kapalı".into(), decimal), decimal(b.crossed)])
+                .collect(),
+        });
+    }
+    out
+}

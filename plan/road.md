@@ -387,7 +387,7 @@ Trimble'ın resmi mass-haul iş akışı borrow/waste kapasitesi, malzeme ve eng
 - [~] **ROAD-HAUL-09:** Kısıtlı kapasite, one-way taşıma, malzeme dönüşüm verimi ve yeniden işleme cost'u alternatif analizde olsun. (Y23–Y24, ADR 0924, 0925: alanların kapasitesi, en küçük moment ya da en düşük maliyet planı; tek yön, dönüşüm verimi ve yeniden işleme açık.)
 - [ ] **ROAD-HAUL-10:** Maliyet/karbon/truck trip hesabı katsayı, taşıt payload ve varsayımlarını görünür tutsun; otomatik mevzuat/şantiye onayı üretmesin.
 - [ ] **ROAD-HAUL-11:** Brükner grafiği, plan ağı, station tables ve 3D materyal bölgeleri aynı HaulPlan'ı kullansın.
-- [ ] **ROAD-HAUL-12:** CSV/XLSX/report çıktısı approved quantity/haul revisions ve aktarım birimlerini taşısın.
+- [x] **ROAD-HAUL-12:** CSV/XLSX/report çıktısı approved quantity/haul revisions ve aktarım birimlerini taşısın. *(Y47, ADR 0953: Taşıma planı → Planı yaz; PDF rapor ve planın onayı açık.)*
 
 ## 17. ROAD-JUNC — Kavşak, bağlantı, köprü/tünel ve araç zarfı — P1/P2
 
@@ -637,6 +637,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y44 | Onaylı kübajın geçmişi | ROAD-VOL-17 | Onaylar numaralı; yeniden onay ve kaldırma eski onayı günü ve nedeniyle geçmişe yazar, geçmiş değişmez ve silinmez (KCAD şema 171); her onay öncekine, bugün son onaya göre fark; Kübaj → Onay geçmişi (ADR 0950) |
 | Y45 | Şev uçlarının teşhisi | ROAD-COR-10 | Her yanın şev ucu, şevin araziyi kaç kez kestiği, duyarlılığı 1/|m − g|; buluşmazsa nedeni ayrı (menteşede arazi yok, arazi önce bitiyor, şerit yetmiyor); Koridor → Şev uçları (ADR 0951) |
 | Y46 | Korunan alanlar | ROAD-GRADE-06 | Koridorun izinin (üst yüzeyin üçgenleri) korunan alanlarla örtüşmesi, deliklerle; izi alana giren kesitler, km aralığı, en uzun giriş; Koridor → Korunan alanlar (ADR 0952) |
+| Y47 | Taşıma planının çalışma kitabı | ROAD-HAUL-12 | Özet (Brükner ve kübaj sürümleri, kübajın onayı, hacimlerin ne olduğu, birimler), taşımalar (uygun ve uygunsuz ayrı, engelin dolaşmasıyla taşıma boyu), alanlar, engeller; XLSX/ODS/CSV (ADR 0953) |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 

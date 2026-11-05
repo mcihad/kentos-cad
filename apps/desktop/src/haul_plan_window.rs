@@ -34,6 +34,8 @@ const CLOSE: &str = "Kapat";
 pub(crate) const FLEET: &str = "Kamyon filosu…";
 pub(crate) const MOMENT: &str = "En küçük moment";
 pub(crate) const COST: &str = "En düşük maliyet";
+/// Planı yaz (ROAD-HAUL-12, docs/adr/0953): the plan as a workbook or a CSV.
+pub(crate) const WRITE: &str = "Planı yaz…";
 
 /// Which list the window shows.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -76,6 +78,8 @@ pub struct Window {
     /// Kamyon filosu over the window (haul_fleet_window.rs, docs/adr/0936 §3), and its values kept when closed.
     pub(crate) fleet: Option<Box<crate::haul_fleet_window::Fleet>>,
     pub(crate) fleet_kept: Option<crate::haul_fleet_window::Fleet>,
+    /// The format Planı yaz writes (docs/adr/0953); none: the workbook.
+    pub(crate) format: Option<kentos_commands::WorkbookFormat>,
 }
 
 #[derive(Debug, Clone)]
@@ -87,6 +91,9 @@ pub enum Event {
     Haul(String),
     Aim(Aim),
     Preview,
+    /// Planı yaz's format, and the writing.
+    Format(kentos_commands::WorkbookFormat),
+    Write,
     Close,
 }
 
@@ -177,6 +184,27 @@ impl App {
                     }
                 }
                 return Task::none();
+            }
+            Event::Format(f) => {
+                if let Some(w) = self.haul_plan_window.as_mut() {
+                    w.format = Some(f);
+                }
+                return Task::none();
+            }
+            Event::Write => {
+                let Some(w) = &self.haul_plan_window else { return Task::none() };
+                let (Some(doc), Some(Ok(planned))) = (&self.document, &w.preview) else {
+                    self.warn("Plan yazılamaz: önce bir Brükner seçin; plan kurulmadı.".to_owned());
+                    return Task::none();
+                };
+                let name = doc
+                    .model
+                    .road_hauls()
+                    .iter()
+                    .find(|h| h.id == planned.haul)
+                    .map_or_else(|| "taşıma planı".to_owned(), |h| format!("{} taşıma planı", h.name));
+                let sheets = road_hauls_plan::sheets(&doc.model, planned);
+                return crate::table_write::save(sheets, w.format.unwrap_or(kentos_commands::WorkbookFormat::Xlsx), name);
             }
             Event::Close => {
                 self.haul_plan_window = None;
@@ -311,6 +339,25 @@ impl App {
                     }
                     None => d.detail(sites),
                 };
+                // Planı yaz (ROAD-HAUL-12): the summary with its units and the volume's revision and approval, the
+                // flows, the sites and the barriers, as a workbook or a CSV.
+                let formats: Vec<kentos_commands::WorkbookFormat> = crate::table_write::FORMATS.iter().map(|c| c.format).collect();
+                let chosen = w.format.unwrap_or(kentos_commands::WorkbookFormat::Xlsx);
+                let format = Select::new(
+                    crate::table_write::FORMATS.iter().map(|c| Choice::new(c.label.to_owned())),
+                    formats.iter().position(|f| *f == chosen),
+                    move |i| msg(Event::Format(formats[i])),
+                );
+                d = d.tail(
+                    iced::widget::row![
+                        kentos_ui::label::caption("Taşıma planı")
+                            .style(|t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) }),
+                        iced::widget::container(format).width(240),
+                        crate::exchange::words::secondary(WRITE, Some(msg(Event::Write))),
+                    ]
+                    .spacing(8)
+                    .align_y(iced::alignment::Vertical::Center),
+                );
             }
         }
         d.view()
@@ -336,6 +383,7 @@ impl App {
             Control::Press(FLEET) => Some(msg(Event::OpenFleet)),
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
+            Control::Press(WRITE) => Some(msg(Event::Write)),
             Control::Press(MOMENT) => Some(msg(Event::Aim(Aim::Moment))),
             Control::Press(COST) => Some(msg(Event::Aim(Aim::Cost))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
