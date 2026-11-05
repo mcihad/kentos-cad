@@ -644,6 +644,36 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
             ),
         );
     }
+    if standard.by_layer {
+        for block in doc.blocks() {
+            let pieces = block
+                .entities
+                .iter()
+                .filter(|part| {
+                    let b = part.base();
+                    b.color.is_some()
+                        || b.line_weight.is_some()
+                        || b.look.line_type.is_some()
+                        || b.look.line_pattern.is_some()
+                })
+                .count();
+            if pieces > 0 {
+                issue(
+                    StandardIssueKind::OwnLook,
+                    &format!("Blok: {}", block.name),
+                    None,
+                    Some("Katmana göre".to_owned()),
+                    Some(format!("{pieces} parça")),
+                    0,
+                    false,
+                    format!(
+                        "“{}” blok tanımındaki {pieces} parçada açıkça atanmış renk, çizgi tipi veya kalınlık var; standart katmana göre görünüş ister. Tanım bir kez denetlendi; yerleştirme sayısı bu bulguya dahil değildir.",
+                        block.name
+                    ),
+                );
+            }
+        }
+    }
     out
 }
 

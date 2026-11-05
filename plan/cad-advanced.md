@@ -1814,6 +1814,9 @@ Komut sınamaları ve gerçek penceredeki P_TEXT bulgusu doğrulandı.
 Blok tanımlarındaki özel ve izin dışı yerleşik çizgi tipleri de tanım başına
 bir kez taranır; yerleştirme sayısıyla çarpılmaz. Kullanılmayan tanımlar da
 rapora dahil edilir. Otomatik test ve gerçek penceredeki üç blok doğrulandı.
+Katmana göre görünüş kuralı açıksa, blok parçalarındaki açık renk, çizgi tipi
+ve kalınlık atamaları da tanım başına raporlanır; ByBlock değerleri değiştirilmez.
+Parça sayısı ve beklenen görünüş komut testi ve gerçek pencerede doğrulandı.
 
 Elle müdahale gerektiren bulgular standart penceresinde ilk sırada gösterilir;
 satır seçimi rapordaki asıl bulguya bağlı kalır. Gerçek arayüzde ayrıntılar

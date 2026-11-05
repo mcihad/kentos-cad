@@ -215,6 +215,17 @@ fn named_patterns_in_block_definitions_are_reported_once_even_without_insertions
         && i.message.contains("1 parça")
         && !i.fixable));
     assert_eq!(doc.to_snapshot_v2(), before);
+    standard.by_layer = true;
+    let own = standards::issues(&doc, &standard);
+    assert!(
+        own.iter()
+            .any(|i| i.kind == kentos_commands::StandardIssueKind::OwnLook
+                && i.subject == "Blok: Test"
+                && i.found.as_deref() == Some("3 parça")
+                && i.expected.as_deref() == Some("Katmana göre")
+                && !i.fixable)
+    );
+    standard.by_layer = false;
     standard.line_types.clear();
     assert!(
         !standards::issues(&doc, &standard)
