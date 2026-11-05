@@ -1825,6 +1825,11 @@ Rapor değişirse eski seçim temizlenir; böylece aynı sıra numarasına gelen
 başka bir bulgu yanlışlıkla seçili gösterilmez. Bu durum gerçek uygulamada
 eksik katman seçilip uygulandıktan sonra doğrulandı.
 
+Standart uygulaması, ön izlemenin üretildiği belge revizyonunu doğrular.
+Arada başka bir işlem çizimi değiştirirse eski ön izleme uygulanmaz; rapor
+yenilenerek yeniden değerlendirilir. Çakışma otomatik testle, güncel raporun
+normal uygulanması gerçek arayüzde doğrulandı.
+
 Yazı ve ölçü stillerinde standartta belirtilen kâğıt yükseklikleri artık
 denetlenir; farklar mm cinsinden ayrı bulgu olarak raporlanır ve çizimi
 kendiliğinden değiştirmez. Komut sınamaları ile gerçek arayüzde 4 → 2,5 mm

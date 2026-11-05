@@ -101,6 +101,11 @@ impl Window {
             restyle: self.restyle,
             rename: self.rename,
             styles: self.styles,
+            expected_revision: self
+                .report
+                .as_ref()
+                .ok()
+                .map(|report| report.revision.clone()),
             ..StandardsApply::default()
         }
     }
@@ -152,10 +157,14 @@ impl App {
             | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Err("Standart denetlenemedi.".to_owned()),
         };
-        let preview = if let Some(locked) = self.tree_locked() {
+        let preview = if report.is_err() {
+            Err("Standart denetimi tamamlanmadan düzeltme planlanamaz.".to_owned())
+        } else if let Some(locked) = self.tree_locked() {
             Err(locked.to_owned())
         } else {
-            match standards::plan_apply(&ExecutionContext::new(&mut copy), &w.apply_input()) {
+            let mut input = w.apply_input();
+            input.expected_revision = report.as_ref().ok().map(|r| r.revision.clone());
+            match standards::plan_apply(&ExecutionContext::new(&mut copy), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
                 | CommandResult::Conflict { error }
@@ -315,7 +324,7 @@ impl App {
         if self
             .drawing_standard
             .as_ref()
-            .is_some_and(|w| w.load_error.is_some())
+            .is_some_and(|w| w.load_error.is_some() || w.report.is_err())
         {
             return false;
         }
@@ -616,4 +625,45 @@ fn applied_words(p: &StandardsApplied) -> String {
         parts.push("yazı tipi ve stiller düzeldi".to_owned());
     }
     format!("Standart uygulandı: {}.", parts.join(", "))
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn stale_standard_preview_cannot_apply_to_changed_document() {
+        let mut app = crate::selecting::tests::objects();
+        crate::files_testing::make_cad(&mut app);
+        app.open_drawing_standard();
+        let revision = app
+            .drawing_standard
+            .as_ref()
+            .unwrap()
+            .report
+            .as_ref()
+            .unwrap()
+            .revision
+            .clone();
+        let model = &mut app.document.as_mut().unwrap().model;
+        let layer = model.layers().active().to_owned();
+        let line = serde_json::from_value(serde_json::json!({"kind":"line","id":0,"layerId":layer,
+            "attrs":{},"a":{"x":0,"y":0},"b":{"x":1,"y":0}}))
+        .unwrap();
+        model.add(line).unwrap();
+        assert_ne!(model.revision().to_string(), revision);
+        let changed = model.to_snapshot_v2();
+        assert!(!app.apply_standard());
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            changed
+        );
+        app.refresh_standard();
+        assert_eq!(
+            app.drawing_standard
+                .as_ref()
+                .unwrap()
+                .apply_input()
+                .expected_revision,
+            Some(app.document.as_ref().unwrap().model.revision().to_string())
+        );
+    }
 }
