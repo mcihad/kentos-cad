@@ -9638,6 +9638,22 @@
    "tests": 1
   },
   {
+   "id": "table.export",
+   "kind": "command",
+   "title": "Tabloyu dışa aktar",
+   "level": "semantic",
+   "via": [
+    "file.export.table"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.table",
+   "mcp": "file.export.table",
+   "note": "Seçili tablonun kalıcı kimliği ve kullanıcının seçtiği dosya yolu aynı dışa aktarma komutuna verilir.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.insert",
    "kind": "command",
    "title": "Tablo ekle",

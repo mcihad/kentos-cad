@@ -75,7 +75,7 @@ impl Context {
             }
             let blocks = self
                 .blocks
-                .get_or_insert_with(|| crate::blocks::core_blocks(doc.blocks()));
+                .get_or_insert_with(|| crate::blocks::drawing_blocks(doc));
             return blocks.try_visit_annotations(&crate::geometry::shape(e), |piece| {
                 let Some(piece) = piece else {
                     return visit(None);

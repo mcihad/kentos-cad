@@ -136,11 +136,12 @@ fn glyphs_of(l: &MapLabel) -> Option<kentos_sheet::pdf::GlyphText> {
             .and_then(|c| c.clone())
             .unwrap_or_else(|| l.color.clone())
     };
-    let mut seen = std::collections::HashSet::new();
+    let owners = glyph_owners(&plan.glyphs);
     let glyphs = plan
         .glyphs
         .iter()
-        .map(|placed| {
+        .enumerate()
+        .map(|(index, placed)| {
             let g = &placed.glyph;
             let em = [
                 g.size,
@@ -151,7 +152,7 @@ fn glyphs_of(l: &MapLabel) -> Option<kentos_sheet::pdf::GlyphText> {
                 g.origin[1],
             ];
             let matrix = affine::compose(&outer, &affine::compose(&placed.transform, &em));
-            let mut text = if seen.insert((g.bytes.start, g.bytes.end)) {
+            let mut text = if owners.get(&(g.bytes.start, g.bytes.end)) == Some(&index) {
                 u.text.source[g.bytes.clone()].to_owned()
             } else {
                 String::new()
@@ -197,6 +198,49 @@ fn glyphs_of(l: &MapLabel) -> Option<kentos_sheet::pdf::GlyphText> {
         glyphs,
         rules,
     })
+}
+
+/// ToUnicode belongs to the advancing body of a cluster. HarfBuzz can emit
+/// an Arabic dot/mark before that body; assigning the letter to that zero-width
+/// mark makes PDFKit infer spaces inside a word. Geometry and paint order stay
+/// exactly as shaped. All-zero clusters keep their first glyph as the owner.
+fn glyph_owners(
+    glyphs: &[kentos_geometry_core::text::shaping::placed::PlacedGlyph],
+) -> HashMap<(usize, usize), usize> {
+    let mut owners: HashMap<_, usize> = HashMap::new();
+    for (index, placed) in glyphs.iter().enumerate() {
+        let g = &placed.glyph;
+        owners
+            .entry((g.bytes.start, g.bytes.end))
+            .and_modify(|old| {
+                if g.advance.abs() > glyphs[*old].glyph.advance.abs() {
+                    *old = index;
+                }
+            })
+            .or_insert(index);
+    }
+    owners
+}
+
+#[cfg(test)]
+mod glyph_owner_tests {
+    #[test]
+    fn arabic_source_letters_belong_to_the_body_not_its_preceding_dots() {
+        use kentos_geometry_core::text::shaping::{self, Style, placed::PlacedGlyph};
+        let line = shaping::line("العربية", Style {family:"arimo",..Style::default()}).unwrap();
+        let glyphs:Vec<_> = line.glyphs.into_iter().map(|glyph|PlacedGlyph {
+            glyph,transform:[1.,0.,0.,1.,0.,0.],
+        }).collect();
+        let owners=super::glyph_owners(&glyphs);
+        let mut actual:Vec<_>=owners.values().map(|&i| {
+            let g=&glyphs[i].glyph;(g.scalars.start,g.id)
+        }).collect();actual.sort();
+        // Independent C HarfBuzz 15.0.0, frozen NotoSansArabic-400 face:
+        // body GIDs in logical order. GIDs 278/309/307 are preceding dots,
+        // and must not receive the source letter's searchable bounding box.
+        assert_eq!(actual,[(0,8),(1,72),(2,48),(3,31),(4,19),(5,18),(6,83)]);
+        assert_eq!(glyphs.len(),10);
+    }
 }
 
 /// A masked text's paper-coloured box.
@@ -266,6 +310,99 @@ pub(crate) fn built_layers_profile(
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
     labels: &[MapLabel],
 ) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
+    let built = built_layers_profile_unchecked(src, layers, overrides, scale, extent, profile, labels)?;
+    let losses = emitted_line_type_losses(&built, scale, extent, src.origin);
+    if !losses.is_empty() {
+        return Err(format!("{} Eksik çizgi deseniyle çıktı üretilmedi.", losses.join("\n")));
+    }
+    Ok(built)
+}
+
+/// Uses the same resolved primitives as delivery, including BYBLOCK, layer
+/// overrides, custom symbols, filters and hidden expanded pieces.
+pub(crate) fn line_type_losses(
+    src: &MapSource<'_>,
+    map: &kentos_sheet::display::MapPrim,
+) -> Result<Vec<String>, String> {
+    let Some(extent) = map.extent else { return Ok(Vec::new()); };
+    if !line_type_check_needed(src.doc, map, src.library) {
+        return Ok(Vec::new());
+    }
+    let built = built_layers_profile_unchecked(src, &map.layers, &map.layer_overrides,
+        map.view.scale, extent, None, &[])?;
+    Ok(emitted_line_type_losses(&built, map.view.scale, extent, src.origin))
+}
+
+/// Cheap source gate, not the finding itself. The ordinary built-in/short
+/// pattern project must not compile its map a second time for this check.
+pub(crate) fn line_type_check_needed(
+    doc: &kentos_domain::Document, map: &kentos_sheet::display::MapPrim, library: &StyleLibrary,
+) -> bool {
+    let types =
+        kentos_native_style::line_types::LineTypes::with_resources(doc.settings(), doc.styles());
+    if types.needs_preflight() {
+        return true;
+    }
+    // Geometric-width dashes are split before filling and can reject an
+    // excessive/dotted recipe. Inspect their actual emitted diagnostics too.
+    let wide = |e: &kentos_contracts::Entity| matches!(e,
+        kentos_contracts::Entity::Polyline(p) if p.widths.as_ref().is_some_and(|w|w.iter().any(|[a,b]|*a>0. || *b>0.)));
+    if doc.entities().any(wide) || doc.blocks().iter().flat_map(|b|&b.entities).any(wide) { return true; }
+
+    let bad = |name: Option<&str>| name.is_some_and(|n| types.loss(n).is_some());
+    fn long_dash(v: &serde_json::Value) -> bool {
+        match v {
+            serde_json::Value::Object(m) => m.get("lineTypeLoss").is_some() || m.get("cadMarks").is_some()
+                || m.get("dash").and_then(serde_json::Value::as_array)
+                    .is_some_and(|d| d.len() > 4096)
+                || m.values().any(long_dash),
+            serde_json::Value::Array(a) => a.iter().any(long_dash),
+            _ => false,
+        }
+    }
+    fn layers(nodes: &[kentos_contracts::LayerNode], bad: &impl Fn(Option<&str>)->bool) -> bool {
+        nodes.iter().any(|n| bad(n.style.line_pattern.as_deref())
+            || n.style.renderer.as_ref().is_some_and(long_dash) || layers(&n.children,bad))
+    }
+    layers(doc.layers().nodes(), &bad)
+        || doc.entities().any(|e| bad(e.base().look.line_pattern.as_deref()))
+        || doc.blocks().iter().flat_map(|b| &b.entities).any(|e| bad(e.base().look.line_pattern.as_deref()))
+        || doc.settings().layer_states.iter().flat_map(|s| &s.nodes)
+            .any(|n| n.style.as_ref().is_some_and(|s|bad(s.line_pattern.as_deref()) || s.renderer.as_ref().is_some_and(long_dash)))
+        || map.layer_overrides.iter().any(|o|bad(o.line_pattern.as_deref()))
+        || library.items(None).iter().any(|(item,_)|item.symbol().is_some_and(long_dash))
+}
+
+fn emitted_line_type_losses(
+    built: &[(String, String, kentos_native_style::StyledLayer)],
+    scale: f64,
+    extent: [f64; 4],
+    origin: Vec2,
+) -> Vec<String> {
+    let seen = [extent[0]-origin.x, extent[1]-origin.y, extent[2]-origin.x, extent[3]-origin.y];
+    let px_per_m = 1. / (scale.max(1e-6) * kentos_native_style::program::METRES_PER_PX);
+    built.iter().flat_map(|(_, name, layer)| layer.batches.iter().filter_map(move |b| {
+        b.line_type_loss.as_ref().filter(|_| {
+            let ink = match &b.kind {
+                kentos_native_style::batches::BatchKind::Stroke { color, .. } => color[3] > 0.,
+                kentos_native_style::batches::BatchKind::Fill { paint: kentos_native_style::FillPaintBatch::Hatch { color, .. } } => color[3] > 0.,
+                _ => false,
+            };
+            ink && b.in_scale(scale) && b.in_view(seen, px_per_m, 1.)
+        })
+            .map(|loss| format!("{name}: {loss}"))
+    })).collect::<std::collections::BTreeSet<_>>().into_iter().collect()
+}
+
+fn built_layers_profile_unchecked(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+    labels: &[MapLabel],
+) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
     let pen_mm = profile
@@ -310,9 +447,13 @@ pub(crate) fn built_layers_profile(
         },
         view_colors: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.settings()),
-        line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
-            doc.settings(),
-        )),
+        line_types: std::sync::Arc::new(
+            kentos_native_style::line_types::LineTypes::at_scale_with_resources(
+                doc.settings(),
+                doc.styles(),
+                scale,
+            ),
+        ),
         phasing: std::sync::Arc::new(phasing),
     };
     let clip = Bounds {
@@ -537,6 +678,7 @@ pub fn collect_vector_profile(
                                 color: t.color.clone(),
                                 width: PX_MM,
                                 dash: Vec::new(),
+                                dash_offset: None,
                                 cap: kentos_sheet::LineCap::Butt,
                                 join: kentos_sheet::LineJoin::Miter,
                             }),

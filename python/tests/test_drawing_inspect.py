@@ -15,6 +15,77 @@ def drawing(entities):
 
 
 class DrawingInspect(unittest.TestCase):
+    def test_unicode_bulk_replace_preserves_profile_preview_and_one_undo(self):
+        doc = drawing([dict(kind='text', p=dict(x=0., y=0.), text='Ög\u0306ç — AV', height=.3, rotation=0.,
+                            layout=dict(engine='unicode-v1'))])
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        bad = doc.call('cad.texts.edit', dict(edit=dict(kind='replace', uids=[row.uid], find='g', **{'with':'h'})))
+        self.assertEqual(bad.status, 'failed')
+        self.assertEqual(doc.to_bytes(), before)
+        edit = cad.ReplaceTextEdit(uids=[row.uid], find='Ög\u0306ç', with_='İstanbul', match_case=True)
+        plan = cad.texts.edit.plan(doc, edit=edit)
+        self.assertEqual(doc.to_bytes(), before)
+        cad.texts.edit(doc, edit=edit)
+        actual = next(iter(doc.entities())).entity.to_json()
+        self.assertEqual(actual, plan.texts[0].to_json())
+        self.assertEqual(actual['text'], 'İstanbul — AV')
+        self.assertEqual(actual['layout']['engine'], 'unicode-v1')
+        self.assertEqual(doc.undo(), 'Bul ve değiştir')
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_unicode_mirror_inherits_project_font_and_matches_its_read_only_plan(self):
+        raw = json.loads((ROOT / 'fixtures/commands/v1/cad.blocks.find.json').read_text())['setup']
+        raw['settings']['drawingFont'] = 'overpass'
+        raw['entities'] = [dict(kind='text', id=1, layerId='a', attrs={}, p=dict(x=5000000., y=4400000.),
+                                text='Ög\u0306ç AV مرحبا', height=.3, rotation=37., boxWidth=2.,
+                                layout=dict(engine='unicode-v1'))]
+        doc = cad.Document.from_bytes(json.dumps(raw).encode())
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        transform = cad.MirrorTransform(a=cad.Vec2(x=5000001., y=4400001.), b=cad.Vec2(x=5000002., y=4400001.4))
+        plan = cad.entities.transform.plan(doc, uids=[row.uid], transform=transform, copy=False)
+        self.assertEqual(doc.to_bytes(), before)
+        cad.entities.transform(doc, uids=[row.uid], transform=transform, copy=False)
+        changed = next(iter(doc.entities()))
+        self.assertEqual(changed.uid, row.uid)
+        self.assertEqual(changed.entity.to_json(), plan.entities[0].to_json())
+        self.assertNotIn('font', changed.entity.to_json())
+        self.assertEqual(doc.undo(), 'Aynala')
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_unicode_readable_uses_the_shared_plan_and_preserves_metadata_in_one_undo(self):
+        doc = drawing([dict(kind='text', p=dict(x=5000000., y=4400000.), text='Ög\u0301\u0306\u0323ç — AV',
+                            height=.3, rotation=137., font='arimo', oblique=24., mask=True,
+                            layout=dict(engine='unicode-v1'))])
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        original = row.entity.to_json()
+        work = cad.ReadableShapeWork(ids=[row.uid])
+        plan = cad.shapes.edit.plan(doc, work=work)
+        self.assertEqual(doc.to_bytes(), before)
+        self.assertEqual(len(plan.changed), 1)
+        result = cad.shapes.edit(doc, work=work)
+        self.assertEqual(result.count, 1)
+        actual = next(iter(doc.entities())).entity.to_json()
+        self.assertEqual(actual['rotation'], 317.)
+        self.assertNotEqual(actual['p'], original['p'])
+        actual['p'], actual['rotation'] = original['p'], original['rotation']
+        self.assertEqual(actual, original)
+        self.assertEqual(doc.undo(), 'Okunur yap')
+        self.assertEqual(doc.to_bytes(), before)
+
+    def test_readable_refuses_stale_field_without_mutating_the_drawing(self):
+        doc = drawing([dict(kind='text', p=dict(x=0., y=0.), text='Eski', height=.3, rotation=180.,
+                            layout=dict(engine='unicode-v1'),
+                            fields=[dict(start=0, end=4, source=dict(kind='project', value='name'))])])
+        before = doc.to_bytes()
+        row = next(iter(doc.entities()))
+        result = doc.call('cad.shapes.edit', dict(work=dict(kind='readable', ids=[row.uid])))
+        self.assertEqual(result.status, 'failed')
+        self.assertEqual(result.error.code, 'invalid_input')
+        self.assertEqual(doc.to_bytes(), before)
+
     def test_gap_threshold_and_job_are_read_only_and_equivalent(self):
         doc = drawing([
             dict(kind='line', a=dict(x=500000., y=4500000.), b=dict(x=500001., y=4500000.)),

@@ -12,6 +12,7 @@
 //! editable source, asked first: the library keeps no undo.
 
 use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 
 use iced::keyboard::key::Named;
 use iced::widget::{Column, button, column, container, row, text, tooltip};
@@ -22,7 +23,7 @@ use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{ContextMenu, Menu, SearchBox, Tip, VirtualList, tip};
 use kentos_ui::{label, style};
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::app::{App, Dialog, Message, Panel};
 use crate::keys::KeyPress;
@@ -38,6 +39,123 @@ const THUMB: f32 = 30.0;
 pub(crate) const RECENT: usize = 5;
 /// The recent group's key: no category path joins to it.
 const RECENT_KEY: &str = "\u{1}son";
+const FAVORITES_KEY: &str = "\u{1}favoriler";
+const PERSONAL_FILE: &str = "sablon-paleti.json";
+const FAVORITE_LIMIT: usize = 100;
+
+/// The user's palette choices. Keys include the library source, and project
+/// templates include the project id so another drawing cannot reuse its id.
+#[derive(Debug, Default)]
+struct Personal {
+    path: Option<PathBuf>,
+    favorites: Vec<String>,
+    recent: Vec<String>,
+}
+
+impl Personal {
+    fn open(folder: &Path) -> (Self, Option<String>) {
+        let path = folder.join(PERSONAL_FILE);
+        let (favorites, recent) = match std::fs::read_to_string(&path) {
+            Ok(text) => {
+                if serde_json::from_str::<Value>(&text)
+                    .ok()
+                    .and_then(|value| value.get("version").and_then(Value::as_u64))
+                    != Some(1)
+                {
+                    return (
+                        Self::default(),
+                        Some(format!(
+                            "Şablon paleti okunamadı: {}. Dosya korunuyor; bu oturumdaki favoriler kaydedilmeyecek.",
+                            path.display()
+                        )),
+                    );
+                }
+                Self::read(&text)
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => (Vec::new(), Vec::new()),
+            Err(error) => {
+                return (
+                    Self::default(),
+                    Some(format!(
+                        "Şablon paleti okunamadı: {}: {error}. Dosya korunuyor; bu oturumdaki favoriler kaydedilmeyecek.",
+                        path.display()
+                    )),
+                );
+            }
+        };
+        (
+            Self {
+                path: Some(path),
+                favorites,
+                recent,
+            },
+            None,
+        )
+    }
+
+    fn read(text: &str) -> (Vec<String>, Vec<String>) {
+        let Ok(value) = serde_json::from_str::<Value>(text) else {
+            return (Vec::new(), Vec::new());
+        };
+        if value.get("version").and_then(Value::as_u64) != Some(1) {
+            return (Vec::new(), Vec::new());
+        }
+        let ids = |key: &str, limit: usize| {
+            let mut found = BTreeSet::new();
+            value
+                .get(key)
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .filter(|id| !id.is_empty() && id.len() <= 512)
+                .filter(|id| found.insert((*id).to_owned()))
+                .take(limit)
+                .map(str::to_owned)
+                .collect()
+        };
+        (ids("favorites", FAVORITE_LIMIT), ids("recent", RECENT))
+    }
+
+    fn save(&self) -> std::io::Result<()> {
+        let Some(path) = &self.path else {
+            return Ok(());
+        };
+        if let Some(folder) = path.parent() {
+            std::fs::create_dir_all(folder)?;
+        }
+        let partial = path.with_extension("json.yaziliyor");
+        let content = serde_json::to_vec_pretty(&json!({
+            "version": 1,
+            "favorites": self.favorites,
+            "recent": self.recent,
+        }))?;
+        std::fs::write(&partial, content)?;
+        std::fs::rename(partial, path)
+    }
+
+    fn used(&mut self, id: &str) -> std::io::Result<()> {
+        self.recent.retain(|old| old != id);
+        self.recent.insert(0, id.to_owned());
+        self.recent.truncate(RECENT);
+        self.save()
+    }
+
+    fn toggle(&mut self, id: &str) -> std::io::Result<()> {
+        if self.favorites.iter().any(|old| old == id) {
+            self.favorites.retain(|old| old != id);
+        } else {
+            if self.favorites.len() >= FAVORITE_LIMIT {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "En fazla 100 şablon favoriye eklenebilir",
+                ));
+            }
+            self.favorites.push(id.to_owned());
+        }
+        self.save()
+    }
+}
 
 /// What the panel keeps while the app runs.
 #[derive(Debug, Default)]
@@ -51,6 +169,27 @@ pub struct PanelState {
     pub(crate) deleting: Option<(String, String)>,
     /// Whether the list has the keyboard (↓ in the search).
     pub(crate) keyboard: bool,
+    personal: Personal,
+}
+
+impl PanelState {
+    pub(crate) fn open_personal(&mut self, folder: &Path) -> Option<String> {
+        let (personal, problem) = Personal::open(folder);
+        self.personal = personal;
+        problem
+    }
+
+    pub(crate) fn used(&mut self, id: &str) -> std::io::Result<()> {
+        self.personal.used(id)
+    }
+
+    pub(crate) fn recent(&self) -> &[String] {
+        &self.personal.recent
+    }
+
+    pub(crate) fn favorites(&self) -> &[String] {
+        &self.personal.favorites
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -68,6 +207,7 @@ pub enum Event {
     Edit(String),
     Copy(String, Source),
     Remove(String),
+    Favorite(String),
 }
 
 fn msg(event: Event) -> Message {
@@ -113,6 +253,40 @@ fn source_text(source: Source) -> &'static str {
 }
 
 impl App {
+    /// Stable key for a template in its source. A project template is scoped
+    /// to the persistent drawing id, even when the file moves on disk.
+    pub(crate) fn personal_template_key(&self, id: &str) -> Option<String> {
+        let (item, source) = self.styles.library.get(id)?;
+        if item.kind() != ItemKind::Template {
+            return None;
+        }
+        Some(match source {
+            Source::System => format!("system:{id}"),
+            Source::User => format!("user:{id}"),
+            Source::Project => format!(
+                "project:{}:{id}",
+                self.document.as_ref()?.model.project_id()?
+            ),
+        })
+    }
+
+    /// Resolve a saved key only in its original source. Old unscoped entries
+    /// can follow system/user templates, never an ambiguous project item.
+    pub(crate) fn personal_template_id<'a>(&self, key: &'a str) -> Option<&'a str> {
+        let id = if let Some(id) = key
+            .strip_prefix("system:")
+            .or_else(|| key.strip_prefix("user:"))
+        {
+            id
+        } else if let Some(rest) = key.strip_prefix("project:") {
+            rest.split_once(':')?.1
+        } else {
+            let (item, source) = self.styles.library.get(key)?;
+            return (source != Source::Project && item.kind() == ItemKind::Template).then_some(key);
+        };
+        (self.personal_template_key(id).as_deref() == Some(key)).then_some(id)
+    }
+
     /// The rows as listed now: the last used templates while nothing is
     /// searched, then the groups the library's list gives, each followed by
     /// its templates when it is open.
@@ -136,14 +310,20 @@ impl App {
             }
         };
         if state.query.trim().is_empty() {
-            let recent: Vec<String> = self
-                .recent_templates
+            let favorites: Vec<String> = state
+                .personal
+                .favorites
                 .iter()
-                .filter(|id| {
-                    lib.get(id)
-                        .is_some_and(|(item, _)| item.kind() == ItemKind::Template)
-                })
-                .cloned()
+                .filter_map(|key| self.personal_template_id(key).map(str::to_owned))
+                .collect();
+            if !favorites.is_empty() {
+                push(FAVORITES_KEY.to_owned(), "Favoriler".to_owned(), favorites);
+            }
+            let recent: Vec<String> = state
+                .personal
+                .recent
+                .iter()
+                .filter_map(|key| self.personal_template_id(key).map(str::to_owned))
                 .collect();
             if !recent.is_empty() {
                 push(
@@ -211,6 +391,13 @@ impl App {
             Event::Edit(id) => return self.open_template_editor(Some(&id), None),
             Event::Copy(id, to) => self.copy_template(&id, to),
             Event::Remove(id) => self.ask_remove_template(&id),
+            Event::Favorite(id) => {
+                if let Some(key) = self.personal_template_key(&id) {
+                    if let Err(error) = self.templates_panel.personal.toggle(&key) {
+                        self.warn(format!("Şablon favorileri kaydedilemedi: {error}"));
+                    }
+                }
+            }
         }
         Task::none()
     }
@@ -484,11 +671,14 @@ impl App {
                         color: Some(Tokens::of(t).faint),
                     }),
             );
-        let face = row![picture, words]
-            .spacing(8)
-            .padding([0, 8])
-            .align_y(Center)
-            .height(Fill);
+        let favorite = self
+            .personal_template_key(id)
+            .is_some_and(|key| self.templates_panel.favorites().contains(&key));
+        let mut face = row![picture, words];
+        if favorite {
+            face = face.push(icon(crate::icons::from_web(Some("starOn"))).size(14.0));
+        }
+        let face = face.spacing(8).padding([0, 8]).align_y(Center).height(Fill);
         let owned = id.to_owned();
         let face = button(face)
             .on_press(msg(Event::Draw(owned.clone())))
@@ -532,7 +722,24 @@ impl App {
         if !selected {
             menu = menu.detail("Önce çizimde nesne seçin.");
         }
+        let favorite = self
+            .personal_template_key(id)
+            .is_some_and(|key| self.templates_panel.favorites().contains(&key));
         menu = menu
+            .item(
+                if favorite {
+                    "Favorilerden çıkar"
+                } else {
+                    "Favorilere ekle"
+                },
+                msg(Event::Favorite(owned.clone())),
+            )
+            .icon(crate::icons::from_web(Some(if favorite {
+                "starOn"
+            } else {
+                "star"
+            })))
+            .separator()
             .item(
                 if editable {
                     "Düzenle…"
@@ -634,7 +841,7 @@ mod tests {
     use kentos_native_style::library::Source;
     use serde_json::json;
 
-    use super::{Event, Line};
+    use super::{Event, Line, Personal};
     use crate::app::{App, Dialog, Message};
     use crate::files_testing::app_with_drawing;
     use crate::keys::KeyPress;
@@ -738,6 +945,97 @@ mod tests {
         // While searching, not (“ada” alone is in Kadastro too).
         send(&mut app, Event::Search("ada sın".into()));
         assert_eq!(rows(&app), ["» Kadastro (1)", "p-ada"]);
+    }
+
+    #[test]
+    fn favorites_group_is_personal_and_search_still_finds_library_items() {
+        let mut app = app();
+        send(&mut app, Event::Favorite("p-parsel".into()));
+        assert_eq!(rows(&app)[..2], ["» Favoriler (1)", "p-parsel"]);
+        let key = app.personal_template_key("p-parsel").unwrap();
+        assert!(app.templates_panel.favorites().contains(&key));
+        send(&mut app, Event::Search("poligon".into()));
+        assert_eq!(rows(&app), ["» Kategorisiz (1)", "p-nokta"]);
+        send(&mut app, Event::Search(String::new()));
+        send(&mut app, Event::Favorite("p-parsel".into()));
+        assert!(app.templates_panel.favorites().is_empty());
+        assert_eq!(rows(&app)[0], "» Kadastro (2)");
+        // An unknown id cannot be added through the UI event.
+        send(&mut app, Event::Favorite("missing".into()));
+        assert!(app.templates_panel.favorites().is_empty());
+    }
+
+    #[test]
+    fn personal_palette_round_trips_without_drawing_changes() {
+        let folder = std::env::temp_dir().join(format!(
+            "kentos-template-palette-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let mut app = app();
+        app.templates_panel.open_personal(&folder);
+        let before = app.document.as_ref().unwrap().model.revision();
+        send(&mut app, Event::Favorite("p-ada".into()));
+        send(&mut app, Event::Draw("p-parsel".into()));
+        assert_eq!(app.document.as_ref().unwrap().model.revision(), before);
+        let (loaded, problem) = Personal::open(&folder);
+        assert!(problem.is_none());
+        assert_eq!(
+            loaded.favorites,
+            [app.personal_template_key("p-ada").unwrap()]
+        );
+        assert_eq!(
+            loaded.recent,
+            [app.personal_template_key("p-parsel").unwrap()]
+        );
+        assert_eq!(
+            Personal::read(r#"{"version":1,"favorites":["a","a",3],"recent":["b"]}"#).0,
+            ["a"]
+        );
+        assert_eq!(
+            Personal::read(r#"{"version":2,"favorites":["a"]}"#).0,
+            Vec::<String>::new()
+        );
+        std::fs::write(folder.join(super::PERSONAL_FILE), "invalid").unwrap();
+        let (unreadable, problem) = Personal::open(&folder);
+        assert!(unreadable.path.is_none());
+        assert!(problem.is_some());
+        assert_eq!(
+            std::fs::read_to_string(folder.join(super::PERSONAL_FILE)).unwrap(),
+            "invalid"
+        );
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn project_favorite_never_follows_another_project_with_the_same_template_id() {
+        let first = app();
+        let key = first.personal_template_key("p-ada").unwrap();
+        assert_eq!(first.personal_template_id(&key), Some("p-ada"));
+        let mut second = app();
+        let mut snapshot = second.document.as_ref().unwrap().model.to_snapshot_v2();
+        snapshot.project_id = Some(kentos_commands::ProjectId([0x71; 16]));
+        let other = crate::document::Document::from_v2(snapshot, None).unwrap();
+        let _ = second.update(Message::Opened(Some(Ok(Box::new(other)))));
+        assert_ne!(
+            first.personal_template_key("p-ada"),
+            second.personal_template_key("p-ada")
+        );
+        assert_eq!(second.personal_template_id(&key), None);
+        assert_eq!(second.personal_template_id("p-ada"), None);
+    }
+
+    #[test]
+    #[ignore = "writes a temporary drawing for real window QA"]
+    fn palette_gui_fixture() {
+        let mut app = app();
+        crate::files_testing::make_cad(&mut app);
+        let path = std::env::temp_dir().join("kentos-template-palette-qa.kcad");
+        crate::document::write(&app.document.unwrap().model.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
     }
 
     /// A key pressed as the window sends it.

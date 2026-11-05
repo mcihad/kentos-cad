@@ -20,6 +20,103 @@ pub const CAD_STANDARDS_CHECK: &str = "cad.standards.check";
 pub const CAD_STANDARDS_CHECK_VERSION: u32 = 1;
 pub const CAD_STANDARDS_APPLY: &str = "cad.standards.apply";
 pub const CAD_STANDARDS_APPLY_VERSION: u32 = 1;
+pub const CAD_STANDARDS_CONFLICTS: &str = "cad.standards.conflicts";
+pub const CAD_STANDARDS_CONFLICTS_VERSION: u32 = 1;
+pub const CAD_STANDARDS_RESOLVE: &str = "cad.standards.resolve";
+pub const CAD_STANDARDS_RESOLVE_VERSION: u32 = 1;
+
+/// Builds a prospective standard from the project's ordered bindings.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsResolve {}
+
+/// Read-only effective standard. Global rules and duplicate named definitions
+/// come from the first document; other named definitions are added in order.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsResolved {
+    pub standard: DrawingStandard,
+    /// First definition of each named resource, in binding order. Read-only;
+    /// `cad.standards.apply` does not install or replace these resources.
+    pub resources: StandardResources,
+    pub sources: Vec<String>,
+    pub provenance: StandardProvenance,
+    pub revision: String,
+}
+
+/// Source identity and office revision of an effective definition.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardOrigin {
+    pub id: String,
+    pub revision: String,
+}
+
+/// Provenance of the global rules and each effective named definition.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardProvenance {
+    pub rules: StandardOrigin,
+    pub layers: std::collections::BTreeMap<String, StandardOrigin>,
+    pub text_styles: std::collections::BTreeMap<String, StandardOrigin>,
+    pub dimension_styles: std::collections::BTreeMap<String, StandardOrigin>,
+    pub line_types: std::collections::BTreeMap<String, StandardOrigin>,
+    pub hatch_patterns: std::collections::BTreeMap<String, StandardOrigin>,
+    pub blocks: std::collections::BTreeMap<String, StandardOrigin>,
+    pub sheet_templates: std::collections::BTreeMap<String, StandardOrigin>,
+    pub leader_styles: std::collections::BTreeMap<String, StandardOrigin>,
+    pub text_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
+    pub dimension_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
+}
+
+/// Inspect global rules and named definitions in ordered standard documents.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsConflicts {}
+
+/// A later document differs from the first on named definitions or global rules.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardConflict {
+    pub kind: String,
+    pub name: String,
+    pub first_id: String,
+    pub later_id: String,
+    pub fields: Vec<String>,
+    // Values for exactly the fields that differ; missing optional values are null.
+    pub first_values: std::collections::BTreeMap<String, serde_json::Value>,
+    pub later_values: std::collections::BTreeMap<String, serde_json::Value>,
+}
+
+/// Compares global rules and named layer, text and dimension style definitions;
+/// it does not combine standards or decide which rules should be applied.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsConflictsReport {
+    pub conflicts: Vec<StandardConflict>,
+    pub revision: String,
+}
 
 fn yes() -> bool {
     true
@@ -37,7 +134,7 @@ fn is_zero(n: &u32) -> bool {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardLayer {
     /// Its name; the drawing's layer of this name (letters folded as Turkish writes them) is it.
@@ -67,7 +164,7 @@ pub struct StandardLayer {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardTextStyle {
     pub name: String,
@@ -83,7 +180,7 @@ pub struct StandardTextStyle {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardDimensionStyle {
     pub name: String,
@@ -96,7 +193,7 @@ pub struct StandardDimensionStyle {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DrawingStandard {
     pub name: String,
@@ -133,6 +230,485 @@ pub struct DrawingStandard {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub by_layer: bool,
+}
+
+/// Portable resource definitions carried by a version 2 office standard.
+/// Association alone never overwrites the project's definitions.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardResources {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LineTypeDef>>"))]
+    pub line_types: Vec<crate::LineTypeDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::HatchPatternDef>>")
+    )]
+    pub hatch_patterns: Vec<crate::HatchPatternDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<StandardBlockReference>>")
+    )]
+    pub blocks: Vec<StandardBlockReference>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<StandardSheetTemplateReference>>")
+    )]
+    pub sheet_templates: Vec<StandardSheetTemplateReference>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::LeaderStyleDef>>")
+    )]
+    pub leader_styles: Vec<crate::LeaderStyleDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::TextStyleDef>>"))]
+    pub text_style_definitions: Vec<crate::TextStyleDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::DimensionStyleDef>>")
+    )]
+    pub dimension_style_definitions: Vec<crate::DimensionStyleDef>,
+}
+
+/// Approved sheet-template origin. It identifies a template revision, not a
+/// copy of its contents or permission to modify an existing sheet.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardSheetTemplateReference {
+    pub template_id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+}
+
+pub fn standard_sheet_templates_problem(
+    items: &[StandardSheetTemplateReference],
+) -> Option<String> {
+    let mut ids = std::collections::BTreeSet::new();
+    for item in items {
+        if item.template_id.trim().is_empty()
+            || item.template_id.trim() != item.template_id
+            || item.template_id.len() > 128
+            || item.template_id.chars().any(char::is_control)
+            || item.revision == 0
+        {
+            return Some("Pafta şablonu kimliği 1–128 bayt ve revizyonu en az 1 olmalı".into());
+        }
+        if !ids.insert(item.template_id.to_lowercase()) {
+            return Some(format!("“{}” pafta şablonu yineleniyor", item.template_id));
+        }
+    }
+    None
+}
+
+/// A named block library release required by an office standard. The
+/// publication identifies a reusable type; geometry stays in its library.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardBlockReference {
+    pub name: String,
+    pub publication: crate::BlockPublication,
+    /// Optional approved authored unit. Checking it never rescales a local block.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<crate::BlockUnits>,
+}
+
+pub fn standard_blocks_problem(blocks: &[StandardBlockReference]) -> Option<String> {
+    let mut names = std::collections::BTreeSet::new();
+    for block in blocks {
+        if block.name.trim().is_empty()
+            || block.name.trim() != block.name
+            || block.name.chars().count() > 128
+            || block.name.chars().any(char::is_control)
+        {
+            return Some("Blok adı 1–128 karakter olmalı ve kenar boşluğu içermemeli".into());
+        }
+        if !names.insert(crate::blocks::name_key(&block.name)) {
+            return Some(format!("“{}” blok adı yineleniyor", block.name));
+        }
+        let card = crate::BlockCard {
+            publication: Some(block.publication.clone()),
+            version: 1,
+            ..Default::default()
+        };
+        if let Some(problem) = crate::blocks::card_problem(&card) {
+            return Some(format!("“{}” blok yayını geçersiz: {problem}", block.name));
+        }
+    }
+    None
+}
+
+/// A portable, versioned envelope for a drawing standard. Version 1 carries
+/// rules only; version 2 additionally carries named line and hatch definitions.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StandardPackage {
+    pub format: String,
+    pub version: u32,
+    /// Stable office-assigned identity and revision, independent of a filename.
+    pub id: String,
+    pub revision: String,
+    pub standard: DrawingStandard,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resources: Option<StandardResources>,
+}
+
+pub const STANDARD_PACKAGE_FORMAT: &str = "kentos.drawing-standard";
+pub const STANDARD_PACKAGE_VERSION: u32 = 1;
+pub const STANDARD_PACKAGE_RESOURCES_VERSION: u32 = 2;
+
+/// Parse either the original bare standard or the versioned envelope. Unknown
+/// fields are refused at every supported level: silently discarding a rule
+/// would make an incomplete standard appear to pass inspection.
+pub fn parse_standard_document(
+    bytes: &[u8],
+) -> Result<(DrawingStandard, Option<StandardPackage>), String> {
+    let value: serde_json::Value =
+        serde_json::from_slice(bytes).map_err(|e| format!("Standart okunamadı: {e}"))?;
+    let object = value
+        .as_object()
+        .ok_or("Standart bir JSON nesnesi olmalı.")?;
+    let (standard_value, package) = if object.contains_key("format")
+        || object.contains_key("version")
+    {
+        let package: StandardPackage = serde_json::from_slice(bytes).map_err(|e| {
+            format!(
+                "Standart paketi okunamadı: {}",
+                e.to_string().replace("duplicate field", "yinelenen alan")
+            )
+        })?;
+        if package.format != STANDARD_PACKAGE_FORMAT
+            || ![STANDARD_PACKAGE_VERSION, STANDARD_PACKAGE_RESOURCES_VERSION]
+                .contains(&package.version)
+        {
+            return Err("Standart paketinin biçimi veya sürümü desteklenmiyor.".into());
+        }
+        match package.version {
+            STANDARD_PACKAGE_VERSION if object.contains_key("resources") => {
+                return Err("Sürüm 1 standart paketi kaynak tanımı içeremez.".into());
+            }
+            STANDARD_PACKAGE_RESOURCES_VERSION => {
+                let Some(resources) = object.get("resources") else {
+                    return Err("Sürüm 2 standart paketinin kaynaklar bölümü eksik.".into());
+                };
+                check_resource_fields(resources)?;
+                let resources = package
+                    .resources
+                    .as_ref()
+                    .ok_or("Kaynaklar bölümü geçersiz.")?;
+                if let Some(problem) = crate::line_types_problem(&resources.line_types) {
+                    return Err(format!("Çizgi tipi kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = crate::hatch_patterns_problem(&resources.hatch_patterns) {
+                    return Err(format!("Tarama kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = standard_blocks_problem(&resources.blocks) {
+                    return Err(format!("Blok kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = standard_sheet_templates_problem(&resources.sheet_templates)
+                {
+                    return Err(format!("Pafta şablonu kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = crate::leader_styles_problem(&resources.leader_styles) {
+                    return Err(format!("Kılavuz stili kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = crate::text_styles_problem(&resources.text_style_definitions)
+                {
+                    return Err(format!("Yazı stili kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) =
+                    crate::dimension_styles_problem(&resources.dimension_style_definitions)
+                {
+                    return Err(format!("Ölçü stili kaynağı geçersiz: {problem}."));
+                }
+            }
+            _ => {}
+        }
+        if package.id.trim().is_empty()
+            || package.revision.trim().is_empty()
+            || package.id.len() > 128
+            || package.revision.len() > 128
+        {
+            return Err("Paket kimliği ve revizyonu boş olmamalı ve 128 baytı aşmamalı.".into());
+        }
+        (
+            object
+                .get("standard")
+                .ok_or("Paketin standart tanımı yok.")?,
+            Some(package),
+        )
+    } else {
+        (&value, None)
+    };
+    let standard_object = standard_value
+        .as_object()
+        .ok_or("Standart bir JSON nesnesi olmalı.")?;
+    const FIELDS: &[&str] = &[
+        "name",
+        "description",
+        "layers",
+        "naming",
+        "fonts",
+        "textStyles",
+        "dimensionStyles",
+        "lineTypes",
+        "byLayer",
+    ];
+    if let Some(key) = standard_object
+        .keys()
+        .find(|key| !FIELDS.contains(&key.as_str()))
+    {
+        return Err(format!("Standartta bilinmeyen alan: {key}."));
+    }
+    for (section, allowed) in [
+        (
+            "layers",
+            &[
+                "name",
+                "description",
+                "color",
+                "lineType",
+                "lineWeight",
+                "plot",
+                "from",
+            ][..],
+        ),
+        ("textStyles", &["name", "font", "height"][..]),
+        ("dimensionStyles", &["name", "height"][..]),
+    ] {
+        if let Some(items) = standard_object.get(section).and_then(|v| v.as_array()) {
+            for item in items {
+                if let Some(key) = item
+                    .as_object()
+                    .and_then(|o| o.keys().find(|k| !allowed.contains(&k.as_str())))
+                {
+                    return Err(format!("{section} içinde bilinmeyen alan: {key}."));
+                }
+            }
+        }
+    }
+    // Deserialize the original bytes, not the intermediate JSON value: a
+    // Value silently keeps only the last occurrence of a duplicate key.
+    let standard: DrawingStandard = match &package {
+        Some(package) => package.standard.clone(),
+        None => serde_json::from_slice(bytes).map_err(|e| {
+            format!(
+                "Standart okunamadı: {}",
+                e.to_string().replace("duplicate field", "yinelenen alan")
+            )
+        })?,
+    };
+    if let Some(problem) = standard_problem(&standard) {
+        return Err(format!("Standart geçersiz: {problem}."));
+    }
+    Ok((standard, package))
+}
+
+/// Resource types in the drawing model are lenient when reading old drawing
+/// files. Office packages must reject unknown rules even inside a definition.
+pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
+    fn object<'a>(
+        value: &'a serde_json::Value,
+        path: &str,
+    ) -> Result<&'a serde_json::Map<String, serde_json::Value>, String> {
+        value
+            .as_object()
+            .ok_or_else(|| format!("{path} bir nesne olmalı."))
+    }
+    fn keys(value: &serde_json::Value, path: &str, allowed: &[&str]) -> Result<(), String> {
+        if let Some(key) = object(value, path)?
+            .keys()
+            .find(|key| !allowed.contains(&key.as_str()))
+        {
+            return Err(format!("{path} içinde bilinmeyen alan: {key}."));
+        }
+        Ok(())
+    }
+    keys(
+        resources,
+        "resources",
+        &[
+            "lineTypes",
+            "hatchPatterns",
+            "blocks",
+            "sheetTemplates",
+            "leaderStyles",
+            "textStyleDefinitions",
+            "dimensionStyleDefinitions",
+        ],
+    )?;
+    let root = object(resources, "resources")?;
+    if let Some(value) = root.get("blocks") {
+        let blocks = value
+            .as_array()
+            .ok_or("resources.blocks bir dizi olmalı.")?;
+        for (i, block) in blocks.iter().enumerate() {
+            let path = format!("resources.blocks[{i}]");
+            keys(block, &path, &["name", "publication", "units"])?;
+            if let Some(publication) = object(block, &path)?.get("publication") {
+                keys(
+                    publication,
+                    &format!("{path}.publication"),
+                    &["familyId", "typeId", "typeName", "release"],
+                )?;
+            }
+        }
+    }
+    if let Some(value) = root.get("sheetTemplates") {
+        let templates = value
+            .as_array()
+            .ok_or("resources.sheetTemplates bir dizi olmalı.")?;
+        for (i, item) in templates.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.sheetTemplates[{i}]"),
+                &["templateId", "revision"],
+            )?;
+        }
+    }
+    if let Some(value) = root.get("leaderStyles") {
+        let styles = value
+            .as_array()
+            .ok_or("resources.leaderStyles bir dizi olmalı.")?;
+        for (i, item) in styles.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.leaderStyles[{i}]"),
+                &["id", "name", "height", "arrow", "arrowSize", "mask"],
+            )?;
+        }
+    }
+    if let Some(value) = root.get("textStyleDefinitions") {
+        let styles = value
+            .as_array()
+            .ok_or("resources.textStyleDefinitions bir dizi olmalı.")?;
+        for (i, item) in styles.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.textStyleDefinitions[{i}]"),
+                &[
+                    "id",
+                    "name",
+                    "font",
+                    "bold",
+                    "italic",
+                    "oblique",
+                    "height",
+                    "widthFactor",
+                    "fontFile",
+                ],
+            )?;
+        }
+    }
+    if let Some(value) = root.get("dimensionStyleDefinitions") {
+        let styles = value
+            .as_array()
+            .ok_or("resources.dimensionStyleDefinitions bir dizi olmalı.")?;
+        for (i, item) in styles.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.dimensionStyleDefinitions[{i}]"),
+                &[
+                    "id",
+                    "name",
+                    "height",
+                    "arrow",
+                    "arrowSize",
+                    "extOffset",
+                    "extBeyond",
+                    "textGap",
+                    "textPlace",
+                    "decimals",
+                    "unit",
+                    "prefix",
+                    "suffix",
+                    "font",
+                    "dimLineColor",
+                    "dimLineWeight",
+                    "dimLineType",
+                    "extColor",
+                    "extWeight",
+                    "extLineType",
+                    "textColor",
+                    "options",
+                ],
+            )?;
+        }
+    }
+    for (section, fields) in [
+        (
+            "lineTypes",
+            &["name", "description", "elements", "unit", "source"][..],
+        ),
+        (
+            "hatchPatterns",
+            &["name", "description", "unit", "lines", "source"][..],
+        ),
+    ] {
+        let Some(value) = root.get(section) else {
+            continue;
+        };
+        let items = value
+            .as_array()
+            .ok_or_else(|| format!("resources.{section} bir dizi olmalı."))?;
+        for (i, item) in items.iter().enumerate() {
+            let path = format!("resources.{section}[{i}]");
+            keys(item, &path, fields)?;
+            let nested = if section == "lineTypes" {
+                "elements"
+            } else {
+                "lines"
+            };
+            if let Some(value) = object(item, &path)?.get(nested) {
+                let elements = value
+                    .as_array()
+                    .ok_or_else(|| format!("{path}.{nested} bir dizi olmalı."))?;
+                for (j, element) in elements.iter().enumerate() {
+                    let child = format!("{path}.{nested}[{j}]");
+                    if section == "lineTypes" {
+                        keys(element, &child, &["length", "text", "shape"])?;
+                        for (kind, fields) in [
+                            (
+                                "text",
+                                &[
+                                    "text", "style", "scale", "rotation", "absolute", "upright",
+                                    "x", "y",
+                                ][..],
+                            ),
+                            (
+                                "shape",
+                                &[
+                                    "name", "file", "scale", "rotation", "absolute", "upright",
+                                    "x", "y",
+                                ][..],
+                            ),
+                        ] {
+                            if let Some(value) = object(element, &child)?.get(kind) {
+                                keys(value, &format!("{child}.{kind}"), fields)?;
+                            }
+                        }
+                    } else {
+                        keys(element, &child, &["angle", "origin", "offset", "dashes"])?;
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// A font's name in the contract and the file (`architects-daughter`).
@@ -262,6 +838,11 @@ pub struct StandardsCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub standard: Option<DrawingStandard>,
+    /// Optional named definitions from a version 2 standard package. Checking
+    /// them never imports or replaces a drawing resource.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub resources: Option<StandardResources>,
 }
 
 /// What a finding is about.
@@ -286,8 +867,26 @@ pub enum StandardIssueKind {
     MissingTextStyle,
     /// A text style the standard does not have.
     TextStyleName,
+    /// A text style's paper height differs from the standard.
+    TextStyleHeight,
     MissingDimensionStyle,
     DimensionStyleName,
+    /// A dimension style's paper text height differs from the standard.
+    DimensionStyleHeight,
+    MissingLineTypeDefinition,
+    LineTypeDefinition,
+    MissingHatchPatternDefinition,
+    HatchPatternDefinition,
+    MissingBlockReference,
+    BlockPublication,
+    BlockUnit,
+    SheetTemplateOrigin,
+    MissingLeaderStyleDefinition,
+    LeaderStyleDefinition,
+    MissingTextStyleDefinition,
+    TextStyleDefinition,
+    MissingDimensionStyleDefinition,
+    DimensionStyleDefinition,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.
@@ -316,7 +915,10 @@ pub struct StandardIssue {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub found: Option<String>,
-    /// The objects it is about (ObjectLineType, OwnLook).
+    /// Direct objects this finding is about (ObjectLineType, OwnLook, named
+    /// line type or hatch definition), or direct placements of a mismatched
+    /// published block (BlockPublication or BlockUnit). Layer and nested-block
+    /// uses are described separately in the finding's message.
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -445,5 +1047,307 @@ mod tests {
         assert!(s.by_layer);
         assert!(!s.layers[9].plot);
         assert_eq!(built_in_standard("yok"), None);
+    }
+
+    #[test]
+    fn standard_documents_preserve_legacy_and_reject_unsupported_package_rules() {
+        let original = built_in_standard("mimari-ofis").unwrap();
+        let raw = serde_json::to_vec(&original).unwrap();
+        let (standard, package) = parse_standard_document(&raw).unwrap();
+        assert_eq!(standard, original);
+        assert!(package.is_none());
+
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_VERSION,
+            id: "belediye-mimari".into(),
+            revision: "2026.1".into(),
+            standard: original.clone(),
+            resources: None,
+        };
+        let mut value = serde_json::to_value(&package).unwrap();
+        let (standard, parsed) =
+            parse_standard_document(&serde_json::to_vec(&value).unwrap()).unwrap();
+        assert_eq!(standard, original);
+        assert_eq!(parsed, Some(package));
+        value["version"] = 3.into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["version"] = 1.into();
+        value["standard"]["layers"][0]["unsupportedRule"] = true.into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["standard"]["layers"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unsupportedRule");
+        value["id"] = " ".into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+    }
+
+    #[test]
+    fn standard_documents_reject_duplicate_rule_keys() {
+        let legacy = br#"{"name":"A","layers":[],"byLayer":true,"byLayer":false}"#;
+        let envelope = br#"{"format":"kentos.drawing-standard","version":1,"id":"a","id":"b","revision":"1","standard":{"name":"A","layers":[]}}"#;
+        let nested = br#"{"format":"kentos.drawing-standard","version":1,"id":"a","revision":"1","standard":{"name":"A","layers":[],"byLayer":true,"byLayer":false}}"#;
+        let layer = br##"{"name":"A","layers":[{"name":"A-WALL","color":"ink","color":"#ff0000","lineType":"continuous","lineWeight":0.2}]}"##;
+        for raw in [&legacy[..], &envelope[..], &nested[..], &layer[..]] {
+            let error = parse_standard_document(raw).unwrap_err();
+            assert!(error.contains("yinelenen alan"), "{error}");
+        }
+    }
+
+    #[test]
+    fn version_two_resources_are_strict_and_version_one_cannot_carry_them() {
+        let line: crate::LineTypeDef = serde_json::from_value(serde_json::json!({
+            "name":"OFFICE-DASH", "elements":[{"length":2.0},{"length":-1.0}]
+        }))
+        .unwrap();
+        let hatch: crate::HatchPatternDef = serde_json::from_value(serde_json::json!({
+            "name":"OFFICE-HATCH", "lines":[{"angle":45.0,"origin":[0.0,0.0],"offset":[0.0,2.0]}]
+        }))
+        .unwrap();
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                line_types: vec![line],
+                hatch_patterns: vec![hatch],
+                blocks: vec![],
+                sheet_templates: vec![],
+                leader_styles: vec![],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(&package).unwrap();
+        assert_eq!(
+            parse_standard_document(&serde_json::to_vec(&value).unwrap())
+                .unwrap()
+                .1,
+            Some(package)
+        );
+        value["resources"]["lineTypes"][0]["elements"][0]["unknown"] = true.into();
+        assert!(
+            parse_standard_document(&serde_json::to_vec(&value).unwrap())
+                .unwrap_err()
+                .contains("bilinmeyen alan")
+        );
+        value["resources"]["lineTypes"][0]["elements"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["version"] = 1.into();
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+        value["version"] = 2.into();
+        value.as_object_mut().unwrap().remove("resources");
+        assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+    }
+
+    #[test]
+    fn version_two_block_references_validate_publication_and_names() {
+        let block: StandardBlockReference = serde_json::from_value(serde_json::json!({
+            "name":"A-KAPI",
+            "publication": {
+                "familyId":"22222222-3333-4444-8555-666666666666",
+                "typeId":"33333333-4444-4555-8666-777777777777",
+                "typeName":"Standart tek kanat", "release":2
+            }
+        }))
+        .unwrap();
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                blocks: vec![block],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["blocks"][0]["units"] = "mm".into();
+        assert_eq!(
+            parse(&value).unwrap().1.unwrap().resources.unwrap().blocks[0].units,
+            Some(crate::BlockUnits::Mm)
+        );
+        value["resources"]["blocks"][0]["units"] = "mile".into();
+        assert!(parse(&value).is_err());
+        value["resources"]["blocks"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("units");
+        value["resources"]["blocks"][0]["publication"]["unsupported"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["blocks"][0]["publication"]
+            .as_object_mut()
+            .unwrap()
+            .remove("unsupported");
+        value["resources"]["blocks"][0]["publication"]["release"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("yayın"));
+        value["resources"]["blocks"][0]["publication"]["release"] = 2.into();
+        let duplicate = value["resources"]["blocks"][0].clone();
+        value["resources"]["blocks"]
+            .as_array_mut()
+            .unwrap()
+            .push(duplicate);
+        value["resources"]["blocks"][1]["name"] = "a-kapı".into();
+        assert!(parse(&value).unwrap_err().contains("yineleniyor"));
+    }
+
+    #[test]
+    fn version_two_sheet_template_references_validate_revision_and_duplicates() {
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                sheet_templates: vec![StandardSheetTemplateReference {
+                    template_id: "office-a3".into(),
+                    revision: 2,
+                }],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["sheetTemplates"][0]["unknown"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["sheetTemplates"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["resources"]["sheetTemplates"][0]["revision"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("revizyonu"));
+        value["resources"]["sheetTemplates"][0]["revision"] = 2.into();
+        value["resources"]["sheetTemplates"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"templateId":"OFFICE-A3","revision":3}));
+        assert!(parse(&value).unwrap_err().contains("yineleniyor"));
+    }
+
+    #[test]
+    fn version_two_leader_styles_validate_content_and_unknown_fields() {
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                leader_styles: vec![
+                    serde_json::from_value(serde_json::json!({
+                        "id":"office-leader-1", "name":"A-NOT", "height":2.5,
+                        "arrow":"open", "arrowSize":1.5
+                    }))
+                    .unwrap(),
+                ],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["leaderStyles"][0]["unexpected"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["leaderStyles"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unexpected");
+        value["resources"]["leaderStyles"][0]["height"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("Kılavuz stili"));
+        value["resources"]["leaderStyles"][0]["height"] = 2.5.into();
+        value["resources"]["leaderStyles"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"id":"office-leader-2", "name":"a-not", "height":2.5}));
+        assert!(parse(&value).unwrap_err().contains("iki kez"));
+    }
+
+    #[test]
+    fn version_two_complete_annotation_styles_reject_unknown_and_invalid_content() {
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                text_style_definitions: vec![
+                    serde_json::from_value(serde_json::json!({
+                        "id":"office-text", "name":"A-NOT", "font":"arimo",
+                        "height":2.5, "widthFactor":0.9,
+                    }))
+                    .unwrap(),
+                ],
+                dimension_style_definitions: vec![
+                    serde_json::from_value(serde_json::json!({
+                        "id":"office-dim", "name":"A-DIM", "height":2.5,
+                        "dimLineColor":"#ff0000", "options":{"round":0.001},
+                    }))
+                    .unwrap(),
+                ],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["textStyleDefinitions"][0]["unknown"] = true.into();
+        assert!(parse(&value).unwrap_err().contains("bilinmeyen alan"));
+        value["resources"]["textStyleDefinitions"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["resources"]["dimensionStyleDefinitions"][0]["options"]["unknown"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["dimensionStyleDefinitions"][0]["options"]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["resources"]["textStyleDefinitions"][0]["height"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("Yazı stili kaynağı"));
+        value["resources"]["textStyleDefinitions"][0]["height"] = 2.5.into();
+        value["resources"]["dimensionStyleDefinitions"][0]["height"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("Ölçü stili kaynağı"));
+        value["resources"]["dimensionStyleDefinitions"][0]["height"] = 2.5.into();
+        value["resources"]["textStyleDefinitions"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "id":"other-text", "name":"a-not", "font":"arimo"
+            }));
+        assert!(parse(&value).unwrap_err().contains("iki kez"));
+    }
+
+    #[test]
+    fn direct_command_input_does_not_ignore_unknown_standard_rules() {
+        let standard = built_in_standard("mimari-ofis").unwrap();
+        let valid = serde_json::to_value(standard).unwrap();
+        for path in ["root", "layer", "text", "dimension"] {
+            let mut value = valid.clone();
+            let target = match path {
+                "root" => &mut value,
+                "layer" => &mut value["layers"][0],
+                "text" => &mut value["textStyles"][0],
+                _ => &mut value["dimensionStyles"][0],
+            };
+            target["unknownRule"] = serde_json::json!(true);
+            assert!(
+                serde_json::from_value::<DrawingStandard>(value).is_err(),
+                "{path}"
+            );
+        }
     }
 }

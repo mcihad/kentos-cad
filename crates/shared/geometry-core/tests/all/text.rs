@@ -97,6 +97,22 @@ fn hizayı_değiştir_keeps_the_text_where_it_is() {
     }
 }
 
+#[test]
+fn unicode_json_transforms_never_use_a_supplied_legacy_width() {
+    let text = json!({"p":{"x":5000000.,"y":4400000.},"text":"Ög\u{306}ç AV", "font":"arimo",
+        "height":0.3,"rotation":137.,"oblique":24.,"layout":{"engine":"unicode-v1"}});
+    let mut with_width = text.clone();
+    with_width["width"] = json!(1000.);
+    assert_eq!(
+        call("textReadable", json!([text])),
+        call("textReadable", json!([with_width]))
+    );
+    assert_eq!(
+        call("textRealign", json!([text, "topCenter"])),
+        call("textRealign", json!([with_width, "topCenter"]))
+    );
+}
+
 /// Two JSON values alike, numbers compared as float64, exactly.
 fn alike(a: &Value, b: &Value) -> bool {
     match (a, b) {
@@ -179,4 +195,15 @@ fn unicode_profile_queries_refuse_unsupported_text_instead_of_returning_error_ma
         let error=run_named(name,&args.to_string()).expect_err(name);
         assert!(error.contains("U+1F6F8"),"{name}: {error}");
     }
+}
+
+#[test]
+fn editing_ranges_keep_extended_graphemes_whole() {
+    use kentos_geometry_core::text::edit::whole_graphemes;
+    assert!(whole_graphemes("Ög\u{306}ç", &[(1, 3)]));
+    assert!(!whole_graphemes("Ög\u{306}ç", &[(1, 2)]));
+    assert!(!whole_graphemes("👨‍👩‍👧‍👦", &[(0, 1)]));
+    assert!(whole_graphemes("👨‍👩‍👧‍👦", &[(0, 7)]));
+    assert!(!whole_graphemes("🇹🇷", &[(0, 1)]));
+    assert!(!whole_graphemes("x", &[(0, 2)]));
 }

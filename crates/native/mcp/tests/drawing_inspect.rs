@@ -2,12 +2,17 @@
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
-fn tool(server: &mut Server, name: &str, args: Value) -> Value {
+fn tool_result(server: &mut Server, name: &str, args: Value) -> Value {
     let result = server.handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
         "name":name,"arguments":args,"_meta":{
             "io.modelcontextprotocol/protocolVersion":MODERN,
             "io.modelcontextprotocol/clientInfo":{"name":"inspection-test","version":"1"},
             "io.modelcontextprotocol/clientCapabilities":{}}}})).unwrap()["result"].clone();
+    result
+}
+
+fn tool(server: &mut Server, name: &str, args: Value) -> Value {
+    let result=tool_result(server,name,args);
     assert_eq!(result["isError"], false, "{result}");
     result["structuredContent"].clone()
 }
@@ -262,4 +267,100 @@ fn explicit_text_profile_edit_through_mcp_keeps_curve_and_undoes_once() {
         tool(&mut server, "drawing.entities", json!({"drawing":drawing}))["items"],
         before["items"]
     );
+}
+
+#[test]
+fn unicode_readable_through_mcp_preserves_metadata_and_undoes_once() {
+    let mut server = Server::new();
+    let new = tool(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let made = tool(
+        &mut server,
+        "cad.entities.create",
+        json!({"drawing":drawing,"layerId":new["summary"]["activeLayer"],
+        "objects":[{"geometry":{"kind":"text","p":{"x":5000000.,"y":4400000.},"text":"Ög\u{301}\u{306}\u{323}ç — AV",
+            "height":0.3,"rotation":137.,"font":"arimo","oblique":24.,"mask":true,"layout":{"engine":"unicode-v1"}}}]}),
+    );
+    assert_eq!(made["status"], "completed", "{made}");
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let edited = tool(
+        &mut server,
+        "cad.shapes.edit",
+        json!({"drawing":drawing,"work":{"kind":"readable","ids":[before["items"][0]["uid"]]}}),
+    );
+    assert_eq!(edited["status"], "completed", "{edited}");
+    assert_eq!(edited["output"]["count"], 1);
+    let mut after = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    assert_eq!(after["items"][0]["entity"]["rotation"], 317.);
+    assert_ne!(
+        after["items"][0]["entity"]["p"],
+        before["items"][0]["entity"]["p"]
+    );
+    for key in ["p", "rotation"] {
+        after["items"][0]["entity"][key] = before["items"][0]["entity"][key].clone();
+    }
+    assert_eq!(after["items"][0]["entity"], before["items"][0]["entity"]);
+    assert_eq!(after["items"][0]["uid"], before["items"][0]["uid"]);
+    tool(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        tool(&mut server, "drawing.entities", json!({"drawing":drawing}))["items"],
+        before["items"]
+    );
+}
+
+#[test]
+fn unicode_mirror_through_mcp_keeps_an_inherited_font_and_logical_text() {
+    let mut server = Server::new();
+    let new = tool(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = &new["drawing"];
+    let made = tool(
+        &mut server,
+        "cad.entities.create",
+        json!({"drawing":drawing,"layerId":new["summary"]["activeLayer"],
+        "objects":[{"geometry":{"kind":"text","p":{"x":5000000.,"y":4400000.},"text":"Ög\u{306}ç AV مرحبا",
+            "height":0.3,"rotation":37.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}}}]}),
+    );
+    assert_eq!(made["status"], "completed", "{made}");
+    let before = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let mirrored = tool(
+        &mut server,
+        "cad.entities.transform",
+        json!({"drawing":drawing,"uids":[before["items"][0]["uid"]],
+        "transform":{"kind":"mirror","a":{"x":5000001.,"y":4400001.},"b":{"x":5000002.,"y":4400001.4}},"copy":false}),
+    );
+    assert_eq!(mirrored["status"], "completed", "{mirrored}");
+    let after = tool(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    assert!(after["items"][0]["entity"].get("font").is_none());
+    assert_eq!(
+        after["items"][0]["entity"]["text"],
+        before["items"][0]["entity"]["text"]
+    );
+    assert_eq!(
+        after["items"][0]["entity"]["layout"],
+        before["items"][0]["entity"]["layout"]
+    );
+    assert_eq!(after["items"][0]["uid"], before["items"][0]["uid"]);
+    tool(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        tool(&mut server, "drawing.entities", json!({"drawing":drawing}))["items"],
+        before["items"]
+    );
+}
+
+#[test]
+fn unicode_bulk_replace_through_mcp_is_atomic_and_preserves_the_profile() {
+    let mut server=Server::new();let new=tool(&mut server,"drawing.new",json!({"workspace":"cad"}));
+    let drawing=&new["drawing"];let layer=&new["summary"]["activeLayer"];
+    let made=tool(&mut server,"cad.entities.create",json!({"drawing":drawing,"layerId":layer,"objects":[{
+        "geometry":{"kind":"text","text":"Ög\u{306}ç — AV","p":{"x":0.,"y":0.},"height":0.3,"rotation":0.,"layout":{"engine":"unicode-v1"}}}]}));
+    assert_eq!(made["status"],"completed","{made}");
+    let before=tool(&mut server,"drawing.entities",json!({"drawing":drawing}));let uid=&before["items"][0]["uid"];
+    let bad=tool_result(&mut server,"cad.texts.edit",json!({"drawing":drawing,"edit":{"kind":"replace","uids":[uid],"find":"g","with":"h"}}));
+    assert_eq!(bad["isError"],true,"{bad}");assert_eq!(bad["structuredContent"]["status"],"failed","{bad}");assert_eq!(tool(&mut server,"drawing.entities",json!({"drawing":drawing})),before);
+    let r=tool(&mut server,"cad.texts.edit",json!({"drawing":drawing,"edit":{"kind":"replace","uids":[uid],"find":"Ög\u{306}ç","with":"İstanbul","matchCase":true}}));
+    assert_eq!(r["status"],"completed","{r}");let after=tool(&mut server,"drawing.entities",json!({"drawing":drawing}));
+    assert_eq!(after["items"][0]["uid"],*uid);assert_eq!(after["items"][0]["entity"]["text"],"İstanbul — AV");
+    assert_eq!(after["items"][0]["entity"]["layout"]["engine"],"unicode-v1");
+    tool(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    assert_eq!(tool(&mut server,"drawing.entities",json!({"drawing":drawing}))["items"],before["items"]);
 }

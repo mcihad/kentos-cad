@@ -125,6 +125,8 @@ impl Panel {
 /// What waits for an answer in the middle of the window.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dialog {
+    /// Read-only candidate identity review for one split revision.
+    RevisionMatches(usize),
     About,
     Shortcuts,
     /// The drawing has unsaved changes; asked before `then` throws them away.
@@ -800,6 +802,8 @@ pub enum Message {
     TableEditor(crate::tables::editor::Event),
     /// Tabloyu güncelle's files (tables/update.rs).
     TableUpdate(crate::tables::update::Event),
+    /// Selected CAD table to CSV, XLSX or ODS.
+    TableExport(crate::tables::export::Event),
     /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
     Navigation(crate::navigation_cards::Event),
     /// The map services' credits and windows (services/app.rs, docs/adr/0208).
@@ -1030,7 +1034,6 @@ pub struct App {
     pub(crate) db_store: &'static kentos_postgis::connections::ConnectionStore,
     /// The connection PostGIS'e bağlan listed last, chosen when it opens again.
     pub(crate) postgis_last: Option<String>,
-    pub(crate) recent_templates: Vec<String>,
     /// Şablon düzenleyici while it is open (template_editor.rs).
     pub(crate) template_editor: Option<crate::template_editor::Editor>,
     /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
@@ -1629,7 +1632,6 @@ impl App {
             db_removing: None,
             db_store: kentos_postgis::connections::store(),
             postgis_last: None,
-            recent_templates: Vec::new(),
             template_editor: None,
             block_attributes: None,
             attribute_values: None,
@@ -2611,6 +2613,7 @@ impl App {
             Message::TableInsert(event) => return self.table_insert_event(event),
             Message::TableEditor(event) => return self.table_editor_event(event),
             Message::TableUpdate(event) => return self.table_update_event(event),
+            Message::TableExport(event) => return self.table_export_event(event),
             Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::ImageFile(file) => self.image_file_given(file),
@@ -3289,6 +3292,7 @@ impl App {
                 }
             }
             "table.update" => return self.update_tables(),
+            "table.export" => return self.export_selected_table(),
             // Tablonun dosyası ve blok çizelgesi (docs/adr/0327 §4–§5).
             "table.link" => return self.link_table(),
             "table.blockSchedule" => self.place_block_schedule(),

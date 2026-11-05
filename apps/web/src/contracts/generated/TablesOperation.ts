@@ -5,4 +5,8 @@ import type { TableEdit } from "./TableEdit";
 /**
  * What `cad.tables.edit` does.
  */
-export type TablesOperation = { "kind": "edit", uid: string, edits: Array<TableEdit>, } | { "kind": "refresh", uids: Array<string>, base?: string, } | { "kind": "link", uid: string, path: string, sheet?: string, base?: string, overrides?: SourceOverrides, } | { "kind": "unlink", uids: Array<string>, };
+export type TablesOperation = { "kind": "edit", uid: string, edits: Array<TableEdit>, } | { "kind": "refresh", uids: Array<string>, base?: string, } | { "kind": "link", uid: string, path: string, sheet?: string, base?: string, overrides?: SourceOverrides, 
+/**
+ * Zero-based file column with unique, nonempty row keys. Requires a header row.
+ */
+key_column?: number, } | { "kind": "unlink", uids: Array<string>, };

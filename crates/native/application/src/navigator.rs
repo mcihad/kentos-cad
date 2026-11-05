@@ -175,7 +175,7 @@ pub(crate) fn read(doc: &Document, input: &NavigatorRead) -> Result<NavigatorRea
 
     let object = object.map(|(uid, e)| {
         let level = e.level(by_uid).filter(|l| known(l)).map(str::to_owned);
-        let blocks = crate::blocks::core_blocks(doc.blocks());
+        let blocks = crate::blocks::drawing_blocks(doc);
         let font = drawing_font(doc.settings().drawing_font);
         let bounds = object_bounds(&shape(e), &blocks, font);
         let views = views

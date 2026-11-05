@@ -1564,3 +1564,286 @@ fn curved_profile_geometry_uses_atomic_groups_for_origin_direction_width_and_mas
     assert!((reversed.p.x-(t.p.x-100.)).abs()<1e-9);
     assert_eq!(reversed.rotation,0.);
 }
+
+#[test]
+fn unicode_readable_keeps_the_measured_frame_at_its_original_location() {
+    use kentos_geometry_core::{
+        Vec2,
+        entity::TextPlace,
+        text::{
+            Font, TextAlign,
+            paragraph::{Engine, Flow},
+        },
+    };
+    let flow = Flow {
+        engine: Some(Engine::UnicodeV1),
+        ..Default::default()
+    };
+    let font = Font::from_id("arimo");
+    for text in [
+        "Ög\u{301}\u{306}\u{323}ç — AV",
+        "مرحبا עברית\n⌀32 ≤ 5‰",
+        "   ",
+    ] {
+        for rotation in [91., 137., 180., 257., 270.] {
+            for align in [
+                None,
+                Some(TextAlign::TopCenter),
+                Some(TextAlign::BottomRight),
+            ] {
+                let mut t = TextPlace::line(
+                    Vec2::new(5_000_000., 4_400_000.),
+                    text,
+                    0.3,
+                    rotation,
+                    align,
+                    Some(0.8),
+                );
+                t.flow = Some(&flow);
+                t.lean = 0.45;
+                let before = t.outline(font);
+                let old = t.unicode_plan(font).unwrap();
+                if text == "Ög\u{301}\u{306}\u{323}ç — AV" && align.is_none() {
+                    // Independent C HarfBuzz + FontTools glyf bounds, Arimo
+                    // for Ö/ç—AV and Noto Sans for the complete g+marks
+                    // cluster (Arimo lacks U+0306). Both fonts' own UPMs.
+                    let expected = [-0.03105, -0.1248, 1.271990625, 0.345];
+                    for (actual, expected) in old.frame.unwrap().iter().zip(expected) {
+                        assert!((actual - expected).abs() < 1e-12);
+                    }
+                    assert!((old.width - 1.116740625).abs() < 1e-12);
+                }
+                let (p, rotation) = t.readable(font).unwrap();
+                t.p = p;
+                t.rotation = rotation;
+                let after = t.outline(font);
+                // A half turn swaps opposite corners, including the true glyph
+                // overhang and the sheared nominal frame; it must not drift.
+                for (i, a) in before.iter().enumerate() {
+                    let b = after[(i + 2) % 4];
+                    assert!(
+                        (a.x - b.x).abs() < 2e-9 && (a.y - b.y).abs() < 2e-9,
+                        "{text:?} angle {rotation} align {align:?}: {a:?} != {b:?}"
+                    );
+                }
+                let new = t.unicode_plan(font).unwrap();
+                assert_eq!(
+                    old.glyphs.iter().map(|g| &g.glyph).collect::<Vec<_>>(),
+                    new.glyphs.iter().map(|g| &g.glyph).collect::<Vec<_>>()
+                );
+                assert!(t.readable(font).is_none(), "the command is idempotent");
+            }
+        }
+    }
+}
+
+#[test]
+fn unicode_realign_keeps_every_glyph_and_rule_in_world_coordinates() {
+    use kentos_geometry_core::{
+        Vec2,
+        entity::TextPlace,
+        text::{
+            Font, TextAlign,
+            paragraph::{Engine, Flow},
+        },
+    };
+    let flow = Flow {
+        engine: Some(Engine::UnicodeV1),
+        left: 0.4,
+        ..Default::default()
+    };
+    let font = Font::from_id("arimo");
+    let aligns = [
+        None,
+        Some(TextAlign::TopCenter),
+        Some(TextAlign::BottomRight),
+        Some(TextAlign::MiddleLeft),
+    ];
+    for multiline in [false, true] {
+        for from in aligns {
+            for to in aligns {
+                // Horizontal paragraph alignment also justifies each shorter
+                // line: that intentional change is not a translation invariant.
+                if multiline && from.map_or(0., TextAlign::along) != to.map_or(0., TextAlign::along)
+                {
+                    continue;
+                }
+                let text = if multiline {
+                    "Ög\u{306}ç AV مرحبا עברית\n⌀32 ≤ 5‰"
+                } else {
+                    "Ög\u{306}ç AV مرحبا עברית"
+                };
+                let runs = [kentos_geometry_core::text::paragraph::Run {
+                    start: 0,
+                    end: 4,
+                    underline: true,
+                    ..Default::default()
+                }];
+                let mut t = TextPlace::line(
+                    Vec2::new(5_000_000., 4_400_000.),
+                    text,
+                    0.3,
+                    137.,
+                    from,
+                    Some(0.8),
+                );
+                t.flow = Some(&flow);
+                t.lean = 0.45;
+                t.runs = &runs;
+                if multiline {
+                    t.box_width = Some(2.5);
+                }
+                let old = t.unicode_plan(font).unwrap();
+                let anchor = t.p;
+                t.p = t.realigned(to, font);
+                t.align = to;
+                let new = t.unicode_plan(font).unwrap();
+                assert_eq!(old.glyphs.len(), new.glyphs.len());
+                for (a, b) in old.glyphs.iter().zip(&new.glyphs) {
+                    assert_eq!(a.glyph, b.glyph);
+                    assert_eq!(&a.transform[..4], &b.transform[..4]);
+                    assert!((anchor.x + a.transform[4] - t.p.x - b.transform[4]).abs() < 2e-9);
+                    assert!((anchor.y + a.transform[5] - t.p.y - b.transform[5]).abs() < 2e-9);
+                }
+                assert_eq!(old.rules.len(), new.rules.len());
+                for (a, b) in old.rules.iter().zip(&new.rules) {
+                    for (a, b) in a.corners.iter().zip(b.corners) {
+                        assert!((anchor.x + a[0] - t.p.x - b[0]).abs() < 2e-9);
+                        assert!((anchor.y + a[1] - t.p.y - b[1]).abs() < 2e-9);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn unicode_mirror_keeps_the_measured_center_at_the_reflected_location() {
+    use kentos_geometry_core::api::json::{FromJson, Json};
+    use kentos_geometry_core::{
+        Vec2,
+        entity::{Shape, TextPlace},
+        geom::affine::{apply, mirror},
+        ops::transform::{TextPolicy, transform_shape_with},
+        text::Font,
+    };
+    let center = |s: &Shape| {
+        let t = TextPlace::of(s).unwrap();
+        let ring = t.outline(Font::DEFAULT);
+        Vec2::new((ring[0].x + ring[2].x) / 2., (ring[0].y + ring[2].y) / 2.)
+    };
+    for words in ["Ög\u{301}\u{306}\u{323}ç — AV", "مرحبا עברית\n⌀32 ≤ 5‰"] {
+        for rotation in [0., 37., 137., 257.] {
+            let e: kentos_geometry_core::entity::Entity = kentos_geometry_core::entity::Entity::from_json(&Json::parse(&serde_json::json!({
+                "kind":"text","p":{"x":5000000.,"y":4400000.},"text":words,"height":0.3,"rotation":rotation,
+                "font":"arimo","oblique":24.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}
+            }).to_string()).unwrap()).unwrap();
+            for b in [Vec2::new(1., 0.), Vec2::new(0., 1.), Vec2::new(1., 0.4)] {
+                let m = mirror(
+                    Vec2::new(5000001., 4400001.),
+                    Vec2::new(5000001. + b.x, 4400001. + b.y),
+                );
+                let expected = apply(&m, center(&e.shape));
+                let changed = transform_shape_with(&e.shape, &m, TextPolicy::Readable);
+                let actual = center(&changed);
+                assert!(
+                    (actual.x - expected.x).abs() < 2e-9 && (actual.y - expected.y).abs() < 2e-9,
+                    "{words:?} {rotation}: {actual:?} != {expected:?}"
+                );
+                let t = TextPlace::of(&changed).unwrap();
+                assert!(!(t.rotation > 90. && t.rotation <= 270.));
+                assert_eq!(t.text, words);
+                assert!(t.is_unicode());
+            }
+        }
+    }
+}
+
+#[test]
+fn unicode_nested_mirrors_keep_inherited_fonts_and_rebuild_after_a_project_font_change() {
+    use kentos_geometry_core::{
+        Vec2,
+        api::json::{FromJson, Json},
+        block::{Blocks, Definition, Underlay, placement},
+        entity::{Entity, Shape, TextPlace},
+        geom::affine::apply,
+        store::Store,
+        text::Font,
+    };
+    let entity = |v: Value| Entity::from_json(&Json::parse(&v.to_string()).unwrap()).unwrap();
+    let original = entity(
+        serde_json::json!({"kind":"text","p":{"x":0.,"y":0.},"text":"Ög\u{306}ç AV مرحبا","height":0.3,
+        "rotation":37.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}}),
+    );
+    let inner = entity(
+        serde_json::json!({"kind":"insert","block":"inner","p":{"x":2.,"y":1.},"scale":2.,"rotation":0.3,"mirror":true}),
+    );
+    let outer = entity(
+        serde_json::json!({"kind":"insert","block":"outer","p":{"x":5000000.,"y":4400000.},"scale":1.5,"rotation":0.7,"mirror":true}),
+    );
+    let defs = vec![
+        Definition {
+            id: "inner".into(),
+            base: Vec2::new(0., 0.),
+            entities: vec![original.clone()],
+            attributes: vec![],
+            dynamic: None,
+            underlay: Some(Underlay {
+                fade: 0.3,
+                monochrome: false,
+            }),
+        },
+        Definition {
+            id: "outer".into(),
+            base: Vec2::new(0., 0.),
+            entities: vec![inner],
+            attributes: vec![],
+            dynamic: None,
+            underlay: None,
+        },
+    ];
+    let center = |shape: &Shape, font| {
+        let t = TextPlace::of(shape).unwrap();
+        let ring = t.outline(font);
+        Vec2::new((ring[0].x + ring[2].x) / 2., (ring[0].y + ring[2].y) / 2.)
+    };
+    let mut store = Store::new();
+    store.set_blocks(Blocks::new_in(defs.clone(), Font::DEFAULT));
+    store.put(1., "a", false, outer.shape.clone());
+    for font in [
+        Font::from_id("arimo"),
+        Font::from_id("overpass"),
+        Font::DEFAULT,
+    ] {
+        store.set_font(font);
+        let expected = apply(
+            &placement(Vec2::new(5000000., 4400000.), 1.5, 0.7, true),
+            apply(
+                &placement(Vec2::new(2., 1.), 2., 0.3, true),
+                center(&original.shape, font),
+            ),
+        );
+        let parts = store.get(1.).unwrap().expanded.as_ref().unwrap();
+        let piece = &parts.shapes[0];
+        let actual = center(piece, font);
+        assert!(
+            (actual.x - expected.x).abs() < 3e-9 && (actual.y - expected.y).abs() < 3e-9,
+            "{font:?}: {actual:?} != {expected:?}"
+        );
+        assert_eq!(
+            parts.strokes[0].transparency,
+            Some(0.3),
+            "rebuilding retains source metadata"
+        );
+        let placed = TextPlace::of(piece).unwrap();
+        assert_eq!(
+            placed.font, None,
+            "a runtime measurement must not freeze an inherited font into the object"
+        );
+        let rebuilt = Blocks::new_in(defs.clone(), font).expand(&outer.shape);
+        assert_eq!(
+            &rebuilt[0].shape, piece,
+            "font-change cache matches a fresh library"
+        );
+    }
+}

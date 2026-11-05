@@ -314,3 +314,76 @@ Pencereler ilk açılışta yüklenir (`ui/style/`); komutlar Araçlar menüsün
      - Desendeki işaret kaydırması desenle dönmez, çizgi boyuncaki işaretinki döner.
    - Lejant penceresi kullanılan sembollerden lejant üretir.
 6. **Paylaşma:** sunucu ile kitaplık paylaşımı ve kurum kitaplıkları.
+
+## SHX çizgi tipi kaynakları
+
+Çizgi tipleri penceresindeki **SHX ekle…**, seçilen şekil dosyasını projenin
+kitaplığına gömer. Ortak `cad.library.edit` komutu kullanılır; Python ve MCP
+aynı öğeyi oluşturabilir. Kaynak proje dosyasıyla taşınır ve `FENCE.SHX`
+ile `fence.shx` aynı kaynak kimliğidir. Kullanılan kaynak silinemez.
+Güncelleme aynı kimlikte yapılır; aynı dosya adı ikinci kez çoğaltılmaz.
+
+SHX içeren `.kstil` dosyası sürüm **3** olur; kaynak yoksa şablonlu dosya
+2, diğer dosya 1 olarak yazılmaya devam eder. SHX kaynağı bir kitaplık
+varlığıdır: `kind: "asset", format: "shx"`; resim boyutları taşımaz.
+Tam veri sözleşmesi [KCAD belirtiminde](specs/kcad-v2.md#şema-164--gömülü-shx-şekil-kaynakları).
+İlk sürüm klasik shapes 1.0/1.1 şekillerini destekler; Unicode/Big Font
+ve genel SHX metin fontu desteği bu teslimin kapsamı değildir.
+
+Python örneği; dosya okuması kullanıcı tarafından seçilmiş yoldandır:
+
+```python
+import base64
+import hashlib
+from pathlib import Path
+from kentos import cad
+
+path = Path("/kurum/kaynaklar/fence.shx")
+with path.open("rb") as source:
+    data = source.read(4 * 1024 * 1024 + 1)
+if len(data) > 4 * 1024 * 1024:
+    raise ValueError("SHX kaynağı 4 MiB sınırını aşıyor")
+item = {
+    "id": "shx:" + path.name.lower(), "kind": "asset",
+    "name": path.name, "path": ["CAD", "SHX"], "format": "shx",
+    "file": path.name,
+    "data": "data:application/x-autocad-shx;base64," + base64.b64encode(data).decode(),
+    "sha256": hashlib.sha256(data).hexdigest(),
+}
+command = cad.command("cad.library.edit")
+request = command.input_type.from_json({"operation": "create", "item": item})
+command.run(doc, request, op="plan").unwrap()  # salt okunur kontrol
+command.run(doc, request).unwrap()
+```
+
+MCP'de `cad.library.edit` aynı `operation` ve `item` alanlarını, ayrıca açık
+çizimin `drawing` kimliğini alır. Şekil dosyasının varlığı, başlığı, özeti ve
+şekil programı hataları ortak komut/renderer tarafından denetlenir.
+
+
+### Çizgi tipinin kullandığı yazı stilleri ve CAD teslimi
+
+`cad.styles.impact` içindeki `follow`, doğrudan bağlı nesnelerin sayısıdır.
+Yalnız bir çizgi tipi tanımının kullandığı stil de canlı kaynaktır; `notes`
+bu desenlerin sayısını ve adlarını açıklar. GUI'deki kullanım ve silme
+koruması aynı domain hesabını kullanır. Ad değiştirmek stil id'sini korur
+ve çizgi tipi metin bağlarını birlikte günceller; Undo/Redo da bağı korur.
+Bağ varken `cad.styles.edit` silme işlemi `style_in_use` ile yazmadan reddedilir.
+Purge bu kaynağı kullanılmıyor saymaz.
+
+```python
+query = cad.command("cad.styles.impact")
+request = query.input_type.from_json({"target": "textStyle", "id": style_id})
+impact = query.run(doc, request, op="plan").unwrap()
+for note in impact.notes:
+    print(note)
+```
+
+Gömülü SHX kullanan `file.export.dxf` ve `file.export.dwg`, doğrulanmış
+şekil dosyasını CAD dosyasının yanına yazar. `plan` yalnız
+`output.report.shapeResources` içinde dosya/yol/boy/SHA-256 ve `reused`
+bilgilerini verir. Aynı baytlı dosya tekrar kullanılır; farklı içerik veya
+symlink, çizimin overwrite izni olsa da değiştirilmez. Böyle bir çakışmada
+çıktıyı başka klasöre aktarın. SHX kaynağı projeye eklenmemişse kaynak kaybı
+raporlanır; dosya sisteminde kendiliğinden aranmaz. Bu teslim otomatik SHX
+kaynak ithali veya genel SHX yazı fontu desteği anlamına gelmez.

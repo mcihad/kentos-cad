@@ -858,6 +858,9 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // The layout kept last time (yerlesim.json beside the settings, docs/adr/0115), each program's
             // own (docs/adr/0802).
             if let Some(dir) = settings::Settings::config_dir() {
+                if let Some(problem) = app.templates_panel.open_personal(&dir) {
+                    app.warn(problem);
+                }
                 // Each window's size (pencereler.json, docs/adr/0746).
                 app.dialog_sizes = dialog_sizes::Keeper::open(&dir);
                 app.layout = layout::Keeper::open_for(&dir, program);

@@ -243,3 +243,177 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("dxf-bicimler", dxf_forms),
     ]
 }
+
+#[cfg(test)]
+mod qa {
+    use serde_json::json;
+
+    #[test]
+    #[ignore = "writes a temporary CAD drawing for real window QA"]
+    fn block_attribute_schedule_fixture() {
+        let mut raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        raw["blocks"][0]["attributes"] = json!([
+            {"tag":"TYPE","value":"Standart","p":{"x":0,"y":0},"height":0.1,"rotation":0},
+            {"tag":"LABEL","value":"KAPI","p":{"x":0,"y":0.2},"height":0.1,"rotation":0,"constant":true}
+        ]);
+        raw["entities"][1]["attrs"] = json!({"TYPE":"Özel"});
+        raw["entities"][2]["attrs"] = json!({"TYPE":"Standart"});
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+        let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32,0.32],"columns":[1.5,1.5,1.5,0.8],
+            "cells":[["","","",""],["","","",""],["","","",""],["","","",""]],
+            "header":true,
+            "source":{"kind":"blocks","names":["Kapı (dinamik)"],"by":"TYPE","columns":["LABEL","TYPE"]}
+        }))
+        .unwrap();
+        let kentos_commands::Entity::Table(table) = table else {
+            unreachable!()
+        };
+        let worked = doc.table_worked_out(&table);
+        doc.add(kentos_commands::Entity::Table(worked)).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-block-attributes.kcad");
+        crate::document::write(&doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+    }
+
+    #[test]
+    #[ignore = "writes a temporary linked CAD table and CSV for real window QA"]
+    fn moved_file_row_fixture() {
+        let raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+        let mut conflict_doc = kentos_domain::Document::from_snapshot_v2(snapshot.clone()).unwrap();
+        let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-row-move.csv");
+        std::fs::write(&csv, "ID,Price\nB,10\nA,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.50,0.38],"columns":[2.0,2.0],
+            "cells":[["ID","Price"],["A","11"],["B","10"]],
+            "header":true,
+            "styles":[
+                {"row":1,"col":0,"rows":1,"cols":2,"fill":"#543838"},
+                {"row":2,"col":0,"rows":1,"cols":2,"fill":"#30435c"}
+            ],
+            "source":{"kind":"file","name":"rows.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Price"],["A","10"],["B","10"]]}
+        }))
+        .unwrap();
+        doc.add(table).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-row-move.kcad");
+        crate::document::write(&doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-style-span.csv");
+        std::fs::write(&csv, "ID,Price\nA,10\nC,30\nB,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32,0.32],"columns":[2.0,2.0],
+            "cells":[["ID","Price"],["A","11"],["B","10"],["C","30"]],
+            "header":true,
+            "styles":[{"row":1,"col":0,"rows":2,"cols":2,"fill":"#543838"}],
+            "source":{"kind":"file","name":"styles.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Price"],["A","10"],["B","10"],["C","30"]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut span_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        span_doc.add(table).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-style-span.kcad");
+        crate::document::write(&span_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-merge-row.csv");
+        std::fs::write(&csv, "ID,Description,Price\nB,Second,20\nA,First,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32],"columns":[1.0,2.0,1.0],
+            "cells":[["ID","Description","Price"],["A","First 10",""],["B","Second","20"]],
+            "merges":[{"row":1,"col":1,"rows":1,"cols":2}],"header":true,
+            "source":{"kind":"file","name":"merges.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Description","Price"],["A","First","10"],["B","Second","20"]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut merge_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        merge_doc.add(table).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-merge-row.kcad");
+        crate::document::write(&merge_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-field-row.csv");
+        std::fs::write(&csv, "ID,Value\nB,20\nA,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32],"columns":[1.0,3.0],
+            "cells":[["ID","Value"],["A",""],["B","20"]],
+            "header":true,
+            "fields":[{"row":1,"col":1,"source":{"kind":"project","value":"name"}}],
+            "source":{"kind":"file","name":"fields.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Value"],["A","10"],["B","20"]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut field_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        let kentos_commands::Entity::Table(table) = table else { unreachable!() };
+        let table = field_doc.table_worked_out(&table);
+        field_doc.add(kentos_commands::Entity::Table(table)).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-field-row.kcad");
+        crate::document::write(&field_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-formula-row.csv");
+        std::fs::write(&csv, "ID,Base,Double\nB,20,\nA,10,\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32],"columns":[1.0,1.5,1.5],
+            "cells":[["ID","Base","Double"],["A","10","20"],["B","20","40"]],
+            "formulas":[{"row":1,"col":2,"formula":"=B2*2"},
+                        {"row":2,"col":2,"formula":"=B3*2"}],
+            "header":true,
+            "source":{"kind":"file","name":"formulas.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Base","Double"],["A","10",""],["B","20",""]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut formula_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        let kentos_commands::Entity::Table(table) = table else { unreachable!() };
+        let table = formula_doc.table_worked_out(&table);
+        formula_doc.add(kentos_commands::Entity::Table(table)).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-formula-row.kcad");
+        crate::document::write(&formula_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-cell-conflict.csv");
+        std::fs::write(&csv, "ID,Price\nA,12\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32],"columns":[2.0,2.0],
+            "cells":[["ID","Price"],["A","11"]],
+            "header":true,
+            "source":{"kind":"file","name":"prices.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Price"],["A","10"]]}
+        }))
+        .unwrap();
+        conflict_doc.add(table).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-cell-conflict.kcad");
+        crate::document::write(&conflict_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+    }
+}

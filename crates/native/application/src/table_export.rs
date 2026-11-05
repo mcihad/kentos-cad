@@ -79,6 +79,18 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
     let groups = input.groups.unwrap_or(true);
     let mut notes: Vec<String> = Vec::new();
     let (name, columns, rows) = match &t.source {
+        Some(TableSource::Blocks { names, by, columns }) => {
+            let written = doc.blocks_schedule(names, by.as_deref(), columns);
+            let (head, rest) = written.split_first().expect("block schedule has a heading");
+            let last = head.len().saturating_sub(1);
+            let columns = head.iter().enumerate().map(|(j, name)| WorkbookColumn {
+                name: name.clone(),
+                kind: if j == last { CellKind::Number } else { CellKind::Text },
+                decimals: None,
+            }).collect();
+            notes.push("Blok adetleri çizimden yeniden sayıldı; kaynak çizim değişmedi.".into());
+            ("Blok çizelgesi".to_owned(), columns, rest.to_vec())
+        }
         Some(TableSource::Schedule { of, columns, filter, sort, group, total, .. }) => {
             let written = doc.schedule_rows(*of, columns, filter.as_ref(), sort, *group, *total);
             let last = written.rows.len().saturating_sub(1);
@@ -167,4 +179,36 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
         },
         bytes,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_commands::DocumentSnapshotV2;
+    use serde_json::json;
+
+    #[test]
+    fn block_export_recounts_inserts_instead_of_trusting_cached_cells() {
+        let snapshot: DocumentSnapshotV2 = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.json"
+        )).unwrap();
+        let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+        let table: Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"","attrs":{},
+            "p":{"x":0,"y":0},"rotation":0,"height":0.1,
+            "rows":[0.3,0.3,0.3],"columns":[1.0,1.0],
+            "cells":[["Blok","Adet"],["Yanlış","999"],["Toplam","999"]],
+            "header":true,"source":{"kind":"blocks","names":[],"columns":[]}
+        })).unwrap();
+        let slot = doc.add(table).unwrap();
+        let uid = doc.uid(slot).unwrap().to_string();
+        let made = export(&doc, &ExportTable {
+            path: "/tmp/kentos-block-recount.csv".into(), uid,
+            groups: None, numbers: TableNumbers::Exact, overwrite: true,
+        }).unwrap();
+        let csv = String::from_utf8(made.bytes).unwrap();
+        assert!(csv.contains("Adet"), "{csv}");
+        assert!(csv.contains("Toplam;3"), "{csv}");
+        assert!(!csv.contains("999"), "{csv}");
+    }
 }

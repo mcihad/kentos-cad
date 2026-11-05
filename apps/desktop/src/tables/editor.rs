@@ -16,7 +16,7 @@ use iced::keyboard::key::Named;
 use iced::widget::{Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack};
 use iced::{Center, Element, Fill, Length, Task, Theme};
 use kentos_commands::{
-    CommandResult, Entity, FieldSource, ProjectValue, TableAlign, TableEdit, TableEntity,
+    CommandResult, Entity, FieldSource, ProjectValue, SourceOverrides, TableAlign, TableEdit, TableEntity,
     TableGrid, TablesEdit, TablesOperation,
 };
 use kentos_domain::{Slot, Uuid};
@@ -50,7 +50,7 @@ const GRID_PX: f32 = 330.0;
 /// stay in it (the rest of the dialog is about 420 px), never under five rows.
 fn grid_px(window_h: f32) -> f32 {
     let most = typography::scaled(GRID_PX);
-    (window_h - typography::scaled(420.0)).clamp(typography::scaled(ROW_PX) * 5.0, most)
+    (window_h - typography::scaled(460.0)).clamp(typography::scaled(ROW_PX) * 5.0, most)
 }
 /// The row numbers' column.
 const GUTTER_PX: f32 = 44.0;
@@ -130,6 +130,8 @@ pub enum Tool {
     /// The active cell bound to the count of `blocks[i]`'s inserts, or let go of.
     Field(usize),
     Unfield,
+    SourceKey(Option<u32>),
+    SourceRule(SourceOverrides),
 }
 
 /// Yazı rengi's colours: name and `#rrggbb`.
@@ -1348,13 +1350,11 @@ impl App {
                         _ => "scheduleOpenings",
                     },
                 };
-                row![
+                let head = row![
                     icon(crate::icons::from_web(Some(name))).size(16.0),
                     label::body(format!("Kaynak: {}", super::source_words(&e.draft)))
                         .font(typography::ui_strong()),
-                    label::caption("Tabloyu güncelle elle yazılanların üstüne yazar.")
-                        .wrapping(iced::widget::text::Wrapping::None)
-                        .width(Fill),
+                    Space::new().width(Fill),
                     tip(
                         words::secondary(DETACH, Some(msg(Event::Detach))),
                         Tip::new("Tablo kaynağını bırakır: Tabloyu güncelle ona dokunmaz."),
@@ -1362,8 +1362,48 @@ impl App {
                     ),
                 ]
                 .spacing(8)
-                .align_y(Center)
-                .into()
+                .align_y(Center);
+                let detail: Element<'_, Message> = match s {
+                    kentos_commands::TableSource::File { key_column, copy, overrides, .. } => {
+                        let key_row: Element<'_, Message> = if copy.is_some() && e.draft.header {
+                            let mut choices = vec![Choice::new("Satır sırası (anahtar yok)")];
+                            choices.extend(
+                                e.draft.cells[0]
+                                    .iter()
+                                    .enumerate()
+                                    .map(|(c, title)| Choice::new(format!("{} — {title}", column_name(c)))),
+                            );
+                            row![
+                                label::caption("Satır anahtarı"),
+                                container(Select::new(choices, Some(key_column.map_or(0, |c| c as usize + 1)), |i| {
+                                    msg(Event::Tool(Tool::SourceKey(i.checked_sub(1).map(|c| c as u32))))
+                                }))
+                                .width(Length::Fixed(typography::scaled(250.0))),
+                                label::caption("Benzersiz ve boş olmayan sütun; elle düzeltmeler satırla taşınır."),
+                            ]
+                            .spacing(8)
+                            .align_y(Center)
+                            .into()
+                        } else {
+                            label::caption("Satır anahtarı için başlık satırı ve bağlı dosya gerekir.").into()
+                        };
+                        let rule_row = row![
+                            label::caption("Yenilemede elle değişen hücre"),
+                            container(Select::new(
+                                vec![Choice::new("Koru"), Choice::new("Dosyayla değiştir")],
+                                Some(if *overrides == SourceOverrides::Keep { 0 } else { 1 }),
+                                |i| msg(Event::Tool(Tool::SourceRule(if i == 0 { SourceOverrides::Keep } else { SourceOverrides::Replace }))),
+                            ))
+                            .width(Length::Fixed(typography::scaled(200.0))),
+                            label::caption("Dosyayla değiştir seçilirse sonraki güncellemede elle yazılan değerler silinir."),
+                        ]
+                        .spacing(8)
+                        .align_y(Center);
+                        column![key_row, rule_row].spacing(5).into()
+                    }
+                    _ => label::caption("Kaynak çizelgeyle birlikte güncellenir.").into(),
+                };
+                column![head, detail].spacing(5).into()
             }
         };
         // The status line.
@@ -1717,6 +1757,8 @@ fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
         Tool::Header => vec![TableEdit::Header {
             on: !e.draft.header,
         }],
+        Tool::SourceKey(column) => vec![TableEdit::SourceKey { column }],
+        Tool::SourceRule(rule) => vec![TableEdit::SourceRule { rule }],
         Tool::Grid(g) => vec![TableEdit::Grid { grid: g }],
         // 0,7 mm on paper, as Tablo ekle's (the web's).
         Tool::Frame => vec![TableEdit::Frame {
@@ -1854,8 +1896,18 @@ fn gutter_style(theme: &Theme, on: bool) -> container::Style {
 }
 
 /// A cell: lines between, the selection's fill, the active cell's accent ring.
-/// A grid cell: the selection's colour when chosen, else its fill; its style's colour, on a fill a dark ink, else
-/// the theme's text (a dark colour lightened on a dark theme, to be read).
+/// A grid cell: the selection's colour when chosen, else its fill; use a readable default ink
+/// against either a light or a dark fill when the user did not choose a text colour.
+fn contrast_ink(fill: iced::Color) -> iced::Color {
+    let linear = |v: f32| if v <= 0.04045 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) };
+    let luminance = 0.2126 * linear(fill.r) + 0.7152 * linear(fill.g) + 0.0722 * linear(fill.b);
+    if luminance < 0.179 {
+        iced::Color::WHITE
+    } else {
+        iced::Color::from_rgb8(0x1b, 0x1f, 0x24)
+    }
+}
+
 fn cell_style(
     theme: &Theme,
     chosen: bool,
@@ -1874,7 +1926,7 @@ fn cell_style(
             c.b + (1.0 - c.b) * 0.45,
         ),
         (Some(c), None) => c,
-        (None, Some(_)) => iced::Color::from_rgb8(0x1b, 0x1f, 0x24),
+        (None, Some(background)) => contrast_ink(background),
         (None, None) => t.text,
     };
     container::Style {
@@ -1890,5 +1942,19 @@ fn cell_style(
             radius: 0.0.into(),
         },
         ..container::Style::default()
+    }
+}
+
+#[cfg(test)]
+mod contrast_tests {
+    use super::contrast_ink;
+
+    #[test]
+    fn table_fill_without_explicit_ink_remains_readable() {
+        assert_eq!(contrast_ink(iced::Color::from_rgb8(0x54, 0x38, 0x38)), iced::Color::WHITE);
+        assert_eq!(
+            contrast_ink(iced::Color::from_rgb8(0xe7, 0xdf, 0xcc)),
+            iced::Color::from_rgb8(0x1b, 0x1f, 0x24)
+        );
     }
 }

@@ -8,7 +8,7 @@
 use kentos_commands::{
     CommandResult, EntitiesPick, EntitiesPicked, EntitiesSelect, Entity, PickedEntity, SelectRegion,
 };
-use kentos_domain::dimension_ties::{contract_place, core_blocks};
+use kentos_domain::dimension_ties::contract_place;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::subref::{Place, place_near, place_near_in};
 use kentos_geometry_core::store::Store;
@@ -131,7 +131,7 @@ pub fn sub_object(doc: &Document, e: &Entity, at: Vec2, tol: f64) -> Option<(Vec
         tol
     };
     if matches!(e, Entity::Insert(_)) {
-        place_near_in(&core_blocks(doc.blocks()), &core, at, tol).map(|(path, p, _)| (path, p))
+        place_near_in(&crate::blocks::drawing_blocks(doc), &core, at, tol).map(|(path, p, _)| (path, p))
     } else {
         place_near(&core, at, tol).map(|(p, _)| (Vec::new(), p))
     }

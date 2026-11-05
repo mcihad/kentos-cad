@@ -1468,6 +1468,7 @@
       ],
       "overflow": [
        "table.link",
+       "table.export",
        "table.blockSchedule"
       ]
      },
@@ -5636,6 +5637,10 @@
       },
       {
        "command": "table.link",
+       "size": "small"
+      },
+      {
+       "command": "table.export",
        "size": "small"
       },
       {

@@ -238,7 +238,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         (a.series == OTHER_SERIES, &a.series).cmp(&(b.series == OTHER_SERIES, &b.series))
     });
     let affected = named.map(|named| {
-        let blocks = crate::blocks::core_blocks(doc.blocks());
+        let blocks = crate::blocks::drawing_blocks(doc);
         let font = drawing_font(doc.settings().drawing_font);
         let boxes: Vec<(&String, Bounds)> = named
             .iter()

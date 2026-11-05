@@ -271,6 +271,7 @@ pub(super) struct Features {
     pub(super) fixtures: bool,
     /// Schema 132 (docs/adr/0735): the data profiles and mappings the project carries.
     pub(super) profile_files: bool,
+    pub(super) standard_docs: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -323,33 +324,33 @@ pub(super) struct Features {
     pub(super) cad_work: bool,
     /// Schema 159 (plan/road.md Y1.1): `cadWork` may be `road`.
     pub(super) road_work: bool,
-    /// Schema 164: a road template's pavement and a volume's rule (docs/adr/0975 §2).
+    /// Schema 166: a road template's pavement and a volume's rule (docs/adr/0975 §2).
     pub(super) road_pavement: bool,
-    /// Schema 165: a superelevation's axis of rotation (docs/adr/0931 §2).
+    /// Schema 167: a superelevation's axis of rotation (docs/adr/0931 §2).
     pub(super) road_pivot: bool,
-    /// Schema 166: a sample line set's clip, breaks method and curve step (docs/adr/0933 §3).
+    /// Schema 168: a sample line set's clip, breaks method and curve step (docs/adr/0933 §3).
     pub(super) section_breaks: bool,
-    /// Schema 167: an earthwork volume's curve correction (docs/adr/0934 §2).
+    /// Schema 169: an earthwork volume's curve correction (docs/adr/0934 §2).
     pub(super) volume_curve: bool,
-    /// Schema 168: a corridor's vertical chord height and sampling check (docs/adr/0939).
+    /// Schema 170: a corridor's vertical chord height and sampling check (docs/adr/0939).
     pub(super) corridor_sampling: bool,
-    /// Schema 169: a mass haul diagram's unsuitable cut and barriers (docs/adr/0944).
+    /// Schema 171: a mass haul diagram's unsuitable cut and barriers (docs/adr/0944).
     pub(super) haul_sorting: bool,
-    /// Schema 170: a profile's crossings (docs/adr/0946).
+    /// Schema 172: a profile's crossings (docs/adr/0946).
     pub(super) profile_crossings: bool,
-    /// Schema 171: a volume's numbered approvals and their history (docs/adr/0950).
+    /// Schema 173: a volume's numbered approvals and their history (docs/adr/0950).
     pub(super) volume_history: bool,
-    /// Schema 172: a mass haul diagram's approved plan and its history (docs/adr/0954).
+    /// Schema 174: a mass haul diagram's approved plan and its history (docs/adr/0954).
     pub(super) haul_approval: bool,
-    /// Schema 173: a mass haul diagram's haul road network and its sites off the road (docs/adr/0955).
+    /// Schema 175: a mass haul diagram's haul road network and its sites off the road (docs/adr/0955).
     pub(super) haul_network: bool,
-    /// Schema 174: a volume factor row's densities and source (docs/adr/0957).
+    /// Schema 176: a volume factor row's densities and source (docs/adr/0957).
     pub(super) volume_states: bool,
-    /// Schema 175: a template side's cut slope benches (docs/adr/0958).
+    /// Schema 177: a template side's cut slope benches (docs/adr/0958).
     pub(super) cut_benches: bool,
-    /// Schema 176: a corridor region's slope transition (docs/adr/0960).
+    /// Schema 178: a corridor region's slope transition (docs/adr/0960).
     pub(super) slope_transitions: bool,
-    /// Schema 177: an earthwork volume on a grid and its cell (docs/adr/0974).
+    /// Schema 179: an earthwork volume on a grid and its cell (docs/adr/0974).
     pub(super) volume_grid: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
@@ -563,6 +564,7 @@ impl Features {
             audit_exceptions: schema >= crate::SCHEMA_WITH_AUDIT_EXCEPTIONS,
             fixtures: schema >= crate::SCHEMA_WITH_FIXTURES,
             profile_files: schema >= crate::SCHEMA_WITH_PROFILE_FILES,
+            standard_docs: schema >= crate::SCHEMA_WITH_STANDARD_DOCS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -1041,7 +1043,7 @@ struct Fields {
 
 /// A linked file's path, digest, copy and rule, as a table's `link` holds them (schema 68, docs/adr/0327 §5).
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Link {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     path: Option<String>,
@@ -1054,6 +1056,8 @@ struct Link {
         skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep"
     )]
     overrides: kentos_contracts::SourceOverrides,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    key_column: Option<u32>,
 }
 
 /// Where a table's fields are in the payload, for a refusal of its shape.
@@ -2884,12 +2888,14 @@ fn build(
                         digest,
                         copy,
                         overrides,
+                        key_column,
                         ..
                     }) => {
                         *path = link.path;
                         *digest = link.digest;
                         *copy = link.copy;
                         *overrides = link.overrides;
+                        *key_column = link.key_column;
                     }
                     _ => {
                         return Err(r.fail_at(
@@ -3410,6 +3416,7 @@ fn table_source(r: &mut Reader<'_>) -> Result<TableSource, KcadError> {
         return Ok(TableSource::File {
             path: None,
             overrides: Default::default(),
+            key_column: None,
             digest: None,
             copy: None,
             name: required(r, name, "name")?,

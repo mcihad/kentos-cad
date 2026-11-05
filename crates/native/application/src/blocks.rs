@@ -111,7 +111,7 @@ pub fn definition_box(
     values: Option<&std::collections::BTreeMap<String, kentos_commands::ParamValue>>,
 ) -> Option<[f64; 4]> {
     definition_box_in(
-        &core_blocks(doc.blocks()),
+        &drawing_blocks(doc),
         crate::geometry::drawing_font(doc.settings().drawing_font),
         block,
         values,
@@ -120,7 +120,16 @@ pub fn definition_box(
 
 /// The drawing's definitions for the core.
 pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
-    Blocks::new(
+    core_blocks_in(blocks, kentos_geometry_core::text::Font::DEFAULT)
+}
+
+/// Resolve inherited Unicode text geometry in the same face as the drawing.
+pub fn drawing_blocks(doc: &kentos_domain::Document) -> Blocks {
+    core_blocks_in(doc.blocks(), crate::geometry::drawing_font(doc.settings().drawing_font))
+}
+
+pub fn core_blocks_in(blocks: &[Arc<BlockDefinition>], font: kentos_geometry_core::text::Font) -> Blocks {
+    Blocks::new_in(
         blocks
             .iter()
             .map(|b| Definition {
@@ -160,6 +169,7 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
                     .collect(),
             })
             .collect(),
+        font,
     )
 }
 

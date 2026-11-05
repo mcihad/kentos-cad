@@ -119,7 +119,7 @@ pub fn paint_layer(
         {
             continue;
         }
-        let st = Style::of(&style_block(b));
+        let st = Style::of(&style_block(b), b);
         let data = layer.values(b.range.clone()).unwrap_or_default();
         match &b.kind {
             BatchKind::Stroke { .. } => strokes(pixmap, view, b, &st, &data),
@@ -158,6 +158,7 @@ pub fn paint(
 type V4 = [f64; 4];
 
 struct Style {
+    pattern: Vec<f64>,
     color: V4,
     stroke: V4,
     dash0: V4,
@@ -172,7 +173,7 @@ struct Style {
 }
 
 impl Style {
-    fn of(s: &StyleBlock) -> Style {
+    fn of(s: &StyleBlock, b: &StyledBatch) -> Style {
         let v = |at: usize| {
             [
                 f64::from(s.f[at]),
@@ -182,6 +183,10 @@ impl Style {
             ]
         };
         Style {
+            pattern: super::uniform::batch_dashes(b)
+                .iter()
+                .map(|x| f64::from(*x as f32))
+                .collect(),
             color: v(0),
             stroke: v(4),
             dash0: v(8),
@@ -213,18 +218,8 @@ impl Style {
         }
     }
 
-    /// The eight dash lengths (`dash0`, `dash1`).
-    fn dashes(&self) -> [f64; 8] {
-        [
-            self.dash0[0],
-            self.dash0[1],
-            self.dash0[2],
-            self.dash0[3],
-            self.dash1[0],
-            self.dash1[1],
-            self.dash1[2],
-            self.dash1[3],
-        ]
+    fn dashes(&self) -> &[f64] {
+        &self.pattern
     }
 }
 
@@ -248,14 +243,14 @@ fn smoothstep(e0: f64, e1: f64, x: f64) -> f64 {
 }
 
 /// `dashCover`: `s` along the line in picture pixels.
-fn dash_cover(d: &[f64; 8], s: f64, k: f64, total_raw: f64, on_share: f64, offset_raw: f64) -> f64 {
+fn dash_cover(d: &[f64], s: f64, k: f64, total_raw: f64, on_share: f64, offset_raw: f64) -> f64 {
     let total = total_raw * k;
     if total <= 0.0 {
         return 1.0;
     }
     // A drawn dash under a pixel before a gap is a dot of one pixel (docs/adr/0186 §3).
     if total < 4.0 {
-        let dots: f64 = (0..8)
+        let dots: f64 = (0..d.len())
             .step_by(2)
             .filter(|&i| d[i + 1] > 0.0)
             .map(|i| (1.0 - d[i] * k).max(0.0))
@@ -424,7 +419,7 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
             } else {
                 cover(half_w - y)
             };
-            cov *= dash_cover(&dashes, s0 + x, k, st.a[1], st.a[2], st.a[3]);
+            cov *= dash_cover(dashes, s0 + x, k, st.a[1], st.a[2], st.a[3]);
             if cov >= 0.004 {
                 lit.push((px, py, cov));
             }
@@ -537,7 +532,7 @@ fn fill(
                 FillPaintBatch::Solid { .. } => straight(st.color, 1.0),
                 FillPaintBatch::Hatch { .. } => {
                     let kw = if screen { k } else { st.weight_k(view) };
-                    straight(st.color, hatch(st, &dashes, p, k, kw))
+                    straight(st.color, hatch(st, dashes, p, k, kw))
                 }
                 FillPaintBatch::Gradient { .. } => gradient(st, p),
                 FillPaintBatch::Pattern { .. } => pattern(st, p, k, view.dpr),
@@ -568,7 +563,7 @@ fn fill(
 }
 
 /// `hatchFs`: the share of the pixel the hatch inks.
-fn hatch(st: &Style, dashes: &[f64; 8], p: [f64; 2], k: f64, kw: f64) -> f64 {
+fn hatch(st: &Style, dashes: &[f64], p: [f64; 2], k: f64, kw: f64) -> f64 {
     let dir = [st.a[0], st.a[1]];
     let n = [-dir[1], dir[0]];
     let half_w = (st.a[3] * kw).max(1.0) * 0.5;
@@ -1217,6 +1212,7 @@ mod tests {
             group: 0,
             effect: None,
             weight_cap: 0.0,
+            line_type_loss: None,
         }
     }
 

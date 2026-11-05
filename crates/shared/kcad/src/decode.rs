@@ -346,6 +346,20 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let layers = required(r, layers, "layers")?;
     let origin = required(r, origin, "origin")?;
     let styles = required(r, styles, "styles")?;
+    if schema < crate::SCHEMA_WITH_SHAPE_RESOURCES
+        && styles
+            .items
+            .iter()
+            .any(kentos_contracts::shape_resource::is_resource)
+    {
+        return Err(r.fail(
+            Code::UnknownField,
+            "SHX kaynakları belge şeması 164 gerektirir",
+        ));
+    }
+    if let Err(error) = kentos_contracts::shape_resource::check_items(&styles.items) {
+        return Err(r.fail(Code::BadValue, &error));
+    }
     let (entities, uids) = required(r, entities, "entities")?;
     let settings = required(r, settings_, "settings")?;
     let active_layer = required(r, active_layer, "activeLayer")?;
@@ -745,6 +759,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut join_views = Vec::new();
     let mut linear_events = Vec::new();
     let mut profile_files = Vec::new();
+    let mut standard_docs = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
@@ -1081,6 +1096,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 profile_files = list;
+            }
+            "standardDocs" if has.standard_docs => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::ProjectStandardDocument> =
+                    serde_json::from_value(value).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                        r.fail_at(code, at, &format!("standart belgeleri okunamadı: {words}"))
+                    })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş standart listesi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::project_standards_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                standard_docs = list;
             }
             // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, read whole and checked.
             "lineage" if has.lineage => {
@@ -1678,6 +1710,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         join_views,
         linear_events,
         profile_files,
+        standard_docs,
         lineage,
         map_srid,
         auto_select,

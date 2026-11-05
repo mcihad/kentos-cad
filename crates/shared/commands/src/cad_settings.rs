@@ -62,6 +62,11 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 ///   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
 ///   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
 /// - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+/// - `standardDocs`: the entire ordered list of versioned drawing-standard
+///   documents retained by the project; an empty list removes all bindings.
+///   An ordered, byte-identical subset may remove unsupported existing
+///   documents for recovery; new or changed documents are validated.
+///   This changes the association only and does not apply the standards.
 ///
 /// Settings are an edit of the project, no undo step (docs/adr/0049).
 ///
@@ -88,6 +93,11 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsSet {
+    /// Replace the project's ordered drawing-standard documents. Missing keeps
+    /// the current list; an empty list removes it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub standard_docs: Option<Vec<crate::ProjectStandardDocument>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,

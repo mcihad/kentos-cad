@@ -242,6 +242,32 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
                 .map(|u| (id, kentos_commands::EntityId(u.into_bytes())))
         })
         .collect();
+    // DXF stores a shape number, never its LIN name. Resolve only explicitly
+    // embedded resources; this builder does not search the user's filesystem.
+    let mut line_types = settings.line_types.clone();
+    for p in &mut line_types {
+        for shape in p.elements.iter_mut().filter_map(|e| e.shape.as_mut()) {
+            let id = kentos_commands::shape_resource::id(
+                kentos_commands::shape_resource::source_name(&shape.file),
+            );
+            let Some(resource) = doc.styles().items.iter().find(|i| {
+                i["id"].as_str() == Some(id.as_str())
+                    && kentos_commands::shape_resource::is_resource(i)
+            }) else {
+                continue;
+            };
+            let Ok(bytes) = kentos_commands::shape_resource::read(resource) else {
+                continue;
+            };
+            let Ok(file) = kentos_geometry_core::text::shx::ShapeFile::read(&bytes) else {
+                continue;
+            };
+            if let Some(number) = file.number(&shape.name) {
+                shape.name = number.to_string();
+                shape.file = resource["file"].as_str().unwrap_or_default().to_owned();
+            }
+        }
+    }
     DxfWriteInput {
         allow_polyline_loss: false,
         layouts,
@@ -252,7 +278,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         notes,
         // The project's line types and their scale (docs/adr/0313 §6).
         line_type_scale: settings.line_type_scale,
-        line_types: settings.line_types.clone(),
+        line_types,
         entities,
         layers: chosen
             .iter()

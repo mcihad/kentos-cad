@@ -20,6 +20,7 @@ from .types import (  # noqa: F401
     DrawingCompared,
     DrawingInspect,
     DrawingInspected,
+    DrawingMatchSearch,
     InspectionGroup,
     InspectionGroupName,
 )
@@ -180,8 +181,15 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
     varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik
     gibi sayılır (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve
     kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler.
-    Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar
-    adım tutmuyor), invalid_file_path, file_not_found, import_unreadable.
+    Pafta, viewport, kayıtlı görünüş ve şablon farkları model sayılarından ayrı
+    projectChanges listesindedir. matchSearch verilirse farklı UUID'li eşlenmemiş
+    nesneler için matchCandidates önerilir; kimlikler ve model sayıları değişmez. search
+    metre, key kaynak kimliği özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır.
+    Birden çok karşılık ambiguous olarak kalır; liste kesilse de belirsizlik bütün
+    aramadan hesaplanır. Arama her tarafta en çok 5000 nesne ve iki milyon hesap
+    birimiyle sınırlı, native Job'da durdurulabilir. Retler: invalid_tolerance,
+    invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor),
+    invalid_file_path, file_not_found, import_unreadable.
     """
     __slots__ = ()
     id = "cad.drawing.compare"
@@ -199,6 +207,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         *,
         against: CompareAgainst,
         limit: int | None | Unset = UNSET,
+        match_search: DrawingMatchSearch | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -212,14 +221,22 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde
         aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta
         layer). Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir;
-        her liste limit'te kesilir ve truncated bunu söyler. Retler: invalid_tolerance,
-        invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor),
-        invalid_file_path, file_not_found, import_unreadable.
+        her liste limit'te kesilir ve truncated bunu söyler. Pafta, viewport, kayıtlı
+        görünüş ve şablon farkları model sayılarından ayrı projectChanges listesindedir.
+        matchSearch verilirse farklı UUID'li eşlenmemiş nesneler için matchCandidates
+        önerilir; kimlikler ve model sayıları değişmez. search metre, key kaynak kimliği
+        özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok karşılık
+        ambiguous olarak kalır; liste kesilse de belirsizlik bütün aramadan hesaplanır.
+        Arama her tarafta en çok 5000 nesne ve iki milyon hesap birimiyle sınırlı, native
+        Job'da durdurulabilir. Retler: invalid_tolerance, invalid_limit, no_such_step (geri
+        alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found,
+        import_unreadable.
 
         Args:
             doc: The drawing it works on.
             against:
             limit: The most ids each list holds, 1 to 1 000 000; absent: `COMPARE_LIMIT`. A cut list says so (`truncated`). Unit: count.
+            match_search: Optional suggestions for unmatched objects with different UUIDs. Suggestions never change identity or counts.
             tolerance: How far points may lie apart and the geometry still be the same, metres, 0 to 10; absent: `COMPARE_TOLERANCE`. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -236,6 +253,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         return self.execute_input(doc, DrawingCompare(
             against=against,
             limit=limit,
+            match_search=match_search,
             tolerance=tolerance,
         ), request_id=request_id, expected=expected)
 
@@ -246,6 +264,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         *,
         against: CompareAgainst,
         limit: int | None | Unset = UNSET,
+        match_search: DrawingMatchSearch | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> DrawingCompared:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -254,6 +273,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         return self.plan_input(doc, DrawingCompare(
             against=against,
             limit=limit,
+            match_search=match_search,
             tolerance=tolerance,
         ))
 
@@ -264,6 +284,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         *,
         against: CompareAgainst,
         limit: int | None | Unset = UNSET,
+        match_search: DrawingMatchSearch | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -272,6 +293,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         return self.validate_input(doc, DrawingCompare(
             against=against,
             limit=limit,
+            match_search=match_search,
             tolerance=tolerance,
         ))
 
@@ -282,6 +304,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         *,
         against: CompareAgainst,
         limit: int | None | Unset = UNSET,
+        match_search: DrawingMatchSearch | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -295,6 +318,7 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         return self.answer_input(doc, DrawingCompare(
             against=against,
             limit=limit,
+            match_search=match_search,
             tolerance=tolerance,
         ), op=op, request_id=request_id, expected=expected)
 

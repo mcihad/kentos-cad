@@ -1,0 +1,54 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "SHX source resource",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "uids": [],
+  "styles": {
+    "items": [
+      {
+        "id": "shx:fence.shx",
+        "kind": "asset",
+        "name": "fence.shx",
+        "path": [
+          "CAD",
+          "SHX"
+        ],
+        "format": "shx",
+        "file": "fence.shx",
+        "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBzaGFwZXMgMS4wDQoaAQABAAEAAQAZAEZFTkNFAAUCCAD/AQgAAgYCCP8AAQgCAABFT0Y=",
+        "sha256": "73f48699381bde84ae815fcdaae9d21285781b4a315505fc2a559042075c7694"
+      }
+    ],
+    "categories": []
+  }
+}

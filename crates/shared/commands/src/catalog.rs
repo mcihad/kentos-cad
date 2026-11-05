@@ -1660,6 +1660,8 @@ pub fn catalog() -> CommandCatalog {
                       Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). \
                       Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). \
                       Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. \
+                      Pafta, viewport, kayıtlı görünüş ve şablon farkları model sayılarından ayrı projectChanges listesindedir. \
+                      matchSearch verilirse farklı UUID'li eşlenmemiş nesneler için matchCandidates önerilir; kimlikler ve model sayıları değişmez. search metre, key kaynak kimliği özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok karşılık ambiguous olarak kalır; liste kesilse de belirsizlik bütün aramadan hesaplanır. Arama her tarafta en çok 5000 nesne ve iki milyon hesap birimiyle sınırlı, native Job'da durdurulabilir. \
                       Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable."
                 .into(),
             aliases: vec!["revizyonkarsilastir".into(), "farkbul".into()],
@@ -5357,7 +5359,7 @@ pub fn catalog() -> CommandCatalog {
                       fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; \
                       turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; \
                       almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. \
-                      combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. Birleşik karakterin içindeki replace eşleşmesi invalid_input ile bütün işlemi reddeder; aksanıyla birlikte bütün karakter aranmalıdır. Unicode profilli sonuç ortak glyph planıyla yazmadan doğrulanır. Unicode içeren combine farklı yerleşim/font/paragraf biçimlerini sessizce dönüştürmez; önce biçimler açıkça eşitlenmelidir. Konum/boy düzenlemesinden önce eski veya doğrulanamayan field açıkça yenilenmelidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -10600,6 +10602,28 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_RESOLVE.into(),
+            version: crate::CAD_STANDARDS_RESOLVE_VERSION,
+            title: "Proje standartlarını birleştir".into(),
+            summary: "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, katman ve stil tanımları ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarının her adı ilk bulunduğu kaynaktan alınır. Tanımların kaynağı, kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.".into(),
+            aliases: vec![], effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::None,
+            cost: CommandCost::Instant, input: schema::<crate::StandardsResolve>(),
+            output: schema::<crate::StandardsResolved>(), plan: Some(schema::<crate::StandardsResolved>()),
+            capabilities: None, examples: vec![CommandExample { title: "Bağlı standartları birleştir".into(), input: json!({}), output: None }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_CONFLICTS.into(),
+            version: crate::CAD_STANDARDS_CONFLICTS_VERSION,
+            title: "Bağlı standartlardaki farklı tanımları göster".into(),
+            summary: "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.".into(),
+            aliases: vec![], effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::None,
+            cost: CommandCost::Instant, input: schema::<crate::StandardsConflicts>(),
+            output: schema::<crate::StandardsConflictsReport>(), plan: Some(schema::<crate::StandardsConflictsReport>()),
+            capabilities: None, examples: vec![CommandExample { title: "Bağlı standartları karşılaştır".into(), input: json!({}), output: None }],
+        },
         // Standardı denetle (docs/adr/0312 §2), held together by fixtures/commands/v1/cad.standards.check.json.
         CommandDescriptor {
             id: crate::CAD_STANDARDS_CHECK.into(),
@@ -10608,7 +10632,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; \
                       öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), \
                       çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. \
-                      Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir."
+                      resources verilirse çizgi tipi ve tarama deseninin eksik/farklı tanımları ile yayımlanmış blok referansının eksik veya farklı kimlik/sürümü de raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["checkstandards".into()],
             effect: CommandEffect::Query,
@@ -15219,6 +15243,12 @@ mod tests {
                     crate::CAD_LAYERS_TRANSLATE => {
                         serde_json::from_value::<crate::LayersTranslate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_RESOLVE => {
+                        serde_json::from_value::<crate::StandardsResolve>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_CONFLICTS => {
+                        serde_json::from_value::<crate::StandardsConflicts>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_STANDARDS_CHECK => {
                         serde_json::from_value::<crate::StandardsCheck>(e.input.clone()).map(|_| ())

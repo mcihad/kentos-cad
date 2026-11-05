@@ -607,6 +607,9 @@ impl StyleLibrary {
 
     /// Adds an item to the user's or the project's library.
     pub fn add(&mut self, source: Source, item: Value) -> Result<Item, String> {
+        if kentos_contracts::shape_resource::is_resource(&item) {
+            kentos_contracts::shape_resource::read(&item)?;
+        }
         let item = Item::from_value(item).ok_or("Öğenin kimliği ya da türü yok.")?;
         if !source.editable() {
             return Err("Sistem kitaplığına öğe eklenemez.".into());
@@ -639,6 +642,9 @@ impl StyleLibrary {
                     o.insert(k.clone(), v.clone());
                 }
             }
+        }
+        if kentos_contracts::shape_resource::is_resource(&value) {
+            kentos_contracts::shape_resource::read(&value)?;
         }
         if let Some(changed) = Item::from_value(value) {
             self.store_mut(source).set(changed);
@@ -689,6 +695,18 @@ impl StyleLibrary {
         };
         if !to.editable() {
             return Err("Sistem kitaplığına öğe eklenemez.".into());
+        }
+        if kentos_contracts::shape_resource::is_resource(src.value()) {
+            if self.store(to).contains(id) {
+                return Err(
+                    "Bu SHX kaynağı hedef kitaplıkta zaten var; aynı dosya adı çoğaltılamaz."
+                        .into(),
+                );
+            }
+            let item = src.clone();
+            self.store_mut(to).set(item.clone());
+            self.touched(true);
+            return Ok(item);
         }
         let mut value = src.value.clone();
         let new_id = new_item_id(if to == Source::Project { "p" } else { "u" });

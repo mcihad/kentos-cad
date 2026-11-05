@@ -15,7 +15,7 @@ use crate::geom::ellipse::is_full_ellipse;
 use crate::geom::hatch_pattern::carried;
 use crate::jsmath::{PI, atan2, cos, js_hypot, or, sin};
 use crate::op;
-use crate::text::TextAlign;
+use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
 
 /// How a reflection treats texts (docs/adr/0292): AutoCAD's MIRRTEXT.
@@ -129,8 +129,14 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
 
 /// [`transform_shape`] with a reflection's text policy (docs/adr/0292).
 pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Shape {
+    transform_shape_in(shape, m, policy, Font::DEFAULT)
+}
+
+/// A drawing's actual font must be supplied when a Unicode text inherits it.
+/// Legacy transforms and the frozen web policy retain their existing rules.
+pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: Font) -> Shape {
     let s = length_scale(m);
-    match shape {
+    let mut transformed = match shape {
         Shape::Point { p, z, parts } => Shape::Point {
             p: apply(m, *p),
             z: *z,
@@ -645,7 +651,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
         // path it was on, its components in their order (docs/adr/0339 §1).
         Shape::Wall { pts, bulges, wall } => {
             let path = crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed);
-            let mapped = transform_shape_with(&path, m, policy);
+            let mapped = transform_shape_in(&path, m, policy, font);
             let Shape::Polyline { pts, bulges, .. } = mapped else {
                 return shape.clone();
             };
@@ -839,6 +845,43 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 }
             };
             crate::geom::image::with_frame(shape, &frame)
+        }
+    };
+    keep_unicode_mirror_center(shape, &mut transformed, m, policy, font);
+    transformed
+}
+
+/// Readable glyphs cannot themselves be reflected. Preserve their measured
+/// frame's reflected center, including real fallback overhang and paragraph
+/// alignment, instead of estimating it from a nominal cap height.
+pub(crate) fn keep_unicode_mirror_center(
+    before: &Shape,
+    after: &mut Shape,
+    m: &Affine,
+    policy: TextPolicy,
+    font: Font,
+) {
+    if policy == TextPolicy::Web || !is_reflection(m) {
+        return;
+    }
+    let center = |shape: &Shape| {
+        let t = crate::entity::TextPlace::of(shape)?;
+        if !t.is_unicode() || t.path.is_some() {
+            return None;
+        }
+        let [a, b, c, d] = t.unicode_plan(font).ok()?.frame?;
+        let angle = t.rotation * PI / 180.;
+        let (u, v) = (cos(angle), sin(angle));
+        Some(Vec2::new(
+            t.p.x + u * (a + c) * 0.5 - v * (b + d) * 0.5,
+            t.p.y + v * (a + c) * 0.5 + u * (b + d) * 0.5,
+        ))
+    };
+    if let (Some(old), Some(new)) = (center(before), center(after)) {
+        let target = apply(m, old);
+        if let Shape::Text { p, .. } = after {
+            p.x += target.x - new.x;
+            p.y += target.y - new.y;
         }
     }
 }

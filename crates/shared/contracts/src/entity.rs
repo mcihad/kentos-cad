@@ -1167,6 +1167,27 @@ pub struct BlockDefinition {
     pub xref: Option<crate::xref::XrefSource>,
 }
 
+impl BlockDefinition {
+    /// The effective value of a defined attribute on an insert. A constant always belongs to the
+    /// definition; otherwise the insert's value takes precedence over the definition's default.
+    /// `None` means this tag is not defined by the block (it may be an insert datum instead).
+    pub fn attribute_value<'a>(&'a self, insert: &'a InsertEntity, tag: &str) -> Option<&'a str> {
+        let definition = self.attributes.iter().find(|attribute| attribute.tag == tag)?;
+        if definition.options.constant {
+            return Some(definition.value.as_deref().unwrap_or(""));
+        }
+        Some(
+            insert
+                .base
+                .attrs
+                .get(tag)
+                .map(String::as_str)
+                .or(definition.value.as_deref())
+                .unwrap_or(""),
+        )
+    }
+}
+
 /// A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its
 /// description, its size and its attributes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

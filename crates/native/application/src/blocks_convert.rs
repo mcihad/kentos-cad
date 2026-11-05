@@ -201,7 +201,7 @@ fn check(
         pending.extend(inner.entities.iter().filter_map(|e|if let Entity::Insert(i)=e {Some(i.block)} else {None}));
         needed.push(Arc::new(inner.clone()));
     }
-    let core_blocks = crate::blocks::core_blocks(&needed);
+    let core_blocks = crate::blocks::core_blocks_in(&needed, crate::geometry::drawing_font(doc.settings().drawing_font));
     let paint_order = relations::PaintOrder::new(doc, &layer);
     let mut mapping = Vec::new();
     let mut placements = Vec::new();

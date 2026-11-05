@@ -6,6 +6,8 @@ test_command_cases.py; this is the same questions through the plain API, and the
 from __future__ import annotations
 
 import unittest
+import json
+import tempfile
 from pathlib import Path
 
 import kentos.cad as cad
@@ -16,6 +18,70 @@ REVISIONS = ROOT / "fixtures/compare/v1/revisions"
 
 
 class DrawingCompare(unittest.TestCase):
+    def test_candidate_ambiguity_survives_output_limit_and_runs_as_a_job(self) -> None:
+        old = cad.Document.new("Eski sürüm", workspace="cad", drawing_unit="m")
+        cad.line.create(old, layer_id=old.active_layer, a=(0, 0), b=(1, 0))
+        new = cad.Document.new("Dış sürüm", workspace="cad", drawing_unit="m")
+        cad.line.create(new, layer_id=new.active_layer, a=(0, 0), b=(1, 0))
+        cad.line.create(new, layer_id=new.active_layer, a=(0, 0.005), b=(1, 0.005))
+        with tempfile.TemporaryDirectory() as folder:
+            baseline = Path(folder) / "baseline.kcad"
+            baseline.write_bytes(old.to_bytes())
+            against = cad.FileCompareAgainst(path=str(baseline))
+            before = new.info()
+            default = cad.drawing.compare(new, against=against)
+            self.assertNotIn("matchCandidates", default.to_json())
+            got = cad.drawing.compare(new, against=against, limit=1, match_search=cad.DrawingMatchSearch(search=0.01))
+            self.assertEqual((got.changed, got.added, got.removed), (0, 2, 1))
+            self.assertEqual(len(got.match_candidates), 1)
+            self.assertTrue(got.match_candidates[0].ambiguous)
+            self.assertTrue(got.truncated)
+            job = new.start("cad.drawing.compare", {"against":against.to_json(), "matchSearch":{"search":0.01}})
+            status = job.wait()
+            self.assertTrue(status.answer.ok)
+            self.assertIsInstance(status.answer.output, cad.DrawingCompared)
+            self.assertEqual(len(status.answer.output.match_candidates), 2)
+            self.assertEqual(new.info(), before)
+
+    def test_source_attribute_proposes_a_far_moved_object(self) -> None:
+        old = cad.Document.new("Eski sürüm", workspace="cad", drawing_unit="m")
+        old_line = cad.line.create(old, layer_id=old.active_layer, a=(0, 0), b=(1, 0), attrs={"sourceHandle":"AB"})
+        new = cad.Document.new("Dış sürüm", workspace="cad", drawing_unit="m")
+        new_line = cad.line.create(new, layer_id=new.active_layer, a=(100, 0), b=(101, 0), attrs={"sourceHandle":"AB"})
+        with tempfile.TemporaryDirectory() as folder:
+            baseline = Path(folder) / "baseline.kcad"
+            baseline.write_bytes(old.to_bytes())
+            got = cad.drawing.compare(new, against=cad.FileCompareAgainst(path=str(baseline)),
+                match_search=cad.DrawingMatchSearch(search=0.001, key="sourceHandle"))
+            candidate = got.match_candidates[0]
+            self.assertEqual((candidate.old_uid, candidate.new_uid), (old_line.uid, new_line.uid))
+            self.assertEqual(candidate.evidence, "sourceKey")
+            self.assertFalse(candidate.ambiguous)
+            self.assertFalse(candidate.same_geometry)
+
+    def test_viewport_changes_are_separate_read_only_and_follow_undo(self) -> None:
+        sheet = json.loads((ROOT / "fixtures/sheet/v1/viewports.json").read_text())["cases"][0]["sheet"]
+        doc = cad.Document.new("Revizyon paftası", workspace="cad", drawing_unit="mm")
+        cad.sheets.edit(doc, ops=[dict(op="addSheet", sheet=sheet)])
+        with tempfile.TemporaryDirectory() as folder:
+            baseline = Path(folder) / "baseline.kcad"
+            baseline.write_bytes(doc.to_bytes())
+            with doc.group("Görünüş ölçeği"):
+                cad.sheets.edit(doc, ops=[dict(op="setViewport", id="viewport", ratio=dict(paper=1, model=20))])
+            before = doc.info()
+            against = cad.FileCompareAgainst(path=str(baseline))
+            got = cad.drawing.compare(doc, against=against)
+            self.assertEqual((got.changed, got.added, got.removed), (0, 0, 0))
+            self.assertEqual(len(got.project_changes), 1)
+            change = got.project_changes[0]
+            self.assertEqual((change.kind, change.id, change.status), ("viewport", "page/viewport", "changed"))
+            self.assertTrue(any(f.startswith("kind.view") for f in change.fields))
+            self.assertEqual(doc.info(), before)
+            doc.undo()
+            self.assertNotIn("projectChanges", cad.drawing.compare(doc, against=against).to_json())
+            doc.redo()
+            self.assertEqual(cad.drawing.compare(doc, against=against).project_changes, got.project_changes)
+
     def test_a_moved_object_is_changed_against_its_history_and_nothing_is_written(self) -> None:
         doc = cad.Document.from_bytes(EDITS.read_bytes())
         first = next(iter(doc.entities(page_size=1000))).uid

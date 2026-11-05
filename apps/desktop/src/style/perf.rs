@@ -187,6 +187,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             length_style: None,
             xref_paths: Vec::new(),
             profile_files: Vec::new(),
+            standard_docs: Vec::new(),
             heights: None,
             coordinate_epoch: None,
             road: None,

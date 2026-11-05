@@ -1758,6 +1758,19 @@ impl<'a> TextPlace<'a> {
         if !(r > 90.0 && r <= 270.0) {
             return None;
         }
+        if self.is_unicode() {
+            // The conservative frame includes the real glyph overhang and
+            // shear. Turning about a legacy em box would move that frame.
+            let [a, b, c, d] = self.unicode_plan(font).ok()?.frame?;
+            let (u, v) = self.axes();
+            return Some((
+                Vec2::new(
+                    self.p.x + u.x * (a + c) + v.x * (b + d),
+                    self.p.y + u.y * (a + c) + v.y * (b + d),
+                ),
+                (r + 180.0) % 360.0,
+            ));
+        }
         let (w, below, _, _) = self.extent(font);
         let (along, rise) = self.shares(self.align, font);
         let t = (r * PI) / 180.0;
@@ -2321,7 +2334,7 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
     };
     place.check_profile(font)?;
     let width: Option<f64> = json::read_field(v, "width")?;
-    let turned = match width {
+    let turned = match width.filter(|_| !place.is_unicode()) {
         Some(w) => place.readable_at(w),
         None => place.readable(font),
     };
@@ -2358,7 +2371,7 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
     };
     place.check_profile(font)?;
     let width: Option<f64> = json::read_field(v, "width")?;
-    Ok(match width {
+    Ok(match width.filter(|_| !place.is_unicode()) {
         Some(w) => place.realigned_at(to, w),
         None => place.realigned(to, font),
     })

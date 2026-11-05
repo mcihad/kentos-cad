@@ -222,13 +222,16 @@ pub fn style_table(
     handles: &mut super::Handles,
     names: &StyleNames,
     styles: &[TextStyleDef],
+    shape_files: &[String],
     length: &dyn Fn(f64) -> f64,
-) {
+) -> (HashMap<String, u64>, HashMap<String, u64>) {
+    let mut written = HashMap::new();
+    let mut shapes = HashMap::new();
     table(
         out,
         "STYLE",
         super::template::STYLE_TABLE,
-        1 + styles.len() + names.synthetic.len(),
+        1 + styles.len() + names.synthetic.len() + shape_files.len(),
     );
     record(
         out,
@@ -243,6 +246,7 @@ pub fn style_table(
             continue;
         };
         let h = handles.take();
+        written.insert(s.id.clone(), h);
         record(
             out,
             "STYLE",
@@ -280,7 +284,29 @@ pub fn style_table(
         style_groups(out, name, 0.0, 1.0, 0.0, &font_file(font, *bold, *italic));
         style_data(out, font, *bold, *italic, super::super::xdata::STYLELESS);
     }
+    for file in shape_files {
+        let h = handles.take();
+        shapes.insert(file.to_lowercase(), h);
+        record(
+            out,
+            "STYLE",
+            h,
+            super::template::STYLE_TABLE,
+            "AcDbTextStyleTableRecord",
+        );
+        // Anonymous shape-file STYLE: flag 1 and group 3 are meaningful.
+        out.str(2, "");
+        out.int(70, 1);
+        out.real(40, 0.);
+        out.real(41, 1.);
+        out.real(50, 0.);
+        out.int(71, 0);
+        out.real(42, 0.);
+        out.str(3, file);
+        out.str(4, "");
+    }
     out.str(0, "ENDTAB");
+    (written, shapes)
 }
 
 /// What the report says of open arrows and dots: DXF's arrowhead blocks are not written.

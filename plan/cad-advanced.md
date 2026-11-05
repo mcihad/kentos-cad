@@ -1403,7 +1403,7 @@ kutuyla değil gerçek parça uçlarıyla doğrulanmıştır.
   düşer; alan/uzunluk uydurulmaz. Gizli katmanları kapsayan mevcut
   Tümünü göster kuralı değiştirilmedi. Ham GUI/PDF kanıtları repo dışında.
 
-### CAD-ADV-10 — Yazı ve field üretimini ekran ile çıktıda aynı hale getir [ ]
+### CAD-ADV-10 — Yazı ve field üretimini ekran ile çıktıda aynı hale getir [x]
 
 **Öncelik:** P1. **Kod:** [C17], [C18], [C16].
 **Dayanak:** Unicode karakter kümeleri ve HarfBuzz şekillendirme ayrımı;
@@ -1431,7 +1431,7 @@ sütun ve field içeren metin dosyasını aç/düzenle/yansıt/yazdır. Ekran,
 ölçülen kutu ve PDF satır sonları karşılaştırılsın. Eksik font ve kaynak
 silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
 
-**Çalışma kaydı — devam ediyor (4 Kasım 2026):**
+**Çalışma kaydı — yerel 2D CAD kabulü tamamlandı (4 Kasım 2026):**
 
 - [ADR 0914](../docs/adr/0914-cad-text-layout-and-live-field-delivery.md)
   mevcut dört metin yolunu ve eski yerleşimi koruma koşullarını karşılaştırır.
@@ -1519,10 +1519,44 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   önizleme, eksik glyph reddi ve tek Undo denendi. Bağımsız okuyucu yalnız
   motor bilgisinin değiştiğini ve Undo sonrası özgün byte'ları doğruladı.
   Yeni yazının varsayılanı veya toplu dönüşüm bu adımla değiştirilmedi.
-- Ortak shaping, glyph kapsamı, çift yönlü metin ve tam ekran/PDF
-  eşdeğerliği tamamlanmadığı için **CAD-ADV-10 açık kalır**.
+- Unicode `Okunur yap`, gerçek glyph/fallback/eğiklik çerçevesinin ortası
+  çevresinde döner; JSON'daki eski genişlik tahmini yeni profili geçersiz
+  kılamaz. Eski veya doğrulanamayan alan ve eksik glyph bütün dönüşümü
+  yazmadan reddeder. 47 çekirdek, 28 uygulama, dokuz MCP ve 11 Python
+  testi, sıkı masaüstü Clippy ve güncel derleme geçti. Gerçek GUI'de iki
+  yazı topluca çevrildi; kaydedilen konumlar bağımsız HarfBuzz/FontTools
+  çerçevesiyle iki nanometre içinde eşleşti, referans çizgileri değişmedi.
+  Tek GUI Undo sonrası dosya özgün byte'lara döndü. Eski alanlı seçimin
+  açıklamalı reddi de GUI'de denendi; ret sonrası kayıt özgün byte'larla aynı.
+  Ekranlar ve QA dosyaları repo dışında; madde genel kabulü hâlâ açık.
+- Unicode aynalama gerçek ölçülen merkezle ve miras alınan proje fontuyla
+  çalışır; iç içe/dinamik blok önbelleği font değişiminde kaynaklardan yenilenir.
+  Gerçek GUI'de önizlemeden Esc, kopyalı onay, kayıt ve tek Undo doğrulandı.
+  Bağımsız referans çerçeveleri ve yazı merkezleri aynı aynaya 4 nm içinde uydu;
+  Undo dosyası özgün byte'larla aynı. Tam çekirdek 973, uygulama 459,
+  interaction 72, MCP 10, Python 12 testi; sıkı Clippy ve derleme geçti.
+  31 çekirdek ve 37 uygulama testi kendi ayrı/ignored koşullarında kaldı.
+- Son kabulde Türkçe/aksan/teknik sembol/RTL/sütun/kesir/eğri ve field
+  içeren yedi yazı gerçek GUI'de açıldı, düzenlendi, aynalandı ve PDF'ye
+  basıldı. Beş font/64 CID konturu özgün fontlarla eşleşti; CPU/PDF
+  mürekkep sınırı en çok 1 px farklıydı. Preview'da Arapça, İbranice ve
+  Türkçe sözcük araması; PDFium'da dört sözcüğün tam geri dönüşü doğrulandı.
+- Toplu değişim grapheme sınırını ve önerilen Unicode planını yazmadan
+  denetler. Uyumsuz profil/biçim birleştirmesi sessiz dönüşmez. Sekmeli
+  satırları ayırma gerçek baseline'ı korur. GUI'de ayır/birleştir/bul-değiştir,
+  açıklamalı ret ve tek Undo denendi; bağımsız okuyucuda ret/Undo kayıtları
+  özgün byte'larla aynıydı. Son başarı bildirimi gerçek ekranda tekrar denendi.
+- Son dilimde 50 çekirdek metin, 468 uygulama (37 ayrı/ignored), 72 interaction,
+  18 plot birim, dokuz kitap testi (bir ayrı dosya testi ignored), ayrıca
+  GUI kaydından CPU/PDF üretme testi; 11 MCP ve 13 Python testi geçti.
+  Sıkı Clippy ve güncel derleme temiz. Ekranlar repo dışında tutuldu.
+- Güncel destek matrisi ve sınırlar ADR 0914'te açık: eski metin otomatik
+  değişmez; ligatür içi parçalı boya ve kapsam dışı glyph açıklamalı
+  reddedilir. Üretilen etiketler/tablo legacy yolları değerlendirilip korunur.
+  Bütün okuyucularda karışık paragraf kopya sırası, PDF/UA/A ve ertelenmiş
+  web kabulü iddia edilmez. **CAD-ADV-10 bu açık yerel destek sözleşmesiyle tamamlandı.**
 
-### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [ ]
+### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [~]
 
 **Öncelik:** P1; yanlış teslimi önleyen uyarılar P0. **Kod:** [C19], [C31].
 **Dayanak:** AutoCAD özel çizgi tiplerinde font, metin yönü, ölçek ve
@@ -1549,7 +1583,187 @@ doğru/yay/path/blok üzerinde kullan. 1:1/1:20/1:100 çıktılarda faz, sembol
 yönü ve kâğıt boyu karşılaştırılsın. Kaynak tanım round-trip'te korunsun;
 desteklenmeyen kaynak için açık bulgu üretilsin.
 
-### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [ ]
+**Başlangıç incelemesi (4 Kasım 2026):**
+
+- [ADR 0930](../docs/adr/0930-complex-linetype-renderer-audit.md) AutoCAD
+  kaynaklarını, mevcut sözleşmedeki 12 öğe sınırını ve rendererin dört
+  ayrı sekize kesme/periyot noktasını karşılaştırır. Yazı/şekil kaybı
+  ve görünür kaynaklara dayanan denetim gereği kaydedildi.
+- Gerçek GUI'de 12 öğeli çizgi deseni bağımsız tam desen geometrisiyle
+  yan yana açıldı; sekizde kesilme ve HW işaretlerinin yokluğu görüldü.
+  Ekran ve deney dosyaları repo dışında. Bu başlangıç hatası kanıtıdır;
+  düzeltme sonrası kabul veya maddenin tamamlanması değildir.
+
+**İlk çıktı koruması (4 Kasım 2026):**
+
+- Gerçek stil derleme sonucundaki kaynak kaybı artık `linetype_unsupported`
+  bulgusuyla GUI tam ön denetimine, Python ve MCP sorgusuna taşınır.
+  PDF/önizleme ve doğrudan CPU/vektör çıktısı eksik görünüşü sessizce
+  teslim etmez. Kullanılmayan tanım ve desteklenen özel sembol yanlış
+  engel oluşturmamalı; bunlar regresyon testleriyle kapsandı.
+- Gerçek 1:50 GUI testinde LONG12 ve WATER ayrı hata verdi; eksik PDF
+  oluşmadı. Kaydetme reddinde kapanıp açıklamayı kaybeden çıktı penceresi
+  düzeltildi. Aynı kullanılmayan tanımları taşıyan desteklenen desen
+  dosyası GUI'den PDF üretti. Kanıtlar repo dışında; test sayıları ve
+  kapsam sınırları ADR 0930'da.
+- Bu, uzun/yazılı/şekilli deseni çizme tamamlanması değildir. Çokgen veya
+  döndürülmüş viewportun tam kırpma denetimi de açık; ilk koruma batch
+  sınır kutusunu kullanır. Maddenin tamamlandı işareti değiştirilmedi.
+
+**Tam çizgi/boşluk yürütmesi (4 Kasım 2026):**
+
+- Native GPU'da uzun tarifler paylaşılan storage sayfalarından okunur;
+  kısa desenlerin mevcut uniform yolu korunur. CPU, hatch vektörleştirme
+  ve uzak-origin periyodu tam listeyi kullanır. Ekran/PDF sekiz öğede
+  kesilmez. Gerçek GPU'da 12/16 ve normalize 18 öğeli örnekler bağımsız
+  mesafe hesabıyla karşılaştırıldı; genel GPU regresyonu geçti.
+- Gerçek GUI'de 12 öğeli kaynak bağımsız referansla zoom yapılarak,
+  1:50 CPU önizleme ve PDF ile karşılaştırıldı. Bağımsız Poppler çıktısı
+  ve PDF operatörleri doğrulandı; GUI KCAD kaydı kaynakla bayt bayt aynı.
+  1:1/1:20/1:100 vektör tarifleri ayrıca otomatik test edildi.
+- PDF stroke başlangıç fazı da eklendi; aynı desenin faz değişimi ve
+  PDF save/restore önbelleği kapsandı. Gerçek GUI'de özel stil içindeki
+  12/+1,25 mm ve 16/−1,25 mm desenlerin PDF'leri bağımsız referansla
+  karşılaştırıldı; PDF operatörlerinde faz ve tam liste doğrulandı.
+- Kaynak KCAD/LIN'in adlandırılmış 12 öğe sınırını sürümlü genişletme,
+  yazı/şekil ve kalan geometri/viewport/performance matrisi açık.
+  Detay ve kanıt kapsamı ADR 0930'da; maddenin tamamlandı işareti kapalı.
+
+**Viewport birimi ve pafta ekranı (4 Kasım 2026):**
+
+- Çizim birimindeki desenin proje ölçeği yerine gerçek viewport ölçeğinde
+  çözülmesi sağlandı. mm/cm/m/ft, kâğıt/çizim deseni, global/nesne
+  çarpanı ve 1:1/1:20/1:100 için 48 durumlu çıktı matrisi geçti.
+  Asıl masaüstü stil önbelleği ve salt okunur belge davranışı ayrıca sınandı.
+- Gerçek arayüzde bulunan son yarım çizgi kaybı ve pafta ekranında fazın
+  sıfırlanması düzeltildi. Kırpılan başlangıç, köşe ve kapalı dikiş devamı
+  Float64 hesapla korunur; yoğun/noktalı tarif mevcut CPU yolunu kullanır.
+- Gerçek 1:20/1:100 paftalar, iki sayfalı GUI PDF'si ve pozitif/negatif
+  fazlı 12/16 öğeli stil örnekleri bağımsız mavi referanslarla karşılaştırıldı.
+  Test ve kapsam ayrıntıları ADR 0930'da. Bu ilerlemeyi göstermek için
+  ana durum `[~]`; yazı/şekil ve kalan kabul tamamlanmadan `[x]` yapılmayacak.
+
+**Uzak path fazı (4 Kasım 2026):**
+
+- Büyük birikmiş path mesafesinin kesirli fazı GPU upload'ında Float64
+  korunup tam periyoda katlanır; kaynak geometri/mesafe değişmez.
+  Büyük pozitif/negatif başlangıç fazı da Float32 uniformdan önce çözülür.
+- Apple M5 gerçek GPU testi hatayı önce yakaladı, düzeltme sonrası CPU ve
+  bağımsız mesafe referansıyla geçti. Gerçek uygulamada birikmiş mesafesi
+  1.005.000.999,625 m olan path'in yakındaki parçası mavi referansla
+  zoom yapılarak karşılaştırıldı; sınır farkı en fazla 1 piksel.
+  Kapsam ve kalan hassasiyet sınırları ADR 0930'da; ana madde `[~]`.
+
+**Karmaşık dosya kaynakları (4 Kasım 2026):**
+
+- Yalnız çizgi tipinin kullandığı yazı stilleri ve ayrı adsız SHX kaynakları
+  içe almada korunur. Sabit/değişken STYLE yüksekliğinin farklı S birimleri,
+  gerçek yazı stili handle'ı ve U yönü aktarımda izlenir.
+- Ham derece açısı bağımsız kodekle; kaynaklar AC1027/AC1032 DWG ile
+  karşılaştırıldı. Gerçek GUI'de iki kaynak yazı stili ve parametreleri
+  doğrulandı. Test ayrıntıları ADR 0930'da. Yazı/SHX çizimi hâlâ açık.
+
+**Yazılı desen çiziminin ilk dilimi (4 Kasım 2026):**
+
+- Paketli fontların ortak glyph planı artık çizgi tipi içinde GPU/CPU/PDF
+  geometri hattından çizilir. R/A/U, köşe fazı, kaynak stil ve iki ölçek
+  çarpanı korunur. Eksik kaynak ve iş yükü sınırında tam çıktı engeli sürer.
+- Gerçek GUI'de HW, açılı/ters yazı ve köşe örnekleri; 1:20/1:50 pafta,
+  iki sayfalı PDF ve KCAD kaydet–yeniden aç denendi. PDF'deki dört kaynak
+  kelimenin sınırları ayrı referansla 0 piksel fark verdi. Test sayıları,
+  değişikliksiz HEAD'de de olan iki eski golden-test hatası ve açık sınırlar
+  ADR 0930'da. SHX/affine/genişlik/performance kabulü bitmedi; ana durum `[~]`.
+
+**Geniş çoklu çizgi deseni (4 Kasım 2026):**
+
+- Geometrik genişlikli yol artık kesintisiz dolu bant yerine adlandırılmış
+  desenin mürekkep parçalarıyla çizilir. Yay kesimleri analitik uzunlukla,
+  uç genişlikleri özgün kenardan hesaplanır; köşe ve kapalı dikiş korunur.
+  Aynı tarif atlaması kılavuz/tablo ve blok içi geniş çizgilerde giderildi.
+- 1:1/1:20/1:100 alan integrali, aynalı/iç içe blok, ortak model/plot,
+  dolgu görünürlüğü, PDF reddi ve Python plan/execute kontrolleri geçti.
+  Gerçek GUI ve iki sayfalı PDF'de 1:20/1:50 desenler ölçüldü: 5 mm parça,
+  8 mm periyot; bitmap yok. Sonuç ve kalan sınırlar ADR 0930'da.
+- SHX, tam affine, noktalı bant, analitik metin-yay fazı ve performans
+  kabulü açık; madde `[~]` olarak kalır. Ekranlar repo dışında.
+
+**Yönetici önizlemesi (4 Kasım 2026):** Çizgi tipleri listesi ve seçili
+büyük örnek, mevcut KentOS GPU önizleme bileşeniyle gerçek yazılı deseni
+çizer. Genel yanlış desteklenmiyor uyarısı kaldırıldı; çizilemeyen kaynağın
+adı seçimde açıkça gösterilir. Konturlar açılışta/düzenlemede hazırlanır.
+Gerçek LIN yükleme, farklı kaydetme ve yeniden açma testiyle doğrulandı;
+kanıtlar ADR 0930'da. Bu dilim SHX çizimini tamamlamaz.
+
+**SHX şekillerinin ilk çizim dilimi (4 Kasım 2026):** Klasik SHX 1.0/1.1
+kaynakları açık seçimle projeye gömülür; ortak GPU/CPU/PDF hattında gerçek
+stroke şekilleri çizilir. Kaynak/özet/yürütme hataları çıktı engelidir.
+Aynı ekleme Python/MCP komutuyla yapılır; kullanılan kaynak silinemez.
+Gerçek GUI'de ekleme, zoom, 1:20/1:100 pafta, iki sayfalı vektör PDF,
+KCAD kaydı ve harici dosya olmadan yeniden açma doğrulandı. Testler ve
+ölçülmüş PDF sonuçları ADR 0930'da. Unicode/Big Font ve genel SHX metin
+fontları, harici teslim paketi ve kalan geometri/performance kabulü açık;
+maddenin durumu `[~]` olarak korunur.
+
+**SHX CAD teslimi (4 Kasım 2026):** Gömülü kaynak içindeki şekil adı gerçek
+numarasına çözülür; DXF LTYPE kaydı adsız, shape-flag'li STYLE kaydına bağlanır.
+DXF/DWG aktarımı doğrulanmış SHX baytlarını çizimin yanına yazar; aynı dosya
+tekrar kullanılır, farklı içerik/symlink üzerine yazılmaz. Python/MCP planı
+kaynak yolu, özet ve tekrar kullanımını bildirir, dosya yazmaz. Gerçek GUI'den
+DXF ve AC1032 DWG üretildi; bağımsız DXF denetimi 128 nesne, şekil 1/2,
+45° açı ve doğru kaynak bağlantısını doğruladı. Çakışan kaynakla GUI aktarımı
+reddedildi, mevcut dosya korundu. Ayrıntılar ADR 0930'da; otomatik kaynak
+ithali, diğer DWG sürümleri ve ana maddenin kalan çizim kabulü açık.
+
+**Analitik yay üzerindeki işaretler (4 Kasım 2026):** Yerleşik CAD çizgi
+tiplerinde daire, yay ve tek parçalı bulge path'in yazı/SHX konumu artık
+çizim için üretilen küçük kirişlerden hesaplanmaz. Gerçek yay uzunluğu ve
+teğet kullanılır; geniş bant da aynı yerleştiriciyi çağırır. Kapalı dikiş,
+CW/CCW, köşe ve pozitif/negatif faz testleri eklendi. 48 çekirdek, 18 plot
+birim ve 70 plot entegrasyon testi geçti (3 mevcut test atlandı). Gerçek
+GUI zoom/iki pafta/PDF denendi; bağımsız okuyucuyla 1:20'de 91, 1:100'de 18
+şeklin konumu ve 2 mm kol boyu doğrulandı. Elips/nonuniform dönüşüm,
+çok parçalı path, özel offset/effect ve genel performans kabulü bu dilimin
+dışında; taşıyıcı dash fazının bütün eğrilerde analitik olduğu iddia edilmez.
+
+**Yazı stili bağımlılığı (4 Kasım 2026):** Yalnız çizgi tiplerinin kullandığı
+yazı stili artık kullanılmıyor sayılmaz ve purge/silme ile kaybolmaz. Kullanım
+sayacı ve silme açıklaması gerçek GUI'de doğrulandı. Ad değiştirme iki çizgi
+tipinin bağını ve görünüşünü korudu; GUI Undo/Redo ve bağımsız KCAD okuması
+geometri/kimlik/pafta korunmasını doğruladı. Komut validate/plan/execute,
+düşük düzey kayıt, iki adın takası ve eşzamanlı değişikliği koruyan Undo testleri
+geçti. Kalan ana kabul nedeniyle 11. madde `[~]` kalır.
+
+**Etki açıklaması ve API doğrulaması (4 Kasım 2026):** `cad.styles.impact`
+notları, doğrudan yazı nesnesi sayısından ayrı olarak bağımlı çizgi tipi
+adlarını açıklar; stil penceresi aynı açıklamayı gösterir. Güncel Python
+SDK'sı yeniden derlendi; 3 testte korunan stil, rename/KCAD döngüsü,
+salt okunur plan, DXF/DWG yan kaynakları ve önceki 6 çıktı alt durumu geçti.
+Gerçek MCP server testinde de SHX ekleme, kaynak bulgusunun çözülmesi,
+stil etkisi/ret/rename ve iki CAD aktarımı doğrulandı. GUI/Python/MCP
+kanıtları ADR 0930'da; ana maddenin açık kabulü değişmedi.
+
+**Elips işaret mesafesi (4 Kasım 2026):** Mevcut sayısal integral ve
+braketli ters çözüm, elipste yazı/SHX konumunu gerçek yay mesafesine bağlar.
+Basıklık, döndürülmüş eksen, sıfır açısını geçen yay ve büyük koordinatlar
+bağımsız 50 basamaklı eliptik integral referansıyla karşılaştırıldı. On birim
+testi, üç ölçekte altı yolun 18 vektör/PDF senaryosu ve strict Clippy geçti.
+Gerçek GUI zoom/iki pafta ve iki sayfalı PDF kontrol edildi; 106/21 şeklin
+konum hatası 0,000016 mm altında, bitmap yok. Bu elips desteği, bütün blok
+dönüşümü/performance kabulünün bittiği anlamına gelmez. Ayrıntılar ADR 0930'da.
+
+**Blok matrisi ve tekrar hazırlığı (4 Kasım 2026):** Yazı/SHX/uzun tarif
+üç ölçekte, aynalı, farklı X/Y ölçekli ve iç içe bloklarda 432 root/blok
+karşılaştırmasını geçti. Gerçek model/zoom/iki pafta/PDF denendi; SHX kâğıt
+boyu bağımsız ölçüldü. Aynı yazının üçgenlemesi artık bir kez hazırlanır;
+kontur/hassasiyet değişmez. Apple M5/Metal debug ölçümünde 800 çizginin HW
+hazırlığı 1591 → 294 ms (tek örnekte yaklaşık 5,4×), gerçek çizim alanının
+önce/sonra görüntüsü 0 piksel fark. 51 çekirdek, 44 native-style, 18 plot
+birim ve 70 entegrasyon testi geçti; strict Clippy/build geçti. GPU belleği
+azalmadı, 1000 yoğun yazılı çizginin mevcut 2 milyon nokta sınırına takıldığı
+açıkça kaydedildi; sınır artırılmadı. Genel release performansı ve diğer açık
+kapsam tamamlandı sayılmaz. Kanıt ve ölçüm sınırları ADR 0930 §22–23'te.
+
+### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
 **Dayanak:** AutoCAD adlandırılmış kaynak denetimi ve proje araç
@@ -1579,7 +1793,264 @@ farklı blok ve çizgi tipini dene. Önizleme ile sonuç aynı olsun, nesne
 override'ı ve iki viewportun farklı stilleri korunabilsin. Yeni/yeniden
 açılmış projelerde aynı profil tarifi aynı üretim davranışını versin.
 
-### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
+**Özel çizgi tipi denetimi (5 Kasım 2026):** Adlandırılmış katman çizgi tipi,
+standart yalnız yerleşik çizgi tipini tarif ediyorsa artık sessizce uygun
+sayılmaz. Denetim tanım adını ve beklenen yerleşik tipi gösterir; eşlemesi
+bilinmediği için otomatik düzeltilebilir sayılmaz ve uygulama kaynak tanımı
+korur. Komut testi kontrolün salt okunur olduğunu ve uygulama sonrası
+bulgunun kaldığını doğrular. Gerçek çizim standardı penceresinde P_SHX bulgusu
+ve açıklaması görüldü; ekran görüntüsü repo dışında. Sürümlü paket ve diğer
+kabul koşulları açık olduğundan madde `[~]` kalır.
+
+Standartta açıkça tanımlanmayan fakat adlandırma kuralına uyan ek katmanlardaki
+özel çizgi tipleri ve nesnenin kendi özel çizgi tipi de artık denetlenir.
+İki ayrı bulgu ve kaynak çizimin değişmemesi komut testiyle; A-DETAY ve bir
+nesneye ait bulgular gerçek arayüzde doğrulandı. Bu, paket kapsamının tamamı
+değildir.
+
+Nesnenin adlandırılmış özel çizgi tipi, nesneye özel görünüşe izin veren
+standartlarda da ayrı raporlanır; izin listesi boşsa bu denetim yapılmaz.
+Komut sınamaları ve gerçek penceredeki P_TEXT bulgusu doğrulandı.
+Blok tanımlarındaki özel ve izin dışı yerleşik çizgi tipleri de tanım başına
+bir kez taranır; yerleştirme sayısıyla çarpılmaz. Kullanılmayan tanımlar da
+rapora dahil edilir. Otomatik test ve gerçek penceredeki üç blok doğrulandı.
+Katmana göre görünüş kuralı açıksa, blok parçalarındaki açık renk, çizgi tipi
+ve kalınlık atamaları da tanım başına raporlanır; ByBlock değerleri değiştirilmez.
+Parça sayısı ve beklenen görünüş komut testi ve gerçek pencerede doğrulandı.
+
+Elle müdahale gerektiren bulgular standart penceresinde ilk sırada gösterilir;
+satır seçimi rapordaki asıl bulguya bağlı kalır. Gerçek arayüzde ayrıntılar
+ve otomatik düzeltmeden sonra kalan iki bulgu doğrulandı; görüntü repo dışındadır.
+Rapor değişirse eski seçim temizlenir; böylece aynı sıra numarasına gelen
+başka bir bulgu yanlışlıkla seçili gösterilmez. Bu durum gerçek uygulamada
+eksik katman seçilip uygulandıktan sonra doğrulandı.
+
+Standart uygulaması, ön izlemenin üretildiği belge revizyonunu doğrular.
+Arada başka bir işlem çizimi değiştirirse eski ön izleme uygulanmaz; rapor
+yenilenerek yeniden değerlendirilir. Çakışma otomatik testle, güncel raporun
+normal uygulanması gerçek arayüzde doğrulandı.
+
+Yazı ve ölçü stillerinde standartta belirtilen kâğıt yükseklikleri artık
+denetlenir; farklar mm cinsinden ayrı bulgu olarak raporlanır ve çizimi
+kendiliğinden değiştirmez. Komut sınamaları ile gerçek arayüzde 4 → 2,5 mm
+yazı ve 3 → 2,5 mm ölçü yazısı farkları, uygulamadan sonra korunmalarıyla
+birlikte doğrulandı. Bu çalışma sürümlü standart paketinin tamamı değildir.
+
+Çizim standardı penceresi mevcut `cad.standards.check/apply` komutlarının
+desteklediği özel JSON standart tanımını geçici olarak seçebilir. Dosya
+boyutu ve tanımı denetlenir, bilinmeyen alanlar reddedilir; kaynak ve seçimin
+çizime kaydedilmediği gösterilir. Gerçek arayüzde iki farklı tanımla rapor
+değişimi, yerleşik standarda dönüş ve hatalı dosyanın reddi doğrulandı.
+Bu seçim kalıcı veya sürümlü ofis paketi değildir; paket kapsamı açık kalır.
+
+Kimlik ve ofis revizyonu taşıyan sürümlü standart tanımının ilk biçimi
+eklendi (`docs/specs/drawing-standard-package.md`). Eski yalın standart
+dosyaları okunur; bilinmeyen kurallar ve desteklenmeyen sürümler reddedilir.
+Otomatik testler ve gerçek uygulamada dosya seçimiyle kimlik/revizyon gösterimi
+doğrulandı. Bu ilk biçim yalnız mevcut standart kurallarını taşır; seçimi
+projeye kaydetmez ve blok, tarama, şablon veya palet kaynaklarını paketlemez.
+Dolayısıyla 12. maddenin kalıcı, kapsamlı ofis paketi kabulü açık kalır.
+KCAD şema 165, çizimde sıralı standart belgelerini saklama altyapısını taşır;
+bozuk veya yinelenen kimlikli belgeler reddedilir. Bağımsız Python okuyucusu,
+eski şema sınaması ve 235 KCAD testi doğrulandı. Gerçek uygulamada örnek
+çizim açılıp kaydedildi ve iki belgenin sırası/içeriği bağımsız okuyucuyla
+karşılaştırıldı. `cad.settings.set` komutu sürümlü belgeler listesini
+doğrulayıp revizyon kontrolüyle bağlar, sıralar veya kaldırır; Python
+bağlamaları güncellendi. Python'un gerçek yerel motorunda bağlama, kaydetme,
+yeniden açma ve kaldırma doğrulandı. Standart penceresi sürümlü bir dosyayı
+projeye bağlayabilir ve bağlı belgelerden birini seçip denetleyebilir; ilk
+belge pencere açıldığında seçilir. Gerçek arayüzde üç belgeyle bağlama,
+kaydetme, yeniden açma, seçim ve küçük pencerede kaydırma doğrulandı.
+`cad.standards.resolve` ile kullanıcı bağlı belgeleri birlikte denetleyebilir:
+genel kurallar ilk belgeden, her adlandırılmış katman ve stil ilk görüldüğü
+belgeden alınır. Birleştirme sorgusu salt okunurdur; uygulama ayrıca ve belge
+revizyonu denetlenerek yapılır. Bağlı belgeler değişince eski birleşik ön izleme
+uygulanamaz. İki kaynaklı gerçek arayüz testinde ikinci kaynağın A-EK katmanı
+ön izlemede görüldü, uygulandı ve kayıt bağımsız okuyucuyla doğrulandı. Python
+üzerinden çözümleme, denetim ve uygulama planı da sınandı. Blok ve çizgi tipi
+tanımlarının paketlenmesi ve önceliği henüz desteklenmez.
+Birleşik sorgu genel kural ile her katman, yazı ve ölçü stili tanımının
+kaynak kimliğini ve ofis sürümünü de döndürür. Bulgu seçildiğinde ilgili
+tanımın kaynağı pencerede gösterilir; bu bilgi nesne veya viewport görünüşünün
+kaynağı değildir. Kaynak önceliği komut ve Python testleriyle, seçilen katmanın
+kaynağı gerçek arayüzde doğrulandı.
+`cad.standards.conflicts`, bağlı standartlardaki aynı adlı katman, yazı ve
+ölçü stili tanımlarının farklı alanlarını ve iki kaynağı raporlar. Sıra
+değişince ilk kaynak yeniden belirlenir; okunamayan belge varsa eksik rapor
+üretilmez. Arayüz aynı sorguyu kullanır; genel kural farklılıkları da bildirilir.
+Karşılaştırma sorgusu kendiliğinden çizimi değiştirmez. Gerçek arayüzde
+genel kural ve üç adlandırılmış fark, sıra değişimi; komutta salt okunurluk ve
+hatalı belge reddi sınandı. Python bağlamasıyla genel ve katman farkı sınandı.
+Fark satırı seçilince iki kaynağın ilgili değerleri gösterilir; sıralama
+değişirse eski seçimin ayrıntıları temizlenir. Bu davranış gerçek arayüzde,
+renk ve genel kural değerleri ise komut ve Python testlerinde doğrulandı.
+Çizgi kalınlığı ve yazı/ölçü yüksekliğindeki sayısal farklılıklar, standart
+denetiminin kullandığı 1e-9 toleransıyla karşılaştırılır. Sınırın altı ve üstü
+otomatik testte ve gerçek pencerede iki ayrı çizimle doğrulandı.
+Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden
+çıkarılabilir; kaynak dosya ve çizim geometrisi değiştirilmez. Eski ön izleme
+ile sıralama engellenir. Otomatik testler ve gerçek arayüzde sıralama,
+çıkarma iptali, onay ve kaydedilen dosyanın bağımsız okunması doğrulandı.
+Okunamayan bağlı standart uygulanmaz, uygunluk raporu yerine uyarı gösterilir
+ve açık onayla çıkarılabilir. Bu kurtarma
+akışı otomatik test ve gerçek arayüzde denendi; çizimin kaydedilen kopyasında
+diğer standart, katman ve nesne bağımsız okuyucuyla doğrulandı. Birden çok
+okunamayan belge de tek tek çıkarılabilir: mevcut sıralı belgelerin yalnız
+değiştirilmemiş alt kümesine izin verilir. İki belgeyle gerçek arayüz ve
+kaydedilen çizim, komutta ekleme ve sıralama reddi otomatik testle doğrulandı.
+Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
+komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
+tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve
+ilgili otomatik testler güncellendi.
+JSON dosyasında aynı alanın birden fazla yazılması da reddedilir; aksi hâlde
+son değerin sessizce seçilmesi farklı denetim sonuçlarına yol açabilirdi.
+Paket, standart ve katman örnekleri otomatik testte; uyarı ve uygulamanın
+devre dışı kalması gerçek dosya seçicisinde doğrulandı.
+CAD özellik paneli, seçilen nesnenin temel model görünüşünde renk, çizgi tipi,
+kalınlık, saydamlık ve çizgi tipi ölçeğinin etkin değerini ve nesne/katman/
+varsayılan kökenini salt okunur bölümde gösterir. Adlandırılmış nesne çizgi
+tipinin kökeni de nesne olarak hesaplanır. Nokta ve çizgi otomatik sınamaları,
+gerçek uygulamada noktanın seçilip bölümün açılması ve ekran görüntüsüyle
+doğrulandı (`/tmp/kentos-cad-adv12-model-appearance.png`; repo dışında).
+Bu yalnız modelin temel görünüşünü açıklar; blok içi parça, viewport, plot
+profili ve stillerin görsel etkisi için tam köken/override analizi açıktır.
+Sürüm 2 standart belgesi, çizgi tipi ve tarama deseninin adlandırılmış
+tanımlarını `resources` içinde taşıyabilir. Dosya, komut ve KCAD sınırında
+biçim/sürüm/alan/doğruluk denetimi vardır; V1'e kaynak eklenmesi veya V2'de
+kaynak bölümünün olmaması reddedilir. `cad.standards.resolve` ilk kaynak
+tanımını ve kökenini verir, `cad.standards.conflicts` aynı adlı farklı
+tanımların alanlarını ve iki değerini raporlar. Bağlama, kaydetme, yeniden
+okuma, sıra değiştirme ve salt okunur sorgular komut sınamasında doğrulandı;
+masaüstü derlemesi geçti. İki sürüm 2 paketi gerçek uygulamada bağlanıp
+çizgi tipi ile tarama tanımı farkları standart penceresinde görüldü; ekran
+görüntüsü repo dışında `/tmp/kentos-cad-adv12-v2-conflicts.png` konumunda.
+Kaynak tanımları çizime otomatik uygulanmaz.
+`cad.standards.check`, sürüm 2 paketindeki çizgi tipi ve tarama tanımlarını
+çizimin kaynak tablolarıyla artık karşılaştırır. Eksik veya geometrisi farklı
+tanımlar ayrı, salt okunur bulgulardır; açıklama/kaynak meta verisi görünüş
+farkı sayılmaz. `plan` ve `execute` bu tanımları kendiliğinden kurmaz veya
+değiştirmez. Komut ve Python sözleşmeleri güncellendi; eksik, farklı ve eşit
+tanımlar ile Undo otomatik sınandı. Gerçek standart penceresinde iki eksik
+kaynak bulgusu, kısa liste metni, seçilen satırın ayrıntılı tanımı ve pasif
+Uygula düğmesi doğrulandı (`/tmp/kentos-cad-adv12-resource-check.png`, repo
+dışında). Kaynakların güvenli eşleme/kurma akışı hâlâ açıktır.
+Sürüm 2 paketi yayımlanmış kitaplık bloklarının adını, aile/tip kimliğini ve
+yayın numarasını da `resources.blocks` içinde taşıyabilir; geometri pakete
+kopyalanmaz. Bağlı standartlar ilk kaynak önceliğiyle bu referansları çözer,
+aynı adlı fakat farklı yayınları iki kaynağıyla bildirir. Denetim eksik bloğu
+veya farklı yayın kimliği/sürümünü salt okunur bulguya çevirir; blok tanımı ve
+yerleştirmeler değiştirilmez. Paket doğrulaması, komut/Python/MCP sözleşmesi,
+eşit/eksik/farklı ve çakışan kaynak senaryoları otomatik sınandı. Gerçek CAD
+penceresinde eksik kitaplık bloğu ve pasif Uygula görüldü; uzun kimlik metninin
+taşması aynı testte saptanıp okunur, satıra sığan ayrıntıyla düzeltildi
+(`/tmp/kentos-cad-adv12-block-detail-after.png`, repo dışında). Yayın meta
+verisinin eşitliği geometri eşitliğinin kanıtı değildir; blokların güvenli
+eşlenmesi ve içerik denetimi hâlâ açıktır.
+Blok yayın uyuşmazlığının açıklaması artık doğrudan yerleştirme ile blok
+tanımındaki iç başvuru sayılarını ayrı verir; `objects` alanı doğrudan
+yerleştirmeyi taşır. Üç yerleştirmeli komut sınaması ve tek yerleştirmeli gerçek
+CAD penceresinde seçili bulgunun tam metni doğrulandı. Bu yalnız salt okunur
+etki bilgisidir; blok tanımını veya yerleştirmeleri değiştirmez.
+Ofis blok referansı isteğe bağlı çizim birimi de taşıyabilir. Beklenen ve yerel
+birim ayrışırsa, yayın bilgisi aynı olsa dahi ayrı ve otomatik düzeltilemeyen
+`blockUnit` bulgusu çıkar; birim veya ölçek sessizce değiştirilmez. Paketler
+arasındaki birim farkı da kaynaklarıyla raporlanır. Eski paketlerde birim alanı
+yoksa bu denetim yapılmaz. Paket, Rust komutu ve Python SDK sınamaları
+geçti. Gerçek CAD penceresinde `m → mm` bulgusu, bir doğrudan yerleştirme,
+tam ayrıntı ve pasif Uygula düğmesi ekran görüntüsüyle doğrulandı; görüntü
+repo dışında tutuldu.
+Pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
+tam görünüş kökeni ile kabul senaryosu hâlâ açıktır.
+Sürüm 2 paketine `sheetTemplates` altında onaylı pafta şablonu kimliği ve
+revizyonu eklendi. Birleşik sorgu ilk kaynak önceliğini ve kökeni, çakışma
+sorgusu aynı kimliğin farklı revizyonlarını bildirir. Denetim paftanın
+kaydedilmiş `origin` alanını onaylı sürümle salt okunur karşılaştırır; elle
+oluşturulan paftayı yeniden üretmez ve aynı içerik olduğunu iddia etmez.
+Komut sınamasında farklı/eşit revizyon, kaynak önceliği, çakışma ve çizimin
+değişmemesi doğrulandı. Gerçek uygulamada şablon sürümü 1 olan pafta,
+ofis sürümü 2 karşısında ayrı bulgu olarak göründü; satır seçiminin açıklaması
+ve pasif Uygula düğmesi ekran görüntüsüyle doğrulandı (repo dışında).
+Şablon içeriğinin
+paketlenmesi/eşlenmesi ve palet akışı açık kaldığı için madde `[~]` kalır.
+Sürüm 2 paketine adlandırılmış kılavuz stilleri de eklendi. Çözümleme ilk
+kaynağı ve ofis revizyonunu, çakışma raporu aynı adlı farklı görünüş alanlarını
+gösterir; yerel stil kimliği farklı olsa da aynı ad ve görünüş uygun sayılır.
+Eksik veya farklı kılavuz stili denetimi salt okunurdur; mevcut liderleri
+sessizce değiştirmez. Paket/komut ve Python sınamaları geçti. Gerçek uygulamada
+eksik A-NOT stili bulgusu, satır seçimi ve pasif Uygula düğmesi ekran görüntüsüyle
+doğrulandı (repo dışında).
+Sürüm 2 paketi yazı ve ölçü stillerinin kısa standart kurallarından ayrı,
+tam çizim tanımlarını da taşıyıp ilk kaynağı, revizyonu ve aynı adlı farklı
+görünüş alanlarını raporlar. Yerel kimlikler eşleşmek zorunda değildir; adı ve
+görünüşü eşit olan stil uygundur. Eksik/farklı tanımlar otomatik uygulanmaz;
+özellikle mevcut yazı ve ölçüler sessizce değiştirilmez. Paket, komut ve Python
+sınamaları geçti. Gerçek arayüzde A-NOT ve A-DIM eksik tanım bulguları,
+satırların ayrıntısı ve pasif Uygula düğmesi görüldü. Ölçü stili JSON ayrıntısı
+tek satırda kesildiği için görünüm satır kaydırmalı yapıldı; gerçek uygulamada
+aşağı kaydırılarak tanımın tamamının okunabildiği doğrulandı. Görüntüler repo
+dışındadır. Tablo stili,
+güvenli kaynak eşlemesi,
+palet ve tam görünüş kökeni açık olduğundan madde
+`[~]` kalır.
+Doğrudan `cad.standards.check` girdisi ile komut normalizasyonu da paketle
+aynı kaynak alanı denetimini çalıştırır; bilinmeyen yazı/ölçü stili alanları
+Python/MCP yolunda sessizce kaybolmaz. Üç komut aşamasında çizimin ve Undo
+geçmişinin değişmediği otomatik sınandı. Eski KCAD çizimlerindeki toleranslı
+stil okuma korunur; bu değişiklik arayüz davranışını değiştirmez.
+Çizgi tipi ve tarama kaynağı bulgularında kaynak adının katman, doğrudan nesne
+ve blok tanımı içindeki kullanım sayıları ayrı gösterilir. Tarama nesnesi desen
+geometrisini kendi içinde sakladığı için ad eşleşmesi yalnız inceleme ipucudur;
+otomatik kaynak değiştirme yetkisi vermez. Kapsam tek çizim taramasıyla
+hesaplanır, `objects` yalnız doğrudan kullanım sayısını taşır. Katman, nesne ve
+blok parçası içeren komut sınamaları çizim ile Undo geçmişinin değişmediğini
+doğruladı. Gerçek uygulamada GAZ çizgi tipinin farklı tanımı seçildiğinde
+1 katman, 0 doğrudan nesne ve 0 blok parçası açıklaması ile pasif Uygula
+düğmesi ekran görüntüsünde doğrulandı; görüntü repo dışında tutuldu.
+Kayıtlı katman durumundaki adlandırılmış çizgi tipi de etki sayısına eklendi;
+katman durumunun geri yüklenmesinde bu kaynak kullanılabilir. KESIK-İNCE
+örneğinde bir kayıtlı durum, bir doğrudan nesne ve sıfır blok parçası otomatik
+sınamada doğrulandı. Aynı sayılar gerçek uygulamanın kaynak ayrıntısında
+görüldü; Uygula düğmesi pasif kaldı ve ekran görüntüsü repo dışında tutuldu.
+Çizgi tipi ve tarama deseninin iç içe sayısal alanları, paketler arası çakışma
+ve çizim denetiminde aynı mutlak `1e-9` toleransını kullanır. Eşiğin altında
+gereksiz bulgu çıkmaması, üstünde hem çakışma hem yerel tanım farkının çıkması
+komut sınamasında doğrulandı; küçük farklar çizim kaynaklarını değiştirmez.
+Gerçek uygulamada `0,5` ve `0,5000000005` tanımlarıyla yalnız katman adı
+bulguları göründü; yanlış çizgi tipi tanımı bulgusu çıkmadı. Ekran görüntüsü
+repo dışında tutuldu.
+Yazı, ölçü ve kılavuz stilinin farklı yerel tanımlarında doğrudan nesne ile
+blok parçası kullanım sayısı ayrı gösterilir; yazı stili ayrıca aynı adı
+kullanan çizgi tipi tanımlarını sayar. Bir çizgi tipindeki tekrar eden yazı
+elemanları tek tanım olarak sayılır. Yerel stil kimliğiyle sayım ve salt okunur
+denetim komut sınamasından geçti. Gerçek çizimde Yol adı için bir doğrudan
+yazı ve bir blok parçası, Mimari için bir doğrudan ölçü görüldü; iki seçimin
+ayrıntısı ve pasif Uygula düğmesi ekran görüntüleriyle doğrulandı (repo dışında).
+Bu etki bilgisi stil eşleme veya değiştirme işlemi değildir; 12. madde `[~]`
+kalır.
+Ofis paketindeki çok sayıda blok için doğrudan ve iç içe yerleştirme etkisi
+artık çizim başına tek taramada hesaplanır. İki tanımlı blok sınaması doğrudan
+1/2 ve iç başvuru 0/1 sayılarını, çizim ile Undo geçmişinin korunmasını
+doğruladı. Gerçek CAD penceresinde iki bulgu seçilip aynı sayılar, satır
+taşması olmadan ve pasif Uygula düğmesiyle ekran görüntülerinde doğrulandı
+(repo dışında). Bu performans/rapor işi kaynak eşleme kabulünü kapatmaz.
+Mevcut Şablonlar paneli kişisel araç paleti olarak genişletildi: şablonun
+sağ menüsünden favoriye ekleme/çıkarma, listenin başında Favoriler grubu ve
+satır yıldızı; şerit menüsünde de aynı grup vardır. Son kullanılan beş şablon
+ve favoriler kullanıcı ayar klasöründeki `sablon-paleti.json` dosyasında atomik
+olarak saklanır; çizim ve ofis standart paketi değişmez. Kaybolan proje
+şablonu o proje yeniden açılana kadar listede gizlenir. Arama, uygulama ve
+klavye akışı korunur. Panel sınamaları ve dosyadan yeniden okuma geçti;
+gerçek CAD penceresinde sağ menü, yıldız ve yeni uygulama oturumunda favorinin
+geri gelmesi ekran görüntüleriyle doğrulandı (repo dışında). Bu, tüm komutları
+kapsayan genel araç tarifi ve ofis paleti yayını değildir; madde `[~]` kalır.
+Kişisel favori/geçmiş anahtarları kitaplık kaynağına, proje şablonunda ayrıca
+kalıcı proje kimliğine bağlandı. Aynı şablon ID'si başka çizimde geçse bile
+yanlış favori olarak görünmez; eski, kaynak belirtmeyen proje favorisi
+güvenle gizlenir. Farklı proje kimliği sınaması eklendi. Gerçek uygulamada
+favori satırı ve `project:<kimlik>:<şablon>` kaydı doğrulandı; ekran görüntüsü
+repo dışındadır.
+
+### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [~]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].
 **Dayanak:** AutoCAD veri çıkarımı; çizim/kaynak seçimi, dış tabloyla
@@ -1609,7 +2080,134 @@ listesi çıkar; gerçek ölçü ve override örneği ekle. Dış açıklama tab
 anahtarla eşle, kaynağı değiştirip yenile. Tekil sayım, birimler, toplam,
 kullanıcı düzeltmeleri ve çok sayfalı çıktı bağımsız kontrol edilsin.
 
-### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
+**Blok özniteliği tutarlılığı (5 Kasım 2026):** Çizime bağlı blok tablosunun
+gruplama ve ek sütunları artık blok sorgusuyla aynı etkin öznitelik kuralını
+kullanır: sabit tanım değeri, örneğin açık değeri ve tanımın varsayılanı.
+Blokta tanımlanmayan ek veri alanı örnekteki kaydından okunmaya devam eder.
+Üç yerleştirmeli sınamada iki varsayılan/standart ve bir özel değer doğru
+gruplandı; toplam 3, sabit `KAPI` sütunu her iki grupta görüldü. Gerçek CAD
+penceresinde tablonun görünümü, seçimi ve canlı yenileme düğmesi doğrulandı;
+ekran görüntüleri repo dışında tutuldu. Genel çıkarım tarifi, iç içe blok
+kapsamı, anahtarlı dış eşleme ve çok sayfalı çıktı kabulü açık kalır.
+
+**Bağlı tablonun satır kayması koruması (5 Kasım 2026):** Dış dosyadan gelen
+bir hücre elle düzeltilmişse ve eski kaynak satırının değişmeyen verileri
+yeni dosyada başka bir sırada bulunuyorsa, satır indeksine göre yenileme artık
+düzeltmeyi yanlış kaleme taşımaz. Uyarı verir; tablo, kaynak özeti ve Undo
+geçmişi olduğu gibi kalır. Aynı satırdaki fiyatın değişmesi yanlış kayma
+sayılmaz. Komut sınamasında `A/11, B/10` ile `B/10, A/10` dosya sırası;
+gerçek CAD penceresinde yenileme uyarısı, çizimin değişmemesi ve komut
+geçmişindeki "Çizimde değişiklik yok" kaydı doğrulandı. Bu yalnız
+belirlenebilen satır kaymalarını korur; kalıcı satır anahtarıyla eşleme ve
+uyuşmazlık çözümü hâlâ açık kabul işidir.
+
+Ek sınamada elle düzeltme içeren satırın silinmesi veya tekil ilk veri alanının
+değişmesi de güvenli olmayan eşleme sayıldı. Tekil `ID` aynı kalırken kaynak
+açıklamasının değişmesi güncellemeyi gereksiz yere engellemez. Tekil alan
+frekansları yalnız gerekirse ve tek geçişte çıkarılır; çok satırlı tabloda
+her satır için tüm kaynak tekrar taranmaz.
+
+**Aynı hücre çatışması:** Dosyaya bağlı tabloda `Keep` kuralı seçiliyken hem
+kullanıcı hem kaynak dosya son okunan kopyaya göre aynı hücreyi değiştirmişse
+yenileme artık kullanıcı değerini sessizce silmez. Uyarıyla tablo ve kaynak
+özeti korunur; açıkça `Replace` seçimi dosya değerinin üzerine yazılmasını
+sağlar. Komut sınaması değerleri, rapor durumunu ve Undo geçmişini kontrol
+eder. Gerçek CAD penceresinde `A/11` tablosunun dosyadaki `A/12` değişimine
+rağmen korunduğu, uyarı ve "Çizimde değişiklik yok" kaydı ekran görüntüsüyle
+doğrulandı; görüntü repo dışındadır. Bu koruma satır anahtarıyla eşleme ve hücre bazında uyuşmazlık çözümü
+yerine geçmez; madde `[~]` kalır.
+
+**Dış tablo satır anahtarı (5 Kasım 2026):** Dosyaya bağlı tabloda başlıklı,
+benzersiz ve boş olmayan bir sütun satır anahtarı olarak seçilebilir. Bu tercih
+komut/şema/KCAD dosyasında saklanır. Yenileme, kaynak satırları yer değiştirse
+de elle değiştirilen hücreyi aynı anahtarlı satıra taşır; yeni kaynak sırasını
+korur. Çakışan hücre değişimi, yinelenen/boş anahtar veya elle düzeltilmiş
+satırın kaynaktan silinmesi tabloyu ve Undo kaydını değiştirmeden uyarı verir.
+Farklı veri satırı yükseklikleri de satır anahtarıyla birlikte taşınır; gerçek
+CAD penceresinde `B/10` kısa, `A/11` uzun satırın yenileme sonrası da kendi
+yüksekliğini koruduğu görüldü.
+Tek veri satırına bağlı dolgu/renk/hizalama stilleri de aynı anahtarlı satıra
+taşınır; başlık ve tüm tablo stili kapsamı korunur. Gerçek CAD penceresinde
+`B/10` mavi, `A/11` kırmızı dolgusunu sıra değişiminden sonra korudu. Bu
+ekran kontrolü koyu dolguda tablo düzenleyicisinin varsayılan siyah yazısının
+okunmadığını da gösterdi; varsayılan yazı rengi arka planın karşıtlığına göre
+seçilecek biçimde düzeltildi. Çok satıra yayılan birleşim veya yeniden
+sıralamayla parçalanan formül aralığı varsa yenileme durdurulur.
+Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
+B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
+korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç içe blok
+sayımı, parçalanan formül aralıkları/çok satırlı birleşimlerin taşınması ve çok paftalı çıktı açık kaldığından
+madde `[~]` durumundadır.
+
+**Çakışma kuralı arayüzü (5 Kasım 2026):** Dosyaya bağlı tablonun
+düzenleyicisinde `Koru` veya `Dosyayla değiştir` seçimi artık görünürdür ve
+komutla aynı kaynağa kaydedilir. Seçim değiştirildiğinde uyarı metni elle
+yazılan değerlerin sonraki yenilemede silineceğini açıklar. Komut sınaması
+varsayılan korumada aynı hücre çatışmasını reddetti ve açık `Replace`
+seçiminden sonra güncellemeyi kabul etti. Gerçek CAD penceresinde `A/11`
+değeriyle açılan tablo için `Dosyayla değiştir` seçilip kaydedildi; `Tabloyu
+güncelle` sonrasında kaynak dosyadaki `A/12` görüntülendi. Ekran görüntüleri
+repo dışında tutuldu.
+
+**Blok adları tekrarlandığında sayım (5 Kasım 2026):** Aynı blok adı bir
+çıkarım isteğinde birden çok kez verilirse blok artık iki kez sayılmaz;
+çizelgenin ek sütun düzeni de tek kez verilen adla aynı kalır. Yerel sınama
+satırları ve toplamı karşılaştırır. İç içe blok, xref ve dizi kapsamı için
+açık sayım seçimi ile izlenebilir örnek kimlikleri hâlâ gereklidir.
+
+**Çok satırlı biçimlerin taşınması (5 Kasım 2026):** Birden fazla veri
+satırına uygulanmış hücre biçimi, anahtarlı satırlar araya yeni satır girerek
+ayrıldığında aynı biçim önceliğini koruyan aralıklara bölünür. Bütün tablo
+veya bütün veri satırları biçimi kapsamını korur; biçimli satır kaybolursa
+ya da biçim sınırı aşılırsa yenileme durur. Yerel sınama `A/B` biçimli,
+`C` biçimsiz kaynağı `A/C/B` sırasına taşıdı. Gerçek CAD penceresinde
+yenileme sonrası `A/11` ve `B/10` dolgusu kaldı, `C/30` biçimsiz kaldı;
+ekran görüntüsü repo dışında tutuldu.
+
+**Tek satırlı birleşimlerin taşınması (5 Kasım 2026):** Başlıkta duran veya
+tek anahtarlı veri satırının içinde kalan birleşim, kaynak satırları yer
+değiştirince konumunu satırla birlikte günceller. Veri satırları arasında
+yayılan birleşim hâlâ güvenli biçimde reddedilir. Yerel sınama `A` satırının
+birleşimini 1. veri satırından 2. veri satırına taşıdı. Gerçek CAD
+penceresinde `A / First 10` birleşik satırı `B / Second / 20` satırının
+altına taşındı; hücre sınırı ve yazı korundu. Görüntü repo dışındadır.
+
+**Alan hücrelerinin taşınması (5 Kasım 2026):** Proje veya nesne kimliğine
+bağlanan field hücresi, anahtarlı dış kaynak satırı yeniden sıralandığında
+aynı kaydın yeni satırına taşınır. Alanın kaydı kaynaktan silindiyse yenileme
+reddedilir. Yerel sınamada `A` satırındaki field adresi 1'den 2'ye taşındı;
+gerçek CAD penceresinde `B/20, A/Dinamik bloklar` sırası ve başarılı yenileme
+görüldü. Ekran görüntüsü repo dışında tutuldu. Parçalanan formül aralıkları ve
+birden çok satıra yayılan birleşimler için güvenli taşıma hâlâ açıktır.
+
+**Formül başvurularının taşınması (5 Kasım 2026):** Formüllerin hem kendi
+hücresi hem de başvurdukları kaynak satırı, yenilemede satır anahtarlarıyla
+yeniden eşlenir. Aralık başvurusu yalnız kaynak satırların tamamı yeni sırada
+kesintisiz kaldığında taşınır. Silinen satıra başvuru veya parçalanan aralık
+yenilemeyi çizimi değiştirmeden durdurur. Yerel
+sınamada `$B$3` başvurusu `$B$2` oldu; gerçek CAD penceresinde `A/10/20,
+B/20/40` tablosu `B/20/40, A/10/20` sırasına yenilendi. Ekran görüntüsü
+repo dışında tutuldu. Aralıkların bitişik ve parçalanmış durumları ayrıca
+yerel testlerle denetlendi.
+
+**Blok adetlerinin dışa aktarımı (5 Kasım 2026):** `file.export.table`,
+blok çizelgesi kaynağındaki adetleri çizimden yeniden sayar ve son sütunu
+çalışma kitabına sayı türünde yazar. Önbellekteki yanlış `999` hücreleri
+varken yerel sınama dışa aktarılan toplamı `3` buldu. Kaynak çizim salt okunur
+kalır. Birim taşıyan genel metraj alanları ve ortak çıkarım tarifi açık kalır.
+
+**Seçili tabloyu dışa aktarma (5 Kasım 2026):** CAD tablosunun bağlamsal
+sekmesine ve Açıklama sekmesindeki Tablo menüsüne `Tabloyu dışa aktar`
+eklendi. Seçili tablonun kalıcı kimliği, seçilen XLSX/ODS/CSV yolu ile
+`file.export.table` komutuna aktarılır; masaüstü, Python ve MCP aynı
+sayısal çalışma kitabı üretimini kullanır. Kaynak tablosu seçilmediğinde
+işlem kullanıcıyı uyarır. Gerçek CAD penceresinde üç bloklu çizelge
+seçilip XLSX olarak kaydedildi; komut geçmişi 3 satır/4 sütun yazıldığını
+gösterdi ve bağımsız XLSX okuması `Adet` sütununu sayı türünde `2, 1, 3`
+olarak doğruladı. Ekran görüntüsü repo dışındadır. Genel metraj alanları ve ortak çıkarım tarifi
+açık kaldığından madde `[~]` durumundadır.
+
+### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [~]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].
 **Dayanak:** AutoCAD 2027 Connected References; kaynak bütünlüğü
@@ -1639,7 +2237,23 @@ altlığı kur. Dosyayı taşı/değiştir, sonra yeniden bağla/yenile; doğru
 kaynak bulunmalı, eski bağların durumu açıklanmalı. Paketi başka dizinde
 aç, kırpmayı ve iki paftadaki override'ları doğrula; tek Undo geçerli modeli geri getirsin.
 
-### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [ ]
+**Aynı adlı yanlış kaynağa bağlanmayı önleme (5 Kasım 2026):** Dış
+başvurunun saklı mutlak yolu kaybolduğunda, proje göreli yolunda veya
+arama klasörlerinde bulunan adayların SHA-256 özeti son yüklenen
+kaynakla karşılaştırılır. Aynı adlı başka çizim otomatik kaynak olmaz;
+başvuru eksik görünür ve aday ile `Yolu değiştir…` eylemi gösterilir.
+İlk yanlış adaydan sonra sonraki klasördeki doğru dosya da aranır.
+Kullanıcının açıkça bağladığı mutlak dosya yerinde değişirse mevcut
+`Değişti`/`Yeniden yükle` akışı korunur. `cad.xrefs.list`, yeniden
+yükleme ve `cad.assets.check` aynı bulma kuralını kullanır. Kaynak
+grafiği, değişim etkisi önizlemesi, paket ve çoklu pafta kabulü açık.
+Gerçek CAD penceresinde ilk arama klasöründeki aynı adlı farklı dosya
+`Bulunamadı` ve açık aday uyarısı olarak göründü; `Yeniden yükle`
+doğru olmayan dosyayı almadı. Doğru dosya ikinci arama klasörüne
+konunca `Yüklü · arama yolundan bulundu` durumu görüntülendi. İki
+durumun ekran görüntüleri repo dışında tutuldu.
+
+### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C24], [C22], [C25].
 **Dayanak:** AutoCAD Trace yorumları ana çizimden ayırır; DWG Compare
@@ -1669,6 +2283,57 @@ belgesi bütün türlerin aynı düzeyde desteklenmediğini açıklar. [R09], [R
 yalnız viewport ve gerçek geometri değişmiş örnekleri karşılaştır.
 Kimliği farklı dış sürümde belirsiz eşlemeyi göster. Nota bağlı kaynak
 değişsin; inceleme durumu ve seçilmiş farkı alma/Undo doğru çalışsın.
+
+**Uygulama durumu (2026-11-05):** Blok tanımı değiştiğinde yerleştirme
+UUID'si ve konumu aynı kalsa da `cad.drawing.compare` artık etkilenen bütün
+yerleştirmeleri `blockDefinition` farkıyla bildiriyor. İç içe blok tanımları
+da parmak izine katılıyor. Masaüstü bölünmüş revizyon görünümü, tanım
+değişikliklerinde yalnız nesne slotlarını izlemek yerine tam karşılaştırma
+yapıyor; küçük blok örneğindeki üç yerleştirme için hem komut hem canlı
+izleyici regresyonu geçti. Güncel masaüstü derlemesinde değişmiş çizim
+ile temel KCAD dosyası bölünmüş görünümde açıldı; `0 eklendi · 0 silindi ·
+3 değişti` sayacı ve sahnedeki fark vurgusu gerçek ekran görüntüsüyle
+doğrulandı. Yalnız katman rengi değişimi de `layerStyle` alanı ve
+`attributes` durumu olarak ayrıldı; bölünmüş görünümde mavi/açık kahverengi
+çizimler ve `3 değişti` sayacı gerçek uygulamada doğrulandı. Ölçü yazısı
+konumu ve yuvarlama override'ı `dimensionPresentation`, ölçü referansları
+`dimensionAssociation` olarak ayrıldı; yalnız sunum değişimi yanlışlıkla
+geometri farkı sayılmıyor. Gerçek uygulamada ölçü yazısı kaydırılmış dosya
+temel çizimle karşılaştırıldı; bölünmüş görünümde tek ölçü vurgulandı ve
+`0 eklendi · 0 silindi · 1 değişti` görüldü. Tarama bağı değişimi
+`hatchAssociation` alanı olarak raporlanıyor; yalnız bağı çözmek geometri
+değişikliği sayılmıyor, gerçek sınır değişikliği geometri olarak kalıyor.
+Altı karşılaştırma regresyonu geçti; gerçek bölünmüş görünümde yalnız
+bağı çözülmüş tarama vurgulandı ve `1 değişti` görüldü. Bu test tek KentOS
+süreciyle yapıldı. Pafta/görünüş semantiği `projectChanges` listesine eklendi:
+viewport ölçeği/oranı, kırpma, kilit, katman kapsamı, çerçeve ve baskı ayarları;
+pafta sayfası/anteti/öğe sırası; kayıtlı görünüş ve şablon; kitap ayarları
+model nesnelerinden ayrı karşılaştırılıyor. 14 native regresyonu, 8 masaüstü
+bölünmüş görünüm testi ve 3 gerçek Python API testi geçti. Python testinde
+Undo/Redo ve salt okunurluk doğrulandı. Gerçek uygulamada yalnız viewport
+ölçeği farklı iki dosyada model sayacı `0 değişti`, ayrı sayaç `Pafta /
+görünüş: 1 fark` gösterdi. API ve kapsam ayrıntıları
+[revizyon karşılaştırma belgesinde](../docs/cad/revision-comparison.md).
+Genel `clippy -D warnings` kapısı, bu teslimin dışındaki mevcut
+`standards.rs`, `table_export.rs`, `registry.rs` ve `tables_edit.rs`
+uyarıları nedeniyle geçmedi; başarılı kontrol olarak sayılmadı.
+Farklı UUID'ler için açık `matchSearch` ile kaynak kimliği özniteliği veya
+geometri yakınlığına dayalı `matchCandidates` önerileri eklendi. Öneriler
+eklenen/silinen sayısını ve kimlikleri değiştirmiyor; çıktı sınırında
+gizlenen alternatifler de belirsizlik hesabına katılıyor. Aday kapsamı
+her tarafta 5000 nesne, hesap iki milyon iş birimiyle sınırlı; native Job
+iptali var. Masaüstünde KentOS UI penceresi, seçim bileşeni ve tabloyla
+1/10/100 mm arama sunuluyor. Okuma kopyasında çalışan tek arka plan işçisi
+belge değişince veya revizyon kapanınca iptal ediliyor; önceki iş gerçekten
+sonlanmadan başka işçi başlayamıyor. Gerçek fare testinde 10 mm'de
+`2 öneri · 2 belirsiz`, 1 mm'de `1 öneri · 0 belirsiz` görüldü. 21 native,
+3 işçi yaşam döngüsü, 8 bölünmüş görünüm ve 5 Python API testi geçti;
+ortak geometri çekirdeğinin bağımsız karşılaştırma örnekleri de geçti.
+Python'da kaynak kimliğiyle uzakta taşınmış nesne önerisi, salt okunurluk,
+liste sınırındaki belirsizlik ve Job sonucu doğrulandı. GUI testi tek
+KentOS süreciyle yapıldı ve test süreci kapatıldı. Görüntüler Git'e eklenmedi.
+İnceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
+tamamlandı olarak işaretlenmedi.
 
 ### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [ ]
 

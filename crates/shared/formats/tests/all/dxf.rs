@@ -54,6 +54,62 @@ fn skipped(r: &ImportResult, what: &str) -> Option<String> {
         .map(|s| s.reason.clone())
 }
 
+/// Hand-authored LTYPE/STYLE tags: no TEXT entity uses these resources.
+/// Group 50 is degrees, independently of a round trip through our writer.
+#[test]
+fn complex_linetypes_retain_style_only_resources_shape_files_and_physical_parameters() {
+    let r = dxf::read(
+        &fixture("complex-ltype-resources.dxf"),
+        &DxfReadOptions {
+            unit: Some(kentos_contracts::DrawingUnit::M),
+            scale: Some(50.),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let fixed = r
+        .text_styles
+        .iter()
+        .find(|s| s.name == "Utility Text")
+        .expect("style used only by linetype");
+    assert_eq!(fixed.height, Some(4.)); // 200 mm / 50 => 4 paper mm
+    assert_eq!(fixed.font_file.as_deref(), Some("Barlow-Regular.ttf"));
+    assert_eq!(fixed.width_factor, Some(0.8));
+    assert_eq!(fixed.oblique, Some(12.));
+    assert!(r.text_styles.iter().any(|s| s.name == "Variable Text"));
+    let pattern = |name: &str| r.line_types.iter().find(|p| p.name == name).unwrap();
+    let text = |name: &str| {
+        pattern(name)
+            .elements
+            .iter()
+            .find_map(|e| e.text.as_ref())
+            .unwrap()
+    };
+    assert_eq!(text("FIXED_TEXT").style, "UTILITY TEXT");
+    assert_eq!(text("FIXED_TEXT").place.scale, 2.); // fixed STYLE height: S is dimensionless
+    assert!((text("FREE_TEXT").place.scale - 0.0002).abs() < 1e-12);
+    for name in ["FIXED_TEXT", "FREE_TEXT"] {
+        let p = &text(name).place;
+        assert!((p.rotation - 90.).abs() < 1e-12);
+        assert!(p.absolute);
+        assert_eq!((p.x, p.y), (0.01, -0.005));
+        assert_eq!(pattern(name).elements[0].length, 0.1);
+    }
+    assert!(text("FIXED_TEXT").place.upright);
+    assert!(!text("FREE_TEXT").place.upright);
+    let shapes: Vec<_> = pattern("SHAPES")
+        .elements
+        .iter()
+        .filter_map(|e| e.shape.as_ref())
+        .collect();
+    assert_eq!(shapes.len(), 2);
+    assert_eq!((&*shapes[0].name, &*shapes[0].file), ("132", "fence.shx"));
+    assert_eq!((&*shapes[1].name, &*shapes[1].file), ("3", "pipes.shx"));
+    for shape in shapes {
+        assert!((shape.place.rotation - 45.).abs() < 1e-12);
+    }
+}
+
 #[test]
 fn every_kind_with_layers_colours_and_the_turkish_code_page() {
     let r = read("entities.dxf");

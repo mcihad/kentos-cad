@@ -358,6 +358,7 @@ def settings(s):
                 "linearEvents": (opaque, False),
                 # Schema 131 (docs/adr/0735): the profiles and mappings the project carries, as their JSON.
                 "profileFiles": (opaque, False),
+                "standardDocs": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2352,6 +2353,8 @@ def document(d):
     has_sets = 114 if any("edge" in item for item in sets) else bool(sets)
     assert d.get("casework", [None]), "boş mutfak dizisi listesi yazılmaz"
     schema = schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d, has_sets)
+    if any(i.get("kind")=="asset" and i.get("format")=="shx" for i in d["styles"]["items"]):
+        schema=max(schema,164)
     texts = d["entities"] + [e for b in d.get("blocks", []) for e in b["entities"]]
     if any(e.get("kind") == "text" and e.get("layout", {}).get("engine") for e in texts):
         schema = max(schema, 163)
@@ -2379,6 +2382,8 @@ def document(d):
         # A fixture's level, a baseboard's finish, a schedule's fixtures, new fields, type filter or subtotals
         # (docs/adr/0733 §8).
         schema = max(schema, 131)
+    if d["settings"].get("standardDocs"):
+        schema = max(schema, 165)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -4787,6 +4792,15 @@ def build():
         out[name + ".kcad"] = container(profile)
         out["broken/" + name + "-in-schema-162.kcad"] = container(
             profile.replace(b"\x67version\x18\xa3", b"\x67version\x18\xa2"))
+    shapes = document(load("shape-resources.json"))
+    out["shape-resources.kcad"]=container(shapes)
+    bad_shape=copy.deepcopy(load("shape-resources.json"))
+    bad_shape["styles"]["items"][0]["sha256"]="0"*64
+    out["broken/shape-resource-hash.kcad"]=container(document(bad_shape))
+    duplicate_shape=copy.deepcopy(load("shape-resources.json"))
+    duplicate_shape["styles"]["items"]*=2
+    out["broken/shape-resource-duplicate.kcad"]=container(document(duplicate_shape))
+    out["broken/shape-resources-in-schema-163.kcad"]=container(shapes.replace(b"\x67version\x18\xa4",b"\x67version\x18\xa3"))
     unicode_text = document(load("text-engine.json"))
     assert unicode_text.count(b"\x67version\x18\xa3") == 1
     out["text-engine.kcad"] = container(unicode_text)
@@ -5564,6 +5578,16 @@ def build():
     fixture_bad("phase", 1, lambda e: e["arch"].update(phase="sonra"))
     fixture_bad("field", 4, lambda e: e["source"]["columns"].append({"field": "brand"}))
     fixture_bad("of", 4, lambda e: e["source"].update(of="furniture"))
+    # Schema 165: ordered, portable standard documents. Schema 164 must refuse the new field.
+    standard_docs = load("standard-docs.json")
+    standard_data = document(standard_docs)
+    assert standard_data.count(b"\x67version\x18\xa5") == 1
+    out["standard-docs.kcad"] = container(standard_data)
+    out["broken/standard-docs-in-schema-164.kcad"] = container(
+        standard_data.replace(b"\x67version\x18\xa5", b"\x67version\x18\xa4"))
+    duplicate = copy.deepcopy(standard_docs)
+    duplicate["settings"]["standardDocs"][1] = duplicate["settings"]["standardDocs"][0].copy()
+    out["broken/standard-docs-duplicate.kcad"] = container(document(duplicate))
     # Schema 132 (docs/adr/0735): a profile, a mapping of the same name after it and another mapping, their documents
     # as the folder's files hold them; schema 131 refuses them.
     carried = load("profile-files.json")
@@ -5641,7 +5665,7 @@ def build():
     del bare["settings"]["road"]
     out["broken/road-work-in-schema-161.kcad"] = container(
         document(bare).replace(b"\x67version\x18\xa2", b"\x67version\x18\xa1"))
-    # Schema 166 (docs/adr/0975 §2): a template's pavement and a volume's rule; schema 163 refuses them as unknown.
+    # Schema 166 (docs/adr/0975 §2): a template's pavement and a volume's rule; schema 165 refuses them as unknown.
     pv = document(load("road-pavement.json"))
     assert pv.count(b"\x67version\x18\xa6") == 1, "the pavement is schema 166"
     out["road-pavement.kcad"] = container(pv)
@@ -5658,7 +5682,7 @@ def build():
     assert pd.count(b"\x67version\x18\xa7") == 1, "the pivot is schema 167"
     out["road-pivot.kcad"] = container(pd)
     out["broken/road-pivot-in-schema-166.kcad"] = container(pd.replace(b"\x67version\x18\xa7", b"\x67version\x18\xa6"))
-    # Schema 166 (docs/adr/0933 §3): a sample line set at the terrain's breaks, clipped, and a range with a curve
+    # Schema 168 (docs/adr/0933 §3): a sample line set at the terrain's breaks, clipped, and a range with a curve
     # step; schema 167 refuses them as unknown.
     broke = load("road-work.json")
     sets = broke["settings"]["road"]["sections"]
@@ -5705,7 +5729,7 @@ def build():
     assert sd.count(b"\x67version\x18\xae") == 1, "a haul plan's approval is schema 174"
     out["road-haul-approval.kcad"] = container(sd)
     out["broken/road-haul-approval-in-schema-173.kcad"] = container(sd.replace(b"\x67version\x18\xae", b"\x67version\x18\xad"))
-    # Schema 173 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road; 172 refuses them.
+    # Schema 175 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road; 174 refuses them.
     netted = load("road-haul-network.json")
     nd = document(netted)
     assert nd.count(b"\x67version\x18\xaf") == 1, "a haul road network is schema 175"

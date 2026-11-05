@@ -488,6 +488,7 @@ pub const PORTED: &[&str] = &[
     "table.insert",
     "table.edit",
     "table.update",
+    "table.export",
     "style.assign",
     "style.clearSymbol",
     // Lejant, saved as a PNG on white paper (docs/adr/0093).

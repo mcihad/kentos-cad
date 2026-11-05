@@ -36,6 +36,73 @@ fn run(doc: &mut Document, command: &str, input: Value) -> Value {
 }
 
 #[test]
+fn portable_shx_commands_validate_export_and_protect_a_used_source() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/shape-resources.json"
+    ))
+    .unwrap();
+    let item = fixture["styles"]["items"][0].clone();
+    let mut doc = open(&setup("cad.library.edit"));
+    let input = json!({"operation":"create","item":item});
+    let before = doc.to_snapshot_v2();
+    let plan = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.library.edit",
+        CallOp::Plan,
+        input.clone(),
+    )
+    .unwrap();
+    assert_eq!(plan["status"], "completed");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    run(&mut doc, "cad.library.edit", input);
+    let saved = doc.to_snapshot_v2();
+    let export = run(
+        &mut doc,
+        "cad.library.edit",
+        json!({"operation":"export","ids":["shx:fence.shx"]}),
+    );
+    let text = export["kstil"].as_str().unwrap();
+    assert_eq!(serde_json::from_str::<Value>(text).unwrap()["version"], 3);
+    assert_eq!(parse_style_file(text).unwrap().items, vec![item]);
+    assert!(parse_style_file(&text.replace("\"version\":3", "\"version\":2")).is_err());
+    assert_eq!(doc.to_snapshot_v2(), saved);
+    let mut other = open(&setup("cad.library.edit"));
+    run(
+        &mut other,
+        "cad.library.edit",
+        json!({"operation":"import","kstil":text}),
+    );
+    assert!(
+        other
+            .styles()
+            .items
+            .iter()
+            .any(|i| i["id"] == "shx:fence.shx")
+    );
+    run(
+        &mut doc,
+        "cad.linetypes.edit",
+        json!({"operation":"add","lineType":{"name":"Fence","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"FENCE.SHX"}},{"length":-2.}]}}),
+    );
+    for input in [
+        json!({"operation":"remove","id":"shx:fence.shx"}),
+        json!({"operation":"duplicate","id":"shx:fence.shx"}),
+        json!({"operation":"update","id":"shx:fence.shx","patch":{"sha256":"wrong"}}),
+    ] {
+        let before = doc.to_snapshot_v2();
+        let result = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.library.edit",
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
+        assert_eq!(result["status"], "failed", "{result}");
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+}
+
+#[test]
 fn a_library_export_is_canonical_and_reads_back_with_what_it_draws() {
     let mut doc = open(&setup("cad.library.edit"));
     let out = run(

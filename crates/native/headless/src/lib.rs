@@ -31,6 +31,7 @@
 mod dispatch;
 mod error;
 pub mod export;
+mod cad_shape_files;
 pub mod file_commands;
 pub mod files;
 pub mod gis_export;

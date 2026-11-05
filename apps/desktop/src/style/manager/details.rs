@@ -35,6 +35,7 @@ pub fn symbol_of_item(item: &Item, lib: &StyleLibrary) -> Value {
         ItemKind::Asset if item.format() == Some("svg") => json!({ "type": "marker", "layers": [
             { "id": "a", "type": "svg", "asset": item.id(), "size": 14, "fill": "ink" },
         ] }),
+        ItemKind::Asset if item.format() == Some("shx") => json!({"type":"marker","layers":[]}),
         ItemKind::Asset => json!({ "type": "marker", "layers": [
             { "id": "a", "type": "raster", "asset": item.id(), "size": 14 },
         ] }),
@@ -222,6 +223,7 @@ pub fn details<'a>(
         label::heading(item.name().to_owned()).into()
     };
     let kind_text = match (item.kind(), kind) {
+        (ItemKind::Asset, _) if item.format() == Some("shx") => "SHX şekil kaynağı".into(),
         (ItemKind::Asset, _) => format!("Çizim ({})", item.format().unwrap_or("").to_uppercase()),
         (ItemKind::Template, _) => format!(
             "Nesne şablonu · {}",
@@ -244,6 +246,12 @@ pub fn details<'a>(
     .align_y(Center);
     let path = item.path().join(" / ");
     let mut fields = Column::new().spacing(10);
+    if item.format() == Some("shx") {
+        fields = fields.push(field_row(
+            "Dosya",
+            text_or_dash(item.text("file").unwrap_or("").into()),
+        ));
+    }
     fields = fields.push(field_row(
         "Kategori",
         if editable {

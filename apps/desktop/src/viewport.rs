@@ -766,9 +766,12 @@ impl Viewport {
             match kept.as_ref() {
                 Some((k, t)) if *k == key => std::sync::Arc::clone(t),
                 _ => {
-                    let t = std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
-                        doc.model.settings(),
-                    ));
+                    let t = std::sync::Arc::new(
+                        kentos_native_style::line_types::LineTypes::with_resources(
+                            doc.model.settings(),
+                            doc.model.styles(),
+                        ),
+                    );
                     *kept = Some((key, std::sync::Arc::clone(&t)));
                     t
                 }

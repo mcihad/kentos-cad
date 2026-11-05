@@ -159,6 +159,8 @@ pub(crate) struct MapDrawer<'a> {
     pub(crate) sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
     /// The paper's system when it is not the project's (docs/adr/0638 §1): the maps' ground is in it.
     pub(crate) map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+    /// Inspect the exact prepared source without producing any map pixels.
+    line_type_check: Option<Result<Vec<String>, String>>,
 }
 
 /// The rows round each bound layer's part, given to `spatial` as obstacle-only neighbours (docs/adr/0636 §2): the
@@ -202,7 +204,16 @@ impl<'a> MapDrawer<'a> {
             raster_only: false,
             sources:None,
             map: None,
+            line_type_check: None,
         }
+    }
+
+    pub(crate) fn inspect_line_types(
+        &mut self, book: &SheetBook, m: &kentos_sheet::display::MapPrim, sheet: &str,
+    ) -> Result<Vec<String>, String> {
+        self.line_type_check = Some(Ok(Vec::new()));
+        let _ = self.draw(book, m, sheet);
+        self.line_type_check.take().unwrap_or_else(|| Ok(Vec::new()))
     }
 
     /// One map's content, or none for a map with no ground (an unplaced one).
@@ -294,6 +305,10 @@ impl<'a> MapDrawer<'a> {
                 origin,
             },
         };
+        if self.line_type_check.is_some() {
+            self.line_type_check = Some(crate::maps::line_type_losses(src, m));
+            return None;
+        }
         let label_spatial = match self.scaled.get(&key) {
             Some(Some((_, spatial))) => spatial,
             _ => self.spatial,
@@ -517,7 +532,7 @@ pub(crate) fn prepare_captured(
         if let Some(f) = findings.iter().find(|f| {
             matches!(
                 f.code.as_str(),
-                "missing_named_view" | "bad_scale" | "bad_value" | "plot_provider_unsupported"
+                "missing_named_view" | "bad_scale" | "bad_value" | "plot_provider_unsupported" | "linetype_unsupported"
                     | "text_field_stale" | "text_field_unverified" | "map_text_unsupported"
                     | "text_layout_unsupported" | "table_field_stale" | "table_field_unverified"
                     | "table_field_source_stale" | "table_field_source_unverified"

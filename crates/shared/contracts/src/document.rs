@@ -462,6 +462,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectProfileFile>>", optional))]
     pub profile_files: Vec<crate::ProjectProfileFile>,
+    /// Ordered portable drawing standards retained with the project. Earlier
+    /// entries take precedence; choosing a standard does not apply it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectStandardDocument>>", optional))]
+    pub standard_docs: Vec<crate::ProjectStandardDocument>,
     /// What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
     /// and the geoid model; absent: not said, and no command takes them for either.
     #[serde(default, skip_serializing_if = "Option::is_none")]

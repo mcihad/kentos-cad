@@ -2364,3 +2364,23 @@ fn a_failed_host_preview_stays_visible_until_retry_or_reopening_output_options()
     assert!(d.error().is_none());
     assert_eq!(d.book(), &before);
 }
+
+#[test]
+fn a_failed_host_output_reopens_options_without_losing_scope_or_changing_the_book() {
+    use kentos_sheet_ui::message::{PdfMessage, PdfScope};
+    let mut d = designer();
+    d.update(Message::Print);
+    d.update(Message::Pdf(PdfMessage::Scope(PdfScope::All)));
+    let before = d.book().clone();
+    let options = d.output_pdf_options();
+    d.update(Message::Pdf(PdfMessage::Save));
+    assert!(d.window(lend(&DemoMaps)).is_none());
+    d.output_failed(ExportKind::Pdf, false, "P · Çizgi tipi eksik.");
+    assert!(d.window(lend(&DemoMaps)).is_some());
+    assert_eq!(d.error(), Some("Dışa aktarılamadı: P · Çizgi tipi eksik."));
+    assert_eq!(d.output_pdf_options(), options);
+    assert_eq!(d.book(), &before);
+    d.update(Message::CloseDialog);
+    d.update(Message::Print);
+    assert!(d.error().is_none());
+}

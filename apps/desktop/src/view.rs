@@ -2084,6 +2084,7 @@ impl App {
             Asking::TakeFrom => self.take_from_view(),
             Asking::LayerList => self.layer_list_view(),
             Asking::FontReport => self.font_report_view(),
+            Asking::RevisionMatches(i) => self.revision_candidates_view(i),
             Asking::FieldInsert => self.field_insert_view(),
             Asking::TextNumber => self.text_number_view(),
             Asking::TextCheck => self.text_check_view(),

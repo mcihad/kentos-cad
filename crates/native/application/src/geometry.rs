@@ -2091,11 +2091,18 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
 /// A text's laid out lines (docs/adr/0182 §2), each one's first letter and the one past its last: what Satırlara
 /// ayır reads its paragraphs' lines from (docs/adr/0325 §3).
 pub fn text_lines(doc: &kentos_domain::Document, t: &kentos_commands::TextEntity) -> Vec<(usize, usize)> {
+    text_layout(doc, t).lines.iter().map(|l| (l.start, l.end)).collect()
+}
+
+/// Physical baseline offsets and depth, including tab pieces of the same row.
+pub fn text_layout(doc: &kentos_domain::Document, t: &kentos_commands::TextEntity) -> kentos_geometry_core::text::paragraph::Layout {
     let s = shape(&Entity::Text(t.clone()));
     let font = drawing_font(doc.settings().drawing_font);
     kentos_geometry_core::entity::TextPlace::of(&s)
-        .map(|p| p.layout(font).lines.iter().map(|l| (l.start, l.end)).collect())
-        .unwrap_or_default()
+        .map(|p| p.layout(font))
+        .unwrap_or(kentos_geometry_core::text::paragraph::Layout {
+            lines: Vec::new(), width: 0., pitch: 0., depth: 0,
+        })
 }
 
 #[cfg(test)]

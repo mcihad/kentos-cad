@@ -80,7 +80,7 @@ use crate::sources::{
     relate as sources_relate, sync as sources_sync,
 };
 use crate::sources_query;
-use crate::standards::{apply as standards_apply, check as standards_check};
+use crate::standards::{apply as standards_apply, check as standards_check, conflicts as standards_conflicts, resolve as standards_resolve};
 use crate::time_query;
 use crate::{sensors_ingest, sensors_latest};
 use crate::spaces_separators;
@@ -175,6 +175,21 @@ fn unreadable(command: &str, e: &serde_json::Error) -> Unrun {
         code: codes::INVALID_INPUT,
         message: format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın."),
     }
+}
+
+// Drawing style records stay permissive for legacy KCAD files. A direct
+// standards command must enforce the package's stricter resource contract
+// before serde drops unrecognized fields during typed deserialization.
+fn check_standard_resource_input(command: &str, input: &Value) -> Result<(), Unrun> {
+    if command == kentos_commands::CAD_STANDARDS_CHECK {
+        if let Some(resources) = input.get("resources").filter(|value| !value.is_null()) {
+            kentos_commands::check_resource_fields(resources).map_err(|message| Unrun {
+                code: codes::INVALID_INPUT,
+                message: format!("{command} girdisi okunamadı: {message}"),
+            })?;
+        }
+    }
+    Ok(())
 }
 
 fn unwritable(command: &str, e: &serde_json::Error) -> Unrun {
@@ -782,6 +797,8 @@ macro_rules! by_command {
             kentos_commands::CAD_FIELDS_USAGE => $then!(fields_usage, FieldsUsage),
             kentos_commands::CAD_LAYERS_TRANSLATE => $then!(layers_translate, LayersTranslate),
             kentos_commands::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
+            kentos_commands::CAD_STANDARDS_CONFLICTS => $then!(standards_conflicts, kentos_commands::StandardsConflicts),
+            kentos_commands::CAD_STANDARDS_RESOLVE => $then!(standards_resolve, kentos_commands::StandardsResolve),
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_commands::CAD_PROFILES_APPLY => {
                 $then!(profiles_apply, kentos_commands::ProfilesApply)
@@ -850,6 +867,7 @@ macro_rules! by_command {
 /// in, its fields in the type's form (what the journal keeps and a
 /// request's fingerprint is made of).
 pub fn normalize(command: &str, input: Value) -> Result<Value, Unrun> {
+    check_standard_resource_input(command, &input)?;
     macro_rules! normal {
         ($module:ident, $input:ty) => {{
             let typed: $input =
@@ -868,6 +886,7 @@ pub fn run(
     op: CallOp,
     input: Value,
 ) -> Result<Value, Unrun> {
+    check_standard_resource_input(command, &input)?;
     macro_rules! go {
         ($module:ident, $input:ty) => {{
             let typed: $input =

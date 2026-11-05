@@ -99,6 +99,13 @@ fn check(doc: &Document, input: &EntitiesMatch) -> Result<Checked, Stop> {
         ));
     }
     let (open, locked) = checks::skip_locked(doc, found)?;
+    for (_, slot, _, _) in &open {
+        if let Some(target) = doc.get(*slot)
+            && let Some(Entity::Text(proposed)) = kind_props(&source, target, &properties)
+        {
+            crate::texts_edit::profile_ready(doc, &proposed)?;
+        }
+    }
     Ok(Checked {
         source,
         targets: open

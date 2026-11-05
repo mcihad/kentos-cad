@@ -7071,7 +7071,7 @@
       "id": "cad.drawing.compare",
       "version": 1,
       "title": "Revizyonları karşılaştır",
-      "summary": "Çizimin şimdiki hâliyle aynı çizimin başka bir hâli arasında ne değiştiğini söyler; çizimi değiştirmez. Öbür hâl (against) açık çizimin geri alma geçmişinde steps adım gerisi (history) ya da bir çizim dosyasıdır (file: mutlak yol, .kcad v2 ya da v1 JSON). Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable.",
+      "summary": "Çizimin şimdiki hâliyle aynı çizimin başka bir hâli arasında ne değiştiğini söyler; çizimi değiştirmez. Öbür hâl (against) açık çizimin geri alma geçmişinde steps adım gerisi (history) ya da bir çizim dosyasıdır (file: mutlak yol, .kcad v2 ya da v1 JSON). Nesneler kalıcı kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). Değişim, veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. Pafta, viewport, kayıtlı görünüş ve şablon farkları model sayılarından ayrı projectChanges listesindedir. matchSearch verilirse farklı UUID'li eşlenmemiş nesneler için matchCandidates önerilir; kimlikler ve model sayıları değişmez. search metre, key kaynak kimliği özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok karşılık ambiguous olarak kalır; liste kesilse de belirsizlik bütün aramadan hesaplanır. Arama her tarafta en çok 5000 nesne ve iki milyon hesap birimiyle sınırlı, native Job'da durdurulabilir. Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found, import_unreadable.",
       "aliases": [
         "revizyonkarsilastir",
         "farkbul"
@@ -7104,6 +7104,17 @@
               "null"
             ],
             "x-unit": "count"
+          },
+          "matchSearch": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingMatchSearch"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional suggestions for unmatched objects with different UUIDs. Suggestions never change identity or counts."
           },
           "tolerance": {
             "description": "How far points may lie apart and the geometry still be the same, metres, 0 to 10; absent: `COMPARE_TOLERANCE`.",
@@ -7154,6 +7165,20 @@
             "description": "The changed objects, in the drawing's order.",
             "items": {
               "$ref": "#/$defs/ChangedObject"
+            },
+            "type": "array"
+          },
+          "matchCandidates": {
+            "description": "Proposed identities, in old/new document order. Original added/removed counts remain unchanged.",
+            "items": {
+              "$ref": "#/$defs/DrawingMatchCandidate"
+            },
+            "type": "array"
+          },
+          "projectChanges": {
+            "description": "Non-model differences: sheets, viewports, named views, view templates and book settings.\nThese are counted separately from model entities and do not create false geometry highlights.",
+            "items": {
+              "$ref": "#/$defs/DrawingProjectChange"
             },
             "type": "array"
           },
@@ -7235,6 +7260,20 @@
             "description": "The changed objects, in the drawing's order.",
             "items": {
               "$ref": "#/$defs/ChangedObject"
+            },
+            "type": "array"
+          },
+          "matchCandidates": {
+            "description": "Proposed identities, in old/new document order. Original added/removed counts remain unchanged.",
+            "items": {
+              "$ref": "#/$defs/DrawingMatchCandidate"
+            },
+            "type": "array"
+          },
+          "projectChanges": {
+            "description": "Non-model differences: sheets, viewports, named views, view templates and book settings.\nThese are counted separately from model entities and do not create false geometry highlights.",
+            "items": {
+              "$ref": "#/$defs/DrawingProjectChange"
             },
             "type": "array"
           },
@@ -27884,7 +27923,7 @@
       "id": "cad.texts.edit",
       "version": 1,
       "title": "Yazıları düzenle",
-      "summary": "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. height (Yazı yüksekliği): uids yazılarının gerçek model yüksekliğini height metre yapar; içerik, yer, hizalama ve alanlar korunur, stil yüksekliği override olarak işaretlenir. Kilitli hedefte tüm işlem reddedilir. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. height (Yazı yüksekliği): uids yazılarının gerçek model yüksekliğini height metre yapar; içerik, yer, hizalama ve alanlar korunur, stil yüksekliği override olarak işaretlenir. Kilitli hedefte tüm işlem reddedilir. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. Birleşik karakterin içindeki replace eşleşmesi invalid_input ile bütün işlemi reddeder; aksanıyla birlikte bütün karakter aranmalıdır. Unicode profilli sonuç ortak glyph planıyla yazmadan doğrulanır. Unicode içeren combine farklı yerleşim/font/paragraf biçimlerini sessizce dönüştürmez; önce biçimler açıkça eşitlenmelidir. Konum/boy düzenlemesinden önce eski veya doğrulanamayan field açıkça yenilenmelidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -61962,10 +62001,193 @@
       ]
     },
     {
+      "id": "cad.standards.resolve",
+      "version": 1,
+      "title": "Proje standartlarını birleştir",
+      "summary": "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, katman ve stil tanımları ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarının her adı ilk bulunduğu kaynaktan alınır. Tanımların kaynağı, kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Builds a prospective standard from the project's ordered bindings.",
+        "title": "StandardsResolve",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Read-only effective standard. Global rules and duplicate named definitions\ncome from the first document; other named definitions are added in order.",
+        "properties": {
+          "provenance": {
+            "$ref": "#/$defs/StandardProvenance"
+          },
+          "resources": {
+            "$ref": "#/$defs/StandardResources",
+            "description": "First definition of each named resource, in binding order. Read-only;\n`cad.standards.apply` does not install or replace these resources."
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "standard": {
+            "$ref": "#/$defs/DrawingStandard"
+          }
+        },
+        "required": [
+          "standard",
+          "resources",
+          "sources",
+          "provenance",
+          "revision"
+        ],
+        "title": "StandardsResolved",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Read-only effective standard. Global rules and duplicate named definitions\ncome from the first document; other named definitions are added in order.",
+        "properties": {
+          "provenance": {
+            "$ref": "#/$defs/StandardProvenance"
+          },
+          "resources": {
+            "$ref": "#/$defs/StandardResources",
+            "description": "First definition of each named resource, in binding order. Read-only;\n`cad.standards.apply` does not install or replace these resources."
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "standard": {
+            "$ref": "#/$defs/DrawingStandard"
+          }
+        },
+        "required": [
+          "standard",
+          "resources",
+          "sources",
+          "provenance",
+          "revision"
+        ],
+        "title": "StandardsResolved",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_standard",
+          "no_standard"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bağlı standartları birleştir",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "cad.standards.conflicts",
+      "version": 1,
+      "title": "Bağlı standartlardaki farklı tanımları göster",
+      "summary": "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Inspect global rules and named definitions in ordered standard documents.",
+        "title": "StandardsConflicts",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Compares global rules and named layer, text and dimension style definitions;\nit does not combine standards or decide which rules should be applied.",
+        "properties": {
+          "conflicts": {
+            "items": {
+              "$ref": "#/$defs/StandardConflict"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "conflicts",
+          "revision"
+        ],
+        "title": "StandardsConflictsReport",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Compares global rules and named layer, text and dimension style definitions;\nit does not combine standards or decide which rules should be applied.",
+        "properties": {
+          "conflicts": {
+            "items": {
+              "$ref": "#/$defs/StandardConflict"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "conflicts",
+          "revision"
+        ],
+        "title": "StandardsConflictsReport",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_standard"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bağlı standartları karşılaştır",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.standards.check",
       "version": 1,
       "title": "Standardı denetle",
-      "summary": "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. resources verilirse çizgi tipi ve tarama deseninin eksik/farklı tanımları ile yayımlanmış blok referansının eksik veya farklı kimlik/sürümü de raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "checkstandards"
       ],
@@ -61990,6 +62212,17 @@
               "string",
               "null"
             ]
+          },
+          "resources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StandardResources"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional named definitions from a version 2 standard package. Checking\nthem never imports or replaces a drawing resource."
           },
           "standard": {
             "anyOf": [
@@ -62687,7 +62920,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS\n  program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes\n  both); a CAD project without a work chooses once, an existing work cannot change;\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and\n  `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with\n  (docs/adr/0720 §1);\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or\nview without levels), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work\nchanged),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a\nsheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),\n`heights_need_system` (ellipsoidal heights or an epoch for a project without a system).",
+        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS\n  program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes\n  both); a CAD project without a work chooses once, an existing work cannot change;\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and\n  `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with\n  (docs/adr/0720 §1);\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n- `standardDocs`: the entire ordered list of versioned drawing-standard\n  documents retained by the project; an empty list removes all bindings.\n  An ordered, byte-identical subset may remove unsupported existing\n  documents for recovery; new or changed documents are validated.\n  This changes the association only and does not apply the standards.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or\nview without levels), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work\nchanged),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a\nsheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),\n`heights_need_system` (ellipsoidal heights or an epoch for a project without a system).",
         "properties": {
           "angleUnit": {
             "anyOf": [
@@ -62864,6 +63097,16 @@
               "null"
             ],
             "x-unit": "epsg"
+          },
+          "standardDocs": {
+            "description": "Replace the project's ordered drawing-standard documents. Missing keeps\nthe current list; an empty list removes it.",
+            "items": {
+              "$ref": "#/$defs/ProjectStandardDocument"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           }
         },
         "title": "SettingsSet",
@@ -115305,7 +115548,125 @@
       ],
       "type": "string"
     },
+    "DrawingMatchCandidate": {
+      "description": "An explicit proposal between two unmatched UUIDs. Neither evidence type guarantees identity.",
+      "properties": {
+        "ambiguous": {
+          "description": "Either object has more than one proposal, including proposals cut from the output by `limit`.",
+          "type": "boolean"
+        },
+        "distance": {
+          "description": "The existing comparison core's location difference, metres; absent for different geometry kinds.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "evidence": {
+          "description": "`sourceKey` for an equal nonempty attribute, otherwise `geometry`.",
+          "type": "string"
+        },
+        "newUid": {
+          "type": "string"
+        },
+        "oldUid": {
+          "type": "string"
+        },
+        "sameGeometry": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "oldUid",
+        "newUid",
+        "evidence",
+        "ambiguous",
+        "sameGeometry"
+      ],
+      "type": "object"
+    },
+    "DrawingMatchSearch": {
+      "additionalProperties": false,
+      "description": "Explicit search for identity candidates, not automatic pairing.",
+      "properties": {
+        "key": {
+          "description": "Attribute containing a source-scoped id/handle. Unequal nonempty keys never match by proximity.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "newUids": {
+          "description": "New-side unmatched UUID scope. Absent: all added objects; empty: none.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "oldUids": {
+          "description": "Old-side unmatched UUID scope. Absent: all removed objects; empty: none. At most 5000 objects per side.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "search": {
+          "description": "Maximum geometric location difference, metres, 0 to 10. Equal source keys may suggest a moved object beyond it.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "search"
+      ],
+      "type": "object"
+    },
+    "DrawingProjectChange": {
+      "description": "A non-model change, compared by the sheet/view's stable id rather than an entity slot.",
+      "properties": {
+        "fields": {
+          "description": "Changed JSON field paths; empty for an addition or removal. Array changes name the array.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "Stable id; a viewport uses its sheet id and item id, separated by `/`.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "`sheet`, `viewport`, `namedView`, `viewTemplate` or `sheetBook`.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "description": "`added`, `removed` or `changed`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "status",
+        "fields"
+      ],
+      "type": "object"
+    },
     "DrawingStandard": {
+      "additionalProperties": false,
       "description": "A drawing standard.",
       "properties": {
         "byLayer": {
@@ -154761,6 +155122,13 @@
           "type": "integer",
           "x-unit": "epsg"
         },
+        "standardDocs": {
+          "description": "Ordered portable drawing standards retained with the project. Earlier\nentries take precedence; choosing a standard does not apply it.",
+          "items": {
+            "$ref": "#/$defs/ProjectStandardDocument"
+          },
+          "type": "array"
+        },
         "survey": {
           "anyOf": [
             {
@@ -154867,6 +155235,20 @@
       },
       "required": [
         "book"
+      ],
+      "type": "object"
+    },
+    "ProjectStandardDocument": {
+      "additionalProperties": false,
+      "description": "An exact versioned standard document retained in the drawing file.",
+      "properties": {
+        "text": {
+          "description": "UTF-8 JSON document, with its format, document version, identity and\noffice revision. Keeping the complete text allows exact re-export.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
       ],
       "type": "object"
     },
@@ -167597,7 +167979,77 @@
       ],
       "type": "string"
     },
+    "StandardBlockReference": {
+      "additionalProperties": false,
+      "description": "A named block library release required by an office standard. The\npublication identifies a reusable type; geometry stays in its library.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "publication": {
+          "$ref": "#/$defs/BlockPublication"
+        },
+        "units": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockUnits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional approved authored unit. Checking it never rescales a local block."
+        }
+      },
+      "required": [
+        "name",
+        "publication"
+      ],
+      "type": "object"
+    },
+    "StandardConflict": {
+      "description": "A later document differs from the first on named definitions or global rules.",
+      "properties": {
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "firstId": {
+          "type": "string"
+        },
+        "firstValues": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "laterId": {
+          "type": "string"
+        },
+        "laterValues": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "firstId",
+        "laterId",
+        "fields",
+        "firstValues",
+        "laterValues"
+      ],
+      "type": "object"
+    },
     "StandardDimensionStyle": {
+      "additionalProperties": false,
       "description": "A dimension style the standard asks for.",
       "properties": {
         "height": {
@@ -167652,7 +168104,7 @@
           "type": "string"
         },
         "objects": {
-          "description": "The objects it is about (ObjectLineType, OwnLook).",
+          "description": "Direct objects this finding is about (ObjectLineType, OwnLook, named\nline type or hatch definition), or direct placements of a mismatched\npublished block (BlockPublication or BlockUnit). Layer and nested-block\nuses are described separately in the finding's message.",
           "format": "uint32",
           "minimum": 0,
           "type": "integer",
@@ -167682,7 +168134,21 @@
             "layerPlot",
             "missingTextStyle",
             "missingDimensionStyle",
-            "dimensionStyleName"
+            "dimensionStyleName",
+            "missingLineTypeDefinition",
+            "lineTypeDefinition",
+            "missingHatchPatternDefinition",
+            "hatchPatternDefinition",
+            "missingBlockReference",
+            "blockPublication",
+            "blockUnit",
+            "sheetTemplateOrigin",
+            "missingLeaderStyleDefinition",
+            "leaderStyleDefinition",
+            "missingTextStyleDefinition",
+            "textStyleDefinition",
+            "missingDimensionStyleDefinition",
+            "dimensionStyleDefinition"
           ],
           "type": "string"
         },
@@ -167712,6 +168178,16 @@
           "type": "string"
         },
         {
+          "const": "textStyleHeight",
+          "description": "A text style's paper height differs from the standard.",
+          "type": "string"
+        },
+        {
+          "const": "dimensionStyleHeight",
+          "description": "A dimension style's paper text height differs from the standard.",
+          "type": "string"
+        },
+        {
           "const": "objectLineType",
           "description": "Objects with a line type of their own the standard does not have.",
           "type": "string"
@@ -167724,6 +168200,7 @@
       ]
     },
     "StandardLayer": {
+      "additionalProperties": false,
       "description": "A layer the standard defines.",
       "properties": {
         "color": {
@@ -167766,7 +168243,175 @@
       ],
       "type": "object"
     },
+    "StandardOrigin": {
+      "description": "Source identity and office revision of an effective definition.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "StandardProvenance": {
+      "description": "Provenance of the global rules and each effective named definition.",
+      "properties": {
+        "blocks": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "dimensionStyleDefinitions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "dimensionStyles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "hatchPatterns": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "layers": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "leaderStyles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "lineTypes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "rules": {
+          "$ref": "#/$defs/StandardOrigin"
+        },
+        "sheetTemplates": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "textStyleDefinitions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "textStyles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "rules",
+        "layers",
+        "textStyles",
+        "dimensionStyles",
+        "lineTypes",
+        "hatchPatterns",
+        "blocks",
+        "sheetTemplates",
+        "leaderStyles",
+        "textStyleDefinitions",
+        "dimensionStyleDefinitions"
+      ],
+      "type": "object"
+    },
+    "StandardResources": {
+      "additionalProperties": false,
+      "description": "Portable resource definitions carried by a version 2 office standard.\nAssociation alone never overwrites the project's definitions.",
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/StandardBlockReference"
+          },
+          "type": "array"
+        },
+        "dimensionStyleDefinitions": {
+          "items": {
+            "$ref": "#/$defs/DimensionStyleDef"
+          },
+          "type": "array"
+        },
+        "hatchPatterns": {
+          "items": {
+            "$ref": "#/$defs/HatchPatternDef"
+          },
+          "type": "array"
+        },
+        "leaderStyles": {
+          "items": {
+            "$ref": "#/$defs/LeaderStyleDef"
+          },
+          "type": "array"
+        },
+        "lineTypes": {
+          "items": {
+            "$ref": "#/$defs/LineTypeDef"
+          },
+          "type": "array"
+        },
+        "sheetTemplates": {
+          "items": {
+            "$ref": "#/$defs/StandardSheetTemplateReference"
+          },
+          "type": "array"
+        },
+        "textStyleDefinitions": {
+          "items": {
+            "$ref": "#/$defs/TextStyleDef"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "StandardSheetTemplateReference": {
+      "additionalProperties": false,
+      "description": "Approved sheet-template origin. It identifies a template revision, not a\ncopy of its contents or permission to modify an existing sheet.",
+      "properties": {
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "templateId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "templateId",
+        "revision"
+      ],
+      "type": "object"
+    },
     "StandardTextStyle": {
+      "additionalProperties": false,
       "description": "A text style the standard asks for.",
       "properties": {
         "font": {
@@ -170852,6 +171497,45 @@
           "type": "object"
         },
         {
+          "description": "A linked file's unique, nonempty row-key column (null: position-based legacy refresh).",
+          "properties": {
+            "column": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "index"
+            },
+            "kind": {
+              "const": "sourceKey",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "What a linked file refresh does with hand-edited cells.",
+          "properties": {
+            "kind": {
+              "const": "sourceRule",
+              "type": "string"
+            },
+            "rule": {
+              "$ref": "#/$defs/SourceOverrides"
+            }
+          },
+          "required": [
+            "kind",
+            "rule"
+          ],
+          "type": "object"
+        },
+        {
           "description": "Kaynağı bırak: the table follows no source.",
           "properties": {
             "kind": {
@@ -171336,7 +172020,7 @@
           "type": "object"
         },
         {
-          "description": "A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the\ndrawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell\nchanged by hand differs from) and what is done with such a cell; unlinked, it is chosen again to update.",
+          "description": "A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the\ndrawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell\nchanged by hand differs from), what is done with such a cell, and an optional unique row key;\nunlinked, it is chosen again to update.",
           "properties": {
             "copy": {
               "items": {
@@ -171355,6 +172039,16 @@
                 "string",
                 "null"
               ]
+            },
+            "keyColumn": {
+              "description": "Zero-based column whose nonempty values identify rows across file revisions.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "index"
             },
             "kind": {
               "const": "file",
@@ -171606,13 +172300,23 @@
           "type": "object"
         },
         {
-          "description": "Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table\nlinked to it: its path, digest and copy kept, `overrides` its rule.",
+          "description": "Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table\nlinked to it: its path, digest and copy kept, `overrides` its rule. An omitted key or override\nkeeps the existing file table's setting when relinking.",
           "properties": {
             "base": {
               "type": [
                 "string",
                 "null"
               ]
+            },
+            "key_column": {
+              "description": "Zero-based file column with unique, nonempty row keys. Requires a header row.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "index"
             },
             "kind": {
               "const": "link",

@@ -103,6 +103,8 @@ pub struct BatchSink {
     scale: Scale,
     /// Fills waiting for the triangulation: the entry, the rings and whether a fan (`fan`).
     fills: Vec<(usize, Vec<Vec<Vec2>>, bool)>,
+    /// Aggregate CAD glyph workload across the layer, before triangulation.
+    cad_points: usize,
     /// The latest styles of each kind and their batches: the objects of a
     /// layer mostly share a few styles (markers along a line always share
     /// one, categories take turns), and building a key for each primitive
@@ -200,6 +202,7 @@ impl BatchSink {
             index: HashMap::new(),
             scale: Scale::default(),
             fills: Vec::new(),
+            cad_points: 0,
             recent_strokes: Recent::new(),
             recent_fills: Recent::new(),
             recent_markers: Recent::new(),
@@ -589,6 +592,49 @@ impl Sink for BatchSink {
         }
     }
 
+    fn reserve_cad_points(&mut self, points: usize) -> bool {
+        let count = self.cad_points.saturating_add(points);
+        if count > 2_000_000 { return false; }
+        self.cad_points = count;
+        true
+    }
+
+    fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
+        if self.hide_strokes { return; }
+        let hidden = self.hide_fills;
+        self.hide_fills = false;
+        self.fill(paint, rings);
+        self.hide_fills = hidden;
+    }
+
+    fn cad_mark_mesh(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>], indices: &[u32]) {
+        if self.hide_strokes {
+            return;
+        }
+        // A projection can densify/nonlinearly warp the boundary. Keep its
+        // existing mapped-ring triangulation, not the source mesh connectivity.
+        if self.map.is_some() || !matches!(paint, FillPaint::Solid { .. }) {
+            self.cad_mark(paint, rings);
+            return;
+        }
+        let points: Vec<_> = rings.iter().flatten().copied().collect();
+        if !indices.len().is_multiple_of(3) || indices.iter().any(|&i| i as usize >= points.len()) {
+            self.cad_mark(paint, rings);
+            return;
+        }
+        let hidden = self.hide_fills;
+        self.hide_fills = false;
+        let entry = rings.first().and_then(|outer| self.queue(paint, outer));
+        self.hide_fills = hidden;
+        if let Some(entry) = entry {
+            let e = &mut self.entries[entry];
+            for &i in indices {
+                let p = points[i as usize];
+                e.data.extend([p.x - e.base.x, p.y - e.base.y]);
+            }
+        }
+    }
+
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
         let at = match self.map {
             None => at,
@@ -881,6 +927,7 @@ mod tests {
             unit: PrimUnit::World,
             dash: None,
             dash_offset: 0.0,
+            line_type_loss: None,
             cap: "butt".into(),
             join: "miter".into(),
             blur: 0.0,
@@ -1021,6 +1068,24 @@ mod tests {
         assert_eq!(at(-98_304.1, 0.0), [-2.0, 0.0]);
         // A coordinate that is no number stays with the anchor.
         assert_eq!(sink.tile_of(Vec2::new(f64::NAN, f64::INFINITY)), [0.0, 0.0]);
+    }
+
+    #[test]
+    fn cad_mark_mesh_uses_mapped_contours_for_nonlinear_projection() {
+        use kentos_geometry_core::crs::map::{MapProjection, interned};
+        use kentos_geometry_core::crs::{Datum, System};
+        let source = System::Tm { datum: Datum::Turef, central_meridian: 36., scale_factor: 1., false_easting: 500_000., false_northing: 0., latitude_of_origin: None };
+        let projection = interned(MapProjection::new(source, System::Mercator {}, Vec::new()));
+        let anchor = projection.forward(ANCHOR).unwrap();
+        let rings = vec![vec![ANCHOR, Vec2::new(ANCHOR.x + 6000., ANCHOR.y), Vec2::new(ANCHOR.x + 6000., ANCHOR.y + 4000.), Vec2::new(ANCHOR.x, ANCHOR.y + 4000.)]];
+        let paint = FillPaint::Solid { color: "#884422".into(), opacity: 0.5, level: 0. };
+        let mut expected = BatchSink::new(anchor); expected.set_map(Some(projection)); expected.cad_mark(&paint, &rings);
+        let mut actual = BatchSink::new(anchor); actual.set_map(Some(projection)); actual.cad_mark_mesh(&paint, &rings, &[0, 1, 2, 0, 2, 3]);
+        let (expected, actual) = (expected.finish(), actual.finish());
+        assert!(!actual.data.is_empty());
+        assert_eq!(actual.json, expected.json);
+        assert_eq!(actual.data, expected.data);
+        assert_eq!(actual.low, expected.low);
     }
 
     /// A picture on a map of another system (docs/adr/0630 §2): its batch holds its small triangles on the map with

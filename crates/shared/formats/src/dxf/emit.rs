@@ -101,6 +101,9 @@ pub struct Library {
     pub text_records: HashMap<String, super::styles::StyleRecord>,
     /// A STYLE record's handle → its upper-case name (a DIMSTYLE's DIMTXSTY).
     pub style_handles: HashMap<u64, String>,
+    /// Shape STYLE records may all have an empty name. Resolve them by
+    /// handle, independently of the text-style name table.
+    pub shape_files: HashMap<u64, String>,
     /// Upper-case dimension style name → its name as written and its variables.
     pub dim_records: HashMap<String, (String, super::styles::DimVars)>,
     /// An LTYPE record's handle → its line type (a DIMSTYLE's DIMLTYPE, docs/adr/0205 §6).

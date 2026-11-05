@@ -390,6 +390,9 @@ impl<'d> Encoder<'d> {
         }
         self.key("styles");
         self.at(Seg::Name("styles"), |e| {
+            if let Err(error) = kentos_contracts::shape_resource::check_items(&doc.styles.items) {
+                return Err(e.fail(Code::BadValue, &error));
+            }
             e.open(2, true)?;
             e.key("items");
             e.at(Seg::Name("items"), |e| e.opaque_list(&doc.styles.items))?;
@@ -511,6 +514,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.join_views.is_empty())
             + usize::from(!s.linear_events.is_empty())
             + usize::from(!s.profile_files.is_empty())
+            + usize::from(!s.standard_docs.is_empty())
             + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
@@ -839,6 +843,17 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.profile_files)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        if !s.standard_docs.is_empty() {
+            self.key("standardDocs");
+            self.at(Seg::Name("standardDocs"), |e| {
+                if let Some(problem) = kentos_contracts::project_standards_problem(&s.standard_docs) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.standard_docs)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -2107,61 +2122,72 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
-    // Schema 177 (docs/adr/0974): an earthwork volume on a grid and its cell.
+    // Schema 179 (docs/adr/0974): an earthwork volume on a grid and its cell.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_grid) {
         return crate::SCHEMA_WITH_VOLUME_GRID;
     }
-    // Schema 176 (docs/adr/0960): a corridor region's slope transition.
+    // Schema 178 (docs/adr/0960): a corridor region's slope transition.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_slope_transitions) {
         return crate::SCHEMA_WITH_SLOPE_TRANSITIONS;
     }
-    // Schema 175 (docs/adr/0958): a template side's cut and fill slope benches.
+    // Schema 177 (docs/adr/0958): a template side's cut and fill slope benches.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cut_benches) {
         return crate::SCHEMA_WITH_CUT_BENCHES;
     }
-    // Schema 174 (docs/adr/0957): a volume factor row's densities and source.
+    // Schema 176 (docs/adr/0957): a volume factor row's densities and source.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_states) {
         return crate::SCHEMA_WITH_VOLUME_STATES;
     }
-    // Schema 173 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road.
+    // Schema 175 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_network) {
         return crate::SCHEMA_WITH_HAUL_NETWORK;
     }
-    // Schema 172 (docs/adr/0954): a mass haul diagram's approved plan and its history.
+    // Schema 174 (docs/adr/0954): a mass haul diagram's approved plan and its history.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_approval) {
         return crate::SCHEMA_WITH_HAUL_APPROVAL;
     }
-    // Schema 171 (docs/adr/0950): a volume's numbered approvals and their history.
+    // Schema 173 (docs/adr/0950): a volume's numbered approvals and their history.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_history) {
         return crate::SCHEMA_WITH_VOLUME_HISTORY;
     }
-    // Schema 170 (docs/adr/0946): a profile's crossings.
+    // Schema 172 (docs/adr/0946): a profile's crossings.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_profile_crossings) {
         return crate::SCHEMA_WITH_PROFILE_CROSSINGS;
     }
-    // Schema 169 (docs/adr/0944): a mass haul diagram's unsuitable cut or barriers.
+    // Schema 171 (docs/adr/0944): a mass haul diagram's unsuitable cut or barriers.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_sorting) {
         return crate::SCHEMA_WITH_HAUL_SORTING;
     }
-    // Schema 168 (docs/adr/0939): a corridor's vertical chord height or sampling check.
+    // Schema 170 (docs/adr/0939): a corridor's vertical chord height or sampling check.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_corridor_sampling) {
         return crate::SCHEMA_WITH_CORRIDOR_SAMPLING;
     }
-    // Schema 167 (docs/adr/0934 §2): an earthwork volume's curve correction.
+    // Schema 169 (docs/adr/0934 §2): an earthwork volume's curve correction.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_curve) {
         return crate::SCHEMA_WITH_VOLUME_CURVE;
     }
-    // Schema 166 (docs/adr/0933 §3): a sample line set's clip, breaks method or curve step.
+    // Schema 168 (docs/adr/0933 §3): a sample line set's clip, breaks method or curve step.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_section_breaks) {
         return crate::SCHEMA_WITH_SECTION_BREAKS;
     }
-    // Schema 165 (docs/adr/0931 §2): a superelevation's axis of rotation.
+    // Schema 167 (docs/adr/0931 §2): a superelevation's axis of rotation.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pivot) {
         return crate::SCHEMA_WITH_ROAD_PIVOT;
     }
-    // Schema 164 (docs/adr/0975 §2): a road template's pavement or a volume's rule.
+    // Schema 166 (docs/adr/0975 §2): a road template's pavement or a volume's rule.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pavement) {
         return crate::SCHEMA_WITH_ROAD_PAVEMENT;
+    }
+    if !doc.settings.standard_docs.is_empty() {
+        return crate::SCHEMA_WITH_STANDARD_DOCS;
+    }
+    if doc
+        .styles
+        .items
+        .iter()
+        .any(kentos_contracts::shape_resource::is_resource)
+    {
+        return crate::SCHEMA_WITH_SHAPE_RESOURCES;
     }
     let new_text = |e: &Entity| matches!(e, Entity::Text(t)
         if t.paragraph.layout.as_ref().is_some_and(|l| l.engine.is_some()));
@@ -2937,8 +2963,8 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
                     || !t.formulas.is_empty()
                     || !t.fields.is_empty()
                     || matches!(&t.source, Some(kentos_contracts::TableSource::Blocks { .. }))
-                    || matches!(&t.source, Some(kentos_contracts::TableSource::File { path, digest, copy, overrides, .. })
-                        if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep()))
+                    || matches!(&t.source, Some(kentos_contracts::TableSource::File { path, digest, copy, overrides, key_column, .. })
+                        if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() || key_column.is_some()))
         })
     };
     if tabled(objs) {

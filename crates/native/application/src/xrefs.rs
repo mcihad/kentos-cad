@@ -185,7 +185,88 @@ fn cycle(drawing: Option<&str>, source: &Source, at: &str) -> Result<(), Stop> {
 /// The source's file as looked for (docs/adr/0349 §1): its path, its relative path from the drawing's folder, the
 /// project's search paths.
 fn found(doc: &Document, x: &XrefSource, drawing: Option<&str>) -> crate::links::Found {
-    crate::links::find(&x.path, x.relative.as_deref(), drawing, &doc.settings().xref_paths)
+    found_source(
+        &x.path,
+        x.relative.as_deref(),
+        &x.digest,
+        drawing,
+        &doc.settings().xref_paths,
+    )
+}
+
+/// A search folder may contain a different drawing with the same file name. The kept path (or the saved relative
+/// path) names an intentional source and may have a new revision; a fallback found only by a search folder must
+/// match the last loaded bytes. Repath is the explicit way to approve a different source.
+pub(crate) fn found_source(
+    path: &str,
+    relative: Option<&str>,
+    digest: &str,
+    drawing: Option<&str>,
+    search: &[String],
+) -> crate::links::Found {
+    let mut direct = crate::links::find(path, relative, drawing, &[]);
+    if let Some(at) = &direct.at {
+        // An absolute path that still exists is the intentionally attached file. A saved relative path becomes a
+        // fallback when that path has gone away, and must prove that it names the same bytes before being accepted.
+        if direct.via != AssetVia::Relative || !Path::new(path).is_absolute()
+            || std::fs::read(at).is_ok_and(|bytes| sha256_hex(&bytes) == digest)
+        {
+            return direct;
+        }
+        direct.tried.push(format!(
+            "{} (içerik özeti farklı)",
+            at.display()
+        ));
+        direct.at = None;
+        direct.via = AssetVia::None;
+    }
+    let folder = drawing.and_then(|d| Path::new(d).parent());
+    let saved = Path::new(path);
+    let rel = relative.map(str::to_owned).or_else(|| {
+        (!saved.is_absolute() && !path.trim().is_empty()).then(|| path.replace('\\', "/"))
+    });
+    let name = saved.file_name();
+    for root in search {
+        let base = if Path::new(root).is_absolute() {
+            PathBuf::from(root)
+        } else if let Some(folder) = folder {
+            crate::source_places::resolve(folder, root)
+        } else {
+            continue;
+        };
+        let mut candidates = Vec::new();
+        if let Some(rel) = &rel {
+            candidates.push(crate::source_places::resolve(&base, rel));
+        }
+        if let Some(name) = name {
+            candidates.push(base.join(name));
+        }
+        for candidate in candidates {
+            let label = candidate.display().to_string();
+            if direct
+                .tried
+                .iter()
+                .any(|s| s == &label || s.starts_with(&format!("{label} (")))
+            {
+                continue;
+            }
+            if candidate.is_file() {
+                if std::fs::read(&candidate).is_ok_and(|bytes| sha256_hex(&bytes) == digest) {
+                    return crate::links::Found {
+                        at: Some(candidate),
+                        via: AssetVia::SearchPath,
+                        tried: Vec::new(),
+                    };
+                }
+                direct.tried.push(format!(
+                    "{label} (içerik özeti farklı)"
+                ));
+            } else {
+                direct.tried.push(label);
+            }
+        }
+    }
+    direct
 }
 
 fn relative_of(drawing: Option<&str>, file: &Path) -> Option<String> {
@@ -658,7 +739,7 @@ fn affected_by(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<String>) {
             }
         }
     }
-    let blocks = crate::blocks::core_blocks(doc.blocks());
+    let blocks = crate::blocks::drawing_blocks(doc);
     let font = crate::geometry::drawing_font(doc.settings().drawing_font);
     let boxes: Vec<kentos_geometry_core::geometry::Bounds> = uids
         .iter()
@@ -769,5 +850,57 @@ pub fn with_relative(blocks: &mut [BlockDefinition], project_file: &Path) {
         {
             x.relative = Some(r);
         }
+    }
+}
+
+#[cfg(test)]
+mod source_finding_tests {
+    use super::*;
+
+    #[test]
+    fn search_paths_never_substitute_another_drawing_with_the_same_name() {
+        let dir = std::env::temp_dir().join(format!(
+            "kentos-xref-digest-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let wrong = dir.join("wrong");
+        let right = dir.join("right");
+        std::fs::create_dir_all(&wrong).unwrap();
+        std::fs::create_dir_all(&right).unwrap();
+        std::fs::write(wrong.join("plan.kcad"), b"another drawing").unwrap();
+        std::fs::write(right.join("plan.kcad"), b"the referenced drawing").unwrap();
+        let digest = sha256_hex(b"the referenced drawing");
+        let moved = dir.join("old/plan.kcad").display().to_string();
+        let drawing = dir.join("host/project.kcad").display().to_string();
+        let roots = [wrong.display().to_string(), right.display().to_string()];
+        let match_found = found_source(&moved, None, &digest, Some(&drawing), &roots);
+        assert_eq!(match_found.at, Some(right.join("plan.kcad")));
+        assert_eq!(match_found.via, AssetVia::SearchPath);
+        let only_wrong = found_source(&moved, None, &digest, Some(&drawing), &roots[..1]);
+        assert!(only_wrong.at.is_none());
+        assert!(
+            only_wrong
+                .tried
+                .iter()
+                .any(|s| s.contains("içerik özeti farklı"))
+        );
+        let relative_candidate = found_source(&moved, Some("../wrong/plan.kcad"), &digest, Some(&drawing), &[]);
+        assert!(relative_candidate.at.is_none());
+        assert!(relative_candidate.tried.iter().any(|s| s.contains("içerik özeti farklı")));
+        // A source deliberately kept at its own path may have changed revision: list reports Changed, and Reload
+        // remains an explicit action. Only a same-name *fallback* is blocked.
+        let deliberate = found_source(
+            &wrong.join("plan.kcad").display().to_string(),
+            None,
+            &digest,
+            Some(&drawing),
+            &[],
+        );
+        assert_eq!(deliberate.at, Some(wrong.join("plan.kcad")));
+        std::fs::remove_dir_all(dir).unwrap();
     }
 }

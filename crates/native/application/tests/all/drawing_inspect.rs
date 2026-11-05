@@ -33,6 +33,232 @@ fn gap_inspection_is_read_only_and_threshold_is_diagnostic() {
 }
 
 #[test]
+fn unicode_readable_is_one_atomic_edit_preserving_fields_and_measured_frame() {
+    use kentos_commands::CallOp;
+    use kentos_geometry_core::{entity::TextPlace, text::Font};
+    use kentos_native_application::{ExecutionContext, geometry::shape, registry};
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["name"] = json!("Ö");
+    raw["entities"] = json!([{"kind":"text","id":1,"layerId":"a","attrs":{},"p":{"x":5000000.,"y":4400000.},
+        "text":"Ög\u{301}\u{306}\u{323}ç — AV","height":0.3,"rotation":137.,"font":"arimo","oblique":24.,"mask":true,
+        "layout":{"engine":"unicode-v1"},"fields":[{"start":0,"end":1,"source":{"kind":"project","value":"name"}}]}]);
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let (uid, entity) = doc
+        .entities_with_uids()
+        .next()
+        .map(|(u, e)| (u.to_string(), e.clone()))
+        .unwrap();
+    let old_shape = shape(&entity);
+    let old_ring = TextPlace::of(&old_shape).unwrap().outline(Font::DEFAULT);
+    let result = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.shapes.edit",
+        CallOp::Execute,
+        json!({"work":{"kind":"readable","ids":[uid]}}),
+    )
+    .unwrap();
+    assert_eq!(result["status"], "completed", "{result}");
+    assert_eq!(result["output"]["count"], 1);
+    let after = doc.entities().next().unwrap();
+    let new_shape = shape(after);
+    let new_ring = TextPlace::of(&new_shape).unwrap().outline(Font::DEFAULT);
+    for (i, a) in old_ring.iter().enumerate() {
+        let b = new_ring[(i + 2) % 4];
+        assert!((a.x - b.x).abs() < 2e-9 && (a.y - b.y).abs() < 2e-9);
+    }
+    let mut actual = serde_json::to_value(after).unwrap();
+    let expected = serde_json::to_value(entity).unwrap();
+    actual["p"] = expected["p"].clone();
+    actual["rotation"] = expected["rotation"].clone();
+    assert_eq!(
+        actual, expected,
+        "the command must preserve field ranges, formatting and masks"
+    );
+    doc.undo();
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn unreadable_unicode_profile_refuses_the_entire_readable_selection_without_undo() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["entities"] = json!([
+        {"kind":"text","id":1,"layerId":"a","attrs":{},"p":{"x":0.,"y":0.},"text":"Sağlam","height":0.3,"rotation":180.,"layout":{"engine":"unicode-v1"}},
+        {"kind":"text","id":2,"layerId":"a","attrs":{},"p":{"x":0.,"y":1.},"text":"Eksik 🛸","height":0.3,"rotation":180.,"layout":{"engine":"unicode-v1"}}
+    ]);
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let ids: Vec<_> = doc
+        .entities_with_uids()
+        .map(|(u, _)| u.to_string())
+        .collect();
+    for (command, args) in [
+        (
+            "cad.shapes.edit",
+            json!({"work":{"kind":"readable","ids":ids}}),
+        ),
+        (
+            "cad.entities.transform",
+            json!({"uids":ids,"transform":{"kind":"mirror","a":{"x":2.,"y":0.},"b":{"x":2.,"y":1.}},"copy":false}),
+        ),
+    ] {
+        for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+            let result = registry::run(
+                &mut ExecutionContext::new(&mut doc),
+                command,
+                op,
+                args.clone(),
+            )
+            .unwrap();
+            assert_eq!(result["status"], "failed", "{result}");
+            assert_eq!(result["error"]["code"], "invalid_input");
+            assert_eq!(doc.to_snapshot_v2(), before);
+            assert_eq!(doc.undo_labels(), undo);
+        }
+    }
+}
+
+#[test]
+fn readable_does_not_remeasure_after_silently_refreshing_a_stale_field() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    for layout in [json!({}), json!({"engine":"unicode-v1"})] {
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+        ))
+        .unwrap();
+        let mut raw = fixture["setup"].clone();
+        raw["name"] = json!("Yeni proje adı");
+        raw["entities"] = json!([
+            {"kind":"text","id":1,"layerId":"a","attrs":{},"p":{"x":0.,"y":0.},"text":"Sağlam","height":0.3,"rotation":180.},
+            {"kind":"text","id":2,"layerId":"a","attrs":{},"p":{"x":0.,"y":1.},"text":"Eski","height":0.3,"rotation":180.,"layout":layout,
+                "fields":[{"start":0,"end":4,"source":{"kind":"project","value":"name"}}]}
+        ]);
+        let mut doc =
+            Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap())
+                .unwrap();
+        let before = doc.to_snapshot_v2();
+        let undo = doc.undo_labels();
+        let ids: Vec<_> = doc
+            .entities_with_uids()
+            .map(|(u, _)| u.to_string())
+            .collect();
+        for (command, args) in [
+            (
+                "cad.shapes.edit",
+                json!({"work":{"kind":"readable","ids":ids}}),
+            ),
+            (
+                "cad.entities.transform",
+                json!({"uids":ids,"transform":{"kind":"mirror","a":{"x":2.,"y":0.},"b":{"x":2.,"y":1.}},"copy":false}),
+            ),
+        ] {
+            for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+                let result = registry::run(
+                    &mut ExecutionContext::new(&mut doc),
+                    command,
+                    op,
+                    args.clone(),
+                )
+                .unwrap();
+                assert_eq!(result["status"], "failed", "{result}");
+                assert_eq!(result["error"]["code"], "invalid_input");
+                assert!(
+                    result["error"]["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains("açıkça yenileyip")
+                );
+                assert_eq!(doc.to_snapshot_v2(), before);
+                assert_eq!(doc.undo_labels(), undo);
+            }
+        }
+    }
+}
+
+#[test]
+fn unicode_mirror_uses_the_inherited_drawing_font_in_plan_execute_and_undo() {
+    use kentos_commands::CallOp;
+    use kentos_geometry_core::{
+        Vec2,
+        entity::TextPlace,
+        geom::affine::{apply, mirror},
+    };
+    use kentos_native_application::{
+        ExecutionContext,
+        geometry::{drawing_font, shape},
+        registry,
+    };
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut raw = fixture["setup"].clone();
+    raw["settings"]["drawingFont"] = json!("overpass");
+    raw["entities"] = json!([{"kind":"text","id":1,"layerId":"a","attrs":{},"p":{"x":5000000.,"y":4400000.},
+        "text":"Ög\u{306}ç — AV مرحبا\n⌀32 ≤ 5‰","height":0.3,"rotation":37.,"boxWidth":2.,"layout":{"engine":"unicode-v1"}}]);
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let (uid, original) = doc
+        .entities_with_uids()
+        .next()
+        .map(|(u, e)| (u.to_string(), e.clone()))
+        .unwrap();
+    let font = drawing_font(doc.settings().drawing_font);
+    let center = |e: &kentos_commands::Entity| {
+        let shape = shape(e);
+        let t = TextPlace::of(&shape).unwrap();
+        let ring = t.outline(font);
+        assert_eq!(t.font, None);
+        assert!(t.is_unicode());
+        Vec2::new((ring[0].x + ring[2].x) / 2., (ring[0].y + ring[2].y) / 2.)
+    };
+    let a = Vec2::new(5000001., 4400001.);
+    let b = Vec2::new(5000002., 4400001.4);
+    let expected = apply(&mirror(a, b), center(&original));
+    let args = json!({"uids":[uid],"transform":{"kind":"mirror","a":{"x":a.x,"y":a.y},"b":{"x":b.x,"y":b.y}},"copy":false});
+    let planned = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.entities.transform",
+        CallOp::Plan,
+        args.clone(),
+    )
+    .unwrap();
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let executed = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.entities.transform",
+        CallOp::Execute,
+        args,
+    )
+    .unwrap();
+    assert_eq!(executed["status"], "completed", "{executed}");
+    let actual = center(doc.entities().next().unwrap());
+    assert!((actual.x - expected.x).abs() < 3e-9 && (actual.y - expected.y).abs() < 3e-9);
+    assert_eq!(
+        serde_json::to_value(doc.entities().next().unwrap()).unwrap(),
+        planned["output"]["entities"][0]
+    );
+    doc.undo();
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
 fn cancelled_inspection_does_not_change_document() {
     let doc = document();
     let before = doc.to_snapshot_v2();

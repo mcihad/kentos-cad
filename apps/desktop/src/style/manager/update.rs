@@ -643,6 +643,20 @@ impl App {
         let Some(id) = self.styles.manager.as_mut().and_then(|m| m.deleting.take()) else {
             return;
         };
+        if let Some((item, Source::Project)) = self.styles.library.get(&id)
+            && item.format() == Some("shx")
+            && let Some(doc) = self.document.as_ref()
+            && kentos_commands::shape_resource::uses(
+                &doc.model.settings().line_types,
+                item.text("file").unwrap_or(""),
+            ) > 0
+        {
+            self.manager_say(
+                "Bu SHX kaynağını çizgi tipleri kullanıyor; önce onların kaynak bağını kaldırın.",
+                true,
+            );
+            return;
+        }
         let name = self
             .styles
             .library

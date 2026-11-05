@@ -37,6 +37,7 @@ pub struct StrokeStyle {
     /// On/off lengths in `unit`, or None.
     pub dash: Option<Vec<f64>>,
     pub dash_offset: f64,
+    pub line_type_loss: Option<String>,
     pub cap: String,
     pub join: String,
     /// Soft edge width in `unit` (0 = crisp).
@@ -320,6 +321,21 @@ pub trait Sink {
     fn stroke(&mut self, style: &StrokeStyle, path: &[Vec2], closed: bool);
     /// One area: outer ring first, holes after.
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]);
+    /// Reserve the complete path's CAD contour work before painting any of it.
+    fn reserve_cad_points(&mut self, _points: usize) -> bool { true }
+    /// A filled CAD line mark follows stroke visibility, not area-fill visibility.
+    fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
+        self.fill(paint, rings);
+    }
+    /// Frozen CAD triangulation. Contour consumers keep the original rings;
+    /// batch consumers may reuse indices instead of clipping every copy again.
+    fn cad_mark_mesh(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>], _indices: &[u32]) {
+        self.cad_mark(paint, rings);
+    }
+    /// An open SHX contour, distinct from its dashed carrier centreline.
+    fn cad_shape(&mut self, style: &StrokeStyle, path: &[Vec2]) {
+        self.stroke(style, path, false);
+    }
     /// `angle`: radians, the direction the marker faces (0 = east).
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64);
     /// The primitives that follow belong to the effect group of a symbol
@@ -417,6 +433,9 @@ impl StrokeStyle {
         o.str("join", &self.join);
         o.num("blur", self.blur);
         o.num("level", self.level);
+        if let Some(loss) = &self.line_type_loss {
+            o.str("lineTypeLoss", loss);
+        }
         o.end();
     }
 }

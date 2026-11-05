@@ -29,7 +29,7 @@ pub mod isolation;
 
 /// The picked piece's own assignment and resolved CAD paint; the owning insert remains the edit target.
 pub fn block_piece_colors(doc: &Document, slot: Slot, path: &[u32]) -> Option<(String, String)> {
-    properties::piece_colors(doc, &crate::blocks::core_blocks(doc.blocks()), doc.get(slot)?, path)
+    properties::piece_colors(doc, &crate::blocks::drawing_blocks(doc), doc.get(slot)?, path)
 }
 
 /// Property refinement for Processing, over its already resolved scope, with the exact command checks.

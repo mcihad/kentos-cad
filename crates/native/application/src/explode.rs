@@ -26,7 +26,7 @@ use kentos_geometry_core::store::Store;
 use kentos_project::format::Format;
 
 use crate::ExecutionContext;
-use crate::blocks::{core_blocks, core_entity};
+use crate::blocks::core_entity;
 use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::edit;
@@ -191,7 +191,7 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
     let (open, locked) = checks::skip_locked(doc, found)?;
     let f = Format::of(doc.settings());
     let font = drawing_font(doc.settings().drawing_font);
-    let own_blocks: Option<Blocks> = store.is_none().then(|| core_blocks(doc.blocks()));
+    let own_blocks: Option<Blocks> = store.is_none().then(|| crate::blocks::drawing_blocks(doc));
     let blocks = store.map_or_else(|| own_blocks.as_ref(), |s| Some(s.blocks()));
     let mut changes = Vec::new();
     let mut not: Option<(usize, String)> = None;

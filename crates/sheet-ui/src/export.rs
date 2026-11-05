@@ -662,4 +662,16 @@ impl Designer {
     pub fn export_failed(&mut self, why: &str) {
         self.error = Some(format!("Dışa aktarılamadı: {why}"));
     }
+
+    /// A host can reject the content before any file write. Reopen the same
+    /// options with their scope/DPI intact so the reason is visible and retryable.
+    pub fn output_failed(&mut self, kind: ExportKind, print: bool, why: &str) {
+        self.dialog = Some(crate::designer::Dialog::Export {
+            kind,
+            dpi: self.export_dpi,
+            errors: self.pdf_errors(),
+            print,
+        });
+        self.export_failed(why);
+    }
 }

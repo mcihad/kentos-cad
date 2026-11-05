@@ -177,7 +177,7 @@ fn stroke_paths(layer: &StyledLayer, b: &StyledBatch, o: &VectorScale) -> Option
         width,
         unit,
         dash,
-        dash_offset: _,
+        dash_offset,
         cap: line_cap,
         ..
     } = &b.kind
@@ -229,6 +229,8 @@ fn stroke_paths(layer: &StyledLayer, b: &StyledBatch, o: &VectorScale) -> Option
                 .filter(|d| !d.is_empty())
                 .map(|d| d.iter().map(|x| paper_mm(*x, *unit, o.scale)).collect())
                 .unwrap_or_default(),
+            dash_offset: (*dash_offset != 0.0 && dash.as_ref().is_some_and(|d|!d.is_empty()))
+                .then(|| paper_mm(*dash_offset, *unit, o.scale)),
             cap: cap(*line_cap),
             join: LineJoin::Round,
         }),
@@ -353,15 +355,9 @@ const MAX_HATCH_PIECES: usize = 200_000;
 /// A hatch's dot on the paper, millimetres across.
 const DOT_MM: f64 = 0.3;
 
-/// A dash list as the shaders repeat it: an odd one twice, at most eight values.
+/// The same complete normalized recipe as native GPU and CPU.
 fn shader_dashes(dash: &[f64]) -> Vec<f64> {
-    let mut even: Vec<f64> = if dash.len() % 2 == 1 {
-        dash.iter().chain(dash).copied().collect()
-    } else {
-        dash.to_vec()
-    };
-    even.truncate(8);
-    even
+    kentos_native_style::uniform::normalized_dashes(dash).into_owned()
 }
 
 /// The drawn pieces of a span of a dashed line whose pattern starts `phase` before the line's
@@ -487,6 +483,7 @@ fn fill_paths(
                 color: color(*c, c[3]),
                 width,
                 dash: Vec::new(),
+                dash_offset: None,
                 cap,
                 join: LineJoin::Miter,
             };
@@ -640,6 +637,7 @@ fn marker_paths(
         color: color(c, c[3] * opacity),
         width: paper_mm(stroke_width.max(0.0), *unit, o.scale),
         dash: Vec::new(),
+        dash_offset: None,
         cap: LineCap::Butt,
         join: LineJoin::Miter,
     };
@@ -893,6 +891,7 @@ mod tests {
             group: 0,
             effect: None,
             weight_cap: 0.0,
+            line_type_loss: None,
         };
         let around = |x: f64, y: f64| Some([x - 50.0, y - 50.0, x + 50.0, y + 50.0]);
         assert!(batch_reaches(&batch, &o, around(583_670.0, 4_400_020.0)));
@@ -941,6 +940,7 @@ mod tests {
             group: 0,
             effect: None,
             weight_cap: 0.0,
+            line_type_loss: None,
         };
         let layer = StyledLayer {
             low: Vec::new(),
@@ -968,6 +968,7 @@ mod tests {
             level: 0., key: 0, bounds: [16960.,16960.,16960.0006,16960.0005],
             origin: [0.,0.], reach: 0., reach_unit: Unit::World,
             min_scale: None, max_scale: None, group: 0, effect: None, weight_cap: 0.,
+            line_type_loss: None,
         };
         let layer = StyledLayer { data, low, ..Default::default() };
         let shapes = fill_paths(&layer, &batch, &paint, &VectorScale { scale: 50., origin: [4_000_000_000.,1_000_000.] }).unwrap();

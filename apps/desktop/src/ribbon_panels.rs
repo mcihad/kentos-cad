@@ -346,10 +346,21 @@ impl App {
             })
         };
         let mut out = Vec::new();
-        let recent: Vec<TemplateLine> = self
-            .recent_templates
+        let favorites: Vec<TemplateLine> = self
+            .templates_panel
+            .favorites()
             .iter()
-            .filter_map(|id| line(id))
+            .filter_map(|key| self.personal_template_id(key).and_then(&line))
+            .collect();
+        if !favorites.is_empty() {
+            out.push(TemplateLine::Header("Favoriler".to_owned()));
+            out.extend(favorites);
+        }
+        let recent: Vec<TemplateLine> = self
+            .templates_panel
+            .recent()
+            .iter()
+            .filter_map(|key| self.personal_template_id(key).and_then(&line))
             .collect();
         if !recent.is_empty() {
             out.push(TemplateLine::Header("Son kullanılanlar".to_owned()));

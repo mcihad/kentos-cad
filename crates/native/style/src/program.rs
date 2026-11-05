@@ -494,12 +494,12 @@ pub fn layer_call(
                     }
                     // Intrinsic solid ink, just as at the root: a leader's head or a wide path's
                     // band must not take a layer's optional polygon fill (ADR 0869).
-                    (_, Shape::Leader { .. } | Shape::Polyline { widths: Some(_), .. }) => it.set(piece_stroke.apply(leader_symbols_of(
+                    (_, Shape::Leader { .. } | Shape::Polyline { widths: Some(_), .. }) => it.set(piece_stroke.apply(it.lines.apply(piece_pattern, leader_symbols_of(
                         style,
                         color,
                         weight,
                         opts.hairlines,
-                    ))),
+                    )))),
                     _ if !piece_stroke.plain() || piece_pattern.is_some() => it.stroked(
                         style,
                         color,
@@ -528,13 +528,13 @@ pub fn layer_call(
             // symbol. A table's lines so, its frame's band solid (docs/adr/0184 §2).
             Entity::Leader(_) | Entity::Table(_) => (
                 MODE_SET,
-                it.set(stroke.apply(leader_symbols_of(style, color, weight, opts.hairlines))),
+                it.set(stroke.apply(it.lines.apply(base.look.line_pattern.as_deref().or(if stroke.line_type.is_none() { style.line_pattern.as_deref() } else { None }), leader_symbols_of(style, color, weight, opts.hairlines)))),
             ),
             // A wide polyline's band solid in its colour, its edges without width its line, as
             // AutoCAD draws one; its widths are its look (docs/adr/0258 §2).
             Entity::Polyline(p) if p.widths.is_some() => (
                 MODE_SET,
-                it.set(stroke.apply(leader_symbols_of(style, color, weight, opts.hairlines))),
+                it.set(stroke.apply(it.lines.apply(base.look.line_pattern.as_deref().or(if stroke.line_type.is_none() { style.line_pattern.as_deref() } else { None }), leader_symbols_of(style, color, weight, opts.hairlines)))),
             ),
             _ => match &base.symbol {
                 Some(id) => (MODE_OWN, it.own(id)),

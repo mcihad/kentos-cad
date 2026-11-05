@@ -25,6 +25,9 @@ use crate::app::{App, Message};
 use crate::document::Document;
 use crate::split_view::Source;
 
+mod candidates;
+pub use candidates::Event as CandidateEvent;
+
 /// How far points may lie apart and be one (the command's default), metres.
 pub(crate) const TOLERANCE: f64 = kentos_commands::COMPARE_TOLERANCE;
 
@@ -49,8 +52,21 @@ pub(crate) struct Revision {
     chosen_for: Option<(u64, u64, u64)>,
     /// The counts of the last comparison.
     pub counts: Counts,
+    /// Sheet/view differences are separate from model entities and their highlights.
+    pub project_changes: Vec<kentos_commands::DrawingProjectChange>,
+    pub candidate_radius: f64,
+    pub candidate_result: Option<Result<drawing_compare::MatchSuggestions, String>>,
+    pub candidate_stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    candidate_epoch: u64,
+    project_sheets: Option<std::sync::Arc<kentos_commands::ProjectSheets>>,
+    project_views: Vec<kentos_commands::NamedView>,
+    project_templates: Vec<kentos_commands::ViewTemplate>,
     /// The open drawing (its session and generation) the marks were made for.
     for_doc: Option<(u64, u64)>,
+    /// Definition edits can change every insert without touching its entity slot.
+    for_blocks: Option<String>,
+    /// A layer appearance edit can change every object on it without touching its slot.
+    for_layers: Option<String>,
     /// What differs, by lasting id: objects not here are the same (or in neither state).
     kinds: HashMap<Uuid, Kind>,
     /// The open drawing's ids by slot, as the marks last saw them: a removed object's id is gone from the drawing.
@@ -91,7 +107,17 @@ impl Revision {
             chosen: Selection::new(),
             chosen_for: None,
             counts: Counts::default(),
+            project_changes: Vec::new(),
+            candidate_radius: 0.01,
+            candidate_result: None,
+            candidate_stop: None,
+            candidate_epoch: 0,
+            project_sheets: None,
+            project_views: Vec::new(),
+            project_templates: Vec::new(),
             for_doc: None,
+            for_blocks: None,
+            for_layers: None,
             kinds: HashMap::new(),
             now_uids: HashMap::new(),
             at: None,
@@ -106,11 +132,35 @@ impl Revision {
         if self.for_doc == Some(key) {
             return;
         }
+        self.clear_candidates();
         let same_drawing = self
             .for_doc
             .is_some_and(|(session, _)| session == now.session);
+        let sheets = now.model.sheets_shared();
+        let sheets_same = match (&self.project_sheets, sheets) {
+            (Some(a), Some(b)) => std::sync::Arc::ptr_eq(a, b),
+            (None, None) => true,
+            _ => false,
+        };
+        let settings = now.model.settings();
+        if !same_drawing
+            || !sheets_same
+            || self.project_views != settings.named_views
+            || self.project_templates != settings.view_templates
+        {
+            self.project_changes = drawing_compare::project_diff(&self.doc.model, &now.model);
+            self.project_sheets = sheets.cloned();
+            self.project_views.clone_from(&settings.named_views);
+            self.project_templates.clone_from(&settings.view_templates);
+        }
         self.for_doc = Some(key);
-        let touched = match (same_drawing, self.at) {
+        let blocks = block_catalog_fingerprint(&now.model);
+        let blocks_changed = self.for_blocks.as_ref().is_some_and(|old| old != &blocks);
+        self.for_blocks = Some(blocks);
+        let layers = layer_catalog_fingerprint(&now.model);
+        let layers_changed = self.for_layers.as_ref().is_some_and(|old| old != &layers);
+        self.for_layers = Some(layers);
+        let touched = match (same_drawing && !blocks_changed && !layers_changed, self.at) {
             (true, Some(at)) => match now.model.changes_since(at) {
                 Changes::Slots(slots) if slots.len() <= MOST_FOLLOWED => Some(slots.to_vec()),
                 _ => None,
@@ -254,6 +304,24 @@ impl Revision {
         };
         *n = n.saturating_add_signed(by);
     }
+}
+
+/// Block operations do not journal all insert slots. A changed definition requires a whole compare so both
+/// direct and nested inserts are marked, including when their own UUID and placement are unchanged.
+fn block_catalog_fingerprint(doc: &kentos_domain::Document) -> String {
+    let mut bytes = Vec::new();
+    for block in doc.blocks() {
+        if let Ok(encoded) = serde_json::to_vec(block.as_ref()) {
+            bytes.extend_from_slice(&(encoded.len() as u64).to_le_bytes());
+            bytes.extend_from_slice(&encoded);
+        }
+    }
+    kentos_commands::encoding::sha256_hex(&bytes)
+}
+
+fn layer_catalog_fingerprint(doc: &kentos_domain::Document) -> String {
+    let bytes = serde_json::to_vec(doc.layers().nodes()).unwrap_or_default();
+    kentos_commands::encoding::sha256_hex(&bytes)
 }
 
 impl Revision {

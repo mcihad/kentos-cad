@@ -225,7 +225,7 @@ fn instantiate(
     wall_of: &dyn Fn(&str) -> Option<Entity>,
 ) -> Result<Entity, Stop> {
     let m = matrix(inst.at, inst.rotation, inst.mirror);
-    let mut e = crate::transform::by_matrix(&member.entity, &m).ok_or_else(|| {
+    let mut e = crate::transform::by_matrix(&member.entity, &m, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
         fail(
             codes::NOT_FINITE,
             "Modülün bir nesnesi yerleştirilemedi.".into(),
@@ -640,7 +640,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     (Some(lo), Some(l)) => order.iter().position(|x| x == l).map_or(0, |r| r - lo),
                     _ => 0,
                 };
-                let mut t = crate::transform::by_matrix(e, &back).ok_or_else(|| {
+                let mut t = crate::transform::by_matrix(e, &back, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
                     fail(
                         codes::NOT_FINITE,
                         "Nesne modüle alınamadı.".into(),
@@ -833,7 +833,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         "operation.from",
                     ));
                 };
-                let mut t = crate::transform::by_matrix(e, &back).ok_or_else(|| {
+                let mut t = crate::transform::by_matrix(e, &back, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
                     fail(
                         codes::NOT_FINITE,
                         "Nesne kaynağa alınamadı.".into(),

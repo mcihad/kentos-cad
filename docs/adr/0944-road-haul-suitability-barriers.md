@@ -1,6 +1,6 @@
 # 0944 — Taşıma planında malzeme uygunluğu ve engeller
 
-Tarih: 2026-11-05. Durum: kabul (Y38.1 çekirdek, Y38.2 komut ve şema 169, Y38.3 pencereler). Kapsam ROAD-HAUL-04 ve ROAD-HAUL-05.
+Tarih: 2026-11-05. Durum: kabul (Y38.1 çekirdek, Y38.2 komut ve şema 171, Y38.3 pencereler). Kapsam ROAD-HAUL-04 ve ROAD-HAUL-05.
 
 ## Sorun
 

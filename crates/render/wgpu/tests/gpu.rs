@@ -28,6 +28,8 @@ mod compose_timing;
 mod hatch;
 #[path = "gpu/weights.rs"]
 mod weights;
+#[path = "gpu/dashes.rs"]
+mod dashes;
 #[path = "gpu/precision.rs"]
 mod precision;
 #[path = "gpu/scene3d.rs"]
@@ -394,6 +396,7 @@ fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
             group: 0,
             effect: None,
             weight_cap: 0.0,
+            line_type_loss: None,
         }],
         ..StyledLayer::default()
     };
@@ -485,6 +488,31 @@ fn paper_widths_on_a_real_gpu() {
     }
     let mut gpu = Gpu::open();
     weights::paper_widths_are_held(&mut gpu);
+}
+
+#[test]
+fn long_patterns_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; skipped is not acceptance");
+        return;
+    }
+    dashes::full_patterns_match_independent_samples(&mut Gpu::open());
+}
+
+#[test]
+fn remote_dash_phase_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; skipped is not acceptance");
+        return;
+    }
+    dashes::remote_cumulative_phase_matches_local_reference(&mut Gpu::open());
+}
+
+/// CAD-ADV-11: actual prepared complex geometry, with GPU completion waited.
+#[test]
+#[ignore = "a real GPU measurement; run alone with --ignored --nocapture"]
+fn complex_linetype_timing() {
+    dashes::complex_linetype_timing(&mut Gpu::open());
 }
 
 /// Katman çizimi's cost in a frame (docs/adr/0226 §7, `gpu/compose_timing.rs`): a measurement, run

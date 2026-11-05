@@ -129,3 +129,5 @@ mod insert_constraints;
 
 mod arc_edge_constraints;
 mod parameter_dimensions;
+
+mod text_bulk;

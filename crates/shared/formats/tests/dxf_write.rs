@@ -3279,6 +3279,202 @@ fn line_types_with_patterns_go_out_and_come_back() {
     assert_eq!(r.entities[0].base().look.line_type, Some(LineType::Dashed));
 }
 
+#[test]
+fn numeric_shx_marks_write_real_anonymous_shape_styles_and_keep_units_and_upright() {
+    let mut input = input(Vec::new());
+    input.unit = Some(DrawingUnit::Mm);
+    input.scale = 20.;
+    input.line_types=serde_json::from_value(serde_json::json!([
+        {"name":"FENCE","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"1","file":"fence.shx","scale":1.5,"rotation":45.,"upright":true,"x":-0.5,"y":0.25}},{"length":-2.}]},
+        {"name":"FENCE_ABSOLUTE","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"#1","file":"FENCE.SHX","scale":2.,"rotation":30.,"absolute":true}},{"length":-2.}]},
+        {"name":"GATES","unit":"drawing","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"2","file":"gates.shx"}},{"length":-2.}]}
+    ])).unwrap();
+    let (text, report) = write(&input);
+    assert!(
+        !report
+            .notes
+            .iter()
+            .any(|n| n.reason.contains("şekli yazılmadı"))
+    );
+    assert!(text.contains("AC1027"));
+    let pairs = pairs(&text);
+    let styles = entities_of(&pairs, "STYLE");
+    let anonymous: Vec<_> = styles.iter().filter(|s| s.contains(&(70, "1"))).collect();
+    assert_eq!(anonymous.len(), 2);
+    for style in &anonymous {
+        assert!(style.contains(&(2, "")));
+    }
+    let handles: Vec<_> = anonymous
+        .iter()
+        .map(|s| u64::from_str_radix(s.iter().find(|g| g.0 == 5).unwrap().1, 16).unwrap())
+        .collect();
+    let references: Vec<_> = entities_of(&pairs, "LTYPE")
+        .iter()
+        .flat_map(|s| s.iter().filter(|g| g.0 == 340).map(|g| g.1))
+        .collect();
+    assert_eq!(references.len(), 3);
+    assert!(
+        references
+            .iter()
+            .all(|h| handles.contains(&u64::from_str_radix(h, 16).unwrap()))
+    );
+    assert_eq!(references[0], references[1]);
+    assert_ne!(references[0], references[2]);
+    let read = dxf::read(text.as_bytes(), &DxfReadOptions::default()).unwrap();
+    let a = read.line_types[0]
+        .elements
+        .iter()
+        .find_map(|e| e.shape.as_ref())
+        .unwrap();
+    assert_eq!((&*a.name, &*a.file), ("1", "fence.shx"));
+    assert_eq!((a.place.scale, a.place.x, a.place.y), (30., -10., 5.));
+    assert!(a.place.upright);
+    assert!(!a.place.absolute);
+    assert_eq!(a.place.rotation, 45.);
+    let a = read.line_types[1]
+        .elements
+        .iter()
+        .find_map(|e| e.shape.as_ref())
+        .unwrap();
+    assert_eq!(a.place.scale, 40.);
+    assert!(a.place.absolute);
+    assert_eq!(a.place.rotation, 30.);
+}
+
+#[test]
+fn complex_linetype_exports_its_actual_style_handle_fixed_height_and_degree_angle() {
+    use kentos_contracts::{
+        DrawingFont, LineTypeDef, PatternElement, PatternPlace, PatternText, PatternUnit,
+        TextStyleDef,
+    };
+    let mut i = input(Vec::new());
+    i.unit = Some(DrawingUnit::Mm);
+    i.scale = 50.;
+    i.text_styles = vec![TextStyleDef {
+        id: "utility".into(),
+        name: "Utility/Water".into(),
+        font: DrawingFont::Barlow,
+        bold: false,
+        italic: false,
+        oblique: Some(12.),
+        height: Some(4.),
+        width_factor: Some(0.8),
+        font_file: Some("Barlow-Regular.ttf".into()),
+    }];
+    let make = |name: &str, style: &str| LineTypeDef {
+        name: name.into(),
+        description: String::new(),
+        source: None,
+        unit: PatternUnit::Paper,
+        elements: vec![
+            PatternElement {
+                length: 5.,
+                text: None,
+                shape: None,
+            },
+            PatternElement {
+                length: -2.,
+                text: None,
+                shape: None,
+            },
+            PatternElement {
+                length: 0.,
+                shape: None,
+                text: Some(PatternText {
+                    text: "HW".into(),
+                    style: style.into(),
+                    place: PatternPlace {
+                        scale: 2.,
+                        rotation: 90.,
+                        absolute: true,
+                        upright: false,
+                        x: 0.1,
+                        y: -0.05,
+                    },
+                }),
+            },
+            PatternElement {
+                length: -2.,
+                text: None,
+                shape: None,
+            },
+        ],
+    };
+    i.line_types = vec![
+        make("WATER", "Utility/Water"),
+        make("MISSING", "Unresolved Font Style"),
+    ];
+    let before = serde_json::to_value(&i).unwrap();
+    let (text, report) = write(&i);
+    assert!(
+        text.lines()
+            .collect::<Vec<_>>()
+            .chunks_exact(2)
+            .any(|p| p[0].trim() == "50" && p[1].parse::<f64>().ok() == Some(90.)),
+        "raw DXF angle must be degrees"
+    );
+    assert!(
+        text.contains("AC1021"),
+        "existing version stays unchanged without U"
+    );
+    assert_eq!(serde_json::to_value(&i).unwrap(), before);
+    let r = dxf::read(
+        text.as_bytes(),
+        &DxfReadOptions {
+            unit: Some(DrawingUnit::M),
+            scale: Some(50.),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let p = r.line_types.iter().find(|p| p.name == "WATER").unwrap();
+    let text = p.elements.iter().find_map(|e| e.text.as_ref()).unwrap();
+    assert_eq!(text.style, "UTILITY_WATER");
+    assert_eq!(text.place.scale, 2.);
+    assert!((text.place.rotation - 90.).abs() < 1e-12);
+    assert!((text.place.x - 0.005).abs() < 1e-12);
+    assert!(
+        r.text_styles
+            .iter()
+            .any(|s| s.name == "Utility_Water"
+                && s.font_file.as_deref() == Some("Barlow-Regular.ttf"))
+    );
+    assert!(
+        report
+            .notes
+            .iter()
+            .any(|n| n.what == "Çizgi tipi" && n.reason.contains("Unresolved Font Style"))
+    );
+    i.line_types[0].elements[2]
+        .text
+        .as_mut()
+        .unwrap()
+        .place
+        .upright = true;
+    let (upright, _) = write(&i);
+    assert!(
+        upright.contains("AC1027"),
+        "U requires a compatible R2013 header"
+    );
+    assert!(
+        upright.contains(" 74\r\n11\r\n"),
+        "text + absolute + upright bits"
+    );
+    let back = read(&upright);
+    assert!(
+        back.line_types
+            .iter()
+            .find(|p| p.name == "WATER")
+            .unwrap()
+            .elements
+            .iter()
+            .find_map(|e| e.text.as_ref())
+            .unwrap()
+            .place
+            .upright
+    );
+}
+
 /// An attribute's options go into the ATTDEF's 70 (docs/adr/0317 §1): invisible 1, verify 4.
 #[test]
 fn an_attribute_s_options_are_its_flags() {

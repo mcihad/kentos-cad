@@ -7,6 +7,7 @@ import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { HeightReference } from "./HeightReference";
 import type { LengthStyle } from "./LengthStyle";
+import type { ProjectStandardDocument } from "./ProjectStandardDocument";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -47,6 +48,11 @@ import type { Workspace } from "./Workspace";
  *   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
  *   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
  * - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+ * - `standardDocs`: the entire ordered list of versioned drawing-standard
+ *   documents retained by the project; an empty list removes all bindings.
+ *   An ordered, byte-identical subset may remove unsupported existing
+ *   documents for recovery; new or changed documents are validated.
+ *   This changes the association only and does not apply the standards.
  *
  * Settings are an edit of the project, no undo step (docs/adr/0049).
  *
@@ -68,7 +74,12 @@ import type { Workspace } from "./Workspace";
  * sheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),
  * `heights_need_system` (ellipsoidal heights or an epoch for a project without a system).
  */
-export type SettingsSet = { name?: string, projectType?: Workspace, 
+export type SettingsSet = { 
+/**
+ * Replace the project's ordered drawing-standard documents. Missing keeps
+ * the current list; an empty list removes it.
+ */
+standardDocs?: Array<ProjectStandardDocument>, name?: string, projectType?: Workspace, 
 /**
  * What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
  */

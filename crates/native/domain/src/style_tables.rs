@@ -146,7 +146,45 @@ impl StyleTables {
 
     /// The tables as the step left them, style by style.
     pub(crate) fn apply_to(&self, settings: &mut ProjectSettings) {
-        apply(&mut settings.text_styles, &self.text, text_styles_problem);
+        // Capture only renames that can actually apply. record() can replay a
+        // step already materialized by its writer: never rename its references twice.
+        let renames: Vec<_> = self
+            .text
+            .iter()
+            .filter_map(|change| {
+                let (Some((_, before)), Some((_, after))) = (&change.before, &change.after) else {
+                    return None;
+                };
+                (before.name != after.name && settings.text_styles.iter().any(|s| s == before))
+                    .then_some((before.name.as_str(), after))
+            })
+            .collect();
+        // A valid name swap has an invalid intermediate duplicate. Validate the
+        // whole eligible text-table change, falling back to the existing conflict
+        // policy when concurrent edits make that table invalid.
+        let mut next = settings.text_styles.clone();
+        apply(&mut next, &self.text, |_| None);
+        if text_styles_problem(&next).is_none() {
+            settings.text_styles = next;
+        } else {
+            apply(&mut settings.text_styles, &self.text, text_styles_problem);
+        }
+        let renames: Vec<_> = renames
+            .into_iter()
+            .filter(|(_, after)| settings.text_styles.iter().any(|s| s == *after))
+            .collect();
+        for pattern in &mut settings.line_types {
+            for e in &mut pattern.elements {
+                if let Some(t) = &mut e.text
+                    && let Some((_, after)) = renames
+                        .iter()
+                        .find(|(before, _)| t.style.eq_ignore_ascii_case(before))
+                {
+                    t.style.clone_from(&after.name);
+                }
+            }
+        }
+
         apply(
             &mut settings.dimension_styles,
             &self.dimension,

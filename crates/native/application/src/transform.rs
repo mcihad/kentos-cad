@@ -54,7 +54,7 @@ use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{js_hypot, js_max};
 use kentos_geometry_core::ops::arrange::{self, Mode};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
-use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape, transform_shape_with};
+use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
 use kentos_geometry_core::ops::warp::{CHORD, Warp, sheet_shape, warp_shape};
 use kentos_geometry_core::text::Font;
 
@@ -695,6 +695,11 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             )));
         }
         let before = shape(entity);
+        if matrix.as_ref().is_some_and(kentos_geometry_core::geom::affine::is_reflection)
+            && let Entity::Text(t) = entity
+        {
+            crate::shape_edits::text_orientation_ready(doc, uid, t, "uids")?;
+        }
         // Only resampling its pixels could follow a projective map or a rubber sheet (docs/adr/0204 §7).
         let bends = matches!(&how, How::Sheet(_) | How::Warp(Warp::Projective { .. }));
         if bends && matches!(entity, Entity::Raster(_)) {
@@ -711,7 +716,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 continue;
             }
             How::Matrix(m) => {
-                let after = transform_shape_with(&before, m, policy);
+                let after = transform_shape_in(&before, m, policy, drawing_font(doc.settings().drawing_font));
                 overflow |= finite_shape(&before) && !finite_shape(&after);
                 with_shape(entity, after).map(|e| carry_scales(entity, e, m))
             }
@@ -791,7 +796,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 Some("uids".into()),
             )));
         }
-        let blocks = crate::blocks::core_blocks(doc.blocks());
+        let blocks = crate::blocks::drawing_blocks(doc);
         let font: Font = drawing_font(doc.settings().drawing_font);
         let boxes: Vec<_> = arranged
             .iter()
@@ -1157,9 +1162,9 @@ fn measures_of(entity: &Entity) -> Option<Vec<Vec<Option<f64>>>> {
 
 /// One object by the matrix `m`, as Taşı, Döndür and Aynala move it (a room module's instance, docs/adr/0775); none
 /// when the core cannot carry its kind.
-pub(crate) fn by_matrix(entity: &Entity, m: &Affine) -> Option<Entity> {
+pub(crate) fn by_matrix(entity: &Entity, m: &Affine, font: Font) -> Option<Entity> {
     let before = shape(entity);
-    let after = transform_shape_with(&before, m, TextPolicy::Readable);
+    let after = transform_shape_in(&before, m, TextPolicy::Readable, font);
     let e = with_shape(entity, after).map(|e| carry_scales(entity, e, m))?;
     crate::geometry::carry_space_separator(entity, e).ok()
 }

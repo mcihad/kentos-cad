@@ -299,6 +299,7 @@ fn ltype_pattern(
             (75, Some(p)) => p.shape = parse_int(g.text()).unwrap_or(0),
             (340, Some(p)) => p.style = Some(format!("#{}", g.text().trim().to_uppercase())),
             (46, Some(p)) => p.place.scale = real(),
+            // DXF angles are degrees; the codec converts its internal radians.
             (50, Some(p)) => p.place.rotation = real(),
             (44, Some(p)) => p.place.x = real(),
             (45, Some(p)) => p.place.y = real(),
@@ -318,6 +319,7 @@ fn ltype_pattern(
         });
         let mut place = p.place;
         place.absolute = p.flags & 1 != 0;
+        place.upright = p.flags & 8 != 0;
         if !(place.scale.is_finite() && place.scale > 0.0) {
             place.scale = 1.0;
         }
@@ -522,6 +524,11 @@ impl<'a> Reader<'a> {
                     if let Some(handle) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok())
                     {
                         self.lib.style_handles.insert(handle, name().to_uppercase());
+                        if g(70).and_then(|x| parse_int(x.text())).unwrap_or(0) & 1 != 0
+                            && let Some(file) = g(3)
+                        {
+                            self.lib.shape_files.insert(handle, self.dec.string(file.value));
+                        }
                     }
                     self.lib.text_records.insert(
                         name().to_uppercase(),
@@ -902,11 +909,22 @@ fn read_once(
     } else {
         em.keep_used(defs)
     };
-    let (text_used, dim_used, project_font) = (
+    let (mut text_used, dim_used, project_font) = (
         std::mem::take(&mut em.text_used),
         std::mem::take(&mut em.dim_used),
         em.project_font,
     );
+    // A linetype can be the only user of a STYLE. Keep its original font,
+    // fixed height, width factor and slant even when no TEXT was imported.
+    for text in lib.patterns.iter().flat_map(|p| &p.elements).filter_map(|e| e.text.as_ref()) {
+        let key = text.style.strip_prefix('#')
+            .and_then(|h| u64::from_str_radix(h, 16).ok())
+            .and_then(|h| lib.style_handles.get(&h)).cloned()
+            .unwrap_or_else(|| text.style.to_uppercase());
+        if !text_used.contains(&key) {
+            text_used.push(key);
+        }
+    }
     let mut out = em.out;
     // Layers the objects landed on: the table's (in its order), then any it lacked.
     let mut layers: Vec<ImportLayer> = Vec::new();
@@ -1097,21 +1115,30 @@ fn read_once(
             let mut t = t.clone();
             for e in &mut t.elements {
                 e.length = to_project(e.length);
-                let place = e
-                    .text
-                    .as_mut()
-                    .map(|x| (&mut x.place, &mut x.style))
-                    .or(e.shape.as_mut().map(|s| (&mut s.place, &mut s.file)));
-                if let Some((place, style)) = place {
-                    place.scale = to_project(place.scale);
-                    place.x = to_project(place.x);
-                    place.y = to_project(place.y);
-                    if let Some(h) = style
-                        .strip_prefix('#')
+                if let Some(text) = &mut e.text {
+                    if let Some(key) = text.style.strip_prefix('#')
                         .and_then(|h| u64::from_str_radix(h, 16).ok())
+                        .and_then(|h| lib.style_handles.get(&h))
                     {
-                        *style = lib.style_handles.get(&h).cloned().unwrap_or_default();
+                        text.style = key.clone();
                     }
+                    // With a fixed STYLE height S multiplies that height;
+                    // otherwise S itself is a drawing length.
+                    if !lib.style_heights.get(&text.style.to_uppercase()).is_some_and(|h| *h > 0.) {
+                        text.place.scale = to_project(text.place.scale);
+                    }
+                    text.place.x = to_project(text.place.x);
+                    text.place.y = to_project(text.place.y);
+                } else if let Some(shape) = &mut e.shape {
+                    if let Some(file) = shape.file.strip_prefix('#')
+                        .and_then(|h| u64::from_str_radix(h, 16).ok())
+                        .and_then(|h| lib.shape_files.get(&h))
+                    {
+                        shape.file = file.clone();
+                    }
+                    shape.place.scale = to_project(shape.place.scale);
+                    shape.place.x = to_project(shape.place.x);
+                    shape.place.y = to_project(shape.place.y);
                 }
             }
             t

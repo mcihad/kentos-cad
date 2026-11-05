@@ -153,7 +153,7 @@ fn registered(srid: u32) -> bool {
     srid == 0 || codes.contains(&srid)
 }
 
-fn check_input(input: &SettingsSet) -> Result<(), Stop> {
+fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
     let given = input.name.is_some()
         || input.project_type.is_some()
         || input.cad_work.is_some()
@@ -171,6 +171,7 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
         || input.drawing_font.is_some()
         || input.arch.is_some()
         || input.heights.is_some()
+        || input.standard_docs.is_some()
         || input.coordinate_epoch.is_some();
     if !given {
         return Err(Stop::failed(error(
@@ -245,6 +246,36 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
             &format!("heights.{path}"),
         ));
     }
+    if let Some(documents) = &input.standard_docs {
+        if let Some(why) = kentos_commands::project_standards_problem(documents) {
+            return Err(fail(codes::INVALID_STANDARD, why, "standardDocs"));
+        }
+        // An ordered subset preserves existing bytes; it only removes documents.
+        // This permits recovery from multiple unsupported packages without
+        // accepting any new or modified rule.
+        let existing = &doc.settings().standard_docs;
+        let mut remaining = documents.iter();
+        let mut next = remaining.next();
+        for original in existing {
+            if next.is_some_and(|document| document.text == original.text) {
+                next = remaining.next();
+            }
+        }
+        let removal_only = documents.len() < existing.len() && next.is_none();
+        for (index, document) in documents.iter().enumerate() {
+            if removal_only {
+                continue;
+            }
+            match kentos_commands::parse_standard_document(document.text.as_bytes()) {
+                Ok((_, Some(_))) => {}
+                Ok((_, None)) => return Err(fail(codes::INVALID_STANDARD,
+                    "Projeye yalnız sürümlü standart belgesi bağlanabilir.".into(),
+                    &format!("standardDocs[{index}]"))),
+                Err(why) => return Err(fail(codes::INVALID_STANDARD, why,
+                    &format!("standardDocs[{index}]"))),
+            }
+        }
+    }
     if let Some(why) = input
         .coordinate_epoch
         .filter(|e| *e != 0.0)
@@ -262,6 +293,9 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
 /// The settings the input leaves, or why not; the drawing's name apart.
 fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings, Stop> {
     let mut s = doc.settings().clone();
+    if let Some(documents) = &input.standard_docs {
+        s.standard_docs = documents.clone();
+    }
     if let Some(t) = input.project_type {
         if s.project_type().is_some_and(|kept| kept != t) {
             return Err(fail(
@@ -431,7 +465,7 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
 }
 
 fn check(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings, Stop> {
-    check_input(input)?;
+    check_input(doc, input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     next_settings(doc, input)
 }
@@ -537,6 +571,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
         before.coordinate_epoch != after.coordinate_epoch,
         "coordinateEpoch",
     );
+    key(before.standard_docs != after.standard_docs, "standardDocs");
     let heights = after.annotation.clone().unwrap_or_default();
     let followed = follow_annotation_change(
         doc,

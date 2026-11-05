@@ -103,6 +103,17 @@ fn core(e: &Entity) -> Option<CoreEntity> {
     CoreEntity::from_json(&Json::parse(&json).ok()?).ok()
 }
 
+fn schedule_value<'a>(
+    definition: Option<&'a kentos_contracts::BlockDefinition>,
+    insert: &'a kentos_contracts::InsertEntity,
+    tag: &str,
+) -> &'a str {
+    definition
+        .and_then(|block| block.attribute_value(insert, tag))
+        .or_else(|| insert.base.attrs.get(tag).map(String::as_str))
+        .unwrap_or("")
+}
+
 impl Document {
     /// How many inserts of the block named `name` the drawing holds (its own, not those inside other blocks); none
     /// when it has no block so named.
@@ -116,7 +127,7 @@ impl Document {
     }
 
     /// A block schedule's rows (docs/adr/0327 §4): a heading (Blok, the attribute, the further columns, Adet), a row
-    /// for each block named (none named: each block placed, in the drawing's order of definitions) and, with `by`, for
+    /// for each distinct block named (none named: each block placed, in the drawing's order of definitions) and, with `by`, for
     /// each of its values (in code point order; an insert without it counts under the empty value), then the total.
     /// A further column (docs/adr/0721 §4) holds its row's inserts' distinct values that are not empty, in the
     /// drawing's order, joined with “; ”; with them a schedule of one block named leaves out its Blok column.
@@ -124,15 +135,17 @@ impl Document {
         let defs: Vec<(Option<kentos_contracts::BlockId>, String)> = if names.is_empty() {
             self.blocks().iter().map(|b| (Some(b.id), b.name.clone())).collect()
         } else {
+            let mut seen = std::collections::HashSet::new();
             names
                 .iter()
+                .filter(|name| seen.insert(name.as_str()))
                 .map(|n| {
                     let id = self.blocks().iter().find(|b| &b.name == n).map(|b| b.id);
                     (id, n.clone())
                 })
                 .collect()
         };
-        let named = columns.is_empty() || names.len() != 1;
+        let named = columns.is_empty() || defs.len() != 1;
         let mut head = Vec::new();
         if named {
             head.push("Blok".to_owned());
@@ -145,7 +158,10 @@ impl Document {
         let mut rows = vec![head];
         let mut total = 0usize;
         // A row: its block's name, its value of `by`, its further cells, its count.
-        let row = |name: &str, value: Option<String>, of: &[&kentos_contracts::InsertEntity]| {
+        let row = |name: &str,
+                   definition: Option<&kentos_contracts::BlockDefinition>,
+                   value: Option<String>,
+                   of: &[&kentos_contracts::InsertEntity]| {
             let mut r = Vec::new();
             if named {
                 r.push(name.to_owned());
@@ -156,9 +172,8 @@ impl Document {
             for c in columns {
                 let mut seen: Vec<&str> = Vec::new();
                 for i in of {
-                    if let Some(v) = i.base.attrs.get(c).map(String::as_str).filter(|v| !v.is_empty())
-                        && !seen.contains(&v)
-                    {
+                    let v = schedule_value(definition, i, c);
+                    if !v.is_empty() && !seen.contains(&v) {
                         seen.push(v);
                     }
                 }
@@ -168,6 +183,7 @@ impl Document {
             r
         };
         for (id, name) in &defs {
+            let definition = id.and_then(|id| self.block(id));
             let inserts: Vec<&kentos_contracts::InsertEntity> = self
                 .entities()
                 .filter_map(|e| match e {
@@ -181,21 +197,21 @@ impl Document {
             match by {
                 None => {
                     total += inserts.len();
-                    rows.push(row(name, None, &inserts));
+                    rows.push(row(name, definition, None, &inserts));
                 }
                 Some(tag) => {
                     let mut values: std::collections::BTreeMap<String, Vec<&kentos_contracts::InsertEntity>> =
                         Default::default();
                     for i in &inserts {
-                        let v = i.base.attrs.get(tag).cloned().unwrap_or_default();
+                        let v = schedule_value(definition, i, tag).to_owned();
                         values.entry(v).or_default().push(i);
                     }
                     if values.is_empty() {
-                        rows.push(row(name, Some(String::new()), &[]));
+                        rows.push(row(name, definition, Some(String::new()), &[]));
                     }
                     for (v, of) in values {
                         total += of.len();
-                        rows.push(row(name, Some(v), &of));
+                        rows.push(row(name, definition, Some(v), &of));
                     }
                 }
             }

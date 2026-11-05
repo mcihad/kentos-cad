@@ -28,6 +28,7 @@ fn batch(id: u64, kind: BatchKind, data: &[f32], cap: f64) -> StyledScene {
         group: 0,
         effect: None,
         weight_cap: cap,
+        line_type_loss: None,
     };
     StyledScene {
         layers: vec![Arc::new(StyledLayerPart {

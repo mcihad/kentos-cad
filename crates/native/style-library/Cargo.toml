@@ -11,5 +11,6 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-style-core = { path = "../../shared/style-core" }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
 serde_json = { workspace = true }
 

@@ -145,6 +145,10 @@ pub struct MapStroke {
     /// Dash and gap lengths on the paper, millimetres, alternating; empty: solid.
     #[serde(default)]
     pub dash: Vec<f64>,
+    /// Distance already consumed in the pattern, paper millimetres; absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dash_offset: Option<f64>,
     #[serde(default = "round_cap")]
     pub cap: LineCap,
     #[serde(default = "round_join")]
@@ -261,7 +265,7 @@ pub struct PdfGlyph {
     /// Index in the frozen unicode-v1 face manifest, not a system font index.
     pub font: u16,
     pub glyph: u16,
-    /// Logical cluster text, empty on subsequent glyphs of the same cluster.
+    /// Logical cluster text on its advancing body, empty on the other glyphs.
     pub text: String,
     /// Normalized font em to paper millimetres, relative to the text anchor.
     pub matrix: [f64; 6],

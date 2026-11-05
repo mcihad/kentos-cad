@@ -59,6 +59,8 @@ pub struct Window {
     unchecked: HashSet<Slot>,
     /// The window opened: its find field takes the keyboard.
     focus: bool,
+    /// A refused write stays readable inside the modal, above its results.
+    notice: Option<(kentos_ui::widget::Severity, String)>,
 }
 
 #[derive(Debug, Clone)]
@@ -113,6 +115,7 @@ impl App {
             matches: Vec::new(),
             unchecked: HashSet::new(),
             focus: true,
+            notice: None,
         });
         self.dialog = Some(Dialog::FindReplace);
     }
@@ -132,6 +135,10 @@ impl App {
         let Some(w) = self.find_replace.as_mut() else {
             return Task::none();
         };
+        if matches!(&event, Event::Find(_) | Event::Replace(_) | Event::Wildcard(_)
+            | Event::MatchCase(_) | Event::WholeWord(_) | Event::SelectionOnly(_)) {
+            w.notice = None;
+        }
         match event {
             Event::Find(t) => w.find = t,
             Event::Replace(t) => w.replace = t,
@@ -175,6 +182,11 @@ impl App {
             .collect();
         let blocked = w.matches.iter().filter(|m| m.blocked.is_some()).count();
         let (n, said) = write_query(&mut doc.model, &picked, &w.query());
+        w.notice = if !said.is_empty() {
+            Some((kentos_ui::widget::Severity::Error, said.join("\n")))
+        } else if n > 0 {
+            Some((kentos_ui::widget::Severity::Info, format!("{n} yazı değiştirildi. Tek adımda geri alabilirsiniz.")))
+        } else { None };
         w.unchecked.clear();
         for text in said {
             self.warn(text);
@@ -373,12 +385,16 @@ impl App {
 
         let any = w.writable().next().is_some();
         let some_checked = w.writable().any(|m| !w.unchecked.contains(&m.slot));
-        let body = Column::new()
-            .spacing(12)
-            .push(fields)
-            .push(options)
-            .push(words::summary(lines))
-            .push(table);
+        let mut body = Column::new().spacing(12).push(fields).push(options);
+        // A successful write consumes its matches. Keep the result, rather
+        // than showing a contradictory “no matches” warning above it.
+        if !w.matches.is_empty() || w.notice.is_none() {
+            body = body.push(words::summary(lines));
+        }
+        if let Some((severity, message)) = &w.notice {
+            body = body.push(kentos_ui::widget::notice::Banner::new(*severity, message.clone()));
+        }
+        let body = body.push(table);
         Frame::new(FIND_TITLE)
             .push(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))

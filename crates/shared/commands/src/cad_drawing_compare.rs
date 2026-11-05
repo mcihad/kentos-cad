@@ -63,6 +63,55 @@ pub struct DrawingCompare {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u32>,
+    /// Optional suggestions for unmatched objects with different UUIDs. Suggestions never change identity or counts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub match_search: Option<DrawingMatchSearch>,
+}
+
+/// Explicit search for identity candidates, not automatic pairing.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DrawingMatchSearch {
+    /// Maximum geometric location difference, metres, 0 to 10. Equal source keys may suggest a moved object beyond it.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub search: f64,
+    /// Attribute containing a source-scoped id/handle. Unequal nonempty keys never match by proximity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub key: Option<String>,
+    /// Old-side unmatched UUID scope. Absent: all removed objects; empty: none. At most 5000 objects per side.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub old_uids: Option<Vec<String>>,
+    /// New-side unmatched UUID scope. Absent: all added objects; empty: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub new_uids: Option<Vec<String>>,
+}
+
+/// An explicit proposal between two unmatched UUIDs. Neither evidence type guarantees identity.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DrawingMatchCandidate {
+    pub old_uid: String,
+    pub new_uid: String,
+    /// `sourceKey` for an equal nonempty attribute, otherwise `geometry`.
+    pub evidence: String,
+    /// Either object has more than one proposal, including proposals cut from the output by `limit`.
+    pub ambiguous: bool,
+    pub same_geometry: bool,
+    /// The existing comparison core's location difference, metres; absent for different geometry kinds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: Option<f64>,
 }
 
 /// An object that is in both and differs.
@@ -83,6 +132,24 @@ pub struct ChangedObject {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: Option<f64>,
+}
+
+/// A non-model change, compared by the sheet/view's stable id rather than an entity slot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DrawingProjectChange {
+    /// `sheet`, `viewport`, `namedView`, `viewTemplate` or `sheetBook`.
+    pub kind: String,
+    /// Stable id; a viewport uses its sheet id and item id, separated by `/`.
+    pub id: String,
+    pub name: String,
+    /// `added`, `removed` or `changed`.
+    pub status: String,
+    /// Changed JSON field paths; empty for an addition or removal. Array changes name the array.
+    pub fields: Vec<String>,
 }
 
 /// Output of `cad.drawing.compare` v1.
@@ -112,6 +179,18 @@ pub struct DrawingCompared {
     pub removed_uids: Vec<String>,
     /// The changed objects, in the drawing's order.
     pub changed_objects: Vec<ChangedObject>,
+    /// Non-model differences: sheets, viewports, named views, view templates and book settings.
+    /// These are counted separately from model entities and do not create false geometry highlights.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<DrawingProjectChange>>"))]
+    pub project_changes: Vec<DrawingProjectChange>,
+    /// Proposed identities, in old/new document order. Original added/removed counts remain unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<DrawingMatchCandidate>>")
+    )]
+    pub match_candidates: Vec<DrawingMatchCandidate>,
     /// A list was cut at `limit`.
     pub truncated: bool,
     #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]

@@ -25,6 +25,7 @@
 
 pub mod atlas;
 pub mod cpu;
+mod dashes;
 pub mod gpu;
 pub mod picture;
 pub mod pictures;

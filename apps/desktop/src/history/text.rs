@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 403] = [
+pub(crate) const TITLES: [(&str, &str); 405] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -84,10 +84,7 @@ pub(crate) const TITLES: [(&str, &str); 403] = [
     ("cad.rasters.mosaic", "Sanal mozaik"),
     ("cad.rasters.reproject", "Rasteri yeniden izdüşür"),
     ("cad.rasters.gpkgread", "GeoPackage karolarını oku"),
-    (
-        "cad.rasters.gpkgwrite",
-        "Rasteri GeoPackage karosu olarak yaz",
-    ),
+    ("cad.rasters.gpkgwrite", "Rasteri GeoPackage karosu olarak yaz"),
     ("cad.time.query", "Zamanda sorgu"),
     ("cad.sensors.ingest", "Sensör gözlemlerini al"),
     ("cad.sensors.latest", "Sensörlerin son gözlemi"),
@@ -305,6 +302,8 @@ pub(crate) const TITLES: [(&str, &str); 403] = [
     ("cad.hatchpatterns.edit", "Tarama desenleri"),
     ("cad.library.edit", "Stil kitaplığı"),
     ("cad.styles.impact", "Stil değişikliğinin etkisi"),
+    ("cad.standards.resolve", "Proje standartlarını birleştir"),
+    ("cad.standards.conflicts", "Bağlı standartlardaki farklı tanımları göster"),
     ("cad.standards.check", "Standardı denetle"),
     ("cad.standards.apply", "Standardı uygula"),
     ("cad.styles.edit", "Yazı ve ölçü stilleri"),
@@ -410,10 +409,7 @@ pub(crate) const TITLES: [(&str, &str); 403] = [
     ("file.import.sld", "SLD'den görünüş al"),
     ("file.export.qml", "Görünüşü QML olarak dışa aktar"),
     ("file.import.qml", "QML'den görünüş al"),
-    (
-        "file.export.maplibre",
-        "Görünüşü MapLibre stili olarak dışa aktar",
-    ),
+    ("file.export.maplibre", "Görünüşü MapLibre stili olarak dışa aktar"),
     ("file.import.maplibre", "MapLibre stilinden görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.dwg", "DWG dışa aktar"),

@@ -113,7 +113,7 @@ fn dd_text(v: &Option<Dd<String>>, t: &dyn Values) -> String {
     }
 }
 
-fn dd_bool(v: &Option<Dd<bool>>, t: &dyn Values) -> bool {
+pub(super) fn dd_bool(v: &Option<Dd<bool>>, t: &dyn Values) -> bool {
     match v {
         None => true,
         Some(Dd::Fixed(b)) => *b,
@@ -368,7 +368,7 @@ fn turned_text(st: &MarkerStyle) -> MarkerStyle {
 
 // ── Lines ──────────────────────────────────────────────────────────────
 
-fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Option<StrokeStyle> {
+pub(super) fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Option<StrokeStyle> {
     let color = dd_color(&layer.color, t).filter(|c| !c.is_empty())?;
     let unit = layer.base.unit;
     let (width, width_unit) = to_drawn(dd_number(&layer.width, t, 0.0), unit, env);
@@ -393,6 +393,7 @@ fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Op
             .dash_offset
             .filter(|&x| truthy_num(x))
             .map_or(0.0, len),
+        line_type_loss: layer.line_type_loss.clone(),
         cap: layer.cap.clone().unwrap_or_else(|| "butt".into()),
         join: layer.join.clone().unwrap_or_else(|| "miter".into()),
         blur: layer.blur.filter(|&x| truthy_num(x)).map_or(0.0, len),
@@ -402,7 +403,7 @@ fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Op
 }
 
 /// A line layer on one path (a line, or an area ring).
-fn emit_line_layer(
+pub(super) fn emit_line_layer(
     layer: &Layer,
     pts: &[Vec2],
     closed: bool,
@@ -410,6 +411,18 @@ fn emit_line_layer(
     t: &dyn Values,
     env: &Env,
     sink: &mut dyn Sink,
+) {
+    emit_line_layer_on(layer, (pts, closed), level, t, env, sink, None);
+}
+
+pub(super) fn emit_line_layer_on(
+    layer: &Layer,
+    (pts, closed): (&[Vec2], bool),
+    level: f64,
+    t: &dyn Values,
+    env: &Env,
+    sink: &mut dyn Sink,
+    route: Option<&super::cad_marks::Route>,
 ) {
     let (base, offset) = match layer {
         Layer::SimpleLine(l) => (&l.base, &l.offset),
@@ -447,9 +460,30 @@ fn emit_line_layer(
     }
     match layer {
         Layer::SimpleLine(l) => {
-            let Some(style) = stroke_style(l, level, t, env) else {
+            let Some(mut style) = stroke_style(l, level, t, env) else {
                 return;
             };
+            let marks = l.cad_marks.as_ref().map(|marks| match marks {
+                Ok(marks) => {
+                    if l.wave.is_some() || l.blur.is_some_and(|b| b != 0.) {
+                        return Err(format!("“{}”: dalga/bulanıklıkla karmaşık çizgi işareti desteklenmiyor.", marks.source()));
+                    }
+                    let phase=to_world(l.dash_offset.unwrap_or(0.),l.base.unit,env);
+                    let placed = match route {
+                        Some(route)=>marks.placements_on(route,phase,l.base.unit,env),
+                        None=>marks.placements(&path,closed,phase,l.base.unit,env),
+                    }.map_err(|error|format!("“{}”: {error}",marks.source()))?;
+                    let points = placed.iter().fold(0usize, |sum, p| sum.saturating_add(p.cost()));
+                    if !sink.reserve_cad_points(points) {
+                        return Err(format!("“{}”: katmanın toplam çizgi tipi yazısı sınırı aşıldı; eksik çıktı üretilmedi.", marks.source()));
+                    }
+                    Ok(placed)
+                }
+                Err(error) => Err(error.clone()),
+            });
+            if let Some(Err(error)) = &marks {
+                style.line_type_loss = Some(error.clone());
+            }
             match &l.wave {
                 Some(w) if w.length > 0.0 => {
                     let len = |v: f64| to_world(v, base.unit, env);
@@ -466,6 +500,9 @@ fn emit_line_layer(
                     }
                 }
                 _ => sink.stroke(&style, &path, closed),
+            }
+            if let Some(Ok(marks)) = marks {
+                for mark in marks { mark.paint(&style, l.base.unit, env, sink); }
             }
         }
         Layer::MarkerLine(l) => emit_markers_along(l, &path, closed, level, t, env, sink),

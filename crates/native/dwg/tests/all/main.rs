@@ -119,3 +119,61 @@ fn constant_and_tapered_widths_survive_all_binary_targets_without_zero_override_
         assert_eq!(got.entities,expected.entities,"{target:?}");
     }
 }
+
+/// Independent codec parses angles into radians before any KentOS read.
+/// The binary bridge must preserve resources referenced only by LTYPE.
+#[test]
+fn complex_linetype_resources_angles_and_upright_cross_the_codec_boundary() {
+    let source = fixture("complex-ltype-resources.dxf");
+    let parsed = acadrust::DxfReader::from_reader(std::io::Cursor::new(source.clone()))
+        .unwrap()
+        .read()
+        .unwrap();
+    let complex = parsed
+        .line_types
+        .get("FIXED_TEXT")
+        .unwrap()
+        .elements
+        .iter()
+        .find_map(|e| e.complex.as_ref())
+        .unwrap();
+    assert!((complex.rotation - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
+    assert!(complex.is_upright());
+    let options = DxfReadOptions {
+        unit: Some(kentos_contracts::DrawingUnit::M),
+        scale: Some(50.),
+        ..Default::default()
+    };
+    let expected = kentos_formats::dxf::read(&source, &options).unwrap();
+    for target in [DwgVersion::AC1027, DwgVersion::AC1032] {
+        let bytes = kentos_dwg::encode(&source, target).unwrap();
+        let got = kentos_dwg::read(&bytes, &options).unwrap();
+        for name in ["FIXED_TEXT", "FREE_TEXT", "SHAPES"] {
+            let pattern = |r: &kentos_contracts::ImportResult| {
+                r.line_types
+                    .iter()
+                    .find(|p| p.name == name)
+                    .unwrap()
+                    .clone()
+            };
+            assert_eq!(pattern(&got), pattern(&expected), "{target:?} {name}");
+        }
+        for name in ["Utility Text", "Variable Text"] {
+            let style = |r: &kentos_contracts::ImportResult| {
+                r.text_styles
+                    .iter()
+                    .find(|s| s.name == name)
+                    .unwrap()
+                    .clone()
+            };
+            let mut actual = style(&got);
+            let expected = style(&expected);
+            actual.id = expected.id.clone();
+            if let (Some(a), Some(e)) = (actual.oblique, expected.oblique) {
+                assert!((a - e).abs() < 1e-12, "oblique degrees: {a} vs {e}");
+                actual.oblique = expected.oblique;
+            }
+            assert_eq!(actual, expected, "{target:?} {name}");
+        }
+    }
+}

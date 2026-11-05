@@ -331,6 +331,7 @@
     "table.insert",
     "table.edit",
     "table.update",
+    "table.export",
     "style.assign",
     "style.clearSymbol",
     "style.legend",

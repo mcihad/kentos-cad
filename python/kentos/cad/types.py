@@ -6550,11 +6550,27 @@ class StandardIssueKind(_StrEnum):
     - ``missingTextStyle``
     - ``missingDimensionStyle``
     - ``dimensionStyleName``
+    - ``missingLineTypeDefinition``
+    - ``lineTypeDefinition``
+    - ``missingHatchPatternDefinition``
+    - ``hatchPatternDefinition``
+    - ``missingBlockReference``
+    - ``blockPublication``
+    - ``blockUnit``
+    - ``sheetTemplateOrigin``
+    - ``missingLeaderStyleDefinition``
+    - ``leaderStyleDefinition``
+    - ``missingTextStyleDefinition``
+    - ``textStyleDefinition``
+    - ``missingDimensionStyleDefinition``
+    - ``dimensionStyleDefinition``
     - ``missingLayer``: A standard layer the drawing lacks.
     - ``layerName``: A layer whose name the standard does not have nor allow.
     - ``projectFont``: The project's drawing font is not one of the standard's.
     - ``textFont``: A text style written in a font the standard does not have.
     - ``textStyleName``: A text style the standard does not have.
+    - ``textStyleHeight``: A text style's paper height differs from the standard.
+    - ``dimensionStyleHeight``: A dimension style's paper text height differs from the standard.
     - ``objectLineType``: Objects with a line type of their own the standard does not have.
     - ``ownLook``: Objects with a look of their own when the standard has them take their layers'.
     """
@@ -6565,16 +6581,32 @@ class StandardIssueKind(_StrEnum):
     MISSING_TEXT_STYLE = "missingTextStyle"
     MISSING_DIMENSION_STYLE = "missingDimensionStyle"
     DIMENSION_STYLE_NAME = "dimensionStyleName"
+    MISSING_LINE_TYPE_DEFINITION = "missingLineTypeDefinition"
+    LINE_TYPE_DEFINITION = "lineTypeDefinition"
+    MISSING_HATCH_PATTERN_DEFINITION = "missingHatchPatternDefinition"
+    HATCH_PATTERN_DEFINITION = "hatchPatternDefinition"
+    MISSING_BLOCK_REFERENCE = "missingBlockReference"
+    BLOCK_PUBLICATION = "blockPublication"
+    BLOCK_UNIT = "blockUnit"
+    SHEET_TEMPLATE_ORIGIN = "sheetTemplateOrigin"
+    MISSING_LEADER_STYLE_DEFINITION = "missingLeaderStyleDefinition"
+    LEADER_STYLE_DEFINITION = "leaderStyleDefinition"
+    MISSING_TEXT_STYLE_DEFINITION = "missingTextStyleDefinition"
+    TEXT_STYLE_DEFINITION = "textStyleDefinition"
+    MISSING_DIMENSION_STYLE_DEFINITION = "missingDimensionStyleDefinition"
+    DIMENSION_STYLE_DEFINITION = "dimensionStyleDefinition"
     MISSING_LAYER = "missingLayer"
     LAYER_NAME = "layerName"
     PROJECT_FONT = "projectFont"
     TEXT_FONT = "textFont"
     TEXT_STYLE_NAME = "textStyleName"
+    TEXT_STYLE_HEIGHT = "textStyleHeight"
+    DIMENSION_STYLE_HEIGHT = "dimensionStyleHeight"
     OBJECT_LINE_TYPE = "objectLineType"
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "blockUnit", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
@@ -10644,6 +10676,8 @@ class TableEdit(_Union):
     - :class:`HeaderTableEdit` (``kind: header``)
     - :class:`GridTableEdit` (``kind: grid``)
     - :class:`FrameTableEdit` (``kind: frame``)
+    - :class:`SourceKeyTableEdit` (``kind: sourceKey``)
+    - :class:`SourceRuleTableEdit` (``kind: sourceRule``)
     - :class:`UnlinkTableEdit` (``kind: unlink``)
     """
     __slots__ = ()
@@ -27603,10 +27637,12 @@ class DrawingCompare(_Model):
     `file_not_found`, `import_unreadable`, `invalid_limit`.
     Attributes:
         limit: The most ids each list holds, 1 to 1 000 000; absent: `COMPARE_LIMIT`. A cut list says so (`truncated`). Unit: count.
+        match_search: Optional suggestions for unmatched objects with different UUIDs. Suggestions never change identity or counts.
         tolerance: How far points may lie apart and the geometry still be the same, metres, 0 to 10; absent: `COMPARE_TOLERANCE`. Unit: length.
     """
     against: CompareAgainst
     limit: int | None | Unset = UNSET
+    match_search: DrawingMatchSearch | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -27614,6 +27650,8 @@ class DrawingCompare(_Model):
         out["against"] = self.against.to_json()
         if self.limit is not UNSET:
             out["limit"] = self.limit
+        if self.match_search is not UNSET:
+            out["matchSearch"] = None if self.match_search is None else self.match_search.to_json()
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         return out
@@ -27623,6 +27661,7 @@ class DrawingCompare(_Model):
         return cls(
             against=CompareAgainst.from_json(data["against"]),
             limit=data.get("limit", UNSET),
+            match_search=UNSET if "matchSearch" not in data else None if data["matchSearch"] is None else DrawingMatchSearch.from_json(data["matchSearch"]),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -27641,6 +27680,9 @@ class DrawingCompared(_Model):
         changed_objects: The changed objects, in the drawing's order.
         truncated: A list was cut at `limit`.
         revision: ^(0|[1-9][0-9]*)$
+        match_candidates: Proposed identities, in old/new document order. Original added/removed counts remain unchanged.
+        project_changes: Non-model differences: sheets, viewports, named views, view templates and book settings.
+            These are counted separately from model entities and do not create false geometry highlights.
     """
     against: str
     same: int
@@ -27652,6 +27694,8 @@ class DrawingCompared(_Model):
     changed_objects: list[ChangedObject]
     truncated: bool
     revision: str
+    match_candidates: list[DrawingMatchCandidate] | Unset = UNSET
+    project_changes: list[DrawingProjectChange] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -27665,6 +27709,10 @@ class DrawingCompared(_Model):
         out["changedObjects"] = [e0.to_json() for e0 in self.changed_objects]
         out["truncated"] = self.truncated
         out["revision"] = self.revision
+        if self.match_candidates is not UNSET:
+            out["matchCandidates"] = [e0.to_json() for e0 in self.match_candidates]
+        if self.project_changes is not UNSET:
+            out["projectChanges"] = [e0.to_json() for e0 in self.project_changes]
         return out
 
     @classmethod
@@ -27680,6 +27728,8 @@ class DrawingCompared(_Model):
             changed_objects=[ChangedObject.from_json(e0) for e0 in data["changedObjects"]],
             truncated=data["truncated"],
             revision=data["revision"],
+            match_candidates=[DrawingMatchCandidate.from_json(e0) for e0 in data["matchCandidates"]] if "matchCandidates" in data else UNSET,
+            project_changes=[DrawingProjectChange.from_json(e0) for e0 in data["projectChanges"]] if "projectChanges" in data else UNSET,
         )
 
 
@@ -27770,6 +27820,114 @@ class DrawingInspected(_Model):
             truncated=data["truncated"],
             revision=data["revision"],
             dimensions=[DimensionRead.from_json(e0) for e0 in data["dimensions"]] if "dimensions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingMatchCandidate(_Model):
+    """An explicit proposal between two unmatched UUIDs. Neither evidence type guarantees identity.
+    Attributes:
+        evidence: `sourceKey` for an equal nonempty attribute, otherwise `geometry`.
+        ambiguous: Either object has more than one proposal, including proposals cut from the output by `limit`.
+        distance: The existing comparison core's location difference, metres; absent for different geometry kinds. Unit: length.
+    """
+    old_uid: str
+    new_uid: str
+    evidence: str
+    ambiguous: bool
+    same_geometry: bool
+    distance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["oldUid"] = self.old_uid
+        out["newUid"] = self.new_uid
+        out["evidence"] = self.evidence
+        out["ambiguous"] = self.ambiguous
+        out["sameGeometry"] = self.same_geometry
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingMatchCandidate:
+        return cls(
+            old_uid=data["oldUid"],
+            new_uid=data["newUid"],
+            evidence=data["evidence"],
+            ambiguous=data["ambiguous"],
+            same_geometry=data["sameGeometry"],
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingMatchSearch(_Model):
+    """Explicit search for identity candidates, not automatic pairing.
+    Attributes:
+        search: Maximum geometric location difference, metres, 0 to 10. Equal source keys may suggest a moved object beyond it. Unit: length.
+        key: Attribute containing a source-scoped id/handle. Unequal nonempty keys never match by proximity.
+        new_uids: New-side unmatched UUID scope. Absent: all added objects; empty: none.
+        old_uids: Old-side unmatched UUID scope. Absent: all removed objects; empty: none. At most 5000 objects per side.
+    """
+    search: float
+    key: str | None | Unset = UNSET
+    new_uids: list[str] | None | Unset = UNSET
+    old_uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["search"] = float(self.search)
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.new_uids is not UNSET:
+            out["newUids"] = None if self.new_uids is None else list(self.new_uids)
+        if self.old_uids is not UNSET:
+            out["oldUids"] = None if self.old_uids is None else list(self.old_uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingMatchSearch:
+        return cls(
+            search=float(data["search"]),
+            key=data.get("key", UNSET),
+            new_uids=UNSET if "newUids" not in data else None if data["newUids"] is None else list(data["newUids"]),
+            old_uids=UNSET if "oldUids" not in data else None if data["oldUids"] is None else list(data["oldUids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingProjectChange(_Model):
+    """A non-model change, compared by the sheet/view's stable id rather than an entity slot.
+    Attributes:
+        kind: `sheet`, `viewport`, `namedView`, `viewTemplate` or `sheetBook`.
+        id: Stable id; a viewport uses its sheet id and item id, separated by `/`.
+        status: `added`, `removed` or `changed`.
+        fields: Changed JSON field paths; empty for an addition or removal. Array changes name the array.
+    """
+    kind: str
+    id: str
+    name: str
+    status: str
+    fields: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["id"] = self.id
+        out["name"] = self.name
+        out["status"] = self.status
+        out["fields"] = list(self.fields)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingProjectChange:
+        return cls(
+            kind=data["kind"],
+            id=data["id"],
+            name=data["name"],
+            status=data["status"],
+            fields=list(data["fields"]),
         )
 
 
@@ -65153,6 +65311,8 @@ class ProjectSettings(_Model):
             reconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`
             objects has none.
         sources: The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
+        standard_docs: Ordered portable drawing standards retained with the project. Earlier
+            entries take precedence; choosing a standard does not apply it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
@@ -65209,6 +65369,7 @@ class ProjectSettings(_Model):
     second_srid: int | None | Unset = UNSET
     source_bases: list[SourceBase] | Unset = UNSET
     sources: list[SourceLink] | Unset = UNSET
+    standard_docs: list[ProjectStandardDocument] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
@@ -65297,6 +65458,8 @@ class ProjectSettings(_Model):
             out["sourceBases"] = [e0.to_json() for e0 in self.source_bases]
         if self.sources is not UNSET:
             out["sources"] = [e0.to_json() for e0 in self.sources]
+        if self.standard_docs is not UNSET:
+            out["standardDocs"] = [e0.to_json() for e0 in self.standard_docs]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.text_styles is not UNSET:
@@ -65361,6 +65524,7 @@ class ProjectSettings(_Model):
             second_srid=data.get("secondSrid", UNSET),
             source_bases=[SourceBase.from_json(e0) for e0 in data["sourceBases"]] if "sourceBases" in data else UNSET,
             sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
+            standard_docs=[ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]] if "standardDocs" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
@@ -65424,6 +65588,27 @@ class ProjectSheets(_Model):
         return cls(
             book=data["book"],
             pictures=[SheetPicture.from_json(e0) for e0 in data["pictures"]] if "pictures" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectStandardDocument(_Model):
+    """An exact versioned standard document retained in the drawing file.
+    Attributes:
+        text: UTF-8 JSON document, with its format, document version, identity and
+            office revision. Keeping the complete text allows exact re-export.
+    """
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectStandardDocument:
+        return cls(
+            text=data["text"],
         )
 
 
@@ -73717,6 +73902,11 @@ class SettingsSet(_Model):
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
     - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+    - `standardDocs`: the entire ordered list of versioned drawing-standard
+      documents retained by the project; an empty list removes all bindings.
+      An ordered, byte-identical subset may remove unsupported existing
+      documents for recovery; new or changed documents are validated.
+      This changes the association only and does not apply the standards.
 
     Settings are an edit of the project, no undo step (docs/adr/0049).
 
@@ -73755,6 +73945,8 @@ class SettingsSet(_Model):
         plot_scale: Unit: scale.
         second_srid: Unit: epsg.
         srid: Unit: epsg.
+        standard_docs: Replace the project's ordered drawing-standard documents. Missing keeps
+            the current list; an empty list removes it.
     """
     angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET
     arch: ArchSettings | None | Unset = UNSET
@@ -73775,6 +73967,7 @@ class SettingsSet(_Model):
     project_type: Workspace | WorkspaceName | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     srid: int | None | Unset = UNSET
+    standard_docs: list[ProjectStandardDocument] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -73816,6 +74009,8 @@ class SettingsSet(_Model):
             out["secondSrid"] = self.second_srid
         if self.srid is not UNSET:
             out["srid"] = self.srid
+        if self.standard_docs is not UNSET:
+            out["standardDocs"] = None if self.standard_docs is None else [e0.to_json() for e0 in self.standard_docs]
         return out
 
     @classmethod
@@ -73840,6 +74035,7 @@ class SettingsSet(_Model):
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
             second_srid=data.get("secondSrid", UNSET),
             srid=data.get("srid", UNSET),
+            standard_docs=UNSET if "standardDocs" not in data else None if data["standardDocs"] is None else [ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]],
         )
 
 
@@ -79442,6 +79638,69 @@ class StakeoutSent(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardBlockReference(_Model):
+    """A named block library release required by an office standard. The
+    publication identifies a reusable type; geometry stays in its library.
+    Attributes:
+        units: Optional approved authored unit. Checking it never rescales a local block.
+    """
+    name: str
+    publication: BlockPublication
+    units: BlockUnits | BlockUnitsName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["publication"] = self.publication.to_json()
+        if self.units is not UNSET:
+            out["units"] = None if self.units is None else _enum_out(self.units)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardBlockReference:
+        return cls(
+            name=data["name"],
+            publication=BlockPublication.from_json(data["publication"]),
+            units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardConflict(_Model):
+    """A later document differs from the first on named definitions or global rules."""
+    kind: str
+    name: str
+    first_id: str
+    later_id: str
+    fields: list[str]
+    first_values: dict[str, Any]
+    later_values: dict[str, Any]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["name"] = self.name
+        out["firstId"] = self.first_id
+        out["laterId"] = self.later_id
+        out["fields"] = list(self.fields)
+        out["firstValues"] = dict(self.first_values)
+        out["laterValues"] = dict(self.later_values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardConflict:
+        return cls(
+            kind=data["kind"],
+            name=data["name"],
+            first_id=data["firstId"],
+            later_id=data["laterId"],
+            fields=list(data["fields"]),
+            first_values=dict(data["firstValues"]),
+            later_values=dict(data["laterValues"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StandardDimensionStyle(_Model):
     """A dimension style the standard asks for.
     Attributes:
@@ -79474,7 +79733,10 @@ class StandardIssue(_Model):
         expected: What the standard asks for.
         found: What the drawing has.
         layer: The layer's id, when it is about one of the drawing's layers.
-        objects: The objects it is about (ObjectLineType, OwnLook). Unit: count.
+        objects: Direct objects this finding is about (ObjectLineType, OwnLook, named
+            line type or hatch definition), or direct placements of a mismatched
+            published block (BlockPublication or BlockUnit). Layer and nested-block
+            uses are described separately in the finding's message. Unit: count.
     """
     kind: StandardIssueKind | StandardIssueKindName
     subject: str
@@ -79560,6 +79822,141 @@ class StandardLayer(_Model):
             description=data.get("description", UNSET),
             from_=data.get("from", UNSET),
             plot=data.get("plot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardOrigin(_Model):
+    """Source identity and office revision of an effective definition."""
+    id: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardOrigin:
+        return cls(
+            id=data["id"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardProvenance(_Model):
+    """Provenance of the global rules and each effective named definition."""
+    rules: StandardOrigin
+    layers: dict[str, StandardOrigin]
+    text_styles: dict[str, StandardOrigin]
+    dimension_styles: dict[str, StandardOrigin]
+    line_types: dict[str, StandardOrigin]
+    hatch_patterns: dict[str, StandardOrigin]
+    blocks: dict[str, StandardOrigin]
+    sheet_templates: dict[str, StandardOrigin]
+    leader_styles: dict[str, StandardOrigin]
+    text_style_definitions: dict[str, StandardOrigin]
+    dimension_style_definitions: dict[str, StandardOrigin]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules.to_json()
+        out["layers"] = {k0: e0.to_json() for k0, e0 in self.layers.items()}
+        out["textStyles"] = {k0: e0.to_json() for k0, e0 in self.text_styles.items()}
+        out["dimensionStyles"] = {k0: e0.to_json() for k0, e0 in self.dimension_styles.items()}
+        out["lineTypes"] = {k0: e0.to_json() for k0, e0 in self.line_types.items()}
+        out["hatchPatterns"] = {k0: e0.to_json() for k0, e0 in self.hatch_patterns.items()}
+        out["blocks"] = {k0: e0.to_json() for k0, e0 in self.blocks.items()}
+        out["sheetTemplates"] = {k0: e0.to_json() for k0, e0 in self.sheet_templates.items()}
+        out["leaderStyles"] = {k0: e0.to_json() for k0, e0 in self.leader_styles.items()}
+        out["textStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.text_style_definitions.items()}
+        out["dimensionStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.dimension_style_definitions.items()}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardProvenance:
+        return cls(
+            rules=StandardOrigin.from_json(data["rules"]),
+            layers={k0: StandardOrigin.from_json(e0) for k0, e0 in data["layers"].items()},
+            text_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["textStyles"].items()},
+            dimension_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyles"].items()},
+            line_types={k0: StandardOrigin.from_json(e0) for k0, e0 in data["lineTypes"].items()},
+            hatch_patterns={k0: StandardOrigin.from_json(e0) for k0, e0 in data["hatchPatterns"].items()},
+            blocks={k0: StandardOrigin.from_json(e0) for k0, e0 in data["blocks"].items()},
+            sheet_templates={k0: StandardOrigin.from_json(e0) for k0, e0 in data["sheetTemplates"].items()},
+            leader_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["leaderStyles"].items()},
+            text_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["textStyleDefinitions"].items()},
+            dimension_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyleDefinitions"].items()},
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardResources(_Model):
+    """Portable resource definitions carried by a version 2 office standard.
+    Association alone never overwrites the project's definitions.
+    """
+    blocks: list[StandardBlockReference] | Unset = UNSET
+    dimension_style_definitions: list[DimensionStyleDef] | Unset = UNSET
+    hatch_patterns: list[HatchPatternDef] | Unset = UNSET
+    leader_styles: list[LeaderStyleDef] | Unset = UNSET
+    line_types: list[LineTypeDef] | Unset = UNSET
+    sheet_templates: list[StandardSheetTemplateReference] | Unset = UNSET
+    text_style_definitions: list[TextStyleDef] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.blocks is not UNSET:
+            out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        if self.dimension_style_definitions is not UNSET:
+            out["dimensionStyleDefinitions"] = [e0.to_json() for e0 in self.dimension_style_definitions]
+        if self.hatch_patterns is not UNSET:
+            out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
+        if self.leader_styles is not UNSET:
+            out["leaderStyles"] = [e0.to_json() for e0 in self.leader_styles]
+        if self.line_types is not UNSET:
+            out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
+        if self.sheet_templates is not UNSET:
+            out["sheetTemplates"] = [e0.to_json() for e0 in self.sheet_templates]
+        if self.text_style_definitions is not UNSET:
+            out["textStyleDefinitions"] = [e0.to_json() for e0 in self.text_style_definitions]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardResources:
+        return cls(
+            blocks=[StandardBlockReference.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
+            dimension_style_definitions=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyleDefinitions"]] if "dimensionStyleDefinitions" in data else UNSET,
+            hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
+            leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
+            line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
+            sheet_templates=[StandardSheetTemplateReference.from_json(e0) for e0 in data["sheetTemplates"]] if "sheetTemplates" in data else UNSET,
+            text_style_definitions=[TextStyleDef.from_json(e0) for e0 in data["textStyleDefinitions"]] if "textStyleDefinitions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardSheetTemplateReference(_Model):
+    """Approved sheet-template origin. It identifies a template revision, not a
+    copy of its contents or permission to modify an existing sheet.
+    Attributes:
+        revision: Unit: version.
+    """
+    template_id: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["templateId"] = self.template_id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardSheetTemplateReference:
+        return cls(
+            template_id=data["templateId"],
+            revision=data["revision"],
         )
 
 
@@ -79701,15 +80098,20 @@ class StandardsCheck(_Model):
     """`cad.standards.check` v1: what the drawing breaks of a standard. It writes nothing.
     Attributes:
         name: A built-in standard by its id (`mimari-ofis`); or
+        resources: Optional named definitions from a version 2 standard package. Checking
+            them never imports or replaces a drawing resource.
         standard: the standard itself.
     """
     name: str | None | Unset = UNSET
+    resources: StandardResources | None | Unset = UNSET
     standard: DrawingStandard | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.resources is not UNSET:
+            out["resources"] = None if self.resources is None else self.resources.to_json()
         if self.standard is not UNSET:
             out["standard"] = None if self.standard is None else self.standard.to_json()
         return out
@@ -79718,7 +80120,43 @@ class StandardsCheck(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsCheck:
         return cls(
             name=data.get("name", UNSET),
+            resources=UNSET if "resources" not in data else None if data["resources"] is None else StandardResources.from_json(data["resources"]),
             standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsConflicts(_Model):
+    """Inspect global rules and named definitions in ordered standard documents."""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsConflicts:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsConflictsReport(_Model):
+    """Compares global rules and named layer, text and dimension style definitions;
+    it does not combine standards or decide which rules should be applied.
+    """
+    conflicts: list[StandardConflict]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["conflicts"] = [e0.to_json() for e0 in self.conflicts]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsConflictsReport:
+        return cls(
+            conflicts=[StandardConflict.from_json(e0) for e0 in data["conflicts"]],
+            revision=data["revision"],
         )
 
 
@@ -79750,6 +80188,53 @@ class StandardsReport(_Model):
             standard=data["standard"],
             issues=[StandardIssue.from_json(e0) for e0 in data["issues"]],
             fixable=data["fixable"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsResolve(_Model):
+    """Builds a prospective standard from the project's ordered bindings."""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsResolve:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsResolved(_Model):
+    """Read-only effective standard. Global rules and duplicate named definitions
+    come from the first document; other named definitions are added in order.
+    Attributes:
+        resources: First definition of each named resource, in binding order. Read-only;
+            `cad.standards.apply` does not install or replace these resources.
+    """
+    standard: DrawingStandard
+    resources: StandardResources
+    sources: list[str]
+    provenance: StandardProvenance
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["standard"] = self.standard.to_json()
+        out["resources"] = self.resources.to_json()
+        out["sources"] = list(self.sources)
+        out["provenance"] = self.provenance.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsResolved:
+        return cls(
+            standard=DrawingStandard.from_json(data["standard"]),
+            resources=StandardResources.from_json(data["resources"]),
+            sources=list(data["sources"]),
+            provenance=StandardProvenance.from_json(data["provenance"]),
             revision=data["revision"],
         )
 
@@ -109155,6 +109640,46 @@ class FrameTableEdit(TableEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourceKeyTableEdit(TableEdit):
+    """A linked file's unique, nonempty row-key column (null: position-based legacy refresh).
+    Attributes:
+        column: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "sourceKey"
+    column: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "sourceKey"}
+        if self.column is not UNSET:
+            out["column"] = self.column
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceKeyTableEdit:
+        return cls(
+            column=data.get("column", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceRuleTableEdit(TableEdit):
+    """What a linked file refresh does with hand-edited cells."""
+    TAG_VALUE: ClassVar[str] = "sourceRule"
+    rule: SourceOverrides | SourceOverridesName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "sourceRule"}
+        out["rule"] = _enum_out(self.rule)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceRuleTableEdit:
+        return cls(
+            rule=_enum_in(SourceOverrides, data["rule"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnlinkTableEdit(TableEdit):
     """Kaynağı bırak: the table follows no source."""
     TAG_VALUE: ClassVar[str] = "unlink"
@@ -109226,12 +109751,16 @@ class AttributesTableSource(TableSource):
 class FileTableSource(TableSource):
     """A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the
     drawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell
-    changed by hand differs from) and what is done with such a cell; unlinked, it is chosen again to update.
+    changed by hand differs from), what is done with such a cell, and an optional unique row key;
+    unlinked, it is chosen again to update.
+    Attributes:
+        key_column: Zero-based column whose nonempty values identify rows across file revisions. Unit: index.
     """
     TAG_VALUE: ClassVar[str] = "file"
     name: str
     copy: list[list[str]] | None | Unset = UNSET
     digest: str | None | Unset = UNSET
+    key_column: int | None | Unset = UNSET
     overrides: SourceOverrides | SourceOverridesName | Unset = UNSET
     path: str | None | Unset = UNSET
     sheet: str | None | Unset = UNSET
@@ -109243,6 +109772,8 @@ class FileTableSource(TableSource):
             out["copy"] = None if self.copy is None else [list(e0) for e0 in self.copy]
         if self.digest is not UNSET:
             out["digest"] = self.digest
+        if self.key_column is not UNSET:
+            out["keyColumn"] = self.key_column
         if self.overrides is not UNSET:
             out["overrides"] = _enum_out(self.overrides)
         if self.path is not UNSET:
@@ -109257,6 +109788,7 @@ class FileTableSource(TableSource):
             name=data["name"],
             copy=UNSET if "copy" not in data else None if data["copy"] is None else [list(e0) for e0 in data["copy"]],
             digest=data.get("digest", UNSET),
+            key_column=data.get("keyColumn", UNSET),
             overrides=_enum_in(SourceOverrides, data["overrides"]) if "overrides" in data else UNSET,
             path=data.get("path", UNSET),
             sheet=data.get("sheet", UNSET),
@@ -109394,12 +109926,16 @@ class RefreshTablesOperation(TablesOperation):
 @dataclass(kw_only=True, slots=True)
 class LinkTablesOperation(TablesOperation):
     """Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table
-    linked to it: its path, digest and copy kept, `overrides` its rule.
+    linked to it: its path, digest and copy kept, `overrides` its rule. An omitted key or override
+    keeps the existing file table's setting when relinking.
+    Attributes:
+        key_column: Zero-based file column with unique, nonempty row keys. Requires a header row. Unit: index.
     """
     TAG_VALUE: ClassVar[str] = "link"
     uid: str
     path: str
     base: str | None | Unset = UNSET
+    key_column: int | None | Unset = UNSET
     overrides: SourceOverrides | SourceOverridesName | None | Unset = UNSET
     sheet: str | None | Unset = UNSET
 
@@ -109409,6 +109945,8 @@ class LinkTablesOperation(TablesOperation):
         out["path"] = self.path
         if self.base is not UNSET:
             out["base"] = self.base
+        if self.key_column is not UNSET:
+            out["key_column"] = self.key_column
         if self.overrides is not UNSET:
             out["overrides"] = None if self.overrides is None else _enum_out(self.overrides)
         if self.sheet is not UNSET:
@@ -109421,6 +109959,7 @@ class LinkTablesOperation(TablesOperation):
             uid=data["uid"],
             path=data["path"],
             base=data.get("base", UNSET),
+            key_column=data.get("key_column", UNSET),
             overrides=UNSET if "overrides" not in data else None if data["overrides"] is None else _enum_in(SourceOverrides, data["overrides"]),
             sheet=data.get("sheet", UNSET),
         )
@@ -111405,7 +111944,7 @@ _SUPERELEVATION_METHOD: dict[str, type[SuperelevationMethod]] = {"curves": Curve
 _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "polar": PolarSurveyWork, "forward": ForwardSurveyWork, "resection": ResectionSurveyWork}
 
 
-_TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "unlink": UnlinkTableEdit}
+_TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "sourceKey": SourceKeyTableEdit, "sourceRule": SourceRuleTableEdit, "unlink": UnlinkTableEdit}
 
 
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource}
@@ -112263,7 +112802,10 @@ __all__ = [
     "DrawingFontName",
     "DrawingInspect",
     "DrawingInspected",
+    "DrawingMatchCandidate",
+    "DrawingMatchSearch",
     "DrawingPaperViewportSource",
+    "DrawingProjectChange",
     "DrawingSetPaperTableSource",
     "DrawingStandard",
     "DrawingUnit",
@@ -113863,6 +114405,7 @@ __all__ = [
     "ProjectSettings",
     "ProjectShare",
     "ProjectSheets",
+    "ProjectStandardDocument",
     "ProjectState",
     "ProjectStateName",
     "ProjectStorage",
@@ -114379,6 +114922,7 @@ __all__ = [
     "SourceBase",
     "SourceCapabilities",
     "SourceColumn",
+    "SourceKeyTableEdit",
     "SourceKind",
     "SourceKindName",
     "SourceLink",
@@ -114390,6 +114934,7 @@ __all__ = [
     "SourceRelation",
     "SourceRelationKind",
     "SourceRelationKindName",
+    "SourceRuleTableEdit",
     "SourceState",
     "SourceTable",
     "SourceUncertainty",
@@ -114498,16 +115043,26 @@ __all__ = [
     "StakeoutSendFormat",
     "StakeoutSendFormatName",
     "StakeoutSent",
+    "StandardBlockReference",
+    "StandardConflict",
     "StandardDimensionStyle",
     "StandardIssue",
     "StandardIssueKind",
     "StandardIssueKindName",
     "StandardLayer",
+    "StandardOrigin",
+    "StandardProvenance",
+    "StandardResources",
+    "StandardSheetTemplateReference",
     "StandardTextStyle",
     "StandardsApplied",
     "StandardsApply",
     "StandardsCheck",
+    "StandardsConflicts",
+    "StandardsConflictsReport",
     "StandardsReport",
+    "StandardsResolve",
+    "StandardsResolved",
     "StartSubPlace",
     "StationEquationDef",
     "StationMapRow",

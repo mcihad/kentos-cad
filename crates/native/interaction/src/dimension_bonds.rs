@@ -3,7 +3,7 @@
 //! insert), for the drawing to show over the selection. Read from the document; nothing is written.
 
 use kentos_commands::{DimensionRefs, Entity};
-use kentos_domain::dimension_ties::{core_blocks, core_place};
+use kentos_domain::dimension_ties::core_place;
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::jsmath::{cos, sin};
@@ -57,7 +57,7 @@ fn bonds_of(
         };
         let mut object = core_entity(e);
         if !r.path.is_empty() {
-            let blocks = blocks.get_or_insert_with(|| core_blocks(doc.blocks()));
+            let blocks = blocks.get_or_insert_with(|| kentos_native_application::blocks::drawing_blocks(doc));
             let Some(p) = piece(blocks, &object, &r.path) else {
                 continue;
             };

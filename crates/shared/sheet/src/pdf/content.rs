@@ -72,7 +72,7 @@ struct Pen {
     width: Option<f32>,
     cap: Option<u8>,
     join: Option<u8>,
-    dash: Option<Vec<f32>>,
+    dash: Option<(Vec<f32>, f32)>,
 }
 
 impl<'a> Page<'a> {
@@ -144,10 +144,10 @@ impl<'a> Page<'a> {
         }
     }
 
-    fn dash(&mut self, dash: Vec<f32>) {
-        if self.pen.dash.as_ref() != Some(&dash) {
-            self.c.set_dash_pattern(dash.iter().copied(), 0.0);
-            self.pen.dash = Some(dash);
+    fn dash(&mut self, dash: Vec<f32>, phase: f32) {
+        if self.pen.dash.as_ref().is_none_or(|(d,p)|d != &dash || *p != phase) {
+            self.c.set_dash_pattern(dash.iter().copied(), phase);
+            self.pen.dash = Some((dash, phase));
         }
     }
 
@@ -370,6 +370,12 @@ impl<'a> Page<'a> {
     /// A line's width, dashes (points), ends and corners.
     /// Each part written when it is not the one in force.
     pub fn line_style(&mut self, width: f64, dash: &[f64], cap: LineCap, join: LineJoin) {
+        self.line_style_phase(width, dash, 0.0, cap, join);
+    }
+
+    /// Same style with an explicit PDF pattern phase, in points. Fold in
+    /// Float64 before conversion, avoiding ambiguous negative PDF 1.7 phases.
+    pub fn line_style_phase(&mut self, width: f64, dash: &[f64], phase: f64, cap: LineCap, join: LineJoin) {
         self.width(width.max(0.0) as f32);
         let cap = match cap {
             LineCap::Butt => LineCapStyle::ButtCap,
@@ -385,11 +391,14 @@ impl<'a> Page<'a> {
             LineJoin::Round => LineJoinStyle::RoundJoin,
             LineJoin::Bevel => LineJoinStyle::BevelJoin,
         });
+        let period = dash.iter().map(|d|d.max(0.0)).sum::<f64>()
+            * if dash.len()%2==1 {2.} else {1.};
+        let phase = if period > 0.0 { phase.rem_euclid(period) as f32 } else { 0.0 };
         let dash: Vec<f32> = dash.iter().map(|d| d.max(0.0) as f32).collect();
         if dash.iter().any(|d| *d > 0.0) {
-            self.dash(dash);
+            self.dash(dash, phase);
         } else {
-            self.dash(Vec::new());
+            self.dash(Vec::new(), 0.0);
         }
     }
 
@@ -485,7 +494,7 @@ impl<'a> Page<'a> {
             self.stroke_rgb(hrgb);
             self.width((size / 5.0) as f32);
             self.join(LineJoinStyle::RoundJoin);
-            self.dash(Vec::new());
+            self.dash(Vec::new(), 0.0);
             // The halo is the same letters stroked under them: an empty replacement text (PDF 1.5's `ActualText`) keeps
             // a reader (pdftotext, search, a screen reader) from taking them twice (docs/adr/0695's PDF gate).
             self.c
@@ -640,5 +649,23 @@ mod tests {
             "{x} {y}"
         );
         assert_eq!(page.xy([0.0, 297_000.0]), (0.0, 0.0));
+    }
+
+    #[test]
+    fn dash_phase_is_folded_and_part_of_the_saved_graphics_state_cache() {
+        let fonts=Fonts::default();
+        let mut page=Page::new(297_000,&fonts);
+        let set=|p:&mut Page<'_>,phase|p.line_style_phase(0.25,&[2.,1.,3.],phase,LineCap::Butt,LineJoin::Round);
+        set(&mut page,-2.); // odd recipe repeats twice: period 12, phase 10.
+        set(&mut page,-2.);
+        page.save();
+        set(&mut page,2.); // same lengths, different phase must be written.
+        page.restore();
+        set(&mut page,10.); // restored phase: no redundant operator.
+        page.line_style(0.25,&[],LineCap::Butt,LineJoin::Round);
+        let stream=String::from_utf8(page.c.finish().to_vec()).unwrap();
+        assert_eq!(stream.matches("[2 1 3] 10 d").count(),1,"{stream}");
+        assert_eq!(stream.matches("[2 1 3] 2 d").count(),1,"{stream}");
+        assert_eq!(stream.matches("[] 0 d").count(),1,"{stream}");
     }
 }

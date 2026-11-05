@@ -406,7 +406,40 @@ fn impact(doc: &Document, input: &StylesImpact) -> Result<StyleImpact, Stop> {
     }
     out.inserts = shown(doc, &blocks);
     out.notes = notes(&out, input.target);
+    if input.target == ImpactTarget::TextStyle
+        && let Some(note) = text_style_dependency_note(doc, id)
+    {
+        out.notes[0] = format!(
+            "{} doğrudan bağlı yazı nesnesi değişikliği alır.",
+            out.follow
+        );
+        out.notes.push(note);
+    }
     Ok(out)
+}
+
+/// A bounded human/AI explanation of definition dependencies; the entity
+/// counters remain direct followers, not counts of linetype definitions.
+pub fn text_style_dependency_note(doc: &Document, id: &str) -> Option<String> {
+    let names = doc.line_type_text_style_users(id);
+    if names.is_empty() {
+        return None;
+    }
+    let shown = names
+        .iter()
+        .take(12)
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(", ");
+    let more = if names.len() > 12 {
+        format!(" ve {} diğer tanım", names.len() - 12)
+    } else {
+        String::new()
+    };
+    Some(format!(
+        "Bu yazı stilini {} çizgi tipi tanımı kullanıyor: {shown}{more}. Stil değişikliği bu desenlerle çizilen çizgi ve yaylara da yansır.",
+        names.len()
+    ))
 }
 
 /// A property's Turkish word, as people read it (`lineType` çizgi tipi).

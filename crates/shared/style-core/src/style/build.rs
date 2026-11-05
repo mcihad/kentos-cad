@@ -803,7 +803,22 @@ fn draw_object(
     sink: &mut BatchSink,
     cx: &mut Cx,
 ) {
-    let parts = output_parts(shape,clip,buf,env,cx);
+    if mode == MODE_SET
+        && let Some(set) = usize::try_from(a).ok().and_then(|k| program.sets.get(k))
+        && let Some(symbol) = program.symbol(set.line.as_ref())
+        && super::cad_band::compile(shape, symbol, values, env, sink, LEVEL_LINE)
+    {
+        return;
+    }
+    let parts = output_parts(shape, clip, buf, env, cx);
+    if mode == MODE_SET
+        && let Some(set) = usize::try_from(a).ok().and_then(|k| program.sets.get(k))
+        && let Some(symbol) = program.symbol(set.line.as_ref())
+        && super::cad_marks::compile_curved(shape, &parts, symbol, values, env, sink, LEVEL_LINE)
+    {
+        return;
+    }
+
     if mode == MODE_IMAGE {
         draw_image(shape, &parts, color, program, sink);
         return;
@@ -960,6 +975,7 @@ fn dimension_stroke(
         unit,
         dash,
         dash_offset: 0.0,
+        line_type_loss: None,
         cap: "butt".into(),
         join: "miter".into(),
         blur: 0.0,
@@ -1019,6 +1035,7 @@ fn draw_image(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink
                     unit: PrimUnit::Px,
                     dash: None,
                     dash_offset: 0.0,
+                    line_type_loss: None,
                     cap: "butt".into(),
                     join: "miter".into(),
                     blur: 0.0,
@@ -1084,6 +1101,7 @@ fn draw_pointcloud(
                     unit: PrimUnit::Px,
                     dash: None,
                     dash_offset: 0.0,
+                    line_type_loss: None,
                     cap: "butt".into(),
                     join: "miter".into(),
                     blur: 0.0,
@@ -1270,6 +1288,7 @@ fn draw_raster(
                     unit: PrimUnit::Px,
                     dash: None,
                     dash_offset: 0.0,
+                    line_type_loss: None,
                     cap: "butt".into(),
                     join: "miter".into(),
                     blur: 0.0,
@@ -1619,6 +1638,7 @@ fn draw_chart(
             unit,
             dash: None,
             dash_offset: 0.0,
+            line_type_loss: None,
             cap: "butt".into(),
             join: "round".into(),
             blur: 0.0,
@@ -2028,6 +2048,7 @@ fn draw_whole(
                         unit: PrimUnit::Px,
                         dash: None,
                         dash_offset: 0.0,
+                        line_type_loss: None,
                         cap: "butt".into(),
                         join: "round".into(),
                         blur: 0.0,
@@ -2332,7 +2353,19 @@ pub fn compile_one(v: &Json) -> Result<String, String> {
         moment: None,
     };
     let sink: &mut dyn Sink = &mut out;
-    compile_symbol(&symbol, &geom, &values, &env, sink, 0.0);
+    if !super::cad_band::compile(&entity.shape, &symbol, &values, &env, sink, 0.)
+        && !super::cad_marks::compile_curved(
+            &entity.shape,
+            std::slice::from_ref(&geom),
+            &symbol,
+            &values,
+            &env,
+            sink,
+            0.,
+        )
+    {
+        compile_symbol(&symbol, &geom, &values, &env, sink, 0.0);
+    }
     Ok(out.json())
 }
 

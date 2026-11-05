@@ -1,7 +1,8 @@
 //! The DXF writer (CLAUDE.md §9.7, docs/adr/0009): the app's objects as an
 //! ASCII DXF in the AutoCAD 2007 format (AC1021). That version is the
 //! oldest one with UTF-8 text (every Turkish letter as it is, no code page
-//! to guess) and it has true colours (the app's hex colours exactly) and
+//! to guess); upright complex linetypes raise only that export to R2013
+//! (AC1027). It has true colours (the app's hex colours exactly) and
 //! line weights; AutoCAD 2007 and later, BricsCAD, Netcad, QGIS/GDAL,
 //! LibreCAD and ezdxf read it. The file has what AutoCAD needs of an
 //! AutoCAD 2000+ drawing (handles, owners, the symbol tables, the model
@@ -94,6 +95,19 @@ impl Out {
     pub fn handle(&mut self, code: i32, h: u64) {
         self.code(code);
         let _ = write!(self.s, "{h:X}\r\n");
+    }
+
+    /// A forward STYLE reference: fixed width keeps every following slot
+    /// stable while STYLE handles are allocated in their original order.
+    fn forward_handle(&mut self, code: i32) -> usize {
+        self.code(code);
+        let at = self.s.len();
+        self.s.push_str("0000000000000000\r\n");
+        at
+    }
+
+    fn resolve_handle(&mut self, at: usize, handle: u64) {
+        self.s.replace_range(at..at + 16, &format!("{handle:016X}"));
     }
 
     /// A 2D point (x in `code`, y in `code` + 10).
@@ -197,15 +211,17 @@ struct Header<'a> {
     insunits: i64,
     /// $LTSCALE: the project's line type scale (docs/adr/0313 §6).
     ltscale: f64,
+    /// Upright complex linetypes require R2013 (74 bit 8).
+    upright_linetypes: bool,
 }
 
 fn header(out: &mut Out, h: &Header) {
     out.section("HEADER");
     let var = |out: &mut Out, name: &str| out.str(9, name);
     var(out, "$ACADVER");
-    out.str(1, "AC1021");
+    out.str(1, if h.upright_linetypes { "AC1027" } else { "AC1021" });
     var(out, "$ACADMAINTVER");
-    out.int(70, 25);
+    out.int(70, if h.upright_linetypes { 0 } else { 25 });
     // AutoCAD 2007 and later read text as UTF-8 whatever the code page says; Turkish is named for older tools.
     var(out, "$DWGCODEPAGE");
     out.str(3, "ANSI_1254");
@@ -559,24 +575,44 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             entities::ltype_handle(&mut ltypes, &mut handles, t);
         }
     }
-    layers.ltype_table(
+    let pattern_styles = layers.ltype_table(
         &mut tables,
         &mut handles,
         paper,
         &ltypes,
         &input.line_types,
+        &input.text_styles,
         &mut report,
     );
     layers.layer_table(&mut tables, &mut handles);
     // A style's paper mm in drawing units (docs/adr/0183 §7).
     let length = |mm: f64| mm / 1000.0 * paper;
-    styles::style_table(
+    let mut shape_files = BTreeMap::new();
+    for (_, reference) in &pattern_styles {
+        if let layers::PatternStyle::Shape(file) = reference {
+            shape_files
+                .entry(file.to_lowercase())
+                .or_insert_with(|| file.clone());
+        }
+    }
+    let shape_files: Vec<_> = shape_files.into_values().collect();
+    let style_handles = styles::style_table(
         &mut tables,
         &mut handles,
         &style_names,
         &input.text_styles,
+        &shape_files,
         &length,
     );
+    for (at, reference) in pattern_styles {
+        let handle = match reference {
+            layers::PatternStyle::Text(id) => style_handles.0.get(&id),
+            layers::PatternStyle::Shape(file) => style_handles.1.get(&file.to_lowercase()),
+        }
+        .copied()
+        .unwrap_or(template::STYLE);
+        tables.resolve_handle(at, handle);
+    }
     template::view_ucs(&mut tables);
     template::appid_table(&mut tables);
     styles::dimstyle_table(
@@ -603,6 +639,12 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             point_size: points.then_some(1.5 * paper / 1000.0),
             insunits: units::insunits_of(unit),
             ltscale: input.line_type_scale.unwrap_or(1.0),
+            upright_linetypes: input.line_types.iter().flat_map(|p| &p.elements).any(|e| {
+                e.text.as_ref().is_some_and(|t| t.place.upright)
+                    || e.shape
+                        .as_ref()
+                        .is_some_and(|s| s.place.upright && layers::shape_number(s).is_some())
+            }),
         },
     );
     template::classes(&mut out);

@@ -1095,11 +1095,12 @@ impl<'d> Encoder<'d> {
                             digest,
                             copy,
                             overrides,
+                            key_column,
                             ..
                         } => {
                             f.push(("source", Val::Source(source)));
                             // Schema 68 (docs/adr/0327 §5): a linked file's path, digest, copy and rule, as their JSON.
-                            if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() {
+                            if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() || key_column.is_some() {
                                 let mut link = serde_json::Map::new();
                                 if let Some(p) = path {
                                     link.insert("path".into(), serde_json::json!(p));
@@ -1112,6 +1113,9 @@ impl<'d> Encoder<'d> {
                                 }
                                 if !overrides.is_keep() {
                                     link.insert("overrides".into(), serde_json::json!(overrides));
+                                }
+                                if let Some(key) = key_column {
+                                    link.insert("keyColumn".into(), serde_json::json!(key));
                                 }
                                 f.push(("link", Val::Json(serde_json::Value::Object(link))));
                             }
