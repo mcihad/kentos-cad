@@ -2548,6 +2548,14 @@ yeni özellik açık/kapalı karşılaştırılsın. Yakın ve uzak görünümde
 milimetrik ayrıntı, yazı, ölçü ve desen yerleşimini gerçek GPU'da görüntüle.
 UI iş parçacığı süresiyle toplam GPU/kare süresi ayrı raporlansın.
 
+**Ölçüm düzeni ve kaydırmada yazı kararlılığı (6 Kasım 2026, [ADR 1062](../docs/adr/1062-large-2d-drawing-fluency-and-stability.md)):**
+Sabit karma veri seti (`perf::mixed`, 10⁴/10⁵/10⁶), ölçüm düzeni (`perf::large`) ve piksel/kenet kararlılık ölçütü
+(`perf::stability`) eklendi; Apple M5/Metal release ölçümleri `docs/perf/large-desktop-2026-11-06.md`'de. Uzak
+görünümde kaydırmada büyütülen yazıların değişmesi düzeltildi (çakışma hücreleri dünyaya bağlı; görünür fark
+22 318 → 0 piksel). Yakın görünüm, tuş yankısı, iptal ve tek düzenleme kapsamı hedefte. Tutmayan: uzak görünüm GPU'su
+(10⁶'da p50 ~1,8 s; bloklar ve 72 kirişli stilli eğriler), uzak tekerlekte MİB (~35 ms), 10⁶'da ilk kare ve hepsini
+seç (~2,3–2,5 s), 2M kontur noktası için instancing. Madde `[~]`.
+
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].
