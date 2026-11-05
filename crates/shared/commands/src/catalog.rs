@@ -10076,6 +10076,17 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_STANDARDS_RESOLVE.into(),
+            version: crate::CAD_STANDARDS_RESOLVE_VERSION,
+            title: "Proje standartlarını birleştir".into(),
+            summary: "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, her adlandırılmış tanım ilk bulunduğu kaynaktan alınır. Kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.".into(),
+            aliases: vec![], effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::None,
+            cost: CommandCost::Instant, input: schema::<crate::StandardsResolve>(),
+            output: schema::<crate::StandardsResolved>(), plan: Some(schema::<crate::StandardsResolved>()),
+            capabilities: None, examples: vec![CommandExample { title: "Bağlı standartları birleştir".into(), input: json!({}), output: None }],
+        },
+        CommandDescriptor {
             id: crate::CAD_STANDARDS_CONFLICTS.into(),
             version: crate::CAD_STANDARDS_CONFLICTS_VERSION,
             title: "Bağlı standartlardaki farklı tanımları göster".into(),
@@ -14651,6 +14662,9 @@ mod tests {
                     crate::CAD_LAYERS_TRANSLATE => {
                         serde_json::from_value::<crate::LayersTranslate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_RESOLVE => {
+                        serde_json::from_value::<crate::StandardsResolve>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_STANDARDS_CONFLICTS => {
                         serde_json::from_value::<crate::StandardsConflicts>(e.input.clone()).map(|_| ())

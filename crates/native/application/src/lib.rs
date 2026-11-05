@@ -1588,6 +1588,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_STANDARDS_CONFLICTS_VERSION,
     ),
     (
+        kentos_commands::CAD_STANDARDS_RESOLVE,
+        kentos_commands::CAD_STANDARDS_RESOLVE_VERSION,
+    ),
+    (
         kentos_commands::CAD_STANDARDS_APPLY,
         kentos_commands::CAD_STANDARDS_APPLY_VERSION,
     ),

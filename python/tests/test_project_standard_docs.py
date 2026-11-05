@@ -32,6 +32,12 @@ class ProjectStandardDocuments(unittest.TestCase):
         self.assertEqual((report.conflicts[0].first_id, report.conflicts[0].later_id), ("first", "second"))
         self.assertEqual(report.conflicts[0].fields, ["byLayer"])
         self.assertEqual(report.conflicts[1].fields, ["color"])
+        resolved = cad.standards.resolve(document)
+        self.assertEqual(resolved.sources, ["first", "second"])
+        self.assertEqual(resolved.standard.layers[0].color, standard["layers"][0]["color"])
+        self.assertEqual(resolved.standard.by_layer, standard.get("byLayer", False))
+        cad.standards.check(document, standard=resolved.standard)
+        cad.standards.apply.plan(document, standard=resolved.standard, expected_revision=resolved.revision)
         self.assertEqual(document.to_bytes(), before)
 
     def test_associate_save_reopen_and_remove(self):

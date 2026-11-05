@@ -75932,6 +75932,44 @@ class StandardsReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardsResolve(_Model):
+    """Builds a prospective standard from the project's ordered bindings."""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsResolve:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsResolved(_Model):
+    """Read-only effective standard. Global rules and duplicate named definitions
+    come from the first document; other named definitions are added in order.
+    """
+    standard: DrawingStandard
+    sources: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["standard"] = self.standard.to_json()
+        out["sources"] = list(self.sources)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsResolved:
+        return cls(
+            standard=DrawingStandard.from_json(data["standard"]),
+            sources=list(data["sources"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StationEquationDef(_Model):
     """A station equation (docs/adr/0901 §6): the km where it is (read before it), the km after it, and whether the km
     grows after it.
@@ -108567,6 +108605,8 @@ __all__ = [
     "StandardsConflicts",
     "StandardsConflictsReport",
     "StandardsReport",
+    "StandardsResolve",
+    "StandardsResolved",
     "StartSubPlace",
     "StationEquationDef",
     "StationMapRow",

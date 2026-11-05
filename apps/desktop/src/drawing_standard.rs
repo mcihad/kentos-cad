@@ -10,8 +10,8 @@ use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DrawingStandard, ProjectStandardDocument, SettingsSet, StandardIssue,
     StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsConflicts,
-    StandardsConflictsReport, StandardsReport, built_in_standard, built_in_standards,
-    parse_standard_document,
+    StandardsConflictsReport, StandardsReport, StandardsResolve, built_in_standard,
+    built_in_standards, parse_standard_document,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, settings_set, standards};
@@ -44,6 +44,8 @@ pub struct Window {
     load_error: Option<String>,
     /// Unreadable embedded documents remain selectable for safe removal.
     invalid_bound: Option<(String, String)>,
+    /// Exact documents used by a combined preview, so it cannot go stale.
+    resolved_snapshot: Option<Vec<String>>,
     confirm_remove: bool,
     pub layers: bool,
     pub restyle: bool,
@@ -62,6 +64,7 @@ pub enum Event {
     Loaded(Result<Option<SelectedStandard>, String>),
     BuiltIn,
     Project(String),
+    Resolve,
     Attach,
     Move(i8),
     RemoveAsk,
@@ -215,6 +218,7 @@ impl App {
             choices: Vec::new(),
             load_error,
             invalid_bound,
+            resolved_snapshot: None,
             confirm_remove: false,
             layers: true,
             restyle: true,
@@ -242,6 +246,14 @@ impl App {
                         selected.document.as_deref() == Some(document.text.as_str())
                     })
             });
+        let resolved_changed = w.resolved_snapshot.as_ref().is_some_and(|snapshot| {
+            snapshot.iter().map(String::as_str).ne(doc
+                .model
+                .settings()
+                .standard_docs
+                .iter()
+                .map(|entry| entry.text.as_str()))
+        });
         let mut copy = doc.model.reading_copy();
         let conflicts = match standards::plan_conflicts(
             &ExecutionContext::new(&mut copy),
@@ -287,6 +299,10 @@ impl App {
             if bound_changed {
                 w.load_error =
                     Some("Bağlı standart değişti veya kaldırıldı; projeden yeniden seçin.".into());
+            }
+            if resolved_changed {
+                w.load_error =
+                    Some("Bağlı standartlar değişti; birleşik denetimi yeniden oluşturun.".into());
             }
             // An index belongs to the old report; after a fix the same index
             // can describe a different finding even when it remains in range.
@@ -362,6 +378,7 @@ impl App {
                 w.custom = Some(standard);
                 w.load_error = None;
                 w.invalid_bound = None;
+                w.resolved_snapshot = None;
                 w.chosen = None;
                 w.confirm_remove = false;
             }
@@ -369,11 +386,13 @@ impl App {
                 w.custom = None;
                 w.load_error = None;
                 w.invalid_bound = None;
+                w.resolved_snapshot = None;
                 w.chosen = None;
                 w.confirm_remove = false;
             }
             Event::Project(id) => {
                 w.confirm_remove = false;
+                w.resolved_snapshot = None;
                 let selected = self.document.as_ref().and_then(|doc| {
                     doc.model
                         .settings()
@@ -408,6 +427,43 @@ impl App {
                         w.invalid_bound = None;
                         w.load_error = Some("Bağlı standart artık bulunamıyor.".into());
                     }
+                }
+            }
+            Event::Resolve => {
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
+                let snapshot: Vec<_> = doc
+                    .model
+                    .settings()
+                    .standard_docs
+                    .iter()
+                    .map(|entry| entry.text.clone())
+                    .collect();
+                let mut copy = doc.model.reading_copy();
+                match standards::plan_resolve(
+                    &ExecutionContext::new(&mut copy),
+                    &StandardsResolve {},
+                ) {
+                    CommandResult::Completed { output, .. } => {
+                        w.custom = Some(SelectedStandard {
+                            label: "Birleşik proje standartları".into(),
+                            standard: output.standard,
+                            document: None,
+                            bound_id: None,
+                        });
+                        w.resolved_snapshot = Some(snapshot);
+                        w.invalid_bound = None;
+                        w.load_error = None;
+                        w.chosen = None;
+                        w.confirm_remove = false;
+                    }
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
+                        w.load_error = Some(error.message);
+                    }
+                    _ => w.load_error = Some("Birleşik standart hazırlanamadı.".into()),
                 }
             }
             Event::Attach => {
@@ -798,7 +854,9 @@ impl App {
                 Ok(p) => (vec![words::text_line(Kind::Info, planned_words(p))], true),
             }
         };
-        let source = if let Some((id, _)) = &w.invalid_bound {
+        let source = if w.resolved_snapshot.is_some() {
+            "Birleşik proje standartları".into()
+        } else if let Some((id, _)) = &w.invalid_bound {
             format!("Projeye bağlı: {id} · geçersiz")
         } else {
             w.custom.as_ref().map_or_else(
@@ -869,10 +927,16 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
                 Some(
-                    "İlk standart pencere açılınca seçilir. Denetim yalnız seçili standardı inceler; bağlamak kuralları uygulamaz."
+                    "İlk standart pencere açılınca seçilir. Birleşik denetim ilk kaynağın genel kurallarını ve her adın ilk tanımını kullanır; bağlamak kuralları uygulamaz."
                         .into(),
                 ),
             ));
+        if count > 0 {
+            body = body.push(words::secondary(
+                "Bağlı standartları birlikte denetle",
+                Some(msg(Event::Resolve)),
+            ));
+        }
         if let Some(index) = position {
             body = if w.confirm_remove {
                 body.push(words::text_line(
@@ -947,9 +1011,10 @@ impl App {
         {
             body = body.push(words::text_line(Kind::Warn, error.clone()));
         }
-        if w.custom
-            .as_ref()
-            .is_some_and(|selected| selected.bound_id.is_none())
+        if w.resolved_snapshot.is_none()
+            && w.custom
+                .as_ref()
+                .is_some_and(|selected| selected.bound_id.is_none())
         {
             body = body.push(label::caption(
                 "Bu dosya seçimi pencere kapanınca unutulur; çizime kaydedilmez.",
@@ -1061,6 +1126,51 @@ fn applied_words(p: &StandardsApplied) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn combined_preview_must_be_refreshed_if_a_binding_changes() {
+        use super::Event;
+        use kentos_commands::{
+            ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,
+            StandardPackage, built_in_standard,
+        };
+        let mut app = crate::selecting::tests::objects();
+        crate::files_testing::make_cad(&mut app);
+        let standard = built_in_standard("mimari-ofis").unwrap();
+        let package = |id: &str| ProjectStandardDocument {
+            text: serde_json::to_string(&StandardPackage {
+                format: STANDARD_PACKAGE_FORMAT.into(),
+                version: STANDARD_PACKAGE_VERSION,
+                id: id.into(),
+                revision: "1".into(),
+                standard: standard.clone(),
+            })
+            .unwrap(),
+        };
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.standard_docs = vec![package("a"), package("b")];
+        doc.set_settings(settings);
+        app.open_drawing_standard();
+        let _ = app.drawing_standard_event(Event::Resolve);
+        assert!(
+            app.drawing_standard
+                .as_ref()
+                .unwrap()
+                .resolved_snapshot
+                .is_some()
+        );
+        assert!(app.drawing_standard.as_ref().unwrap().load_error.is_none());
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.standard_docs.reverse();
+        doc.set_settings(settings);
+        app.refresh_standard();
+        assert!(app.drawing_standard.as_ref().unwrap().load_error.is_some());
+        assert!(!app.apply_standard());
+        let _ = app.drawing_standard_event(Event::Resolve);
+        assert!(app.drawing_standard.as_ref().unwrap().load_error.is_none());
+    }
+
     #[test]
     fn project_standards_can_be_reordered_and_removed_only_after_confirmation() {
         use super::Event;

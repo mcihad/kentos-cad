@@ -38,8 +38,15 @@ document texts. This permits removing unsupported embedded documents one at a
 time without admitting new, modified or reordered unsupported documents.
 Use `expectedRevision` to protect the edit from intervening changes. The same
 field is available through the generated Python SDK and MCP command contract.
-Association does not apply a standard. The standard-check window selects one
-project binding at a time; it does not yet combine multiple standards.
+Association does not apply a standard. The standard-check window can inspect a
+single binding or explicitly resolve the ordered bindings together.
+`cad.standards.resolve` returns a prospective `DrawingStandard` and document
+revision: global rules come from the first binding, and each named layer, text
+style and dimension style comes from its first occurrence. Remaining named
+definitions are appended in order. The query itself does not change the
+drawing. Pass its standard and revision explicitly to check or apply; a stale
+revision cannot be applied. The window refuses a combined preview when its
+source documents have changed, and requires it to be prepared again.
 `cad.standards.conflicts` reports differences in global rules and identically named layer,
 text-style and dimension-style definitions in the ordered documents. It
 identifies the first and later document and the differing fields. It does not
@@ -50,11 +57,11 @@ and the local command registry.
 
 This format is a starting point for CAD-ADV-12, not the complete office
 package. Future resource packaging and the complete association workflow
-require explicit format and project-schema evolution, conflict handling,
+require explicit format and project-schema evolution, resource conflict handling,
 migration tests, and the same command access for desktop, Python and MCP.
 
-For the remaining association workflow, support more than one source with an
-explicit, visible priority and conflict report. Autodesk documents both
+For the association workflow Autodesk documents both
 [drawing-to-standard associations](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-Core/files/GUID-3430632D-3294-44EA-ACDE-429CBE1F1BDD.htm)
 and [ordered precedence for conflicting standards](https://help.autodesk.com/cloudhelp/2022/ENU/AutoCAD-Architecture/files/GUID-22AC35EC-47D1-4FA4-96AF-671663396F55.htm).
-These are design inputs, not functionality implemented by version 1.
+The current resolution covers the named definitions and global rules described
+above; block, hatch, line-type definition and template conflicts remain open.

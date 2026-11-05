@@ -1860,13 +1860,20 @@ bağlamaları güncellendi. Python'un gerçek yerel motorunda bağlama, kaydetme
 yeniden açma ve kaldırma doğrulandı. Standart penceresi sürümlü bir dosyayı
 projeye bağlayabilir ve bağlı belgelerden birini seçip denetleyebilir; ilk
 belge pencere açıldığında seçilir. Gerçek arayüzde üç belgeyle bağlama,
-kaydetme, yeniden açma, seçim ve küçük pencerede kaydırma doğrulandı. Birden
-fazla standardın birlikte denetimi ve öncelik çözümü henüz yoktur.
+kaydetme, yeniden açma, seçim ve küçük pencerede kaydırma doğrulandı.
+`cad.standards.resolve` ile kullanıcı bağlı belgeleri birlikte denetleyebilir:
+genel kurallar ilk belgeden, her adlandırılmış katman ve stil ilk görüldüğü
+belgeden alınır. Birleştirme sorgusu salt okunurdur; uygulama ayrıca ve belge
+revizyonu denetlenerek yapılır. Bağlı belgeler değişince eski birleşik ön izleme
+uygulanamaz. İki kaynaklı gerçek arayüz testinde ikinci kaynağın A-EK katmanı
+ön izlemede görüldü, uygulandı ve kayıt bağımsız okuyucuyla doğrulandı. Python
+üzerinden çözümleme, denetim ve uygulama planı da sınandı. Blok ve çizgi tipi
+tanımlarının paketlenmesi ve önceliği henüz desteklenmez.
 `cad.standards.conflicts`, bağlı standartlardaki aynı adlı katman, yazı ve
 ölçü stili tanımlarının farklı alanlarını ve iki kaynağı raporlar. Sıra
 değişince ilk kaynak yeniden belirlenir; okunamayan belge varsa eksik rapor
-üretilmez. Arayüz aynı sorguyu kullanır; genel kural farklılıkları da bildirilir,
-birleştirme veya otomatik öncelik uygulaması henüz yapılmaz. Gerçek arayüzde
+üretilmez. Arayüz aynı sorguyu kullanır; genel kural farklılıkları da bildirilir.
+Karşılaştırma sorgusu kendiliğinden çizimi değiştirmez. Gerçek arayüzde
 genel kural ve üç adlandırılmış fark, sıra değişimi; komutta salt okunurluk ve
 hatalı belge reddi sınandı. Python bağlamasıyla genel ve katman farkı sınandı.
 Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden

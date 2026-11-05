@@ -87,6 +87,8 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.standards.resolve", "invalid_standard", "Standart paketinin geçersizliği standards_cmd::project_standards_resolve_by_order testinde sınanır."),
+    ("cad.standards.resolve", "no_standard", "Boş belge listesi standards_cmd::project_standards_resolve_by_order testinde sınanır."),
     ("cad.standards.conflicts", "invalid_standard", "Okunamayan bağlı belge standards_cmd::project_standard_conflicts_report_sources_and_fields_without_mutating testinde sınanır."),
     ("cad.entities.delete", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
     ("cad.entities.transform", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),

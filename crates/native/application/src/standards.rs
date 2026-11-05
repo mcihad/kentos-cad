@@ -14,8 +14,9 @@ use kentos_commands::{
     CommandResult, CommandWarning, DimensionStyleDef, DrawingFont, DrawingStandard, LayerNode,
     LayerNodeType, LayerStyle, LayersTranslate, LineType, StandardConflict, StandardIssue,
     StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsConflicts,
-    StandardsConflictsReport, StandardsReport, TextStyleDef, TranslateRule, built_in_standard,
-    built_in_standards, fold_name, font_id, font_label, pattern_matches, standard_problem,
+    StandardsConflictsReport, StandardsReport, StandardsResolve, StandardsResolved, TextStyleDef,
+    TranslateRule, built_in_standard, built_in_standards, fold_name, font_id, font_label,
+    pattern_matches, standard_problem,
 };
 use kentos_domain::{Document, NewLayer, Uuid};
 
@@ -39,6 +40,107 @@ pub mod conflicts {
     pub use super::{
         execute_conflicts as execute, plan_conflicts as plan, validate_conflicts as validate,
     };
+}
+
+pub mod resolve {
+    pub use super::{
+        execute_resolve as execute, plan_resolve as plan, validate_resolve as validate,
+    };
+}
+
+pub fn validate_resolve(cx: &ExecutionContext<'_>, _input: &StandardsResolve) -> CommandResult<()> {
+    match read_project_packages(cx.doc) {
+        Ok(packages) if packages.is_empty() => fail(
+            codes::NO_STANDARD,
+            "Projeye bağlı standart yok.".into(),
+            "standardDocs",
+        )
+        .into(),
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
+        Err(stop) => stop.into(),
+    }
+}
+
+pub fn plan_resolve(
+    cx: &ExecutionContext<'_>,
+    _input: &StandardsResolve,
+) -> CommandResult<StandardsResolved> {
+    resolve_project(cx.doc)
+}
+
+pub fn execute_resolve(
+    cx: &mut ExecutionContext<'_>,
+    _input: StandardsResolve,
+) -> CommandResult<StandardsResolved> {
+    resolve_project(cx.doc)
+}
+
+fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
+    use std::collections::BTreeSet;
+    let packages = match read_project_packages(doc) {
+        Ok(packages) if !packages.is_empty() => packages,
+        Ok(_) => {
+            return fail(
+                codes::NO_STANDARD,
+                "Projeye bağlı standart yok.".into(),
+                "standardDocs",
+            )
+            .into();
+        }
+        Err(stop) => return stop.into(),
+    };
+    let mut result = packages[0].standard.clone();
+    let mut layers: BTreeSet<_> = result
+        .layers
+        .iter()
+        .map(|item| fold_name(item.name.trim()))
+        .collect();
+    let mut texts: BTreeSet<_> = result
+        .text_styles
+        .iter()
+        .map(|item| fold_name(item.name.trim()))
+        .collect();
+    let mut dimensions: BTreeSet<_> = result
+        .dimension_styles
+        .iter()
+        .map(|item| fold_name(item.name.trim()))
+        .collect();
+    for package in packages.iter().skip(1) {
+        for item in &package.standard.layers {
+            if layers.insert(fold_name(item.name.trim())) {
+                result.layers.push(item.clone());
+            }
+        }
+        for item in &package.standard.text_styles {
+            if texts.insert(fold_name(item.name.trim())) {
+                result.text_styles.push(item.clone());
+            }
+        }
+        for item in &package.standard.dimension_styles {
+            if dimensions.insert(fold_name(item.name.trim())) {
+                result.dimension_styles.push(item.clone());
+            }
+        }
+    }
+    result.name = "Projeye bağlı standartlar".into();
+    result.description = format!(
+        "Genel kurallar ilk kaynaktan, her adlı tanım ilk bulunduğu kaynaktan alınır. İlk kaynak: {}.",
+        packages[0].id
+    );
+    if let Some(why) = standard_problem(&result) {
+        return fail(codes::INVALID_STANDARD, why, "standardDocs").into();
+    }
+    CommandResult::Completed {
+        output: StandardsResolved {
+            standard: result,
+            sources: packages.into_iter().map(|p| p.id).collect(),
+            revision: doc.revision().to_string(),
+        },
+        warnings: Vec::new(),
+    }
 }
 
 pub fn validate_conflicts(
@@ -65,30 +167,36 @@ pub fn execute_conflicts(
     project_conflicts(cx.doc)
 }
 
-fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> {
-    use std::collections::BTreeMap;
+fn read_project_packages(doc: &Document) -> Result<Vec<kentos_commands::StandardPackage>, Stop> {
     let mut packages = Vec::new();
     for (index, document) in doc.settings().standard_docs.iter().enumerate() {
         match kentos_commands::parse_standard_document(document.text.as_bytes()) {
             Ok((_, Some(package))) => packages.push(package),
             Ok((_, None)) => {
-                return fail(
+                return Err(fail(
                     codes::INVALID_STANDARD,
                     "Bağlı standart sürümlü değil.".into(),
                     &format!("standardDocs[{index}]"),
-                )
-                .into();
+                ));
             }
             Err(why) => {
-                return fail(
+                return Err(fail(
                     codes::INVALID_STANDARD,
                     why,
                     &format!("standardDocs[{index}]"),
-                )
-                .into();
+                ));
             }
         }
     }
+    Ok(packages)
+}
+
+fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> {
+    use std::collections::BTreeMap;
+    let packages = match read_project_packages(doc) {
+        Ok(packages) => packages,
+        Err(stop) => return stop.into(),
+    };
     let mut layers: BTreeMap<String, (&String, &kentos_commands::StandardLayer)> = BTreeMap::new();
     let mut texts: BTreeMap<String, (&String, &kentos_commands::StandardTextStyle)> =
         BTreeMap::new();
@@ -121,7 +229,7 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             }
         }
         for layer in &package.standard.layers {
-            let key = fold_name(&layer.name);
+            let key = fold_name(layer.name.trim());
             if let Some((first_id, first)) = layers.get(&key) {
                 let first: &kentos_commands::StandardLayer = first;
                 let mut fields = Vec::new();
@@ -154,7 +262,7 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             }
         }
         for style in &package.standard.text_styles {
-            let key = fold_name(&style.name);
+            let key = fold_name(style.name.trim());
             if let Some((first_id, first)) = texts.get(&key) {
                 let first: &kentos_commands::StandardTextStyle = first;
                 let mut fields = Vec::new();
@@ -178,7 +286,7 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             }
         }
         for style in &package.standard.dimension_styles {
-            let key = fold_name(&style.name);
+            let key = fold_name(style.name.trim());
             if let Some((first_id, first)) = dimensions.get(&key) {
                 let first: &kentos_commands::StandardDimensionStyle = first;
                 if first.height != style.height {

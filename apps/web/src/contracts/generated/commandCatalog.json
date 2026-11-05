@@ -57424,6 +57424,93 @@
       ]
     },
     {
+      "id": "cad.standards.resolve",
+      "version": 1,
+      "title": "Proje standartlarını birleştir",
+      "summary": "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, her adlandırılmış tanım ilk bulunduğu kaynaktan alınır. Kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Builds a prospective standard from the project's ordered bindings.",
+        "title": "StandardsResolve",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Read-only effective standard. Global rules and duplicate named definitions\ncome from the first document; other named definitions are added in order.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "standard": {
+            "$ref": "#/$defs/DrawingStandard"
+          }
+        },
+        "required": [
+          "standard",
+          "sources",
+          "revision"
+        ],
+        "title": "StandardsResolved",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Read-only effective standard. Global rules and duplicate named definitions\ncome from the first document; other named definitions are added in order.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "standard": {
+            "$ref": "#/$defs/DrawingStandard"
+          }
+        },
+        "required": [
+          "standard",
+          "sources",
+          "revision"
+        ],
+        "title": "StandardsResolved",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_standard",
+          "no_standard"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bağlı standartları birleştir",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.standards.conflicts",
       "version": 1,
       "title": "Bağlı standartlardaki farklı tanımları göster",

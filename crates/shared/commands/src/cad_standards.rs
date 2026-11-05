@@ -22,6 +22,29 @@ pub const CAD_STANDARDS_APPLY: &str = "cad.standards.apply";
 pub const CAD_STANDARDS_APPLY_VERSION: u32 = 1;
 pub const CAD_STANDARDS_CONFLICTS: &str = "cad.standards.conflicts";
 pub const CAD_STANDARDS_CONFLICTS_VERSION: u32 = 1;
+pub const CAD_STANDARDS_RESOLVE: &str = "cad.standards.resolve";
+pub const CAD_STANDARDS_RESOLVE_VERSION: u32 = 1;
+
+/// Builds a prospective standard from the project's ordered bindings.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsResolve {}
+
+/// Read-only effective standard. Global rules and duplicate named definitions
+/// come from the first document; other named definitions are added in order.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsResolved {
+    pub standard: DrawingStandard,
+    pub sources: Vec<String>,
+    pub revision: String,
+}
 
 /// Inspect global rules and named definitions in ordered standard documents.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

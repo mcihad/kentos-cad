@@ -3056,6 +3056,8 @@ __all__ = [
     "StandardsConflicts",
     "StandardsConflictsReport",
     "StandardsReport",
+    "StandardsResolve",
+    "StandardsResolved",
     "StartSubPlace",
     "StationEquationDef",
     "StationMapRow",
