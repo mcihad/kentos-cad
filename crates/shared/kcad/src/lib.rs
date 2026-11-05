@@ -796,11 +796,14 @@ pub const SCHEMA_WITH_LONG_PATTERNS: u32 = 181;
 /// Schema 182 (docs/adr/1030): a table's `breaks` (its parts), a cell's words of several lines and a data extraction
 /// table's source (`schedule` of kind `extraction`). Temporary number on the CAD-ADV-13 branch: renumbered on merge.
 pub const SCHEMA_WITH_EXTRACTION: u32 = 182;
+/// Schema 183 (docs/adr/1100 §3): the sheet template revisions the bound office standards approved,
+/// `settings.approvedSheetTemplates`. Temporary number on the CAD-ADV-12 branch: renumbered on merge.
+pub const SCHEMA_WITH_APPROVED_SHEET_TEMPLATES: u32 = 183;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 180] = [
+pub const SCHEMAS: [u32; 181] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -981,6 +984,7 @@ pub const SCHEMAS: [u32; 180] = [
     SCHEMA_WITH_REVIEW_NOTES,
     SCHEMA_WITH_LONG_PATTERNS,
     SCHEMA_WITH_EXTRACTION,
+    SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
 ];
 
 /// The file a drawing is saved as.

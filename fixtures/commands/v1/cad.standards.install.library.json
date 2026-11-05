@@ -1,0 +1,8246 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.standards.install",
+ "commandVersion": 1,
+ "title": "Standart kaynaklarını kur: blok kitaplığı ve pafta şablonu",
+ "note": "ADR 1100. Bağımsız başvuru scripts/fixtures/standards_install_library_cases.py: kitaplıklar veri dosyalarından okunur, kurallar ADR'den elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ofis kitaplığı",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 100.0,
+   "workspace": "cad",
+   "standardDocs": [
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"blocks\": [{\"name\": \"KAPI\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0001\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0001\", \"typeName\": \"Tek kanatlı kapı 90\", \"release\": 2}, \"units\": \"m\"}, {\"name\": \"KUZEY\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0002\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0002\", \"typeName\": \"Kuzey oku\", \"release\": 1}}, {\"name\": \"ESKI-KAPI\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0001\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0001\", \"typeName\": \"Tek kanatlı kapı 90\", \"release\": 9}}, {\"name\": \"BILINMEYEN\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0009\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0009\", \"typeName\": \"Bilinmeyen tip\", \"release\": 1}}, {\"name\": \"KUZEY-MM\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0002\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0002\", \"typeName\": \"Kuzey oku\", \"release\": 1}, \"units\": \"mm\"}], \"sheetTemplates\": [{\"templateId\": \"sys:cad-mimari\", \"revision\": 1}, {\"templateId\": \"sys:cad-teknik\", \"revision\": 1}, {\"templateId\": \"sys:genel-a4-dikey\", \"revision\": 7}, {\"templateId\": \"ofis:a3-yatay\", \"revision\": 1}]}}"
+    },
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"blocks\": [{\"name\": \"kapı\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0001\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0001\", \"typeName\": \"Tek kanatlı kapı 90\", \"release\": 1}}, {\"name\": \"KOT\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0002\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0003\", \"typeName\": \"Kot işareti\", \"release\": 1}}], \"sheetTemplates\": [{\"templateId\": \"SYS:CAD-MIMARI\", \"revision\": 3}]}}"
+    }
+   ],
+   "approvedSheetTemplates": [
+    {
+     "templateId": "sys:cad-mimari",
+     "revision": 3,
+     "standard": "eski-ofis",
+     "standardRevision": "2025.1"
+    }
+   ]
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "insert",
+    "id": 1,
+    "layerId": "0",
+    "attrs": {},
+    "block": "0192f5a0-0000-7000-8000-00000000d001",
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 2,
+    "layerId": "0",
+    "attrs": {},
+    "block": "0192f5a0-0000-7000-8000-00000000d001",
+    "p": {
+     "x": 2.0,
+     "y": 0.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 3,
+    "layerId": "0",
+    "attrs": {},
+    "block": "0192f5a0-0000-7000-8000-00000000d002",
+    "p": {
+     "x": 4.0,
+     "y": 0.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "insert",
+    "id": 4,
+    "layerId": "0",
+    "attrs": {},
+    "block": "0192f5a0-0000-7000-8000-00000000d003",
+    "p": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "scale": 1.0,
+    "rotation": 0.0
+   }
+  ],
+  "uids": [
+   "0192f5a1-2222-7000-8000-000000000001",
+   "0192f5a1-2222-7000-8000-000000000002",
+   "0192f5a1-2222-7000-8000-000000000003",
+   "0192f5a1-2222-7000-8000-000000000004"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-0000-7000-8000-00000000d001",
+    "name": "KAPI",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "b": {
+       "x": 0.0,
+       "y": 0.9
+      }
+     },
+     {
+      "kind": "arc",
+      "id": 2,
+      "layerId": "",
+      "attrs": {},
+      "c": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "r": 0.9,
+      "a0": 0.0,
+      "a1": 1.5707963267948966
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0.0,
+       "y": -0.1
+      },
+      "b": {
+       "x": 0.0,
+       "y": 0.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 4,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0.9,
+       "y": -0.1
+      },
+      "b": {
+       "x": 0.9,
+       "y": 0.0
+      }
+     }
+    ],
+    "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+    "units": "m",
+    "card": {
+     "publication": {
+      "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+      "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+      "typeName": "Tek kanatlı kapı 90",
+      "release": 1
+     },
+     "category": "Mimari/Kapılar",
+     "tags": [
+      "kapı",
+      "tek kanat",
+      "ofis"
+     ],
+     "version": 1
+    }
+   },
+   {
+    "id": "0192f5a0-0000-7000-8000-00000000d002",
+    "name": "kuzey",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "entities": [
+     {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "c": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "r": 0.5
+     },
+     {
+      "kind": "polyline",
+      "id": 2,
+      "layerId": "",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.6
+       },
+       {
+        "x": -0.15,
+        "y": -0.3
+       },
+       {
+        "x": 0.0,
+        "y": -0.15
+       },
+       {
+        "x": 0.15,
+        "y": -0.3
+       }
+      ],
+      "closed": true
+     }
+    ],
+    "description": "Kuzey oku; taban noktası dairenin merkezi.",
+    "units": "m",
+    "card": {
+     "publication": {
+      "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+      "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+      "typeName": "Kuzey oku",
+      "release": 1
+     },
+     "category": "İşaretler/Yön",
+     "tags": [
+      "kuzey",
+      "ok",
+      "ofis"
+     ],
+     "version": 1
+    }
+   },
+   {
+    "id": "0192f5a0-0000-7000-8000-00000000d003",
+    "name": "PLAN",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-0000-7000-8000-00000000d001",
+      "p": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ]
+   }
+  ],
+  "sheets": {
+   "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+     {
+      "id": "a-101",
+      "name": "A-101",
+      "page": {
+       "paper": "a3",
+       "orientation": "landscape",
+       "size": {
+        "width": 420000,
+        "height": 297000
+       },
+       "margins": {
+        "top": 10000,
+        "right": 10000,
+        "bottom": 10000,
+        "left": 20000
+       }
+      },
+      "items": [],
+      "origin": {
+       "templateId": "sys:cad-mimari",
+       "revision": 3
+      }
+     },
+     {
+      "id": "a-102",
+      "name": "A-102",
+      "page": {
+       "paper": "a3",
+       "orientation": "landscape",
+       "size": {
+        "width": 420000,
+        "height": 297000
+       },
+       "margins": {
+        "top": 10000,
+        "right": 10000,
+        "bottom": 10000,
+        "left": 20000
+       }
+      },
+      "items": [],
+      "origin": {
+       "templateId": "sys:cad-mimari",
+       "revision": 3
+      }
+     },
+     {
+      "id": "t-101",
+      "name": "T-101",
+      "page": {
+       "paper": "a3",
+       "orientation": "landscape",
+       "size": {
+        "width": 420000,
+        "height": 297000
+       },
+       "margins": {
+        "top": 10000,
+        "right": 10000,
+        "bottom": 10000,
+        "left": 20000
+       }
+      },
+      "items": [],
+      "origin": {
+       "templateId": "sys:cad-teknik",
+       "revision": 1
+      }
+     }
+    ],
+    "masters": [],
+    "assets": []
+   },
+   "pictures": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Seçimsiz: eksik KOT bloğu ve onaylı teknik şablon eklenir, farklılar korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 8,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       },
+       {
+        "name": "KOT",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.0
+           },
+           {
+            "x": -0.15,
+            "y": 0.25
+           },
+           {
+            "x": 0.15,
+            "y": 0.25
+           }
+          ],
+          "closed": true
+         },
+         {
+          "kind": "line",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": -0.15,
+           "y": 0.25
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.25
+          }
+         }
+        ],
+        "description": "Kot işareti; taban noktası üçgenin ucu.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0003",
+          "typeName": "Kot işareti",
+          "release": 1
+         },
+         "category": "İşaretler/Kot",
+         "tags": [
+          "kot",
+          "ofis"
+         ],
+         "version": 1
+        }
+       }
+      ],
+      "blockIds": {
+       "KOT": "0192f5b1-0000-7000-8000-000000000004"
+      },
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        },
+        {
+         "templateId": "sys:cad-teknik",
+         "revision": 1,
+         "standard": "ofis-a",
+         "standardRevision": "2026.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz; kitaplıkta olmayanlar ayrı bulgu satırıdır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 8,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı KAPI yerinde değiştirilir: çizimdeki ad ve kimlik kalır, yerleştirmeler izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KAPI",
+        "action": "replace"
+       },
+       {
+        "kind": "block",
+        "name": "KOT",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-teknik",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 0,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 9,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 5,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.05
+          },
+          "b": {
+           "x": 0.9,
+           "y": -0.05
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 2
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "blockIds": {
+       "KAPI": "0192f5a0-0000-7000-8000-00000000d001"
+      },
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştirilen KAPI'yı PLAN bloğunun içindeki yerleştirme de izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "kapi",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 7,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 5,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.05
+          },
+          "b": {
+           "x": 0.9,
+           "y": -0.05
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 2
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       },
+       {
+        "name": "KOT",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.0
+           },
+           {
+            "x": -0.15,
+            "y": 0.25
+           },
+           {
+            "x": 0.15,
+            "y": 0.25
+           }
+          ],
+          "closed": true
+         },
+         {
+          "kind": "line",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": -0.15,
+           "y": 0.25
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.25
+          }
+         }
+        ],
+        "description": "Kot işareti; taban noktası üçgenin ucu.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0003",
+          "typeName": "Kot işareti",
+          "release": 1
+         },
+         "category": "İşaretler/Kot",
+         "tags": [
+          "kot",
+          "ofis"
+         ],
+         "version": 1
+        }
+       }
+      ],
+      "blockIds": {
+       "KAPI": "0192f5a0-0000-7000-8000-00000000d001",
+       "KOT": "0192f5b1-0000-7000-8000-000000000004"
+      },
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        },
+        {
+         "templateId": "sys:cad-teknik",
+         "revision": 1,
+         "standard": "ofis-a",
+         "standardRevision": "2026.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı KAPI yeni adla eklenir; çizimdeki kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KAPI",
+        "action": "renameIncoming",
+        "newName": "KAPI-R2"
+       },
+       {
+        "kind": "block",
+        "name": "KOT",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-teknik",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "renameIncoming",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3,
+         "newName": "KAPI-R2"
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 0,
+       "replaced": 0,
+       "renamed": 1,
+       "kept": 9,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       },
+       {
+        "name": "KAPI-R2",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 5,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.05
+          },
+          "b": {
+           "x": 0.9,
+           "y": -0.05
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 2
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       }
+      ],
+      "blockIds": {
+       "KAPI-R2": "0192f5b1-0000-7000-8000-000000000002"
+      },
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni adla eklenen bloğun kitaplık kimliği çizimde varsa yeni kimlik alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KAPI",
+        "action": "renameIncoming",
+        "newName": "KAPI-R2"
+       },
+       {
+        "kind": "block",
+        "name": "KOT",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-teknik",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "renameIncoming",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3,
+         "newName": "KAPI-R2"
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 0,
+       "replaced": 0,
+       "renamed": 1,
+       "kept": 9,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       },
+       {
+        "name": "KAPI-R2",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 5,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.05
+          },
+          "b": {
+           "x": 0.9,
+           "y": -0.05
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 2
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       }
+      ],
+      "blockIds": {
+       "KAPI-R2": "new"
+      },
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ofis kitaplığı",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"blocks\": [{\"name\": \"KAPI\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0001\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0001\", \"typeName\": \"Tek kanatlı kapı 90\", \"release\": 2}, \"units\": \"m\"}, {\"name\": \"KUZEY\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0002\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0002\", \"typeName\": \"Kuzey oku\", \"release\": 1}}, {\"name\": \"ESKI-KAPI\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0001\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0001\", \"typeName\": \"Tek kanatlı kapı 90\", \"release\": 9}}, {\"name\": \"BILINMEYEN\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0009\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0009\", \"typeName\": \"Bilinmeyen tip\", \"release\": 1}}, {\"name\": \"KUZEY-MM\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0002\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0002\", \"typeName\": \"Kuzey oku\", \"release\": 1}, \"units\": \"mm\"}], \"sheetTemplates\": [{\"templateId\": \"sys:cad-mimari\", \"revision\": 1}, {\"templateId\": \"sys:cad-teknik\", \"revision\": 1}, {\"templateId\": \"sys:genel-a4-dikey\", \"revision\": 7}, {\"templateId\": \"ofis:a3-yatay\", \"revision\": 1}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"blocks\": [{\"name\": \"kapı\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0001\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0001\", \"typeName\": \"Tek kanatlı kapı 90\", \"release\": 1}}, {\"name\": \"KOT\", \"publication\": {\"familyId\": \"0192f5b1-0000-7000-8000-0000000f0002\", \"typeId\": \"0192f5b1-0000-7000-8000-0000000e0003\", \"typeName\": \"Kot işareti\", \"release\": 1}}], \"sheetTemplates\": [{\"templateId\": \"SYS:CAD-MIMARI\", \"revision\": 3}]}}"
+      }
+     ],
+     "approvedSheetTemplates": [
+      {
+       "templateId": "sys:cad-mimari",
+       "revision": 3,
+       "standard": "eski-ofis",
+       "standardRevision": "2025.1"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-0000-7000-8000-00000000d001",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-0000-7000-8000-00000000d001",
+      "p": {
+       "x": 2.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-0000-7000-8000-00000000d002",
+      "p": {
+       "x": 4.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5b1-0000-7000-8000-000000000002",
+      "p": {
+       "x": 10.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5a1-2222-7000-8000-000000000001",
+     "0192f5a1-2222-7000-8000-000000000002",
+     "0192f5a1-2222-7000-8000-000000000003",
+     "0192f5a1-2222-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-0000-7000-8000-00000000d001",
+      "name": "KAPI",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.0,
+         "y": 0.9
+        }
+       },
+       {
+        "kind": "arc",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "c": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "r": 0.9,
+        "a0": 0.0,
+        "a1": 1.5707963267948966
+       },
+       {
+        "kind": "line",
+        "id": 3,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": -0.1
+        },
+        "b": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 4,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.9,
+         "y": -0.1
+        },
+        "b": {
+         "x": 0.9,
+         "y": 0.0
+        }
+       }
+      ],
+      "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+      "units": "m",
+      "card": {
+       "publication": {
+        "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+        "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+        "typeName": "Tek kanatlı kapı 90",
+        "release": 1
+       },
+       "category": "Mimari/Kapılar",
+       "tags": [
+        "kapı",
+        "tek kanat",
+        "ofis"
+       ],
+       "version": 1
+      }
+     },
+     {
+      "id": "0192f5a0-0000-7000-8000-00000000d002",
+      "name": "kuzey",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "c": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "r": 0.5
+       },
+       {
+        "kind": "polyline",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.6
+         },
+         {
+          "x": -0.15,
+          "y": -0.3
+         },
+         {
+          "x": 0.0,
+          "y": -0.15
+         },
+         {
+          "x": 0.15,
+          "y": -0.3
+         }
+        ],
+        "closed": true
+       }
+      ],
+      "description": "Kuzey oku; taban noktası dairenin merkezi.",
+      "units": "m",
+      "card": {
+       "publication": {
+        "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+        "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+        "typeName": "Kuzey oku",
+        "release": 1
+       },
+       "category": "İşaretler/Yön",
+       "tags": [
+        "kuzey",
+        "ok",
+        "ofis"
+       ],
+       "version": 1
+      }
+     },
+     {
+      "id": "0192f5b1-0000-7000-8000-000000000002",
+      "name": "PLAN",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "insert",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "block": "0192f5a0-0000-7000-8000-00000000d001",
+        "p": {
+         "x": 5.0,
+         "y": 0.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ]
+     }
+    ],
+    "sheets": {
+     "book": {
+      "schema": "kentos.sheet/1",
+      "sheets": [
+       {
+        "id": "a-101",
+        "name": "A-101",
+        "page": {
+         "paper": "a3",
+         "orientation": "landscape",
+         "size": {
+          "width": 420000,
+          "height": 297000
+         },
+         "margins": {
+          "top": 10000,
+          "right": 10000,
+          "bottom": 10000,
+          "left": 20000
+         }
+        },
+        "items": [],
+        "origin": {
+         "templateId": "sys:cad-mimari",
+         "revision": 3
+        }
+       },
+       {
+        "id": "a-102",
+        "name": "A-102",
+        "page": {
+         "paper": "a3",
+         "orientation": "landscape",
+         "size": {
+          "width": 420000,
+          "height": 297000
+         },
+         "margins": {
+          "top": 10000,
+          "right": 10000,
+          "bottom": 10000,
+          "left": 20000
+         }
+        },
+        "items": [],
+        "origin": {
+         "templateId": "sys:cad-mimari",
+         "revision": 3
+        }
+       },
+       {
+        "id": "t-101",
+        "name": "T-101",
+        "page": {
+         "paper": "a3",
+         "orientation": "landscape",
+         "size": {
+          "width": 420000,
+          "height": 297000
+         },
+         "margins": {
+          "top": 10000,
+          "right": 10000,
+          "bottom": 10000,
+          "left": 20000
+         }
+        },
+        "items": [],
+        "origin": {
+         "templateId": "sys:cad-teknik",
+         "revision": 1
+        }
+       }
+      ],
+      "masters": [],
+      "assets": []
+     },
+     "pictures": []
+    }
+   }
+  },
+  {
+   "name": "Eksik KOT kitaplık kimliğiyle eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-teknik",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 1,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 9,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       },
+       {
+        "name": "KOT",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.0
+           },
+           {
+            "x": -0.15,
+            "y": 0.25
+           },
+           {
+            "x": 0.15,
+            "y": 0.25
+           }
+          ],
+          "closed": true
+         },
+         {
+          "kind": "line",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": -0.15,
+           "y": 0.25
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.25
+          }
+         }
+        ],
+        "description": "Kot işareti; taban noktası üçgenin ucu.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0003",
+          "typeName": "Kot işareti",
+          "release": 1
+         },
+         "category": "İşaretler/Kot",
+         "tags": [
+          "kot",
+          "ofis"
+         ],
+         "version": 1
+        }
+       }
+      ],
+      "blockIds": {
+       "KOT": "0192f5b1-0000-7000-8000-000000000004"
+      },
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksikler atlanınca yazım yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KOT",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-teknik",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 0,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 10,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Onaylı mimari şablonun revizyonu değiştirilir; paftalar değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-mimari",
+        "action": "replace"
+       },
+       {
+        "kind": "block",
+        "name": "KOT",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-teknik",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 0,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 9,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "blockIds": {},
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 1,
+         "standard": "ofis-a",
+         "standardRevision": "2026.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kitaplıkta olmayan blok korunur ve bulgu olarak kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "ESKI-KAPI",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "block",
+        "name": "BILINMEYEN",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 8,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlk standart önce gelir: KAPI ofis-a'nın 2. yayını, mimari şablon ofis-a'nın 1. revizyonu",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 8,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kurulumu geri al: bloklar ve onaylı şablonlar önceki hâline döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KAPI",
+        "action": "replace"
+       },
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-mimari",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "block",
+         "name": "KAPI",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "fields": [
+          "entities",
+          "publication"
+         ],
+         "uses": 3
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "kentos-ofis",
+         "uses": 1
+        },
+        {
+         "kind": "block",
+         "name": "ESKI-KAPI",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "release"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "BILINMEYEN",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "block",
+         "name": "KUZEY-MM",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "units"
+         ]
+        },
+        {
+         "kind": "block",
+         "name": "KOT",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         },
+         "library": "kentos-ofis"
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-mimari",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "fields": [
+          "revision"
+         ],
+         "uses": 2
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:cad-teknik",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "library": "sistem",
+         "uses": 1
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "sys:genel-a4-dikey",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "revision"
+         ]
+        },
+        {
+         "kind": "sheetTemplate",
+         "name": "ofis:a3-yatay",
+         "status": "unavailable",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 2,
+       "renamed": 0,
+       "kept": 6,
+       "unavailable": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 5,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.05
+          },
+          "b": {
+           "x": 0.9,
+           "y": -0.05
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 2
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       },
+       {
+        "name": "KOT",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.0
+           },
+           {
+            "x": -0.15,
+            "y": 0.25
+           },
+           {
+            "x": 0.15,
+            "y": 0.25
+           }
+          ],
+          "closed": true
+         },
+         {
+          "kind": "line",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": -0.15,
+           "y": 0.25
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.25
+          }
+         }
+        ],
+        "description": "Kot işareti; taban noktası üçgenin ucu.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0003",
+          "typeName": "Kot işareti",
+          "release": 1
+         },
+         "category": "İşaretler/Kot",
+         "tags": [
+          "kot",
+          "ofis"
+         ],
+         "version": 1
+        }
+       }
+      ],
+      "blockIds": {
+       "KAPI": "0192f5a0-0000-7000-8000-00000000d001",
+       "KOT": "0192f5b1-0000-7000-8000-000000000004"
+      },
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 1,
+         "standard": "ofis-a",
+         "standardRevision": "2026.1"
+        },
+        {
+         "templateId": "sys:cad-teknik",
+         "revision": 1,
+         "standard": "ofis-a",
+         "standardRevision": "2026.1"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Standart kaynaklarını kur",
+     "expect": {
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Standart kaynaklarını kur",
+     "expect": {
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 5,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.05
+          },
+          "b": {
+           "x": 0.9,
+           "y": -0.05
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 2
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       },
+       {
+        "name": "KOT",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.0
+           },
+           {
+            "x": -0.15,
+            "y": 0.25
+           },
+           {
+            "x": 0.15,
+            "y": 0.25
+           }
+          ],
+          "closed": true
+         },
+         {
+          "kind": "line",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": -0.15,
+           "y": 0.25
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.25
+          }
+         }
+        ],
+        "description": "Kot işareti; taban noktası üçgenin ucu.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0003",
+          "typeName": "Kot işareti",
+          "release": 1
+         },
+         "category": "İşaretler/Kot",
+         "tags": [
+          "kot",
+          "ofis"
+         ],
+         "version": 1
+        }
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 1,
+         "standard": "ofis-a",
+         "standardRevision": "2026.1"
+        },
+        {
+         "templateId": "sys:cad-teknik",
+         "revision": 1,
+         "standard": "ofis-a",
+         "standardRevision": "2026.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı olan KUZEY değiştirilemez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KUZEY",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“KUZEY” blok çizimdekiyle aynı: değişecek bir şey yok.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kitaplıkta olmayan blok eklenemez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "ESKI-KAPI",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“ESKI-KAPI” blok okunabilen hiçbir kitaplıkta yok: kurulamaz, yalnız çizimdeki korunabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Birimi onaylanandan farklı yayın kurulamaz: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KUZEY-MM",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“KUZEY-MM” blok okunabilen hiçbir kitaplıkta yok: kurulamaz, yalnız çizimdeki korunabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kitaplıkta olmayan şablon kaydedilemez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "sheetTemplate",
+        "name": "ofis:a3-yatay",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“ofis:a3-yatay” pafta şablonu okunabilen hiçbir kitaplıkta yok: kurulamaz, yalnız çizimdeki korunabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Şablon yeni adla eklenemez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:cad-mimari",
+        "action": "renameIncoming",
+        "newName": "X"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“sys:cad-mimari” pafta şablonu kimliğiyle kaydedilir, yeni adla eklenemez: değiştirilebilir ya da çizimdeki korunabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik KOT değiştirilemez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KOT",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“KOT” blok çizimde yok: eklenebilir ya da atlanabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni ad çizimdeki bir blokta var: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KAPI",
+        "action": "renameIncoming",
+        "newName": "PLAN"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_name",
+       "message": "“PLAN” adlı blok çizimde ya da standartta var; başka bir ad verin.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni ad standarttaki bir blokta var: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KAPI",
+        "action": "renameIncoming",
+        "newName": "kot"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_name",
+       "message": "“kot” adlı blok çizimde ya da standartta var; başka bir ad verin.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Standartta olmayan blok: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "YOK",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "standard_resource_not_found",
+       "message": "Bağlı standartlarda “YOK” adlı blok yok. Kaynağı standartların listesinden seçin.",
+       "path": "choices[0].name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Standartta olmayan şablon: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "sheetTemplate",
+        "name": "sys:yok",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "standard_resource_not_found",
+       "message": "Bağlı standartlarda “sys:yok” adlı pafta şablonu yok. Kaynağı standartların listesinden seçin.",
+       "path": "choices[0].name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı bloğa iki seçim: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "block",
+        "name": "KAPI",
+        "action": "replace"
+       },
+       {
+        "kind": "block",
+        "name": "kapi",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“kapi” blok için iki seçim verildi; her kaynağa bir seçim verin.",
+       "path": "choices[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "blocks": [
+       {
+        "name": "KAPI",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.9
+          }
+         },
+         {
+          "kind": "arc",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.9,
+          "a0": 0.0,
+          "a1": 1.5707963267948966
+         },
+         {
+          "kind": "line",
+          "id": 3,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.0,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.0,
+           "y": 0.0
+          }
+         },
+         {
+          "kind": "line",
+          "id": 4,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": 0.9,
+           "y": -0.1
+          },
+          "b": {
+           "x": 0.9,
+           "y": 0.0
+          }
+         }
+        ],
+        "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+          "typeName": "Tek kanatlı kapı 90",
+          "release": 1
+         },
+         "category": "Mimari/Kapılar",
+         "tags": [
+          "kapı",
+          "tek kanat",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "kuzey",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0.0,
+           "y": 0.0
+          },
+          "r": 0.5
+         },
+         {
+          "kind": "polyline",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "pts": [
+           {
+            "x": 0.0,
+            "y": 0.6
+           },
+           {
+            "x": -0.15,
+            "y": -0.3
+           },
+           {
+            "x": 0.0,
+            "y": -0.15
+           },
+           {
+            "x": 0.15,
+            "y": -0.3
+           }
+          ],
+          "closed": true
+         }
+        ],
+        "description": "Kuzey oku; taban noktası dairenin merkezi.",
+        "units": "m",
+        "card": {
+         "publication": {
+          "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+          "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+          "typeName": "Kuzey oku",
+          "release": 1
+         },
+         "category": "İşaretler/Yön",
+         "tags": [
+          "kuzey",
+          "ok",
+          "ofis"
+         ],
+         "version": 1
+        }
+       },
+       {
+        "name": "PLAN",
+        "base": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "entities": [
+         {
+          "kind": "insert",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "block": "$blockOf:KAPI",
+          "p": {
+           "x": 5.0,
+           "y": 0.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+         }
+        ]
+       }
+      ],
+      "settings": {
+       "approvedSheetTemplates": [
+        {
+         "templateId": "sys:cad-mimari",
+         "revision": 3,
+         "standard": "eski-ofis",
+         "standardRevision": "2025.1"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

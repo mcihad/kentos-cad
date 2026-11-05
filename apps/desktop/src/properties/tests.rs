@@ -297,6 +297,33 @@ fn cad_inspector_explains_inherited_and_own_model_appearance_without_writing() {
     assert!(value(&app, "Temel model görünüşü", "Renk").contains("Katman:"));
 }
 
+/// docs/adr/1100 §5: “Bu değer nereden geliyor?” says the level each value comes from and what its reset reaches,
+/// writing nothing.
+#[test]
+fn the_value_origin_section_names_the_level_and_the_reset_scope() {
+    let mut app = objects();
+    crate::files_testing::make_cad(&mut app);
+    let slot = add(&mut app, Entity::Line(LineEntity {
+        base: base("parsel"),
+        a: Wire { x: E, y: N },
+        b: Wire { x: E + 1.0, y: N },
+        za: None, zb: None, ma: None, mb: None,
+    }));
+    select(&mut app, &[slot]);
+    assert!(value(&app, "Bu değer nereden geliyor?", "Renk").ends_with("· Katman"));
+    assert!(value(&app, "Bu değer nereden geliyor?", "Kalınlık").ends_with("· Katman"));
+    event(&mut app, Event::Color(vec![Slot(slot)], Some("#E5484D".into())));
+    assert_eq!(value(&app, "Bu değer nereden geliyor?", "Renk"), "#E5484D · Nesne");
+    let notes: Vec<String> = rows(&app)
+        .into_iter()
+        .find(|(title, _)| title == "Bu değer nereden geliyor?")
+        .map(|(_, rows)| rows.into_iter().map(|r| r.value).collect())
+        .unwrap_or_default();
+    assert!(notes.iter().any(|n| n.starts_with("Sıfırla → ") && n.contains("· bu nesne (1)")), "{notes:?}");
+    event(&mut app, Event::Color(vec![Slot(slot)], None));
+    assert!(value(&app, "Bu değer nereden geliyor?", "Renk").ends_with("· Katman"));
+}
+
 #[test]
 fn nothing_selected_shows_the_drawing() {
     let app = objects();

@@ -6775,15 +6775,19 @@ StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "l
 
 
 class StandardResourceKind(_StrEnum):
-    """A kind of named resource a bound office standard carries (docs/adr/1002 §1)."""
+    """A kind of named resource a bound office standard carries (docs/adr/1002 §1); a block is a library publication's
+    reference and a sheet template an approved template revision (docs/adr/1100 §2–§3).
+    """
     LINE_TYPE = "lineType"
     HATCH_PATTERN = "hatchPattern"
     TEXT_STYLE = "textStyle"
     DIMENSION_STYLE = "dimensionStyle"
     LEADER_STYLE = "leaderStyle"
+    BLOCK = "block"
+    SHEET_TEMPLATE = "sheetTemplate"
 
 
-StandardResourceKindName = Literal["lineType", "hatchPattern", "textStyle", "dimensionStyle", "leaderStyle"]
+StandardResourceKindName = Literal["lineType", "hatchPattern", "textStyle", "dimensionStyle", "leaderStyle", "block", "sheetTemplate"]
 """The names of :class:`StandardResourceKind`, for a plain string."""
 
 
@@ -14202,6 +14206,39 @@ class AnnotativeScale(_Model):
             point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             text_shift=UNSET if "textShift" not in data else None if data["textShift"] is None else TextShift.from_json(data["textShift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ApprovedSheetTemplate(_Model):
+    """A sheet template revision a bound office standard approved, recorded in the drawing by
+    `cad.standards.install` (docs/adr/1100 §3): the project's own note of which template new sheets
+    are made from. Recording it changes no sheet; a sheet keeps the origin it was made from.
+    Attributes:
+        template_id: The template's id (`sys:cad-mimari`, a user's or an office's).
+        revision: Unit: version.
+        standard: The standard that approved it and its office revision.
+    """
+    template_id: str
+    revision: int
+    standard: str
+    standard_revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["templateId"] = self.template_id
+        out["revision"] = self.revision
+        out["standard"] = self.standard
+        out["standardRevision"] = self.standard_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ApprovedSheetTemplate:
+        return cls(
+            template_id=data["templateId"],
+            revision=data["revision"],
+            standard=data["standard"],
+            standard_revision=data["standardRevision"],
         )
 
 
@@ -66579,6 +66616,8 @@ class ProjectSettings(_Model):
         address_locators: The project's address data (docs/adr/0229 §2), in the order they were made.
         annotation: The project's annotation heights on paper (docs/adr/0205 §1); absent:
             every kind's default.
+        approved_sheet_templates: The sheet template revisions the bound office standards approved, as `cad.standards.install` recorded them
+            (docs/adr/1100 §3): which revision new sheets are made from; existing sheets keep their own origin.
         arch: The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
         auto_select: Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
             the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a
@@ -66657,6 +66696,7 @@ class ProjectSettings(_Model):
     plot_scale: float
     address_locators: list[AddressLocator] | Unset = UNSET
     annotation: AnnotationHeights | None | Unset = UNSET
+    approved_sheet_templates: list[ApprovedSheetTemplate] | Unset = UNSET
     arch: ArchSettings | None | Unset = UNSET
     auto_select: bool | None | Unset = UNSET
     cad_work: CadWork | CadWorkName | None | Unset = UNSET
@@ -66714,6 +66754,8 @@ class ProjectSettings(_Model):
             out["addressLocators"] = [e0.to_json() for e0 in self.address_locators]
         if self.annotation is not UNSET:
             out["annotation"] = None if self.annotation is None else self.annotation.to_json()
+        if self.approved_sheet_templates is not UNSET:
+            out["approvedSheetTemplates"] = [e0.to_json() for e0 in self.approved_sheet_templates]
         if self.arch is not UNSET:
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.auto_select is not UNSET:
@@ -66815,6 +66857,7 @@ class ProjectSettings(_Model):
             plot_scale=float(data["plotScale"]),
             address_locators=[AddressLocator.from_json(e0) for e0 in data["addressLocators"]] if "addressLocators" in data else UNSET,
             annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
+            approved_sheet_templates=[ApprovedSheetTemplate.from_json(e0) for e0 in data["approvedSheetTemplates"]] if "approvedSheetTemplates" in data else UNSET,
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
             auto_select=data.get("autoSelect", UNSET),
             cad_work=UNSET if "cadWork" not in data else None if data["cadWork"] is None else _enum_in(CadWork, data["cadWork"]),
@@ -81809,9 +81852,14 @@ class StandardInstallChoice(_Model):
 class StandardInstallRow(_Model):
     """One resource of the bound standards and what the install does with it.
     Attributes:
-        status: `missing`, `same` or `differs`, against the drawing's resource of that name.
+        status: `missing`, `same` or `differs`, against the drawing's resource of that name; `unavailable` when no library
+            KentOS reads holds the block publication or template revision the standard names (kept, reported).
         source: The standard the resource comes from and its office revision.
-        fields: The differing appearance fields (`differs` only).
+        fields: The differing appearance fields (`differs`); for `unavailable`, what the nearest library entry differs in
+            (`release`, `units`, `revision`), none when no library has the type or template at all.
+        library: Blocks and sheet templates: the library the definition is read from (`kentos-ofis`, `sistem`).
+        uses: Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet
+            templates: the sheets made from that template, which are never changed. Unit: count.
     """
     kind: StandardResourceKind | StandardResourceKindName
     name: str
@@ -81819,7 +81867,9 @@ class StandardInstallRow(_Model):
     action: StandardInstallAction | StandardInstallActionName
     source: StandardOrigin
     fields: list[str] | Unset = UNSET
+    library: str | None | Unset = UNSET
     new_name: str | None | Unset = UNSET
+    uses: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -81830,8 +81880,12 @@ class StandardInstallRow(_Model):
         out["source"] = self.source.to_json()
         if self.fields is not UNSET:
             out["fields"] = list(self.fields)
+        if self.library is not UNSET:
+            out["library"] = self.library
         if self.new_name is not UNSET:
             out["newName"] = self.new_name
+        if self.uses is not UNSET:
+            out["uses"] = self.uses
         return out
 
     @classmethod
@@ -81843,7 +81897,9 @@ class StandardInstallRow(_Model):
             action=_enum_in(StandardInstallAction, data["action"]),
             source=StandardOrigin.from_json(data["source"]),
             fields=list(data["fields"]) if "fields" in data else UNSET,
+            library=data.get("library", UNSET),
             new_name=data.get("newName", UNSET),
+            uses=data.get("uses", UNSET),
         )
 
 
@@ -82287,8 +82343,10 @@ class StandardsConflictsReport(_Model):
 @dataclass(kw_only=True, slots=True)
 class StandardsInstall(_Model):
     """Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the
-    choices. Refusals, in order: `no_standard`, `invalid_standard`, `standard_resource_not_found`,
-    `invalid_install_choice`, `duplicate_name`, `invalid_revision`, `revision_conflict`.
+    choices; a block reference is read from the first block library that holds its publication, a sheet template
+    revision is recorded as approved (docs/adr/1100). Refusals, in order: `no_standard`, `invalid_standard`,
+    `standard_resource_not_found`, `invalid_install_choice`, `duplicate_name`, `invalid_revision`,
+    `revision_conflict`, `block_refused`.
     """
     choices: list[StandardInstallChoice] | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -82318,6 +82376,7 @@ class StandardsInstalled(_Model):
         replaced: Unit: count.
         renamed: Unit: count.
         kept: Unit: count.
+        unavailable: The references no readable library holds (each also counted in `kept`). Unit: count.
         revision: ^(0|[1-9][0-9]*)$
     """
     rows: list[StandardInstallRow]
@@ -82325,6 +82384,7 @@ class StandardsInstalled(_Model):
     replaced: int
     renamed: int
     kept: int
+    unavailable: int
     revision: str
 
     def to_json(self) -> dict[str, Any]:
@@ -82334,6 +82394,7 @@ class StandardsInstalled(_Model):
         out["replaced"] = self.replaced
         out["renamed"] = self.renamed
         out["kept"] = self.kept
+        out["unavailable"] = self.unavailable
         out["revision"] = self.revision
         return out
 
@@ -82345,6 +82406,7 @@ class StandardsInstalled(_Model):
             replaced=data["replaced"],
             renamed=data["renamed"],
             kept=data["kept"],
+            unavailable=data["unavailable"],
             revision=data["revision"],
         )
 
@@ -115050,6 +115112,7 @@ __all__ = [
     "ApplyComboOptionsOperation",
     "ApplyPageSetupPaperOp",
     "ApplyTemplatePaperOp",
+    "ApprovedSheetTemplate",
     "ArcConstructedCurve",
     "ArcContinueCurveConstruction",
     "ArcCreate",

@@ -37,4 +37,19 @@ impl Document {
         let after = Arc::new((line_types, hatch_patterns));
         self.record(vec![Op::PatternTables { before, after }], label);
     }
+
+    /// Replaces the approved sheet template revisions as one undo step named `label` (inside an open step, part of
+    /// it; docs/adr/1100 §3). Nothing happens when they are the same.
+    pub fn set_approved_sheet_templates(
+        &mut self,
+        templates: Vec<kentos_contracts::ApprovedSheetTemplate>,
+        label: &str,
+    ) {
+        if self.settings.approved_sheet_templates == templates {
+            return;
+        }
+        let before = Arc::new(std::mem::replace(&mut self.settings.approved_sheet_templates, templates));
+        let after = Arc::new(self.settings.approved_sheet_templates.clone());
+        self.record(vec![Op::ApprovedSheetTemplates { before, after }], label);
+    }
 }

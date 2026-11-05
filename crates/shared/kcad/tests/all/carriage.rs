@@ -146,6 +146,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         xref_paths: _,
         profile_files: _,
         standard_docs: _,
+        approved_sheet_templates: _,
         review_notes: _,
         heights: _,
         coordinate_epoch: _,

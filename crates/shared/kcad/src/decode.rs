@@ -761,6 +761,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut profile_files = Vec::new();
     let mut standard_docs = Vec::new();
     let mut review_notes = Vec::new();
+    let mut approved_sheet_templates = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
@@ -1114,6 +1115,24 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 standard_docs = list;
+            }
+            // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, read whole and checked.
+            "approvedSheetTemplates" if has.approved_sheet_templates => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::ApprovedSheetTemplate> =
+                    serde_json::from_value(value).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                        r.fail_at(code, at, &format!("onaylı pafta şablonları okunamadı: {words}"))
+                    })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş onaylı pafta şablonu listesi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::approved_sheet_templates_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                approved_sheet_templates = list;
             }
             // Schema 180 (docs/adr/1000 §2): the review notes, read whole and checked.
             "reviewNotes" if has.review_notes => {
@@ -1744,6 +1763,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         linear_events,
         profile_files,
         standard_docs,
+        approved_sheet_templates,
         review_notes,
         lineage,
         map_srid,

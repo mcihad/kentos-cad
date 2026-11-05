@@ -614,7 +614,8 @@ impl App {
                 continue;
             }
             for mut row in section.rows {
-                if row.note && (row.warn || section.id.starts_with("blockParams")) {
+                // A note under a value of “Bu değer nereden geliyor?” runs the sheet's width (docs/adr/1100 §5).
+                if row.note && (row.warn || section.id.starts_with("blockParams") || section.id == "valueOrigin") {
                     sheet = sheet.note(self.cell(row));
                     continue;
                 }

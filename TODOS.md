@@ -51,6 +51,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-ADV-12 / ADR 1100: `cad.standards.install`'ın blok ve pafta şablonu satırları (`block`, `sheetTemplate`,
+  `unavailable`, `library`, `uses`), `kentos-ofis` kitaplığının web'de okunması, `io/kcad.ts` şema 183
+  (`approvedSheetTemplates`), Standart kaynaklarını kur penceresinin Kitaplık/Kullanım sütunları ve Öznitelikler'in
+  “Bu değer nereden geliyor?” bölümü. TS türleri bu dilimde yeniden üretilmedi (yalnız `commandCatalog.json`).
+- CAD-ADV-12 / ADR 1100 §4 (masaüstü dahil açık): yayımlanan ofis araç paleti — paket `resources.toolPalettes`,
+  komut kaydına bağlı araç tarifi (`command`, `commandVersion`, doğrulanmış `input`), kişisel favorinin
+  `standart:<kimlik>:<öğe>` anahtarı ve bağlı/bağsız araç kararı.
+
 - CAD-ADV-13 / ADR 1030: `cad.extract` işleyicisi, tablo parçaları ve satır sonu (`io/kcad.ts` şema 182, `columns.ts`, WASM
   `tableLayout.line`), paket türü 38, `FORMATS_VERSION` 107, Veri çıkarımı penceresi.
 - CAD-ADV-16 / ADR 1090: `cad.sheets.details` arayüzü (detay listesi, oran seçici, seçimden kapsam, tablo parçası);

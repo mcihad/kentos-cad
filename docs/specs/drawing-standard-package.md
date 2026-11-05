@@ -38,7 +38,11 @@ requires a `resources` object. Its supported fields are `lineTypes`,
 hold the corresponding KentOS project definitions. `blocks` holds a block name and its existing library
 `publication` metadata (`familyId`, `typeId`, `typeName`, `release`), without
 embedding geometry. `sheetTemplates` holds approved template IDs and revision
-numbers; it does not embed or install a template. An empty resources object is
+numbers; it does not embed a template. Association alone installs nothing:
+`cad.standards.install` (docs/adr/1002, docs/adr/1100) resolves a block reference against the block libraries
+KentOS reads by its publication and installs it by the user's choice, and records an approved template revision
+in the drawing (`approvedSheetTemplates`) without changing a sheet; a reference no library holds is reported as
+`unavailable`. An empty resources object is
 valid. For example:
 
 ```json
@@ -224,5 +228,5 @@ For the association workflow Autodesk documents both
 [drawing-to-standard associations](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-Core/files/GUID-3430632D-3294-44EA-ACDE-429CBE1F1BDD.htm)
 and [ordered precedence for conflicting standards](https://help.autodesk.com/cloudhelp/2022/ENU/AutoCAD-Architecture/files/GUID-22AC35EC-47D1-4FA4-96AF-671663396F55.htm).
 The current resolution covers the named definitions and global rules described
-above. Contents and automatic mapping or installation of these resources
-remain open.
+above. Installation by the user's mapping is `cad.standards.install` (docs/adr/1002, 1100); automatic
+mapping, table styles and published tool palettes remain open.
