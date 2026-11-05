@@ -94,7 +94,11 @@ comparison; block names use the block table's Turkish case folding. The
 standard's drawing rules still resolve as before. `cad.standards.conflicts` reports differing
 fields and both values when two bound packages define the same resource name
 with different content; a case difference in the name alone is not a content
-conflict. Both queries are read only and available through the command
+conflict. Numeric line-type and hatch-pattern fields use the same absolute
+1e-9 tolerance as named annotation styles, recursively within arrays and
+objects. `cad.standards.check` uses that tolerance too, so a near-equal
+definition cannot pass one query and fail the other. Both queries are read
+only and available through the command
 registry, Python SDK and MCP contract.
 Conflicting template revisions of the same ID are reported as
 `sheetTemplateReference` with both sources and values; binding order selects

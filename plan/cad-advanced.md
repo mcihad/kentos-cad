@@ -2006,6 +2006,13 @@ blok parçası içeren komut sınamaları çizim ile Undo geçmişinin değişme
 doğruladı. Gerçek uygulamada GAZ çizgi tipinin farklı tanımı seçildiğinde
 1 katman, 0 doğrudan nesne ve 0 blok parçası açıklaması ile pasif Uygula
 düğmesi ekran görüntüsünde doğrulandı; görüntü repo dışında tutuldu.
+Çizgi tipi ve tarama deseninin iç içe sayısal alanları, paketler arası çakışma
+ve çizim denetiminde aynı mutlak `1e-9` toleransını kullanır. Eşiğin altında
+gereksiz bulgu çıkmaması, üstünde hem çakışma hem yerel tanım farkının çıkması
+komut sınamasında doğrulandı; küçük farklar çizim kaynaklarını değiştirmez.
+Gerçek uygulamada `0,5` ve `0,5000000005` tanımlarıyla yalnız katman adı
+bulguları göründü; yanlış çizgi tipi tanımı bulgusu çıkmadı. Ekran görüntüsü
+repo dışında tutuldu.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

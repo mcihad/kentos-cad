@@ -357,7 +357,7 @@ fn version_two_resource_definitions_resolve_by_order_and_report_content_conflict
         &mut ExecutionContext::new(&mut doc),
         "cad.settings.set",
         CallOp::Execute,
-        json!({"standardDocs":[later, first], "expectedRevision":revision}),
+        json!({"standardDocs":[later, first.clone()], "expectedRevision":revision}),
     )
     .unwrap();
     assert_eq!(reordered["status"], "completed", "{reordered}");
@@ -370,6 +370,47 @@ fn version_two_resource_definitions_resolve_by_order_and_report_content_conflict
         reversed["output"]["provenance"]["lineTypes"]["office-dash"]["id"],
         "office-b"
     );
+
+    let mut tiny: StandardPackage = serde_json::from_str(&first.text).unwrap();
+    tiny.id = "office-tiny".into();
+    let resources = tiny.resources.as_mut().unwrap();
+    resources.line_types[0].elements[0].length += 5e-10;
+    resources.hatch_patterns[0].lines[0].offset[1] += 5e-10;
+    let bind = |doc: &mut Document, second: &StandardPackage| {
+        let revision = doc.revision().to_string();
+        let result = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.settings.set",
+            CallOp::Execute,
+            json!({"standardDocs":[first.clone(),
+                ProjectStandardDocument {text:serde_json::to_string(second).unwrap()}],
+                "expectedRevision":revision}),
+        )
+        .unwrap();
+        assert_eq!(result["status"], "completed");
+    };
+    bind(&mut doc, &tiny);
+    let before = doc.to_snapshot_v2();
+    assert!(
+        read(&mut doc, "cad.standards.conflicts")["output"]["conflicts"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let resources = tiny.resources.as_mut().unwrap();
+    resources.line_types[0].elements[0].length += 2e-9;
+    resources.hatch_patterns[0].lines[0].offset[1] += 2e-9;
+    bind(&mut doc, &tiny);
+    let before = doc.to_snapshot_v2();
+    assert_eq!(
+        read(&mut doc, "cad.standards.conflicts")["output"]["conflicts"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
 }
 
 #[test]
@@ -450,6 +491,19 @@ fn named_resources_are_checked_without_installing_or_replacing_drawing_definitio
     settings.hatch_patterns[0].description = "yerel açıklama".into();
     doc.set_settings(settings);
     assert!(kinds(&mut doc).is_empty());
+    let mut settings = doc.settings().clone();
+    settings.line_types[0].elements[0].length += 5e-10;
+    settings.hatch_patterns[0].lines[0].offset[1] += 5e-10;
+    doc.set_settings(settings);
+    assert!(kinds(&mut doc).is_empty());
+    let mut settings = doc.settings().clone();
+    settings.line_types[0].elements[0].length += 2e-9;
+    settings.hatch_patterns[0].lines[0].offset[1] += 2e-9;
+    doc.set_settings(settings);
+    assert_eq!(
+        kinds(&mut doc),
+        ["lineTypeDefinition", "hatchPatternDefinition"]
+    );
 }
 
 #[test]

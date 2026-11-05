@@ -639,15 +639,9 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
 }
 
 fn resource_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
-    let mut fields = std::collections::BTreeSet::new();
-    for value in [first, later] {
-        if let Some(object) = value.as_object() {
-            fields.extend(object.keys().cloned());
-        }
-    }
-    fields
+    style_differences(first, later)
         .into_iter()
-        .filter(|field| field != "name" && first.get(field) != later.get(field))
+        .filter(|field| field != "name")
         .collect()
 }
 
@@ -1557,14 +1551,19 @@ fn resource_issues(
                 ),
                 None,
             ),
-            Some(found) if resource_geometry(expected) != resource_geometry(found) => (
-                StandardIssueKind::LineTypeDefinition,
-                format!(
-                    "“{}” çizgi tipinin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.{impact}",
-                    expected.name,
-                ),
-                Some(resource_geometry(found).to_string()),
-            ),
+            Some(found)
+                if !style_differences(&resource_geometry(expected), &resource_geometry(found))
+                    .is_empty() =>
+            {
+                (
+                    StandardIssueKind::LineTypeDefinition,
+                    format!(
+                        "“{}” çizgi tipinin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.{impact}",
+                        expected.name,
+                    ),
+                    Some(resource_geometry(found).to_string()),
+                )
+            }
             Some(_) => continue,
         };
         issues.push(StandardIssue {
@@ -1600,14 +1599,19 @@ fn resource_issues(
                 ),
                 None,
             ),
-            Some(found) if resource_geometry(expected) != resource_geometry(found) => (
-                StandardIssueKind::HatchPatternDefinition,
-                format!(
-                    "“{}” tarama deseninin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.{impact}",
-                    expected.name,
-                ),
-                Some(resource_geometry(found).to_string()),
-            ),
+            Some(found)
+                if !style_differences(&resource_geometry(expected), &resource_geometry(found))
+                    .is_empty() =>
+            {
+                (
+                    StandardIssueKind::HatchPatternDefinition,
+                    format!(
+                        "“{}” tarama deseninin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.{impact}",
+                        expected.name,
+                    ),
+                    Some(resource_geometry(found).to_string()),
+                )
+            }
             Some(_) => continue,
         };
         issues.push(StandardIssue {
