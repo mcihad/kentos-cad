@@ -249,9 +249,17 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             path,
         ));
     }
+    if matches!(&t.source, Some(TableSource::File { key_column: Some(_), .. }))
+        && matches!(e, TableEdit::InsertRows { .. } | TableEdit::DeleteRows { .. } | TableEdit::InsertColumns { .. } | TableEdit::DeleteColumns { .. } | TableEdit::Merge { .. } | TableEdit::Unmerge { .. })
+    {
+        return Err(invalid("Anahtarlı bağlı tabloda satır/sütun yapısı değiştirilmez; önce kaynaktan ayırın.".into(), path));
+    }
     match e {
         TableEdit::SetCell { row, col, words } => {
             let (r, c) = cell_in(&t, *row, *col, path)?;
+            if r > 0 && matches!(&t.source, Some(TableSource::File { key_column: Some(key), .. }) if *key as usize == c) {
+                return Err(invalid("Bağlı tablonun satır anahtarı hücresi değiştirilemez; kaynak dosyayı düzeltin.".into(), path));
+            }
             t.formulas.retain(|f| (f.row as usize, f.col as usize) != (r, c));
             t.fields.retain(|f| (f.row as usize, f.col as usize) != (r, c));
             if table_formula::is_formula(words) {
@@ -513,6 +521,28 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             t.frame = *width;
             Ok(t)
         }
+        TableEdit::SourceKey { column } => {
+            let Some(TableSource::File { key_column, copy, .. }) = &mut t.source else {
+                return Err(invalid("Satır anahtarı yalnız dosyaya bağlı tabloda seçilir.".into(), path));
+            };
+            if let Some(col) = column {
+                if !t.header {
+                    return Err(invalid("Satır anahtarı için başlık satırı açık olmalı.".into(), path));
+                }
+                let Some(copy) = copy else {
+                    return Err(invalid("Satır anahtarı için son kaynak kopyası gerekli; dosyaya yeniden bağlayın.".into(), path));
+                };
+                if t.cells.len() != copy.len() || t.cells.iter().zip(copy.iter()).any(|(own, was)| own.len() != was.len()) {
+                    return Err(invalid("Tablonun satır ve sütun yapısı son kaynak kopyasından farklı; önce kaynağa yeniden bağlayın.".into(), path));
+                }
+                let keys = row_keys(copy, *col as usize).map_err(|why| invalid(why, path))?;
+                if keys.values().any(|r| t.cells.get(*r).and_then(|row| row.get(*col as usize)) != copy[*r].get(*col as usize)) {
+                    return Err(invalid("Satır anahtarı sütununda elle değişmiş değer var; önce kaynağı düzeltin.".into(), path));
+                }
+            }
+            *key_column = *column;
+            Ok(t)
+        }
         TableEdit::Unlink => {
             t.source = None;
             Ok(t)
@@ -702,6 +732,109 @@ fn conflicting_hand_edits(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<St
         .sum()
 }
 
+fn row_keys(rows: &[Vec<String>], column: usize) -> Result<HashMap<&str, usize>, String> {
+    if rows.first().is_none_or(|header| column >= header.len()) {
+        return Err(format!("Satır anahtarı sütunu {} dosyada yok.", column + 1));
+    }
+    let mut keys = HashMap::new();
+    for (r, row) in rows.iter().enumerate().skip(1) {
+        let Some(key) = row.get(column).map(String::as_str).filter(|key| !key.trim().is_empty()) else {
+            return Err(format!("{}. veri satırının anahtarı boş.", r));
+        };
+        if key != key.trim() {
+            return Err(format!("“{key}” satır anahtarının başında veya sonunda boşluk var."));
+        }
+        if keys.insert(key, r).is_some() {
+            return Err(format!("“{key}” satır anahtarı dosyada birden çok kez geçiyor."));
+        }
+    }
+    Ok(keys)
+}
+
+/// Match file rows by a declared, unique column. Source order is retained; hand edits follow the
+/// key, and conflicting edits or disappearing edited rows stop the whole refresh. Row-scoped table
+/// extras need their own reindexing before a reorder can be accepted.
+fn keyed_overrides(
+    t: &TableEntity,
+    copy: &[Vec<String>],
+    fresh: &[Vec<String>],
+    column: usize,
+    rule: SourceOverrides,
+) -> Result<(Vec<Vec<String>>, u32, u32), String> {
+    if !t.header || copy.first() != fresh.first() {
+        return Err("Anahtarlı tablo için başlık satırı ve sütun sırası aynı kalmalı.".to_owned());
+    }
+    let old_keys = row_keys(copy, column)?;
+    let new_keys = row_keys(fresh, column)?;
+    if rule == SourceOverrides::Keep
+        && old_keys.values().any(|r| t.cells.get(*r).and_then(|row| row.get(column)) != copy[*r].get(column))
+    {
+        return Err("Satır anahtarı hücresi elle değiştirildi; kaynak satırı güvenle eşlenemiyor.".to_owned());
+    }
+    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    if reordered && (!t.styles.is_empty() || !t.formulas.is_empty() || !t.fields.is_empty() || !t.merges.is_empty()) {
+        return Err("Satır sırası değişti; hücre stili, birleşim, formül veya field konumu güvenle taşınamadığı için tablo korunuyor.".to_owned());
+    }
+    if reordered && t.rows.iter().skip(2).any(|h| Some(h) != t.rows.get(1)) {
+        return Err("Satır sırası değişti; farklı satır yükseklikleri güvenle taşınamadığı için tablo korunuyor.".to_owned());
+    }
+    for (key, old_r) in &old_keys {
+        if new_keys.contains_key(key) {
+            continue;
+        }
+        let Some(own) = t.cells.get(*old_r) else { continue };
+        if rule == SourceOverrides::Keep
+            && copy[*old_r].iter().enumerate().any(|(c, was)| {
+                own.get(c).is_some_and(|value| value != was)
+                    && t.formula_at(*old_r, c).is_none()
+                    && t.field_at(*old_r, c).is_none()
+            })
+        {
+            return Err(format!("“{key}” anahtarlı elle düzeltilmiş satır kaynaktan silindi; tablo korunuyor."));
+        }
+    }
+    let mut out = fresh.to_vec();
+    let (mut kept, mut replaced) = (0, 0);
+    for (c, cell) in out[0].iter_mut().enumerate() {
+        let (Some(own), Some(was)) = (
+            t.cells.first().and_then(|row| row.get(c)),
+            copy.first().and_then(|row| row.get(c)),
+        ) else { continue };
+        if own == was || t.formula_at(0, c).is_some() || t.field_at(0, c).is_some() {
+            continue;
+        }
+        if rule == SourceOverrides::Keep {
+            *cell = own.clone();
+            kept += 1;
+        } else {
+            replaced += 1;
+        }
+    }
+    for row in out.iter_mut().skip(1) {
+        let Some(key) = row.get(column).cloned() else { continue };
+        let Some(old_r) = old_keys.get(key.as_str()).copied() else { continue };
+        for (c, cell) in row.iter_mut().enumerate() {
+            let (Some(own), Some(was)) = (
+                t.cells.get(old_r).and_then(|row| row.get(c)),
+                copy.get(old_r).and_then(|row| row.get(c)),
+            ) else { continue };
+            if own == was || t.formula_at(old_r, c).is_some() || t.field_at(old_r, c).is_some() {
+                continue;
+            }
+            if rule == SourceOverrides::Keep {
+                if cell != was {
+                    return Err(format!("“{key}” anahtarlı satırın {}. hücresini hem kaynak hem kullanıcı değiştirdi; tablo korunuyor.", c + 1));
+                }
+                *cell = own.clone();
+                kept += 1;
+            } else {
+                replaced += 1;
+            }
+        }
+    }
+    Ok((out, kept, replaced))
+}
+
 struct Checked {
     changed: Vec<(Slot, Uuid, TableEntity)>,
     report: Vec<TableReport>,
@@ -770,6 +903,7 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                             digest,
                             copy,
                             overrides,
+                            key_column,
                             ..
                         },
                     ) => match std::fs::read(resolved(path, base.as_deref())) {
@@ -797,39 +931,48 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                         None
                                     }
                                     Ok((fresh, aligns)) => {
-                                        let conflicts = if *overrides == SourceOverrides::Keep {
-                                            copy.as_ref().map_or(0, |old| conflicting_hand_edits(&t, old, &fresh))
-                                        } else {
-                                            0
-                                        };
-                                        if *overrides == SourceOverrides::Keep
+                                        let merged = if let Some(column) = key_column {
+                                            match copy.as_ref() {
+                                                Some(old) => keyed_overrides(&t, old, &fresh, *column as usize, *overrides),
+                                                None => Err("Anahtarlı tablonun son kaynak kopyası yok; elle düzeltmeler güvenle eşlenemiyor.".to_owned()),
+                                            }
+                                        } else if *overrides == SourceOverrides::Keep
                                             && copy.as_ref().is_some_and(|old| moved_hand_edit(&t, old, &fresh))
                                         {
-                                            status = TableRefresh::Unreadable;
-                                            warnings.push(warning(
-                                                codes::SOURCE_UNREADABLE,
-                                                format!("“{path}” dosyasında elle düzeltilmiş bir satırın sırası veya kimliği değişti. Satır anahtarı tanımlı olmadığı için düzeltme başka kaleme aktarılmadı; tablo olduğu gibi kaldı."),
-                                            ));
-                                            None
-                                        } else if conflicts > 0 {
-                                            status = TableRefresh::Unreadable;
-                                            warnings.push(warning(
-                                                codes::SOURCE_UNREADABLE,
-                                                format!("“{path}” dosyasında kaynak ve elle düzeltme aynı {conflicts} hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."),
-                                            ));
-                                            None
+                                            Err("Elle düzeltilmiş bir satırın sırası veya kimliği değişti. Satır anahtarı tanımlı olmadığı için düzeltme başka kaleme aktarılmadı; tablo olduğu gibi kaldı.".to_owned())
                                         } else {
-                                            let (cells, k, r) = with_overrides(&t, copy.as_ref(), &fresh, *overrides);
-                                            (kept, replaced) = (k, r);
-                                            refreshed(doc, &t, &cells, &aligns).map(|mut n| {
-                                                let mut s = source.clone();
-                                                if let TableSource::File { digest, copy, .. } = &mut s {
-                                                    *digest = Some(d);
-                                                    *copy = Some(fresh);
-                                                }
-                                                n.source = Some(s);
-                                                n
-                                            })
+                                            let conflicts = if *overrides == SourceOverrides::Keep {
+                                                copy.as_ref().map_or(0, |old| conflicting_hand_edits(&t, old, &fresh))
+                                            } else {
+                                                0
+                                            };
+                                            if conflicts > 0 {
+                                                Err(format!("Kaynak ve elle düzeltme aynı {conflicts} hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."))
+                                            } else {
+                                                Ok(with_overrides(&t, copy.as_ref(), &fresh, *overrides))
+                                            }
+                                        };
+                                        match merged {
+                                            Err(why) => {
+                                                status = TableRefresh::Unreadable;
+                                                warnings.push(warning(
+                                                    codes::SOURCE_UNREADABLE,
+                                                    format!("“{path}” dosyasında {why}"),
+                                                ));
+                                                None
+                                            }
+                                            Ok((cells, k, r)) => {
+                                                (kept, replaced) = (k, r);
+                                                refreshed(doc, &t, &cells, &aligns).map(|mut n| {
+                                                    let mut s = source.clone();
+                                                    if let TableSource::File { digest, copy, .. } = &mut s {
+                                                        *digest = Some(d);
+                                                        *copy = Some(fresh);
+                                                    }
+                                                    n.source = Some(s);
+                                                    n
+                                                })
+                                            }
                                         }
                                     }
                                 }
@@ -885,6 +1028,7 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
             sheet,
             base,
             overrides,
+            key_column,
         } => {
             let (slot, u, t) = table_at(doc, uid, "operation.uid")?;
             if path.trim().is_empty() || path.chars().any(char::is_control) {
@@ -899,19 +1043,34 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
             };
             let (fresh, aligns) = sheet_rows(&bytes, sheet.as_deref(), t.header)
                 .map_err(|why| fail(codes::SOURCE_UNREADABLE, format!("“{path}”: {why}"), "operation.path"))?;
+            let key_column = (*key_column).or(match &t.source {
+                Some(TableSource::File { key_column, .. }) => *key_column,
+                _ => None,
+            });
+            if let Some(column) = key_column {
+                if !t.header {
+                    return Err(invalid("Satır anahtarı için tabloda başlık satırı açık olmalı.".into(), "operation.keyColumn"));
+                }
+                row_keys(&fresh, column as usize).map_err(|why| invalid(why, "operation.keyColumn"))?;
+            }
             let Some(mut next) = refreshed(doc, &t, &fresh, &aligns) else {
                 return Err(invalid("Tablo dosyanın satırlarıyla yazılamadı.".into(), "operation.path"));
             };
             let name = Path::new(path)
                 .file_name()
                 .map_or_else(|| path.clone(), |n| n.to_string_lossy().into_owned());
+            let override_rule = overrides.unwrap_or(match &t.source {
+                Some(TableSource::File { overrides, .. }) => *overrides,
+                _ => SourceOverrides::default(),
+            });
             next.source = Some(TableSource::File {
                 name,
                 sheet: sheet.clone(),
                 path: Some(path.clone()),
                 digest: Some(digest_of(&bytes)),
                 copy: Some(fresh),
-                overrides: overrides.unwrap_or_default(),
+                overrides: override_rule,
+                key_column,
             });
             if let Some((field, words)) = next.problem() {
                 return Err(invalid(words, &format!("operation.{field}")));
@@ -1048,10 +1207,10 @@ mod tests {
         let before = doc.to_snapshot_v2();
         let history = doc.undo_labels();
         let request = TablesEdit {
-            operation: TablesOperation::Refresh { uids: vec![uid], base: None },
+            operation: TablesOperation::Refresh { uids: vec![uid.clone()], base: None },
             expected_revision: None,
         };
-        let result = execute(&mut ExecutionContext::new(&mut doc), request);
+        let result = execute(&mut ExecutionContext::new(&mut doc), request.clone());
         let CommandResult::Completed { output, warnings } = result else {
             panic!("refresh must report an ambiguous row: {result:?}");
         };
@@ -1060,6 +1219,22 @@ mod tests {
         assert!(output.changed.is_empty());
         assert_eq!(doc.to_snapshot_v2(), before);
         assert_eq!(doc.undo_labels(), history);
+
+        let set_key = TablesEdit {
+            operation: TablesOperation::Edit {
+                uid: uid.clone(),
+                edits: vec![TableEdit::SourceKey { column: Some(0) }],
+            },
+            expected_revision: None,
+        };
+        assert!(matches!(execute(&mut ExecutionContext::new(&mut doc), set_key), CommandResult::Completed { .. }));
+        let result = execute(&mut ExecutionContext::new(&mut doc), request);
+        let CommandResult::Completed { output, .. } = result else { panic!("keyed refresh: {result:?}") };
+        assert_eq!(output.report[0].status, TableRefresh::Updated);
+        assert_eq!(output.report[0].kept, 1);
+        let Some(Entity::Table(table)) = doc.get(slot) else { panic!("table") };
+        assert_eq!(table.cells[1], vec!["B", "10"]);
+        assert_eq!(table.cells[2], vec!["A", "11"]);
         std::fs::remove_file(path).unwrap();
     }
 
@@ -1156,5 +1331,36 @@ mod tests {
         let Some(Entity::Table(table)) = doc.get(slot) else { panic!("table") };
         assert_eq!(table.cells[1][1], "12");
         std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn declared_row_key_follows_reorder_and_rejects_ambiguous_values() {
+        let copy = vec![
+            vec!["ID".into(), "Price".into()],
+            vec!["A".into(), "10".into()],
+            vec!["B".into(), "20".into()],
+        ];
+        let table: TableEntity = serde_json::from_value(json!({
+            "id":0,"layerId":"duvar","attrs":{},"p":{"x":0,"y":0},
+            "rotation":0,"height":0.1,"rows":[0.3,0.3,0.3],"columns":[1.0,1.0],
+            "cells":[["ID","Price"],["A","11"],["B","20"]],"header":true
+        }))
+        .unwrap();
+        let reordered = vec![copy[0].clone(), copy[2].clone(), copy[1].clone()];
+        let (cells, kept, replaced) = keyed_overrides(&table, &copy, &reordered, 0, SourceOverrides::Keep).unwrap();
+        assert_eq!(cells[1], vec!["B", "20"]);
+        assert_eq!(cells[2], vec!["A", "11"]);
+        assert_eq!((kept, replaced), (1, 0));
+        let (cells, kept, replaced) = keyed_overrides(&table, &copy, &reordered, 0, SourceOverrides::Replace).unwrap();
+        assert_eq!(cells[2], vec!["A", "10"]);
+        assert_eq!((kept, replaced), (0, 1));
+        assert!(keyed_overrides(&table, &copy, &reordered[..2], 0, SourceOverrides::Keep)
+            .unwrap_err().contains("kaynaktan silindi"));
+        let duplicate = vec![copy[0].clone(), copy[1].clone(), copy[1].clone()];
+        assert!(keyed_overrides(&table, &copy, &duplicate, 0, SourceOverrides::Keep)
+            .unwrap_err().contains("birden çok"));
+        let conflict = vec![copy[0].clone(), vec!["A".into(), "12".into()], copy[2].clone()];
+        assert!(keyed_overrides(&table, &copy, &conflict, 0, SourceOverrides::Keep)
+            .unwrap_err().contains("hem kaynak hem kullanıcı"));
     }
 }

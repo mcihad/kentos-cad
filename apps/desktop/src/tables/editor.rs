@@ -130,6 +130,7 @@ pub enum Tool {
     /// The active cell bound to the count of `blocks[i]`'s inserts, or let go of.
     Field(usize),
     Unfield,
+    SourceKey(Option<u32>),
 }
 
 /// Yazı rengi's colours: name and `#rrggbb`.
@@ -1348,13 +1349,11 @@ impl App {
                         _ => "scheduleOpenings",
                     },
                 };
-                row![
+                let head = row![
                     icon(crate::icons::from_web(Some(name))).size(16.0),
                     label::body(format!("Kaynak: {}", super::source_words(&e.draft)))
                         .font(typography::ui_strong()),
-                    label::caption("Tabloyu güncelle elle yazılanların üstüne yazar.")
-                        .wrapping(iced::widget::text::Wrapping::None)
-                        .width(Fill),
+                    Space::new().width(Fill),
                     tip(
                         words::secondary(DETACH, Some(msg(Event::Detach))),
                         Tip::new("Tablo kaynağını bırakır: Tabloyu güncelle ona dokunmaz."),
@@ -1362,8 +1361,34 @@ impl App {
                     ),
                 ]
                 .spacing(8)
-                .align_y(Center)
-                .into()
+                .align_y(Center);
+                let detail: Element<'_, Message> = match s {
+                    kentos_commands::TableSource::File { key_column, copy: Some(_), .. } if e.draft.header => {
+                        let mut choices = vec![Choice::new("Satır sırası (anahtar yok)")];
+                        choices.extend(
+                            e.draft.cells[0]
+                                .iter()
+                                .enumerate()
+                                .map(|(c, title)| Choice::new(format!("{} — {title}", column_name(c)))),
+                        );
+                        row![
+                            label::caption("Satır anahtarı"),
+                            container(Select::new(choices, Some(key_column.map_or(0, |c| c as usize + 1)), |i| {
+                                msg(Event::Tool(Tool::SourceKey(i.checked_sub(1).map(|c| c as u32))))
+                            }))
+                            .width(Length::Fixed(typography::scaled(250.0))),
+                            label::caption("Benzersiz ve boş olmayan sütun; elle düzeltmeler satırla taşınır."),
+                        ]
+                        .spacing(8)
+                        .align_y(Center)
+                        .into()
+                    }
+                    kentos_commands::TableSource::File { .. } => {
+                        label::caption("Satır anahtarı için başlık satırı ve bağlı dosya gerekir.").into()
+                    }
+                    _ => label::caption("Kaynak çizelgeyle birlikte güncellenir.").into(),
+                };
+                column![head, detail].spacing(5).into()
             }
         };
         // The status line.
@@ -1717,6 +1742,7 @@ fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
         Tool::Header => vec![TableEdit::Header {
             on: !e.draft.header,
         }],
+        Tool::SourceKey(column) => vec![TableEdit::SourceKey { column }],
         Tool::Grid(g) => vec![TableEdit::Grid { grid: g }],
         // 0,7 mm on paper, as Tablo ekle's (the web's).
         Tool::Frame => vec![TableEdit::Frame {

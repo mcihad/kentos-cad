@@ -244,6 +244,7 @@ impl App {
                 sheet: None,
                 base: base.map(|b| b.to_string_lossy().into_owned()),
                 overrides: None,
+                key_column: None,
             };
             if self.run_tables(operation).is_some() {
                 self.say(

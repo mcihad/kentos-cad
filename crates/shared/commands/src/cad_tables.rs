@@ -182,6 +182,11 @@ pub enum TableEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         width: Option<f64>,
     },
+    /// A linked file's unique, nonempty row-key column (null: position-based legacy refresh).
+    SourceKey {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        column: Option<u32>,
+    },
     /// Kaynağı bırak: the table follows no source.
     Unlink,
 }
@@ -209,7 +214,8 @@ pub enum TablesOperation {
         base: Option<String>,
     },
     /// Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table
-    /// linked to it: its path, digest and copy kept, `overrides` its rule.
+    /// linked to it: its path, digest and copy kept, `overrides` its rule. An omitted key or override
+    /// keeps the existing file table's setting when relinking.
     Link {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
@@ -223,6 +229,10 @@ pub enum TablesOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         overrides: Option<SourceOverrides>,
+        /// Zero-based file column with unique, nonempty row keys. Requires a header row.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        key_column: Option<u32>,
     },
     /// Kaynağı bırak: the tables keep their cells and follow no source.
     Unlink {

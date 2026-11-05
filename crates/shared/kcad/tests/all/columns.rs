@@ -8,6 +8,29 @@ use kentos_kcad::contracts::{DocumentSnapshotV2, Entity, EntityBase, EntityId, P
 use kentos_kcad::{Code, Columns, Quiet, Step};
 use serde_json::Value;
 
+#[test]
+fn linked_table_row_key_survives_kcad_roundtrip() {
+    let mut doc: DocumentSnapshotV2 = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/kcad/v2/dynamic-blocks.json"
+    )))
+    .unwrap();
+    let id = doc.entities[0].base().id;
+    doc.entities[0] = serde_json::from_value(serde_json::json!({
+        "kind":"table","id":id,"layerId":"duvar","attrs":{},
+        "p":{"x":0,"y":-2},"rotation":0,"height":0.1,
+        "rows":[0.3,0.3],"columns":[1.0,1.0],
+        "cells":[["ID","Price"],["A","11"]],"header":true,
+        "source":{"kind":"file","name":"prices.csv","path":"prices.csv",
+            "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+            "copy":[["ID","Price"],["A","10"]],"keyColumn":0}
+    }))
+    .unwrap();
+    let bytes = kentos_kcad::encode_verified(&doc).expect("keyed table saves");
+    let opened = kentos_kcad::decode(&bytes).expect("keyed table opens");
+    assert_eq!(opened.entities[0], doc.entities[0]);
+}
+
 const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/kcad/v2/");
 
 fn read(name: &str) -> Vec<u8> {

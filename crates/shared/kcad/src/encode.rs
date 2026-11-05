@@ -2907,8 +2907,8 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
                     || !t.formulas.is_empty()
                     || !t.fields.is_empty()
                     || matches!(&t.source, Some(kentos_contracts::TableSource::Blocks { .. }))
-                    || matches!(&t.source, Some(kentos_contracts::TableSource::File { path, digest, copy, overrides, .. })
-                        if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep()))
+                    || matches!(&t.source, Some(kentos_contracts::TableSource::File { path, digest, copy, overrides, key_column, .. })
+                        if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() || key_column.is_some()))
         })
     };
     if tabled(objs) {

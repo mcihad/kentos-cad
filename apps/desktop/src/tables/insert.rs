@@ -323,6 +323,7 @@ impl App {
                             overrides: Default::default(),
                             digest: None,
                             copy: None,
+                            key_column: None,
                             name: name.clone(),
                             sheet: sheet.name.clone(),
                         })),

@@ -3074,6 +3074,7 @@ fn geometry(
                             copy: None,
                             digest: None,
                             overrides: Default::default(),
+                            key_column: None,
                             name,
                             sheet,
                         })
@@ -3117,6 +3118,7 @@ fn geometry(
                     digest,
                     copy,
                     overrides,
+                    key_column,
                     ..
                 }) = &mut source
             {
@@ -3124,6 +3126,7 @@ fn geometry(
                 *digest = l.digest;
                 *copy = l.copy;
                 *overrides = l.overrides;
+                *key_column = l.key_column;
             }
             Entity::Table(TableEntity {
                 styles: more.styles,
@@ -3785,6 +3788,8 @@ struct TableLink {
     copy: Option<Vec<Vec<String>>>,
     #[serde(default, skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep")]
     overrides: kentos_contracts::SourceOverrides,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    key_column: Option<u32>,
 }
 
 fn table_cells_json(
@@ -3799,12 +3804,14 @@ fn table_cells_json(
             digest,
             copy,
             overrides,
+            key_column,
             ..
-        }) if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() => Some(TableLink {
+        }) if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() || key_column.is_some() => Some(TableLink {
             path: path.clone(),
             digest: digest.clone(),
             copy: copy.clone(),
             overrides: *overrides,
+            key_column: *key_column,
         }),
         _ => None,
     };

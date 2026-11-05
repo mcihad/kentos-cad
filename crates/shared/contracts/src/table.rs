@@ -197,7 +197,8 @@ pub enum TableSource {
     Attributes { objects: Vec<EntityId> },
     /// A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the
     /// drawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell
-    /// changed by hand differs from) and what is done with such a cell; unlinked, it is chosen again to update.
+    /// changed by hand differs from), what is done with such a cell, and an optional unique row key;
+    /// unlinked, it is chosen again to update.
     #[serde(rename_all = "camelCase")]
     File {
         name: String,
@@ -216,6 +217,10 @@ pub enum TableSource {
         #[serde(default, skip_serializing_if = "crate::SourceOverrides::is_keep")]
         #[cfg_attr(feature = "ts", ts(as = "Option<crate::SourceOverrides>", optional))]
         overrides: crate::SourceOverrides,
+        /// Zero-based column whose nonempty values identify rows across file revisions.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        key_column: Option<u32>,
     },
     /// Blok çizelgesi (docs/adr/0327 §4): the inserts of the blocks named (none named: every block placed) counted,
     /// by the attribute `by` when given; written again by the document at every step. `columns` (docs/adr/0721 §4,
@@ -535,8 +540,12 @@ impl TableShape<'_> {
                 path,
                 digest,
                 copy,
+                key_column,
                 ..
             }) => {
+                if key_column.is_some_and(|c| c as usize >= self.columns.len()) {
+                    return Some(("source", "Satır anahtarı tablonun bir sütunu olmalı.".to_owned()));
+                }
                 if path.as_deref().is_some_and(|p| p.trim().is_empty() || p.chars().any(char::is_control)) {
                     return Some((
                         "source",
@@ -606,6 +615,9 @@ impl TableEntity {
 
     /// What is wrong with it: its shape's problem, then its styles', formulas' and fields' (docs/adr/0327).
     pub fn problem(&self) -> Option<(&'static str, String)> {
+        if matches!(&self.source, Some(TableSource::File { key_column: Some(_), .. })) && !self.header {
+            return Some(("source", "Satır anahtarı için başlık satırı açık olmalı.".to_owned()));
+        }
         self.shape()
             .problem()
             .or_else(|| crate::table_cells::cells_problem(self))

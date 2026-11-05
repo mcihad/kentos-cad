@@ -1001,7 +1001,7 @@ struct Fields {
 
 /// A linked file's path, digest, copy and rule, as a table's `link` holds them (schema 68, docs/adr/0327 §5).
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Link {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     path: Option<String>,
@@ -1014,6 +1014,8 @@ struct Link {
         skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep"
     )]
     overrides: kentos_contracts::SourceOverrides,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    key_column: Option<u32>,
 }
 
 /// Where a table's fields are in the payload, for a refusal of its shape.
@@ -2844,12 +2846,14 @@ fn build(
                         digest,
                         copy,
                         overrides,
+                        key_column,
                         ..
                     }) => {
                         *path = link.path;
                         *digest = link.digest;
                         *copy = link.copy;
                         *overrides = link.overrides;
+                        *key_column = link.key_column;
                     }
                     _ => {
                         return Err(r.fail_at(
@@ -3370,6 +3374,7 @@ fn table_source(r: &mut Reader<'_>) -> Result<TableSource, KcadError> {
         return Ok(TableSource::File {
             path: None,
             overrides: Default::default(),
+            key_column: None,
             digest: None,
             copy: None,
             name: required(r, name, "name")?,

@@ -2117,6 +2117,20 @@ rağmen korunduğu, uyarı ve "Çizimde değişiklik yok" kaydı ekran görünt�
 doğrulandı; görüntü repo dışındadır. Bu koruma satır anahtarıyla eşleme ve hücre bazında uyuşmazlık çözümü
 yerine geçmez; madde `[~]` kalır.
 
+**Dış tablo satır anahtarı (5 Kasım 2026):** Dosyaya bağlı tabloda başlıklı,
+benzersiz ve boş olmayan bir sütun satır anahtarı olarak seçilebilir. Bu tercih
+komut/şema/KCAD dosyasında saklanır. Yenileme, kaynak satırları yer değiştirse
+de elle değiştirilen hücreyi aynı anahtarlı satıra taşır; yeni kaynak sırasını
+korur. Çakışan hücre değişimi, yinelenen/boş anahtar veya elle düzeltilmiş
+satırın kaynaktan silinmesi tabloyu ve Undo kaydını değiştirmeden uyarı verir.
+Birleşimler, formüller, field'lar, hücre stilleri veya farklı veri satırı
+yükseklikleri varsa yeniden sıralama henüz güvenle taşınamadığı için durdurulur.
+Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
+B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
+korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç içe blok
+sayımı, satıra bağlı biçimlerin taşınması ve çok paftalı çıktı açık kaldığından
+madde `[~]` durumundadır.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].
