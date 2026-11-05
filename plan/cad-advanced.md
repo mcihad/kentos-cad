@@ -1808,6 +1808,10 @@ Standartta açıkça tanımlanmayan fakat adlandırma kuralına uyan ek katmanla
 nesneye ait bulgular gerçek arayüzde doğrulandı. Bu, paket kapsamının tamamı
 değildir.
 
+Elle müdahale gerektiren bulgular standart penceresinde ilk sırada gösterilir;
+satır seçimi rapordaki asıl bulguya bağlı kalır. Gerçek arayüzde ayrıntılar
+ve otomatik düzeltmeden sonra kalan iki bulgu doğrulandı; görüntü repo dışındadır.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

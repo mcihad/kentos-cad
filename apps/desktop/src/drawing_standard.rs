@@ -247,6 +247,10 @@ impl App {
                 r.issues.clone(),
             ),
         };
+        // Keep the command report order intact; show findings needing a person
+        // first while retaining their original indices for selection and details.
+        let mut issues: Vec<_> = issues.into_iter().enumerate().collect();
+        issues.sort_by_key(|(_, issue)| issue.fixable);
         let chosen = w.chosen;
         let head = kentos_ui::widget::table::band(
             row![
@@ -259,11 +263,11 @@ impl App {
             .padding([0, 8]),
         );
         let detail = chosen
-            .and_then(|i| issues.get(i))
-            .map(|issue| issue.message.clone());
+            .and_then(|i| issues.iter().find(|(original, _)| *original == i))
+            .map(|(_, issue)| issue.message.clone());
         let count = issues.len();
         let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
-            let issue = &issues[i];
+            let (original, issue) = &issues[i];
             let mark: Element<'_, Message> = if issue.fixable {
                 icon(Icon::Check).size(12.0).tone(Tone::Success).into()
             } else {
@@ -291,10 +295,10 @@ impl App {
             .height(typography::scaled(ROW))
             .align_y(Center);
             iced::widget::button(face)
-                .on_press(msg(Event::Pick(i)))
+                .on_press(msg(Event::Pick(*original)))
                 .padding(0)
                 .width(Fill)
-                .style(style::button::row(chosen == Some(i)))
+                .style(style::button::row(chosen == Some(*original)))
                 .into()
         })
         .height(typography::scaled(156.0));
