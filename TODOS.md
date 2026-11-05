@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-ADV-15 / ADR 1000: `.kcad` şema 180 `settings.reviewNotes`, `cad.review.notes.edit/list` ve
+  `cad.drawing.take`. Web'e dönüldüğünde codec/kolon aktarımı, İnceleme notları paneli, eskime gösterimi ve
+  bölünmüş revizyonun Farkları al tablosu aynı komutlara bağlanmalı; web paketinin şema 180'i okuduğu varsayılmamalı.
 - CAD-ADV-10 / ADR0914 (devam ediyor): `layout.engine: unicode-v1`, KCAD şema 163 ve ortak glyph/contour
   planı. Web'e dönüldüğünde codec/kolon aktarımı, profil dönüşümü, seçim/maske kutusu, Canvas/WebGPU yazı çizimi
   ve pafta PDF girdisi aynı gerçek GID/yerleşim planına bağlanmalı; kaynak metni CSS fontuyla yeniden dizmek

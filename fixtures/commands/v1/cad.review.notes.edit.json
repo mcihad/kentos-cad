@@ -1,0 +1,1713 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.review.notes.edit",
+ "commandVersion": 1,
+ "title": "İnceleme notunu düzenle",
+ "note": "ADR 1000. Bağımsız başvuru scripts/fixtures/review_cases.py: kurallar ADR'den elle yazılır, nesne damgasının değeri değil eşitliği denetlenir; sürüm dosyaları kcad_v2_reference.py'nin yazıcısıyla yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "İnceleme ve farkları alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilit",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "101",
+     "Sahip": "A"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "102",
+     "Sahip": "B"
+    },
+    "pts": [
+     {
+      "x": 500030.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500050.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500050.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "103"
+    },
+    "pts": [
+     {
+      "x": 500060.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 500000.0,
+     "y": 4400030.0
+    },
+    "b": {
+     "x": 500040.0,
+     "y": 4400030.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 5,
+    "layerId": "yol",
+    "attrs": {
+     "Ad": "1. Sokak"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400060.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "yol",
+    "attrs": {},
+    "p": {
+     "x": 500010.0,
+     "y": 4400050.0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 7,
+    "layerId": "yol",
+    "attrs": {
+     "Tür": "Ağaç"
+    },
+    "c": {
+     "x": 500050.0,
+     "y": 4400050.0
+    },
+    "r": 5.0
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "kilit",
+    "attrs": {},
+    "p": {
+     "x": 500090.0,
+     "y": 4400010.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5a3-3333-7000-8000-000000000001",
+   "0192f5a3-3333-7000-8000-000000000002",
+   "0192f5a3-3333-7000-8000-000000000003",
+   "0192f5a3-3333-7000-8000-000000000004",
+   "0192f5a3-3333-7000-8000-000000000005",
+   "0192f5a3-3333-7000-8000-000000000006",
+   "0192f5a3-3333-7000-8000-000000000007",
+   "0192f5a3-3333-7000-8000-000000000008"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Not ekle: parsel 102'ye bağlı, açık, 1 numara; tek adım",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "anchors": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "author": "Ayşe",
+       "revision": "B",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open",
+         "author": "Ayşe",
+         "revision": "B",
+         "anchors": [
+          {
+           "uid": "0192f5a3-3333-7000-8000-000000000002",
+           "stamp": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "canUndo": true,
+      "dirty": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Noktalı, AI kaynaklı, çok satırlı not; bağsız",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Bir.\nİki\tüç",
+       "at": {
+        "x": 500005.0,
+        "y": 4400005.0
+       },
+       "origin": "ai",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Bir.\nİki\tüç",
+         "status": "open",
+         "at": {
+          "x": 500005.0,
+          "y": 4400005.0
+         },
+         "origin": "ai"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki nesneye not bağlanır: not nesneyi değiştirmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "anchors": [
+        "0192f5a3-3333-7000-8000-000000000008"
+       ],
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open",
+         "anchors": [
+          {
+           "uid": "0192f5a3-3333-7000-8000-000000000008",
+           "stamp": "$any"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Notu geri al: liste boşalır; yinele: geri gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "İnceleme notu",
+     "expect": {
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "İnceleme notu",
+     "expect": {
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenarında boşluk olan metin: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": " Kapı",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_review_note",
+       "message": "Notun metni boş olmamalı, kenarında boşluk ve satır sonu ile sekme dışında denetim karakteri bulunmamalı, en çok 4000 karakter olmalı.",
+       "path": "change.text"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş metin: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_review_note",
+       "message": "Notun metni boş olmamalı, kenarında boşluk ve satır sonu ile sekme dışında denetim karakteri bulunmamalı, en çok 4000 karakter olmalı.",
+       "path": "change.text"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "4001 karakterlik metin: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_review_note",
+       "message": "Notun metni boş olmamalı, kenarında boşluk ve satır sonu ile sekme dışında denetim karakteri bulunmamalı, en çok 4000 karakter olmalı.",
+       "path": "change.text"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zil karakterli metin: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "a\u0007b",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_review_note",
+       "message": "Notun metni boş olmamalı, kenarında boşluk ve satır sonu ile sekme dışında denetim karakteri bulunmamalı, en çok 4000 karakter olmalı.",
+       "path": "change.text"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Büyük harfli kimlik: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192F5B0-2000-7000-8000-00000000000A"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“0192F5B0-2000-7000-8000-00000000000A” geçerli bir not kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği notlar listesinden alın.",
+       "path": "change.id"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı kimlikle ikinci not: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_review_note",
+       "message": "“0192f5b0-2000-7000-8000-00000000000a” kimlikli bir inceleme notu çizimde zaten var; başka bir kimlik verin ya da kimliği boş bırakın.",
+       "path": "change.id"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenarı boşluklu yazar: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "author": "Ayşe ",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_review_note",
+       "message": "Notun yazarı boş olmamalı, kenarında boşluk ve denetim karakteri bulunmamalı, en çok 120 karakter olmalı.",
+       "path": "change.author"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Noktanın doğusu NaN: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "at": {
+        "x": 0.0,
+        "y": 4400000.0
+       },
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Notun noktası doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "change.at.x"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     },
+     "nonFinite": {
+      "change.at.x": "NaN"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı nesne iki kez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "anchors": [
+        "0192f5a3-3333-7000-8000-000000000002",
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_review_anchors",
+       "message": "“0192f5a3-3333-7000-8000-000000000002” nesnesi iki kez verildi; her nesneyi bir kez bağlayın.",
+       "path": "change.anchors[1]"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bağ UUID değil: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "anchors": [
+        "parsel-2"
+       ],
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“parsel-2” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+       "path": "change.anchors[0]"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "anchors": [
+        "0192f5a3-3333-7000-8000-000000000001",
+        "0192f5a3-3333-7000-8000-000000000999"
+       ],
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a3-3333-7000-8000-000000000999” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesneyi seçin.",
+       "path": "change.anchors[1]"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan pafta: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "sheet": "pafta-9",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_sheet",
+       "message": "“pafta-9” kimlikli pafta çizimde yok. Var olan bir paftayı seçin.",
+       "path": "change.sheet"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan adlı görünüş: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "view": "gorunus-9",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_view",
+       "message": "“gorunus-9” kimlikli adlı görünüş çizimde yok. Var olan bir görünüşü seçin.",
+       "path": "change.view"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Durum Yanıtlandı, revizyon C: aynı not, aynı numara",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "update",
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "status": "answered",
+       "revision": "C"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "answered",
+         "revision": "C"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş güncelleme: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "update",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_review_note",
+       "message": "Değişiklik boş: metin, durum ya da revizyondan en az birini verin.",
+       "path": "change"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan notu güncelleme: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "update",
+       "id": "0192f5b0-2000-7000-8000-00000000000b",
+       "status": "resolved"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "review_note_not_found",
+       "message": "“0192f5b0-2000-7000-8000-00000000000b” kimlikli inceleme notu çizimde yok: silinmiş olabilir. Notlar listesini yenileyin.",
+       "path": "change.id"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yanıt ve Çözüldü: yanıt sona eklenir, durum yalnız verildiği için değişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "reply",
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "text": "Bakılacak.",
+       "author": "Cihad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open",
+         "replies": [
+          {
+           "text": "Bakılacak.",
+           "author": "Cihad"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "reply",
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "text": "Düzeltildi.",
+       "status": "resolved"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "resolved",
+         "replies": [
+          {
+           "text": "Bakılacak.",
+           "author": "Cihad"
+          },
+          {
+           "text": "Düzeltildi."
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Numaralar: en büyüğün bir fazlası; aradaki silinen numara boş kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000b"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000b",
+       "number": 2,
+       "notes": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        },
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000b",
+         "number": 2,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "remove",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000b",
+         "number": 2,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000c"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000c",
+       "number": 3,
+       "notes": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000b",
+         "number": 2,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        },
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000c",
+         "number": 3,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Son notu sil: liste yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "remove",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeniden bağla: bağ listesi verilen liste olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "anchors": [
+        "0192f5a3-3333-7000-8000-000000000001",
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open",
+         "anchors": [
+          {
+           "uid": "0192f5a3-3333-7000-8000-000000000001",
+           "stamp": "$any"
+          },
+          {
+           "uid": "0192f5a3-3333-7000-8000-000000000002",
+           "stamp": "$any"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "rebind",
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "anchors": [
+        "0192f5a3-3333-7000-8000-000000000003"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open",
+         "anchors": [
+          {
+           "uid": "0192f5a3-3333-7000-8000-000000000003",
+           "stamp": "$any"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Silinen nesneye yeniden bağlanmaz: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "anchors": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "reviewNotes": [
+        {
+         "id": "0192f5b0-2000-7000-8000-00000000000a",
+         "number": 1,
+         "text": "Kapı genişliğini kontrol edin.",
+         "status": "open",
+         "anchors": [
+          {
+           "uid": "0192f5a3-3333-7000-8000-000000000002",
+           "stamp": "$any"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "rebind",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a3-3333-7000-8000-000000000002” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesneyi seçin.",
+       "path": "change.anchors[0]"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama ve plan yazmaz; plan verilen kimliği ve numarayı söyler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "id": "0192f5b0-2000-7000-8000-00000000000a",
+       "number": 1,
+       "notes": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen revizyon eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      },
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen revizyon sayı değil: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "change": {
+       "kind": "add",
+       "text": "Kapı genişliğini kontrol edin.",
+       "id": "0192f5b0-2000-7000-8000-00000000000a"
+      },
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "command": "cad.review.notes.edit",
+     "expect": {
+      "revision": "same",
+      "settings": {
+       "reviewNotes": null
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

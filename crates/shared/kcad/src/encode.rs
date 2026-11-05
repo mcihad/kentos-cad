@@ -515,6 +515,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.linear_events.is_empty())
             + usize::from(!s.profile_files.is_empty())
             + usize::from(!s.standard_docs.is_empty())
+            + usize::from(!s.review_notes.is_empty())
             + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
@@ -790,6 +791,18 @@ impl<'d> Encoder<'d> {
                 }
                 e.w.text(length_style(style));
                 Ok(())
+            })?;
+        }
+        // Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
+        if !s.review_notes.is_empty() {
+            self.key("reviewNotes");
+            self.at(Seg::Name("reviewNotes"), |e| {
+                if let Some(problem) = kentos_contracts::review_notes_problem(&s.review_notes) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.review_notes)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         // Schema 91 (docs/adr/0538 §1): the bound layers' bases.
@@ -2122,6 +2135,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 180 (docs/adr/1000 §2): review notes.
+    if !doc.settings.review_notes.is_empty() {
+        return crate::SCHEMA_WITH_REVIEW_NOTES;
+    }
     // Schema 179 (docs/adr/0974): an earthwork volume on a grid and its cell.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_grid) {
         return crate::SCHEMA_WITH_VOLUME_GRID;

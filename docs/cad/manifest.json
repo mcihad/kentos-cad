@@ -8011,6 +8011,23 @@
    "tests": 0
   },
   {
+   "id": "review.notes",
+   "kind": "command",
+   "title": "İnceleme notları",
+   "level": "semantic",
+   "via": [
+    "cad.review.notes.edit",
+    "cad.review.notes.list"
+   ],
+   "operation": null,
+   "python": "kentos.cad.review.notes.edit, kentos.cad.review.notes.list",
+   "mcp": "cad.review.notes.edit, cad.review.notes.list",
+   "note": "Ekle, yanıtla, durum, yeniden bağla ve sil cad.review.notes.edit'e gider; tablo ve eskime cad.review.notes.list'in cevabıdır (ADR 1000 §6). Bölünmüş revizyondaki Farkları al cad.drawing.take'i çalıştırır.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "road.sheets",
    "kind": "command",
    "title": "Yol paftaları…",

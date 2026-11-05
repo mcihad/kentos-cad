@@ -80,6 +80,9 @@ use crate::sources::{
     relate as sources_relate, sync as sources_sync,
 };
 use crate::sources_query;
+use crate::drawing_take;
+use crate::review_notes;
+use crate::review_notes::list_cmd as review_notes_list;
 use crate::standards::{apply as standards_apply, check as standards_check, conflicts as standards_conflicts, resolve as standards_resolve};
 use crate::time_query;
 use crate::{sensors_ingest, sensors_latest};
@@ -736,6 +739,9 @@ macro_rules! by_command {
             kentos_commands::CAD_ENTITIES_CLEANUP => $then!(entities_cleanup, EntitiesCleanup),
             kentos_commands::CAD_DRAWING_AUDIT => $then!(drawing_audit, DrawingAudit),
             kentos_commands::CAD_DRAWING_COMPARE => $then!(drawing_compare, DrawingCompare),
+            kentos_commands::CAD_DRAWING_TAKE => $then!(drawing_take, kentos_commands::DrawingTake),
+            kentos_commands::CAD_REVIEW_NOTES_EDIT => $then!(review_notes, kentos_commands::ReviewNotesEdit),
+            kentos_commands::CAD_REVIEW_NOTES_LIST => $then!(review_notes_list, kentos_commands::ReviewNotesList),
             kentos_commands::CAD_ADDRESSES_CHECK => $then!(addresses_check, AddressesCheck),
             kentos_commands::CAD_ADDRESSES_COMPARE => $then!(addresses_compare, AddressesCompare),
             kentos_commands::CAD_ADDRESSES_NORMALIZE => {

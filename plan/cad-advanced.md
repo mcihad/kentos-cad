@@ -2253,7 +2253,7 @@ doğru olmayan dosyayı almadı. Doğru dosya ikinci arama klasörüne
 konunca `Yüklü · arama yolundan bulundu` durumu görüntülendi. İki
 durumun ekran görüntüleri repo dışında tutuldu.
 
-### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [~]
+### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [x]
 
 **Öncelik:** P1. **Kod:** [C24], [C22], [C25].
 **Dayanak:** AutoCAD Trace yorumları ana çizimden ayırır; DWG Compare
@@ -2332,8 +2332,20 @@ ortak geometri çekirdeğinin bağımsız karşılaştırma örnekleri de geçti
 Python'da kaynak kimliğiyle uzakta taşınmış nesne önerisi, salt okunurluk,
 liste sınırındaki belirsizlik ve Job sonucu doğrulandı. GUI testi tek
 KentOS süreciyle yapıldı ve test süreci kapatıldı. Görüntüler Git'e eklenmedi.
-İnceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
-tamamlandı olarak işaretlenmedi.
+
+**Kapanış — [ADR 1000](../docs/adr/1000-review-notes-and-taking-revision-differences.md) (5 Kasım 2026):**
+İnceleme notları `.kcad` şema 180'de (`settings.reviewNotes`) tasarımdan ayrı saklanır; `cad.review.notes.edit`
+(ekle/güncelle/yanıtla/yeniden bağla/sil, tek Undo “İnceleme notu”) ve `cad.review.notes.list` nesne damgasıyla
+`current/changed/blockChanged/removed` eskimesini verir; kilitli katmandaki nesneye not bağlanabilir, AI/PDF notu
+tasarımı değiştirmez. `cad.drawing.take` seçilen farkları kalıcı kimlikle alır (ekle/değiştir/sil, hepsi ya da
+hiçbiri, tek Undo “Farkları al”); kilit, eksik katman/blok, ortak tabanla iki taraflı değişim (`take_conflict`,
+açık `overwrite`) ve blok tanımı/katman görünüşü uyarıları vardır. Bağımsız `review_cases.py` başvurusuyla 76 ortak
+durum (28 düzenleme, 20 liste, 28 alma), 4 Rust testi (blok tanımı eskimesi ve uyarısı, eksik tanım, sınırlar,
+kaydet–aç/Undo), 236 KCAD testi, bağımsız `tools/kcad/kcad.py` okuyucusuyla 1581 dosya ve 7 Python yerel motor testi
+geçti. Masaüstünde bölünmüş revizyonun **Farkları al…** penceresi ve Açıklama › İşaretleme › **İnceleme notları**
+penceresi 1440×900 ve 1100×650'de, iki temada görüntülendi; görüntüler repo dışında. Sınırlar ADR 1000 §8'de:
+alt nesne bağı, özel durum modeli, PDF yorumu içe alma, blok tanımı/pafta farkı alma ve web karşılığı bu maddenin
+dışında. Sahnelerle sürülen pencere testinin dışında ayrı bir fare kaydı yapılmadı.
 
 ### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [ ]
 

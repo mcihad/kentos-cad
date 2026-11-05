@@ -789,11 +789,13 @@ pub const SCHEMA_WITH_CUT_BENCHES: u32 = 177;
 pub const SCHEMA_WITH_SLOPE_TRANSITIONS: u32 = 178;
 /// Schema 179 (docs/adr/0974): an earthwork volume's `grid` method and its `cell`.
 pub const SCHEMA_WITH_VOLUME_GRID: u32 = 179;
+/// Schema 180 (docs/adr/1000 §2): the review notes a drawing carries, `settings.reviewNotes`.
+pub const SCHEMA_WITH_REVIEW_NOTES: u32 = 180;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 177] = [
+pub const SCHEMAS: [u32; 178] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -971,6 +973,7 @@ pub const SCHEMAS: [u32; 177] = [
     SCHEMA_WITH_CUT_BENCHES,
     SCHEMA_WITH_SLOPE_TRANSITIONS,
     SCHEMA_WITH_VOLUME_GRID,
+    SCHEMA_WITH_REVIEW_NOTES,
 ];
 
 /// The file a drawing is saved as.

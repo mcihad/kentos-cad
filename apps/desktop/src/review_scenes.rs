@@ -1,0 +1,105 @@
+//! The pictures of docs/adr/1000 (review notes, taking revision differences): Farkları al over a drawing file's
+//! revision with two differences ticked; the split view after the take; İnceleme notları with a stale note bound to
+//! a moved parcel, an answered one and its reply; the Açıklama tab's İşaretleme group with İnceleme notları.
+//! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=inceleme-farklari-al,inceleme-farklari-alindi,inceleme-notlari,inceleme-serit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
+//! Test code only.
+
+use kentos_native_application::{ExecutionContext, registry};
+
+use crate::app::{App, Message};
+use crate::document::Document;
+use crate::split_view::Event;
+use crate::tools_screens::Scene;
+
+fn path(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/compare/v1/revisions").join(name)
+}
+
+fn command(app: &mut App, name: &str, input: serde_json::Value) {
+    let doc = app.document.as_mut().expect("open");
+    let answer =
+        registry::run(&mut ExecutionContext::new(&mut doc.model), name, kentos_commands::CallOp::Execute, input)
+            .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+}
+
+fn uid(app: &App, slot: u32) -> String {
+    app.document.as_ref().expect("open").model.uid(kentos_domain::Slot(slot)).expect("an object").to_string()
+}
+
+/// The parcel map and, in the other view, the file with parcel 102 five metres back, parcel 103 gone and a new line.
+fn compared(app: &mut App) {
+    let open = Document::read(&path("ayni.kcad")).expect("reads");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(open)))));
+    app.tab = "map";
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    let _ = app.update(Message::Run("view.split"));
+    app.revision_from_file(0, &path("tasindi.kcad"));
+    let _ = app.update(Message::Run("view.zoomExtents"));
+}
+
+fn ticked(app: &mut App) {
+    compared(app);
+    let _ = app.update(Message::Split(Event::Take(crate::split_revision::TakeEvent::Open(0))));
+    let rows: Vec<_> = {
+        let r = app.split.as_ref().and_then(|s| s.others[0].revision.as_ref()).expect("a revision");
+        r.take_rows(&app.document.as_ref().expect("open").model).into_iter().map(|row| row.uid).collect()
+    };
+    // The changed parcel and the line only the file has.
+    for u in rows.iter().take(2) {
+        let _ = app.update(Message::Split(Event::Take(crate::split_revision::TakeEvent::Toggle(0, *u))));
+    }
+}
+
+fn notes(app: &mut App) {
+    let open = Document::read(&path("ayni.kcad")).expect("reads");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(open)))));
+    app.tab = "annotate";
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    let (p102, p101) = (uid(app, 2), uid(app, 1));
+    command(
+        app,
+        "cad.review.notes.edit",
+        serde_json::json!({ "change": { "kind": "add", "text": "102 parselinin batı sınırı tapu planıyla uyuşmuyor; 5 m kaydırılmış olabilir.",
+            "anchors": [p102], "revision": "B", "author": "Ayşe", "createdAt": "2026-11-05T17:40:00Z" } }),
+    );
+    command(
+        app,
+        "cad.review.notes.edit",
+        serde_json::json!({ "change": { "kind": "add", "text": "101 parselinin malik bilgisi eksik.", "anchors": [p101],
+            "author": "Ayşe", "origin": "ai" } }),
+    );
+    let second = app.document.as_ref().expect("open").model.settings().review_notes[1].id.clone();
+    command(
+        app,
+        "cad.review.notes.edit",
+        serde_json::json!({ "change": { "kind": "reply", "id": second, "text": "Malik B olarak işlendi.", "author": "Cihad", "status": "answered" } }),
+    );
+    command(
+        app,
+        "cad.entities.transform",
+        serde_json::json!({ "uids": [p102], "transform": { "kind": "move", "dx": 5.0, "dy": 0.0 } }),
+    );
+    let _ = app.update(Message::Run("review.notes"));
+}
+
+pub(crate) fn scenes() -> Vec<Scene> {
+    vec![
+        ("inceleme-farklari-al", ticked),
+        ("inceleme-farklari-alindi", |app| {
+            ticked(app);
+            let _ = app.update(Message::Split(Event::Take(crate::split_revision::TakeEvent::Take(0))));
+        }),
+        ("inceleme-notlari", notes),
+        ("inceleme-serit", |app| {
+            notes(app);
+            let _ = app.update(Message::DialogClosed);
+            let _ = app.update(Message::RibbonTab("annotate"));
+        }),
+    ]
+}

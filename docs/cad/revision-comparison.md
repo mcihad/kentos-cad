@@ -92,6 +92,20 @@ Belge değişince sonuç eskir ve çalışan arama iptal edilir. Revizyon
 görünümü kapanınca da iptal istenir. Önceki iş gerçekten sonlanana kadar
 tek iş kilidi yeni bir aday işçisi başlatılmasını engeller.
 
-İnceleme notlarının yaşam döngüsü ve seçilmiş farkı alma ayrı açık
-işlerdir. Bu teslim CAD-ADV-15'in
-bütününün tamamlandığı anlamına gelmez.
+## Seçilen farkları alma ve inceleme notları
+
+[ADR 1000](../adr/1000-review-notes-and-taking-revision-differences.md):
+`cad.drawing.take` seçilen kalıcı kimlikleri öbür hâlden açık çizime alır —
+yalnız orada olan aynı kimlikle eklenir, yalnız açık çizimde olan silinir,
+farklı olan değiştirilir; hepsi ya da hiçbiri, tek Undo “Farkları al”.
+Kilitli katman, eksik katman/blok tanımı reddeder; `base` ile iki tarafta
+farklı değişen nesne `take_conflict` olur, `overwrite` açıkça üzerine yazar.
+Blok tanımı ve katman görünüşü alınmaz, farklıysa uyarı verilir. Masaüstünde
+bölünmüş revizyonun **Farkları al…** penceresi görünen sürümü geçici `.kcad`
+olarak yazar ve bu komutu çalıştırır.
+
+`cad.review.notes.edit` / `cad.review.notes.list` (şema 180) nesneye, paftaya
+ya da adlı görünüşe bağlı notları tasarımdan ayrı tutar; bağlanan nesnenin
+damgası saklanır, nesne ya da blok tanımı değişince not eskimiş görünür,
+Undo nesneyi geri getirince yeniden günceldir. Açıklama › İşaretleme ›
+**İnceleme notları** penceresi aynı komutları kullanır.

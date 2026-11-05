@@ -61,6 +61,7 @@ pub mod constraints_query;
 pub mod parameters_edit;
 pub mod audit_cmd;
 pub mod drawing_compare;
+pub mod drawing_take;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
@@ -439,6 +440,7 @@ pub mod legends;
 pub mod levels_assign;
 mod library_symbols;
 pub mod north;
+pub mod review_notes;
 pub mod revisions;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
 pub mod tags;
@@ -1574,6 +1576,18 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_DRAWING_COMPARE,
         kentos_commands::CAD_DRAWING_COMPARE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_DRAWING_TAKE,
+        kentos_commands::CAD_DRAWING_TAKE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_REVIEW_NOTES_EDIT,
+        kentos_commands::CAD_REVIEW_NOTES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_REVIEW_NOTES_LIST,
+        kentos_commands::CAD_REVIEW_NOTES_LIST_VERSION,
     ),
     (
         kentos_commands::CAD_ENTITIES_COPY,

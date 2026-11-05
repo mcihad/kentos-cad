@@ -1689,6 +1689,95 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Farkları al and İnceleme notları (docs/adr/1000), held together by fixtures/commands/v1/cad.drawing.take.json,
+        // cad.review.notes.edit.json and cad.review.notes.list.json.
+        CommandDescriptor {
+            id: crate::CAD_DRAWING_TAKE.into(),
+            version: crate::CAD_DRAWING_TAKE_VERSION,
+            title: "Seçilen farkları al".into(),
+            summary: "Çizimin başka bir hâlinden (against: cad.drawing.compare'ınki gibi geri alma geçmişinde steps adım geri ya da mutlak yollu çizim dosyası) seçilen nesneleri kalıcı kimlikleriyle açık çizime alır; tek geri alma adımı, adı “Farkları al”. \
+                      Yalnız öbür hâlde olan nesne aynı kimlikle geri eklenir (added), yalnız açık çizimde olan silinir (removed), ikisinde olup farklı olan öbür hâliyle değiştirilir, yuvası ve kimliği korunur (replaced), aynı olan dokunulmadan kalır (unchanged). Aynılık verinin eşitliğidir, tolerans yoktur. \
+                      Hepsi ya da hiçbiri: kilitli katmandaki nesne (alınan ya da açık çizimdeki) bütün işlemi reddeder. Blok tanımı ve katman görünüşü alınmaz; farklıysa block_definition_differs, layer_style_differs uyarısı verilir. \
+                      base ortak taban verilirse iki tarafta da tabandan farklı değişmiş nesne take_conflict ile reddedilir; overwrite: true açıkça üzerine yazar. \
+                      Retler: invalid_input, invalid_uid, revision_conflict, no_such_step, invalid_file_path, file_not_found, import_unreadable, entity_not_found, layer_not_found, unknown_block, layer_locked, take_conflict."
+                .into(),
+            aliases: vec!["farklarial".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::DrawingTake>(),
+            output: schema::<crate::DrawingTaken>(),
+            plan: Some(schema::<crate::DrawingTaken>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir revizyon dosyasından iki nesneyi geri al".into(),
+                input: json!({ "against": { "kind": "file", "path": "/veri/plan (revizyon B).kcad" },
+                    "uids": ["0192f5b0-0000-7000-8000-000000000101", "0192f5b0-0000-7000-8000-000000000102"] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_REVIEW_NOTES_EDIT.into(),
+            version: crate::CAD_REVIEW_NOTES_EDIT_VERSION,
+            title: "İnceleme notunu düzenle".into(),
+            summary: "Çizimin inceleme notlarında tek değişiklik yapar; tek geri alma adımı, adı “İnceleme notu”. Not tasarım nesnesi değildir: çizilmez, basılmaz, ölçülmez; PDF ya da AI kaynaklı not da yalnız nottur. \
+                      change.kind: add (metin; isteğe bağlı nesne bağları anchors, nokta at, pafta sheet, adlı görünüş view, kaynak revizyon, origin user/pdf/ai, author, createdAt), update (metin, durum open/answered/resolved ya da revizyon), reply (yanıt; durum yalnız verilirse değişir), rebind (bağları çizimin şimdiki hâliyle yeniden damgalar: değişiklik görüldü), remove. \
+                      Bağlanan nesnenin o anki damgası saklanır; nesne sonra değişirse not eskimiş görünür (cad.review.notes.list). Kilitli ya da gizli katmandaki nesneye not bağlanabilir; not nesneyi değiştirmez. Numara var olan notların en büyüğünün bir fazlasıdır. \
+                      Retler: invalid_review_note, invalid_uid, review_note_not_found, duplicate_review_note, not_finite, invalid_review_anchors, entity_not_found, unknown_sheet, unknown_view, too_many_review_replies, too_many_review_notes, revision_conflict."
+                .into(),
+            aliases: vec!["incelemenotu".into(), "not".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ReviewNotesEdit>(),
+            output: schema::<crate::ReviewNotesEdited>(),
+            plan: Some(schema::<crate::ReviewNotesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir nesneye inceleme notu bağla".into(),
+                    input: json!({ "change": { "kind": "add", "text": "Kapı genişliği 90 cm olmalı.",
+                        "anchors": ["0192f5b0-0000-7000-8000-000000000101"], "revision": "B" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Notu yanıtla ve çözüldü yap".into(),
+                    input: json!({ "change": { "kind": "reply", "id": "0192f5b0-1000-7000-8000-000000000001",
+                        "text": "Düzeltildi.", "status": "resolved" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_REVIEW_NOTES_LIST.into(),
+            version: crate::CAD_REVIEW_NOTES_LIST_VERSION,
+            title: "İnceleme notlarını listele".into(),
+            summary: "Çizimin inceleme notlarını numara sırasıyla verir; çizimi değiştirmez. Her not için bağlarının durumu (current, changed: nesne değişti, blockChanged: blok tanımı değişti, removed: nesne yok), pafta ya da görünüş yoksa sheetMissing/viewMissing ve eskime (stale) hesaplanır. \
+                      status ve staleOnly süzgeçtir; open, answered, resolved ve stale sayaçları süzgeçten önce bütün notlarındır."
+                .into(),
+            aliases: vec!["incelemenotlari".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ReviewNotesList>(),
+            output: schema::<crate::ReviewNotesListed>(),
+            plan: Some(schema::<crate::ReviewNotesListed>()),
+            capabilities: None,
+            examples: vec![CommandExample { title: "Eskimiş açık notları göster".into(),
+                input: json!({ "status": ["open"], "staleOnly": true }), output: None }],
+        },
         // Ötele's semantic command (docs/adr/0246), held together by
         // fixtures/commands/v1/cad.entities.offset.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -15249,6 +15338,15 @@ mod tests {
                     }
                     crate::CAD_STANDARDS_CONFLICTS => {
                         serde_json::from_value::<crate::StandardsConflicts>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_DRAWING_TAKE => {
+                        serde_json::from_value::<crate::DrawingTake>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_REVIEW_NOTES_EDIT => {
+                        serde_json::from_value::<crate::ReviewNotesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_REVIEW_NOTES_LIST => {
+                        serde_json::from_value::<crate::ReviewNotesList>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_STANDARDS_CHECK => {
                         serde_json::from_value::<crate::StandardsCheck>(e.input.clone()).map(|_| ())

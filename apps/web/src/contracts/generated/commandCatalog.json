@@ -7355,6 +7355,518 @@
       ]
     },
     {
+      "id": "cad.drawing.take",
+      "version": 1,
+      "title": "Seçilen farkları al",
+      "summary": "Çizimin başka bir hâlinden (against: cad.drawing.compare'ınki gibi geri alma geçmişinde steps adım geri ya da mutlak yollu çizim dosyası) seçilen nesneleri kalıcı kimlikleriyle açık çizime alır; tek geri alma adımı, adı “Farkları al”. Yalnız öbür hâlde olan nesne aynı kimlikle geri eklenir (added), yalnız açık çizimde olan silinir (removed), ikisinde olup farklı olan öbür hâliyle değiştirilir, yuvası ve kimliği korunur (replaced), aynı olan dokunulmadan kalır (unchanged). Aynılık verinin eşitliğidir, tolerans yoktur. Hepsi ya da hiçbiri: kilitli katmandaki nesne (alınan ya da açık çizimdeki) bütün işlemi reddeder. Blok tanımı ve katman görünüşü alınmaz; farklıysa block_definition_differs, layer_style_differs uyarısı verilir. base ortak taban verilirse iki tarafta da tabandan farklı değişmiş nesne take_conflict ile reddedilir; overwrite: true açıkça üzerine yazar. Retler: invalid_input, invalid_uid, revision_conflict, no_such_step, invalid_file_path, file_not_found, import_unreadable, entity_not_found, layer_not_found, unknown_block, layer_locked, take_conflict.",
+      "aliases": [
+        "farklarial"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.drawing.take` v1. Refusals, in order: `invalid_input`, `invalid_uid`, `revision_conflict`,\n`no_such_step`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `entity_not_found`, `layer_not_found`,\n`unknown_block`, `layer_locked`, `take_conflict`. Warnings: `block_definition_differs`, `layer_style_differs`.",
+        "properties": {
+          "against": {
+            "$ref": "#/$defs/CompareAgainst",
+            "description": "The state taken from, as `cad.drawing.compare` names it."
+          },
+          "base": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CompareAgainst"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The common state both sides came from: an object both changed apart from it is a conflict."
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "description": "Take a conflicting object anyway.",
+            "type": "boolean"
+          },
+          "uids": {
+            "description": "The objects' persistent ids, 1 to 10 000, none twice.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "against",
+          "uids"
+        ],
+        "title": "DrawingTake",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.take` v1: the ids by what happened, each in the input's order.",
+        "properties": {
+          "added": {
+            "description": "Brought back with their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Taken out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "description": "Replaced by their other state.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "unchanged": {
+            "description": "The same in both: untouched.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "added",
+          "replaced",
+          "removed",
+          "unchanged",
+          "revision"
+        ],
+        "title": "DrawingTaken",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.take` v1: the ids by what happened, each in the input's order.",
+        "properties": {
+          "added": {
+            "description": "Brought back with their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Taken out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "description": "Replaced by their other state.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "unchanged": {
+            "description": "The same in both: untouched.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "added",
+          "replaced",
+          "removed",
+          "unchanged",
+          "revision"
+        ],
+        "title": "DrawingTaken",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "invalid_uid",
+          "invalid_revision",
+          "revision_conflict",
+          "no_such_step",
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "entity_not_found",
+          "layer_not_found",
+          "unknown_block",
+          "layer_locked",
+          "take_conflict"
+        ],
+        "warnings": [
+          "block_definition_differs",
+          "layer_style_differs"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir revizyon dosyasından iki nesneyi geri al",
+          "input": {
+            "against": {
+              "kind": "file",
+              "path": "/veri/plan (revizyon B).kcad"
+            },
+            "uids": [
+              "0192f5b0-0000-7000-8000-000000000101",
+              "0192f5b0-0000-7000-8000-000000000102"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.review.notes.edit",
+      "version": 1,
+      "title": "İnceleme notunu düzenle",
+      "summary": "Çizimin inceleme notlarında tek değişiklik yapar; tek geri alma adımı, adı “İnceleme notu”. Not tasarım nesnesi değildir: çizilmez, basılmaz, ölçülmez; PDF ya da AI kaynaklı not da yalnız nottur. change.kind: add (metin; isteğe bağlı nesne bağları anchors, nokta at, pafta sheet, adlı görünüş view, kaynak revizyon, origin user/pdf/ai, author, createdAt), update (metin, durum open/answered/resolved ya da revizyon), reply (yanıt; durum yalnız verilirse değişir), rebind (bağları çizimin şimdiki hâliyle yeniden damgalar: değişiklik görüldü), remove. Bağlanan nesnenin o anki damgası saklanır; nesne sonra değişirse not eskimiş görünür (cad.review.notes.list). Kilitli ya da gizli katmandaki nesneye not bağlanabilir; not nesneyi değiştirmez. Numara var olan notların en büyüğünün bir fazlasıdır. Retler: invalid_review_note, invalid_uid, review_note_not_found, duplicate_review_note, not_finite, invalid_review_anchors, entity_not_found, unknown_sheet, unknown_view, too_many_review_replies, too_many_review_notes, revision_conflict.",
+      "aliases": [
+        "incelemenotu",
+        "not"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.review.notes.edit` v1. Refusals, in order: `invalid_review_note`, `invalid_uid`,\n`review_note_not_found`, `duplicate_review_note`, `not_finite`, `invalid_review_anchors`, `entity_not_found`,\n`unknown_sheet`, `unknown_view`, `too_many_review_replies`, `too_many_review_notes`, `revision_conflict`.",
+        "properties": {
+          "change": {
+            "$ref": "#/$defs/ReviewNoteOp",
+            "description": "The one change."
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "change"
+        ],
+        "title": "ReviewNotesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.review.notes.edit` v1.",
+        "properties": {
+          "id": {
+            "description": "The note the change was about.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "How many notes the drawing has after.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "number": {
+            "description": "Its number (a removed note's too).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "notes",
+          "revision"
+        ],
+        "title": "ReviewNotesEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.review.notes.edit` v1.",
+        "properties": {
+          "id": {
+            "description": "The note the change was about.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "How many notes the drawing has after.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "number": {
+            "description": "Its number (a removed note's too).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "notes",
+          "revision"
+        ],
+        "title": "ReviewNotesEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_review_note",
+          "invalid_uid",
+          "review_note_not_found",
+          "duplicate_review_note",
+          "not_finite",
+          "invalid_review_anchors",
+          "entity_not_found",
+          "unknown_sheet",
+          "unknown_view",
+          "too_many_review_replies",
+          "too_many_review_notes",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir nesneye inceleme notu bağla",
+          "input": {
+            "change": {
+              "anchors": [
+                "0192f5b0-0000-7000-8000-000000000101"
+              ],
+              "kind": "add",
+              "revision": "B",
+              "text": "Kapı genişliği 90 cm olmalı."
+            }
+          }
+        },
+        {
+          "title": "Notu yanıtla ve çözüldü yap",
+          "input": {
+            "change": {
+              "id": "0192f5b0-1000-7000-8000-000000000001",
+              "kind": "reply",
+              "status": "resolved",
+              "text": "Düzeltildi."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.review.notes.list",
+      "version": 1,
+      "title": "İnceleme notlarını listele",
+      "summary": "Çizimin inceleme notlarını numara sırasıyla verir; çizimi değiştirmez. Her not için bağlarının durumu (current, changed: nesne değişti, blockChanged: blok tanımı değişti, removed: nesne yok), pafta ya da görünüş yoksa sheetMissing/viewMissing ve eskime (stale) hesaplanır. status ve staleOnly süzgeçtir; open, answered, resolved ve stale sayaçları süzgeçten önce bütün notlarındır.",
+      "aliases": [
+        "incelemenotlari"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.review.notes.list` v1: absent filters list every note.",
+        "properties": {
+          "staleOnly": {
+            "description": "Only stale notes.",
+            "type": "boolean"
+          },
+          "status": {
+            "description": "Only notes in these states.",
+            "items": {
+              "$ref": "#/$defs/ReviewStatus"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "ReviewNotesList",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.review.notes.list` v1: the notes by their numbers; the counts are of every note.",
+        "properties": {
+          "answered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/$defs/ReviewNoteState"
+            },
+            "type": "array"
+          },
+          "open": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "resolved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "notes",
+          "open",
+          "answered",
+          "resolved",
+          "stale",
+          "revision"
+        ],
+        "title": "ReviewNotesListed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.review.notes.list` v1: the notes by their numbers; the counts are of every note.",
+        "properties": {
+          "answered": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/$defs/ReviewNoteState"
+            },
+            "type": "array"
+          },
+          "open": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "resolved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "notes",
+          "open",
+          "answered",
+          "resolved",
+          "stale",
+          "revision"
+        ],
+        "title": "ReviewNotesListed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": []
+      },
+      "examples": [
+        {
+          "title": "Eskimiş açık notları göster",
+          "input": {
+            "staleOnly": true,
+            "status": [
+              "open"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.offset",
       "version": 1,
       "title": "Nesneleri ötele",
@@ -88145,6 +88657,60 @@
       "meaning": "Hiç nesne verilmedi."
     },
     {
+      "code": "invalid_review_note",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İnceleme notunun metni, yazarı, tarihi ya da revizyonu kurallarına uymuyor ya da değişiklik boş."
+    },
+    {
+      "code": "review_note_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte inceleme notu çizimde yok."
+    },
+    {
+      "code": "duplicate_review_note",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte bir inceleme notu çizimde zaten var."
+    },
+    {
+      "code": "invalid_review_anchors",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Notun nesne bağları 1000'i aşıyor ya da bir nesne iki kez verilmiş."
+    },
+    {
+      "code": "too_many_review_replies",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir inceleme notu en çok 200 yanıt taşır."
+    },
+    {
+      "code": "too_many_review_notes",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir çizim en çok 10 000 inceleme notu taşır."
+    },
+    {
+      "code": "take_conflict",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne ortak tabandan sonra iki tarafta da farklı değişmiş; üzerine yazmak açıkça seçilmeli."
+    },
+    {
+      "code": "block_definition_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı."
+    },
+    {
+      "code": "layer_style_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alınan nesnenin katman görünüşü iki sürümde farklı; katman görünüşü alınmadı."
+    },
+    {
       "code": "invalid_uid",
       "kind": "failed",
       "retryable": false,
@@ -155070,6 +155636,13 @@
           },
           "type": "array"
         },
+        "reviewNotes": {
+          "description": "Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,\nplotted or measured. Numbered; their stamps say which state of an object each was written for.",
+          "items": {
+            "$ref": "#/$defs/ReviewNote"
+          },
+          "type": "array"
+        },
         "road": {
           "anyOf": [
             {
@@ -159355,6 +159928,473 @@
             "uid"
           ],
           "type": "object"
+        }
+      ]
+    },
+    "ReviewAnchor": {
+      "additionalProperties": false,
+      "description": "An object a note is bound to, with the stamps of the state it was written for.",
+      "properties": {
+        "blockStamp": {
+          "description": "For a block insert: the stamp of its definition and every definition nested in it, then.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stamp": {
+          "description": "The object's stamp then (docs/adr/0253 §2).",
+          "type": "string"
+        },
+        "uid": {
+          "description": "The object's persistent id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "stamp"
+      ],
+      "type": "object"
+    },
+    "ReviewAnchorCheck": {
+      "description": "An anchor's state.",
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/ReviewAnchorState"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "state"
+      ],
+      "type": "object"
+    },
+    "ReviewAnchorState": {
+      "description": "How an anchor stands against the object now.",
+      "oneOf": [
+        {
+          "const": "current",
+          "description": "The object is as the note saw it.",
+          "type": "string"
+        },
+        {
+          "const": "changed",
+          "description": "The object changed.",
+          "type": "string"
+        },
+        {
+          "const": "blockChanged",
+          "description": "The object is as it was, its block definition (or one nested in it) changed.",
+          "type": "string"
+        },
+        {
+          "const": "removed",
+          "description": "The object is gone.",
+          "type": "string"
+        }
+      ]
+    },
+    "ReviewNote": {
+      "additionalProperties": false,
+      "description": "A review note.",
+      "properties": {
+        "anchors": {
+          "items": {
+            "$ref": "#/$defs/ReviewAnchor"
+          },
+          "type": "array"
+        },
+        "at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Vec2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A point in the model, world coordinates.",
+          "x-unit": "length"
+        },
+        "author": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Lowercase, hyphenated UUID; unique in the drawing.",
+          "type": "string"
+        },
+        "number": {
+          "description": "1, 2, 3 …: one more than the largest a note in the drawing has.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "origin": {
+          "$ref": "#/$defs/ReviewOrigin"
+        },
+        "replies": {
+          "items": {
+            "$ref": "#/$defs/ReviewReply"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "description": "The source revision the note was written against (“B”, “2026-11-05”).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sheet": {
+          "description": "A sheet's id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/ReviewStatus",
+          "default": "open"
+        },
+        "text": {
+          "type": "string"
+        },
+        "view": {
+          "description": "A named view's id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "text"
+      ],
+      "type": "object"
+    },
+    "ReviewNoteOp": {
+      "description": "One change of the drawing's review notes.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A new note, open; its anchors' stamps are the drawing's now.",
+          "properties": {
+            "anchors": {
+              "description": "Persistent ids of the objects the note is about, at most 1000, none twice.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Vec2"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A point in the model, world coordinates.",
+              "x-unit": "length"
+            },
+            "author": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "createdAt": {
+              "description": "When it was written, as the host says it (ISO 8601); the command puts no clock in.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "description": "Lowercase, hyphenated UUID; absent: a new one.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "add",
+              "type": "string"
+            },
+            "origin": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ReviewOrigin"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`user` (absent), `pdf` or `ai`: a note only, never a design change."
+            },
+            "revision": {
+              "description": "The source revision label (“B”).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sheet": {
+              "description": "A sheet's id.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "text": {
+              "type": "string"
+            },
+            "view": {
+              "description": "A named view's id.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A note's text, status or revision label; at least one.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "update",
+              "type": "string"
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ReviewStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A reply after the note's last; the status changes only when given.",
+          "properties": {
+            "author": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "createdAt": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "reply",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ReviewStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The anchors stamped again with the drawing as it is now: the change was seen. `anchors` given: the note's\nanchors become exactly these; absent: all of them, again.",
+          "properties": {
+            "anchors": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "rebind",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The note goes.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ReviewNoteState": {
+      "description": "A note and whether it is stale.",
+      "properties": {
+        "anchorStates": {
+          "description": "Each anchor's state, in the note's order.",
+          "items": {
+            "$ref": "#/$defs/ReviewAnchorCheck"
+          },
+          "type": "array"
+        },
+        "note": {
+          "$ref": "#/$defs/ReviewNote"
+        },
+        "sheetMissing": {
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "An anchor is not current, or its sheet or view is gone.",
+          "type": "boolean"
+        },
+        "viewMissing": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "note",
+        "stale",
+        "anchorStates",
+        "sheetMissing",
+        "viewMissing"
+      ],
+      "type": "object"
+    },
+    "ReviewOrigin": {
+      "description": "Who or what wrote a note. A PDF's or an AI's note is a note only: it changes no design.",
+      "enum": [
+        "user",
+        "pdf",
+        "ai"
+      ],
+      "type": "string"
+    },
+    "ReviewReply": {
+      "additionalProperties": false,
+      "description": "A reply to a note.",
+      "properties": {
+        "author": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "ReviewStatus": {
+      "description": "Where a note stands.",
+      "oneOf": [
+        {
+          "const": "open",
+          "description": "Açık.",
+          "type": "string"
+        },
+        {
+          "const": "answered",
+          "description": "Yanıtlandı.",
+          "type": "string"
+        },
+        {
+          "const": "resolved",
+          "description": "Çözüldü.",
+          "type": "string"
         }
       ]
     },

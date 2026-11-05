@@ -270,6 +270,11 @@ pub(crate) enum Op {
     /// The style tables a `cad.styles.edit` changed, style by style (docs/adr/0699).
     StyleTables(Box<crate::style_tables::StyleTables>),
     /// Only the metadata installed by an explicit architectural package (ADR 0659).
+    /// The review notes (docs/adr/1000 §3), before and after: a note is not an object but its change is a step.
+    ReviewNotes {
+        before: std::sync::Arc<Vec<kentos_contracts::ReviewNote>>,
+        after: std::sync::Arc<Vec<kentos_contracts::ReviewNote>>,
+    },
     TemplateSettings {
         before: Box<crate::template_settings::TemplateSettings>,
         after: Box<crate::template_settings::TemplateSettings>,
@@ -690,6 +695,10 @@ impl Op {
             },
             Op::StyleTables(tables) => Op::StyleTables(Box::new(tables.inverse())),
             Op::TemplateSettings { before, after } => Op::TemplateSettings {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::ReviewNotes { before, after } => Op::ReviewNotes {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1436,6 +1445,7 @@ impl Document {
                 | Op::DimensionSetUpdate { .. }
                 | Op::ImportMetadata { .. }
                 | Op::TemplateSettings { .. }
+                | Op::ReviewNotes { .. }
                 | Op::StyleTables(_)
                 | Op::Sheets { .. }
                 | Op::Units { .. }
@@ -1720,6 +1730,10 @@ impl Document {
             }
             Op::TemplateSettings { before, after } => {
                 after.apply_from(before, self);
+                return;
+            }
+            Op::ReviewNotes { after, .. } => {
+                self.settings.review_notes = after.as_ref().clone();
                 return;
             }
             Op::StyleTables(tables) => {

@@ -183,6 +183,7 @@ mod subnetworks_window;
 mod source_status;
 mod source_trouble;
 mod drawing_standard;
+mod review_window;
 #[cfg(test)]
 mod edge_shift_scenes;
 #[cfg(test)]
@@ -505,6 +506,8 @@ mod data_profile_tests;
 mod profile_scenes;
 #[cfg(test)]
 mod standard_scenes;
+#[cfg(test)]
+mod review_scenes;
 #[cfg(test)]
 mod stretch_scenes;
 mod style_impact;

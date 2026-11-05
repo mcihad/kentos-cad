@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `179`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-180.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `180`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-181.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -2044,3 +2044,18 @@ Standart kurallarının anlam denetimi komut katmanına aittir. Alanı olmayan
 Bağımsız örnekler `standard-docs.json/.kcad` ve ilgili `broken/standard-docs-*`
 dosyalarıdır. Dosya biçimi desteği tek başına arayüzden bağlama veya
 standartların otomatik uygulanması anlamına gelmez.
+
+### Şema 180 — inceleme notları
+
+Yalnız `settings.reviewNotes` boş değilse yazılır (ADR 1000 §2). Her not
+küçük harfli UUID `id`, 1'den büyük tekil `number`, `text` (boş olmayan,
+kenarı boşluksuz, satır sonu ve sekme dışında denetim karakteri yok, en
+çok 4000 karakter), `status` (`open`, `answered`, `resolved`) ve isteğe
+bağlı `origin` (`user`, `pdf`, `ai`), `author`, `createdAt`, `revision`,
+`at`, `sheet`, `view`, `anchors` (en çok 1000 tekil `uid` + `stamp`,
+blok yerleştirmesinde `blockStamp`) ve `replies` (en çok 200) taşır;
+bir çizimde en çok 10 000 not olur. Not çizim nesnesi değildir: çizilmez,
+basılmaz, ölçülmez. Alanı olmayan çizimler önceki şemalarını ve
+baytlarını korur. 179 ve altında yeni alan `unknown_field`; yinelenen
+kimlik/numara veya geçersiz metin `bad_value` olur. Bağımsız örnekler
+`review-notes.json/.kcad` ve `broken/review-notes-*` dosyalarıdır.

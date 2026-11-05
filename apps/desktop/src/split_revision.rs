@@ -26,7 +26,9 @@ use crate::document::Document;
 use crate::split_view::Source;
 
 mod candidates;
+mod take;
 pub use candidates::Event as CandidateEvent;
+pub use take::Event as TakeEvent;
 
 /// How far points may lie apart and be one (the command's default), metres.
 pub(crate) const TOLERANCE: f64 = kentos_commands::COMPARE_TOLERANCE;
@@ -58,6 +60,8 @@ pub(crate) struct Revision {
     pub candidate_result: Option<Result<drawing_compare::MatchSuggestions, String>>,
     pub candidate_stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     candidate_epoch: u64,
+    /// The differences ticked in Farkları al (docs/adr/1000 §6).
+    pub take_chosen: take::Chosen,
     project_sheets: Option<std::sync::Arc<kentos_commands::ProjectSheets>>,
     project_views: Vec<kentos_commands::NamedView>,
     project_templates: Vec<kentos_commands::ViewTemplate>,
@@ -112,6 +116,7 @@ impl Revision {
             candidate_result: None,
             candidate_stop: None,
             candidate_epoch: 0,
+            take_chosen: take::Chosen::new(),
             project_sheets: None,
             project_views: Vec::new(),
             project_templates: Vec::new(),

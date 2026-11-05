@@ -1,0 +1,1681 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.drawing.take",
+ "commandVersion": 1,
+ "title": "Seçilen farkları al",
+ "note": "ADR 1000. Bağımsız başvuru scripts/fixtures/review_cases.py: kurallar ADR'den elle yazılır, nesne damgasının değeri değil eşitliği denetlenir; sürüm dosyaları kcad_v2_reference.py'nin yazıcısıyla yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "İnceleme ve farkları alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilit",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "101",
+     "Sahip": "A"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "102",
+     "Sahip": "B"
+    },
+    "pts": [
+     {
+      "x": 500030.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500050.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500050.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "No": "103"
+    },
+    "pts": [
+     {
+      "x": 500060.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4400020.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 500000.0,
+     "y": 4400030.0
+    },
+    "b": {
+     "x": 500040.0,
+     "y": 4400030.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 5,
+    "layerId": "yol",
+    "attrs": {
+     "Ad": "1. Sokak"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400060.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "yol",
+    "attrs": {},
+    "p": {
+     "x": 500010.0,
+     "y": 4400050.0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 7,
+    "layerId": "yol",
+    "attrs": {
+     "Tür": "Ağaç"
+    },
+    "c": {
+     "x": 500050.0,
+     "y": 4400050.0
+    },
+    "r": 5.0
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "kilit",
+    "attrs": {},
+    "p": {
+     "x": 500090.0,
+     "y": 4400010.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5a3-3333-7000-8000-000000000001",
+   "0192f5a3-3333-7000-8000-000000000002",
+   "0192f5a3-3333-7000-8000-000000000003",
+   "0192f5a3-3333-7000-8000-000000000004",
+   "0192f5a3-3333-7000-8000-000000000005",
+   "0192f5a3-3333-7000-8000-000000000006",
+   "0192f5a3-3333-7000-8000-000000000007",
+   "0192f5a3-3333-7000-8000-000000000008"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Taşınan parseli bir adım öncesinden al: eski hâliyle, aynı yuvada",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "No": "102",
+         "Sahip": "B"
+        },
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500050.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500050.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400020.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aldıktan sonra geri al: taşınmış hâli döner",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Farkları al",
+     "expect": {
+      "entities": {
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "No": "102",
+         "Sahip": "B"
+        },
+        "pts": [
+         {
+          "x": 500035.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500035.0,
+          "y": 4400020.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Silinen çizgiyi al: aynı kimlikle yeni yuvada",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "0192f5a3-3333-7000-8000-000000000004"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "0192f5a3-3333-7000-8000-000000000004"
+       ],
+       "replaced": [],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "ids": [
+       1,
+       2,
+       3,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "entities": {
+       "9": {
+        "kind": "line",
+        "id": 9,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+         "x": 500000.0,
+         "y": 4400030.0
+        },
+        "b": {
+         "x": 500040.0,
+         "y": 4400030.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sonradan çizilen çizgiyi al: silinir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.line.create",
+     "input": {
+      "layerId": "yol",
+      "a": {
+       "x": 500000.0,
+       "y": 4400080.0
+      },
+      "b": {
+       "x": 500005.0,
+       "y": 4400080.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 9,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "cizgi"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "uids": [
+       "$uid:cizgi"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [],
+       "removed": [
+        "$uid:cizgi"
+       ],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyadan 5 m gerideki parsel: değiştirilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "No": "102",
+         "Sahip": "B"
+        },
+        "pts": [
+         {
+          "x": 500025.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500025.0,
+          "y": 4400020.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyada olmayan parsel 103: silinir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [],
+       "removed": [
+        "0192f5a3-3333-7000-8000-000000000003"
+       ],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "ids": [
+       1,
+       2,
+       4,
+       5,
+       6,
+       7,
+       8
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız dosyada olan çizgi: eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000009"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "0192f5a3-3333-7000-8000-000000000009"
+       ],
+       "replaced": [],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "entities": {
+       "9": {
+        "kind": "line",
+        "id": 9,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+         "x": 500000.0,
+         "y": 4400070.0
+        },
+        "b": {
+         "x": 500010.0,
+         "y": 4400070.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız özniteliği farklı parsel: değiştirilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000001"
+       ],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "No": "101",
+         "Sahip": "Z"
+        },
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500020.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500020.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500000.0,
+          "y": 4400020.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkisinde aynı yol: dokunulmaz, adım yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000005"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [],
+       "removed": [],
+       "unchanged": [
+        "0192f5a3-3333-7000-8000-000000000005"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Üç fark birlikte, tek geri alma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002",
+       "0192f5a3-3333-7000-8000-000000000003",
+       "0192f5a3-3333-7000-8000-000000000009",
+       "0192f5a3-3333-7000-8000-000000000005"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "0192f5a3-3333-7000-8000-000000000009"
+       ],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "removed": [
+        "0192f5a3-3333-7000-8000-000000000003"
+       ],
+       "unchanged": [
+        "0192f5a3-3333-7000-8000-000000000005"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "ids": [
+       1,
+       2,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Farkları al",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "No": "102",
+         "Sahip": "B"
+        },
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500050.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500050.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400020.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki nokta: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000008"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki nesne değiştirilemez, hiçbir fark alınmadı. Kilidi Katmanlar panelinden açın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Biri kilitli: hiçbiri alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002",
+       "0192f5a3-3333-7000-8000-000000000008"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki nesne değiştirilemez, hiçbir fark alınmadı. Kilidi Katmanlar panelinden açın.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katmanı açık çizimde olmayan nesne: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/eksik-katman.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000011"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“Arşiv” katmanı açık çizimde yok; nesne alınamaz. Önce katmanı ekleyin ya da sürümden alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki tarafta da olmayan kimlik: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001",
+       "0192f5a3-3333-7000-8000-000000000999"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a3-3333-7000-8000-000000000999” kimlikli nesne ne açık çizimde ne de karşılaştırılan sürümde var; karşılaştırmayı yenileyin.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "UUID olmayan kimlik: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "parsel-2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“parsel-2” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği karşılaştırmanın çıktısından alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş liste: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Alınacak nesne sayısı 1 ile 10000 arasında olmalı; 0 verildi.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı kimlik iki kez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002",
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f5a3-3333-7000-8000-000000000002” iki kez verildi; her nesneyi bir kez verin.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geri alma geçmişi boşken: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "history",
+       "steps": 1
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_such_step",
+       "message": "Geri alma geçmişinde adım yok; önce çizimde bir değişiklik yapın.",
+       "path": "against.steps"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/yok.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:review/v1/yok.kcad okunamadı: dosya yok ya da açılamıyor.",
+       "path": "against.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ortak tabandan iki tarafta değişen parsel: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 3.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "base": {
+       "kind": "file",
+       "path": "$fixture:review/v1/taban.kcad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "take_conflict",
+       "message": "“0192f5a3-3333-7000-8000-000000000002” nesnesi ortak tabandan sonra iki tarafta da farklı değişti; hiçbir fark alınmadı. Üzerine yazmayı açıkça seçin ya da nesneyi karşılaştırmadan çıkarın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çatışmada açıkça üzerine yaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 3.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "base": {
+       "kind": "file",
+       "path": "$fixture:review/v1/taban.kcad"
+      },
+      "overwrite": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "No": "102",
+         "Sahip": "B"
+        },
+        "pts": [
+         {
+          "x": 500025.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500025.0,
+          "y": 4400020.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açık çizimde değişmeyen parsel tabanla çatışmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 3.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "created": [],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000001"
+      ],
+      "base": {
+       "kind": "file",
+       "path": "$fixture:review/v1/taban.kcad"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000001"
+       ],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz, alınacakları söyler",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002",
+       "0192f5a3-3333-7000-8000-000000000003",
+       "0192f5a3-3333-7000-8000-000000000009"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "0192f5a3-3333-7000-8000-000000000009"
+       ],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000002"
+       ],
+       "removed": [
+        "0192f5a3-3333-7000-8000-000000000003"
+       ],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "validate",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen revizyon eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen revizyon sayı değil: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/surum.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ],
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli dosya yolu: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "plan.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“plan.kcad” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/ad.kcad).",
+       "path": "against.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bozuk dosya: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:kcad/v2/broken/arrays-items-short.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "against.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katman rengi farklı sürümden çizgi: alınır, katman görünüşü alınmaz, uyarı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "against": {
+       "kind": "file",
+       "path": "$fixture:review/v1/renk.kcad"
+      },
+      "uids": [
+       "0192f5a3-3333-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "replaced": [
+        "0192f5a3-3333-7000-8000-000000000004"
+       ],
+       "removed": [],
+       "unchanged": [],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_style_differs",
+        "message": "1 nesnenin katman görünüşü iki sürümde farklı; katman görünüşü alınmadı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+         "x": 500000.0,
+         "y": 4400030.0
+        },
+        "b": {
+         "x": 500045.0,
+         "y": 4400030.0
+        }
+       }
+      },
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kilit",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

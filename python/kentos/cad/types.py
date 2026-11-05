@@ -5676,6 +5676,51 @@ ResourceKindName = Literal["layer", "group", "block", "textStyle", "dimensionSty
 """The names of :class:`ResourceKind`, for a plain string."""
 
 
+class ReviewAnchorState(_StrEnum):
+    """How an anchor stands against the object now.
+
+    - ``current``: The object is as the note saw it.
+    - ``changed``: The object changed.
+    - ``blockChanged``: The object is as it was, its block definition (or one nested in it) changed.
+    - ``removed``: The object is gone.
+    """
+    CURRENT = "current"
+    CHANGED = "changed"
+    BLOCK_CHANGED = "blockChanged"
+    REMOVED = "removed"
+
+
+ReviewAnchorStateName = Literal["current", "changed", "blockChanged", "removed"]
+"""The names of :class:`ReviewAnchorState`, for a plain string."""
+
+
+class ReviewOrigin(_StrEnum):
+    """Who or what wrote a note. A PDF's or an AI's note is a note only: it changes no design."""
+    USER = "user"
+    PDF = "pdf"
+    AI = "ai"
+
+
+ReviewOriginName = Literal["user", "pdf", "ai"]
+"""The names of :class:`ReviewOrigin`, for a plain string."""
+
+
+class ReviewStatus(_StrEnum):
+    """Where a note stands.
+
+    - ``open``: Açık.
+    - ``answered``: Yanıtlandı.
+    - ``resolved``: Çözüldü.
+    """
+    OPEN = "open"
+    ANSWERED = "answered"
+    RESOLVED = "resolved"
+
+
+ReviewStatusName = Literal["open", "answered", "resolved"]
+"""The names of :class:`ReviewStatus`, for a plain string."""
+
+
 class RoadEditOperation(_StrEnum):
     """What an edit of a template or a set does.
 
@@ -10285,6 +10330,30 @@ class RevcloudFrame(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> RevcloudFrame:
         return _variant(_REVCLOUD_FRAME, "RevcloudFrame", "kind", data).from_json(data)
+
+
+class ReviewNoteOp(_Union):
+    """One change of the drawing's review notes.
+
+    One of:
+
+    - :class:`AddReviewNoteOp` (``kind: add``)
+    - :class:`UpdateReviewNoteOp` (``kind: update``)
+    - :class:`ReplyReviewNoteOp` (``kind: reply``)
+    - :class:`RebindReviewNoteOp` (``kind: rebind``)
+    - :class:`RemoveReviewNoteOp` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewNoteOp:
+        return _variant(_REVIEW_NOTE_OP, "ReviewNoteOp", "kind", data).from_json(data)
 
 
 class RoadWork(_Union):
@@ -27985,6 +28054,82 @@ class DrawingStandard(_Model):
             line_types=[_enum_in(LineType, e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             naming=list(data["naming"]) if "naming" in data else UNSET,
             text_styles=[StandardTextStyle.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingTake(_Model):
+    """Input of `cad.drawing.take` v1. Refusals, in order: `invalid_input`, `invalid_uid`, `revision_conflict`,
+    `no_such_step`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `entity_not_found`, `layer_not_found`,
+    `unknown_block`, `layer_locked`, `take_conflict`. Warnings: `block_definition_differs`, `layer_style_differs`.
+    Attributes:
+        against: The state taken from, as `cad.drawing.compare` names it.
+        uids: The objects' persistent ids, 1 to 10 000, none twice.
+        base: The common state both sides came from: an object both changed apart from it is a conflict.
+        overwrite: Take a conflicting object anyway.
+    """
+    against: CompareAgainst
+    uids: list[str]
+    base: CompareAgainst | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    overwrite: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["against"] = self.against.to_json()
+        out["uids"] = list(self.uids)
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else self.base.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingTake:
+        return cls(
+            against=CompareAgainst.from_json(data["against"]),
+            uids=list(data["uids"]),
+            base=UNSET if "base" not in data else None if data["base"] is None else CompareAgainst.from_json(data["base"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            overwrite=data.get("overwrite", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingTaken(_Model):
+    """Output of `cad.drawing.take` v1: the ids by what happened, each in the input's order.
+    Attributes:
+        added: Brought back with their ids.
+        replaced: Replaced by their other state.
+        removed: Taken out.
+        unchanged: The same in both: untouched.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    added: list[str]
+    replaced: list[str]
+    removed: list[str]
+    unchanged: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = list(self.added)
+        out["replaced"] = list(self.replaced)
+        out["removed"] = list(self.removed)
+        out["unchanged"] = list(self.unchanged)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingTaken:
+        return cls(
+            added=list(data["added"]),
+            replaced=list(data["replaced"]),
+            removed=list(data["removed"]),
+            unchanged=list(data["unchanged"]),
+            revision=data["revision"],
         )
 
 
@@ -65301,6 +65446,8 @@ class ProjectSettings(_Model):
             mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
             others; of a name both have, the drawing's is the one read.
         relations: The project's relations (docs/adr/0405 §1).
+        review_notes: Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
+            plotted or measured. Numbered; their stamps say which state of an object each was written for.
         road: A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
             project drawn for a road has them (`.kcad` schema 158).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
@@ -65364,6 +65511,7 @@ class ProjectSettings(_Model):
     networks: list[NetworkDef] | Unset = UNSET
     profile_files: list[ProjectProfileFile] | Unset = UNSET
     relations: list[ProjectRelation] | Unset = UNSET
+    review_notes: list[ReviewNote] | Unset = UNSET
     road: RoadSettings | None | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
@@ -65448,6 +65596,8 @@ class ProjectSettings(_Model):
             out["profileFiles"] = [e0.to_json() for e0 in self.profile_files]
         if self.relations is not UNSET:
             out["relations"] = [e0.to_json() for e0 in self.relations]
+        if self.review_notes is not UNSET:
+            out["reviewNotes"] = [e0.to_json() for e0 in self.review_notes]
         if self.road is not UNSET:
             out["road"] = None if self.road is None else self.road.to_json()
         if self.second_custom_crs is not UNSET:
@@ -65519,6 +65669,7 @@ class ProjectSettings(_Model):
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
             profile_files=[ProjectProfileFile.from_json(e0) for e0 in data["profileFiles"]] if "profileFiles" in data else UNSET,
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
+            review_notes=[ReviewNote.from_json(e0) for e0 in data["reviewNotes"]] if "reviewNotes" in data else UNSET,
             road=UNSET if "road" not in data else None if data["road"] is None else RoadSettings.from_json(data["road"]),
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
@@ -69948,6 +70099,306 @@ class RevcloudCreate(_Model):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewAnchor(_Model):
+    """An object a note is bound to, with the stamps of the state it was written for.
+    Attributes:
+        uid: The object's persistent id.
+        stamp: The object's stamp then (docs/adr/0253 §2).
+        block_stamp: For a block insert: the stamp of its definition and every definition nested in it, then.
+    """
+    uid: str
+    stamp: str
+    block_stamp: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["stamp"] = self.stamp
+        if self.block_stamp is not UNSET:
+            out["blockStamp"] = self.block_stamp
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewAnchor:
+        return cls(
+            uid=data["uid"],
+            stamp=data["stamp"],
+            block_stamp=data.get("blockStamp", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewAnchorCheck(_Model):
+    """An anchor's state."""
+    uid: str
+    state: ReviewAnchorState | ReviewAnchorStateName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["state"] = _enum_out(self.state)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewAnchorCheck:
+        return cls(
+            uid=data["uid"],
+            state=_enum_in(ReviewAnchorState, data["state"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewNote(_Model):
+    """A review note.
+    Attributes:
+        id: Lowercase, hyphenated UUID; unique in the drawing.
+        number: 1, 2, 3 …: one more than the largest a note in the drawing has. Unit: id.
+        at: A point in the model, world coordinates. Unit: length.
+        revision: The source revision the note was written against (“B”, “2026-11-05”).
+        sheet: A sheet's id.
+        view: A named view's id.
+    """
+    id: str
+    number: int
+    text: str
+    anchors: list[ReviewAnchor] | Unset = UNSET
+    at: Vec2 | None | Unset = UNSET
+    author: str | None | Unset = UNSET
+    created_at: str | None | Unset = UNSET
+    origin: ReviewOrigin | ReviewOriginName | Unset = UNSET
+    replies: list[ReviewReply] | Unset = UNSET
+    revision: str | None | Unset = UNSET
+    sheet: str | None | Unset = UNSET
+    status: ReviewStatus | ReviewStatusName = ReviewStatus.OPEN
+    view: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["number"] = self.number
+        out["text"] = self.text
+        if self.anchors is not UNSET:
+            out["anchors"] = [e0.to_json() for e0 in self.anchors]
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.author is not UNSET:
+            out["author"] = self.author
+        if self.created_at is not UNSET:
+            out["createdAt"] = self.created_at
+        if self.origin is not UNSET:
+            out["origin"] = _enum_out(self.origin)
+        if self.replies is not UNSET:
+            out["replies"] = [e0.to_json() for e0 in self.replies]
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.sheet is not UNSET:
+            out["sheet"] = self.sheet
+        out["status"] = _enum_out(self.status)
+        if self.view is not UNSET:
+            out["view"] = self.view
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewNote:
+        return cls(
+            id=data["id"],
+            number=data["number"],
+            text=data["text"],
+            anchors=[ReviewAnchor.from_json(e0) for e0 in data["anchors"]] if "anchors" in data else UNSET,
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            author=data.get("author", UNSET),
+            created_at=data.get("createdAt", UNSET),
+            origin=_enum_in(ReviewOrigin, data["origin"]) if "origin" in data else UNSET,
+            replies=[ReviewReply.from_json(e0) for e0 in data["replies"]] if "replies" in data else UNSET,
+            revision=data.get("revision", UNSET),
+            sheet=data.get("sheet", UNSET),
+            status=_enum_in(ReviewStatus, data["status"]) if "status" in data else ReviewStatus.OPEN,
+            view=data.get("view", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewNoteState(_Model):
+    """A note and whether it is stale.
+    Attributes:
+        stale: An anchor is not current, or its sheet or view is gone.
+        anchor_states: Each anchor's state, in the note's order.
+    """
+    note: ReviewNote
+    stale: bool
+    anchor_states: list[ReviewAnchorCheck]
+    sheet_missing: bool
+    view_missing: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["note"] = self.note.to_json()
+        out["stale"] = self.stale
+        out["anchorStates"] = [e0.to_json() for e0 in self.anchor_states]
+        out["sheetMissing"] = self.sheet_missing
+        out["viewMissing"] = self.view_missing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewNoteState:
+        return cls(
+            note=ReviewNote.from_json(data["note"]),
+            stale=data["stale"],
+            anchor_states=[ReviewAnchorCheck.from_json(e0) for e0 in data["anchorStates"]],
+            sheet_missing=data["sheetMissing"],
+            view_missing=data["viewMissing"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewNotesEdit(_Model):
+    """Input of `cad.review.notes.edit` v1. Refusals, in order: `invalid_review_note`, `invalid_uid`,
+    `review_note_not_found`, `duplicate_review_note`, `not_finite`, `invalid_review_anchors`, `entity_not_found`,
+    `unknown_sheet`, `unknown_view`, `too_many_review_replies`, `too_many_review_notes`, `revision_conflict`.
+    Attributes:
+        change: The one change.
+    """
+    change: ReviewNoteOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["change"] = self.change.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewNotesEdit:
+        return cls(
+            change=ReviewNoteOp.from_json(data["change"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewNotesEdited(_Model):
+    """Output of `cad.review.notes.edit` v1.
+    Attributes:
+        id: The note the change was about.
+        number: Its number (a removed note's too). Unit: id.
+        notes: How many notes the drawing has after. Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    id: str
+    number: int
+    notes: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["number"] = self.number
+        out["notes"] = self.notes
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewNotesEdited:
+        return cls(
+            id=data["id"],
+            number=data["number"],
+            notes=data["notes"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewNotesList(_Model):
+    """Input of `cad.review.notes.list` v1: absent filters list every note.
+    Attributes:
+        stale_only: Only stale notes.
+        status: Only notes in these states.
+    """
+    stale_only: bool | Unset = UNSET
+    status: list[ReviewStatus | ReviewStatusName] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.stale_only is not UNSET:
+            out["staleOnly"] = self.stale_only
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else [_enum_out(e0) for e0 in self.status]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewNotesList:
+        return cls(
+            stale_only=data.get("staleOnly", UNSET),
+            status=UNSET if "status" not in data else None if data["status"] is None else [_enum_in(ReviewStatus, e0) for e0 in data["status"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewNotesListed(_Model):
+    """Output of `cad.review.notes.list` v1: the notes by their numbers; the counts are of every note.
+    Attributes:
+        open: Unit: count.
+        answered: Unit: count.
+        resolved: Unit: count.
+        stale: Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    notes: list[ReviewNoteState]
+    open: int
+    answered: int
+    resolved: int
+    stale: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["notes"] = [e0.to_json() for e0 in self.notes]
+        out["open"] = self.open
+        out["answered"] = self.answered
+        out["resolved"] = self.resolved
+        out["stale"] = self.stale
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewNotesListed:
+        return cls(
+            notes=[ReviewNoteState.from_json(e0) for e0 in data["notes"]],
+            open=data["open"],
+            answered=data["answered"],
+            resolved=data["resolved"],
+            stale=data["stale"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewReply(_Model):
+    """A reply to a note."""
+    text: str
+    author: str | None | Unset = UNSET
+    created_at: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        if self.author is not UNSET:
+            out["author"] = self.author
+        if self.created_at is not UNSET:
+            out["createdAt"] = self.created_at
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewReply:
+        return cls(
+            text=data["text"],
+            author=data.get("author", UNSET),
+            created_at=data.get("createdAt", UNSET),
         )
 
 
@@ -107276,6 +107727,175 @@ class ObjectRevcloudFrame(RevcloudFrame):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddReviewNoteOp(ReviewNoteOp):
+    """A new note, open; its anchors' stamps are the drawing's now.
+    Attributes:
+        anchors: Persistent ids of the objects the note is about, at most 1000, none twice.
+        at: A point in the model, world coordinates. Unit: length.
+        created_at: When it was written, as the host says it (ISO 8601); the command puts no clock in.
+        id: Lowercase, hyphenated UUID; absent: a new one.
+        origin: `user` (absent), `pdf` or `ai`: a note only, never a design change.
+        revision: The source revision label (“B”).
+        sheet: A sheet's id.
+        view: A named view's id.
+    """
+    TAG_VALUE: ClassVar[str] = "add"
+    text: str
+    anchors: list[str] | Unset = UNSET
+    at: Vec2 | None | Unset = UNSET
+    author: str | None | Unset = UNSET
+    created_at: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    origin: ReviewOrigin | ReviewOriginName | None | Unset = UNSET
+    revision: str | None | Unset = UNSET
+    sheet: str | None | Unset = UNSET
+    view: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "add"}
+        out["text"] = self.text
+        if self.anchors is not UNSET:
+            out["anchors"] = list(self.anchors)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.author is not UNSET:
+            out["author"] = self.author
+        if self.created_at is not UNSET:
+            out["createdAt"] = self.created_at
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else _enum_out(self.origin)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.sheet is not UNSET:
+            out["sheet"] = self.sheet
+        if self.view is not UNSET:
+            out["view"] = self.view
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddReviewNoteOp:
+        return cls(
+            text=data["text"],
+            anchors=list(data["anchors"]) if "anchors" in data else UNSET,
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            author=data.get("author", UNSET),
+            created_at=data.get("createdAt", UNSET),
+            id=data.get("id", UNSET),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else _enum_in(ReviewOrigin, data["origin"]),
+            revision=data.get("revision", UNSET),
+            sheet=data.get("sheet", UNSET),
+            view=data.get("view", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateReviewNoteOp(ReviewNoteOp):
+    """A note's text, status or revision label; at least one."""
+    TAG_VALUE: ClassVar[str] = "update"
+    id: str
+    revision: str | None | Unset = UNSET
+    status: ReviewStatus | ReviewStatusName | None | Unset = UNSET
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["id"] = self.id
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else _enum_out(self.status)
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateReviewNoteOp:
+        return cls(
+            id=data["id"],
+            revision=data.get("revision", UNSET),
+            status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ReviewStatus, data["status"]),
+            text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReplyReviewNoteOp(ReviewNoteOp):
+    """A reply after the note's last; the status changes only when given."""
+    TAG_VALUE: ClassVar[str] = "reply"
+    id: str
+    text: str
+    author: str | None | Unset = UNSET
+    created_at: str | None | Unset = UNSET
+    status: ReviewStatus | ReviewStatusName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reply"}
+        out["id"] = self.id
+        out["text"] = self.text
+        if self.author is not UNSET:
+            out["author"] = self.author
+        if self.created_at is not UNSET:
+            out["createdAt"] = self.created_at
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else _enum_out(self.status)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReplyReviewNoteOp:
+        return cls(
+            id=data["id"],
+            text=data["text"],
+            author=data.get("author", UNSET),
+            created_at=data.get("createdAt", UNSET),
+            status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ReviewStatus, data["status"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RebindReviewNoteOp(ReviewNoteOp):
+    """The anchors stamped again with the drawing as it is now: the change was seen. `anchors` given: the note's
+    anchors become exactly these; absent: all of them, again.
+    """
+    TAG_VALUE: ClassVar[str] = "rebind"
+    id: str
+    anchors: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rebind"}
+        out["id"] = self.id
+        if self.anchors is not UNSET:
+            out["anchors"] = None if self.anchors is None else list(self.anchors)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RebindReviewNoteOp:
+        return cls(
+            id=data["id"],
+            anchors=UNSET if "anchors" not in data else None if data["anchors"] is None else list(data["anchors"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveReviewNoteOp(ReviewNoteOp):
+    """The note goes."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveReviewNoteOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PlanRoadWork(RoadWork):
     """Plan yolu: the road `width` wide round `axis` (an area with its `Tür` and `Genişlik`); a Yol's kerbs `kerb` wide
     leave a carriageway area inside (Taşıt yolu), its median `median` wide an area closed with half circles
@@ -111896,6 +112516,9 @@ _RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "upd
 _REVCLOUD_FRAME: dict[str, type[RevcloudFrame]] = {"rectangle": RectangleRevcloudFrame, "polygon": PolygonRevcloudFrame, "object": ObjectRevcloudFrame}
 
 
+_REVIEW_NOTE_OP: dict[str, type[ReviewNoteOp]] = {"add": AddReviewNoteOp, "update": UpdateReviewNoteOp, "reply": ReplyReviewNoteOp, "rebind": RebindReviewNoteOp, "remove": RemoveReviewNoteOp}
+
+
 _ROAD_WORK: dict[str, type[RoadWork]] = {"plan": PlanRoadWork, "junctions": JunctionsRoadWork, "median": MedianRoadWork}
 
 
@@ -112000,6 +112623,7 @@ __all__ = [
     "AddMembersModulesOperation",
     "AddMembersOptionsOperation",
     "AddParameterEdit",
+    "AddReviewNoteOp",
     "AddSheetPaperOp",
     "AddSlabsOperation",
     "AddVariantPaperOp",
@@ -112808,6 +113432,8 @@ __all__ = [
     "DrawingProjectChange",
     "DrawingSetPaperTableSource",
     "DrawingStandard",
+    "DrawingTake",
+    "DrawingTaken",
     "DrawingUnit",
     "DrawingUnitName",
     "DuplicatePolicy",
@@ -114485,6 +115111,7 @@ __all__ = [
     "RayEntity",
     "RayEntityGeometry",
     "ReadableShapeWork",
+    "RebindReviewNoteOp",
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",
     "RecipeLevel",
@@ -114586,6 +115213,7 @@ __all__ = [
     "RemoveOpeningTypesOperation",
     "RemoveParameterEdit",
     "RemoveRelationsOp",
+    "RemoveReviewNoteOp",
     "RemoveSheetPaperOp",
     "RemoveVariantPaperOp",
     "RenameDomainMigrationStep",
@@ -114616,6 +115244,7 @@ __all__ = [
     "ReplaceStyleWallsOperation",
     "ReplaceTextEdit",
     "ReplaceTypeOpeningsOperation",
+    "ReplyReviewNoteOp",
     "ReportDetail",
     "ReportItem",
     "ReportSeverity",
@@ -114650,6 +115279,22 @@ __all__ = [
     "RetireCodeMigrationStep",
     "RevcloudCreate",
     "RevcloudFrame",
+    "ReviewAnchor",
+    "ReviewAnchorCheck",
+    "ReviewAnchorState",
+    "ReviewAnchorStateName",
+    "ReviewNote",
+    "ReviewNoteOp",
+    "ReviewNoteState",
+    "ReviewNotesEdit",
+    "ReviewNotesEdited",
+    "ReviewNotesList",
+    "ReviewNotesListed",
+    "ReviewOrigin",
+    "ReviewOriginName",
+    "ReviewReply",
+    "ReviewStatus",
+    "ReviewStatusName",
     "RevisionMarked",
     "RevisionPlan",
     "RevisionsMark",
@@ -115415,6 +116060,7 @@ __all__ = [
     "UpdateModulesOperation",
     "UpdateOpeningTypesOperation",
     "UpdateRelationsOp",
+    "UpdateReviewNoteOp",
     "ValueMap",
     "ValueProblem",
     "ValuesFieldsWriteOp",

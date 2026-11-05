@@ -59,6 +59,7 @@ pub mod hatch_boundaries;
 mod hatch_ties;
 mod history;
 mod import_metadata;
+mod review_notes;
 mod template_settings;
 mod style_tables;
 mod identity;

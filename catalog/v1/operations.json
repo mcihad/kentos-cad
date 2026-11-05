@@ -1340,6 +1340,14 @@
       ],
       "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un (Nereye: çizimin içine ya da profiller klasörüne, ADR 0735), Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558); çizimin taşıdığını kaldırmak cad.profiles.remove'un (ADR 0735)."
     },
+    "review.notes": {
+      "level": "semantic",
+      "via": [
+        "cad.review.notes.edit",
+        "cad.review.notes.list"
+      ],
+      "note": "Ekle, yanıtla, durum, yeniden bağla ve sil cad.review.notes.edit'e gider; tablo ve eskime cad.review.notes.list'in cevabıdır (ADR 1000 §6). Bölünmüş revizyondaki Farkları al cad.drawing.take'i çalıştırır."
+    },
     "standards.check": {
       "level": "query",
       "via": [

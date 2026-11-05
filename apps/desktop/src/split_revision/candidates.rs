@@ -307,7 +307,7 @@ impl App {
     }
 }
 
-fn object_label(doc: &kentos_domain::Document, id: &str) -> String {
+pub(super) fn object_label(doc: &kentos_domain::Document, id: &str) -> String {
     let entity = kentos_domain::Uuid::parse_str(id)
         .ok()
         .and_then(|uid| doc.slot_of(uid))

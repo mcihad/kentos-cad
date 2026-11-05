@@ -127,6 +127,10 @@ impl Panel {
 pub enum Dialog {
     /// Read-only candidate identity review for one split revision.
     RevisionMatches(usize),
+    /// Farkları al for one split revision (docs/adr/1000 §6).
+    RevisionTake(usize),
+    /// İnceleme notları (docs/adr/1000 §6).
+    ReviewNotes,
     About,
     Shortcuts,
     /// The drawing has unsaved changes; asked before `then` throws them away.
@@ -641,6 +645,7 @@ pub enum Message {
     LayerTranslate(crate::layer_translate::Event),
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     DrawingStandard(crate::drawing_standard::Event),
+    ReviewNotes(crate::review_window::Event),
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     DataProfile(crate::data_profile::Event),
     /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
@@ -1251,6 +1256,7 @@ pub struct App {
     pub(crate) layer_translate: Option<crate::layer_translate::Window>,
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
+    pub(crate) review_window: Option<crate::review_window::Window>,
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     pub(crate) data_profile: Option<crate::data_profile::Window>,
     /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
@@ -1762,6 +1768,7 @@ impl App {
             layer_merge: None,
             layer_translate: None,
             drawing_standard: None,
+            review_window: None,
             data_profile: None,
             subnetworks_window: None,
             source_status: None,
@@ -2519,6 +2526,7 @@ impl App {
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
+            Message::ReviewNotes(event) => return self.review_notes_event(event),
             Message::DataProfile(event) => return self.data_profile_event(event),
             Message::Subnetworks(event) => return self.subnetworks_event(event),
             Message::SourceStatus(event) => return self.source_status_event(event),
@@ -3587,6 +3595,7 @@ impl App {
             "layer.translate" => self.open_layer_translate(),
             // Standardı denetle and Standardı uygula: one window (docs/adr/0312 §7).
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
+            "review.notes" => self.open_review_notes(),
             "profile.window" => self.open_data_profile(),
             "network.subnetworks" => self.open_subnetworks(),
             // Olay bağları (event_links_window.rs, docs/adr/0569 §5).

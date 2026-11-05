@@ -51,6 +51,7 @@ use kentos_native_application::spaces_number;
 use kentos_native_application::{program_check, program_edit};
 use kentos_native_application::donut_create;
 use kentos_native_application::drawing_compare;
+use kentos_native_application::{drawing_take, review_notes};
 use kentos_native_application::drawing_inspect;
 use kentos_native_application::blocks_find;
 use kentos_native_application::blocks_convert;
@@ -487,6 +488,25 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+impl Input for kentos_commands::DrawingTake {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ReviewNotesList {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ReviewNotesEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (&mut self.change, path) {
+            (kentos_commands::ReviewNoteOp::Add { at: Some(p), .. }, "change.at.x") => Some(&mut p.x),
+            (kentos_commands::ReviewNoteOp::Add { at: Some(p), .. }, "change.at.y") => Some(&mut p.y),
+            _ => None,
+        }
+    }
 }
 impl Input for kentos_commands::DrawingInspect {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -4943,6 +4963,16 @@ fn run_op(
         }
         kentos_commands::CAD_DRAWING_COMPARE => {
             run!(drawing_compare, kentos_commands::DrawingCompare)
+        }
+        kentos_commands::CAD_DRAWING_TAKE => {
+            run!(drawing_take, kentos_commands::DrawingTake)
+        }
+        kentos_commands::CAD_REVIEW_NOTES_EDIT => {
+            run!(review_notes, kentos_commands::ReviewNotesEdit)
+        }
+        kentos_commands::CAD_REVIEW_NOTES_LIST => {
+            use kentos_native_application::review_notes::list_cmd as review_notes_list;
+            run!(review_notes_list, kentos_commands::ReviewNotesList)
         }
         kentos_commands::CAD_CURVES_EDIT => {
             run!(curves_edit, kentos_commands::CurvesEdit)

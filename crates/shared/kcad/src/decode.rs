@@ -760,6 +760,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut linear_events = Vec::new();
     let mut profile_files = Vec::new();
     let mut standard_docs = Vec::new();
+    let mut review_notes = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
@@ -1113,6 +1114,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 standard_docs = list;
+            }
+            // Schema 180 (docs/adr/1000 §2): the review notes, read whole and checked.
+            "reviewNotes" if has.review_notes => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::ReviewNote> = serde_json::from_value(value).map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                    r.fail_at(code, at, &format!("inceleme notları okunamadı: {words}"))
+                })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş inceleme notu listesi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::review_notes_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                review_notes = list;
             }
             // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, read whole and checked.
             "lineage" if has.lineage => {
@@ -1711,6 +1729,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         linear_events,
         profile_files,
         standard_docs,
+        review_notes,
         lineage,
         map_srid,
         auto_select,

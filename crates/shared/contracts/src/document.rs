@@ -467,6 +467,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectStandardDocument>>", optional))]
     pub standard_docs: Vec<crate::ProjectStandardDocument>,
+    /// Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
+    /// plotted or measured. Numbered; their stamps say which state of an object each was written for.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ReviewNote>>", optional))]
+    pub review_notes: Vec<crate::ReviewNote>,
     /// What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
     /// and the geoid model; absent: not said, and no command takes them for either.
     #[serde(default, skip_serializing_if = "Option::is_none")]

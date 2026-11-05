@@ -167,6 +167,7 @@ impl Split {
 #[derive(Debug, Clone)]
 pub enum Event {
     Candidates(crate::split_revision::CandidateEvent),
+    Take(crate::split_revision::TakeEvent),
     /// A view's time chosen (docs/adr/0576 §1).
     Time {
         view: Option<usize>,
@@ -293,7 +294,7 @@ impl App {
             return;
         }
         let gone = split.others.remove(i);
-        if let Some(crate::app::Dialog::RevisionMatches(at)) = self.dialog.as_mut() {
+        if let Some(crate::app::Dialog::RevisionMatches(at) | crate::app::Dialog::RevisionTake(at)) = self.dialog.as_mut() {
             if *at == i {
                 self.dialog = None;
             } else if *at > i {
@@ -509,6 +510,7 @@ impl App {
     pub(crate) fn split_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Candidates(event) => return self.revision_candidates_event(event),
+            Event::Take(event) => return self.revision_take_event(event),
             Event::Time { view, ask } => {
                 let s = &self.time.slider;
                 let (anchor, step, last, moment) = (s.anchor, s.step, s.last, s.moment());
@@ -795,6 +797,12 @@ impl App {
                 .on_press(Message::Split(Event::Candidates(
                     crate::split_revision::CandidateEvent::Open(i),
                 ))),
+            );
+            col = col.push(
+                button(label::caption("Farkları al…"))
+                    .padding([3, 8])
+                    .style(style::button::flat)
+                    .on_press(Message::Split(Event::Take(crate::split_revision::TakeEvent::Open(i)))),
             );
             if !r.project_changes.is_empty() {
                 let details = r

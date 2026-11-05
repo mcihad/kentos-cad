@@ -168,6 +168,16 @@ codes! {
     /// No object named (`cad.entities.delete`).
     NO_ENTITIES = "no_entities", Failed, false, "Hiç nesne verilmedi.";
     /// A persistent id that is not lowercase UUID text with hyphens.
+    // Review notes and taking revision differences (docs/adr/1000).
+    INVALID_REVIEW_NOTE = "invalid_review_note", Failed, false, "İnceleme notunun metni, yazarı, tarihi ya da revizyonu kurallarına uymuyor ya da değişiklik boş.";
+    REVIEW_NOTE_NOT_FOUND = "review_note_not_found", Failed, false, "Bu kimlikte inceleme notu çizimde yok.";
+    DUPLICATE_REVIEW_NOTE = "duplicate_review_note", Failed, false, "Bu kimlikte bir inceleme notu çizimde zaten var.";
+    INVALID_REVIEW_ANCHORS = "invalid_review_anchors", Failed, false, "Notun nesne bağları 1000'i aşıyor ya da bir nesne iki kez verilmiş.";
+    TOO_MANY_REVIEW_REPLIES = "too_many_review_replies", Failed, false, "Bir inceleme notu en çok 200 yanıt taşır.";
+    TOO_MANY_REVIEW_NOTES = "too_many_review_notes", Failed, false, "Bir çizim en çok 10 000 inceleme notu taşır.";
+    TAKE_CONFLICT = "take_conflict", Failed, false, "Nesne ortak tabandan sonra iki tarafta da farklı değişmiş; üzerine yazmak açıkça seçilmeli.";
+    BLOCK_DEFINITION_DIFFERS = "block_definition_differs", Warning, false, "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı.";
+    LAYER_STYLE_DIFFERS = "layer_style_differs", Warning, false, "Alınan nesnenin katman görünüşü iki sürümde farklı; katman görünüşü alınmadı.";
     INVALID_UID = "invalid_uid", Failed, false, "Kalıcı kimlik küçük harfli, tireli UUID metni değil.";
     /// A persistent id no object of the document has.
     ENTITY_NOT_FOUND = "entity_not_found", Failed, false, "Kalıcı kimliği verilen nesne çizimde yok.";

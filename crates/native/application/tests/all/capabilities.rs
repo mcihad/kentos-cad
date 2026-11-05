@@ -87,6 +87,10 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.drawing.take", "unknown_block", "Tanımı kaybolmuş blok yerleştirmesi review_take::an_insert_whose_definition_the_drawing_lost_is_not_taken testinde sınanır."),
+    ("cad.drawing.take", "block_definition_differs", "Tanımı değişmiş bloğun yerleştirmesini alma review_take::a_changed_definition_makes_the_insert_note_stale_and_the_take_warns testinde sınanır."),
+    ("cad.review.notes.edit", "too_many_review_replies", "200 yanıt sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
+    ("cad.review.notes.edit", "too_many_review_notes", "10 000 not sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
     ("road.volumes.query", "volume_curve_past_centre", "Kesitin kurbun merkezini geçmesi için iç yanının yarıçaptan (ortak çizimde 150 m) uzun olması gerekir; ortak çizimin arazisi buna yetmez. Kural kentos_road::volume::effective'tedir ve tests/all/curve_volumes.rs'de (merkezi geçen kesit durumu) sınanır; kübaj aynı fonksiyonu kullanır."),
     ("cad.standards.resolve", "invalid_standard", "Standart paketinin geçersizliği standards_cmd::project_standards_resolve_by_order testinde sınanır."),
     ("cad.standards.resolve", "no_standard", "Boş belge listesi standards_cmd::project_standards_resolve_by_order testinde sınanır."),

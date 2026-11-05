@@ -359,6 +359,8 @@ def settings(s):
                 # Schema 131 (docs/adr/0735): the profiles and mappings the project carries, as their JSON.
                 "profileFiles": (opaque, False),
                 "standardDocs": (opaque, False),
+                # Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
+                "reviewNotes": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2384,6 +2386,9 @@ def document(d):
         schema = max(schema, 131)
     if d["settings"].get("standardDocs"):
         schema = max(schema, 165)
+    if d["settings"].get("reviewNotes"):
+        # Review notes bound to objects, a sheet or a view (docs/adr/1000 §2).
+        schema = max(schema, 180)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3324,7 +3329,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-180.kcad"] = container(root(cmap(parts), version=uint(180)))
+    files["schema-version-181.kcad"] = container(root(cmap(parts), version=uint(181)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5578,6 +5583,20 @@ def build():
     fixture_bad("phase", 1, lambda e: e["arch"].update(phase="sonra"))
     fixture_bad("field", 4, lambda e: e["source"]["columns"].append({"field": "brand"}))
     fixture_bad("of", 4, lambda e: e["source"].update(of="furniture"))
+    # Schema 180 (docs/adr/1000 §2): two review notes, one bound to the point with its stamps and a reply, one resolved
+    # with a sheet label; schema 179 refuses the field, a repeated id and an empty text are bad values.
+    review = load("review-notes.json")
+    review_data = document(review)
+    assert review_data.count(b"\x67version\x18\xb4") == 1
+    out["review-notes.kcad"] = container(review_data)
+    out["broken/review-notes-in-schema-179.kcad"] = container(
+        review_data.replace(b"\x67version\x18\xb4", b"\x67version\x18\xb3"))
+    twice = copy.deepcopy(review)
+    twice["settings"]["reviewNotes"][1]["id"] = twice["settings"]["reviewNotes"][0]["id"]
+    out["broken/review-notes-duplicate.kcad"] = container(document(twice))
+    blank = copy.deepcopy(review)
+    blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
+    out["broken/review-notes-text.kcad"] = container(document(blank))
     # Schema 165: ordered, portable standard documents. Schema 164 must refuse the new field.
     standard_docs = load("standard-docs.json")
     standard_data = document(standard_docs)

@@ -509,6 +509,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             xref_paths: Vec::new(),
             profile_files: Vec::new(),
             standard_docs: Vec::new(),
+            review_notes: Vec::new(),
             heights: None,
             coordinate_epoch: None,
             road: None,
