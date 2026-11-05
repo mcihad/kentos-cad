@@ -66,19 +66,7 @@ fn answer(doc: &Document, input: &BlocksQuery) -> CommandResult<BlocksQueried> {
 
 /// An insert's value of `tag`.
 pub fn value_of<'a>(block: &'a BlockDefinition, insert: &'a InsertEntity, tag: &str) -> &'a str {
-    let Some(a) = block.attributes.iter().find(|a| a.tag == tag) else {
-        return "";
-    };
-    if a.options.constant {
-        return a.value.as_deref().unwrap_or("");
-    }
-    insert
-        .base
-        .attrs
-        .get(tag)
-        .map(String::as_str)
-        .or(a.value.as_deref())
-        .unwrap_or("")
+    block.attribute_value(insert, tag).unwrap_or("")
 }
 
 fn number(text: &str) -> Option<f64> {

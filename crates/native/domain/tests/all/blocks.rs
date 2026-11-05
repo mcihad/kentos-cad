@@ -95,3 +95,39 @@ fn bad_sets_write_nothing_and_leave_pending_redo_usable() {
         .expect("pending redo survives refusals and no-ops");
     assert_eq!(doc.to_snapshot_v2(), after);
 }
+
+#[test]
+fn block_schedule_groups_effective_default_and_constant_attributes() {
+    let mut raw: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/dynamic-blocks.json"
+    ))
+    .expect("fixture");
+    raw["blocks"][0]["attributes"] = json!([
+        {"tag":"TYPE","value":"Standart","p":{"x":0,"y":0},"height":0.1,"rotation":0},
+        {"tag":"LABEL","value":"KAPI","p":{"x":0,"y":0.2},"height":0.1,"rotation":0,"constant":true}
+    ]);
+    raw["entities"][1]["attrs"] = json!({"TYPE":"Özel"});
+    raw["entities"][2]["attrs"] = json!({"TYPE":"Standart"});
+    let snapshot: DocumentSnapshotV2 = serde_json::from_value(raw).expect("snapshot");
+    let doc = Document::from_snapshot_v2(snapshot).expect("drawing");
+    let before = doc.to_snapshot_v2();
+    let rows = doc.blocks_schedule(
+        &["Kapı (dinamik)".to_owned()],
+        Some("TYPE"),
+        &["LABEL".to_owned(), "TYPE".to_owned()],
+    );
+    assert_eq!(
+        rows,
+        vec![
+            vec!["TYPE", "LABEL", "TYPE", "Adet"],
+            vec!["Standart", "KAPI", "Standart", "2"],
+            vec!["Özel", "KAPI", "Özel", "1"],
+            vec!["Toplam", "", "", "3"],
+        ]
+    );
+    assert_eq!(
+        doc.to_snapshot_v2(),
+        before,
+        "schedule must only read the drawing"
+    );
+}

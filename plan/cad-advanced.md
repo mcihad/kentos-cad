@@ -2050,7 +2050,7 @@ güvenle gizlenir. Farklı proje kimliği sınaması eklendi. Gerçek uygulamada
 favori satırı ve `project:<kimlik>:<şablon>` kaydı doğrulandı; ekran görüntüsü
 repo dışındadır.
 
-### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
+### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [~]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].
 **Dayanak:** AutoCAD veri çıkarımı; çizim/kaynak seçimi, dış tabloyla
@@ -2079,6 +2079,16 @@ eşleme ve güncelliğini yitirmiş sonuç ayrımı. [R07]
 listesi çıkar; gerçek ölçü ve override örneği ekle. Dış açıklama tablosunu
 anahtarla eşle, kaynağı değiştirip yenile. Tekil sayım, birimler, toplam,
 kullanıcı düzeltmeleri ve çok sayfalı çıktı bağımsız kontrol edilsin.
+
+**Blok özniteliği tutarlılığı (5 Kasım 2026):** Çizime bağlı blok tablosunun
+gruplama ve ek sütunları artık blok sorgusuyla aynı etkin öznitelik kuralını
+kullanır: sabit tanım değeri, örneğin açık değeri ve tanımın varsayılanı.
+Blokta tanımlanmayan ek veri alanı örnekteki kaydından okunmaya devam eder.
+Üç yerleştirmeli sınamada iki varsayılan/standart ve bir özel değer doğru
+gruplandı; toplam 3, sabit `KAPI` sütunu her iki grupta görüldü. Gerçek CAD
+penceresinde tablonun görünümü, seçimi ve canlı yenileme düğmesi doğrulandı;
+ekran görüntüleri repo dışında tutuldu. Genel çıkarım tarifi, iç içe blok
+kapsamı, anahtarlı dış eşleme ve çok sayfalı çıktı kabulü açık kalır.
 
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 

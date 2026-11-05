@@ -243,3 +243,42 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("dxf-bicimler", dxf_forms),
     ]
 }
+
+#[cfg(test)]
+mod qa {
+    use serde_json::json;
+
+    #[test]
+    #[ignore = "writes a temporary CAD drawing for real window QA"]
+    fn block_attribute_schedule_fixture() {
+        let mut raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        raw["blocks"][0]["attributes"] = json!([
+            {"tag":"TYPE","value":"Standart","p":{"x":0,"y":0},"height":0.1,"rotation":0},
+            {"tag":"LABEL","value":"KAPI","p":{"x":0,"y":0.2},"height":0.1,"rotation":0,"constant":true}
+        ]);
+        raw["entities"][1]["attrs"] = json!({"TYPE":"Özel"});
+        raw["entities"][2]["attrs"] = json!({"TYPE":"Standart"});
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+        let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32,0.32],"columns":[1.5,1.5,1.5,0.8],
+            "cells":[["","","",""],["","","",""],["","","",""],["","","",""]],
+            "header":true,
+            "source":{"kind":"blocks","names":["Kapı (dinamik)"],"by":"TYPE","columns":["LABEL","TYPE"]}
+        }))
+        .unwrap();
+        let kentos_commands::Entity::Table(table) = table else {
+            unreachable!()
+        };
+        let worked = doc.table_worked_out(&table);
+        doc.add(kentos_commands::Entity::Table(worked)).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-block-attributes.kcad");
+        crate::document::write(&doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+    }
+}
