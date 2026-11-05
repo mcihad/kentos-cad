@@ -7971,6 +7971,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CULVERTS_CLOSURE.into(),
+            version: crate::ROAD_CULVERTS_CLOSURE_VERSION,
+            title: "Taşkında yol kapanması".into(),
+            summary: "Bir taşkının hidrografını (saat, m³/s; noktalar arası doğrusal) menfezden ve savak sayılan yoldan geçirir (road.culverts.hydraulics'in inlet, entranceLoss, roughness, tailwater ve weir'i): yolun kaç saat su altında kaldığını, küçük binek, büyük binek ve büyük 4×4 araçlara (Shand 2011) ve H2–H6 tehlike sınıflarında kaç saat kapalı olduğunu, eşik debileri ve saat aralıklarıyla verir. range ile debi çarpanı ve Cd aralığında en kısa ve en uzun süreler (köşelerde kesin). Katsayıları ve hidrografı KentOS vermez. Yalnız okur. \
+                      Uyarılar: culvert_overtopped, culvert_road_closed ve okumanın uyarıları. Retler: not_a_road_project, unknown_culvert, invalid_culvert_hydraulics, invalid_culvert."
+                .into(),
+            aliases: vec!["yolkapanma".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CulvertsClosure>(),
+            output: schema::<crate::CulvertClosureRead>(),
+            plan: Some(schema::<crate::CulvertClosureRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Üçgen hidrograf, debi ±%20".into(),
+                input: json!({ "culvert": "m-1", "hydrograph": [{ "time": 0.0, "flow": 0.0 }, { "time": 3.0, "flow": 60.0 }, { "time": 12.0, "flow": 0.0 }], "inlet": "boxWingwall30To75", "entranceLoss": 0.4, "weir": { "cd": 1.66, "length": 60.0 }, "range": { "flowLow": 0.8, "flowHigh": 1.2, "cdLow": 1.5, "cdHigh": 1.8 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_DRAINAGE_QUERY.into(),
             version: crate::ROAD_DRAINAGE_QUERY_VERSION,
             title: "Drenajı sorgula".into(),
@@ -14749,6 +14774,9 @@ mod tests {
                     crate::ROAD_CULVERTS_HYDRAULICS => {
                         serde_json::from_value::<crate::CulvertsHydraulics>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CULVERTS_CLOSURE => {
+                        serde_json::from_value::<crate::CulvertsClosure>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloud>(e.input.clone()).map(|_| ()),
                     crate::ROAD_DRAINAGE_QUERY => serde_json::from_value::<crate::DrainageQuery>(e.input.clone()).map(|_| ()),
@@ -15610,6 +15638,9 @@ mod tests {
                         }
                         crate::ROAD_CULVERTS_HYDRAULICS => {
                             serde_json::from_value::<crate::CulvertHydraulicsRead>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CULVERTS_CLOSURE => {
+                            serde_json::from_value::<crate::CulvertClosureRead>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsWritten>(output.clone()).map(|_| ()),
                         crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloudWritten>(output.clone()).map(|_| ()),

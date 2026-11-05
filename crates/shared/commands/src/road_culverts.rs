@@ -401,3 +401,133 @@ pub struct CulvertHydraulicsRead {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CulvertFlowRead>>", optional))]
     pub curve: Vec<CulvertFlowRead>,
 }
+
+pub const ROAD_CULVERTS_CLOSURE: &str = "road.culverts.closure";
+pub const ROAD_CULVERTS_CLOSURE_VERSION: u32 = 1;
+
+/// A hydrograph's point: its time (hours from the flood's start) and flow (m³/s). The flow is linear between points.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HydrographPoint {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "h")))]
+    pub time: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
+    pub flow: f64,
+}
+
+/// The ranges a flood's closure is asked over (docs/adr/0948): a factor on the hydrograph's flows and the weir's Cd,
+/// each from its low to its high, the asked (1 and the weir's Cd) between them.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ClosureRange {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub flow_low: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub flow_high: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cd_low: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cd_high: f64,
+}
+
+/// Input of `road.culverts.closure` v1 (plan/road.md Y42, docs/adr/0948): a flood's hydrograph through a culvert and
+/// over the road as a weir (`road.culverts.hydraulics`' inlet, ke, n, tailwater and weir), and how long the road is
+/// under water, closed to each vehicle class and at each hazard class; with `range`, the shortest and longest of each.
+///
+/// Refusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert_hydraulics` (hydraulics' rules; a hydrograph of
+/// 2 to 1000 points, times from 0 to 8760 h rising, flows 0 to 10000 m³/s with some flow; a range's flow factors in
+/// (0, 10] about 1, its Cd in (0, 3] about the weir's), and the culvert's own (`invalid_culvert`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertsClosure {
+    pub culvert: String,
+    pub hydrograph: Vec<HydrographPoint>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tailwater: Option<f64>,
+    pub inlet: CulvertInlet,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub entrance_loss: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub roughness: Option<f64>,
+    pub weir: CulvertWeir,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub range: Option<ClosureRange>,
+}
+
+/// A stretch of a flood's hours (from the flood's start).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ClosureSpan {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "h")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "h")))]
+    pub to: f64,
+}
+
+/// One criterion through a flood: `submerged`, `smallPassenger`, `largePassenger`, `large4wd`, or `H2` to `H6`; its
+/// words; the least total flow from which it holds (none: not up to the peak); its hours and when.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ClosureCriterion {
+    pub criterion: String,
+    pub words: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "discharge")))]
+    pub flow: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "h")))]
+    pub hours: f64,
+    pub spans: Vec<ClosureSpan>,
+}
+
+/// A flood at one flow factor and Cd: `asked`, `low` or `high`; the peak's flow and hydraulics; the criteria.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ClosureFlood {
+    pub case: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub factor: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cd: f64,
+    pub peak: CulvertFlowRead,
+    pub criteria: Vec<ClosureCriterion>,
+}
+
+/// Output of `road.culverts.closure` v1 (docs/adr/0948): the culvert, its inlet's invert, the road's crest, and the
+/// floods: the asked first, then the range's low and high.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CulvertClosureRead {
+    pub culvert: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub inlet_invert: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub crest: f64,
+    pub floods: Vec<ClosureFlood>,
+}

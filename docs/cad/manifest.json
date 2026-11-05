@@ -1882,12 +1882,13 @@
    "via": [
     "road.culverts.edit",
     "road.culverts.draw",
-    "road.culverts.hydraulics"
+    "road.culverts.hydraulics",
+    "road.culverts.closure"
    ],
    "operation": null,
-   "python": "Connection: road.culverts.edit, Connection: road.culverts.draw, Connection: road.culverts.hydraulics",
-   "mcp": "road.culverts.edit, road.culverts.draw, road.culverts.hydraulics",
-   "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2); Hidrolik bölümü road.culverts.hydraulics ile giriş önündeki suyu, yolun aşılmasını ve performans eğrisini okur (plan/road.md Y41, ADR 0947).",
+   "python": "Connection: road.culverts.edit, Connection: road.culverts.draw, Connection: road.culverts.hydraulics, Connection: road.culverts.closure",
+   "mcp": "road.culverts.edit, road.culverts.draw, road.culverts.hydraulics, road.culverts.closure",
+   "note": "Ölçüler yazıldıkça road.culverts.edit'in planıyla okuma kopyasında önizler; Kaydet ve Sil road.culverts.edit, Planda çiz road.culverts.draw ile yazar (plan/road.md Y11.2, ADR 0909 §2); Hidrolik bölümü road.culverts.hydraulics ile giriş önündeki suyu, yolun aşılmasını ve performans eğrisini okur (plan/road.md Y41, ADR 0947); Kapanma bölümü road.culverts.closure ile taşkının hidrografından yolun su altında ve araçlara kapalı kaldığı süreleri okur (plan/road.md Y42, ADR 0948).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

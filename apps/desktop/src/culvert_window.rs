@@ -27,11 +27,14 @@ use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, CulvertFlow, CulvertHydraulicsRead, CulvertInlet, CulvertReport, CulvertShapeDef, CulvertWeir,
-    CulvertsDraw, CulvertsEdit, CulvertsHydraulics, RoadEditOperation,
+    ClosureRange, CommandWarning, CulvertClosureRead, CulvertFlow, CulvertHydraulicsRead, CulvertInlet, CulvertReport,
+    CulvertShapeDef, CulvertWeir, CulvertsClosure, CulvertsDraw, CulvertsEdit, CulvertsHydraulics, HydrographPoint,
+    RoadEditOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_culverts_draw, road_culverts_edit, road_culverts_hydraulics};
+use kentos_native_application::{
+    ExecutionContext, road_culverts_closure, road_culverts_draw, road_culverts_edit, road_culverts_hydraulics,
+};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
@@ -68,8 +71,19 @@ pub(crate) const FIELDS: [&str; 16] = [
     "Döşeme (m)",
 ];
 const CELLS: &str = "Göz sayısı";
-/// The pages under the culvert's sizes: its barrel, its hydraulics.
-const PAGES: [&str; 2] = ["Gövde", "Hidrolik"];
+/// The pages under the culvert's sizes: its barrel, its hydraulics, a flood's closure of the road.
+const PAGES: [&str; 3] = ["Gövde", "Hidrolik", "Kapanma"];
+/// The flood's typed fields, in order: a triangular hydrograph, then the ranges.
+pub(crate) const FLOOD: [&str; 8] = [
+    "Tepe debi (m³/s)",
+    "Tepeye süre (sa)",
+    "Toplam süre (sa)",
+    "Taban debi (m³/s)",
+    "Debi çarpanı alt",
+    "Debi çarpanı üst",
+    "Cd alt",
+    "Cd üst",
+];
 /// The hydraulics' typed fields, in order.
 pub(crate) const HYDRAULICS: [&str; 7] =
     ["Debi (m³/s)", "Kuyruk suyu (m)", "Giriş kaybı ke", "Manning n", "Savak Cd", "Savak boyu (m)", "Kret kotu (m)"];
@@ -89,6 +103,34 @@ const INLETS: [(CulvertInlet, &str); 7] = [
 /// The inlets of a pipe's or a box's.
 fn inlets(pipe: bool) -> &'static [(CulvertInlet, &'static str)] {
     if pipe { &INLETS[..3] } else { &INLETS[3..] }
+}
+
+/// The hydraulics' typed fields in a row: with its flow on Hidrolik, without on Kapanma (the hydrograph is the flow).
+fn hydraulic_row(w: &Window, with_flow: bool) -> iced::widget::Row<'_, Message> {
+    let field = |hint: &'static str, k: usize, width: f32| {
+        words::field(
+            HYDRAULICS[k],
+            kentos_ui::widget::text_field(hint, &w.hydraulic[k]).on_input(move |t| msg(Event::Hydraulic(k, t))).width(width),
+            None,
+        )
+    };
+    let choices = inlets(w.pipe);
+    let on_inlet = Select::new(
+        choices.iter().map(|(_, words)| Choice::new(*words)),
+        choices.iter().position(|(i, _)| *i == w.inlet),
+        move |k| msg(Event::Inlet(choices[k].0)),
+    );
+    let mut r = iced::widget::Row::new().spacing(10).align_y(iced::alignment::Vertical::Bottom);
+    if with_flow {
+        r = r.push(field("m³/s", 0, 90.0));
+    }
+    r.push(field("0", 1, 90.0))
+        .push(words::field("Giriş", container(on_inlet).width(200), None))
+        .push(field("ke", 2, 90.0))
+        .push(field("menfezin", 3, 80.0))
+        .push(field("yok", 4, 70.0))
+        .push(field("yok", 5, 90.0))
+        .push(field("yol", 6, 100.0))
 }
 
 /// The culvert as last read.
@@ -117,6 +159,9 @@ pub struct Window {
     pub(crate) hydraulic: [String; 7],
     /// The saved culvert's hydraulics as last read: none until a flow is typed.
     pub(crate) hydraulics: Option<Result<(CulvertHydraulicsRead, Vec<CommandWarning>), String>>,
+    pub(crate) flood: [String; 8],
+    /// The flood's closure as last read: none until a peak is typed.
+    pub(crate) closure: Option<Result<(CulvertClosureRead, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -131,6 +176,7 @@ pub enum Event {
     Page(usize),
     Inlet(CulvertInlet),
     Hydraulic(usize, String),
+    Flood(usize, String),
     Save,
     Draw,
     Remove,
@@ -181,6 +227,53 @@ impl Window {
                 roughness: number(&f[3], HYDRAULICS[3])?,
                 weir,
                 curve: Some(CURVE),
+            })
+        })())
+    }
+
+    /// The flood's question as typed: none without a peak, else it or why it is not one. The hydrograph is a triangle
+    /// from the base flow at 0 to the peak at its time and back to the base at the flood's end.
+    pub(crate) fn closure_input(&self) -> Option<Result<CulvertsClosure, String>> {
+        let id = self.chosen.clone()?;
+        let f = &self.flood;
+        let peak = match number(&f[0], FLOOD[0]) {
+            Ok(None) => return None,
+            Ok(Some(q)) => q,
+            Err(e) => return Some(Err(e)),
+        };
+        Some((|| {
+            let need = |k: usize| number(&f[k], FLOOD[k])?.ok_or_else(|| format!("{} yazılmalı.", FLOOD[k]));
+            let (rise, end) = (need(1)?, need(2)?);
+            let base = number(&f[3], FLOOD[3])?.unwrap_or(0.0);
+            let h = &self.hydraulic;
+            let ke = number(&h[2], HYDRAULICS[2])?.ok_or_else(|| format!("{} yazılmalı; KentOS vermez.", HYDRAULICS[2]))?;
+            let (Some(cd), Some(length)) = (number(&h[4], HYDRAULICS[4])?, number(&h[5], HYDRAULICS[5])?) else {
+                return Err("Kapanma yolu savak sayar: savak Cd ve savak boyu yazılmalı.".into());
+            };
+            let ranges: Vec<Option<f64>> = (4..8).map(|k| number(&f[k], FLOOD[k])).collect::<Result<_, _>>()?;
+            let range = match ranges.as_slice() {
+                [None, None, None, None] => None,
+                [Some(a), Some(b), c, d] => Some(ClosureRange {
+                    flow_low: *a,
+                    flow_high: *b,
+                    cd_low: c.unwrap_or(cd),
+                    cd_high: d.unwrap_or(cd),
+                }),
+                _ => return Err("Aralık için debi çarpanının altı ve üstü birlikte yazılmalı.".into()),
+            };
+            Ok(CulvertsClosure {
+                culvert: id,
+                hydrograph: vec![
+                    HydrographPoint { time: 0.0, flow: base },
+                    HydrographPoint { time: rise, flow: peak },
+                    HydrographPoint { time: end, flow: base },
+                ],
+                tailwater: number(&h[1], HYDRAULICS[1])?,
+                inlet: self.inlet,
+                entrance_loss: ke,
+                roughness: number(&h[3], HYDRAULICS[3])?,
+                weir: CulvertWeir { cd, length, crest: number(&h[6], HYDRAULICS[6])? },
+                range,
             })
         })())
     }
@@ -259,6 +352,8 @@ impl App {
             inlet: CulvertInlet::PipeSquareHeadwall,
             hydraulic: Default::default(),
             hydraulics: None,
+            flood: Default::default(),
+            closure: None,
         }));
         self.dialog = Some(Dialog::Culverts);
         let _ = self.culvert_event(Event::Choose(chosen));
@@ -284,6 +379,7 @@ impl App {
         w.hydraulics = w
             .hydraulics_input()
             .map(|asked| asked.and_then(|q| road_culverts_hydraulics::preview(&doc.model, &q)));
+        w.closure = w.closure_input().map(|asked| asked.and_then(|q| road_culverts_closure::preview(&doc.model, &q)));
     }
 
     pub(crate) fn culvert_event(&mut self, event: Event) -> Task<Message> {
@@ -339,7 +435,8 @@ impl App {
             Event::Field(k, t) => w.fields[k.min(15)] = t,
             Event::Cells(t) => w.cells = t,
             Event::Layer(l) => w.layer = Some(l),
-            Event::Page(p) => w.page = p.min(1),
+            Event::Page(p) => w.page = p.min(2),
+            Event::Flood(k, t) => w.flood[k.min(7)] = t,
             Event::Inlet(i) => w.inlet = i,
             Event::Hydraulic(k, t) => w.hydraulic[k.min(6)] = t,
             Event::Save => return self.save_culvert(),
@@ -507,6 +604,10 @@ impl App {
                     body = self.hydraulics_view(w, body);
                     return self.culvert_frame(w, body);
                 }
+                if w.page == 2 {
+                    body = self.closure_view(w, body);
+                    return self.culvert_frame(w, body);
+                }
                 let picture = crate::picture::picture(iced::widget::canvas(Barrel { report: r, top: w.preview.top }).width(Fill).height(Fill), TITLE);
                 use crate::road_dialog::{col, grouped, num};
                 let list = crate::road_dialog::sheet_fill(
@@ -572,36 +673,10 @@ impl App {
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
         let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        let field = |hint: &'static str, k: usize, width: f32| {
-            words::field(
-                HYDRAULICS[k],
-                kentos_ui::widget::text_field(hint, &w.hydraulic[k]).on_input(move |t| msg(Event::Hydraulic(k, t))).width(width),
-                None,
-            )
-        };
-        let choices = inlets(w.pipe);
-        let on_inlet = Select::new(
-            choices.iter().map(|(_, words)| Choice::new(*words)),
-            choices.iter().position(|(i, _)| *i == w.inlet),
-            move |k| msg(Event::Inlet(choices[k].0)),
-        );
         if w.chosen.is_none() {
             return body.push(label::caption("Hidrolik kayıtlı menfezi okur: önce menfezi kaydedin.").style(muted));
         }
-        body = body.push(
-            row![
-                field("m³/s", 0, 90.0),
-                field("0", 1, 90.0),
-                words::field("Giriş", container(on_inlet).width(200), None),
-                field("ke", 2, 90.0),
-                field("menfezin", 3, 80.0),
-                field("yok", 4, 70.0),
-                field("yok", 5, 90.0),
-                field("yol", 6, 100.0),
-            ]
-            .spacing(10)
-            .align_y(iced::alignment::Vertical::Bottom),
-        );
+        body = body.push(hydraulic_row(w, true));
         let read = match &w.hydraulics {
             None => {
                 return body.push(
@@ -692,6 +767,130 @@ impl App {
         )
     }
 
+    /// Kapanma: a flood's hydrograph through the saved culvert, how long the road is under water and closed to each
+    /// vehicle class, the hydrograph drawn with its thresholds and the closures beside the table.
+    fn closure_view<'a>(
+        &'a self,
+        w: &'a Window,
+        mut body: kentos_ui::widget::grow::Grows<'a, Message>,
+    ) -> kentos_ui::widget::grow::Grows<'a, Message> {
+        use crate::road_dialog::{col, grouped, num};
+        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
+        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        if w.chosen.is_none() {
+            return body.push(label::caption("Kapanma kayıtlı menfezi okur: önce menfezi kaydedin.").style(muted));
+        }
+        body = body.push(hydraulic_row(w, false));
+        let field = |hint: &'static str, k: usize, width: f32| {
+            words::field(
+                FLOOD[k],
+                kentos_ui::widget::text_field(hint, &w.flood[k]).on_input(move |t| msg(Event::Flood(k, t))).width(width),
+                None,
+            )
+        };
+        body = body.push(
+            row![
+                field("m³/s", 0, 110.0),
+                field("sa", 1, 110.0),
+                field("sa", 2, 110.0),
+                field("0", 3, 110.0),
+                space::horizontal().width(14),
+                field("yok", 4, 110.0),
+                field("yok", 5, 110.0),
+                field("Cd", 6, 70.0),
+                field("Cd", 7, 70.0),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom),
+        );
+        let read = match &w.closure {
+            None => {
+                return body.push(
+                    label::caption(
+                        "Tepe debi, tepeye süre ve toplam süreyle üçgen bir taşkın hidrografı yazın; giriş, ke ve savak \
+                         Hidrolik'teki gibi. Yolun su altında kaldığı ve küçük binek, büyük binek ve 4×4 araçlara \
+                         (Shand 2011) kapalı olduğu saatler hidrograftan kesin okunur. Debi çarpanı ve Cd aralığı \
+                         yazılınca en kısa ve en uzun süreler de okunur.",
+                    )
+                    .style(muted),
+                );
+            }
+            Some(Err(why)) => return body.push(label::caption(why.clone()).style(danger)),
+            Some(Ok((read, _))) => read,
+        };
+        let asked = &read.floods[0];
+        let hours = |k: usize| asked.criteria[k].hours;
+        body = body.push(label::caption(format!(
+            "Tepe {} m³/s, su kotu {:.2} (kret {:.2}) · yol {:.2} sa su altında · kapalı: küçük binek {:.2} sa, büyük binek {:.2} sa, 4×4 {:.2} sa",
+            trimmed((asked.peak.flow * 1000.0).round() / 1000.0),
+            asked.peak.level,
+            read.crest,
+            hours(0),
+            hours(1),
+            hours(2),
+            hours(3)
+        )));
+        if hours(1) > 0.0 {
+            let style = if hours(3) > 0.0 { danger } else { warn };
+            body = body.push(
+                label::caption(
+                    "Yol kapanmalı: süreler duran araç ölçütlerinden; gerçek taşkında derinlik ve hız gözle \
+                     kestirilemez (WRL 2017/07). Kapatma kararı yetkilinindir.",
+                )
+                .style(style),
+            );
+        }
+        let ranged = read.floods.len() == 3;
+        let rows = asked
+            .criteria
+            .iter()
+            .enumerate()
+            .map(|(k, c)| {
+                let (first, last) = (c.spans.first().map(|s| s.from), c.spans.last().map(|s| s.to));
+                let mut row = vec![
+                    c.words.split(':').next().unwrap_or(&c.words).to_owned(),
+                    c.flow.map_or_else(|| "—".into(), |q| grouped(q, 2)),
+                    grouped(c.hours, 2),
+                    first.map_or_else(|| "—".into(), |t| grouped(t, 2)),
+                    last.map_or_else(|| "—".into(), |t| grouped(t, 2)),
+                ];
+                if ranged {
+                    row.push(format!("{} – {}", grouped(read.floods[1].criteria[k].hours, 2), grouped(read.floods[2].criteria[k].hours, 2)));
+                }
+                row
+            })
+            .collect();
+        let mut cols = vec![
+            col("Ölçüt", 118.0),
+            num("Eşik (m³/s)", 80.0),
+            num("Süre (sa)", 66.0),
+            num("Başlar (sa)", 74.0),
+            num("Biter (sa)", 66.0),
+        ];
+        if ranged {
+            cols.push(num("Aralık (sa)", 92.0));
+        }
+        let table = crate::road_dialog::sheet_fill(cols, rows, "Ölçüt yok");
+        let points = match w.closure_input() {
+            Some(Ok(q)) => q.hydrograph.iter().map(|p| (p.time, p.flow)).collect(),
+            _ => Vec::new(),
+        };
+        let picture = crate::picture::picture(
+            iced::widget::canvas(FloodChart { read, points }).width(Fill).height(Fill),
+            "Taşkın hidrografı",
+        );
+        body.push_grow(
+            row![
+                container(picture).width(iced::FillPortion(1)).height(Fill),
+                container(table).width(iced::FillPortion(1)).height(Fill)
+            ]
+            .spacing(12)
+            .height(Fill),
+            typography::scaled(220.0),
+        )
+    }
+
     pub(crate) fn culvert_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.culvert_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
@@ -702,6 +901,10 @@ impl App {
             Control::Press(DRAW) => Some(msg(Event::Draw)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Fill(CELLS, t) => Some(msg(Event::Cells(t.to_owned()))),
+            Control::Fill(name, t) if FLOOD.contains(&name) => {
+                let k = FLOOD.iter().position(|f| *f == name).unwrap_or(0);
+                Some(msg(Event::Flood(k, t.to_owned())))
+            }
             Control::Fill(name, t) if HYDRAULICS.contains(&name) => {
                 let k = HYDRAULICS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Hydraulic(k, t.to_owned())))
@@ -925,6 +1128,140 @@ impl canvas::Program<Message> for Performance<'_> {
                 size: small,
                 ..Text::default()
             });
+        }
+        vec![frame.into_geometry()]
+    }
+}
+
+/// A flood's hydrograph against the hours, as a road's closure is read: the asked flood, the range's low and high
+/// dashed; the thresholds of submergence, small passenger vehicles and large 4WDs; the hours each holds shaded.
+struct FloodChart<'a> {
+    read: &'a CulvertClosureRead,
+    /// The asked hydrograph (hours, m³/s); each flood is it times the flood's factor.
+    points: Vec<(f64, f64)>,
+}
+
+impl canvas::Program<Message> for FloodChart<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let tk = Tokens::of(theme);
+        let floods = &self.read.floods;
+        let Some(asked) = floods.first() else { return vec![frame.into_geometry()] };
+        let crit = |f: &kentos_commands::ClosureFlood, k: usize| f.criteria.get(k).cloned();
+        let q1 = floods.iter().map(|f| f.peak.flow).fold(0.0, f64::max).max(1e-9) * 1.08;
+        let t_end = self.points.iter().map(|p| p.0).fold(0.0, f64::max).max(1e-9);
+        let (left, right, top, bottom) = (48.0_f32, 14.0_f32, 26.0_f32, 30.0_f32);
+        let (w, h) = (f64::from(bounds.width - left - right), f64::from(bounds.height - top - bottom));
+        let at = |t: f64, q: f64| Point::new(left + (t / t_end * w) as f32, top + ((q1 - q.clamp(0.0, q1)) / q1 * h) as f32);
+        let small = Pixels(11.0);
+        // The hours under water shaded; the vehicles' closures are drawn on their thresholds below (shaded too, the
+        // three overlapped into one muddy band).
+        if let Some(c) = crit(asked, 0) {
+            for sp in &c.spans {
+                let (a, b) = (at(sp.from, q1), at(sp.to, 0.0));
+                frame.fill_rectangle(a, iced::Size::new(b.x - a.x, b.y - a.y), iced::Color { a: 0.10, ..tk.accent });
+            }
+        }
+        let dq = tick(q1, 5.0);
+        let mut q = 0.0;
+        while q <= q1 + 1e-9 {
+            let p = at(0.0, q);
+            frame.stroke(&Path::line(p, Point::new(left + w as f32, p.y)), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.fill_text(Text {
+                content: trimmed(q),
+                position: Point::new(left - 6.0, p.y - 6.0),
+                color: tk.muted,
+                size: small,
+                align_x: iced::alignment::Horizontal::Right.into(),
+                ..Text::default()
+            });
+            q += dq;
+        }
+        let dt = tick(t_end, 8.0);
+        let mut t = 0.0;
+        while t <= t_end + 1e-9 {
+            let p = at(t, 0.0);
+            frame.stroke(&Path::line(at(t, q1), p), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.fill_text(Text {
+                content: trimmed(t),
+                position: Point::new(p.x, p.y + 4.0),
+                color: tk.muted,
+                size: small,
+                align_x: iced::alignment::Horizontal::Center.into(),
+                ..Text::default()
+            });
+            t += dt;
+        }
+        frame.fill_text(Text {
+            content: "Saat →".into(),
+            position: Point::new(left + w as f32, bounds.height - 13.0),
+            color: tk.muted,
+            size: small,
+            align_x: iced::alignment::Horizontal::Right.into(),
+            ..Text::default()
+        });
+        frame.fill_text(Text {
+            content: "Debi (m³/s)".into(),
+            position: Point::new(left, 6.0),
+            color: tk.muted,
+            size: small,
+            ..Text::default()
+        });
+        // The thresholds, labelled at the right; close thresholds' words pushed apart a line each (they overlapped).
+        let mut words: Vec<(f32, String, iced::Color)> = Vec::new();
+        for (k, color, word) in [(0, tk.accent, "su altında"), (1, tk.warning, "küçük binek"), (3, tk.danger, "4×4")] {
+            let Some(qk) = crit(asked, k).and_then(|c| c.flow) else { continue };
+            let (a, b) = (at(0.0, qk), at(t_end, qk));
+            let dashed = Stroke {
+                line_dash: canvas::LineDash { segments: &[6.0, 4.0], offset: 0 },
+                ..Stroke::default().with_width(1.3).with_color(color)
+            };
+            frame.stroke(&Path::line(a, b), dashed);
+            // Where the flood is above it, the threshold drawn thick: the hours it holds.
+            for sp in crit(asked, k).map(|c| c.spans).unwrap_or_default() {
+                frame.stroke(&Path::line(at(sp.from, qk), at(sp.to, qk)), Stroke::default().with_width(5.0).with_color(color));
+            }
+            words.push((b.y - 14.0, format!("{word} {}", trimmed((qk * 100.0).round() / 100.0)), color));
+        }
+        words.sort_by(|a, b| a.0.total_cmp(&b.0));
+        for i in 1..words.len() {
+            words[i].0 = words[i].0.max(words[i - 1].0 + 13.0);
+        }
+        for (y, content, color) in words {
+            let width = 6.2 * content.chars().count() as f32 + 6.0;
+            frame.fill_rectangle(
+                Point::new(left + w as f32 - 4.0 - width + 2.0, y - 1.0),
+                iced::Size::new(width, 14.0),
+                iced::Color { a: 0.92, ..tk.surface },
+            );
+            frame.fill_text(Text {
+                content,
+                position: Point::new(left + w as f32 - 4.0, y),
+                color,
+                size: small,
+                align_x: iced::alignment::Horizontal::Right.into(),
+                ..Text::default()
+            });
+        }
+        // The hydrographs: the asked, and the range's low and high dashed.
+        for (i, f) in floods.iter().enumerate() {
+            let line = Path::new(|p| {
+                for (j, (t, q)) in self.points.iter().enumerate() {
+                    let at = at(*t, q * f.factor);
+                    if j == 0 { p.move_to(at) } else { p.line_to(at) }
+                }
+            });
+            let stroke = if i == 0 {
+                Stroke::default().with_width(2.4).with_color(tk.accent)
+            } else {
+                Stroke {
+                    line_dash: canvas::LineDash { segments: &[3.0, 3.0], offset: 0 },
+                    ..Stroke::default().with_width(1.2).with_color(tk.muted)
+                }
+            };
+            frame.stroke(&line, stroke);
         }
         vec![frame.into_geometry()]
     }

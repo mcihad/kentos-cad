@@ -1984,6 +1984,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.culverts.closure",
+        refusals: &[&["not_a_road_project", "unknown_culvert", "invalid_culvert_hydraulics", "invalid_culvert"]],
+        warnings: &["culvert_overtopped", "culvert_road_closed", "culvert_stale", "corridor_stale", "corridor_unsolved"],
+        targets: none,
+    },
+    Entry {
         id: "road.culverts.hydraulics",
         refusals: &[&["not_a_road_project", "unknown_culvert", "invalid_culvert_hydraulics", "invalid_culvert"]],
         warnings: &["culvert_overtopped", "culvert_stale", "culvert_cover", "corridor_stale", "corridor_unsolved"],

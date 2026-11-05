@@ -6,7 +6,7 @@
 
 use kentos_commands::{
     CommandResult, CommandWarning, CulvertFlowRead, CulvertHydraulicsRead, CulvertInlet, CulvertOvertop,
-    CulvertShapeDef, CulvertsHydraulics,
+    CulvertShapeDef, CulvertWeir, CulvertsHydraulics,
 };
 use kentos_domain::Document;
 use kentos_road::culvert_hydraulics::{Control, Culvert, Section, Weir, hazard_words, inlet, perform};
@@ -30,16 +30,16 @@ fn inlet_name(i: CulvertInlet) -> &'static str {
     }
 }
 
-fn bad(path: &str, words: &str) -> Stop {
+pub(crate) fn bad(path: &str, words: &str) -> Stop {
     fail(codes::INVALID_CULVERT_HYDRAULICS, format!("Menfez hidroliği sorusu geçerli değil: {words}."), path)
 }
 
-fn within(v: f64, lo: f64, hi: f64) -> bool {
+pub(crate) fn within(v: f64, lo: f64, hi: f64) -> bool {
     v.is_finite() && v >= lo && v <= hi
 }
 
 /// One flow, read.
-fn flow_read(culvert: &Culvert, weir: &Weir, q: f64, tw: f64, invert: f64) -> CulvertFlowRead {
+pub(crate) fn flow_read(culvert: &Culvert, weir: &Weir, q: f64, tw: f64, invert: f64) -> CulvertFlowRead {
     let p = perform(culvert, weir, q, tw);
     CulvertFlowRead {
         flow: q,
@@ -61,26 +61,30 @@ fn flow_read(culvert: &Culvert, weir: &Weir, q: f64, tw: f64, invert: f64) -> Cu
     }
 }
 
-fn answer(doc: &Document, input: &CulvertsHydraulics) -> Result<(CulvertHydraulicsRead, Vec<CommandWarning>), Stop> {
-    common::road_project(doc)?;
-    let (_, def) = common::find(doc.road_culverts(), &input.culvert, "culvert")?;
-    if !(input.flow.is_finite() && input.flow > 0.0 && input.flow <= 10_000.0) {
-        return Err(bad("flow", "debi 0'dan büyük, en çok 10000 m³/s olur"));
-    }
-    let tw = input.tailwater.unwrap_or(0.0);
-    if !within(tw, 0.0, 100.0) {
+/// What a hydraulics question asks besides its flow, checked before the culvert is read.
+pub(crate) struct Asked<'a> {
+    pub(crate) tailwater: Option<f64>,
+    pub(crate) inlet: CulvertInlet,
+    pub(crate) entrance_loss: f64,
+    pub(crate) roughness: Option<f64>,
+    pub(crate) weir: Option<&'a CulvertWeir>,
+}
+
+/// The question's own rules: the tailwater, ke, n (the question's or the culvert's) and the weir. Its n.
+pub(crate) fn check(def: &kentos_commands::CulvertDef, asked: &Asked<'_>) -> Result<f64, Stop> {
+    if !within(asked.tailwater.unwrap_or(0.0), 0.0, 100.0) {
         return Err(bad("tailwater", "çıkıştaki su derinliği 0 ile 100 m arası olur"));
     }
-    if !within(input.entrance_loss, 0.0, 2.0) {
+    if !within(asked.entrance_loss, 0.0, 2.0) {
         return Err(bad("entranceLoss", "giriş kaybı katsayısı 0 ile 2 arası olur"));
     }
-    let Some(n) = input.roughness.or(def.roughness) else {
+    let Some(n) = asked.roughness.or(def.roughness) else {
         return Err(bad("roughness", "menfezin Manning pürüzlülüğü yok; roughness ile verin"));
     };
     if !(n.is_finite() && n > 0.0 && n <= 0.1) {
         return Err(bad("roughness", "Manning pürüzlülüğü 0'dan büyük, en çok 0.1 olur"));
     }
-    if let Some(w) = &input.weir {
+    if let Some(w) = asked.weir {
         if !(w.cd.is_finite() && w.cd > 0.0 && w.cd <= 3.0) {
             return Err(bad("weir.cd", "savak katsayısı 0'dan büyük, en çok 3 olur"));
         }
@@ -91,9 +95,24 @@ fn answer(doc: &Document, input: &CulvertsHydraulics) -> Result<(CulvertHydrauli
             return Err(bad("weir.crest", "savak kreti bir kot olur"));
         }
     }
-    if input.curve.is_some_and(|c| !(2..=200).contains(&c)) {
-        return Err(bad("curve", "eğrinin nokta sayısı 2 ile 200 arası olur"));
-    }
+    Ok(n)
+}
+
+/// A culvert read for its hydraulics: its model, the road as a weir (none: never overtopped), its inverts, slope,
+/// cells and n, the crest (none without a weir) and the read's warnings.
+pub(crate) struct Model {
+    pub(crate) culvert: Culvert,
+    pub(crate) weir: Weir,
+    pub(crate) inlet_invert: f64,
+    pub(crate) outlet_invert: f64,
+    pub(crate) cells: u32,
+    pub(crate) n: f64,
+    pub(crate) crest: Option<f64>,
+    pub(crate) warnings: Vec<CommandWarning>,
+}
+
+/// The culvert read now and modelled with `asked` and its n.
+pub(crate) fn model(doc: &Document, def: &kentos_commands::CulvertDef, asked: &Asked<'_>, n: f64) -> Result<Model, Stop> {
     let read = common::read(doc, def)?;
     let r = &read.report;
     let end = |side: &str| r.ends.iter().find(|e| e.side == side).map_or(def.invert, |e| e.invert);
@@ -110,25 +129,47 @@ fn answer(doc: &Document, input: &CulvertsHydraulics) -> Result<(CulvertHydrauli
         length: r.length,
         slope,
         n,
-        inlet: inlet(inlet_name(input.inlet)).expect("every named inlet is kept"),
-        ke: input.entrance_loss,
+        inlet: inlet(inlet_name(asked.inlet)).expect("every named inlet is kept"),
+        ke: asked.entrance_loss,
     };
-    let crest = input.weir.as_ref().map(|w| w.crest.unwrap_or(read.crest));
+    let crest = asked.weir.map(|w| w.crest.unwrap_or(read.crest));
     if let Some(c) = crest
         && c <= inlet_invert
     {
         return Err(bad("weir.crest", &format!("savak kreti ({c:.3}) menfezin giriş kotunun ({inlet_invert:.3}) üstünde olmalı")));
     }
-    let weir = match (&input.weir, crest) {
+    let weir = match (asked.weir, crest) {
         (Some(w), Some(c)) => Weir { crest: c - inlet_invert, length: w.length, cd: w.cd },
         _ => Weir { crest: f64::INFINITY, length: 0.0, cd: 0.0 },
     };
-    let at = flow_read(&culvert, &weir, input.flow, tw, inlet_invert);
+    Ok(Model { culvert, weir, inlet_invert, outlet_invert, cells, n, crest, warnings: read.warnings })
+}
+
+fn answer(doc: &Document, input: &CulvertsHydraulics) -> Result<(CulvertHydraulicsRead, Vec<CommandWarning>), Stop> {
+    common::road_project(doc)?;
+    let (_, def) = common::find(doc.road_culverts(), &input.culvert, "culvert")?;
+    if !(input.flow.is_finite() && input.flow > 0.0 && input.flow <= 10_000.0) {
+        return Err(bad("flow", "debi 0'dan büyük, en çok 10000 m³/s olur"));
+    }
+    let asked = Asked {
+        tailwater: input.tailwater,
+        inlet: input.inlet,
+        entrance_loss: input.entrance_loss,
+        roughness: input.roughness,
+        weir: input.weir.as_ref(),
+    };
+    let n = check(def, &asked)?;
+    if input.curve.is_some_and(|c| !(2..=200).contains(&c)) {
+        return Err(bad("curve", "eğrinin nokta sayısı 2 ile 200 arası olur"));
+    }
+    let m = model(doc, def, &asked, n)?;
+    let tw = input.tailwater.unwrap_or(0.0);
+    let at = flow_read(&m.culvert, &m.weir, input.flow, tw, m.inlet_invert);
     let curve = input.curve.map_or_else(Vec::new, |k| {
         let top = 1.5 * input.flow;
-        (0..k).map(|i| flow_read(&culvert, &weir, top * f64::from(i) / f64::from(k - 1), tw, inlet_invert)).collect()
+        (0..k).map(|i| flow_read(&m.culvert, &m.weir, top * f64::from(i) / f64::from(k - 1), tw, m.inlet_invert)).collect()
     });
-    let mut warnings = read.warnings;
+    let mut warnings = m.warnings;
     if let Some(o) = &at.over {
         warnings.push(CommandWarning {
             code: codes::CULVERT_OVERTOPPED.into(),
@@ -146,13 +187,13 @@ fn answer(doc: &Document, input: &CulvertsHydraulics) -> Result<(CulvertHydrauli
     Ok((
         CulvertHydraulicsRead {
             culvert: def.id.clone(),
-            inlet_invert,
-            outlet_invert,
-            length: r.length,
-            slope,
-            cells,
-            roughness: n,
-            crest,
+            inlet_invert: m.inlet_invert,
+            outlet_invert: m.outlet_invert,
+            length: m.culvert.length,
+            slope: m.culvert.slope,
+            cells: m.cells,
+            roughness: m.n,
+            crest: m.crest,
             at,
             curve,
         },

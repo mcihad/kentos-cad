@@ -19119,6 +19119,131 @@ class Clip(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ClosureCriterion(_Model):
+    """One criterion through a flood: `submerged`, `smallPassenger`, `largePassenger`, `large4wd`, or `H2` to `H6`; its
+    words; the least total flow from which it holds (none: not up to the peak); its hours and when.
+    Attributes:
+        hours: Unit: h.
+        flow: Unit: discharge.
+    """
+    criterion: str
+    words: str
+    hours: float
+    spans: list[ClosureSpan]
+    flow: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["criterion"] = self.criterion
+        out["words"] = self.words
+        out["hours"] = float(self.hours)
+        out["spans"] = [e0.to_json() for e0 in self.spans]
+        if self.flow is not UNSET:
+            out["flow"] = None if self.flow is None else float(self.flow)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClosureCriterion:
+        return cls(
+            criterion=data["criterion"],
+            words=data["words"],
+            hours=float(data["hours"]),
+            spans=[ClosureSpan.from_json(e0) for e0 in data["spans"]],
+            flow=UNSET if "flow" not in data else None if data["flow"] is None else float(data["flow"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ClosureFlood(_Model):
+    """A flood at one flow factor and Cd: `asked`, `low` or `high`; the peak's flow and hydraulics; the criteria.
+    Attributes:
+        factor: Unit: 1.
+        cd: Unit: 1.
+    """
+    case: str
+    factor: float
+    cd: float
+    peak: CulvertFlowRead
+    criteria: list[ClosureCriterion]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["case"] = self.case
+        out["factor"] = float(self.factor)
+        out["cd"] = float(self.cd)
+        out["peak"] = self.peak.to_json()
+        out["criteria"] = [e0.to_json() for e0 in self.criteria]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClosureFlood:
+        return cls(
+            case=data["case"],
+            factor=float(data["factor"]),
+            cd=float(data["cd"]),
+            peak=CulvertFlowRead.from_json(data["peak"]),
+            criteria=[ClosureCriterion.from_json(e0) for e0 in data["criteria"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ClosureRange(_Model):
+    """The ranges a flood's closure is asked over (docs/adr/0948): a factor on the hydrograph's flows and the weir's Cd,
+    each from its low to its high, the asked (1 and the weir's Cd) between them.
+    Attributes:
+        flow_low: Unit: 1.
+        flow_high: Unit: 1.
+        cd_low: Unit: 1.
+        cd_high: Unit: 1.
+    """
+    flow_low: float
+    flow_high: float
+    cd_low: float
+    cd_high: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["flowLow"] = float(self.flow_low)
+        out["flowHigh"] = float(self.flow_high)
+        out["cdLow"] = float(self.cd_low)
+        out["cdHigh"] = float(self.cd_high)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClosureRange:
+        return cls(
+            flow_low=float(data["flowLow"]),
+            flow_high=float(data["flowHigh"]),
+            cd_low=float(data["cdLow"]),
+            cd_high=float(data["cdHigh"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ClosureSpan(_Model):
+    """A stretch of a flood's hours (from the flood's start).
+    Attributes:
+        from_: Unit: h.
+        to: Unit: h.
+    """
+    from_: float
+    to: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClosureSpan:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CloudDescribed(_Model):
     """A point cloud described.
     Attributes:
@@ -22088,6 +22213,37 @@ class CsvFileWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CulvertClosureRead(_Model):
+    """Output of `road.culverts.closure` v1 (docs/adr/0948): the culvert, its inlet's invert, the road's crest, and the
+    floods: the asked first, then the range's low and high.
+    Attributes:
+        inlet_invert: Unit: elevation.
+        crest: Unit: elevation.
+    """
+    culvert: str
+    inlet_invert: float
+    crest: float
+    floods: list[ClosureFlood]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culvert"] = self.culvert
+        out["inletInvert"] = float(self.inlet_invert)
+        out["crest"] = float(self.crest)
+        out["floods"] = [e0.to_json() for e0 in self.floods]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertClosureRead:
+        return cls(
+            culvert=data["culvert"],
+            inlet_invert=float(data["inletInvert"]),
+            crest=float(data["crest"]),
+            floods=[ClosureFlood.from_json(e0) for e0 in data["floods"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CulvertDef(_Model):
     """A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its
     station and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and
@@ -22489,6 +22645,58 @@ class CulvertWeir(_Model):
             cd=float(data["cd"]),
             length=float(data["length"]),
             crest=UNSET if "crest" not in data else None if data["crest"] is None else float(data["crest"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CulvertsClosure(_Model):
+    """Input of `road.culverts.closure` v1 (plan/road.md Y42, docs/adr/0948): a flood's hydrograph through a culvert and
+    over the road as a weir (`road.culverts.hydraulics`' inlet, ke, n, tailwater and weir), and how long the road is
+    under water, closed to each vehicle class and at each hazard class; with `range`, the shortest and longest of each.
+
+    Refusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert_hydraulics` (hydraulics' rules; a hydrograph of
+    2 to 1000 points, times from 0 to 8760 h rising, flows 0 to 10000 m³/s with some flow; a range's flow factors in
+    (0, 10] about 1, its Cd in (0, 3] about the weir's), and the culvert's own (`invalid_culvert`).
+    Attributes:
+        entrance_loss: Unit: 1.
+        roughness: Unit: 1.
+        tailwater: Unit: m.
+    """
+    culvert: str
+    hydrograph: list[HydrographPoint]
+    inlet: CulvertInlet | CulvertInletName
+    entrance_loss: float
+    weir: CulvertWeir
+    range: ClosureRange | None | Unset = UNSET
+    roughness: float | None | Unset = UNSET
+    tailwater: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["culvert"] = self.culvert
+        out["hydrograph"] = [e0.to_json() for e0 in self.hydrograph]
+        out["inlet"] = _enum_out(self.inlet)
+        out["entranceLoss"] = float(self.entrance_loss)
+        out["weir"] = self.weir.to_json()
+        if self.range is not UNSET:
+            out["range"] = None if self.range is None else self.range.to_json()
+        if self.roughness is not UNSET:
+            out["roughness"] = None if self.roughness is None else float(self.roughness)
+        if self.tailwater is not UNSET:
+            out["tailwater"] = None if self.tailwater is None else float(self.tailwater)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CulvertsClosure:
+        return cls(
+            culvert=data["culvert"],
+            hydrograph=[HydrographPoint.from_json(e0) for e0 in data["hydrograph"]],
+            inlet=_enum_in(CulvertInlet, data["inlet"]),
+            entrance_loss=float(data["entranceLoss"]),
+            weir=CulvertWeir.from_json(data["weir"]),
+            range=UNSET if "range" not in data else None if data["range"] is None else ClosureRange.from_json(data["range"]),
+            roughness=UNSET if "roughness" not in data else None if data["roughness"] is None else float(data["roughness"]),
+            tailwater=UNSET if "tailwater" not in data else None if data["tailwater"] is None else float(data["tailwater"]),
         )
 
 
@@ -38009,6 +38217,30 @@ class Helmert(_Model):
             scale=float(data["scale"]),
             convention=_enum_in(Convention, data["convention"]),
             accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HydrographPoint(_Model):
+    """A hydrograph's point: its time (hours from the flood's start) and flow (m³/s). The flow is linear between points.
+    Attributes:
+        time: Unit: h.
+        flow: Unit: discharge.
+    """
+    time: float
+    flow: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["time"] = float(self.time)
+        out["flow"] = float(self.flow)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HydrographPoint:
+        return cls(
+            time=float(data["time"]),
+            flow=float(data["flow"]),
         )
 
 
@@ -109027,6 +109259,10 @@ __all__ = [
     "CloseCurveEdit",
     "ClosedPolylines",
     "ClosedPolylinesName",
+    "ClosureCriterion",
+    "ClosureFlood",
+    "ClosureRange",
+    "ClosureSpan",
     "CloudDescribed",
     "CloudExtra",
     "CloudFormat",
@@ -109169,6 +109405,7 @@ __all__ = [
     "CsvGeometryName",
     "CsvSeparator",
     "CsvSeparatorName",
+    "CulvertClosureRead",
     "CulvertDef",
     "CulvertEnd",
     "CulvertFlow",
@@ -109182,6 +109419,7 @@ __all__ = [
     "CulvertReport",
     "CulvertShapeDef",
     "CulvertWeir",
+    "CulvertsClosure",
     "CulvertsDraw",
     "CulvertsDrawn",
     "CulvertsEdit",
@@ -109826,6 +110064,7 @@ __all__ = [
     "HoleRemoveAreaWork",
     "HorizontalAdjustWork",
     "HorizontalConstraintRule",
+    "HydrographPoint",
     "IfcAlignmentWritten",
     "IfcExported",
     "ImageClipBy",

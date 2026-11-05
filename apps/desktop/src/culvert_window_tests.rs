@@ -108,6 +108,59 @@ fn the_hydraulics_read_the_shared_case() {
     assert_eq!(app.culvert_window.as_ref().expect("open").inlet, kentos_commands::CulvertInlet::PipeSquareHeadwall);
 }
 
+/// Kapanma reads a flood as `road.culverts.closure` does: the shared cases “Üçgen hidrograf, kutu menfez” and “Debi ve Cd
+/// aralığıyla” typed in.
+#[test]
+fn the_closure_reads_the_shared_cases() {
+    let mut app = app();
+    let _ = app.update(Message::Run("culvert.editor"));
+    send(&mut app, W::Page(2));
+    send(&mut app, W::Flood(0, "60".into()));
+    let why = match app.culvert_window.as_ref().and_then(|w| w.closure.clone()) {
+        Some(Err(why)) => why,
+        other => panic!("refused without its hours: {other:?}"),
+    };
+    assert!(why.contains("Tepeye süre"), "{why}");
+    send(&mut app, W::Flood(1, "3".into()));
+    send(&mut app, W::Flood(2, "12".into()));
+    send(&mut app, W::Hydraulic(2, "0.4".into()));
+    let why = match app.culvert_window.as_ref().and_then(|w| w.closure.clone()) {
+        Some(Err(why)) => why,
+        other => panic!("refused without a weir: {other:?}"),
+    };
+    assert!(why.contains("savak"), "{why}");
+    send(&mut app, W::Hydraulic(4, "1.66".into()));
+    send(&mut app, W::Hydraulic(5, "60".into()));
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.culverts.closure.json")).expect("cases");
+    let expected = |name: &str| {
+        let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case");
+        case["steps"][0]["result"]["output"]["floods"].clone()
+    };
+    let check = |app: &App, name: &str| {
+        let (read, _) = app.culvert_window.as_ref().and_then(|w| w.closure.clone()).expect("asked").expect("reads");
+        let want = expected(name);
+        assert_eq!(read.floods.len(), want.as_array().expect("floods").len(), "{name}");
+        for (f, w) in read.floods.iter().zip(want.as_array().expect("floods")) {
+            for (c, cw) in f.criteria.iter().zip(w["criteria"].as_array().expect("criteria")) {
+                let h = cw["hours"].as_f64().expect("hours");
+                assert!((c.hours - h).abs() < 1e-6, "{name} {} {}: {} vs {h}", f.case, c.criterion, c.hours);
+            }
+        }
+    };
+    check(&app, "Üçgen hidrograf, kutu menfez");
+    for (k, v) in [(4, "0.8"), (5, "1.2"), (6, "1.5"), (7, "1.8")] {
+        send(&mut app, W::Flood(k, v.into()));
+    }
+    check(&app, "Debi ve Cd aralığıyla");
+    send(&mut app, W::Flood(5, String::new()));
+    let why = match app.culvert_window.as_ref().and_then(|w| w.closure.clone()) {
+        Some(Err(why)) => why,
+        other => panic!("a range needs both factors: {other:?}"),
+    };
+    assert!(why.contains("birlikte"), "{why}");
+}
+
 /// The window, wide and narrow, light and dark, and the barrel drawn in plan; `.run/gui-evidence/yol-y11-menfez-*`:
 ///
 /// ```text
@@ -148,6 +201,13 @@ fn screens() {
         shot(&mut app, "hidrolik-tasma");
         send(&mut app, W::Hydraulic(0, "12".into()));
         shot(&mut app, "hidrolik");
+        send(&mut app, W::Page(2));
+        for (k, v) in [(0, "60"), (1, "3"), (2, "12"), (4, "0.8"), (5, "1.2"), (6, "1.5"), (7, "1.8")] {
+            send(&mut app, W::Flood(k, v.into()));
+        }
+        shot(&mut app, "kapanma");
+        send(&mut app, W::Hydraulic(5, "10".into()));
+        shot(&mut app, "kapanma-dar-cukur");
         send(&mut app, W::Page(0));
         send(&mut app, W::Choose(Some("m-2".into())));
         shot(&mut app, "boru");

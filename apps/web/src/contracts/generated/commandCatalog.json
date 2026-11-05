@@ -44168,6 +44168,203 @@
       ]
     },
     {
+      "id": "road.culverts.closure",
+      "version": 1,
+      "title": "Taşkında yol kapanması",
+      "summary": "Bir taşkının hidrografını (saat, m³/s; noktalar arası doğrusal) menfezden ve savak sayılan yoldan geçirir (road.culverts.hydraulics'in inlet, entranceLoss, roughness, tailwater ve weir'i): yolun kaç saat su altında kaldığını, küçük binek, büyük binek ve büyük 4×4 araçlara (Shand 2011) ve H2–H6 tehlike sınıflarında kaç saat kapalı olduğunu, eşik debileri ve saat aralıklarıyla verir. range ile debi çarpanı ve Cd aralığında en kısa ve en uzun süreler (köşelerde kesin). Katsayıları ve hidrografı KentOS vermez. Yalnız okur. Uyarılar: culvert_overtopped, culvert_road_closed ve okumanın uyarıları. Retler: not_a_road_project, unknown_culvert, invalid_culvert_hydraulics, invalid_culvert.",
+      "aliases": [
+        "yolkapanma"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.culverts.closure` v1 (plan/road.md Y42, docs/adr/0948): a flood's hydrograph through a culvert and\nover the road as a weir (`road.culverts.hydraulics`' inlet, ke, n, tailwater and weir), and how long the road is\nunder water, closed to each vehicle class and at each hazard class; with `range`, the shortest and longest of each.\n\nRefusals: `not_a_road_project`, `unknown_culvert`, `invalid_culvert_hydraulics` (hydraulics' rules; a hydrograph of\n2 to 1000 points, times from 0 to 8760 h rising, flows 0 to 10000 m³/s with some flow; a range's flow factors in\n(0, 10] about 1, its Cd in (0, 3] about the weir's), and the culvert's own (`invalid_culvert`).",
+        "properties": {
+          "culvert": {
+            "type": "string"
+          },
+          "entranceLoss": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "hydrograph": {
+            "items": {
+              "$ref": "#/$defs/HydrographPoint"
+            },
+            "type": "array"
+          },
+          "inlet": {
+            "$ref": "#/$defs/CulvertInlet"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ClosureRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "roughness": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "tailwater": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "weir": {
+            "$ref": "#/$defs/CulvertWeir"
+          }
+        },
+        "required": [
+          "culvert",
+          "hydrograph",
+          "inlet",
+          "entranceLoss",
+          "weir"
+        ],
+        "title": "CulvertsClosure",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.closure` v1 (docs/adr/0948): the culvert, its inlet's invert, the road's crest, and the\nfloods: the asked first, then the range's low and high.",
+        "properties": {
+          "crest": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "culvert": {
+            "type": "string"
+          },
+          "floods": {
+            "items": {
+              "$ref": "#/$defs/ClosureFlood"
+            },
+            "type": "array"
+          },
+          "inletInvert": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          }
+        },
+        "required": [
+          "culvert",
+          "inletInvert",
+          "crest",
+          "floods"
+        ],
+        "title": "CulvertClosureRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.culverts.closure` v1 (docs/adr/0948): the culvert, its inlet's invert, the road's crest, and the\nfloods: the asked first, then the range's low and high.",
+        "properties": {
+          "crest": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "culvert": {
+            "type": "string"
+          },
+          "floods": {
+            "items": {
+              "$ref": "#/$defs/ClosureFlood"
+            },
+            "type": "array"
+          },
+          "inletInvert": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          }
+        },
+        "required": [
+          "culvert",
+          "inletInvert",
+          "crest",
+          "floods"
+        ],
+        "title": "CulvertClosureRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_culvert",
+          "invalid_culvert_hydraulics",
+          "invalid_culvert"
+        ],
+        "warnings": [
+          "culvert_overtopped",
+          "culvert_road_closed",
+          "culvert_stale",
+          "corridor_stale",
+          "corridor_unsolved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üçgen hidrograf, debi ±%20",
+          "input": {
+            "culvert": "m-1",
+            "entranceLoss": 0.4,
+            "hydrograph": [
+              {
+                "flow": 0.0,
+                "time": 0.0
+              },
+              {
+                "flow": 60.0,
+                "time": 3.0
+              },
+              {
+                "flow": 0.0,
+                "time": 12.0
+              }
+            ],
+            "inlet": "boxWingwall30To75",
+            "range": {
+              "cdHigh": 1.8,
+              "cdLow": 1.5,
+              "flowHigh": 1.2,
+              "flowLow": 0.8
+            },
+            "weir": {
+              "cd": 1.66,
+              "length": 60.0
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "road.drainage.query",
       "version": 1,
       "title": "Drenajı sorgula",
@@ -87308,6 +87505,12 @@
       "meaning": "Bu debide su menfezin üstünden yolu aşıyor; tehlike sınıfı iletide."
     },
     {
+      "code": "culvert_road_closed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Taşkın menfezin üstündeki yolu küçük binek araçlara saatlerce kapatıyor; süre iletide."
+    },
+    {
       "code": "corridor_in_use",
       "kind": "failed",
       "retryable": false,
@@ -102027,6 +102230,131 @@
           "type": "string"
         }
       ]
+    },
+    "ClosureCriterion": {
+      "description": "One criterion through a flood: `submerged`, `smallPassenger`, `largePassenger`, `large4wd`, or `H2` to `H6`; its\nwords; the least total flow from which it holds (none: not up to the peak); its hours and when.",
+      "properties": {
+        "criterion": {
+          "type": "string"
+        },
+        "flow": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "discharge"
+        },
+        "hours": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "h"
+        },
+        "spans": {
+          "items": {
+            "$ref": "#/$defs/ClosureSpan"
+          },
+          "type": "array"
+        },
+        "words": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "criterion",
+        "words",
+        "hours",
+        "spans"
+      ],
+      "type": "object"
+    },
+    "ClosureFlood": {
+      "description": "A flood at one flow factor and Cd: `asked`, `low` or `high`; the peak's flow and hydraulics; the criteria.",
+      "properties": {
+        "case": {
+          "type": "string"
+        },
+        "cd": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "criteria": {
+          "items": {
+            "$ref": "#/$defs/ClosureCriterion"
+          },
+          "type": "array"
+        },
+        "factor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "peak": {
+          "$ref": "#/$defs/CulvertFlowRead"
+        }
+      },
+      "required": [
+        "case",
+        "factor",
+        "cd",
+        "peak",
+        "criteria"
+      ],
+      "type": "object"
+    },
+    "ClosureRange": {
+      "additionalProperties": false,
+      "description": "The ranges a flood's closure is asked over (docs/adr/0948): a factor on the hydrograph's flows and the weir's Cd,\neach from its low to its high, the asked (1 and the weir's Cd) between them.",
+      "properties": {
+        "cdHigh": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "cdLow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "flowHigh": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "flowLow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "flowLow",
+        "flowHigh",
+        "cdLow",
+        "cdHigh"
+      ],
+      "type": "object"
+    },
+    "ClosureSpan": {
+      "description": "A stretch of a flood's hours (from the flood's start).",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "h"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "h"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "type": "object"
     },
     "CloudDescribed": {
       "description": "A point cloud described.",
@@ -122272,6 +122600,27 @@
         "rotation",
         "scale",
         "convention"
+      ],
+      "type": "object"
+    },
+    "HydrographPoint": {
+      "additionalProperties": false,
+      "description": "A hydrograph's point: its time (hours from the flood's start) and flow (m³/s). The flow is linear between points.",
+      "properties": {
+        "flow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "discharge"
+        },
+        "time": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "h"
+        }
+      },
+      "required": [
+        "time",
+        "flow"
       ],
       "type": "object"
     },

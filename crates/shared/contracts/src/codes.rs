@@ -761,6 +761,8 @@ codes! {
     INVALID_CULVERT_HYDRAULICS = "invalid_culvert_hydraulics", Failed, false, "Menfez hidroliği sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: the road over a culvert is overtopped at the flow asked, with its hazard class (docs/adr/0947).
     CULVERT_OVERTOPPED = "culvert_overtopped", Warning, false, "Bu debide su menfezin üstünden yolu aşıyor; tehlike sınıfı iletide.";
+    /// A warning: a flood closes the road over a culvert to small passenger vehicles for some hours (docs/adr/0948).
+    CULVERT_ROAD_CLOSED = "culvert_road_closed", Warning, false, "Taşkın menfezin üstündeki yolu küçük binek araçlara saatlerce kapatıyor; süre iletide.";
     /// A corridor an earthwork volume uses.
     CORRIDOR_IN_USE = "corridor_in_use", Failed, false, "Bu koridoru bir kübaj hesabı kullanıyor; önce kübaj hesabını silin.";
     /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).

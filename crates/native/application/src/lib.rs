@@ -303,6 +303,7 @@ pub mod road_guardrails_edit;
 pub mod road_guardrails_query;
 pub mod road_culverts;
 pub mod road_culverts_draw;
+pub mod road_culverts_closure;
 pub mod road_culverts_hydraulics;
 pub mod road_culverts_edit;
 pub mod road_culverts_query;
@@ -1325,6 +1326,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_CULVERTS_QUERY, kentos_commands::ROAD_CULVERTS_QUERY_VERSION),
     (kentos_commands::ROAD_CULVERTS_DRAW, kentos_commands::ROAD_CULVERTS_DRAW_VERSION),
     (kentos_commands::ROAD_CULVERTS_HYDRAULICS, kentos_commands::ROAD_CULVERTS_HYDRAULICS_VERSION),
+    (kentos_commands::ROAD_CULVERTS_CLOSURE, kentos_commands::ROAD_CULVERTS_CLOSURE_VERSION),
     (kentos_commands::ROAD_WALLS_EDIT, kentos_commands::ROAD_WALLS_EDIT_VERSION),
     (kentos_commands::ROAD_WALLS_QUERY, kentos_commands::ROAD_WALLS_QUERY_VERSION),
     (kentos_commands::ROAD_WALLS_DRAW, kentos_commands::ROAD_WALLS_DRAW_VERSION),

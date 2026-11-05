@@ -1,6 +1,6 @@
 # 0948 — Taşkında yolun kapanma süresi, araç sınıfları ve belirsizlik
 
-Tarih: 2026-11-05. Durum: kabul (Y42.1 çekirdek). Kapsam ROAD-DRAIN-08'in açık kalanı (süre, araç sınıfı, belirsizlik).
+Tarih: 2026-11-05. Durum: kabul (Y42.1 çekirdek, Y42.2 komut, Y42.3 pencere). Kapsam ROAD-DRAIN-08'in açık kalanı (süre, araç sınıfı, belirsizlik).
 
 ## Sorun
 
@@ -94,8 +94,58 @@ Rust eşikleri ve süreleri 1e-7 içinde aynı bulur (`crates/shared/road/tests/
   kapasitesi belirler.
 - Yüksek kuyruk suyu (1,8 m) yolu daha erken su altında bırakır: eşik 3,71'den 2,97 m³/s'ye iner.
 
-## Açık
+## Komut: `road.culverts.closure` (Y42.2)
 
-- Komut, Python/MCP ve pencere (Y42.2, Y42.3).
+Kayıtlı menfezi `road.culverts.hydraulics`'in modeliyle okur: giriş, ke, n, kuyruk suyu, savak (burada zorunlu). Yalnız
+okur.
+
+- **Girdi:** hidrograf (2–1000 nokta, saat 0–8760 artarak, debi 0–10000 m³/s, en az bir noktada debi var) ve isteğe
+  bağlı aralık. Aralıkta debi çarpanı (0, 1] ile [1, 10], Cd (0, savağın Cd'si] ile [savağın Cd'si, 3] olur.
+- **Çıktı:** sorulan taşkın, varsa aralığın altı ve üstü. Her birinde çarpan, Cd, tepedeki hidrolik ve dokuz ölçüt
+  (su altında, üç araç, H2–H6). Her ölçüt eşik debisini, saatini ve saat aralıklarını taşır.
+- **Uyarılar:**
+  - `culvert_overtopped`: yolun kaç saat su altında kaldığını, başlangıç ve bitiş saatini, aralıkta en kısa ve en
+    uzununu söyler;
+  - `culvert_road_closed`: küçük binek araçlara kapanmayı söyler.
+- **Retler:** hidroliğinkiler (`invalid_culvert_hydraulics` hidrograf ve aralık için de).
+- Hidroliğin denetimi ve modeli tek yerde: `road_culverts_hydraulics::{check, model}`. İki komut aynı menfezi aynı
+  biçimde okur.
+
+`scripts/fixtures/road_culvert_closure_command_cases.py` 24 durum yazar. Menfezin okunuşu hidrolik komutunun
+başvurusundan, kapanma bu ADR'nin başvurusundan (metre başına debi sınırı) gelir. Rust ve Python 1e-6 içinde aynı
+bulur.
+
+Ortak çizimin kutu menfezinde (60 m savak) tepe 60 m³/s, 3. saatte tepe, 12 saatte biten üçgen bir taşkın:
+
+| Ölçüt | Eşik | Süre | Aralık (çarpan 0,8–1,2, Cd 1,5–1,8) |
+|---|---|---|---|
+| Su altında | 25,46 m³/s | 6,91 sa (1,27–8,18) | 5,64–7,76 sa |
+| Küçük binek | 45,37 m³/s | 2,93 sa | 0,62–4,45 sa |
+| Büyük binek | 54,94 m³/s | 1,01 sa | 0–2,86 sa |
+| 4×4 | — | 0 | 0–1,29 sa |
+
+Taşma boyu 10 m'ye inince aynı taşkın küçük binek araçlara 5,93 sa, 4×4'e 5,11 sa kapalıdır.
+
+## Pencere: Menfez → Kapanma (Y42.3)
+
+Menfez penceresine üçüncü sayfa eklendi.
+
+- **Alanlar:** Hidrolik'in alanları (debi hariç; ikisi aynı değerleri paylaşır), ardından üçgen hidrograf (tepe debi,
+  tepeye süre, toplam süre, taban debi) ve aralık (debi çarpanı alt/üst, Cd alt/üst; Cd yazılmazsa savağınki).
+  Komut her hidrografı alır; pencere en sık kullanılan üçgeni kurar.
+- **Okuma satırı:** tepe, tepede su kotu ve kret, su altında kalma ve üç araç sınıfının kapanma saatleri.
+- **Uyarı:** yol kapanıyorsa WRL'nin uyarısı yazılır (duran araç ölçütü; sahada derinlik ve hız gözle
+  kestirilemez). Kapatma kararı yetkilinindir.
+- **Grafik:**
+  - hidrograf düz çizgi, aralığın altı ve üstü kesikli;
+  - su altında kalma, küçük binek ve 4×4 eşikleri kesikli yatay çizgi; taşkının eşiği aştığı saatlerde çizgi kalın;
+  - su altında kalınan saatler açık renkle taranır.
+
+  İlk sürüm üç ölçütün saatlerini üst üste taradı ve koyu temada çamurlu tek bir bant çıktı. Yakın eşiklerin
+  yazıları (25,46 / 30,37 / 34,44) üst üste biniyordu; şimdi birer satır aralıkla ve zeminli yazılır.
+- **Tablo:** ölçüt, eşik, süre, başlar, biter ve aralık. Eğri ile tablo sayfayı yarı yarıya paylaşır; aralık sütunu
+  1440 px'te sığar.
+
+## Açık
 - Menfez önündeki biriktirmeyle hidrograf ötelemesi; debiyle değişen kuyruk suyu.
 - Yayalar için sınırlar (ARR'nin insan güvenliği ölçütleri) ve yeniden açılma süresi.
