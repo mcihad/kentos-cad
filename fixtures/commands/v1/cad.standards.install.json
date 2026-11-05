@@ -1,0 +1,3273 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.standards.install",
+ "commandVersion": 1,
+ "title": "Standart kaynaklarını kur",
+ "note": "ADR 1002. Bağımsız başvuru scripts/fixtures/standards_install_cases.py: kurallar ADR'den elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Ofis kaynakları",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 100,
+   "workspace": "cad",
+   "lineTypes": [
+    {
+     "name": "GAZ",
+     "elements": [
+      {
+       "length": 1.0
+      },
+      {
+       "length": -1.0
+      }
+     ],
+     "unit": "paper"
+    },
+    {
+     "name": "SINIR",
+     "elements": [
+      {
+       "length": 3.0
+      },
+      {
+       "length": -1.0
+      }
+     ],
+     "unit": "paper"
+    }
+   ],
+   "hatchPatterns": [
+    {
+     "name": "TUGLA",
+     "unit": "mm",
+     "lines": [
+      {
+       "angle": 0.0,
+       "origin": [
+        0.0,
+        0.0
+       ],
+       "offset": [
+        0.0,
+        6.35
+       ]
+      }
+     ]
+    }
+   ],
+   "textStyles": [
+    {
+     "id": "yerel-not",
+     "name": "A-NOT",
+     "font": "barlow",
+     "height": 3.5
+    }
+   ],
+   "dimensionStyles": [
+    {
+     "id": "yerel-olcu",
+     "name": "A-OLCU",
+     "height": 2.5
+    }
+   ],
+   "leaderStyles": [
+    {
+     "id": "ofis-kilavuz",
+     "name": "YEREL-KILAVUZ",
+     "height": 2.5
+    }
+   ],
+   "standardDocs": [
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"lineTypes\": [{\"name\": \"GAZ\", \"elements\": [{\"length\": 2.0}, {\"length\": -1.0}], \"unit\": \"paper\"}, {\"name\": \"OFIS-KESIK\", \"elements\": [{\"length\": 4.0}, {\"length\": -2.0}], \"unit\": \"paper\"}, {\"name\": \"sinir\", \"description\": \"Ofisin açıklaması\", \"elements\": [{\"length\": 3.0000000001}, {\"length\": -1.0}], \"unit\": \"paper\"}], \"hatchPatterns\": [{\"name\": \"OFIS-TARAMA\", \"unit\": \"mm\", \"lines\": [{\"angle\": 45.0, \"origin\": [0.0, 0.0], \"offset\": [0.0, 2.0]}]}], \"textStyleDefinitions\": [{\"id\": \"ofis-not\", \"name\": \"A-NOT\", \"font\": \"barlow\", \"height\": 2.5}], \"dimensionStyleDefinitions\": [{\"id\": \"ofis-olcu\", \"name\": \"A-OLCU\", \"height\": 2.5}], \"leaderStyles\": [{\"id\": \"ofis-kilavuz\", \"name\": \"OFIS-KILAVUZ\", \"height\": 2.5}]}}"
+    },
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"lineTypes\": [{\"name\": \"GAZ\", \"elements\": [{\"length\": 9.0}, {\"length\": -9.0}], \"unit\": \"paper\"}, {\"name\": \"B-NOKTA\", \"elements\": [{\"length\": 0.0}, {\"length\": -1.0}], \"unit\": \"paper\"}]}}"
+    }
+   ]
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "0",
+    "attrs": {},
+    "linePattern": "GAZ",
+    "lineType": "dashed",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Seçimsiz: eksikler eklenir, farklılar korunur, aynılar dokunulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz, aynı satırları verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı GAZ yerinde değiştirilir: ad ve kullanan çizgi izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 3,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 2.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı GAZ yeni adla eklenir, çizimdeki kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "gaz",
+        "action": "renameIncoming",
+        "newName": "GAZ-OFIS"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "renameIncoming",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ],
+         "newName": "GAZ-OFIS"
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 0,
+       "renamed": 1,
+       "kept": 3,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "GAZ-OFIS",
+         "elements": [
+          {
+           "length": 2.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı A-NOT yerinde: yerel kimlik ve ad korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "textStyle",
+        "name": "A-NOT",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 3,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 2.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı A-NOT yeni adla: kendi kimliğiyle eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "textStyle",
+        "name": "A-NOT",
+        "action": "renameIncoming",
+        "newName": "A-NOT-OFIS"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "renameIncoming",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ],
+         "newName": "A-NOT-OFIS"
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 0,
+       "renamed": 1,
+       "kept": 3,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        },
+        {
+         "id": "ofis-not",
+         "name": "A-NOT-OFIS",
+         "font": "barlow",
+         "height": 2.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kılavuz stili eklenir; çizimde aynı kimlik var: kimlik -2 alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik olan atlanabilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "OFIS-KESIK",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "hatchPattern",
+        "name": "OFIS-TARAMA",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 6,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hepsi atlanınca yazım yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "OFIS-KESIK",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "lineType",
+        "name": "B-NOKTA",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "hatchPattern",
+        "name": "OFIS-TARAMA",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "leaderStyle",
+        "name": "OFIS-KILAVUZ",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 0,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 8,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kurulumu geri al: tablolar önceki hâline döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "replace",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 3,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 2.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Standart kaynaklarını kur",
+     "expect": {
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Standart kaynaklarını kur",
+     "expect": {
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 2.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlk standart önce gelir: GAZ ofis-a'nın",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "lineType",
+         "name": "GAZ",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "elements"
+         ]
+        },
+        {
+         "kind": "lineType",
+         "name": "OFIS-KESIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "sinir",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "lineType",
+         "name": "B-NOKTA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        },
+        {
+         "kind": "hatchPattern",
+         "name": "OFIS-TARAMA",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "textStyle",
+         "name": "A-NOT",
+         "status": "differs",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         },
+         "fields": [
+          "height"
+         ]
+        },
+        {
+         "kind": "dimensionStyle",
+         "name": "A-OLCU",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "leaderStyle",
+         "name": "OFIS-KILAVUZ",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "lineTypes": [
+        {
+         "name": "GAZ",
+         "elements": [
+          {
+           "length": 1.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "SINIR",
+         "elements": [
+          {
+           "length": 3.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "OFIS-KESIK",
+         "elements": [
+          {
+           "length": 4.0
+          },
+          {
+           "length": -2.0
+          }
+         ],
+         "unit": "paper"
+        },
+        {
+         "name": "B-NOKTA",
+         "elements": [
+          {
+           "length": 0.0
+          },
+          {
+           "length": -1.0
+          }
+         ],
+         "unit": "paper"
+        }
+       ],
+       "hatchPatterns": [
+        {
+         "name": "TUGLA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 0.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            6.35
+           ]
+          }
+         ]
+        },
+        {
+         "name": "OFIS-TARAMA",
+         "unit": "mm",
+         "lines": [
+          {
+           "angle": 45.0,
+           "origin": [
+            0.0,
+            0.0
+           ],
+           "offset": [
+            0.0,
+            2.0
+           ]
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "yerel-not",
+         "name": "A-NOT",
+         "font": "barlow",
+         "height": 3.5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "id": "yerel-olcu",
+         "name": "A-OLCU",
+         "height": 2.5
+        }
+       ],
+       "leaderStyles": [
+        {
+         "id": "ofis-kilavuz",
+         "name": "YEREL-KILAVUZ",
+         "height": 2.5
+        },
+        {
+         "id": "ofis-kilavuz-2",
+         "name": "OFIS-KILAVUZ",
+         "height": 2.5
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Standartta olmayan ad: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "YOK",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "standard_resource_not_found",
+       "message": "Bağlı standartlarda “YOK” adlı çizgi tipi yok. Kaynağı standartların listesinden seçin.",
+       "path": "choices[0].name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Türü yanlış: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "hatchPattern",
+        "name": "GAZ",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "standard_resource_not_found",
+       "message": "Bağlı standartlarda “GAZ” adlı tarama deseni yok. Kaynağı standartların listesinden seçin.",
+       "path": "choices[0].name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı kaynağa iki seçim: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "replace"
+       },
+       {
+        "kind": "lineType",
+        "name": "gaz",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“gaz” çizgi tipi için iki seçim verildi; her kaynağa bir seçim verin.",
+       "path": "choices[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik olanı değiştirmek: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "OFIS-KESIK",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“OFIS-KESIK” çizgi tipi çizimde yok: eklenebilir ya da atlanabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı olanı eklemek: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "dimensionStyle",
+        "name": "A-OLCU",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“A-OLCU” ölçü stili çizimdekiyle aynı: değişecek bir şey yok.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı olanı eklemek: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“GAZ” çizgi tipi çizimdekinden farklı: değiştirilebilir, yeni adla eklenebilir ya da çizimdeki korunabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni adsız yeni adla ekleme: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "renameIncoming"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "Yeni adla eklemek için kenarı boşluksuz, boş olmayan bir ad verin (newName).",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenarı boşluklu yeni ad: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "renameIncoming",
+        "newName": " GAZ2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "Yeni adla eklemek için kenarı boşluksuz, boş olmayan bir ad verin (newName).",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştirmede yeni ad: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "replace",
+        "newName": "X"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "Yeni ad yalnız yeni adla eklemede (renameIncoming) verilir.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni ad çizimde var: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "renameIncoming",
+        "newName": "sinir"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_name",
+       "message": "“sinir” adlı çizgi tipi çizimde ya da standartta var; başka bir ad verin.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni ad standartta var: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "lineType",
+        "name": "GAZ",
+        "action": "renameIncoming",
+        "newName": "B-NOKTA"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_name",
+       "message": "“B-NOKTA” adlı çizgi tipi çizimde ya da standartta var; başka bir ad verin.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen revizyon eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen revizyon sayı değil: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

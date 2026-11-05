@@ -78,7 +78,7 @@ pub fn execute_resolve(
     resolve_project(cx.doc)
 }
 
-fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
+pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
     use std::collections::BTreeSet;
     let packages = match read_project_packages(doc) {
         Ok(packages) if !packages.is_empty() => packages,
@@ -649,7 +649,7 @@ fn leader_style_differences(first: &serde_json::Value, later: &serde_json::Value
     style_differences(first, later)
 }
 
-fn resource_appearance<T: serde::Serialize>(item: &T) -> serde_json::Value {
+pub(crate) fn resource_appearance<T: serde::Serialize>(item: &T) -> serde_json::Value {
     let mut value = serde_json::to_value(item).expect("validated style");
     let object = value.as_object_mut().expect("style object");
     object.remove("id");
@@ -657,7 +657,7 @@ fn resource_appearance<T: serde::Serialize>(item: &T) -> serde_json::Value {
     value
 }
 
-fn style_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
+pub(crate) fn style_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
     fn equal(a: &serde_json::Value, b: &serde_json::Value) -> bool {
         match (a, b) {
             (serde_json::Value::Number(a), serde_json::Value::Number(b)) => a

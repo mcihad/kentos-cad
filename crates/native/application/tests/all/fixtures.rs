@@ -489,6 +489,11 @@ trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
 }
+impl Input for kentos_commands::StandardsInstall {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
 impl Input for kentos_commands::DrawingTake {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -4966,6 +4971,10 @@ fn run_op(
         }
         kentos_commands::CAD_DRAWING_TAKE => {
             run!(drawing_take, kentos_commands::DrawingTake)
+        }
+        kentos_commands::CAD_STANDARDS_INSTALL => {
+            use kentos_native_application::standards_install;
+            run!(standards_install, kentos_commands::StandardsInstall)
         }
         kentos_commands::CAD_REVIEW_NOTES_EDIT => {
             run!(review_notes, kentos_commands::ReviewNotesEdit)

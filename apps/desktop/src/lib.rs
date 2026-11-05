@@ -185,6 +185,7 @@ mod source_status;
 mod source_trouble;
 mod drawing_standard;
 mod review_window;
+mod standard_install;
 #[cfg(test)]
 mod edge_shift_scenes;
 #[cfg(test)]

@@ -62705,6 +62705,176 @@
       ]
     },
     {
+      "id": "cad.standards.install",
+      "version": 1,
+      "title": "Standart kaynaklarını kur",
+      "summary": "Projeye bağlı ofis standartlarının adlandırılmış kaynaklarını (çizgi tipi, tarama deseni, yazı, ölçü ve kılavuz stili; cad.standards.resolve'un ilk kaynak önceliğiyle) çizime kurar; tek geri alma adımı, adı “Standart kaynaklarını kur”. Her kaynak çizimdeki aynı adlıyla karşılaştırılır: missing (yok), same (görünüşü aynı), differs (farklı; farklı alanlar fields'ta). Varsayılan: eksik olan eklenir, farklı olan çizimdeki olarak kalır; aynı adlı farklı kaynak seçim olmadan asla ezilmez. choices: kind, name ve action — add (eksikse), replace (farklıysa yerinde; çizimdeki ad ve yerel kimlik korunur, onu kullananlar izler), keepLocal, renameIncoming (farklıysa standarttakini newName ile ekler). Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden verir. Retler: no_standard, invalid_standard, standard_resource_not_found, invalid_install_choice, duplicate_name, invalid_revision, revision_conflict.",
+      "aliases": [
+        "standartkur"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the\nchoices. Refusals, in order: `no_standard`, `invalid_standard`, `standard_resource_not_found`,\n`invalid_install_choice`, `duplicate_name`, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "choices": {
+            "items": {
+              "$ref": "#/$defs/StandardInstallChoice"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "StandardsInstall",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.standards.install` v1.",
+        "properties": {
+          "added": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "kept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "renamed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "replaced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "description": "Every resource of the bound standards, by kind then by the standards' order.",
+            "items": {
+              "$ref": "#/$defs/StandardInstallRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows",
+          "added",
+          "replaced",
+          "renamed",
+          "kept",
+          "revision"
+        ],
+        "title": "StandardsInstalled",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.standards.install` v1.",
+        "properties": {
+          "added": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "kept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "renamed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "replaced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "description": "Every resource of the bound standards, by kind then by the standards' order.",
+            "items": {
+              "$ref": "#/$defs/StandardInstallRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows",
+          "added",
+          "replaced",
+          "renamed",
+          "kept",
+          "revision"
+        ],
+        "title": "StandardsInstalled",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_standard",
+          "invalid_standard",
+          "standard_resource_not_found",
+          "invalid_install_choice",
+          "duplicate_name",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Eksikleri ekle, farklı GAZ çizgi tipini yeni adla al",
+          "input": {
+            "choices": [
+              {
+                "action": "renameIncoming",
+                "kind": "lineType",
+                "name": "GAZ",
+                "newName": "GAZ-OFIS"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.standards.conflicts",
       "version": 1,
       "title": "Bağlı standartlardaki farklı tanımları göster",
@@ -88790,6 +88960,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı."
+    },
+    {
+      "code": "standard_resource_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bağlı standartlarda bu ad ve türde kaynak yok."
+    },
+    {
+      "code": "invalid_install_choice",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynak için seçilen işlem onun durumuna uymuyor ya da iki kez verildi."
     },
     {
       "code": "pattern_too_long_for_lin",
@@ -169207,6 +169389,88 @@
       ],
       "type": "object"
     },
+    "StandardInstallAction": {
+      "description": "What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and\nlocal id kept, so what names it follows), the drawing's kept, or the standard's added under another name.",
+      "enum": [
+        "add",
+        "replace",
+        "keepLocal",
+        "renameIncoming"
+      ],
+      "type": "string"
+    },
+    "StandardInstallChoice": {
+      "additionalProperties": false,
+      "description": "The user's choice for one resource; a resource without one takes its default (add a missing one, keep a\ndiffering or equal one).",
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/StandardInstallAction"
+        },
+        "kind": {
+          "$ref": "#/$defs/StandardResourceKind"
+        },
+        "name": {
+          "description": "The resource's name in the standard.",
+          "type": "string"
+        },
+        "newName": {
+          "description": "For `renameIncoming`: the name the standard's resource takes in the drawing.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "action"
+      ],
+      "type": "object"
+    },
+    "StandardInstallRow": {
+      "description": "One resource of the bound standards and what the install does with it.",
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/StandardInstallAction"
+        },
+        "fields": {
+          "description": "The differing appearance fields (`differs` only).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "$ref": "#/$defs/StandardResourceKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "newName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/StandardOrigin",
+          "description": "The standard the resource comes from and its office revision."
+        },
+        "status": {
+          "description": "`missing`, `same` or `differs`, against the drawing's resource of that name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "status",
+        "action",
+        "source"
+      ],
+      "type": "object"
+    },
     "StandardIssue": {
       "description": "A finding.",
       "properties": {
@@ -169479,6 +169743,17 @@
         "dimensionStyleDefinitions"
       ],
       "type": "object"
+    },
+    "StandardResourceKind": {
+      "description": "A kind of named resource a bound office standard carries (docs/adr/1002 §1).",
+      "enum": [
+        "lineType",
+        "hatchPattern",
+        "textStyle",
+        "dimensionStyle",
+        "leaderStyle"
+      ],
+      "type": "string"
     },
     "StandardResources": {
       "additionalProperties": false,

@@ -9421,11 +9421,12 @@
    "title": "Standardı uygula",
    "level": "semantic",
    "via": [
-    "cad.standards.apply"
+    "cad.standards.apply",
+    "cad.standards.install"
    ],
    "operation": null,
-   "python": "kentos.cad.standards.apply",
-   "mcp": "cad.standards.apply",
+   "python": "kentos.cad.standards.apply, kentos.cad.standards.install",
+   "mcp": "cad.standards.apply, cad.standards.install",
    "note": "Standart ve dört seçenek komuta verilir; pencerenin önizlemesi komutun planıdır (ADR 0312 §3).",
    "scope": "cad",
    "desktop": "implemented",

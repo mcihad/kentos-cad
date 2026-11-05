@@ -441,6 +441,7 @@ pub mod levels_assign;
 mod library_symbols;
 pub mod north;
 pub mod review_notes;
+pub mod standards_install;
 pub mod revisions;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
 pub mod tags;
@@ -1653,6 +1654,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_STANDARDS_CONFLICTS,
         kentos_commands::CAD_STANDARDS_CONFLICTS_VERSION,
+    ),
+    (
+        kentos_commands::CAD_STANDARDS_INSTALL,
+        kentos_commands::CAD_STANDARDS_INSTALL_VERSION,
     ),
     (
         kentos_commands::CAD_STANDARDS_RESOLVE,

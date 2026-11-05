@@ -270,6 +270,12 @@ pub(crate) enum Op {
     /// The style tables a `cad.styles.edit` changed, style by style (docs/adr/0699).
     StyleTables(Box<crate::style_tables::StyleTables>),
     /// Only the metadata installed by an explicit architectural package (ADR 0659).
+    /// The project's line types and hatch patterns (docs/adr/1002 §4), before and after: a standard's resources
+    /// installed as a step of their own.
+    PatternTables {
+        before: std::sync::Arc<(Vec<kentos_contracts::LineTypeDef>, Vec<kentos_contracts::HatchPatternDef>)>,
+        after: std::sync::Arc<(Vec<kentos_contracts::LineTypeDef>, Vec<kentos_contracts::HatchPatternDef>)>,
+    },
     /// The review notes (docs/adr/1000 §3), before and after: a note is not an object but its change is a step.
     ReviewNotes {
         before: std::sync::Arc<Vec<kentos_contracts::ReviewNote>>,
@@ -699,6 +705,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::ReviewNotes { before, after } => Op::ReviewNotes {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::PatternTables { before, after } => Op::PatternTables {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1446,6 +1456,7 @@ impl Document {
                 | Op::ImportMetadata { .. }
                 | Op::TemplateSettings { .. }
                 | Op::ReviewNotes { .. }
+                | Op::PatternTables { .. }
                 | Op::StyleTables(_)
                 | Op::Sheets { .. }
                 | Op::Units { .. }
@@ -1734,6 +1745,11 @@ impl Document {
             }
             Op::ReviewNotes { after, .. } => {
                 self.settings.review_notes = after.as_ref().clone();
+                return;
+            }
+            Op::PatternTables { after, .. } => {
+                self.settings.line_types = after.0.clone();
+                self.settings.hatch_patterns = after.1.clone();
                 return;
             }
             Op::StyleTables(tables) => {

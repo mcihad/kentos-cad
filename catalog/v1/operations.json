@@ -1358,7 +1358,8 @@
     "standards.apply": {
       "level": "semantic",
       "via": [
-        "cad.standards.apply"
+        "cad.standards.apply",
+        "cad.standards.install"
       ],
       "note": "Standart ve dört seçenek komuta verilir; pencerenin önizlemesi komutun planıdır (ADR 0312 §3)."
     },

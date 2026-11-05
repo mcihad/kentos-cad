@@ -6585,6 +6585,20 @@ StakeoutSendFormatName = Literal["landxml", "gsi16", "gsi8", "gts7", "jobxml", "
 """The names of :class:`StakeoutSendFormat`, for a plain string."""
 
 
+class StandardInstallAction(_StrEnum):
+    """What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and
+    local id kept, so what names it follows), the drawing's kept, or the standard's added under another name.
+    """
+    ADD = "add"
+    REPLACE = "replace"
+    KEEP_LOCAL = "keepLocal"
+    RENAME_INCOMING = "renameIncoming"
+
+
+StandardInstallActionName = Literal["add", "replace", "keepLocal", "renameIncoming"]
+"""The names of :class:`StandardInstallAction`, for a plain string."""
+
+
 class StandardIssueKind(_StrEnum):
     """What a finding is about.
 
@@ -6653,6 +6667,19 @@ class StandardIssueKind(_StrEnum):
 
 StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "blockUnit", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
+
+
+class StandardResourceKind(_StrEnum):
+    """A kind of named resource a bound office standard carries (docs/adr/1002 §1)."""
+    LINE_TYPE = "lineType"
+    HATCH_PATTERN = "hatchPattern"
+    TEXT_STYLE = "textStyle"
+    DIMENSION_STYLE = "dimensionStyle"
+    LEADER_STYLE = "leaderStyle"
+
+
+StandardResourceKindName = Literal["lineType", "hatchPattern", "textStyle", "dimensionStyle", "leaderStyle"]
+"""The names of :class:`StandardResourceKind`, for a plain string."""
 
 
 class StationOwner(_StrEnum):
@@ -80242,6 +80269,80 @@ class StandardDimensionStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardInstallChoice(_Model):
+    """The user's choice for one resource; a resource without one takes its default (add a missing one, keep a
+    differing or equal one).
+    Attributes:
+        name: The resource's name in the standard.
+        new_name: For `renameIncoming`: the name the standard's resource takes in the drawing.
+    """
+    kind: StandardResourceKind | StandardResourceKindName
+    name: str
+    action: StandardInstallAction | StandardInstallActionName
+    new_name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["action"] = _enum_out(self.action)
+        if self.new_name is not UNSET:
+            out["newName"] = self.new_name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardInstallChoice:
+        return cls(
+            kind=_enum_in(StandardResourceKind, data["kind"]),
+            name=data["name"],
+            action=_enum_in(StandardInstallAction, data["action"]),
+            new_name=data.get("newName", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardInstallRow(_Model):
+    """One resource of the bound standards and what the install does with it.
+    Attributes:
+        status: `missing`, `same` or `differs`, against the drawing's resource of that name.
+        source: The standard the resource comes from and its office revision.
+        fields: The differing appearance fields (`differs` only).
+    """
+    kind: StandardResourceKind | StandardResourceKindName
+    name: str
+    status: str
+    action: StandardInstallAction | StandardInstallActionName
+    source: StandardOrigin
+    fields: list[str] | Unset = UNSET
+    new_name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["status"] = self.status
+        out["action"] = _enum_out(self.action)
+        out["source"] = self.source.to_json()
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.new_name is not UNSET:
+            out["newName"] = self.new_name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardInstallRow:
+        return cls(
+            kind=_enum_in(StandardResourceKind, data["kind"]),
+            name=data["name"],
+            status=data["status"],
+            action=_enum_in(StandardInstallAction, data["action"]),
+            source=StandardOrigin.from_json(data["source"]),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            new_name=data.get("newName", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StandardIssue(_Model):
     """A finding.
     Attributes:
@@ -80674,6 +80775,71 @@ class StandardsConflictsReport(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsConflictsReport:
         return cls(
             conflicts=[StandardConflict.from_json(e0) for e0 in data["conflicts"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsInstall(_Model):
+    """Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the
+    choices. Refusals, in order: `no_standard`, `invalid_standard`, `standard_resource_not_found`,
+    `invalid_install_choice`, `duplicate_name`, `invalid_revision`, `revision_conflict`.
+    """
+    choices: list[StandardInstallChoice] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.choices is not UNSET:
+            out["choices"] = [e0.to_json() for e0 in self.choices]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsInstall:
+        return cls(
+            choices=[StandardInstallChoice.from_json(e0) for e0 in data["choices"]] if "choices" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsInstalled(_Model):
+    """Output of `cad.standards.install` v1.
+    Attributes:
+        rows: Every resource of the bound standards, by kind then by the standards' order.
+        added: Unit: count.
+        replaced: Unit: count.
+        renamed: Unit: count.
+        kept: Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    rows: list[StandardInstallRow]
+    added: int
+    replaced: int
+    renamed: int
+    kept: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["added"] = self.added
+        out["replaced"] = self.replaced
+        out["renamed"] = self.renamed
+        out["kept"] = self.kept
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsInstalled:
+        return cls(
+            rows=[StandardInstallRow.from_json(e0) for e0 in data["rows"]],
+            added=data["added"],
+            replaced=data["replaced"],
+            renamed=data["renamed"],
+            kept=data["kept"],
             revision=data["revision"],
         )
 
@@ -115940,12 +116106,18 @@ __all__ = [
     "StandardBlockReference",
     "StandardConflict",
     "StandardDimensionStyle",
+    "StandardInstallAction",
+    "StandardInstallActionName",
+    "StandardInstallChoice",
+    "StandardInstallRow",
     "StandardIssue",
     "StandardIssueKind",
     "StandardIssueKindName",
     "StandardLayer",
     "StandardOrigin",
     "StandardProvenance",
+    "StandardResourceKind",
+    "StandardResourceKindName",
     "StandardResources",
     "StandardSheetTemplateReference",
     "StandardTextStyle",
@@ -115954,6 +116126,8 @@ __all__ = [
     "StandardsCheck",
     "StandardsConflicts",
     "StandardsConflictsReport",
+    "StandardsInstall",
+    "StandardsInstalled",
     "StandardsReport",
     "StandardsResolve",
     "StandardsResolved",

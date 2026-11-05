@@ -5184,6 +5184,20 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.standards.install",
+        refusals: &[&[
+            "no_standard",
+            "invalid_standard",
+            "standard_resource_not_found",
+            "invalid_install_choice",
+            "duplicate_name",
+            "invalid_revision",
+            "revision_conflict",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.standards.conflicts",
         refusals: &[&["invalid_standard"]],
         warnings: &[],

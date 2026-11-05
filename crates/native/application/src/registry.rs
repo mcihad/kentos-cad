@@ -80,6 +80,7 @@ use crate::sources::{
     relate as sources_relate, sync as sources_sync,
 };
 use crate::sources_query;
+use crate::standards_install;
 use crate::drawing_take;
 use crate::review_notes;
 use crate::review_notes::list_cmd as review_notes_list;
@@ -804,6 +805,7 @@ macro_rules! by_command {
             kentos_commands::CAD_LAYERS_TRANSLATE => $then!(layers_translate, LayersTranslate),
             kentos_commands::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
             kentos_commands::CAD_STANDARDS_CONFLICTS => $then!(standards_conflicts, kentos_commands::StandardsConflicts),
+            kentos_commands::CAD_STANDARDS_INSTALL => $then!(standards_install, kentos_commands::StandardsInstall),
             kentos_commands::CAD_STANDARDS_RESOLVE => $then!(standards_resolve, kentos_commands::StandardsResolve),
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_commands::CAD_PROFILES_APPLY => {

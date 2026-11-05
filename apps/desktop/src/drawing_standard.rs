@@ -1255,9 +1255,14 @@ impl App {
                 "Bu dosya seçimi pencere kapanınca unutulur; çizime kaydedilmez.",
             ));
         }
+        let bound = self.document.as_ref().is_some_and(|d| !d.model.settings().standard_docs.is_empty());
         Frame::new(STANDARD_TITLE)
             .scroll(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .aside(words::secondary(
+                "Kaynakları kur…",
+                bound.then_some(Message::StandardInstall(crate::standard_install::Event::Open)),
+            ))
             .action(words::primary(
                 APPLY,
                 (ready && w.load_error.is_none()).then(|| msg(Event::Apply)),

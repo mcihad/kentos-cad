@@ -2058,6 +2058,15 @@ güvenle gizlenir. Farklı proje kimliği sınaması eklendi. Gerçek uygulamada
 favori satırı ve `project:<kimlik>:<şablon>` kaydı doğrulandı; ekran görüntüsü
 repo dışındadır.
 
+**Kaynakların kullanıcı eşlemesiyle kurulması (5 Kasım 2026, [ADR 1002](../docs/adr/1002-installing-office-standard-resources.md)):**
+`cad.standards.install` bağlı standartların çizgi tipi, tarama, yazı/ölçü stili tanımı ve kılavuz stillerini
+çizimdekilerle karşılaştırır (eksik/aynı/farklı, farklı alanlarıyla) ve seçime göre kurar: eksik eklenir, farklı olan
+seçim olmadan korunur; Değiştir çizimdeki ad ve kimliği koruyarak yerinde değiştirir, Yeni adla standarttakini başka
+adla ekler. Hiçbir kaynak silinmez; tek Undo “Standart kaynaklarını kur” (çizgi tipi/tarama tabloları için yeni
+geri alma işlemi). Çizim standardı penceresinde **Kaynakları kur…**. Bağımsız başvuruyla 25 ortak durum ilk koşuda
+geçti; gerçek pencerede önce/sonra görüntülendi. Blok/pafta şablonu kurulumu, tablo stili, ofis paleti yayını, tam
+görünüş kökeni ve iki profilli kabul senaryosu açık; madde `[~]`.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [~]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

@@ -1351,3 +1351,116 @@ mod tests {
         }
     }
 }
+
+pub const CAD_STANDARDS_INSTALL: &str = "cad.standards.install";
+pub const CAD_STANDARDS_INSTALL_VERSION: u32 = 1;
+/// The undo step's name.
+pub const STANDARDS_INSTALL_STEP: &str = "Standart kaynaklarını kur";
+
+/// A kind of named resource a bound office standard carries (docs/adr/1002 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum StandardResourceKind {
+    LineType,
+    HatchPattern,
+    TextStyle,
+    DimensionStyle,
+    LeaderStyle,
+}
+
+/// What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and
+/// local id kept, so what names it follows), the drawing's kept, or the standard's added under another name.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum StandardInstallAction {
+    Add,
+    Replace,
+    KeepLocal,
+    RenameIncoming,
+}
+
+/// The user's choice for one resource; a resource without one takes its default (add a missing one, keep a
+/// differing or equal one).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardInstallChoice {
+    pub kind: StandardResourceKind,
+    /// The resource's name in the standard.
+    pub name: String,
+    pub action: StandardInstallAction,
+    /// For `renameIncoming`: the name the standard's resource takes in the drawing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub new_name: Option<String>,
+}
+
+/// Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the
+/// choices. Refusals, in order: `no_standard`, `invalid_standard`, `standard_resource_not_found`,
+/// `invalid_install_choice`, `duplicate_name`, `invalid_revision`, `revision_conflict`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsInstall {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<StandardInstallChoice>>"))]
+    pub choices: Vec<StandardInstallChoice>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// One resource of the bound standards and what the install does with it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardInstallRow {
+    pub kind: StandardResourceKind,
+    pub name: String,
+    /// `missing`, `same` or `differs`, against the drawing's resource of that name.
+    pub status: String,
+    pub action: StandardInstallAction,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub new_name: Option<String>,
+    /// The differing appearance fields (`differs` only).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub fields: Vec<String>,
+    /// The standard the resource comes from and its office revision.
+    pub source: StandardOrigin,
+}
+
+/// Output of `cad.standards.install` v1.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsInstalled {
+    /// Every resource of the bound standards, by kind then by the standards' order.
+    pub rows: Vec<StandardInstallRow>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub replaced: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub renamed: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub kept: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]
+    pub revision: String,
+}

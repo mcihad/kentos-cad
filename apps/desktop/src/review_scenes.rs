@@ -103,3 +103,32 @@ pub(crate) fn scenes() -> Vec<Scene> {
         }),
     ]
 }
+
+/// docs/adr/1002: the shared cases' drawing (two bound office standards, a differing GAZ and A-NOT) with
+/// Standart kaynaklarını kur open, GAZ to be added under a new name and A-NOT replaced in place.
+fn install(app: &mut App) {
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.standards.install.json"
+    ))
+    .expect("the cases");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).expect("the drawing reads");
+    let doc = Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::make_cad(app);
+    let _ = app.update(Message::StandardInstall(crate::standard_install::Event::Open));
+    use crate::standard_install::{Choice, Event as I};
+    use kentos_commands::{StandardInstallAction as A, StandardResourceKind as K};
+    let _ = app.update(Message::StandardInstall(I::Pick(K::LineType, "GAZ".into(), Choice(A::RenameIncoming))));
+    let _ = app.update(Message::StandardInstall(I::Pick(K::TextStyle, "A-NOT".into(), Choice(A::Replace))));
+}
+
+pub(crate) fn install_scenes() -> Vec<Scene> {
+    vec![
+        ("standart-kaynak-kur", install),
+        ("standart-kaynak-kuruldu", |app| {
+            install(app);
+            let _ = app.update(Message::StandardInstall(crate::standard_install::Event::Install));
+        }),
+    ]
+}

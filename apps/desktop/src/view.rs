@@ -2093,6 +2093,7 @@ impl App {
             Asking::RevisionMatches(i) => self.revision_candidates_view(i),
             Asking::RevisionTake(i) => self.revision_take_view(i),
             Asking::ReviewNotes => self.review_notes_view(),
+            Asking::StandardInstall => self.standard_install_view(),
             Asking::FieldInsert => self.field_insert_view(),
             Asking::TextNumber => self.text_number_view(),
             Asking::TextCheck => self.text_check_view(),

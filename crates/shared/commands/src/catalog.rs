@@ -10723,6 +10723,34 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::StandardsResolved>(), plan: Some(schema::<crate::StandardsResolved>()),
             capabilities: None, examples: vec![CommandExample { title: "Bağlı standartları birleştir".into(), input: json!({}), output: None }],
         },
+        // Standart kaynaklarını kur (docs/adr/1002), held together by fixtures/commands/v1/cad.standards.install.json.
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_INSTALL.into(),
+            version: crate::CAD_STANDARDS_INSTALL_VERSION,
+            title: "Standart kaynaklarını kur".into(),
+            summary: "Projeye bağlı ofis standartlarının adlandırılmış kaynaklarını (çizgi tipi, tarama deseni, yazı, ölçü ve kılavuz stili; cad.standards.resolve'un ilk kaynak önceliğiyle) çizime kurar; tek geri alma adımı, adı “Standart kaynaklarını kur”. \
+                      Her kaynak çizimdeki aynı adlıyla karşılaştırılır: missing (yok), same (görünüşü aynı), differs (farklı; farklı alanlar fields'ta). Varsayılan: eksik olan eklenir, farklı olan çizimdeki olarak kalır; aynı adlı farklı kaynak seçim olmadan asla ezilmez. \
+                      choices: kind, name ve action — add (eksikse), replace (farklıysa yerinde; çizimdeki ad ve yerel kimlik korunur, onu kullananlar izler), keepLocal, renameIncoming (farklıysa standarttakini newName ile ekler). Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden verir. \
+                      Retler: no_standard, invalid_standard, standard_resource_not_found, invalid_install_choice, duplicate_name, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["standartkur".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StandardsInstall>(),
+            output: schema::<crate::StandardsInstalled>(),
+            plan: Some(schema::<crate::StandardsInstalled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Eksikleri ekle, farklı GAZ çizgi tipini yeni adla al".into(),
+                input: json!({ "choices": [{ "kind": "lineType", "name": "GAZ", "action": "renameIncoming", "newName": "GAZ-OFIS" }] }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_STANDARDS_CONFLICTS.into(),
             version: crate::CAD_STANDARDS_CONFLICTS_VERSION,
@@ -15359,6 +15387,9 @@ mod tests {
                     }
                     crate::CAD_STANDARDS_CONFLICTS => {
                         serde_json::from_value::<crate::StandardsConflicts>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_INSTALL => {
+                        serde_json::from_value::<crate::StandardsInstall>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_DRAWING_TAKE => {
                         serde_json::from_value::<crate::DrawingTake>(e.input.clone()).map(|_| ())

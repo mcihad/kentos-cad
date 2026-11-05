@@ -87,6 +87,8 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.standards.install", "no_standard", "Bağlı standart olmayan çizim review_take::installing_needs_a_readable_bound_standard testinde sınanır."),
+    ("cad.standards.install", "invalid_standard", "Okunamayan bağlı standart review_take::installing_needs_a_readable_bound_standard testinde sınanır."),
     ("cad.linetypes.edit", "pattern_too_long_for_lin", "12 öğeyi aşan desenin LIN dışa aktarımı review_take::a_long_pattern_is_kept_and_left_out_of_a_lin_file testinde sınanır."),
     ("cad.drawing.take", "unknown_block", "Tanımı kaybolmuş blok yerleştirmesi review_take::an_insert_whose_definition_the_drawing_lost_is_not_taken testinde sınanır."),
     ("cad.drawing.take", "block_definition_differs", "Tanımı değişmiş bloğun yerleştirmesini alma review_take::a_changed_definition_makes_the_insert_note_stale_and_the_take_warns testinde sınanır."),

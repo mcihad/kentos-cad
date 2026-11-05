@@ -281,3 +281,29 @@ fn an_opened_metre_dxf_keeps_its_pattern_lengths() {
     let layer = s.layers.iter().find(|l| l.name == "A").expect("the layer");
     assert_eq!(layer.style.line_pattern.as_deref(), Some("U16"));
 }
+
+/// docs/adr/1002: an install refuses without a bound standard (`no_standard`) and with one it cannot read
+/// (`invalid_standard`), writing nothing.
+#[test]
+fn installing_needs_a_readable_bound_standard() {
+    use kentos_commands::{ProjectStandardDocument, StandardsInstall};
+    let mut doc = drawing();
+    let refused = |doc: &mut Document| match kentos_native_application::standards_install::execute(
+        &mut ExecutionContext::new(doc),
+        StandardsInstall::default(),
+    ) {
+        CommandResult::Failed { error } => error.code,
+        other => panic!("refused: {other:?}"),
+    };
+    assert_eq!(refused(&mut doc), "no_standard");
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![ProjectStandardDocument {
+        text: serde_json::json!({"format": "kentos.drawing-standard", "version": 2, "id": "bozuk", "revision": "1",
+            "standard": {"name": "Bozuk", "layers": [], "bilinmeyen": true}, "resources": {}})
+        .to_string(),
+    }];
+    doc.set_settings(settings);
+    let revision = doc.revision();
+    assert_eq!(refused(&mut doc), "invalid_standard");
+    assert_eq!(doc.revision(), revision);
+}
