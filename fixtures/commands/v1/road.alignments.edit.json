@@ -8122,7 +8122,114 @@
             "status": "failed",
             "error": {
               "code": "offset_cusp",
-              "message": "“Sol kenar” paralel aksı km 597.101–602.598 arasında kıvrılıyor: orada kurpun yarıçapı ötelemeden küçük. Ötelemeyi küçültün ya da kurpları genişletin.",
+              "message": "“Sol kenar” paralel aksı km 2+597.101–2+602.598 arasında kıvrılıyor: p1 kurbunun yarıçapı orada 7.000 m'ye iniyor, öteleme 7.500 m. p1 kurbunun yarıçapını 7.500 m'nin üstüne çıkarın ya da ötelemeyi 7.000 m'nin altına indirin.",
+              "path": "pis"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Sol kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": -7.5
+                  }
+                },
+                {
+                  "id": "g-3",
+                  "name": "Bağlantı",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484000.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484100.0,
+                      "y": 4419000.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484100.0,
+                      "y": 4419100.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Kurp kaldırılır: sol kenar kırıkta kendini keser",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "alignment": "g-1",
+            "operation": "set",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "p1",
+                "x": 485600.0,
+                "y": 4420000.0
+              },
+              {
+                "id": "b",
+                "x": 486100.0,
+                "y": 4420500.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "offset_cusp",
+              "message": "“Sol kenar” paralel aksı km 2+596.893 ile km 2+603.107 arasında kendini kesiyor: p1 kurpsuz bir kırık ve iç yanında her öteleme kendini keser. p1 noktasına yarıçapı 7.500 m'nin üstünde bir kurp koyun.",
               "path": "pis"
             }
           },

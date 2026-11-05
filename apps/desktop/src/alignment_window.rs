@@ -279,20 +279,29 @@ fn impact_words(imp: &kentos_commands::AlignmentImpact) -> String {
 }
 
 /// The chosen alignment's status line, as the window writes it (for the tests).
-pub(crate) fn status_of(w: &Window) -> String {
-    w.chosen.and_then(|i| w.rows.get(i)).map_or_else(String::new, |r| status(&w.rows, r))
+/// Whether the chosen row is refused: its status is said in red.
+pub(crate) fn refused(w: &Window) -> bool {
+    w.chosen.and_then(|i| w.rows.get(i)).is_some_and(|r| status(&w.rows, r).1)
 }
 
-fn status(rows: &[Row], r: &Row) -> String {
+pub(crate) fn status_of(w: &Window) -> String {
+    w.chosen.and_then(|i| w.rows.get(i)).map_or_else(String::new, |r| status(&w.rows, r).0)
+}
+
+/// What the chosen row builds to, and whether it is refused (said in red).
+fn status(rows: &[Row], r: &Row) -> (String, bool) {
     let defs: Result<Vec<AlignmentDef>, String> = rows.iter().map(Row::def).collect();
     let (defs, def) = match (defs, r.def()) {
         (Ok(d), Ok(def)) => (d, def),
-        (Err(e), _) | (_, Err(e)) => return e,
+        (Err(e), _) | (_, Err(e)) => {
+            let bad = e.ends_with("olmalı.");
+            return (e, bad);
+        }
     };
     let source = match &def.offset_of {
         Some(o) => match defs.iter().find(|d| d.id == o.alignment) {
             Some(s) => s.clone(),
-            None => return "Paralel aksın kaynağını seçin.".into(),
+            None => return ("Paralel aksın kaynağını seçin.".into(), false),
         },
         None => def.clone(),
     };
@@ -310,19 +319,19 @@ fn status(rows: &[Row], r: &Row) -> String {
         .collect();
     let al = match core::build(&pis) {
         Ok(a) => a,
-        Err(e) => return format!("Kurulamıyor: {}", chain_words(&e)),
+        Err(e) => return (format!("Kurulamıyor: {}", chain_words(&e)), true),
     };
     let st = road_alignments::stationing_of(source.stationing.as_ref());
     let regions = match st.regions(al.length) {
         Ok(r) => r,
-        Err(_) => return "Km eşitliği aksın üstünde, bir öncekinden sonra olmalı.".into(),
+        Err(_) => return ("Km eşitliği aksın üstünde, bir öncekinden sonra olmalı.".into(), true),
     };
     let comma = |v: f64| format!("{v:.3}").replace('.', ",");
+    // The command's own words, with the fix in numbers (docs/adr/0970).
     if let Some(o) = &def.offset_of
-        && let Err(core::offset::OffsetError::Cusp { from, to } | core::offset::OffsetError::Crosses { a: from, b: to }) =
-            core::offset::check(&al, o.offset)
+        && let Err(e) = core::offset::check(&al, o.offset)
     {
-        return format!("Paralel aks kıvrılıyor: km {}–{} arası.", comma(from), comma(to));
+        return (road_alignments::offset_words(&def.name, &e, o.offset, &|s| core::Stationing::km(&regions, s)), true);
     }
     let length = def.offset_of.as_ref().map_or(al.length, |o| core::offset::length(&al, o.offset));
     let joins = al.joins.iter().filter(|j| j.reverse).count();
@@ -354,7 +363,7 @@ fn status(rows: &[Row], r: &Row) -> String {
     if kinks.is_empty() && jumps == 0 && !seams.is_empty() {
         words.push_str(" · konum, doğrultu ve eğrilik sürekli");
     }
-    words
+    (words, false)
 }
 
 fn chain_words(e: &core::ChainError) -> String {
@@ -1007,8 +1016,7 @@ impl App {
             }
         }
         let point = kentos_ui::widget::text_field("Y; X", &w.point).on_input(|t| msg(Event::Point(t)));
-        let said = status(&w.rows, r);
-        let bad = said.starts_with("Kurulamıyor") || said.starts_with("Paralel aks kıvrılıyor") || said.ends_with("olmalı.");
+        let (said, bad) = status(&w.rows, r);
         let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
         let mut col = col.push(if bad { label::caption(said).style(danger) } else { label::caption(said) });
         // What saving the PIs typed would do (docs/adr/0963).

@@ -5423,7 +5423,7 @@
             "status": "failed",
             "error": {
               "code": "offset_cusp",
-              "message": "“İç kenar” paralel aksı km 465.163–474.052 arasında kıvrılıyor: orada kurpun yarıçapı ötelemeden küçük. Ötelemeyi küçültün ya da kurpları genişletin.",
+              "message": "“İç kenar” paralel aksı km 2+465.163–2+474.052 arasında kıvrılıyor: p1 kurbunun yarıçapı orada 400.000 m'ye iniyor, öteleme 450.000 m. p1 kurbunun yarıçapını 450.000 m'nin üstüne çıkarın ya da ötelemeyi 400.000 m'nin altına indirin.",
               "path": "offsetOf.offset"
             }
           },
@@ -5530,6 +5530,272 @@
           "within": 1e-06
         }
       ]
+    },
+    {
+      "name": "Kolları yaklaşan dönüşün iç kenarı kendini keser",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "İç kenar",
+            "offsetOf": {
+              "alignment": "g-2",
+              "offset": -50.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "offset_cusp",
+              "message": "“İç kenar” paralel aksının km 0+128.114 ve km 0+579.160 noktaları aynı yere düşüyor: aksın bu iki yeri 50.000 m'lik ötelemeye göre birbirine çok yakın. Ötelemeyi küçültün ya da aksın bu iki yerini birbirinden uzaklaştırın.",
+              "path": "offsetOf.offset"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Dönüş",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485300.0,
+                      "y": 4420000.0,
+                      "radius": 60.0
+                    },
+                    {
+                      "id": "p2",
+                      "x": 485300.0,
+                      "y": 4420160.0,
+                      "radius": 60.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 485000.0,
+                      "y": 4420060.0
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol aksları",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "alignments": [
+              {
+                "id": "g-1",
+                "name": "Ana aks",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 485000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 485600.0,
+                    "y": 4420000.0,
+                    "radius": 400.0,
+                    "spiralIn": 80.0,
+                    "spiralOut": 80.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 486100.0,
+                    "y": 4420500.0
+                  }
+                ],
+                "stationing": {
+                  "start": 2000.0
+                }
+              },
+              {
+                "id": "g-2",
+                "name": "Dönüş",
+                "revision": 1,
+                "pis": [
+                  {
+                    "id": "a",
+                    "x": 485000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "id": "p1",
+                    "x": 485300.0,
+                    "y": 4420000.0,
+                    "radius": 60.0
+                  },
+                  {
+                    "id": "p2",
+                    "x": 485300.0,
+                    "y": 4420160.0,
+                    "radius": 60.0
+                  },
+                  {
+                    "id": "b",
+                    "x": 485000.0,
+                    "y": 4420060.0
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "km",
+            "name": "Km",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Yol",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "yol-km",
+                "name": "Yol km",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [],
+        "uids": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
     },
     {
       "name": "Paralel aksa paralel",

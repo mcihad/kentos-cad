@@ -460,3 +460,64 @@ fn screens_continuity() {
         shot(&mut app, "kirik");
     }
 }
+
+/// Ana aks turned right at p1: Sağ kenar (5 m right) is then on the inside. A radius of 3 m folds it, no curve crosses
+/// it; the window says the command's words with the fix in numbers (docs/adr/0970).
+fn offset_inside(app: &mut App, radius: &str) {
+    send(app, W::Choose(0));
+    send(app, W::Pi(2, 1, "-240".into()));
+    send(app, W::Pi(1, 2, radius.into()));
+    send(app, W::Pi(1, 3, "0".into()));
+    send(app, W::Pi(1, 4, "0".into()));
+    send(app, W::Choose(2));
+}
+
+#[test]
+fn the_window_says_the_parallel_axis_fix() {
+    let mut app = impact_app();
+    let _ = app.update(Message::Run("alignment.editor"));
+    let said = |app: &App| -> String { app.alignment_window.as_ref().map(crate::alignment_window::status_of).unwrap_or_default() };
+    offset_inside(&mut app, "3");
+    assert!(said(&app).contains("p1 kurbunun yarıçapını 5.000 m'nin üstüne çıkarın ya da ötelemeyi 3.000 m'nin altına indirin."), "{}", said(&app));
+    let red = |app: &App| app.alignment_window.as_ref().is_some_and(crate::alignment_window::refused);
+    assert!(red(&app), "the refusal is said in red");
+    offset_inside(&mut app, "0");
+    assert!(red(&app));
+    assert!(said(&app).contains("p1 kurpsuz bir kırık") && said(&app).contains("yarıçapı 5.000 m'nin üstünde bir kurp koyun"), "{}", said(&app));
+}
+
+/// The parallel axis's refusal in the window, wide and narrow; `.run/gui-evidence/yol-y64/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib alignment_window_tests::screens_offset_fix -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_offset_fix() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y64");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = impact_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y64-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.editor"));
+        offset_inside(&mut app, "3");
+        shot(&mut app, "kivrilma");
+        offset_inside(&mut app, "0");
+        shot(&mut app, "kirik");
+    }
+}

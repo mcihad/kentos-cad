@@ -341,7 +341,71 @@ def refusal_of(pis):
     raise AssertionError("builds")
 
 
+def offset_place(els, s, d):
+    e, (x, y) = ref.place_at(els, s)
+    th = e.theta(s - e.station)
+    return x + d * mp.sin(th), y - d * mp.cos(th)
+
+
+def first_crossing(b, d):
+    """Docs/adr/0970: the first pair of stations a < b whose offset places are one point, or none. The offset is
+    sampled every 0.25 m by float Simpson steps, its segments' crossings found by shapely's STRtree, each refined by
+    mpmath's findroot at 40 digits; the least (a, b) is kept."""
+    from shapely import STRtree
+    from shapely.geometry import LineString
+
+    d = mp.mpf(d)
+    st, pts = [], []
+    for e in b.els:
+        n = max(2, math.ceil(float(e.length) / 0.25))
+        th0, k0, c = float(e.theta0), float(e.k0), float(e.rate())
+        th = lambda t: th0 + k0 * t + c * t * t / 2
+        x, y, h = float(e.start[0]), float(e.start[1]), float(e.length) / n
+        for i in range(n):
+            t = h * i
+            st.append(float(e.station) + t)
+            pts.append((x + float(d) * math.sin(th(t)), y - float(d) * math.cos(th(t))))
+            m, u = t + h / 2, t + h
+            x += h / 6 * (math.cos(th(t)) + 4 * math.cos(th(m)) + math.cos(th(u)))
+            y += h / 6 * (math.sin(th(t)) + 4 * math.sin(th(m)) + math.sin(th(u)))
+    end = float(b.length)
+    st.append(end)
+    pts.append(tuple(float(v) for v in offset_place(b.els, mp.mpf(end), d)))
+    segs = [LineString([pts[i], pts[i + 1]]) for i in range(len(pts) - 1)]
+    tree = STRtree(segs)
+    best = None
+    for i, g in enumerate(segs):
+        for j in tree.query(g, predicate="intersects"):
+            j = int(j)
+            if j <= i + 1:
+                continue
+            q = g.intersection(segs[j])
+            if q.geom_type != "Point":
+                continue
+            ga = st[i] + g.project(q) / g.length * (st[i + 1] - st[i])
+            gb = st[j] + segs[j].project(q) / segs[j].length * (st[j + 1] - st[j])
+            f = lambda a_, b_: [offset_place(b.els, a_, d)[0] - offset_place(b.els, b_, d)[0],
+                                offset_place(b.els, a_, d)[1] - offset_place(b.els, b_, d)[1]]
+            ra, rb = mp.findroot(f, (mp.mpf(ga), mp.mpf(gb)))
+            ra, rb = min(ra, rb), max(ra, rb)
+            if rb - ra > mp.mpf("1e-6") and (best is None or (ra, rb) < best):
+                best = (ra, rb)
+    return best
+
+
+def kink_between(b, a, z):
+    """The PI of a kink (a direction jump) between two stations, by the later element's id."""
+    for e0, e1 in zip(b.els, b.els[1:]):
+        if abs(ref.wrap(e1.theta0 - e0.theta(e0.length))) > mp.mpf("1e-9") and a < e1.station < z:
+            return e1.id.split("/")[0]
+    return None
+
+
 def cusp(name, b, d, path):
+    """Docs/adr/0970: the cusp's stations, the element's tightest radius on the offset's side and the fix in numbers;
+    else the first crossing, at a kink or not."""
+    dd = abs(d)
+    k = lambda st: km_text(ref.km_of(b.regions, st))
     for e in b.els:
         if e.kind == "tangent":
             continue
@@ -350,10 +414,24 @@ def cusp(name, b, d, path):
             rate = e.rate()
             sf = min(max((-1 / mp.mpf(d) - e.k0) / rate if rate else 0, 0), e.length)
             frm, to = (0, e.length) if fa and fb else ((0, sf) if fa else (sf, e.length))
-            return failed("offset_cusp", f"“{name}” paralel aksı km {float(e.station + frm):.3f}–"
-                                         f"{float(e.station + to):.3f} arasında kıvrılıyor: orada kurpun yarıçapı "
-                                         "ötelemeden küçük. Ötelemeyi küçültün ya da kurpları genişletin.", path)
-    raise AssertionError("no cusp")
+            radius = 1 / max(abs(k) for k, f in ((e.k0, fa), (e.k1, fb)) if f)
+            p = e.id.split("/")[0]
+            return failed("offset_cusp", f"“{name}” paralel aksı km {k(e.station + frm)}–"
+                                         f"{k(e.station + to)} arasında kıvrılıyor: {p} kurbunun yarıçapı "
+                                         f"orada {float(radius):.3f} m'ye iniyor, öteleme {dd:.3f} m. {p} kurbunun "
+                                         f"yarıçapını {dd:.3f} m'nin üstüne çıkarın ya da ötelemeyi "
+                                         f"{float(radius):.3f} m'nin altına indirin.", path)
+    x = first_crossing(b, d)
+    assert x is not None, "no cusp, no crossing"
+    a, z = x
+    p = kink_between(b, a, z)
+    if p is not None:
+        return failed("offset_cusp", f"“{name}” paralel aksı km {k(a)} ile km {k(z)} arasında kendini "
+                                     f"kesiyor: {p} kurpsuz bir kırık ve iç yanında her öteleme kendini keser. {p} "
+                                     f"noktasına yarıçapı {dd:.3f} m'nin üstünde bir kurp koyun.", path)
+    return failed("offset_cusp", f"“{name}” paralel aksının km {k(a)} ve km {k(z)} noktaları aynı yere "
+                                 f"düşüyor: aksın bu iki yeri {dd:.3f} m'lik ötelemeye göre birbirine çok yakın. "
+                                 "Ötelemeyi küçültün ya da aksın bu iki yerini birbirinden uzaklaştırın.", path)
 
 
 def written(alignments, target, mapping_rows, height=None):
@@ -461,6 +539,13 @@ def create_cases():
        cusp("İç kenar", main_b, -450.0, "offsetOf.offset"))
     no("Paralel aksın kaynağı yok", {"name": "Kenar", "offsetOf": {"alignment": "g-9", "offset": 5.0}},
        rule("kaynak aks projede yok", "offsetOf.alignment"))
+    # Docs/adr/0970: a hairpin whose arms close in, R 60 over the 50 m offset (no cusp): its inner offset's arms
+    # cross between the curves.
+    hair = {"id": "g-2", "name": "Dönüş", "revision": 1,
+            "pis": [pi("a", X0, Y0), pi("p1", X0 + 300, Y0, 60), pi("p2", X0 + 300, Y0 + 160, 60), pi("b", X0, Y0 + 60)]}
+    no("Kolları yaklaşan dönüşün iç kenarı kendini keser", {"name": "İç kenar", "offsetOf": {"alignment": "g-2",
+                                                                                            "offset": -50.0}},
+       cusp("İç kenar", build([hair], hair), -50.0, "offsetOf.offset"), setup([MAIN, hair]), [MAIN, hair])
     no("Paralel aksa paralel", {"name": "Kenar 2", "offsetOf": {"alignment": "g-2", "offset": 5.0}},
        rule("paralel aks yalnız PI'larıyla kurulan aksa bağlanır", "offsetOf.alignment"), setup([MAIN, LEFT]),
        [MAIN, LEFT])
@@ -721,6 +806,16 @@ def edit_cases():
     tight = {**MAIN, "pis": [MAIN_PIS[0], {"id": "p1", "x": X0 + 600, "y": Y0, "radius": 7.0}, MAIN_PIS[2]]}
     no("Sol kenarı kıvıran yarıçap", {"alignment": "g-1", "operation": "set", "pis": tight["pis"]},
        cusp("Sol kenar", build([tight], tight), -7.5, "pis"))
+    # Docs/adr/0970: p1 without its curve is a kink; Sol kenar (7.5 m on the inner side) crosses itself
+    # 7.5·tan(δ/2) before and after it, δ = 45°: the textbook's answer, checked against the found one.
+    kinked = {**MAIN, "pis": [MAIN_PIS[0], {"id": "p1", "x": X0 + 600, "y": Y0}, MAIN_PIS[2]]}
+    kb = build([kinked], kinked)
+    ka, kz = first_crossing(kb, -7.5)
+    reach = mp.mpf("7.5") * mp.tan(mp.pi / 8)
+    assert abs(ka - (600 - reach)) < mp.mpf("1e-9") and abs(kz - (600 + reach)) < mp.mpf("1e-9"), (ka, kz)
+    no("Kurp kaldırılır: sol kenar kırıkta kendini keser", {"alignment": "g-1", "operation": "set",
+                                                           "pis": kinked["pis"]},
+       cusp("Sol kenar", kb, -7.5, "pis"))
     over = [MAIN_PIS[0], {**MAIN_PIS[1], "radius": 4000.0, "spiralIn": 0.0, "spiralOut": 0.0}, MAIN_PIS[2]]
     over = [{k: v for k, v in p.items() if v != 0.0 or k in ("x", "y")} for p in over]
     no("Kurp aksa sığmıyor", {"alignment": "g-1", "operation": "set", "pis": over}, refusal_of(over))

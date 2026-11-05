@@ -172,7 +172,7 @@ fn every_case_is_what_the_reference_says() {
             let what = format!("{name} offset {d}");
             match w.get("cusp") {
                 Some(cusp) => match offset::check(&al, d) {
-                    Err(offset::OffsetError::Cusp { from, to }) => {
+                    Err(offset::OffsetError::Cusp { from, to, .. }) => {
                         near(from, n(&cusp[0]), 1e-7, &what);
                         near(to, n(&cusp[1]), 1e-7, &what);
                     }
@@ -316,4 +316,32 @@ fn picture() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("yol-y3-cekirdek.svg"), svg).unwrap();
+}
+
+/// A kink's inner offset crosses itself |d|·tan(δ/2) before and after it, at any |d|, under the sampling's metre too
+/// (docs/adr/0970); its outer side holds. A cusp names its element and its tightest radius.
+#[test]
+fn a_kinks_inner_offset_crosses_at_the_textbook_stations() {
+    let p = |id: &str, x: f64, y: f64, radius: f64| PiInput { id: id.into(), x, y, radius, spiral_in: 0.0, spiral_out: 0.0 };
+    let kinked = build(&[p("a", 0.0, 0.0, 0.0), p("p1", 600.0, 0.0, 0.0), p("b", 1100.0, 500.0, 0.0)]).expect("builds");
+    for d in [-0.3f64, -7.5, -40.0] {
+        let reach = d.abs() * (std::f64::consts::PI / 8.0).tan();
+        match offset::check(&kinked, d) {
+            Err(offset::OffsetError::Crosses { a, b, kink }) => {
+                near(a, 600.0 - reach, 1e-9, "before");
+                near(b, 600.0 + reach, 1e-9, "after");
+                assert_eq!(kink.as_deref(), Some("p1"));
+            }
+            other => panic!("{d}: {other:?}"),
+        }
+        offset::check(&kinked, -d).unwrap_or_else(|e| panic!("the outer side {}: {e:?}", -d));
+    }
+    let tight = build(&[p("a", 0.0, 0.0, 0.0), p("p1", 600.0, 0.0, 7.0), p("b", 1100.0, 500.0, 0.0)]).expect("builds");
+    match offset::check(&tight, -7.5) {
+        Err(offset::OffsetError::Cusp { element, radius, .. }) => {
+            assert!(element.starts_with("p1/"), "{element}");
+            near(radius, 7.0, 1e-12, "radius");
+        }
+        other => panic!("{other:?}"),
+    }
 }

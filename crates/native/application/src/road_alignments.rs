@@ -156,7 +156,7 @@ pub(crate) fn build(list: &[AlignmentDef], def: &AlignmentDef, field: &str) -> R
             .ok_or_else(|| fail(codes::INVALID_ALIGNMENT, "Paralel aksın kaynağı projede yok.".into(), &join("offsetOf")))?;
         let mut built = build(list, source, &join("offsetOf"))?;
         if let Err(e) = offset::check(&built.core, o.offset) {
-            return Err(cusp_stop(&def.name, e, &join("offsetOf.offset")));
+            return Err(cusp_stop(&def.name, e, o.offset, &built, &join("offsetOf.offset")));
         }
         built.offset = o.offset;
         return Ok(built);
@@ -184,17 +184,39 @@ pub(crate) fn build(list: &[AlignmentDef], def: &AlignmentDef, field: &str) -> R
     })
 }
 
-pub(crate) fn cusp_stop(name: &str, e: offset::OffsetError, path: &str) -> Stop {
-    let words = match e {
-        offset::OffsetError::Cusp { from, to } => format!(
-            "“{name}” paralel aksı km {:.3}–{:.3} arasında kıvrılıyor: orada kurpun yarıçapı ötelemeden küçük.",
-            from, to
-        ),
-        offset::OffsetError::Crosses { a, b } => {
-            format!("“{name}” paralel aksı km {a:.3} ile {b:.3} yakınında kendini kesiyor.")
+pub(crate) fn cusp_stop(name: &str, e: offset::OffsetError, d: f64, built: &Built, path: &str) -> Stop {
+    fail(codes::OFFSET_CUSP, offset_words(name, &e, d, &|s| built.km(s)), path)
+}
+
+/// Why a parallel axis does not hold, with its fix in numbers (docs/adr/0970): the command's refusal and the
+/// Güzergâh window's status say these same words. Stations are said as the source's kms (`km`).
+pub fn offset_words(name: &str, e: &offset::OffsetError, d: f64, km: &dyn Fn(f64) -> f64) -> String {
+    let d = d.abs();
+    let k = |s: f64| km_text(km(s), 3);
+    match e {
+        offset::OffsetError::Cusp { from, to, element, radius } => {
+            let pi = element.split('/').next().unwrap_or(element);
+            let (from, to) = (k(*from), k(*to));
+            format!(
+                "“{name}” paralel aksı km {from}–{to} arasında kıvrılıyor: {pi} kurbunun yarıçapı orada {radius:.3} m'ye \
+                 iniyor, öteleme {d:.3} m. {pi} kurbunun yarıçapını {d:.3} m'nin üstüne çıkarın ya da ötelemeyi \
+                 {radius:.3} m'nin altına indirin."
+            )
         }
-    };
-    fail(codes::OFFSET_CUSP, format!("{words} Ötelemeyi küçültün ya da kurpları genişletin."), path)
+        offset::OffsetError::Crosses { a, b, kink: Some(pi) } => format!(
+            "“{name}” paralel aksı km {} ile km {} arasında kendini kesiyor: {pi} kurpsuz bir kırık ve iç yanında \
+             her öteleme kendini keser. {pi} noktasına yarıçapı {d:.3} m'nin üstünde bir kurp koyun.",
+            k(*a),
+            k(*b)
+        ),
+        offset::OffsetError::Crosses { a, b, kink: None } => format!(
+            "“{name}” paralel aksının km {} ve km {} noktaları aynı yere düşüyor: aksın bu iki yeri \
+             {d:.3} m'lik ötelemeye göre birbirine çok yakın. Ötelemeyi küçültün ya da aksın bu iki yerini birbirinden \
+             uzaklaştırın.",
+            k(*a),
+            k(*b)
+        ),
+    }
 }
 
 impl Built {
@@ -439,7 +461,7 @@ pub(crate) fn dependents_hold(list: &[AlignmentDef], id: &str, path: &str) -> Re
         if let Some(o) = d.offset_of.as_ref().filter(|o| o.alignment == id)
             && let Err(e) = offset::check(&built.core, o.offset)
         {
-            return Err(cusp_stop(&d.name, e, path));
+            return Err(cusp_stop(&d.name, e, o.offset, &built, path));
         }
     }
     Ok(())
