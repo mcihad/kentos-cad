@@ -416,6 +416,20 @@ impl App {
             }
             None => "Kesit yok".to_owned(),
         };
+        // The red line at the km as road.profiles.query reads it (docs/adr/0966): elevation, grade and its curvature.
+        let red = match (self.document.as_ref(), w.read.profile.as_ref()) {
+            (Some(doc), Some(def)) => kentos_native_application::road_profiles::point_at(&doc.model, def, w.station),
+            _ => None,
+        };
+        let said = match red.as_ref().and_then(|p| p.red.zip(p.grade).map(|z| (z, p.radius))) {
+            Some(((z, g), r)) => {
+                let bend = r.map_or_else(|| "düz eğim".to_owned(), |r| format!("R {} m", comma(r, 0)));
+                // Said with its own km: the section shown is the nearest one, the red line is read at the km itself.
+                let km = red.as_ref().map_or_else(String::new, |p| p.km_text.clone());
+                format!("{said} · km {km}: kırmızı kot {} · eğim %{} · {bend}", comma(z, 2), comma(100.0 * g, 2))
+            }
+            None => said,
+        };
         let step = |words: &'static str, d: i8, enabled: bool| {
             words::secondary(words, enabled.then(|| msg(Event::Step(d))))
         };

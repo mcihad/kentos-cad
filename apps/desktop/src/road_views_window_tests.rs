@@ -111,5 +111,34 @@ fn screens() {
             send(&mut app, V::Station(0.5 * (rows[k] + rows[k + 1]) + 0.3));
             shot(&mut app, "arada");
         }
+        // Y60 (docs/adr/0966): on the circle the footer reads its radius, on a grade “düz eğim”.
+        send(&mut app, V::Station(340.0));
+        shot(&mut app, "y60-daire");
+        send(&mut app, V::Station(100.0));
+        shot(&mut app, "y60-egim");
+    }
+}
+
+/// The red line at the km (Y60, docs/adr/0966; ROAD-PROFILE-12): the window reads elevation, grade and the radius of
+/// curvature from the same function `road.profiles.query` answers with, at each km the slider takes.
+#[test]
+fn the_red_line_at_the_km_is_the_query_s() {
+    let mut app = app();
+    let w = app.road_views_window.as_ref().expect("open");
+    let (id, length) = (w.profile.clone().expect("a profile"), w.read.length);
+    for k in 0..=20 {
+        let s = length * f64::from(k) / 20.0;
+        send(&mut app, V::Station(s));
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let def = doc.road_profiles().iter().find(|p| p.id == id).cloned().expect("the profile");
+        let shown = kentos_native_application::road_profiles::point_at(doc, &def, s);
+        let input = kentos_commands::ProfilesQuery { profile: Some(id.clone()), stations: vec![s], every: None, terrain: false };
+        let kentos_commands::CommandResult::Completed { output, .. } =
+            kentos_native_application::road_profiles_query::execute(&mut kentos_native_application::ExecutionContext::new(doc), input)
+        else {
+            panic!("the query reads")
+        };
+        let asked = output.at.first().cloned();
+        assert_eq!(shown.as_ref().map(|p| (p.red, p.grade, p.rate, p.radius)), asked.map(|p| (p.red, p.grade, p.rate, p.radius)), "km {s}");
     }
 }

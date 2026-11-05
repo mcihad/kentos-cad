@@ -13,6 +13,16 @@ kmText: string,
  */
 red?: number, grade?: number, 
 /**
+ * The rate of change of grade there, z″ (docs/adr/0966; AASHTO's r = A/L on a parabola): negative on a crest;
+ * 0 on a straight grade; absent outside the profile.
+ */
+rate?: number, 
+/**
+ * The red line's radius of curvature there, (1 + g²)^{3/2} / |z″|: a circle's own radius, a parabola's H at its
+ * vertex; absent on a straight grade and outside the profile.
+ */
+radius?: number, 
+/**
  * The terrain (black) elevation; absent off the surface or without one.
  */
 black?: number, 

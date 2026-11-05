@@ -152116,6 +152116,24 @@
           "description": "The km written `2+345.678`.",
           "type": "string"
         },
+        "radius": {
+          "description": "The red line's radius of curvature there, (1 + g²)^{3/2} / |z″|: a circle's own radius, a parabola's H at its\nvertex; absent on a straight grade and outside the profile.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "rate": {
+          "description": "The rate of change of grade there, z″ (docs/adr/0966; AASHTO's r = A/L on a parabola): negative on a crest;\n0 on a straight grade; absent outside the profile.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1/m"
+        },
         "red": {
           "description": "The design (red) elevation and grade; absent outside the profile's first and last PVI.",
           "format": "double",

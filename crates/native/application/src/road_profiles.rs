@@ -164,6 +164,14 @@ pub(crate) fn build(doc: &Document, def: &ProfileDef) -> Result<Built, Stop> {
     Ok(Built { vertical, alignment })
 }
 
+/// The red line at `station` of a saved profile as `road.profiles.query` reads it (red, grade, rate and radius of
+/// curvature, docs/adr/0966), without the terrain: for a window that shows a km. None when it does not build or the
+/// station is off its alignment.
+pub fn point_at(doc: &Document, def: &ProfileDef, station: f64) -> Option<ProfileAt> {
+    let built = build(doc, def).ok()?;
+    at(&built, None, station)
+}
+
 /// `def` on its alignment turned round (docs/adr/0965; ROAD-ALIGN-10): the same grade line read from the other end. A
 /// PVI at s goes to `length` − s with its elevation, in the reversed order; a symmetric parabola and a circle are
 /// symmetric about their PVI and stay, an asymmetric parabola's arms swap (the arm before the PVI is now after it). The
@@ -281,6 +289,9 @@ pub(crate) fn at(built: &Built, surface: Option<&Surface>, station: f64) -> Opti
         km_text: km_text(km, 3),
         red: red.map(|r| r.0),
         grade: red.map(|r| r.1),
+        // The curvature there (docs/adr/0966): z″ and the plane curve's radius (1 + z′²)^{3/2}/|z″|.
+        rate: red.map(|r| r.2),
+        radius: red.filter(|r| r.2 != 0.0).map(|r| (1.0 + r.1 * r.1).powf(1.5) / r.2.abs()),
         black,
         difference: red.zip(black).map(|(r, b)| r.0 - b),
     })

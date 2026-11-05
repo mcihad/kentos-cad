@@ -213,6 +213,10 @@ def at(d, s, surface=True):
     out = {"station": float(s), "km": float(km), "kmText": acmd.km_text(km)}
     if red is not None:
         out["red"], out["grade"] = red[0], red[1]
+        # Docs/adr/0966: the rate of change of grade z″ and the plane curve's radius (1 + z′²)^{3/2}/|z″|.
+        out["rate"] = red[2]
+        if red[2] != 0:
+            out["radius"] = (1 + red[1] ** 2) ** 1.5 / abs(red[2])
     black = black_at(b, s) if surface and d.get("surface") == "t-1" else None
     if black is not None:
         out["black"] = black
@@ -578,6 +582,11 @@ def query_cases():
       [stale_warning(SIDE)])
     elems = [float(e.station) for e in ALIGNED["g-1"].els]
     q("Elemanların başında", {"profile": "b-1", "stations": elems}, one(MAIN, at=[at(MAIN, s) for s in elems]))
+    # Docs/adr/0966: the curvature at a point: on a grade none, in the parabola r = A/L, on the circle its radius
+    # 1200 m wherever on it, in each arm of the asymmetric curve its own r.
+    curv = [100.0, 150.0, 170.0, 320.0, 340.0, 360.0, 500.0, 540.0]
+    q("Noktada eğrilik: eğimde, parabolde, dairede, asimetrik kollarda", {"profile": "b-1", "stations": curv},
+      one(MAIN, at=[at(MAIN, s) for s in curv]))
     broken = {**MAIN, "surface": "t-2"}
     q("Kurulamayan yüzey: siyah kot yok, uyarı", {"profile": "b-1", "stations": [100.0, 300.0]},
       {"profiles": [report(broken)], "at": [at(broken, s, False) for s in (100.0, 300.0)], "ticks": [], "terrain": []},

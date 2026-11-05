@@ -61222,6 +61222,10 @@ class ProfileAt(_Model):
         black: The terrain (black) elevation; absent off the surface or without one. Unit: elevation.
         difference: Red − black: fill positive, cut negative; absent without both. Unit: elevation.
         grade: Unit: 1.
+        radius: The red line's radius of curvature there, (1 + g²)^{3/2} / |z″|: a circle's own radius, a parabola's H at its
+            vertex; absent on a straight grade and outside the profile. Unit: m.
+        rate: The rate of change of grade there, z″ (docs/adr/0966; AASHTO's r = A/L on a parabola): negative on a crest;
+            0 on a straight grade; absent outside the profile. Unit: 1/m.
         red: The design (red) elevation and grade; absent outside the profile's first and last PVI. Unit: elevation.
     """
     station: float
@@ -61230,6 +61234,8 @@ class ProfileAt(_Model):
     black: float | None | Unset = UNSET
     difference: float | None | Unset = UNSET
     grade: float | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    rate: float | None | Unset = UNSET
     red: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -61243,6 +61249,10 @@ class ProfileAt(_Model):
             out["difference"] = None if self.difference is None else float(self.difference)
         if self.grade is not UNSET:
             out["grade"] = None if self.grade is None else float(self.grade)
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.rate is not UNSET:
+            out["rate"] = None if self.rate is None else float(self.rate)
         if self.red is not UNSET:
             out["red"] = None if self.red is None else float(self.red)
         return out
@@ -61256,6 +61266,8 @@ class ProfileAt(_Model):
             black=UNSET if "black" not in data else None if data["black"] is None else float(data["black"]),
             difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            rate=UNSET if "rate" not in data else None if data["rate"] is None else float(data["rate"]),
             red=UNSET if "red" not in data else None if data["red"] is None else float(data["red"]),
         )
 

@@ -283,6 +283,18 @@ pub struct ProfileAt {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub grade: Option<f64>,
+    /// The rate of change of grade there, z″ (docs/adr/0966; AASHTO's r = A/L on a parabola): negative on a crest;
+    /// 0 on a straight grade; absent outside the profile.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1/m")))]
+    pub rate: Option<f64>,
+    /// The red line's radius of curvature there, (1 + g²)^{3/2} / |z″|: a circle's own radius, a parabola's H at its
+    /// vertex; absent on a straight grade and outside the profile.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub radius: Option<f64>,
     /// The terrain (black) elevation; absent off the surface or without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
