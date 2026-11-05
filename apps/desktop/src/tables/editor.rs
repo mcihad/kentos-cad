@@ -1880,8 +1880,18 @@ fn gutter_style(theme: &Theme, on: bool) -> container::Style {
 }
 
 /// A cell: lines between, the selection's fill, the active cell's accent ring.
-/// A grid cell: the selection's colour when chosen, else its fill; its style's colour, on a fill a dark ink, else
-/// the theme's text (a dark colour lightened on a dark theme, to be read).
+/// A grid cell: the selection's colour when chosen, else its fill; use a readable default ink
+/// against either a light or a dark fill when the user did not choose a text colour.
+fn contrast_ink(fill: iced::Color) -> iced::Color {
+    let linear = |v: f32| if v <= 0.04045 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) };
+    let luminance = 0.2126 * linear(fill.r) + 0.7152 * linear(fill.g) + 0.0722 * linear(fill.b);
+    if luminance < 0.179 {
+        iced::Color::WHITE
+    } else {
+        iced::Color::from_rgb8(0x1b, 0x1f, 0x24)
+    }
+}
+
 fn cell_style(
     theme: &Theme,
     chosen: bool,
@@ -1900,7 +1910,7 @@ fn cell_style(
             c.b + (1.0 - c.b) * 0.45,
         ),
         (Some(c), None) => c,
-        (None, Some(_)) => iced::Color::from_rgb8(0x1b, 0x1f, 0x24),
+        (None, Some(background)) => contrast_ink(background),
         (None, None) => t.text,
     };
     container::Style {
@@ -1916,5 +1926,19 @@ fn cell_style(
             radius: 0.0.into(),
         },
         ..container::Style::default()
+    }
+}
+
+#[cfg(test)]
+mod contrast_tests {
+    use super::contrast_ink;
+
+    #[test]
+    fn table_fill_without_explicit_ink_remains_readable() {
+        assert_eq!(contrast_ink(iced::Color::from_rgb8(0x54, 0x38, 0x38)), iced::Color::WHITE);
+        assert_eq!(
+            contrast_ink(iced::Color::from_rgb8(0xe7, 0xdf, 0xcc)),
+            iced::Color::from_rgb8(0x1b, 0x1f, 0x24)
+        );
     }
 }

@@ -772,8 +772,8 @@ fn keyed_overrides(
         return Err("Satır anahtarı hücresi elle değiştirildi; kaynak satırı güvenle eşlenemiyor.".to_owned());
     }
     let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
-    if reordered && (!t.styles.is_empty() || !t.formulas.is_empty() || !t.fields.is_empty() || !t.merges.is_empty()) {
-        return Err("Satır sırası değişti; hücre stili, birleşim, formül veya field konumu güvenle taşınamadığı için tablo korunuyor.".to_owned());
+    if reordered && (!t.formulas.is_empty() || !t.fields.is_empty() || !t.merges.is_empty()) {
+        return Err("Satır sırası değişti; birleşim, formül veya field konumu güvenle taşınamadığı için tablo korunuyor.".to_owned());
     }
     for (key, old_r) in &old_keys {
         if new_keys.contains_key(key) {
@@ -830,6 +830,38 @@ fn keyed_overrides(
         }
     }
     Ok((out, kept, replaced))
+}
+
+/// Preserve style order and move one-row styles with their keyed record. A header or a full-table
+/// style keeps its scope. Multi-row subsets cannot be split without changing style precedence.
+fn keyed_styles(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellStyle>, String> {
+    let old_keys = row_keys(copy, column)?;
+    let new_keys = row_keys(fresh, column)?;
+    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    if !reordered {
+        return Ok(t.styles.clone());
+    }
+    t.styles.iter().map(|style| {
+        let mut next = style.clone();
+        let range = &mut next.range;
+        if range.row == 0 && range.rows == 1 {
+            return Ok(next);
+        }
+        if copy.len() == fresh.len()
+            && ((range.row == 0 && range.rows as usize == copy.len())
+                || (range.row == 1 && range.rows as usize == copy.len() - 1))
+        {
+            return Ok(next);
+        }
+        if range.rows != 1 || range.row == 0 {
+            return Err("Satır sırası değişti; çok satırlı hücre stili güvenle taşınamadığı için tablo korunuyor.".to_owned());
+        }
+        let key = copy.get(range.row as usize).and_then(|row| row.get(column))
+            .ok_or_else(|| "Biçimli satır kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned())?;
+        range.row = *new_keys.get(key.as_str())
+            .ok_or_else(|| format!("“{key}” anahtarlı biçimli satır kaynaktan silindi; tablo korunuyor."))? as u32;
+        Ok(next)
+    }).collect()
 }
 
 struct Checked {
@@ -930,7 +962,9 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                     Ok((fresh, aligns)) => {
                                         let merged = if let Some(column) = key_column {
                                             match copy.as_ref() {
-                                                Some(old) => keyed_overrides(&t, old, &fresh, *column as usize, *overrides),
+                                                Some(old) => keyed_overrides(&t, old, &fresh, *column as usize, *overrides)
+                                                    .and_then(|(cells, kept, replaced)| keyed_styles(&t, old, &fresh, *column as usize)
+                                                        .map(|styles| (cells, kept, replaced, Some(styles)))),
                                                 None => Err("Anahtarlı tablonun son kaynak kopyası yok; elle düzeltmeler güvenle eşlenemiyor.".to_owned()),
                                             }
                                         } else if *overrides == SourceOverrides::Keep
@@ -946,7 +980,8 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                             if conflicts > 0 {
                                                 Err(format!("Kaynak ve elle düzeltme aynı {conflicts} hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."))
                                             } else {
-                                                Ok(with_overrides(&t, copy.as_ref(), &fresh, *overrides))
+                                                let (cells, kept, replaced) = with_overrides(&t, copy.as_ref(), &fresh, *overrides);
+                                                Ok((cells, kept, replaced, None))
                                             }
                                         };
                                         match merged {
@@ -958,9 +993,12 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                                 ));
                                                 None
                                             }
-                                            Ok((cells, k, r)) => {
+                                            Ok((cells, k, r, styles)) => {
                                                 (kept, replaced) = (k, r);
                                                 refreshed(doc, &t, &cells, &aligns).map(|mut n| {
+                                                    if let Some(styles) = styles {
+                                                        n.styles = styles;
+                                                    }
                                                     if let (Some(column), Some(old)) = (key_column, copy.as_ref()) {
                                                         if let Ok(old_keys) = row_keys(old, *column as usize) {
                                                             for (new_row, fresh_row) in fresh.iter().enumerate().skip(1) {
@@ -1211,6 +1249,10 @@ mod tests {
             "id":0,"layerId":"duvar","attrs":{},"p":{"x":0,"y":-2},
             "rotation":0,"height":0.1,"rows":[0.3,0.6,0.4],"columns":[1.0,1.0],
             "cells":cells,"header":true,
+            "styles":[
+                {"row":1,"col":0,"rows":1,"cols":2,"fill":"#ff0000"},
+                {"row":2,"col":0,"rows":1,"cols":2,"fill":"#0000ff"}
+            ],
             "source":{"kind":"file","name":"rows.csv","path":path.to_string_lossy(),
                       "digest":digest_of(original),"copy":copy}
         }))
@@ -1249,6 +1291,8 @@ mod tests {
         assert_eq!(table.cells[1], vec!["B", "10"]);
         assert_eq!(table.cells[2], vec!["A", "11"]);
         assert_eq!(table.rows, vec![0.3, 0.4, 0.6]);
+        assert_eq!(table.styles[0].range.row, 2);
+        assert_eq!(table.styles[1].range.row, 1);
         std::fs::remove_file(path).unwrap();
     }
 
@@ -1376,5 +1420,15 @@ mod tests {
         let conflict = vec![copy[0].clone(), vec!["A".into(), "12".into()], copy[2].clone()];
         assert!(keyed_overrides(&table, &copy, &conflict, 0, SourceOverrides::Keep)
             .unwrap_err().contains("hem kaynak hem kullanıcı"));
+        let mut styled = table.clone();
+        styled.styles = vec![serde_json::from_value(json!({
+            "row":1,"col":0,"rows":2,"cols":1,"fill":"#ff0000"
+        })).unwrap()];
+        let subset = vec![copy[0].clone(), copy[1].clone(), copy[2].clone(), vec!["C".into(), "30".into()]];
+        assert!(keyed_styles(&styled, &subset, &vec![subset[0].clone(), subset[2].clone(), subset[1].clone(), subset[3].clone()], 0)
+            .unwrap_err().contains("çok satırlı"));
+        styled.styles[0].range.rows = 1;
+        assert!(keyed_styles(&styled, &copy, &reordered[..2], 0)
+            .unwrap_err().contains("silindi"));
     }
 }

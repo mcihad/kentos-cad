@@ -2126,8 +2126,14 @@ satırın kaynaktan silinmesi tabloyu ve Undo kaydını değiştirmeden uyarı v
 Farklı veri satırı yükseklikleri de satır anahtarıyla birlikte taşınır; gerçek
 CAD penceresinde `B/10` kısa, `A/11` uzun satırın yenileme sonrası da kendi
 yüksekliğini koruduğu görüldü.
-Birleşimler, formüller, field'lar veya hücre stilleri varsa yeniden sıralama
-henüz güvenle taşınamadığı için durdurulur.
+Tek veri satırına bağlı dolgu/renk/hizalama stilleri de aynı anahtarlı satıra
+taşınır; başlık ve tüm tablo stili kapsamı korunur. Gerçek CAD penceresinde
+`B/10` mavi, `A/11` kırmızı dolgusunu sıra değişiminden sonra korudu. Bu
+ekran kontrolü koyu dolguda tablo düzenleyicisinin varsayılan siyah yazısının
+okunmadığını da gösterdi; varsayılan yazı rengi arka planın karşıtlığına göre
+seçilecek biçimde düzeltildi. Birleşimler, formüller, field'lar ve kısmi çok
+satırlı stil aralıkları varsa yeniden sıralama henüz güvenle taşınamadığı için
+durdurulur.
 Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
 B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
 korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç içe blok

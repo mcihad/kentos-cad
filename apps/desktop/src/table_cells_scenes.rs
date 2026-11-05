@@ -300,6 +300,10 @@ mod qa {
             "rows":[0.32,0.50,0.38],"columns":[2.0,2.0],
             "cells":[["ID","Price"],["A","11"],["B","10"]],
             "header":true,
+            "styles":[
+                {"row":1,"col":0,"rows":1,"cols":2,"fill":"#543838"},
+                {"row":2,"col":0,"rows":1,"cols":2,"fill":"#30435c"}
+            ],
             "source":{"kind":"file","name":"rows.csv","path":csv.to_string_lossy(),
                 "digest":"0000000000000000000000000000000000000000000000000000000000000000",
                 "copy":[["ID","Price"],["A","10"],["B","10"]]}
