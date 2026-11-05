@@ -972,6 +972,201 @@
      "sensitivity": 1.3714285714285714
     }
    ]
+  },
+  {
+   "name": "Basamaklı dolgu: vadide basamaklardan geçer",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 3.0,
+      "width": 2.0,
+      "fall": 4.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 3.0,
+      "width": 2.0,
+      "fall": 4.0
+     },
+     "bench": {
+      "height": 1.0,
+      "width": 1.0
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60.0,
+     "z": 78.0,
+     "gap": false
+    },
+    {
+     "offset": -9.0,
+     "z": 92.0,
+     "gap": false
+    },
+    {
+     "offset": -5.0,
+     "z": 99.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 99.5,
+     "gap": false
+    },
+    {
+     "offset": 5.0,
+     "z": 99.0,
+     "gap": false
+    },
+    {
+     "offset": 9.0,
+     "z": 92.0,
+     "gap": false
+    },
+    {
+     "offset": 60.0,
+     "z": 78.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 34.208875,
+     "crossings": 3,
+     "cut": false,
+     "sensitivity": 2.55,
+     "next": 2.1140765050167225
+    },
+    {
+     "kind": "hit",
+     "offset": 34.208875,
+     "crossings": 3,
+     "cut": false,
+     "sensitivity": 2.55,
+     "next": 2.1140765050167225
+    }
+   ]
+  },
+  {
+   "name": "Basamaklı dolgu tümsekli arazide",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0,
+     "fillBench": {
+      "height": 3.0,
+      "width": 2.0
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 96.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 99.5,
+     "gap": false
+    },
+    {
+     "offset": 4.5,
+     "z": 99.0,
+     "gap": false
+    },
+    {
+     "offset": 10.2,
+     "z": 96.3,
+     "gap": false
+    },
+    {
+     "offset": 11.5,
+     "z": 97.2,
+     "gap": false
+    },
+    {
+     "offset": 13.5,
+     "z": 94.0,
+     "gap": false
+    },
+    {
+     "offset": 60.0,
+     "z": 82.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 6.357575757575757,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.4242424242424243
+    },
+    {
+     "kind": "hit",
+     "offset": 11.026944444444442,
+     "crossings": 3,
+     "cut": false,
+     "sensitivity": 1.4444444444444362,
+     "next": 0.6777430555555585
+    }
+   ]
   }
  ]
 }

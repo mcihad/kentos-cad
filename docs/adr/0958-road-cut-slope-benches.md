@@ -65,11 +65,12 @@ Geçilen köşeler kesite girer.
 
 ### Kodlar ve tanı
 
-- Koridor her basamak için iki öznitelik kodu yazar: `bench{k}Top` (yüzün tepesi, basamağın içi) ve `bench{k}End`
-  (basamağın dış ucu). Şevin ucundan önce gelen köşeler yazılır. Üst yüzey, kübaj ve çizim bunları sıradan noktalar
+- Koridor her basamak için iki öznitelik kodu yazar: `bench{k}In` (basamağın içi, önceki yüzün bittiği yer) ve
+  `bench{k}Out` (basamağın dış ucu). Y52'de `bench{k}Top`/`bench{k}End` idi; dolgu basamağı (ADR 0959) gelince yöne
+  bağlı olmayan adlarla değişti. Şevin ucundan önce gelen köşeler yazılır. Üst yüzey, kübaj ve çizim bunları sıradan noktalar
   gibi taşır.
 - Şev tanısı (ADR 0951) basamaklı yolu aynı kırık çizgiyle okur; köşeler aday yerlere eklenir.
-- Ön denetimin iletileri (ADR 0956) kodları Türkçe adlarıyla yazar: `bench1Top` "1. basamak içi", `bench1End`
+- Ön denetimin iletileri (ADR 0956) kodları Türkçe adlarıyla yazar: `bench1In` "1. basamak içi", `bench1Out`
   "1. basamak ucu".
 
 ### Pencere
@@ -92,7 +93,7 @@ Referanslar KentOS kodu kullanmaz. Hepsi Rust'ta ve Python'da geçer.
 |---|---|
 | `road_template_cases.py` | 28 (8 yeni) |
 | `road_daylight_cases.py` | 12 (2 yeni) |
-| `road_corridor_command_cases.py` | Basamaklı koridor sorgusu; `bench1Top`, `bench1End`, `bench2Top`, `bench2End` kodları |
+| `road_corridor_command_cases.py` | Basamaklı koridor sorgusu; `bench1In`, `bench1Out`, `bench2In`, `bench2Out` kodları |
 | `road_section_command_cases.py` | 3 tip kesit düzenleme durumu: basamaklı yeni tip, genişliksiz basamak, dik basamak eğimi |
 | `road_corridor_preflight_command_cases.py` | 25 (1 yeni): km 1+300 dikişinde "yalnız öncekinde sol 1. basamak içi, sol 1. basamak ucu"; sol şev ucu planda 3,911 m, kotta 0,141 m kayıyor |
 
@@ -116,8 +117,7 @@ km 1+040 kesitinin sol yanı:
 
 ## Açık
 
-- **Dolgu basamakları:** Civil 3D `DaylightBench` dolguda da basamak koyar. Dolgu şevinin kırık çizgisi aynı
-  `bench_path` ile kurulabilir; yönü aşağı.
+- **Dolgu basamakları:** Y53'te yapıldı (ADR 0959).
 - **Şev geçişleri:** Bölgeler arasında şev eğiminin ya da basamağın km boyunca değişmesi (ROAD-GRADE-03'ün kalanı)
   yok. Şimdilik bölge sınırında sıçrar; ön denetim (ADR 0956) bunu dikiş olarak söyler.
 - **En büyük yükseklik eşiği:** Civil 3D'de basamak ancak şev bir eşikten yüksekse başlar. Burada eşik basamak

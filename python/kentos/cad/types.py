@@ -82897,9 +82897,8 @@ class TargetReference(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TemplateBenchDef(_Model):
-    """A cut slope's benches (docs/adr/0958): every `height` m up the slope a bench `width` m wide, its surface falling
-    `fall` percent outward (toward the face above; absent: level). From the project's geotechnical report: KentOS gives
-    none.
+    """A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its
+    surface falling `fall` percent outward (absent: level). From the project's geotechnical report: KentOS gives none.
     Attributes:
         height: Unit: length.
         width: Unit: length.
@@ -83131,12 +83130,14 @@ class TemplateSideDef(_Model):
         cut: Unit: 1.
         fill: Unit: 1.
         bench: The cut slope's benches (berme, docs/adr/0958; KCAD schema 175).
+        fill_bench: The fill slope's benches (docs/adr/0958; KCAD schema 175).
     """
     cut: float
     fill: float
     bench: TemplateBenchDef | None | Unset = UNSET
     components: list[TemplateComponentDef] | Unset = UNSET
     ditch: TemplateDitchDef | None | Unset = UNSET
+    fill_bench: TemplateBenchDef | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83148,6 +83149,8 @@ class TemplateSideDef(_Model):
             out["components"] = [e0.to_json() for e0 in self.components]
         if self.ditch is not UNSET:
             out["ditch"] = None if self.ditch is None else self.ditch.to_json()
+        if self.fill_bench is not UNSET:
+            out["fillBench"] = None if self.fill_bench is None else self.fill_bench.to_json()
         return out
 
     @classmethod
@@ -83158,6 +83161,7 @@ class TemplateSideDef(_Model):
             bench=UNSET if "bench" not in data else None if data["bench"] is None else TemplateBenchDef.from_json(data["bench"]),
             components=[TemplateComponentDef.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
             ditch=UNSET if "ditch" not in data else None if data["ditch"] is None else TemplateDitchDef.from_json(data["ditch"]),
+            fill_bench=UNSET if "fillBench" not in data else None if data["fillBench"] is None else TemplateBenchDef.from_json(data["fillBench"]),
         )
 
 

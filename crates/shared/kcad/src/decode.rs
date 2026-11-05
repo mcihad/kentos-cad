@@ -681,9 +681,10 @@ pub(crate) fn road_has_volume_history(road: &kentos_contracts::RoadSettings) -> 
     })
 }
 
-/// Whether road settings carry schema 175's field: a template side's cut slope benches (docs/adr/0958).
+/// Whether road settings carry schema 175's fields: a template side's cut or fill slope benches (docs/adr/0958).
 pub(crate) fn road_has_cut_benches(road: &kentos_contracts::RoadSettings) -> bool {
-    road.templates.iter().any(|t| t.left.bench.is_some() || t.right.as_ref().is_some_and(|r| r.bench.is_some()))
+    let benched = |s: &kentos_contracts::TemplateSideDef| s.bench.is_some() || s.fill_bench.is_some();
+    road.templates.iter().any(|t| benched(&t.left) || t.right.as_ref().is_some_and(benched))
 }
 
 /// Whether road settings carry schema 174's fields: a volume factor row's densities or source (docs/adr/0957).

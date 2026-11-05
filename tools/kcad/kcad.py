@@ -508,7 +508,7 @@ SCHEMA_WITH_VOLUME_HISTORY = 171  # docs/adr/0950: a volume's numbered approvals
 SCHEMA_WITH_HAUL_APPROVAL = 172  # docs/adr/0954: a mass haul diagram's approved plan and its history
 SCHEMA_WITH_HAUL_NETWORK = 173  # docs/adr/0955: a mass haul diagram's haul road network and its sites off the road
 SCHEMA_WITH_VOLUME_STATES = 174  # docs/adr/0957: a volume factor row's soil densities and source
-SCHEMA_WITH_CUT_BENCHES = 175  # docs/adr/0958: a template side's cut slope benches
+SCHEMA_WITH_CUT_BENCHES = 175  # docs/adr/0958: a template side's cut and fill slope benches
 SCHEMA_WITH_INSTANCE_STOREYS = 155
 SCHEDULE_UNIT_FIELDS = ("unitKind", "building", "wing", "recordedArea", "shareWeight")
 UNIT_KINDS = ("unit", "common", "outdoor")
@@ -9577,13 +9577,14 @@ class _Schema:
             comp = self.fields({"kind": (self.enum(("lane", "shoulder")), True), "width": (finite, True),
                                 "slope": (finite, True)})
             ditch = self.fields({"fore": (finite, True), "depth": (finite, True), "bottom": (finite, False)})
-            # Docs/adr/0958: the cut slope's benches (schema 175).
+            # Docs/adr/0958: the cut and fill slopes' benches (schema 175).
             bench = self.fields({"height": (finite, True), "width": (finite, True), "fall": (finite, False)})
+            benches = {"bench": (bench, False), "fillBench": (bench, False)} if self.cut_benches else {}
             t = self.fields({"components": (self.array(comp), False), "cut": (finite, True), "fill": (finite, True),
-                             "ditch": (ditch, False), **({"bench": (bench, False)} if self.cut_benches else {})})(x)
-            b = t.get("bench")
-            if b and not (0 < b["height"] <= 100 and 0 < b["width"] <= 50 and 0 <= b.get("fall", 0) <= 50):
-                self.fail("bad_value", "basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur")
+                             "ditch": (ditch, False), **benches})(x)
+            for b in (t.get("bench"), t.get("fillBench")):
+                if b and not (0 < b["height"] <= 100 and 0 < b["width"] <= 50 and 0 <= b.get("fall", 0) <= 50):
+                    self.fail("bad_value", "basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur")
             if len(t.get("components", [])) > 32:
                 self.fail("bad_value", "bir yanda en çok 32 bileşen olur")
             for c in t.get("components", []):

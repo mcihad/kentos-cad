@@ -14636,8 +14636,8 @@
          "onlyBefore": [
           "left.ditchToe",
           "left.ditchBottom",
-          "left.bench1Top",
-          "left.bench1End",
+          "left.bench1In",
+          "left.bench1Out",
           "right.ditchToe",
           "right.ditchBottom"
          ],

@@ -410,8 +410,9 @@ fn screens_breaks() {
     }
 }
 
-/// Basamaklı yarma şevi (Y52, docs/adr/0958): a bench typed on the left of a template; Kaydet writes it with
-/// `road.templates.edit`, and on the window's high sample cut the left slope walks over benches before it meets.
+/// Basamaklı şev (Y52, Y53; docs/adr/0958): cut and fill benches typed on the left of a template (the right its
+/// mirror); Kaydet writes them with `road.templates.edit`, and on the window's sample ground the cut slope on the left
+/// and the fill slope on the right walk over benches before they meet it.
 fn benched(app: &mut App) {
     made(app);
     send(app, W::Choose(Chosen::Template(0)));
@@ -419,6 +420,9 @@ fn benched(app: &mut App) {
     send(app, W::End(5, "3".into()));
     send(app, W::End(6, "2".into()));
     send(app, W::End(7, "4".into()));
+    send(app, W::FillBench);
+    send(app, W::End(8, "3".into()));
+    send(app, W::End(9, "2".into()));
 }
 
 #[test]
@@ -429,22 +433,29 @@ fn the_template_takes_a_cut_bench_and_its_slope_walks_over_it() {
     let t = model(&mut app).road_templates()[0].clone();
     let b = t.left.bench.expect("written");
     assert_eq!((b.height, b.width, b.fall), (3.0, 2.0, 4.0));
-    assert!(t.right.as_ref().is_none_or(|r| r.bench.is_none()), "the right is not benched");
+    let f = t.left.fill_bench.expect("written");
+    assert_eq!((f.height, f.width, f.fall), (3.0, 2.0, 0.0), "no fall typed: level");
+    assert!(t.right.is_none(), "the right is the left's mirror");
     let core = kentos_native_application::road_sections::core_template(&t);
     let s = kentos_road::section::template::build(&core, 100.0, &crate::section_window::sample_ground_benched()).expect("builds");
     assert_eq!(s.left.kind, kentos_road::section::template::Kind::Cut);
     // Past the ditch, faces of 3 m rise at 1:1 and benches 2 m wide fall 4 % outward: each bench is a level pair.
-    let flats = s.left.points.windows(2).filter(|p| (p[1][0] - p[0][0]).abs() > 1.99 && (p[1][1] - p[0][1]).abs() < 0.1).count();
-    assert!(flats >= 2, "at least two benches on the 10 m cut: {:?}", s.left.points);
+    let flats = |p: &[[f64; 2]]| p.windows(2).filter(|p| (p[1][0] - p[0][0]).abs() > 1.99 && (p[1][1] - p[0][1]).abs() < 0.1).count();
+    assert!(flats(&s.left.points) >= 2, "at least two benches on the 10 m cut: {:?}", s.left.points);
+    // On the right, faces of 3 m fall at 1:1.5 and level benches 2 m wide: the fill is benched too.
+    assert_eq!(s.right.kind, kentos_road::section::template::Kind::Fill);
+    assert!(flats(&s.right.points) >= 2, "at least two benches on the deep fill: {:?}", s.right.points);
     // Taken off again.
     let _ = app.update(Message::Run("section.editor"));
     send(&mut app, W::Choose(Chosen::Template(0)));
     send(&mut app, W::Bench);
+    send(&mut app, W::FillBench);
     send(&mut app, W::Save);
-    assert!(model(&mut app).road_templates()[0].left.bench.is_none());
+    let left = &model(&mut app).road_templates()[0].left;
+    assert!(left.bench.is_none() && left.fill_bench.is_none());
 }
 
-/// The benched template on its sample cut, wide and narrow, light and dark; `.run/gui-evidence/yol-y52/*`:
+/// The benched template on its sample cut and fill, wide and narrow, light and dark; `.run/gui-evidence/yol-y53/*`:
 ///
 /// ```text
 /// cargo test -p kentos-desktop --lib section_window_tests::screens_benches -- --ignored --nocapture
@@ -455,12 +466,19 @@ fn screens_benches() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y52");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y53");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [
-        ("light", Size::new(1440.0, 900.0), "acik-genis"),
-        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    for (theme, size, name, full) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis", false),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar", false),
+        ("light", Size::new(1920.0, 1200.0), "tam-ekran", true),
     ] {
+        use kentos_ui::widget::sizable::sizes;
+        if full {
+            sizes::set(crate::section_window::TITLE, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+        } else {
+            sizes::forget(crate::section_window::TITLE);
+        }
         let mut app = app(false);
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
@@ -470,7 +488,7 @@ fn screens_benches() {
         };
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
-            let file = out.join(format!("y52-{file}-{name}.png"));
+            let file = out.join(format!("y53-{file}-{name}.png"));
             snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
@@ -485,4 +503,5 @@ fn screens_benches() {
         shot(&mut app, "enkesit-basamak");
         send(&mut app, W::Cancel);
     }
+    kentos_ui::widget::sizable::sizes::forget(crate::section_window::TITLE);
 }

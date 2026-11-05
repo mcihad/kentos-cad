@@ -11,4 +11,8 @@ export type TemplateSideDef = { components?: Array<TemplateComponentDef>, cut: n
 /**
  * The cut slope's benches (berme, docs/adr/0958; KCAD schema 175).
  */
-bench?: TemplateBenchDef, };
+bench?: TemplateBenchDef, 
+/**
+ * The fill slope's benches (docs/adr/0958; KCAD schema 175).
+ */
+fillBench?: TemplateBenchDef, };

@@ -200,6 +200,10 @@
        "height": 6.0,
        "width": 3.0,
        "fall": 5.0
+      },
+      "fillBench": {
+       "height": 5.0,
+       "width": 2.0
       }
      },
      "pavement": {

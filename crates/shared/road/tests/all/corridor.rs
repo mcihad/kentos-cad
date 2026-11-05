@@ -135,6 +135,7 @@ fn template_side(v: &Value) -> Side {
         fill: 1.0,
         ditch: v[1].as_f64().map(|bottom| Ditch { fore: 1.0, depth: 1.0, bottom }),
         bench: None,
+        fill_bench: None,
     }
 }
 

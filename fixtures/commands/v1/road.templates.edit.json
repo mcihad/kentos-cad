@@ -24479,6 +24479,832 @@
       ]
     },
     {
+      "name": "Basamaklı dolgu şevli yeni tip kesit",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "name": "Dolgu basamaklı",
+            "left": {
+              "components": [
+                {
+                  "kind": "lane",
+                  "width": 3.25,
+                  "slope": -2.0
+                }
+              ],
+              "cut": 1.0,
+              "fill": 1.5,
+              "bench": {
+                "height": 6.0,
+                "width": 3.0,
+                "fall": 5.0
+              },
+              "fillBench": {
+                "height": 5.0,
+                "width": 4.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "templates": [
+                {
+                  "id": "tk-1",
+                  "name": "Tip 1",
+                  "revision": 1,
+                  "usedBy": [
+                    "k-1"
+                  ]
+                },
+                {
+                  "id": "tk-2",
+                  "name": "Tip 2",
+                  "revision": 2,
+                  "usedBy": [
+                    "k-2"
+                  ]
+                },
+                {
+                  "id": "tk-3",
+                  "name": "Dolgu basamaklı",
+                  "revision": 1,
+                  "usedBy": []
+                }
+              ],
+              "revision": "$current",
+              "template": {
+                "id": "tk-3",
+                "name": "Dolgu basamaklı",
+                "revision": 1,
+                "left": {
+                  "components": [
+                    {
+                      "kind": "lane",
+                      "width": 3.25,
+                      "slope": -2.0
+                    }
+                  ],
+                  "cut": 1.0,
+                  "fill": 1.5,
+                  "bench": {
+                    "height": 6.0,
+                    "width": 3.0,
+                    "fall": 5.0
+                  },
+                  "fillBench": {
+                    "height": 5.0,
+                    "width": 4.0
+                  }
+                }
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Mevcut zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-2",
+                  "name": "Kurulamaz",
+                  "points": {
+                    "layers": [
+                      "bos"
+                    ]
+                  }
+                }
+              ],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 20.0,
+                      "y": 50.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 300.0,
+                      "y": 60.0,
+                      "radius": 150.0,
+                      "spiralIn": 40.0,
+                      "spiralOut": 40.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 560.0,
+                      "y": 360.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 1000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan aks",
+                  "revision": 3,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 30.0,
+                      "y": 380.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 580.0,
+                      "y": 20.0
+                    }
+                  ]
+                },
+                {
+                  "id": "g-3",
+                  "name": "Sağ kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": 5.0
+                  }
+                }
+              ],
+              "profiles": [
+                {
+                  "id": "b-1",
+                  "name": "Proje kotu",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "pvis": [
+                    {
+                      "id": "a",
+                      "station": 0.0,
+                      "elevation": 102.0
+                    },
+                    {
+                      "id": "v1",
+                      "station": 170.0,
+                      "elevation": 101.5,
+                      "length": 80.0
+                    },
+                    {
+                      "id": "v2",
+                      "station": 340.0,
+                      "elevation": 111.0,
+                      "radius": 1200.0
+                    },
+                    {
+                      "id": "v3",
+                      "station": 520.0,
+                      "elevation": 106.0,
+                      "lengthIn": 50.0,
+                      "lengthOut": 35.0
+                    },
+                    {
+                      "id": "b",
+                      "station": 669.0,
+                      "elevation": 113.0
+                    }
+                  ],
+                  "surface": "t-1"
+                },
+                {
+                  "id": "b-2",
+                  "name": "Yan kot",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 4,
+                  "pvis": [
+                    {
+                      "id": "a",
+                      "station": 0.0,
+                      "elevation": 110.0
+                    },
+                    {
+                      "id": "v1",
+                      "station": 300.0,
+                      "elevation": 104.0,
+                      "length": 120.0
+                    },
+                    {
+                      "id": "b",
+                      "station": 650.0,
+                      "elevation": 112.0
+                    }
+                  ],
+                  "surface": "t-1"
+                },
+                {
+                  "id": "b-3",
+                  "name": "Kısmi kot",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "pvis": [
+                    {
+                      "id": "a",
+                      "station": 100.0,
+                      "elevation": 104.0
+                    },
+                    {
+                      "id": "b",
+                      "station": 400.0,
+                      "elevation": 110.0
+                    }
+                  ]
+                }
+              ],
+              "templates": [
+                {
+                  "id": "tk-1",
+                  "name": "Tip 1",
+                  "revision": 1,
+                  "left": {
+                    "components": [
+                      {
+                        "kind": "lane",
+                        "width": 3.5,
+                        "slope": -2.5
+                      },
+                      {
+                        "kind": "shoulder",
+                        "width": 1.0,
+                        "slope": -4.0
+                      }
+                    ],
+                    "cut": 1.0,
+                    "fill": 1.5,
+                    "ditch": {
+                      "fore": 2.0,
+                      "depth": 0.5,
+                      "bottom": 0.5
+                    }
+                  }
+                },
+                {
+                  "id": "tk-2",
+                  "name": "Tip 2",
+                  "revision": 2,
+                  "left": {
+                    "components": [
+                      {
+                        "kind": "lane",
+                        "width": 3.0,
+                        "slope": -2.0
+                      },
+                      {
+                        "kind": "shoulder",
+                        "width": 1.5,
+                        "slope": -4.0
+                      }
+                    ],
+                    "cut": 1.5,
+                    "fill": 2.0
+                  },
+                  "right": {
+                    "components": [
+                      {
+                        "kind": "lane",
+                        "width": 3.5,
+                        "slope": -2.5
+                      },
+                      {
+                        "kind": "lane",
+                        "width": 3.5,
+                        "slope": -2.5
+                      },
+                      {
+                        "kind": "shoulder",
+                        "width": 1.0,
+                        "slope": -4.0
+                      }
+                    ],
+                    "cut": 1.0,
+                    "fill": 1.5
+                  }
+                },
+                {
+                  "id": "tk-3",
+                  "name": "Dolgu basamaklı",
+                  "revision": 1,
+                  "left": {
+                    "components": [
+                      {
+                        "kind": "lane",
+                        "width": 3.25,
+                        "slope": -2.0
+                      }
+                    ],
+                    "cut": 1.0,
+                    "fill": 1.5,
+                    "bench": {
+                      "height": 6.0,
+                      "width": 3.0,
+                      "fall": 5.0
+                    },
+                    "fillBench": {
+                      "height": 5.0,
+                      "width": 4.0
+                    }
+                  }
+                }
+              ],
+              "sections": [
+                {
+                  "id": "k-1",
+                  "name": "Enkesitler",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "profile": "b-1",
+                  "template": "tk-1",
+                  "surface": "t-1",
+                  "left": 25.0,
+                  "right": 25.0,
+                  "stations": {
+                    "method": "range",
+                    "from": 100.0,
+                    "to": 300.0,
+                    "every": 50.0,
+                    "geometry": true
+                  }
+                },
+                {
+                  "id": "k-2",
+                  "name": "Yan kesitler",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 3,
+                  "profile": "b-2",
+                  "template": "tk-2",
+                  "surface": "t-1",
+                  "left": 20.0,
+                  "right": 30.0,
+                  "stations": {
+                    "method": "stations",
+                    "stations": [
+                      50.0,
+                      200.0,
+                      400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Yüksekliksiz dolgu basamağı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "name": "x",
+            "left": {
+              "components": [
+                {
+                  "kind": "lane",
+                  "width": 3.25,
+                  "slope": -2.0
+                }
+              ],
+              "cut": 1.0,
+              "fill": 1.5,
+              "fillBench": {
+                "height": 0.0,
+                "width": 4.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_road_template",
+              "message": "Tip kesit kurallarına uymuyor: basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur.",
+              "path": "left.fillBench"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Mevcut zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-2",
+                  "name": "Kurulamaz",
+                  "points": {
+                    "layers": [
+                      "bos"
+                    ]
+                  }
+                }
+              ],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 20.0,
+                      "y": 50.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 300.0,
+                      "y": 60.0,
+                      "radius": 150.0,
+                      "spiralIn": 40.0,
+                      "spiralOut": 40.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 560.0,
+                      "y": 360.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 1000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Yan aks",
+                  "revision": 3,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 30.0,
+                      "y": 380.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 580.0,
+                      "y": 20.0
+                    }
+                  ]
+                },
+                {
+                  "id": "g-3",
+                  "name": "Sağ kenar",
+                  "revision": 1,
+                  "offsetOf": {
+                    "alignment": "g-1",
+                    "offset": 5.0
+                  }
+                }
+              ],
+              "profiles": [
+                {
+                  "id": "b-1",
+                  "name": "Proje kotu",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "pvis": [
+                    {
+                      "id": "a",
+                      "station": 0.0,
+                      "elevation": 102.0
+                    },
+                    {
+                      "id": "v1",
+                      "station": 170.0,
+                      "elevation": 101.5,
+                      "length": 80.0
+                    },
+                    {
+                      "id": "v2",
+                      "station": 340.0,
+                      "elevation": 111.0,
+                      "radius": 1200.0
+                    },
+                    {
+                      "id": "v3",
+                      "station": 520.0,
+                      "elevation": 106.0,
+                      "lengthIn": 50.0,
+                      "lengthOut": 35.0
+                    },
+                    {
+                      "id": "b",
+                      "station": 669.0,
+                      "elevation": 113.0
+                    }
+                  ],
+                  "surface": "t-1"
+                },
+                {
+                  "id": "b-2",
+                  "name": "Yan kot",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 4,
+                  "pvis": [
+                    {
+                      "id": "a",
+                      "station": 0.0,
+                      "elevation": 110.0
+                    },
+                    {
+                      "id": "v1",
+                      "station": 300.0,
+                      "elevation": 104.0,
+                      "length": 120.0
+                    },
+                    {
+                      "id": "b",
+                      "station": 650.0,
+                      "elevation": 112.0
+                    }
+                  ],
+                  "surface": "t-1"
+                },
+                {
+                  "id": "b-3",
+                  "name": "Kısmi kot",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "pvis": [
+                    {
+                      "id": "a",
+                      "station": 100.0,
+                      "elevation": 104.0
+                    },
+                    {
+                      "id": "b",
+                      "station": 400.0,
+                      "elevation": 110.0
+                    }
+                  ]
+                }
+              ],
+              "templates": [
+                {
+                  "id": "tk-1",
+                  "name": "Tip 1",
+                  "revision": 1,
+                  "left": {
+                    "components": [
+                      {
+                        "kind": "lane",
+                        "width": 3.5,
+                        "slope": -2.5
+                      },
+                      {
+                        "kind": "shoulder",
+                        "width": 1.0,
+                        "slope": -4.0
+                      }
+                    ],
+                    "cut": 1.0,
+                    "fill": 1.5,
+                    "ditch": {
+                      "fore": 2.0,
+                      "depth": 0.5,
+                      "bottom": 0.5
+                    }
+                  }
+                },
+                {
+                  "id": "tk-2",
+                  "name": "Tip 2",
+                  "revision": 2,
+                  "left": {
+                    "components": [
+                      {
+                        "kind": "lane",
+                        "width": 3.0,
+                        "slope": -2.0
+                      },
+                      {
+                        "kind": "shoulder",
+                        "width": 1.5,
+                        "slope": -4.0
+                      }
+                    ],
+                    "cut": 1.5,
+                    "fill": 2.0
+                  },
+                  "right": {
+                    "components": [
+                      {
+                        "kind": "lane",
+                        "width": 3.5,
+                        "slope": -2.5
+                      },
+                      {
+                        "kind": "lane",
+                        "width": 3.5,
+                        "slope": -2.5
+                      },
+                      {
+                        "kind": "shoulder",
+                        "width": 1.0,
+                        "slope": -4.0
+                      }
+                    ],
+                    "cut": 1.0,
+                    "fill": 1.5
+                  }
+                }
+              ],
+              "sections": [
+                {
+                  "id": "k-1",
+                  "name": "Enkesitler",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "profile": "b-1",
+                  "template": "tk-1",
+                  "surface": "t-1",
+                  "left": 25.0,
+                  "right": 25.0,
+                  "stations": {
+                    "method": "range",
+                    "from": 100.0,
+                    "to": 300.0,
+                    "every": 50.0,
+                    "geometry": true
+                  }
+                },
+                {
+                  "id": "k-2",
+                  "name": "Yan kesitler",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 3,
+                  "profile": "b-2",
+                  "template": "tk-2",
+                  "surface": "t-1",
+                  "left": 20.0,
+                  "right": 30.0,
+                  "stations": {
+                    "method": "stations",
+                    "stations": [
+                      50.0,
+                      200.0,
+                      400.0
+                    ]
+                  }
+                }
+              ],
+              "superelevations": [
+                {
+                  "id": "d-1",
+                  "name": "Ana aks deveri",
+                  "alignment": "g-1",
+                  "alignmentRevision": 1,
+                  "revision": 1,
+                  "normalLeft": -2.5,
+                  "normalRight": -2.5,
+                  "method": {
+                    "method": "curves",
+                    "curves": [
+                      {
+                        "pi": "p1",
+                        "rate": 6.0,
+                        "runoff": 40.0,
+                        "onTangent": 0.0,
+                        "widening": 0.5
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "d-2",
+                  "name": "Yan aks deveri",
+                  "alignment": "g-2",
+                  "alignmentRevision": 2,
+                  "revision": 2,
+                  "normalLeft": -2.0,
+                  "normalRight": -2.0,
+                  "method": {
+                    "method": "stations",
+                    "rows": [
+                      {
+                        "station": 100.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      },
+                      {
+                        "station": 200.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 400.0,
+                        "left": 3.0,
+                        "right": -3.0
+                      },
+                      {
+                        "station": 500.0,
+                        "left": -2.0,
+                        "right": -2.0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
       "name": "Geçersiz beklenen sürüm",
       "steps": [
         {

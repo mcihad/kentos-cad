@@ -46,9 +46,9 @@ def code_words(code):
         point = names[point]
     elif point.startswith("c") and point[1:].isdigit():
         point = f"{point[1:]}. bileşen"
-    elif point.startswith("bench") and point.endswith("Top") and point[5:-3].isdigit():
-        point = f"{point[5:-3]}. basamak içi"
-    elif point.startswith("bench") and point.endswith("End") and point[5:-3].isdigit():
+    elif point.startswith("bench") and point.endswith("In") and point[5:-2].isdigit():
+        point = f"{point[5:-2]}. basamak içi"
+    elif point.startswith("bench") and point.endswith("Out") and point[5:-3].isdigit():
         point = f"{point[5:-3]}. basamak ucu"
     return side + point
 

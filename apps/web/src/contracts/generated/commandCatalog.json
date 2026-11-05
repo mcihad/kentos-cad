@@ -171159,7 +171159,7 @@
     },
     "TemplateBenchDef": {
       "additionalProperties": false,
-      "description": "A cut slope's benches (docs/adr/0958): every `height` m up the slope a bench `width` m wide, its surface falling\n`fall` percent outward (toward the face above; absent: level). From the project's geotechnical report: KentOS gives\nnone.",
+      "description": "A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its\nsurface falling `fall` percent outward (absent: level). From the project's geotechnical report: KentOS gives none.",
       "properties": {
         "fall": {
           "format": "double",
@@ -171448,6 +171448,17 @@
           "format": "double",
           "type": "number",
           "x-unit": "1"
+        },
+        "fillBench": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TemplateBenchDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The fill slope's benches (docs/adr/0958; KCAD schema 175)."
         }
       },
       "required": [

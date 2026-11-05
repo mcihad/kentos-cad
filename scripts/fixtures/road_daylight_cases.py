@@ -72,15 +72,16 @@ def diagnose(side, axis, ground, right):
         m = 1 / F(side["cut"])
     else:
         u0, z0, m = u, z, -1 / F(side["fill"])
-    # Docs/adr/0958: a benched cut's slope is its corners' polyline; each terrain stretch is cut at them below.
+    # Docs/adr/0958: a benched slope (a cut's up, a fill's down) is its corners' polyline; each terrain stretch is cut
+    # at them below.
     corners = []
-    b = side.get("bench") if cut else None
+    b = side.get("bench") if cut else side.get("fillBench")
     if b:
         h, w, f = F(b["height"]), F(b["width"]), F(b.get("fall", 0)) / 100
         last_u = max(p[0] for p in t)
         cu, cz = u0, z0
         for k in range(400):
-            cu, cz = (cu + h / m, cz + h) if k % 2 == 0 else (cu + w, cz - w * f)
+            cu, cz = (cu + h / abs(m), cz + (h if cut else -h)) if k % 2 == 0 else (cu + w, cz - w * f)
             corners.append((cu, cz))
             if cu > last_u:
                 break
@@ -201,6 +202,15 @@ def cases():
     bumpy = [(-60.0, 104.0), (-12.0, 103.6), (-9.6, 103.0), (-8.0, 104.4), (-5.0, 101.0), (0.0, 100.5), (40.0, 98.0)]
     case("Basamaklı yarma tümsekli arazide", {**benched, "bench": {"height": 2.0, "width": 3.0, "fall": 0.0}}, plain,
          100.0, g(bumpy))
+    # Docs/adr/0958: benched fill slopes; the cut's bench is not read on a fill.
+    filled = {**plain, "fill": 1.5, "fillBench": {"height": 3.0, "width": 2.0, "fall": 4.0}}
+    deep = [(-60.0, 78.0), (-9.0, 92.0), (-5.0, 99.0), (0.0, 99.5), (5.0, 99.0), (9.0, 92.0), (60.0, 78.0)]
+    case("Basamaklı dolgu: vadide basamaklardan geçer", filled, {**filled, "bench": {"height": 1.0, "width": 1.0}}, 100.0,
+         g(deep))
+    # Below the first bench a hump reaches above the slope and falls away: three crossings, the first on the bench.
+    humped = [(-40.0, 96.0), (0.0, 99.5), (4.5, 99.0), (10.2, 96.3), (11.5, 97.2), (13.5, 94.0), (60.0, 82.0)]
+    case("Basamaklı dolgu tümsekli arazide", plain, {**plain, "fillBench": {"height": 3.0, "width": 2.0}}, 100.0,
+         g(humped))
     return out
 
 

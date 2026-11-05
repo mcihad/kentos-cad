@@ -580,6 +580,13 @@ def templates_cases():
        rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.bench"))
     no("Dik basamak eğimi", {"operation": "set", "name": "x", "left": {**plain, "bench": {**bench, "fall": 80.0}}},
        rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.bench"))
+    # A fill slope's benches, alone or with the cut's.
+    ok("Basamaklı dolgu şevli yeni tip kesit", {"operation": "set", "name": "Dolgu basamaklı",
+                                               "left": {**plain, "bench": bench, "fillBench": {"height": 5.0, "width": 4.0}}},
+       start + [{"id": "tk-3", "name": "Dolgu basamaklı", "revision": 1,
+                 "left": {**plain, "bench": bench, "fillBench": {"height": 5.0, "width": 4.0}}}], "tk-3")
+    no("Yüksekliksiz dolgu basamağı", {"operation": "set", "name": "x", "left": {**plain, "fillBench": {"height": 0.0, "width": 4.0}}},
+       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.fillBench"))
     no("Geçersiz beklenen sürüm", {"operation": "set", "template": "tk-1", "name": "Tip A", "expectedRevision": "on"},
        BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "set", "template": "tk-1", "name": "Tip A", "expectedRevision": "41"},

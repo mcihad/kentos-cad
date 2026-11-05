@@ -2440,8 +2440,8 @@ def document(d):
     if any("densities" in f or "source" in f for v in road.get("volumes", []) for f in v.get("factors", [])):
         # A volume factor row's soil densities and source (docs/adr/0957).
         schema = max(schema, 174)
-    if any("bench" in t["left"] or "bench" in (t.get("right") or {}) for t in road.get("templates", [])):
-        # A template side's cut slope benches (docs/adr/0958).
+    if any(k in s for t in road.get("templates", []) for s in (t["left"], t.get("right") or {}) for k in ("bench", "fillBench")):
+        # A template side's cut or fill slope benches (docs/adr/0958).
         schema = max(schema, 175)
 
     def indexed(nodes):
@@ -5711,10 +5711,10 @@ def build():
     assert dd.count(b"\x67version\x18\xae") == 1, "a factor row's densities are schema 174"
     out["road-volume-states.kcad"] = container(dd)
     out["broken/road-volume-states-in-schema-173.kcad"] = container(dd.replace(b"\x67version\x18\xae", b"\x67version\x18\xad"))
-    # Schema 175 (docs/adr/0958): a template side's cut slope benches; schema 174 refuses them.
+    # Schema 175 (docs/adr/0958): a template side's cut and fill slope benches; schema 174 refuses them.
     benched = load("road-cut-benches.json")
     bd = document(benched)
-    assert bd.count(b"\x67version\x18\xaf") == 1, "a template's cut benches are schema 175"
+    assert bd.count(b"\x67version\x18\xaf") == 1, "a template's slope benches are schema 175"
     out["road-cut-benches.kcad"] = container(bd)
     out["broken/road-cut-benches-in-schema-174.kcad"] = container(bd.replace(b"\x67version\x18\xaf", b"\x67version\x18\xae"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.

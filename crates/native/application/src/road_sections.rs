@@ -88,7 +88,8 @@ pub fn core_template(def: &TemplateDef) -> Template {
         cut: s.cut,
         fill: s.fill,
         ditch: s.ditch.as_ref().map(|d| Ditch { fore: d.fore, depth: d.depth, bottom: d.bottom }),
-        bench: s.bench.map(|b| kentos_road::section::template::CutBench { height: b.height, width: b.width, fall: b.fall }),
+        bench: s.bench.map(|b| kentos_road::section::template::SlopeBench { height: b.height, width: b.width, fall: b.fall }),
+        fill_bench: s.fill_bench.map(|b| kentos_road::section::template::SlopeBench { height: b.height, width: b.width, fall: b.fall }),
     };
     Template { left: side(&def.left), right: side(def.right.as_ref().unwrap_or(&def.left)) }
 }

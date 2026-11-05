@@ -779,7 +779,7 @@ pub const SCHEMA_WITH_HAUL_APPROVAL: u32 = 172;
 pub const SCHEMA_WITH_HAUL_NETWORK: u32 = 173;
 /// Schema 174 (docs/adr/0957): a volume factor row's soil `densities` and its `source`.
 pub const SCHEMA_WITH_VOLUME_STATES: u32 = 174;
-/// Schema 175 (docs/adr/0958): a template side's cut slope `bench`.
+/// Schema 175 (docs/adr/0958): a template side's cut slope `bench` and fill slope `fillBench`.
 pub const SCHEMA_WITH_CUT_BENCHES: u32 = 175;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;

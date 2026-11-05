@@ -102,8 +102,8 @@ def bad(path, message):
 def template_codes(t):
     def one(side):
         d = side.get("ditch")
-        # [components, ditch bottom, kinds (none: by the template's), benched (docs/adr/0958)].
-        return [len(side["components"]), d["bottom"] if d else None, None, bool(side.get("bench"))]
+        # [components, ditch bottom, kinds (none: by the template's), benched cut and fill (docs/adr/0958)].
+        return [len(side["components"]), d["bottom"] if d else None, None, (bool(side.get("bench")), bool(side.get("fillBench")))]
     return {"left": one(t["left"]), "right": one(t.get("right") or t["left"])}
 
 
@@ -568,9 +568,13 @@ def query_cases():
     folded = {"id": "c-3", "name": "Dar kurp koridoru", "alignment": "g-4", "alignmentRevision": 1, "revision": 1,
               "profile": "b-4", "surface": "t-1", "left": 40.0, "right": 40.0, "tangent": 10.0, "curve": 2.0,
               "regions": [{"from": 0.0, "to": round(G4_LENGTH - 1.0, 3), "template": "tk-1"}]}
-    # Docs/adr/0958: the main corridor with its first template's cut slopes benched every 2 m.
+    # Docs/adr/0958: the main corridor with its first template's cut slopes benched every 2 m; then its second
+    # template's fill slopes (up to 2.7 m high, km 1+347 – 1+425) every metre.
     benched = [{**scmd.TK1, "left": {**scmd.TK1["left"], "bench": {"height": 2.0, "width": 2.5, "fall": 5.0}}}, scmd.TK2]
     q("Basamaklı yarma şevli koridor", {"corridor": "c-1", "points": True}, START, templates=benched)
+    fb = {"height": 1.0, "width": 1.5, "fall": 4.0}
+    filled = [scmd.TK1, {**scmd.TK2, "left": {**scmd.TK2["left"], "fillBench": fb}, "right": {**scmd.TK2["right"], "fillBench": fb}}]
+    q("Basamaklı dolgu şevli koridor", {"corridor": "c-1", "points": True}, START, templates=filled)
     q("Dar kurpta kesitler kesişir", {"corridor": "c-3"}, START + [folded])
     # docs/adr/0939: the vertical curves divided by their chord height, the sections between measured and refined.
     q("Düşey kurplar kiriş yüksekliğiyle bölünür", {"corridor": "c-1"},

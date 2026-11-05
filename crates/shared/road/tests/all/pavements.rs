@@ -27,7 +27,8 @@ fn side(v: &Value) -> Side {
         cut: n(&v["cut"]),
         fill: n(&v["fill"]),
         ditch: v.get("ditch").map(|d| Ditch { fore: n(&d["fore"]), depth: n(&d["depth"]), bottom: n(&d["bottom"]) }),
-        bench: v.get("bench").map(|b| kentos_road::section::template::CutBench { height: n(&b["height"]), width: n(&b["width"]), fall: b.get("fall").map_or(0.0, n) }),
+        bench: v.get("bench").map(|b| kentos_road::section::template::SlopeBench { height: n(&b["height"]), width: n(&b["width"]), fall: b.get("fall").map_or(0.0, n) }),
+        fill_bench: v.get("fillBench").map(|b| kentos_road::section::template::SlopeBench { height: n(&b["height"]), width: n(&b["width"]), fall: b.get("fall").map_or(0.0, n) }),
     }
 }
 
