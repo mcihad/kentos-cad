@@ -17,4 +17,9 @@ details?: boolean,
 /**
  * Include embedded picture bytes (base64), explicitly opt in to the larger response.
  */
-pictures?: boolean, };
+pictures?: boolean, 
+/**
+ * Include each frame's detail recipe and camera lock (docs/adr/1090 §2): what `cad.sheets.details` makes it
+ * again from.
+ */
+recipes?: boolean, };

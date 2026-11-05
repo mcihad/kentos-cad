@@ -20,6 +20,7 @@ pub mod plot_profile;
 pub mod book_transfer;
 pub mod cloud;
 pub mod create;
+pub mod details;
 pub mod fit;
 pub mod display;
 pub mod drawing_set;

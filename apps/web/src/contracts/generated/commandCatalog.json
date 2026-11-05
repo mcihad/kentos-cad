@@ -15723,6 +15723,10 @@
             "description": "Include embedded picture bytes (base64), explicitly opt in to the larger response.",
             "type": "boolean"
           },
+          "recipes": {
+            "description": "Include each frame's detail recipe and camera lock (docs/adr/1090 §2): what `cad.sheets.details` makes it\nagain from.",
+            "type": "boolean"
+          },
           "uids": {
             "description": "The changed objects' persistent ids; absent: no affected list.",
             "items": {
@@ -75144,6 +75148,338 @@
       ]
     },
     {
+      "id": "cad.sheets.details",
+      "version": 1,
+      "title": "Detay paftaları",
+      "summary": "Aynı modelin genel 2B detaylarını kesin oranlarla paftalara yerleştirir (docs/adr/1090 §2); mimari kat verisi gerekmez. Her detay: name, bounds (model kapsamı, metre: en küçük doğu, kuzey, en büyük doğu, kuzey) ya da table {table, part} (bölünmüş model tablosunun parçası, docs/adr/1030 §7), ratio {paper, model} (1:5 = paper 1, model 5; 2:1 = paper 2, model 1), isteğe bağlı layers (katman durumu {type:theme,name}; başka kullanıcının katman aç/kapası baskıyı değiştirmez), layerOverrides, annotation {type:fixed,scale} ve locked (yok: kilitli; ekran yakınlaştırması baskı ölçeğini değiştirmez). Pencere boyu kapsam × paper/model, en yakın µm'ye yuvarlanır. Detaylar şablonun (source; yok: sys:cad-teknik) ilk sabit görünüm penceresinin alanına verilen sırayla, soldan sağa satır satır (aralık 10 mm, başlık bandı 6,5 mm, hücre en az 40 mm) yerleşir; paftaya sığmayan detay setin sonraki paftasına geçer. Şablonun penceresi detaylara yer açar; her detayın altında “<ad> — Ölçek 1/N” yazısı görünümün kendi ölçeğini okur. Paftalar first'ten (yok: D-501) numaralanır, başlık title (yok: Detaylar), alt küme Detaylar. Plan yapılacak paftaları ve her detayın kâğıt çerçevesini verir; hepsi tek değişiklik, inverse geri alır. Boş kapsam invalid_extent, geçersiz oran invalid_ratio, 1 mm'den küçük pencere detail_too_small, boş alana bile sığmayan detay detail_does_not_fit, bounds ile table birlikte ya da hiçbiri ambiguous_source, tablo olmayan nesne not_a_table, olmayan parça table_part_missing.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sheets.details` v1: the details packed in their order into the template's first fixed map frame, row\nby row, running on to further sheets of the set; the sheets numbered on from `first` (D-501) and titled `title`.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `entity_not_found` (a table part's table),\n`not_a_table`, `table_part_missing`, `ambiguous_source` (both or neither of bounds and table), `unknown_template`,\n`invalid_options`, `bad_value`, `invalid_extent`, `invalid_ratio`, `detail_too_small`, `not_fixed_map`,\n`bad_drawing_info`, `detail_does_not_fit`, then the sheet core's own.",
+        "properties": {
+          "details": {
+            "items": {
+              "$ref": "#/$defs/DetailRequest"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "first": {
+            "description": "The first sheet's number; absent: D-501.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "options": {
+            "$ref": "#/$defs/PaperInstanceOptions",
+            "default": {},
+            "description": "The template's paper and answers (cad.sheets.create's options but the name, centre and scale).",
+            "x-raw-record": true
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetTemplateSource"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The template; absent: KentOS's ISO technical sheet (`sys:cad-teknik`)."
+          },
+          "title": {
+            "description": "The sheets' title; absent: Detaylar.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "details"
+        ],
+        "title": "SheetsDetails",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sheets.details` v1 (its plan's too): the book change and where each detail went.",
+        "properties": {
+          "details": {
+            "description": "Each detail in the input's order: its sheet, viewport and title ids, paper frame (µm) and denominator.",
+            "items": {
+              "$ref": "#/$defs/PaperDetailPlaced"
+            },
+            "type": "array"
+          },
+          "inverse": {
+            "description": "The operations that take the change back, in the order to apply them\n(an input of this command again).",
+            "items": true,
+            "type": "array"
+          },
+          "inversePictures": {
+            "description": "Previous embedded bytes when the operation changed them. Restore together with inverse operations,\npassing these as pictures and replacePictures=true. Omitted when bytes did not change.",
+            "items": {
+              "$ref": "#/$defs/SheetPicture"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "label": {
+            "description": "What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).",
+            "type": "string"
+          },
+          "made": {
+            "description": "The sheets made, in order.",
+            "items": {
+              "$ref": "#/$defs/PaperDetailSheet"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The book's sheets after the change, in its order.",
+            "items": {
+              "$ref": "#/$defs/SheetInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "inverse",
+          "sheets",
+          "revision",
+          "made",
+          "details"
+        ],
+        "title": "SheetsDetailed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sheets.details` v1 (its plan's too): the book change and where each detail went.",
+        "properties": {
+          "details": {
+            "description": "Each detail in the input's order: its sheet, viewport and title ids, paper frame (µm) and denominator.",
+            "items": {
+              "$ref": "#/$defs/PaperDetailPlaced"
+            },
+            "type": "array"
+          },
+          "inverse": {
+            "description": "The operations that take the change back, in the order to apply them\n(an input of this command again).",
+            "items": true,
+            "type": "array"
+          },
+          "inversePictures": {
+            "description": "Previous embedded bytes when the operation changed them. Restore together with inverse operations,\npassing these as pictures and replacePictures=true. Omitted when bytes did not change.",
+            "items": {
+              "$ref": "#/$defs/SheetPicture"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "label": {
+            "description": "What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).",
+            "type": "string"
+          },
+          "made": {
+            "description": "The sheets made, in order.",
+            "items": {
+              "$ref": "#/$defs/PaperDetailSheet"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The book's sheets after the change, in its order.",
+            "items": {
+              "$ref": "#/$defs/SheetInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "inverse",
+          "sheets",
+          "revision",
+          "made",
+          "details"
+        ],
+        "title": "SheetsDetailed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "bad_drawing_info",
+          "duplicate_sheet_number",
+          "bad_drawing_index",
+          "not_fixed_map",
+          "ambiguous_source",
+          "invalid_extent",
+          "bad_curve",
+          "curve_too_complex",
+          "asset_in_use",
+          "asset_too_large",
+          "bad_asset",
+          "bad_atlas",
+          "bad_binding",
+          "bad_color",
+          "bad_constraint",
+          "bad_continuation",
+          "bad_font",
+          "bad_group",
+          "bad_id",
+          "bad_layout",
+          "bad_level",
+          "bad_link",
+          "bad_name",
+          "bad_order",
+          "bad_patch",
+          "bad_template",
+          "bad_value",
+          "bad_variable",
+          "bad_variable_value",
+          "duplicate_id",
+          "duplicate_name",
+          "duplicate_variable",
+          "empty_group",
+          "group_cycle",
+          "ids_missing",
+          "invalid_column_name",
+          "item_in_use",
+          "item_locked",
+          "kind_change",
+          "margins_too_large",
+          "master_in_use",
+          "missing_asset",
+          "mixed_owners",
+          "newer_schema",
+          "no_items",
+          "no_master",
+          "out_of_range",
+          "page_orientation",
+          "page_size_mismatch",
+          "reserved_id",
+          "template_has_place",
+          "template_too_large",
+          "unknown_guide",
+          "unknown_item",
+          "unknown_master",
+          "unknown_paper",
+          "unknown_schema",
+          "unknown_sheet",
+          "unknown_variant",
+          "invalid_revision",
+          "revision_conflict",
+          "entity_not_found",
+          "not_a_table",
+          "table_part_missing",
+          "unknown_template",
+          "unknown_variable",
+          "invalid_options",
+          "invalid_ratio",
+          "detail_too_small",
+          "detail_does_not_fit",
+          "book_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Aynı bağlantının 1:1, 1:5, 1:20 ve 1:100 detayları",
+          "input": {
+            "details": [
+              {
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "name": "Bulon",
+                "ratio": {
+                  "model": 1.0,
+                  "paper": 1.0
+                }
+              },
+              {
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "name": "Levha",
+                "ratio": {
+                  "model": 5.0,
+                  "paper": 1.0
+                }
+              },
+              {
+                "bounds": [
+                  -0.5,
+                  -0.5,
+                  1.5,
+                  1.0
+                ],
+                "name": "Bağlantı",
+                "ratio": {
+                  "model": 20.0,
+                  "paper": 1.0
+                }
+              },
+              {
+                "bounds": [
+                  -5.0,
+                  -3.0,
+                  5.0,
+                  3.0
+                ],
+                "name": "Genel",
+                "ratio": {
+                  "model": 100.0,
+                  "paper": 1.0
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sheets.edit",
       "version": 1,
       "title": "Pafta kitabı",
@@ -89288,6 +89624,14 @@
             "description": "Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.",
             "type": "boolean"
           },
+          "resumable": {
+            "description": "Separate PDFs only (docs/adr/1090 §7): a publication that is stopped or fails keeps its finished pages and a\njournal in a hidden sibling folder (`.<folder>.kentos-devam`), never in the delivery folder, so `resume` can go on.",
+            "type": "boolean"
+          },
+          "resume": {
+            "description": "Go on with the stopped publication of this folder: its finished pages are checked by SHA-256 and kept, the\nrest are made. Refused unless the drawing, its linked resources, the title context and the options are the ones\nit started with (`resume_stale`).",
+            "type": "boolean"
+          },
           "sheets": {
             "description": "None means every sheet; an explicit list is used in exactly its supplied order.",
             "items": {
@@ -89323,6 +89667,13 @@
           "manifest": {
             "type": "string"
           },
+          "pages": {
+            "description": "Each written page's audit and content digest (docs/adr/1090 §4), in the published order.",
+            "items": {
+              "$ref": "#/$defs/SheetPublishedPage"
+            },
+            "type": "array"
+          },
           "path": {
             "type": "string"
           },
@@ -89339,6 +89690,20 @@
                 "type": "null"
               }
             ]
+          },
+          "resumed": {
+            "description": "With `resume`: the sheets whose finished pages were kept from the stopped publication.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "description": "What is published, sheet by sheet (docs/adr/1090 §7): paper, viewports with their scales, locks and layer\nstates, the plot profile.",
+            "items": {
+              "$ref": "#/$defs/SheetPublishScope"
+            },
+            "type": "array"
           },
           "sha256": {
             "type": "string"
@@ -89384,6 +89749,13 @@
           "manifest": {
             "type": "string"
           },
+          "pages": {
+            "description": "Each written page's audit and content digest (docs/adr/1090 §4), in the published order.",
+            "items": {
+              "$ref": "#/$defs/SheetPublishedPage"
+            },
+            "type": "array"
+          },
           "path": {
             "type": "string"
           },
@@ -89400,6 +89772,20 @@
                 "type": "null"
               }
             ]
+          },
+          "resumed": {
+            "description": "With `resume`: the sheets whose finished pages were kept from the stopped publication.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "description": "What is published, sheet by sheet (docs/adr/1090 §7): paper, viewports with their scales, locks and layer\nstates, the plot profile.",
+            "items": {
+              "$ref": "#/$defs/SheetPublishScope"
+            },
+            "type": "array"
           },
           "sha256": {
             "type": "string"
@@ -89438,7 +89824,9 @@
           "pin_mismatch",
           "publish_blocked",
           "package_incomplete",
-          "integrity_failed"
+          "integrity_failed",
+          "no_resume",
+          "resume_stale"
         ]
       },
       "examples": [
@@ -89447,6 +89835,197 @@
           "input": {
             "mode": "separate",
             "naming": "{index}-{sheet}",
+            "path": "/tmp/pafta-teslimi"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.publish.status",
+      "version": 1,
+      "title": "Yayın durumu",
+      "summary": "Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği.",
+      "aliases": [
+        "YAYINDURUMU"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "job",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `file.publish.status` v1 (“Yayın durumu”, docs/adr/1090 §6): a delivery folder's last publication against\nthe drawing as it is now, and a stopped publication's journal. Reads files, writes none.",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The delivery folder (absolute), as given to `file.publish.sheets`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "PublishStatus",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.publish.status` v1.",
+        "properties": {
+          "current": {
+            "$ref": "#/$defs/SheetPublishPin",
+            "description": "The drawing now; kept apart from the published source."
+          },
+          "date": {
+            "description": "The publication's date.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetPublishPin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The source the delivery was published from."
+          },
+          "sheets": {
+            "description": "The published sheets in their order, then the book's unpublished ones.",
+            "items": {
+              "$ref": "#/$defs/SheetPublishStatus"
+            },
+            "type": "array"
+          },
+          "stale": {
+            "description": "The published sheets to make again (stale, failed or whose file changed), in the published order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "state": {
+            "$ref": "#/$defs/PublishFolderState"
+          },
+          "stopped": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StoppedPublication"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "path",
+          "state",
+          "current",
+          "sheets",
+          "stale"
+        ],
+        "title": "PublishStatusReport",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.publish.status` v1.",
+        "properties": {
+          "current": {
+            "$ref": "#/$defs/SheetPublishPin",
+            "description": "The drawing now; kept apart from the published source."
+          },
+          "date": {
+            "description": "The publication's date.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetPublishPin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The source the delivery was published from."
+          },
+          "sheets": {
+            "description": "The published sheets in their order, then the book's unpublished ones.",
+            "items": {
+              "$ref": "#/$defs/SheetPublishStatus"
+            },
+            "type": "array"
+          },
+          "stale": {
+            "description": "The published sheets to make again (stale, failed or whose file changed), in the published order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "state": {
+            "$ref": "#/$defs/PublishFolderState"
+          },
+          "stopped": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StoppedPublication"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "path",
+          "state",
+          "current",
+          "sheets",
+          "stale"
+        ],
+        "title": "PublishStatusReport",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "book_unreadable",
+          "cancelled"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Teslim klasörünün güncelliği",
+          "input": {
             "path": "/tmp/pafta-teslimi"
           }
         }
@@ -94067,6 +94646,42 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Seçilen katların hepsinin planı bir paftada var; yeniden yapmak için Yeniden'i (again) seçin."
+    },
+    {
+      "code": "table_part_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablonun bu numarada parçası yok; parçalar 0'dan sayılır."
+    },
+    {
+      "code": "invalid_ratio",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Oranın iki sayısı sonlu ve pozitif, paydası 0,000001 ile 100 000 000 arasında olmalı."
+    },
+    {
+      "code": "detail_too_small",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Detay bu oranda kâğıtta 1 mm'den küçük kalıyor; daha büyük bir ölçek seçin."
+    },
+    {
+      "code": "detail_does_not_fit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Detay şablonun boş çizim alanına bile sığmıyor; daha küçük bir ölçek ya da daha büyük kâğıt seçin."
+    },
+    {
+      "code": "no_resume",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu teslim klasörünün durdurulmuş bir yayını yok; yayını baştan başlatın."
+    },
+    {
+      "code": "resume_stale",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizim, bağlı kaynakları ya da seçenekler durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz, baştan yayınlayın."
     },
     {
       "code": "no_steps",
@@ -98759,7 +99374,12 @@
       "oneOf": [
         {
           "const": "shows",
-          "description": "An object's box meets the frame's ground box, and the frame draws it: on its level (or on none), its category\nand phase not left out by its view's recipe (docs/adr/0774 §4).",
+          "description": "An object's box meets the frame's ground box, and the frame draws it: on its level (or on none), its category\nand phase not left out by its view's recipe (docs/adr/0774 §4), on a layer the frame prints (its layer state,\nlist and overrides; docs/adr/1090 §6).",
+          "type": "string"
+        },
+        {
+          "const": "table",
+          "description": "The frame shows a model table whose rows come from one of the objects (a coordinate, area or attribute table\nof it, a block schedule counting its insert, a schedule listing it, a cell field reading it; docs/adr/1090 §6).",
           "type": "string"
         },
         {
@@ -98781,7 +99401,7 @@
           "type": "string"
         },
         "reasons": {
-          "description": "Its reasons, in this order: shows, marked, unknown.",
+          "description": "Its reasons, in this order: shows, table, marked, unknown.",
           "items": {
             "$ref": "#/$defs/AffectReason"
           },
@@ -98789,6 +99409,13 @@
         },
         "sheet": {
           "type": "string"
+        },
+        "tables": {
+          "description": "With `table`: the tables it shows that read the objects, by persistent id, in the drawing's order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "uids": {
           "description": "The objects that affect it, by persistent id, in the input's order (none for `unknown` alone).",
@@ -113906,6 +114533,111 @@
         "table",
         "source",
         "rows"
+      ],
+      "type": "object"
+    },
+    "DetailRequest": {
+      "additionalProperties": false,
+      "description": "One detail of `cad.sheets.details`: exactly one of `bounds` and `table`.",
+      "properties": {
+        "annotation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaperAnnotationScale"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The annotation representation (`{type:\"fixed\", scale}`); absent: the viewport's own scale."
+        },
+        "bounds": {
+          "description": "The model extent, canonical metres: min east, min north, max east, max north.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "layerOverrides": {
+          "description": "Layers drawn otherwise in this viewport only.",
+          "items": {
+            "$ref": "#/$defs/PaperLayerOverride"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "layers": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaperMapLayers"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Which layers it draws (`{type:\"theme\", name}` for a layer state); absent: the drawing's."
+        },
+        "locked": {
+          "description": "The camera locked; absent: locked.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "ratio": {
+          "$ref": "#/$defs/PaperScaleRatio",
+          "description": "Paper:model in the same unit (1:5 is `{paper:1, model:5}`)."
+        },
+        "table": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DetailTablePart"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A model table's part instead of an extent: the part's outline, half a text height around it."
+        }
+      },
+      "required": [
+        "name",
+        "ratio"
+      ],
+      "type": "object"
+    },
+    "DetailTablePart": {
+      "additionalProperties": false,
+      "description": "A detail's model source: an extent, or a model table's part (docs/adr/1030 §7: a broken table's parts go on\nsheets of their own, docs/adr/1090 §3).",
+      "properties": {
+        "part": {
+          "description": "Its part, from 0 (the first part, left).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "table": {
+          "description": "The model table's persistent id.",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "table",
+        "part"
       ],
       "type": "object"
     },
@@ -145669,6 +146401,63 @@
         }
       ]
     },
+    "PaperDetailPlaced": {
+      "description": "Where one detail went.",
+      "properties": {
+        "denominator": {
+          "description": "model / paper.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "scale"
+        },
+        "frame": {
+          "$ref": "#/$defs/PaperRectUm",
+          "description": "The viewport's frame on the paper, µm."
+        },
+        "item": {
+          "description": "The viewport's item id and its title's.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sheet",
+        "item",
+        "title",
+        "frame",
+        "denominator"
+      ],
+      "type": "object"
+    },
+    "PaperDetailSheet": {
+      "description": "A sheet made.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sheet",
+        "number",
+        "name"
+      ],
+      "type": "object"
+    },
     "PaperDistributeMode": {
       "enum": [
         "centers",
@@ -150627,6 +151416,71 @@
       },
       "required": [
         "schema"
+      ],
+      "type": "object"
+    },
+    "PaperSheetDetail": {
+      "additionalProperties": false,
+      "description": "One detail: the model extent it shows, at an exact ratio, with its layer and annotation representation.",
+      "properties": {
+        "annotation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaperAnnotationScale"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The annotation representation; absent: the viewport's own scale."
+        },
+        "bounds": {
+          "description": "The model extent, canonical metres: min east, min north, max east, max north.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "layerOverrides": {
+          "description": "Layers drawn otherwise in this viewport only.",
+          "items": {
+            "$ref": "#/$defs/PaperLayerOverride"
+          },
+          "type": "array"
+        },
+        "layers": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaperMapLayers"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Which layers it draws; absent: the drawing's (a layer state keeps the print from following anyone's\nlayer switching, docs/adr/1090 §5)."
+        },
+        "locked": {
+          "default": true,
+          "description": "The camera locked (zooming on the screen never changes the print scale); default true.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Its title (“Ankraj detayı”); the sheet writes “<name> — Ölçek 1/N” under it, N read from the viewport.",
+          "type": "string"
+        },
+        "ratio": {
+          "$ref": "#/$defs/PaperScaleRatio",
+          "description": "Paper:model, both in the same unit (1:5 is paper 1, model 5; 2:1 is paper 2, model 1)."
+        }
+      },
+      "required": [
+        "name",
+        "bounds",
+        "ratio"
       ],
       "type": "object"
     },
@@ -158172,6 +159026,34 @@
       ],
       "type": "object"
     },
+    "PublishFolderState": {
+      "description": "Where a delivery folder stands.",
+      "oneOf": [
+        {
+          "const": "published",
+          "description": "Published: `yayin.json` is there.",
+          "type": "string"
+        },
+        {
+          "const": "stopped",
+          "description": "A publication of it stopped; nothing was delivered.",
+          "type": "string"
+        },
+        {
+          "const": "none",
+          "description": "Neither.",
+          "type": "string"
+        }
+      ]
+    },
+    "PublishStopReason": {
+      "description": "Why a publication stopped.",
+      "enum": [
+        "cancelled",
+        "failed"
+      ],
+      "type": "string"
+    },
     "QuantityTotals": {
       "description": "The rows' sums.",
       "properties": {
@@ -165323,6 +166205,17 @@
           "type": "array",
           "x-unit": "length"
         },
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaperSheetDetail"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "With `recipes`: the frame as a detail of `cad.sheets.details` (docs/adr/1090 §2): its extent, ratio, layers, overrides,\nannotation choice and lock, which make it again; none for a frame that is not a placed, unturned viewport of\nthe drawing."
+        },
         "item": {
           "description": "The item's id.",
           "type": "string"
@@ -165333,6 +166226,10 @@
             "string",
             "null"
           ]
+        },
+        "locked": {
+          "description": "With `recipes`: its camera is locked, zooming on the screen leaves its print scale (docs/adr/0594).",
+          "type": "boolean"
         },
         "marks": {
           "description": "The view marks that point at it, by persistent id, in the drawing's order.",
@@ -165895,6 +166792,49 @@
       ],
       "type": "object"
     },
+    "SheetPublishFrame": {
+      "description": "One viewport of a published sheet.",
+      "properties": {
+        "annotation": {
+          "description": "The annotation representation chosen; none: the viewport's scale.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "scale"
+        },
+        "denominator": {
+          "description": "model / paper; none for an atlas frame.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "scale"
+        },
+        "item": {
+          "type": "string"
+        },
+        "layers": {
+          "description": "`drawing` (the drawing's own visibility, which anyone's layer switching changes), `list`, or\n`theme:<layer state>`.",
+          "type": "string"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item",
+        "name",
+        "locked",
+        "layers"
+      ],
+      "type": "object"
+    },
     "SheetPublishIssue": {
       "properties": {
         "code": {
@@ -165959,6 +166899,153 @@
       ],
       "type": "object"
     },
+    "SheetPublishScope": {
+      "description": "One sheet of a publication's scope.",
+      "properties": {
+        "frames": {
+          "items": {
+            "$ref": "#/$defs/SheetPublishFrame"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "paper": {
+          "description": "The page, mm: width, height.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "paper-mm"
+        },
+        "profile": {
+          "description": "The plot profile it prints with, by name; none: the objects' own looks.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "tables": {
+          "description": "Table items on the sheet.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "sheet",
+        "name",
+        "number",
+        "revision",
+        "paper",
+        "frames",
+        "tables"
+      ],
+      "type": "object"
+    },
+    "SheetPublishState": {
+      "description": "A published sheet against the drawing now.",
+      "oneOf": [
+        {
+          "const": "current",
+          "description": "Its page now draws what was published.",
+          "type": "string"
+        },
+        {
+          "const": "stale",
+          "description": "Its page now draws otherwise: publish it again.",
+          "type": "string"
+        },
+        {
+          "const": "unknown",
+          "description": "The publication has no digest for it (made before docs/adr/1090): it cannot be compared.",
+          "type": "string"
+        },
+        {
+          "const": "removed",
+          "description": "The sheet is no longer in the book.",
+          "type": "string"
+        },
+        {
+          "const": "unpublished",
+          "description": "In the book, not in the publication.",
+          "type": "string"
+        },
+        {
+          "const": "fileChanged",
+          "description": "Its delivered PDF is missing or not the published bytes.",
+          "type": "string"
+        },
+        {
+          "const": "failed",
+          "description": "Its page cannot be made now; the reason is in `issue`.",
+          "type": "string"
+        }
+      ]
+    },
+    "SheetPublishStatus": {
+      "properties": {
+        "digest": {
+          "description": "The digest now.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issue": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SheetPublishIssue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "published": {
+          "description": "The digest published.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/SheetPublishState"
+        }
+      },
+      "required": [
+        "sheet",
+        "name",
+        "state"
+      ],
+      "type": "object"
+    },
     "SheetPublishedFile": {
       "properties": {
         "bytes": {
@@ -165985,6 +167072,128 @@
         "sheets",
         "bytes",
         "sha256"
+      ],
+      "type": "object"
+    },
+    "SheetPublishedPage": {
+      "description": "One written page: what it paints and its content digest (docs/adr/1090 §4).",
+      "properties": {
+        "clips": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "digest": {
+          "description": "The page's content digest made without the title context (user, date): equal digests draw the same page.",
+          "type": "string"
+        },
+        "evenOddFills": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "file": {
+          "description": "The PDF it is in.",
+          "type": "string"
+        },
+        "fills": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "findings": {
+          "description": "The page's audit findings (none an error by itself: the preflight's errors block publication).",
+          "items": {
+            "$ref": "#/$defs/SheetPublishIssue"
+          },
+          "type": "array"
+        },
+        "fonts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hairlines": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "images": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "minStrokeMm": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "placeholders": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "rasterMaps": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "strokes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "texts": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "thinLines": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "transparent": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "sheet",
+        "file",
+        "digest",
+        "strokes",
+        "fills",
+        "evenOddFills",
+        "hairlines",
+        "thinLines",
+        "texts",
+        "fonts",
+        "clips",
+        "transparent",
+        "images",
+        "rasterMaps",
+        "placeholders",
+        "findings"
       ],
       "type": "object"
     },
@@ -171569,6 +172778,68 @@
           "type": "string"
         }
       ]
+    },
+    "StoppedPublication": {
+      "description": "A stopped publication's journal: no delivery folder was made; `resume` goes on from it.",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "done": {
+          "description": "Finished pages kept, and the ones still to make.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/SheetPublishedFile"
+          },
+          "type": "array"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/SheetPublishIssue"
+          },
+          "type": "array"
+        },
+        "reason": {
+          "$ref": "#/$defs/PublishStopReason"
+        },
+        "remaining": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "resumable": {
+          "description": "The drawing is still the one it started with: `resume` can go on.",
+          "type": "boolean"
+        },
+        "sheets": {
+          "description": "The sheets chosen, in order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "source": {
+          "$ref": "#/$defs/SheetPublishPin"
+        }
+      },
+      "required": [
+        "reason",
+        "date",
+        "source",
+        "sheets",
+        "done",
+        "remaining",
+        "files",
+        "issues",
+        "resumable"
+      ],
+      "type": "object"
     },
     "StreetSource": {
       "description": "The streets' layer and which of its attributes say what.",

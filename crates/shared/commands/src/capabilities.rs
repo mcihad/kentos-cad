@@ -5771,6 +5771,27 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.sheets.details",
+        refusals: &[
+            SHEET_CORE,
+            REVISION,
+            &[
+                "entity_not_found",
+                "not_a_table",
+                "table_part_missing",
+                "unknown_template",
+                "unknown_variable",
+                "invalid_options",
+                "invalid_ratio",
+                "detail_too_small",
+                "detail_does_not_fit",
+                "book_unreadable",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.sheets.fit",
         refusals: &[
             REVISION,
@@ -6985,7 +7006,15 @@ const ENTRIES: &[Entry] = &[
             "publish_blocked",
             "package_incomplete",
             "integrity_failed",
+            "no_resume",
+            "resume_stale",
         ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "file.publish.status",
+        refusals: &[&["invalid_file_path", "book_unreadable", "cancelled"]],
         warnings: &[],
         targets: none,
     },

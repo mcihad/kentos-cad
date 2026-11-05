@@ -205,15 +205,17 @@ class AffectReason(_StrEnum):
     """Why a frame is affected.
 
     - ``shows``: An object's box meets the frame's ground box, and the frame draws it: on its level (or on none), its category
+    - ``table``: The frame shows a model table whose rows come from one of the objects (a coordinate, area or attribute table
     - ``marked``: One of the objects is a view mark pointing at the frame.
     - ``unknown``: The frame's ground is not known (no fixed view): it may show them.
     """
     SHOWS = "shows"
+    TABLE = "table"
     MARKED = "marked"
     UNKNOWN = "unknown"
 
 
-AffectReasonName = Literal["shows", "marked", "unknown"]
+AffectReasonName = Literal["shows", "table", "marked", "unknown"]
 """The names of :class:`AffectReason`, for a plain string."""
 
 
@@ -5406,6 +5408,32 @@ PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "att
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
+class PublishFolderState(_StrEnum):
+    """Where a delivery folder stands.
+
+    - ``published``: Published: `yayin.json` is there.
+    - ``stopped``: A publication of it stopped; nothing was delivered.
+    - ``none``: Neither.
+    """
+    PUBLISHED = "published"
+    STOPPED = "stopped"
+    NONE = "none"
+
+
+PublishFolderStateName = Literal["published", "stopped", "none"]
+"""The names of :class:`PublishFolderState`, for a plain string."""
+
+
+class PublishStopReason(_StrEnum):
+    """Why a publication stopped."""
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+
+PublishStopReasonName = Literal["cancelled", "failed"]
+"""The names of :class:`PublishStopReason`, for a plain string."""
+
+
 class QueriedKind(_StrEnum):
     """What a question was asked of.
 
@@ -6179,6 +6207,30 @@ class SheetPublishMode(_StrEnum):
 
 SheetPublishModeName = Literal["single", "separate"]
 """The names of :class:`SheetPublishMode`, for a plain string."""
+
+
+class SheetPublishState(_StrEnum):
+    """A published sheet against the drawing now.
+
+    - ``current``: Its page now draws what was published.
+    - ``stale``: Its page now draws otherwise: publish it again.
+    - ``unknown``: The publication has no digest for it (made before docs/adr/1090): it cannot be compared.
+    - ``removed``: The sheet is no longer in the book.
+    - ``unpublished``: In the book, not in the publication.
+    - ``fileChanged``: Its delivered PDF is missing or not the published bytes.
+    - ``failed``: Its page cannot be made now; the reason is in `issue`.
+    """
+    CURRENT = "current"
+    STALE = "stale"
+    UNKNOWN = "unknown"
+    REMOVED = "removed"
+    UNPUBLISHED = "unpublished"
+    FILE_CHANGED = "fileChanged"
+    FAILED = "failed"
+
+
+SheetPublishStateName = Literal["current", "stale", "unknown", "removed", "unpublished", "fileChanged", "failed"]
+"""The names of :class:`SheetPublishState`, for a plain string."""
 
 
 class SheetResourceKind(_StrEnum):
@@ -12262,13 +12314,15 @@ class AdjustObservation(_Model):
 class AffectedFrame(_Model):
     """A frame the objects' change affects.
     Attributes:
-        reasons: Its reasons, in this order: shows, marked, unknown.
+        reasons: Its reasons, in this order: shows, table, marked, unknown.
         uids: The objects that affect it, by persistent id, in the input's order (none for `unknown` alone).
+        tables: With `table`: the tables it shows that read the objects, by persistent id, in the drawing's order.
     """
     sheet: str
     item: str
     reasons: list[AffectReason | AffectReasonName]
     uids: list[str]
+    tables: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -12276,6 +12330,8 @@ class AffectedFrame(_Model):
         out["item"] = self.item
         out["reasons"] = [_enum_out(e0) for e0 in self.reasons]
         out["uids"] = list(self.uids)
+        if self.tables is not UNSET:
+            out["tables"] = list(self.tables)
         return out
 
     @classmethod
@@ -12285,6 +12341,7 @@ class AffectedFrame(_Model):
             item=data["item"],
             reasons=[_enum_in(AffectReason, e0) for e0 in data["reasons"]],
             uids=list(data["uids"]),
+            tables=list(data["tables"]) if "tables" in data else UNSET,
         )
 
 
@@ -25357,6 +25414,84 @@ class DetachedTable(_Model):
             table=data["table"],
             source=data["source"],
             rows=data["rows"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DetailRequest(_Model):
+    """One detail of `cad.sheets.details`: exactly one of `bounds` and `table`.
+    Attributes:
+        ratio: Paper:model in the same unit (1:5 is `{paper:1, model:5}`).
+        annotation: The annotation representation (`{type:"fixed", scale}`); absent: the viewport's own scale.
+        bounds: The model extent, canonical metres: min east, min north, max east, max north. Unit: m.
+        layer_overrides: Layers drawn otherwise in this viewport only.
+        layers: Which layers it draws (`{type:"theme", name}` for a layer state); absent: the drawing's.
+        locked: The camera locked; absent: locked.
+        table: A model table's part instead of an extent: the part's outline, half a text height around it.
+    """
+    name: str
+    ratio: PaperScaleRatio
+    annotation: PaperAnnotationScale | None | Unset = UNSET
+    bounds: list[float] | None | Unset = UNSET
+    layer_overrides: list[PaperLayerOverride] | None | Unset = UNSET
+    layers: PaperMapLayers | None | Unset = UNSET
+    locked: bool | None | Unset = UNSET
+    table: DetailTablePart | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["ratio"] = self.ratio.to_json()
+        if self.annotation is not UNSET:
+            out["annotation"] = None if self.annotation is None else self.annotation.to_json()
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
+        if self.layer_overrides is not UNSET:
+            out["layerOverrides"] = None if self.layer_overrides is None else [e0.to_json() for e0 in self.layer_overrides]
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else self.layers.to_json()
+        if self.locked is not UNSET:
+            out["locked"] = self.locked
+        if self.table is not UNSET:
+            out["table"] = None if self.table is None else self.table.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetailRequest:
+        return cls(
+            name=data["name"],
+            ratio=PaperScaleRatio.from_json(data["ratio"]),
+            annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else PaperAnnotationScale.from_json(data["annotation"]),
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
+            layer_overrides=UNSET if "layerOverrides" not in data else None if data["layerOverrides"] is None else [PaperLayerOverride.from_json(e0) for e0 in data["layerOverrides"]],
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else PaperMapLayers.from_json(data["layers"]),
+            locked=data.get("locked", UNSET),
+            table=UNSET if "table" not in data else None if data["table"] is None else DetailTablePart.from_json(data["table"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DetailTablePart(_Model):
+    """A detail's model source: an extent, or a model table's part (docs/adr/1030 §7: a broken table's parts go on
+    sheets of their own, docs/adr/1090 §3).
+    Attributes:
+        table: The model table's persistent id.
+        part: Its part, from 0 (the first part, left). Unit: index.
+    """
+    table: str
+    part: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["part"] = self.part
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetailTablePart:
+        return cls(
+            table=data["table"],
+            part=data["part"],
         )
 
 
@@ -56778,6 +56913,66 @@ class PaperCoordColumns(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperDetailPlaced(_Model):
+    """Where one detail went.
+    Attributes:
+        item: The viewport's item id and its title's.
+        frame: The viewport's frame on the paper, µm.
+        denominator: model / paper. Unit: scale.
+    """
+    name: str
+    sheet: str
+    item: str
+    title: str
+    frame: PaperRectUm
+    denominator: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sheet"] = self.sheet
+        out["item"] = self.item
+        out["title"] = self.title
+        out["frame"] = self.frame.to_json()
+        out["denominator"] = float(self.denominator)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperDetailPlaced:
+        return cls(
+            name=data["name"],
+            sheet=data["sheet"],
+            item=data["item"],
+            title=data["title"],
+            frame=PaperRectUm.from_json(data["frame"]),
+            denominator=float(data["denominator"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperDetailSheet(_Model):
+    """A sheet made."""
+    sheet: str
+    number: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["number"] = self.number
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperDetailSheet:
+        return cls(
+            sheet=data["sheet"],
+            number=data["number"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperDrawingInfo(_Model):
     """An issued sheet's identity is separate from its mutable tab name and document revision.
     Attributes:
@@ -57915,6 +58110,54 @@ class PaperSheetBook(_Model):
             plot_profiles=[PaperPlotProfile.from_json(e0) for e0 in data["plotProfiles"]] if "plotProfiles" in data else UNSET,
             sheets=[PaperSheet.from_json(e0) for e0 in data["sheets"]] if "sheets" in data else list(),
             variables=[PaperVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperSheetDetail(_Model):
+    """One detail: the model extent it shows, at an exact ratio, with its layer and annotation representation.
+    Attributes:
+        name: Its title (“Ankraj detayı”); the sheet writes “<name> — Ölçek 1/N” under it, N read from the viewport.
+        bounds: The model extent, canonical metres: min east, min north, max east, max north. Unit: m.
+        ratio: Paper:model, both in the same unit (1:5 is paper 1, model 5; 2:1 is paper 2, model 1).
+        annotation: The annotation representation; absent: the viewport's own scale.
+        layer_overrides: Layers drawn otherwise in this viewport only.
+        layers: Which layers it draws; absent: the drawing's (a layer state keeps the print from following anyone's
+            layer switching, docs/adr/1090 §5).
+        locked: The camera locked (zooming on the screen never changes the print scale); default true.
+    """
+    name: str
+    bounds: list[float]
+    ratio: PaperScaleRatio
+    annotation: PaperAnnotationScale | None | Unset = UNSET
+    layer_overrides: list[PaperLayerOverride] | Unset = UNSET
+    layers: PaperMapLayers | None | Unset = UNSET
+    locked: bool = True
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        out["ratio"] = self.ratio.to_json()
+        if self.annotation is not UNSET:
+            out["annotation"] = None if self.annotation is None else self.annotation.to_json()
+        if self.layer_overrides is not UNSET:
+            out["layerOverrides"] = [e0.to_json() for e0 in self.layer_overrides]
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else self.layers.to_json()
+        out["locked"] = self.locked
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperSheetDetail:
+        return cls(
+            name=data["name"],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            ratio=PaperScaleRatio.from_json(data["ratio"]),
+            annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else PaperAnnotationScale.from_json(data["annotation"]),
+            layer_overrides=[PaperLayerOverride.from_json(e0) for e0 in data["layerOverrides"]] if "layerOverrides" in data else UNSET,
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else PaperMapLayers.from_json(data["layers"]),
+            locked=data["locked"] if "locked" in data else True,
         )
 
 
@@ -66871,6 +67114,11 @@ class PublishSheets(_Model):
         naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
         pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
         resources: Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
+        resumable: Separate PDFs only (docs/adr/1090 §7): a publication that is stopped or fails keeps its finished pages and a
+            journal in a hidden sibling folder (`.<folder>.kentos-devam`), never in the delivery folder, so `resume` can go on.
+        resume: Go on with the stopped publication of this folder: its finished pages are checked by SHA-256 and kept, the
+            rest are made. Refused unless the drawing, its linked resources, the title context and the options are the ones
+            it started with (`resume_stale`).
         sheets: None means every sheet; an explicit list is used in exactly its supplied order.
     """
     path: str
@@ -66883,6 +67131,8 @@ class PublishSheets(_Model):
     naming: str = "{index}-{sheet}"
     pin: SheetPublishPin | None | Unset = UNSET
     resources: bool = False
+    resumable: bool | Unset = UNSET
+    resume: bool | Unset = UNSET
     sheets: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -66901,6 +67151,10 @@ class PublishSheets(_Model):
         if self.pin is not UNSET:
             out["pin"] = None if self.pin is None else self.pin.to_json()
         out["resources"] = self.resources
+        if self.resumable is not UNSET:
+            out["resumable"] = self.resumable
+        if self.resume is not UNSET:
+            out["resume"] = self.resume
         if self.sheets is not UNSET:
             out["sheets"] = None if self.sheets is None else list(self.sheets)
         return out
@@ -66918,7 +67172,82 @@ class PublishSheets(_Model):
             naming=data["naming"] if "naming" in data else "{index}-{sheet}",
             pin=UNSET if "pin" not in data else None if data["pin"] is None else SheetPublishPin.from_json(data["pin"]),
             resources=data["resources"] if "resources" in data else False,
+            resumable=data.get("resumable", UNSET),
+            resume=data.get("resume", UNSET),
             sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else list(data["sheets"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PublishStatus(_Model):
+    """Input of `file.publish.status` v1 (“Yayın durumu”, docs/adr/1090 §6): a delivery folder's last publication against
+    the drawing as it is now, and a stopped publication's journal. Reads files, writes none.
+    Attributes:
+        path: The delivery folder (absolute), as given to `file.publish.sheets`.
+    """
+    path: str
+    drawing: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PublishStatus:
+        return cls(
+            path=data["path"],
+            drawing=data.get("drawing", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PublishStatusReport(_Model):
+    """Output of `file.publish.status` v1.
+    Attributes:
+        current: The drawing now; kept apart from the published source.
+        sheets: The published sheets in their order, then the book's unpublished ones.
+        stale: The published sheets to make again (stale, failed or whose file changed), in the published order.
+        date: The publication's date.
+        published: The source the delivery was published from.
+    """
+    path: str
+    state: PublishFolderState | PublishFolderStateName
+    current: SheetPublishPin
+    sheets: list[SheetPublishStatus]
+    stale: list[str]
+    date: str | None | Unset = UNSET
+    published: SheetPublishPin | None | Unset = UNSET
+    stopped: StoppedPublication | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["state"] = _enum_out(self.state)
+        out["current"] = self.current.to_json()
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["stale"] = list(self.stale)
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.published is not UNSET:
+            out["published"] = None if self.published is None else self.published.to_json()
+        if self.stopped is not UNSET:
+            out["stopped"] = None if self.stopped is None else self.stopped.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PublishStatusReport:
+        return cls(
+            path=data["path"],
+            state=_enum_in(PublishFolderState, data["state"]),
+            current=SheetPublishPin.from_json(data["current"]),
+            sheets=[SheetPublishStatus.from_json(e0) for e0 in data["sheets"]],
+            stale=list(data["stale"]),
+            date=data.get("date", UNSET),
+            published=UNSET if "published" not in data else None if data["published"] is None else SheetPublishPin.from_json(data["published"]),
+            stopped=UNSET if "stopped" not in data else None if data["stopped"] is None else StoppedPublication.from_json(data["stopped"]),
         )
 
 
@@ -74991,7 +75320,11 @@ class SetFrame(_Model):
         bounds: The corners' box: west, south, east, north (metres); none with no corners. Unit: length.
         corners: The ground its content shows, its four corners clockwise from the content's top left (east, north, metres); empty
             for a map without a fixed view and centre (`unknown`). Unit: length.
+        detail: With `recipes`: the frame as a detail of `cad.sheets.details` (docs/adr/1090 §2): its extent, ratio, layers, overrides,
+            annotation choice and lock, which make it again; none for a frame that is not a placed, unturned viewport of
+            the drawing.
         level: The level it draws (its view's recipe's, else its own; docs/adr/0716, 0774 §3), by id; none: every level.
+        locked: With `recipes`: its camera is locked, zooming on the screen leaves its print scale (docs/adr/0594).
         missing: Its linked view is gone (`missing_named_view`): it draws nothing until linked again or detached.
         recipe: Its view's recipe's version (docs/adr/0774 §1); none without a recipe. Unit: version.
         scale: Its scale (1:N); none for a map that follows something else (an atlas). Unit: scale.
@@ -75002,7 +75335,9 @@ class SetFrame(_Model):
     marks: list[str]
     bounds: list[float] | None | Unset = UNSET
     corners: list[Vec2] | Unset = UNSET
+    detail: PaperSheetDetail | None | Unset = UNSET
     level: str | None | Unset = UNSET
+    locked: bool | Unset = UNSET
     missing: bool | Unset = UNSET
     recipe: int | None | Unset = UNSET
     scale: float | None | Unset = UNSET
@@ -75017,8 +75352,12 @@ class SetFrame(_Model):
             out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
         if self.corners is not UNSET:
             out["corners"] = [_vec2_out(e0) for e0 in self.corners]
+        if self.detail is not UNSET:
+            out["detail"] = None if self.detail is None else self.detail.to_json()
         if self.level is not UNSET:
             out["level"] = self.level
+        if self.locked is not UNSET:
+            out["locked"] = self.locked
         if self.missing is not UNSET:
             out["missing"] = self.missing
         if self.recipe is not UNSET:
@@ -75037,7 +75376,9 @@ class SetFrame(_Model):
             marks=list(data["marks"]),
             bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
             corners=[Vec2.from_json(e0) for e0 in data["corners"]] if "corners" in data else UNSET,
+            detail=UNSET if "detail" not in data else None if data["detail"] is None else PaperSheetDetail.from_json(data["detail"]),
             level=data.get("level", UNSET),
+            locked=data.get("locked", UNSET),
             missing=data.get("missing", UNSET),
             recipe=data.get("recipe", UNSET),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
@@ -75547,6 +75888,46 @@ class SheetPicture(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetPublishFrame(_Model):
+    """One viewport of a published sheet.
+    Attributes:
+        layers: `drawing` (the drawing's own visibility, which anyone's layer switching changes), `list`, or
+            `theme:<layer state>`.
+        annotation: The annotation representation chosen; none: the viewport's scale. Unit: scale.
+        denominator: model / paper; none for an atlas frame. Unit: scale.
+    """
+    item: str
+    name: str
+    locked: bool
+    layers: str
+    annotation: float | None | Unset = UNSET
+    denominator: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item
+        out["name"] = self.name
+        out["locked"] = self.locked
+        out["layers"] = self.layers
+        if self.annotation is not UNSET:
+            out["annotation"] = None if self.annotation is None else float(self.annotation)
+        if self.denominator is not UNSET:
+            out["denominator"] = None if self.denominator is None else float(self.denominator)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPublishFrame:
+        return cls(
+            item=data["item"],
+            name=data["name"],
+            locked=data["locked"],
+            layers=data["layers"],
+            annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else float(data["annotation"]),
+            denominator=UNSET if "denominator" not in data else None if data["denominator"] is None else float(data["denominator"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetPublishIssue(_Model):
     sheet: str
     code: str
@@ -75607,6 +75988,93 @@ class SheetPublishPin(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetPublishScope(_Model):
+    """One sheet of a publication's scope.
+    Attributes:
+        paper: The page, mm: width, height. Unit: paper-mm.
+        tables: Table items on the sheet. Unit: count.
+        profile: The plot profile it prints with, by name; none: the objects' own looks.
+    """
+    sheet: str
+    name: str
+    number: str
+    revision: str
+    paper: list[float]
+    frames: list[SheetPublishFrame]
+    tables: int
+    profile: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["name"] = self.name
+        out["number"] = self.number
+        out["revision"] = self.revision
+        out["paper"] = [float(e0) for e0 in self.paper]
+        out["frames"] = [e0.to_json() for e0 in self.frames]
+        out["tables"] = self.tables
+        if self.profile is not UNSET:
+            out["profile"] = self.profile
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPublishScope:
+        return cls(
+            sheet=data["sheet"],
+            name=data["name"],
+            number=data["number"],
+            revision=data["revision"],
+            paper=[float(e0) for e0 in data["paper"]],
+            frames=[SheetPublishFrame.from_json(e0) for e0 in data["frames"]],
+            tables=data["tables"],
+            profile=data.get("profile", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetPublishStatus(_Model):
+    """
+    Attributes:
+        digest: The digest now.
+        published: The digest published.
+    """
+    sheet: str
+    name: str
+    state: SheetPublishState | SheetPublishStateName
+    digest: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    issue: SheetPublishIssue | None | Unset = UNSET
+    published: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["name"] = self.name
+        out["state"] = _enum_out(self.state)
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.issue is not UNSET:
+            out["issue"] = None if self.issue is None else self.issue.to_json()
+        if self.published is not UNSET:
+            out["published"] = self.published
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPublishStatus:
+        return cls(
+            sheet=data["sheet"],
+            name=data["name"],
+            state=_enum_in(SheetPublishState, data["state"]),
+            digest=data.get("digest", UNSET),
+            file=data.get("file", UNSET),
+            issue=UNSET if "issue" not in data else None if data["issue"] is None else SheetPublishIssue.from_json(data["issue"]),
+            published=data.get("published", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetPublishedFile(_Model):
     """
     Attributes:
@@ -75632,6 +76100,89 @@ class SheetPublishedFile(_Model):
             sheets=list(data["sheets"]),
             bytes=data["bytes"],
             sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetPublishedPage(_Model):
+    """One written page: what it paints and its content digest (docs/adr/1090 §4).
+    Attributes:
+        file: The PDF it is in.
+        digest: The page's content digest made without the title context (user, date): equal digests draw the same page.
+        strokes: Unit: count.
+        fills: Unit: count.
+        even_odd_fills: Unit: count.
+        hairlines: Unit: count.
+        thin_lines: Unit: count.
+        texts: Unit: count.
+        clips: Unit: count.
+        transparent: Unit: count.
+        images: Unit: count.
+        raster_maps: Unit: count.
+        placeholders: Unit: count.
+        findings: The page's audit findings (none an error by itself: the preflight's errors block publication).
+        min_stroke_mm: Unit: paper-mm.
+    """
+    sheet: str
+    file: str
+    digest: str
+    strokes: int
+    fills: int
+    even_odd_fills: int
+    hairlines: int
+    thin_lines: int
+    texts: int
+    fonts: list[str]
+    clips: int
+    transparent: int
+    images: int
+    raster_maps: int
+    placeholders: int
+    findings: list[SheetPublishIssue]
+    min_stroke_mm: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["file"] = self.file
+        out["digest"] = self.digest
+        out["strokes"] = self.strokes
+        out["fills"] = self.fills
+        out["evenOddFills"] = self.even_odd_fills
+        out["hairlines"] = self.hairlines
+        out["thinLines"] = self.thin_lines
+        out["texts"] = self.texts
+        out["fonts"] = list(self.fonts)
+        out["clips"] = self.clips
+        out["transparent"] = self.transparent
+        out["images"] = self.images
+        out["rasterMaps"] = self.raster_maps
+        out["placeholders"] = self.placeholders
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.min_stroke_mm is not UNSET:
+            out["minStrokeMm"] = None if self.min_stroke_mm is None else float(self.min_stroke_mm)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPublishedPage:
+        return cls(
+            sheet=data["sheet"],
+            file=data["file"],
+            digest=data["digest"],
+            strokes=data["strokes"],
+            fills=data["fills"],
+            even_odd_fills=data["evenOddFills"],
+            hairlines=data["hairlines"],
+            thin_lines=data["thinLines"],
+            texts=data["texts"],
+            fonts=list(data["fonts"]),
+            clips=data["clips"],
+            transparent=data["transparent"],
+            images=data["images"],
+            raster_maps=data["rasterMaps"],
+            placeholders=data["placeholders"],
+            findings=[SheetPublishIssue.from_json(e0) for e0 in data["findings"]],
+            min_stroke_mm=UNSET if "minStrokeMm" not in data else None if data["minStrokeMm"] is None else float(data["minStrokeMm"]),
         )
 
 
@@ -75697,6 +76248,101 @@ class SheetsCreate(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             index=data.get("index", UNSET),
             options=data["options"] if "options" in data else dict(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsDetailed(_Model):
+    """Output of `cad.sheets.details` v1 (its plan's too): the book change and where each detail went.
+    Attributes:
+        label: What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).
+        inverse: The operations that take the change back, in the order to apply them
+            (an input of this command again).
+        sheets: The book's sheets after the change, in its order.
+        revision: The document's revision after the write, as decimal text.
+        made: The sheets made, in order.
+        details: Each detail in the input's order: its sheet, viewport and title ids, paper frame (µm) and denominator.
+        inverse_pictures: Previous embedded bytes when the operation changed them. Restore together with inverse operations,
+            passing these as pictures and replacePictures=true. Omitted when bytes did not change.
+    """
+    label: str
+    inverse: list[Any]
+    sheets: list[SheetInfo]
+    revision: str
+    made: list[PaperDetailSheet]
+    details: list[PaperDetailPlaced]
+    inverse_pictures: list[SheetPicture] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["inverse"] = list(self.inverse)
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["revision"] = self.revision
+        out["made"] = [e0.to_json() for e0 in self.made]
+        out["details"] = [e0.to_json() for e0 in self.details]
+        if self.inverse_pictures is not UNSET:
+            out["inversePictures"] = None if self.inverse_pictures is None else [e0.to_json() for e0 in self.inverse_pictures]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsDetailed:
+        return cls(
+            label=data["label"],
+            inverse=list(data["inverse"]),
+            sheets=[SheetInfo.from_json(e0) for e0 in data["sheets"]],
+            revision=data["revision"],
+            made=[PaperDetailSheet.from_json(e0) for e0 in data["made"]],
+            details=[PaperDetailPlaced.from_json(e0) for e0 in data["details"]],
+            inverse_pictures=UNSET if "inversePictures" not in data else None if data["inversePictures"] is None else [SheetPicture.from_json(e0) for e0 in data["inversePictures"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsDetails(_Model):
+    """Input of `cad.sheets.details` v1: the details packed in their order into the template's first fixed map frame, row
+    by row, running on to further sheets of the set; the sheets numbered on from `first` (D-501) and titled `title`.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `entity_not_found` (a table part's table),
+    `not_a_table`, `table_part_missing`, `ambiguous_source` (both or neither of bounds and table), `unknown_template`,
+    `invalid_options`, `bad_value`, `invalid_extent`, `invalid_ratio`, `detail_too_small`, `not_fixed_map`,
+    `bad_drawing_info`, `detail_does_not_fit`, then the sheet core's own.
+    Attributes:
+        first: The first sheet's number; absent: D-501.
+        options: The template's paper and answers (cad.sheets.create's options but the name, centre and scale).
+        source: The template; absent: KentOS's ISO technical sheet (`sys:cad-teknik`).
+        title: The sheets' title; absent: Detaylar.
+    """
+    details: list[DetailRequest]
+    expected_revision: str | None | Unset = UNSET
+    first: str | None | Unset = UNSET
+    options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
+    source: SheetTemplateSource | None | Unset = UNSET
+    title: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["details"] = [e0.to_json() for e0 in self.details]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.first is not UNSET:
+            out["first"] = self.first
+        out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        if self.title is not UNSET:
+            out["title"] = self.title
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsDetails:
+        return cls(
+            details=[DetailRequest.from_json(e0) for e0 in data["details"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            first=data.get("first", UNSET),
+            options=data["options"] if "options" in data else dict(),
+            source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
+            title=data.get("title", UNSET),
         )
 
 
@@ -75919,6 +76565,10 @@ class SheetsPublished(_Model):
     """
     Attributes:
         ready: True after full output/source checks; validate-only deliberately leaves this false.
+        pages: Each written page's audit and content digest (docs/adr/1090 §4), in the published order.
+        resumed: With `resume`: the sheets whose finished pages were kept from the stopped publication.
+        scope: What is published, sheet by sheet (docs/adr/1090 §7): paper, viewports with their scales, locks and layer
+            states, the plot profile.
     """
     path: str
     sheets: list[str]
@@ -75928,7 +76578,10 @@ class SheetsPublished(_Model):
     ready: bool
     manifest: str
     sha256: str
+    pages: list[SheetPublishedPage] | Unset = UNSET
     resources: SheetDeliveryResources | None | Unset = UNSET
+    resumed: list[str] | Unset = UNSET
+    scope: list[SheetPublishScope] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75940,8 +76593,14 @@ class SheetsPublished(_Model):
         out["ready"] = self.ready
         out["manifest"] = self.manifest
         out["sha256"] = self.sha256
+        if self.pages is not UNSET:
+            out["pages"] = [e0.to_json() for e0 in self.pages]
         if self.resources is not UNSET:
             out["resources"] = None if self.resources is None else self.resources.to_json()
+        if self.resumed is not UNSET:
+            out["resumed"] = list(self.resumed)
+        if self.scope is not UNSET:
+            out["scope"] = [e0.to_json() for e0 in self.scope]
         return out
 
     @classmethod
@@ -75955,7 +76614,10 @@ class SheetsPublished(_Model):
             ready=data["ready"],
             manifest=data["manifest"],
             sha256=data["sha256"],
+            pages=[SheetPublishedPage.from_json(e0) for e0 in data["pages"]] if "pages" in data else UNSET,
             resources=UNSET if "resources" not in data else None if data["resources"] is None else SheetDeliveryResources.from_json(data["resources"]),
+            resumed=list(data["resumed"]) if "resumed" in data else UNSET,
+            scope=[SheetPublishScope.from_json(e0) for e0 in data["scope"]] if "scope" in data else UNSET,
         )
 
 
@@ -75967,10 +76629,13 @@ class SheetsSet(_Model):
     Attributes:
         details: Include the canonical book and complete system templates for automation.
         pictures: Include embedded picture bytes (base64), explicitly opt in to the larger response.
+        recipes: Include each frame's detail recipe and camera lock (docs/adr/1090 §2): what `cad.sheets.details` makes it
+            again from.
         uids: The changed objects' persistent ids; absent: no affected list.
     """
     details: bool | Unset = UNSET
     pictures: bool | Unset = UNSET
+    recipes: bool | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -75979,6 +76644,8 @@ class SheetsSet(_Model):
             out["details"] = self.details
         if self.pictures is not UNSET:
             out["pictures"] = self.pictures
+        if self.recipes is not UNSET:
+            out["recipes"] = self.recipes
         if self.uids is not UNSET:
             out["uids"] = None if self.uids is None else list(self.uids)
         return out
@@ -75988,6 +76655,7 @@ class SheetsSet(_Model):
         return cls(
             details=data.get("details", UNSET),
             pictures=data.get("pictures", UNSET),
+            recipes=data.get("recipes", UNSET),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
 
@@ -81759,6 +82427,52 @@ class StepWarning(_Model):
             code=data["code"],
             message=data["message"],
             path=data.get("path", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StoppedPublication(_Model):
+    """A stopped publication's journal: no delivery folder was made; `resume` goes on from it.
+    Attributes:
+        sheets: The sheets chosen, in order.
+        done: Finished pages kept, and the ones still to make.
+        resumable: The drawing is still the one it started with: `resume` can go on.
+    """
+    reason: PublishStopReason | PublishStopReasonName
+    date: str
+    source: SheetPublishPin
+    sheets: list[str]
+    done: list[str]
+    remaining: list[str]
+    files: list[SheetPublishedFile]
+    issues: list[SheetPublishIssue]
+    resumable: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["reason"] = _enum_out(self.reason)
+        out["date"] = self.date
+        out["source"] = self.source.to_json()
+        out["sheets"] = list(self.sheets)
+        out["done"] = list(self.done)
+        out["remaining"] = list(self.remaining)
+        out["files"] = [e0.to_json() for e0 in self.files]
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        out["resumable"] = self.resumable
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StoppedPublication:
+        return cls(
+            reason=_enum_in(PublishStopReason, data["reason"]),
+            date=data["date"],
+            source=SheetPublishPin.from_json(data["source"]),
+            sheets=list(data["sheets"]),
+            done=list(data["done"]),
+            remaining=list(data["remaining"]),
+            files=[SheetPublishedFile.from_json(e0) for e0 in data["files"]],
+            issues=[SheetPublishIssue.from_json(e0) for e0 in data["issues"]],
+            resumable=data["resumable"],
         )
 
 
@@ -114771,6 +115485,8 @@ __all__ = [
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
     "DetachedTable",
+    "DetailRequest",
+    "DetailTablePart",
     "DeviationExplodeDensity",
     "DeviceTerminal",
     "DiameterConstraintRule",
@@ -116093,6 +116809,8 @@ __all__ = [
     "PaperConstraints",
     "PaperCoordColumns",
     "PaperCoordSource",
+    "PaperDetailPlaced",
+    "PaperDetailSheet",
     "PaperDistributeMode",
     "PaperDistributeModeName",
     "PaperDrawingInfo",
@@ -116191,6 +116909,7 @@ __all__ = [
     "PaperShapeKind",
     "PaperSheet",
     "PaperSheetBook",
+    "PaperSheetDetail",
     "PaperSizeDimension",
     "PaperSizeDimensionName",
     "PaperSizeUm",
@@ -116540,8 +117259,14 @@ __all__ = [
     "ProposedGrade",
     "ProposedPvi",
     "ProtectedArea",
+    "PublishFolderState",
+    "PublishFolderStateName",
     "PublishFormsOp",
     "PublishSheets",
+    "PublishStatus",
+    "PublishStatusReport",
+    "PublishStopReason",
+    "PublishStopReasonName",
     "PushOpeningsOperation",
     "QmlExported",
     "QmlImported",
@@ -116972,16 +117697,24 @@ __all__ = [
     "SheetMapInfo",
     "SheetModelScope",
     "SheetPicture",
+    "SheetPublishFrame",
     "SheetPublishIssue",
     "SheetPublishMode",
     "SheetPublishModeName",
     "SheetPublishPin",
+    "SheetPublishScope",
+    "SheetPublishState",
+    "SheetPublishStateName",
+    "SheetPublishStatus",
     "SheetPublishedFile",
+    "SheetPublishedPage",
     "SheetResourceKind",
     "SheetResourceKindName",
     "SheetSeries",
     "SheetTemplateSource",
     "SheetsCreate",
+    "SheetsDetailed",
+    "SheetsDetails",
     "SheetsEdit",
     "SheetsEdited",
     "SheetsFit",
@@ -117225,6 +117958,7 @@ __all__ = [
     "StepKind",
     "StepKindName",
     "StepWarning",
+    "StoppedPublication",
     "StraightenTextEdit",
     "StreetSource",
     "StretchBlockAction",

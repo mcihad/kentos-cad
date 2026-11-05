@@ -38,6 +38,7 @@ fn msg(e: Event) -> Message {
 fn reason_words(r: AffectReason) -> &'static str {
     match r {
         AffectReason::Shows => "nesneyi gösteriyor",
+        AffectReason::Table => "nesneyi okuyan tabloyu gösteriyor",
         AffectReason::Marked => "işaret ona bakıyor",
         AffectReason::Unknown => "zemini bilinmiyor",
     }

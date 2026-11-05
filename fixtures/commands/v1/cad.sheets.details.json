@@ -1,0 +1,3296 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.sheets.details",
+  "commandVersion": 1,
+  "title": "Detay paftaları: aynı modelin kesin oranlı detayları, yerleşim, set paftaları, tablo parçaları, retler",
+  "note": "ADR 1090. Beklenenler scripts/fixtures/sheet_details_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; şablonun sayfası, öğeleri ve haritası kendi dosyasından okunur.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Detaylar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 100,
+      "workspace": "cad",
+      "drawingUnit": "m"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "detay",
+        "name": "Detay",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "detay",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "detay",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "b": {
+          "x": 0.1,
+          "y": 0.06
+        }
+      },
+      {
+        "kind": "line",
+        "id": 2,
+        "layerId": "detay",
+        "attrs": {},
+        "a": {
+          "x": -5.0,
+          "y": -3.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 3.0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": -0.2
+        },
+        "b": {
+          "x": 0.37,
+          "y": -0.2
+        }
+      },
+      {
+        "kind": "table",
+        "id": 4,
+        "layerId": "detay",
+        "attrs": {},
+        "p": {
+          "x": 20.0,
+          "y": 10.0
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "columns": [
+          2.0,
+          1.5
+        ],
+        "cells": [
+          [
+            "Poz",
+            "Adet"
+          ],
+          [
+            "P1",
+            "1"
+          ],
+          [
+            "P2",
+            "2"
+          ],
+          [
+            "P3",
+            "3"
+          ],
+          [
+            "P4",
+            "4"
+          ],
+          [
+            "P5",
+            "5"
+          ],
+          [
+            "P6",
+            "6"
+          ],
+          [
+            "P7",
+            "7"
+          ]
+        ],
+        "header": true,
+        "breaks": {
+          "height": 2.0,
+          "gap": 0.5
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Aynı modelin 1:1, 1:5, 1:20 ve 1:100 detayları tek paftada",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              },
+              {
+                "name": "Levha",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                }
+              },
+              {
+                "name": "Bağlantı",
+                "bounds": [
+                  -0.5,
+                  -0.5,
+                  1.5,
+                  0.7
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              },
+              {
+                "name": "Genel",
+                "bounds": [
+                  -5.0,
+                  -3.0,
+                  5.0,
+                  3.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 13,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Bulon",
+                      "scale": 1.0
+                    },
+                    {
+                      "item": "detay-1-detay-2",
+                      "name": "Levha",
+                      "scale": 5.0
+                    },
+                    {
+                      "item": "detay-1-detay-3",
+                      "name": "Bağlantı",
+                      "scale": 20.0
+                    },
+                    {
+                      "item": "detay-1-detay-4",
+                      "name": "Genel",
+                      "scale": 100.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Bulon",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 1.0
+                },
+                {
+                  "name": "Levha",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-2",
+                  "title": "detay-1-detay-2-baslik",
+                  "frame": {
+                    "left": 140000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 5.0
+                },
+                {
+                  "name": "Bağlantı",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-3",
+                  "title": "detay-1-detay-3-baslik",
+                  "frame": {
+                    "left": 250000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 20.0
+                },
+                {
+                  "name": "Genel",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-4",
+                  "title": "detay-1-detay-4-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 96500,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 100.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 13,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Bulon",
+                    "scale": 1.0
+                  },
+                  {
+                    "item": "detay-1-detay-2",
+                    "name": "Levha",
+                    "scale": 5.0
+                  },
+                  {
+                    "item": "detay-1-detay-3",
+                    "name": "Bağlantı",
+                    "scale": 20.0
+                  },
+                  {
+                    "item": "detay-1-detay-4",
+                    "name": "Genel",
+                    "scale": 100.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmaz: aynı yerleşim",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              },
+              {
+                "name": "Levha",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                }
+              },
+              {
+                "name": "Bağlantı",
+                "bounds": [
+                  -0.5,
+                  -0.5,
+                  1.5,
+                  0.7
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              },
+              {
+                "name": "Genel",
+                "bounds": [
+                  -5.0,
+                  -3.0,
+                  5.0,
+                  3.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 13,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Bulon",
+                      "scale": 1.0
+                    },
+                    {
+                      "item": "detay-1-detay-2",
+                      "name": "Levha",
+                      "scale": 5.0
+                    },
+                    {
+                      "item": "detay-1-detay-3",
+                      "name": "Bağlantı",
+                      "scale": 20.0
+                    },
+                    {
+                      "item": "detay-1-detay-4",
+                      "name": "Genel",
+                      "scale": 100.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Bulon",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 1.0
+                },
+                {
+                  "name": "Levha",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-2",
+                  "title": "detay-1-detay-2-baslik",
+                  "frame": {
+                    "left": 140000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 5.0
+                },
+                {
+                  "name": "Bağlantı",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-3",
+                  "title": "detay-1-detay-3-baslik",
+                  "frame": {
+                    "left": 250000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 20.0
+                },
+                {
+                  "name": "Genel",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-4",
+                  "title": "detay-1-detay-4-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 96500,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 100.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama: girdi geçerli",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              },
+              {
+                "name": "Levha",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                }
+              },
+              {
+                "name": "Bağlantı",
+                "bounds": [
+                  -0.5,
+                  -0.5,
+                  1.5,
+                  0.7
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              },
+              {
+                "name": "Genel",
+                "bounds": [
+                  -5.0,
+                  -3.0,
+                  5.0,
+                  3.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Büyütme 2:1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Kaynak dikişi",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.04,
+                  0.02
+                ],
+                "ratio": {
+                  "paper": 2.0,
+                  "model": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Kaynak dikişi",
+                      "scale": 0.5
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Kaynak dikişi",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 80000,
+                    "height": 40000
+                  },
+                  "denominator": 0.5
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Kaynak dikişi",
+                    "scale": 0.5
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kesirli 1:37,5",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Ankraj",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  3.0,
+                  1.5
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 37.5
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Ankraj",
+                      "scale": 37.5
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Ankraj",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 80000,
+                    "height": 40000
+                  },
+                  "denominator": 37.5
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Ankraj",
+                    "scale": 37.5
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "İlk numara D-601 ve başlık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              },
+              {
+                "name": "Levha",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                }
+              }
+            ],
+            "first": "D-601",
+            "title": "Bağlantı detayları"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-601",
+                    "title": "Bağlantı detayları",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 9,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Bulon",
+                      "scale": 1.0
+                    },
+                    {
+                      "item": "detay-1-detay-2",
+                      "name": "Levha",
+                      "scale": 5.0
+                    }
+                  ],
+                  "name": "D-601 Bağlantı detayları",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-601",
+                  "name": "D-601 Bağlantı detayları"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Bulon",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 1.0
+                },
+                {
+                  "name": "Levha",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-2",
+                  "title": "detay-1-detay-2-baslik",
+                  "frame": {
+                    "left": 140000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 5.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-601",
+                  "title": "Bağlantı detayları",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 9,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Bulon",
+                    "scale": 1.0
+                  },
+                  {
+                    "item": "detay-1-detay-2",
+                    "name": "Levha",
+                    "scale": 5.0
+                  }
+                ],
+                "name": "D-601 Bağlantı detayları",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "İlk numara 07: genişlik korunur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ],
+            "first": "07"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "07",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Bulon",
+                      "scale": 1.0
+                    }
+                  ],
+                  "name": "07 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "07",
+                  "name": "07 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Bulon",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 1.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "07",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Bulon",
+                    "scale": 1.0
+                  }
+                ],
+                "name": "07 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paftaya sığmayan detay setin sonraki paftasına geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Kesit 1",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  30.0,
+                  15.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100.0
+                }
+              },
+              {
+                "name": "Kesit 2",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  30.0,
+                  15.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100.0
+                }
+              },
+              {
+                "name": "Kesit 3",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  30.0,
+                  15.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Kesit 1",
+                      "scale": 100.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar (1/3)",
+                  "width": 420.0
+                },
+                {
+                  "drawingInfo": {
+                    "number": "D-502",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-2",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-2-detay-2",
+                      "name": "Kesit 2",
+                      "scale": 100.0
+                    }
+                  ],
+                  "name": "D-502 Detaylar (2/3)",
+                  "width": 420.0
+                },
+                {
+                  "drawingInfo": {
+                    "number": "D-503",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-3",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-3-detay-3",
+                      "name": "Kesit 3",
+                      "scale": 100.0
+                    }
+                  ],
+                  "name": "D-503 Detaylar (3/3)",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar (1/3)"
+                },
+                {
+                  "sheet": "detay-2",
+                  "number": "D-502",
+                  "name": "D-502 Detaylar (2/3)"
+                },
+                {
+                  "sheet": "detay-3",
+                  "number": "D-503",
+                  "name": "D-503 Detaylar (3/3)"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Kesit 1",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 300000,
+                    "height": 150000
+                  },
+                  "denominator": 100.0
+                },
+                {
+                  "name": "Kesit 2",
+                  "sheet": "detay-2",
+                  "item": "detay-2-detay-2",
+                  "title": "detay-2-detay-2-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 300000,
+                    "height": 150000
+                  },
+                  "denominator": 100.0
+                },
+                {
+                  "name": "Kesit 3",
+                  "sheet": "detay-3",
+                  "item": "detay-3-detay-3",
+                  "title": "detay-3-detay-3-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 300000,
+                    "height": 150000
+                  },
+                  "denominator": 100.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Kesit 1",
+                    "scale": 100.0
+                  }
+                ],
+                "name": "D-501 Detaylar (1/3)",
+                "width": 420.0
+              },
+              {
+                "drawingInfo": {
+                  "number": "D-502",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-2",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-2-detay-2",
+                    "name": "Kesit 2",
+                    "scale": 100.0
+                  }
+                ],
+                "name": "D-502 Detaylar (2/3)",
+                "width": 420.0
+              },
+              {
+                "drawingInfo": {
+                  "number": "D-503",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-3",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-3-detay-3",
+                    "name": "Kesit 3",
+                    "scale": 100.0
+                  }
+                ],
+                "name": "D-503 Detaylar (3/3)",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Satır dolunca alt satır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "D1",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.2,
+                  0.5
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 10.0
+                }
+              },
+              {
+                "name": "D2",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.2,
+                  0.5
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 10.0
+                }
+              },
+              {
+                "name": "D3",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.2,
+                  0.5
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 10.0
+                }
+              },
+              {
+                "name": "D4",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.2,
+                  0.5
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 10.0
+                }
+              },
+              {
+                "name": "D5",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.2,
+                  0.5
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 10.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 15,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "D1",
+                      "scale": 10.0
+                    },
+                    {
+                      "item": "detay-1-detay-2",
+                      "name": "D2",
+                      "scale": 10.0
+                    },
+                    {
+                      "item": "detay-1-detay-3",
+                      "name": "D3",
+                      "scale": 10.0
+                    },
+                    {
+                      "item": "detay-1-detay-4",
+                      "name": "D4",
+                      "scale": 10.0
+                    },
+                    {
+                      "item": "detay-1-detay-5",
+                      "name": "D5",
+                      "scale": 10.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "D1",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 120000,
+                    "height": 50000
+                  },
+                  "denominator": 10.0
+                },
+                {
+                  "name": "D2",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-2",
+                  "title": "detay-1-detay-2-baslik",
+                  "frame": {
+                    "left": 160000,
+                    "top": 20000,
+                    "width": 120000,
+                    "height": 50000
+                  },
+                  "denominator": 10.0
+                },
+                {
+                  "name": "D3",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-3",
+                  "title": "detay-1-detay-3-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 86500,
+                    "width": 120000,
+                    "height": 50000
+                  },
+                  "denominator": 10.0
+                },
+                {
+                  "name": "D4",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-4",
+                  "title": "detay-1-detay-4-baslik",
+                  "frame": {
+                    "left": 160000,
+                    "top": 86500,
+                    "width": 120000,
+                    "height": 50000
+                  },
+                  "denominator": 10.0
+                },
+                {
+                  "name": "D5",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-5",
+                  "title": "detay-1-detay-5-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 153000,
+                    "width": 120000,
+                    "height": 50000
+                  },
+                  "denominator": 10.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 15,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "D1",
+                    "scale": 10.0
+                  },
+                  {
+                    "item": "detay-1-detay-2",
+                    "name": "D2",
+                    "scale": 10.0
+                  },
+                  {
+                    "item": "detay-1-detay-3",
+                    "name": "D3",
+                    "scale": 10.0
+                  },
+                  {
+                    "item": "detay-1-detay-4",
+                    "name": "D4",
+                    "scale": 10.0
+                  },
+                  {
+                    "item": "detay-1-detay-5",
+                    "name": "D5",
+                    "scale": 10.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dar detayın hücresi 40 mm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Pim 1",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.01,
+                  0.05
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              },
+              {
+                "name": "Pim 2",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.01,
+                  0.05
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              },
+              {
+                "name": "Pim 3",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.01,
+                  0.05
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 11,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Pim 1",
+                      "scale": 1.0
+                    },
+                    {
+                      "item": "detay-1-detay-2",
+                      "name": "Pim 2",
+                      "scale": 1.0
+                    },
+                    {
+                      "item": "detay-1-detay-3",
+                      "name": "Pim 3",
+                      "scale": 1.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Pim 1",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 10000,
+                    "height": 50000
+                  },
+                  "denominator": 1.0
+                },
+                {
+                  "name": "Pim 2",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-2",
+                  "title": "detay-1-detay-2-baslik",
+                  "frame": {
+                    "left": 80000,
+                    "top": 20000,
+                    "width": 10000,
+                    "height": 50000
+                  },
+                  "denominator": 1.0
+                },
+                {
+                  "name": "Pim 3",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-3",
+                  "title": "detay-1-detay-3-baslik",
+                  "frame": {
+                    "left": 130000,
+                    "top": 20000,
+                    "width": 10000,
+                    "height": 50000
+                  },
+                  "denominator": 1.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 11,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Pim 1",
+                    "scale": 1.0
+                  },
+                  {
+                    "item": "detay-1-detay-2",
+                    "name": "Pim 2",
+                    "scale": 1.0
+                  },
+                  {
+                    "item": "detay-1-detay-3",
+                    "name": "Pim 3",
+                    "scale": 1.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "İkinci çağrı: sonraki numara ve kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Bulon",
+                      "scale": 1.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Bulon",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 1.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Bulon",
+                    "scale": 1.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Levha",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Bulon",
+                      "scale": 1.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                },
+                {
+                  "drawingInfo": {
+                    "number": "D-502",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-2",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-2-detay-1",
+                      "name": "Levha",
+                      "scale": 5.0
+                    }
+                  ],
+                  "name": "D-502 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-2",
+                  "number": "D-502",
+                  "name": "D-502 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Levha",
+                  "sheet": "detay-2",
+                  "item": "detay-2-detay-1",
+                  "title": "detay-2-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 5.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Bulon",
+                    "scale": 1.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              },
+              {
+                "drawingInfo": {
+                  "number": "D-502",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-2",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-2-detay-1",
+                    "name": "Levha",
+                    "scale": 5.0
+                  }
+                ],
+                "name": "D-502 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman durumu, ezme ve açıklama temsili taşınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Ölçülü",
+                "bounds": [
+                  0.0,
+                  -0.3,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                },
+                "annotation": {
+                  "type": "fixed",
+                  "scale": 5.0
+                }
+              },
+              {
+                "name": "Ölçüsüz",
+                "bounds": [
+                  0.0,
+                  -0.3,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                },
+                "layers": {
+                  "type": "list",
+                  "layers": [
+                    "detay"
+                  ]
+                },
+                "layerOverrides": [
+                  {
+                    "layer": "olcu",
+                    "frozen": true
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 9,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Ölçülü",
+                      "scale": 5.0
+                    },
+                    {
+                      "item": "detay-1-detay-2",
+                      "name": "Ölçüsüz",
+                      "scale": 5.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Ölçülü",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 120000
+                  },
+                  "denominator": 5.0
+                },
+                {
+                  "name": "Ölçüsüz",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-2",
+                  "title": "detay-1-detay-2-baslik",
+                  "frame": {
+                    "left": 140000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 120000
+                  },
+                  "denominator": 5.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 9,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Ölçülü",
+                    "scale": 5.0
+                  },
+                  {
+                    "item": "detay-1-detay-2",
+                    "name": "Ölçüsüz",
+                    "scale": 5.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitsiz detay",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Levha",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                },
+                "locked": false
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Levha",
+                      "scale": 5.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Levha",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 100000,
+                    "height": 60000
+                  },
+                  "denominator": 5.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Levha",
+                    "scale": 5.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tablonun ilk parçası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Poz listesi 1",
+                "table": {
+                  "table": "$uidOf:4",
+                  "part": 0
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Poz listesi 1",
+                      "scale": 20.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Poz listesi 1",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 187500,
+                    "height": 112500
+                  },
+                  "denominator": 20.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Poz listesi 1",
+                    "scale": 20.0
+                  }
+                ],
+                "name": "D-501 Detaylar",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tablonun parçaları ayrı detaylar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Poz listesi 1",
+                "table": {
+                  "table": "$uidOf:4",
+                  "part": 0
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              },
+              {
+                "name": "Poz listesi 2",
+                "table": {
+                  "table": "$uidOf:4",
+                  "part": 1
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              },
+              {
+                "name": "Poz listesi 3",
+                "table": {
+                  "table": "$uidOf:4",
+                  "part": 2
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "inverse": "$any",
+              "label": "$any",
+              "revision": "$current",
+              "sheets": [
+                {
+                  "drawingInfo": {
+                    "number": "D-501",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-1",
+                  "items": 7,
+                  "maps": [
+                    {
+                      "item": "detay-1-detay-1",
+                      "name": "Poz listesi 1",
+                      "scale": 20.0
+                    }
+                  ],
+                  "name": "D-501 Detaylar (1/2)",
+                  "width": 420.0
+                },
+                {
+                  "drawingInfo": {
+                    "number": "D-502",
+                    "title": "Detaylar",
+                    "revision": "",
+                    "status": "",
+                    "subset": [
+                      "Detaylar"
+                    ]
+                  },
+                  "height": 297.0,
+                  "id": "detay-2",
+                  "items": 9,
+                  "maps": [
+                    {
+                      "item": "detay-2-detay-2",
+                      "name": "Poz listesi 2",
+                      "scale": 20.0
+                    },
+                    {
+                      "item": "detay-2-detay-3",
+                      "name": "Poz listesi 3",
+                      "scale": 20.0
+                    }
+                  ],
+                  "name": "D-502 Detaylar (2/2)",
+                  "width": 420.0
+                }
+              ],
+              "made": [
+                {
+                  "sheet": "detay-1",
+                  "number": "D-501",
+                  "name": "D-501 Detaylar (1/2)"
+                },
+                {
+                  "sheet": "detay-2",
+                  "number": "D-502",
+                  "name": "D-502 Detaylar (2/2)"
+                }
+              ],
+              "details": [
+                {
+                  "name": "Poz listesi 1",
+                  "sheet": "detay-1",
+                  "item": "detay-1-detay-1",
+                  "title": "detay-1-detay-1-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 187500,
+                    "height": 112500
+                  },
+                  "denominator": 20.0
+                },
+                {
+                  "name": "Poz listesi 2",
+                  "sheet": "detay-2",
+                  "item": "detay-2-detay-2",
+                  "title": "detay-2-detay-2-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 187500,
+                    "height": 112500
+                  },
+                  "denominator": 20.0
+                },
+                {
+                  "name": "Poz listesi 3",
+                  "sheet": "detay-2",
+                  "item": "detay-2-detay-3",
+                  "title": "detay-2-detay-3-baslik",
+                  "frame": {
+                    "left": 30000,
+                    "top": 149000,
+                    "width": 187500,
+                    "height": 62500
+                  },
+                  "denominator": 20.0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "sheets": [
+              {
+                "drawingInfo": {
+                  "number": "D-501",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-1",
+                "items": 7,
+                "maps": [
+                  {
+                    "item": "detay-1-detay-1",
+                    "name": "Poz listesi 1",
+                    "scale": 20.0
+                  }
+                ],
+                "name": "D-501 Detaylar (1/2)",
+                "width": 420.0
+              },
+              {
+                "drawingInfo": {
+                  "number": "D-502",
+                  "title": "Detaylar",
+                  "revision": "",
+                  "status": "",
+                  "subset": [
+                    "Detaylar"
+                  ]
+                },
+                "height": 297.0,
+                "id": "detay-2",
+                "items": 9,
+                "maps": [
+                  {
+                    "item": "detay-2-detay-2",
+                    "name": "Poz listesi 2",
+                    "scale": 20.0
+                  },
+                  {
+                    "item": "detay-2-detay-3",
+                    "name": "Poz listesi 3",
+                    "scale": 20.0
+                  }
+                ],
+                "name": "D-502 Detaylar (2/2)",
+                "width": 420.0
+              }
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan tablo parçası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "P",
+                "table": {
+                  "table": "$uidOf:4",
+                  "part": 3
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "table_part_missing",
+              "message": "$any",
+              "path": "details[0].table.part"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tablo olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "P",
+                "table": {
+                  "table": "$uidOf:1",
+                  "part": 0
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_table",
+              "message": "$any",
+              "path": "details[0].table"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimde olmayan tablo",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "P",
+                "table": {
+                  "table": "0192f5a1-1090-7000-8100-0000000000ff",
+                  "part": 0
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "$any",
+              "path": "details[0].table"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapsam ile tablo birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "P",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0
+                ],
+                "table": {
+                  "table": "$uidOf:4",
+                  "part": 0
+                },
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ambiguous_source",
+              "message": "$any",
+              "path": "details[0]"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaynaksız detay",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "P",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ambiguous_source",
+              "message": "$any",
+              "path": "details[0]"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Detaysız çağrı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bad_value",
+              "message": "$any",
+              "path": "details"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": " ",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bad_value",
+              "message": "$any",
+              "path": "details[0].name"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ters kapsam",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Ters",
+                "bounds": [
+                  1.0,
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_extent",
+              "message": "$any",
+              "path": "details[0].bounds"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıfır paydalı oran",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Oran",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 0.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ratio",
+              "message": "$any",
+              "path": "details[0].ratio"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 mm'den küçük pencere",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Nokta",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.0005,
+                  0.01
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "detail_too_small",
+              "message": "$any",
+              "path": "details[0].ratio"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı ad iki detayda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              },
+              {
+                "name": "bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.5,
+                  0.3
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 5.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bad_value",
+              "message": "$any",
+              "path": "details[1].name"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş alana bile sığmayan detay",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Vaziyet",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  50.0,
+                  10.0
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "detail_does_not_fit",
+              "message": "$any",
+              "path": "details[0]"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adı verilen seçenek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ],
+            "options": {
+              "name": "D"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_options",
+              "message": "$any",
+              "path": "options"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan sistem şablonu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ],
+            "source": {
+              "type": "system",
+              "id": "sys:yok"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_template",
+              "message": "$any",
+              "path": "source.id"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rakamla bitmeyen ilk numara",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ],
+            "first": "D-"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bad_drawing_info",
+              "message": "$any",
+              "path": "first"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ],
+            "expectedRevision": "01"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "$any",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüm: hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "details": [
+              {
+                "name": "Bulon",
+                "bounds": [
+                  0.0,
+                  0.0,
+                  0.1,
+                  0.06
+                ],
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 1.0
+                }
+              }
+            ],
+            "expectedRevision": "9999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "$any",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "sheets": [],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

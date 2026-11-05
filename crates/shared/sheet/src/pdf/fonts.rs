@@ -122,6 +122,17 @@ pub(super) struct Fonts {
 }
 
 impl Fonts {
+    /// A page resource's face as `family-weight[-italic]`; a frozen glyph face or an unknown name as it is.
+    pub fn base_name(&self, resource: &str) -> String {
+        self.by_key
+            .iter()
+            .find(|(_, e)| e.name == resource)
+            .map_or_else(
+                || resource.to_owned(),
+                |((f, w, i), _)| if *i { format!("{f}-{w}-italic") } else { format!("{f}-{w}") },
+            )
+    }
+
     /// The embedded face `font` is written with.
     pub fn get(&self, font: &str, weight: u16, italic: bool) -> Option<&Embedded> {
         face_of(font, weight, italic).and_then(|m| self.by_key.get(&key_of(m)))

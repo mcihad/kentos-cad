@@ -37,6 +37,8 @@ pub struct BookPdf {
     pub sheet_findings: Vec<(String, Finding)>,
     /// Rasterization choices, target resolution and explicit resource limits.
     pub notes: Vec<String>,
+    /// What each page paints and its content digest, in page order (docs/adr/1090 §4).
+    pub pages: Vec<kentos_sheet::pdf::PageAudit>,
 }
 
 /// Why a book PDF was not written: a code a program decides by and the words.
@@ -458,7 +460,7 @@ pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],o
     )
     .map_err(|e| PlotError::new("plot_asset_unreadable", e))?;
     check_stop(progress)?;
-    let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
+    let (bytes, pages) = kentos_sheet::pdf::to_pdf_audited(&book, &inputs, &options)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     check_stop(progress)?;
     let mut findings = kentos_sheet::pdf::findings(&book, &inputs, &options)
@@ -499,6 +501,7 @@ pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],o
         findings,
         sheet_findings,
         notes,
+        pages,
     })
 }
 

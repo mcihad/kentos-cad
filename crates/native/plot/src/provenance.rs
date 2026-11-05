@@ -60,6 +60,23 @@ impl Capture {
     pub fn pin(&self) -> &SheetPublishPin {
         &self.pin
     }
+    /// The same capture without its title context (user and date empty): what a page's content digest is made from,
+    /// so a later day or another user does not make a page stale (docs/adr/1090 §4). The pin stays the original's.
+    pub fn neutral(&self) -> Self {
+        Self {
+            doc: self.doc.reading_copy(),
+            images: self.images.clone(),
+            user: String::new(),
+            date: String::new(),
+            drawing: self.drawing.clone(),
+            pin: self.pin.clone(),
+            dpi: self.dpi,
+        }
+    }
+    /// The user and date written into titles.
+    pub fn context(&self) -> (&str, &str) {
+        (&self.user, &self.date)
+    }
     pub fn matches(&self, pin: &SheetPublishPin) -> bool {
         pin.revision == self.pin.revision
             && pin.sha256 == self.pin.sha256

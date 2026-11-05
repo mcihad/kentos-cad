@@ -5,8 +5,8 @@ use iced::futures::{SinkExt, Stream, channel::mpsc};
 use iced::widget::{button, column, progress_bar, row, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
-    CallEnvelope, CallOp, CommandResult, FILE_PUBLISH_SHEETS, PublishSheets, SheetPublishMode,
-    SheetsPublished,
+    CallEnvelope, CallOp, CommandResult, FILE_PUBLISH_SHEETS, FILE_PUBLISH_STATUS, PublishSheets,
+    PublishStatus, PublishStatusReport, SheetPublishMode, SheetPublishState, SheetsPublished,
 };
 use kentos_native_application::jobs::Job;
 use kentos_ui::{
@@ -33,6 +33,10 @@ pub struct State {
     pub progress: f32,
     pub status: String,
     close_after: bool,
+    /// The delivery folder's last publication against the drawing now, or its stopped one (docs/adr/1090 §6).
+    pub folder: Option<PublishStatusReport>,
+    /// The job asks the folder's state, not for a publication.
+    asking: bool,
 }
 impl std::fmt::Debug for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -65,6 +69,10 @@ pub enum Event {
     Picked(u64, Option<PathBuf>),
     Plan,
     Publish,
+    /// The delivery folder's state: stale sheets of its publication, a stopped one (docs/adr/1090 §6).
+    Status,
+    /// Go on with the folder's stopped publication (docs/adr/1090 §7).
+    Resume,
     Stop,
     Tick,
     Close,
@@ -152,6 +160,8 @@ impl App {
             geo: options.geo,
             layers: options.layers,
             pin: None,
+            resumable: true,
+            resume: false,
         };
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let id = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -169,6 +179,8 @@ impl App {
             progress: 0.,
             status: String::new(),
             close_after: false,
+            folder: None,
+            asking: false,
         })));
         self.dialog = Some(crate::app::Dialog::Exchange);
         Task::none()
@@ -259,11 +271,16 @@ impl App {
                 s.changed();
             }
             Event::Picked(..) => {}
-            Event::Plan | Event::Publish => {
+            Event::Plan | Event::Publish | Event::Status | Event::Resume => {
                 let Some(doc) = &self.document else {
                     return Task::none();
                 };
                 let mut input = s.input.clone();
+                s.asking = matches!(e, Event::Status);
+                if s.asking {
+                    // The folder's state is its own answer: a plan's report would read as if it were about it.
+                    s.report = None;
+                }
                 input.sheets = Some(
                     s.rows
                         .iter()
@@ -271,7 +288,7 @@ impl App {
                         .map(|r| r.id.clone())
                         .collect(),
                 );
-                let op = if matches!(e, Event::Plan) {
+                let op = if matches!(e, Event::Plan | Event::Status) {
                     CallOp::Plan
                 } else {
                     CallOp::Execute
@@ -279,7 +296,14 @@ impl App {
                 if s.check_only && matches!(op, CallOp::Execute) {
                     return Task::none();
                 }
-                if matches!(op, CallOp::Execute) {
+                if matches!(e, Event::Resume) {
+                    if !s.folder.as_ref().and_then(|f| f.stopped.as_ref()).is_some_and(|x| x.resumable) {
+                        return Task::none();
+                    }
+                    input.mode = SheetPublishMode::Separate;
+                    input.resume = true;
+                    input.sheets = s.folder.as_ref().and_then(|f| f.stopped.as_ref()).map(|x| x.sheets.clone());
+                } else if matches!(op, CallOp::Execute) {
                     let Some(report) = &s.report else {
                         return Task::none();
                     };
@@ -288,12 +312,16 @@ impl App {
                     }
                     input.pin = Some(report.source.clone());
                 }
-                let command = if s.check_only {
+                let command = if s.asking {
+                    FILE_PUBLISH_STATUS
+                } else if s.check_only {
                     kentos_commands::FILE_PREFLIGHT_SHEETS
                 } else {
                     FILE_PUBLISH_SHEETS
                 };
-                let encoded = if s.check_only {
+                let encoded = if s.asking {
+                    serde_json::to_value(PublishStatus { path: input.path.clone(), drawing: input.drawing.clone() })
+                } else if s.check_only {
                     serde_json::to_value(kentos_commands::PreflightSheets {
                         drawing: input.drawing.clone(),
                         sheets: input.sheets.clone(),
@@ -322,7 +350,9 @@ impl App {
                 s.generation = doc.model.generation();
                 s.op = op;
                 s.progress = 0.;
-                s.status = if matches!(op, CallOp::Plan) {
+                s.status = if s.asking {
+                    "Teslim klasörünün yayını çizimle karşılaştırılıyor…"
+                } else if matches!(op, CallOp::Plan) {
                     "Paftalar denetleniyor…"
                 } else {
                     "Paftalar yayınlanıyor…"
@@ -360,6 +390,15 @@ impl App {
                     s.job = None;
                     s.captured = None;
                     match answer.result {
+                        CommandResult::Completed { output, .. } if s.asking => {
+                            match serde_json::from_value::<PublishStatusReport>(output) {
+                                Ok(f) => {
+                                    s.status = folder_text(&f);
+                                    s.folder = Some(f);
+                                }
+                                Err(e) => s.status = format!("Yayın durumu okunamadı: {e}"),
+                            }
+                        }
                         CommandResult::Completed { output, .. } => {
                             let parsed = if s.check_only {
                                 serde_json::from_value::<kentos_commands::SheetsPreflighted>(output)
@@ -373,6 +412,9 @@ impl App {
                                         ready: r.ready,
                                         manifest: String::new(),
                                         sha256: String::new(),
+                                        scope: Vec::new(),
+                                        pages: Vec::new(),
+                                        resumed: Vec::new(),
                                     })
                             } else {
                                 serde_json::from_value::<SheetsPublished>(output)
@@ -422,7 +464,11 @@ impl App {
                             s.report = None;
                         }
                         CommandResult::Cancelled => {
-                            s.status = "Yayın iptal edildi; kısmi teslim oluşturulmadı.".into()
+                            s.status = if s.input.mode == SheetPublishMode::Separate && s.input.resumable {
+                                "Yayın durduruldu; teslim klasörü oluşturulmadı. Bitmiş sayfalar devam için saklandı: Durum ile görün, Devam et ile sürdürün.".into()
+                            } else {
+                                "Yayın iptal edildi; kısmi teslim oluşturulmadı.".into()
+                            }
                         }
                         _ => {
                             s.status =
@@ -573,6 +619,43 @@ impl App {
                 label::body(&s.status)
             });
         }
+        if let Some(f) = &s.folder {
+            let mut rows = column![label::caption(format!(
+                "Çizim şimdi: revizyon {} · yayının kaynağı: {}",
+                f.current.revision,
+                f.published.as_ref().map_or("—".to_owned(), |p| format!("revizyon {}", p.revision))
+            ))]
+            .spacing(4);
+            for x in &f.sheets {
+                let (word, warn) = match x.state {
+                    SheetPublishState::Current => ("güncel", false),
+                    SheetPublishState::Stale => ("güncelliğini yitirdi", true),
+                    SheetPublishState::Unknown => ("karşılaştırılamaz (özetsiz eski yayın)", true),
+                    SheetPublishState::Removed => ("kitapta yok", true),
+                    SheetPublishState::Unpublished => ("yayında yok", false),
+                    SheetPublishState::FileChanged => ("teslim edilen PDF değişmiş", true),
+                    SheetPublishState::Failed => ("şimdi üretilemiyor", true),
+                };
+                let text = format!("{} · {word}", x.name);
+                rows = rows.push(if warn { label::body(text).style(style::text::warning) } else { label::caption(text) });
+            }
+            if let Some(st) = &f.stopped {
+                rows = rows.push(
+                    label::body(format!(
+                        "Durdurulan yayın ({}): {} sayfa bitti, {} sayfa kaldı{}",
+                        match st.reason {
+                            kentos_commands::PublishStopReason::Cancelled => "iptal",
+                            kentos_commands::PublishStopReason::Failed => "hata",
+                        },
+                        st.done.len(),
+                        st.remaining.len(),
+                        if st.resumable { "; Devam et ile sürdürülebilir." } else { "; çizim değişti, baştan yayınlayın." }
+                    ))
+                    .style(style::text::warning),
+                );
+            }
+            body = body.push(rows);
+        }
         if let Some(report) = &s.report {
             let mut results = column![label::caption(format!(
                 "Kaynak revizyonu {} · sonraki değişiklikler bu sonuca dahil değildir.",
@@ -585,6 +668,46 @@ impl App {
                     resources.project,
                     resources.files.len()
                 )));
+            }
+            for sc in &report.scope {
+                let frames = sc
+                    .frames
+                    .iter()
+                    .map(|f| {
+                        format!(
+                            "{} {}{}{}",
+                            f.name,
+                            f.denominator.map_or_else(|| "atlas".into(), scale_text),
+                            if f.locked { " · kilitli" } else { " · kilitsiz" },
+                            if f.layers == "drawing" { " · çizimin katmanları" } else { "" }
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                results = results.push(label::caption(format!(
+                    "{} · {:.0}×{:.0} mm{} · {}",
+                    if sc.number.is_empty() { sc.name.as_str() } else { sc.number.as_str() },
+                    sc.paper[0],
+                    sc.paper[1],
+                    sc.profile.as_ref().map_or(String::new(), |p| format!(" · {p}")),
+                    frames
+                )));
+            }
+            for pg in &report.pages {
+                results = results.push(label::caption(format!(
+                    "Sayfa {} · {} çizgi, {} dolgu, {} yazı ({}), {} kırpma{}{}",
+                    s.rows.iter().find(|r| r.id == pg.sheet).map_or(pg.sheet.as_str(), |r| r.name.as_str()),
+                    pg.strokes,
+                    pg.fills,
+                    pg.texts,
+                    if pg.fonts.is_empty() { "yazı yüzü yok".to_owned() } else { pg.fonts.join(", ") },
+                    pg.clips,
+                    if pg.transparent > 0 { format!(", {} saydam", pg.transparent) } else { String::new() },
+                    if pg.raster_maps > 0 { format!(", {} resim görünüm", pg.raster_maps) } else { String::new() }
+                )));
+                for f in &pg.findings {
+                    results = results.push(label::caption(format!("Uyarı/not · {} {}", f.message, f.fix)).style(style::text::warning));
+                }
             }
             for f in &report.files {
                 results = results.push(label::caption(&f.name));
@@ -613,6 +736,7 @@ impl App {
             }
             body = body.push(results);
         }
+
         let ready = !busy
             && matches!(s.op, CallOp::Plan)
             && self
@@ -641,6 +765,22 @@ impl App {
                 .style(style::button::secondary),
         );
         if !s.check_only {
+            let resumable = s.folder.as_ref().and_then(|f| f.stopped.as_ref()).is_some_and(|x| x.resumable);
+            window = window
+                .action(
+                    button(label::body("Durum"))
+                        .on_press_maybe((!busy && !s.input.path.trim().is_empty()).then_some(event(Event::Status)))
+                        .padding(kentos_ui::theme::metrics::action())
+                        .style(style::button::secondary),
+                )
+                .action(
+                    button(label::body("Devam et"))
+                        .on_press_maybe((!busy && resumable).then_some(event(Event::Resume)))
+                        .padding(kentos_ui::theme::metrics::action())
+                        .style(style::button::secondary),
+                );
+        }
+        if !s.check_only {
             window = window.action(
                 button(label::body("Yayınla"))
                     .on_press_maybe(ready.then_some(event(Event::Publish)))
@@ -650,4 +790,28 @@ impl App {
         }
         window.modal(event(Event::Close))
     }
+}
+
+/// The folder's state in a line (docs/adr/1090 §6).
+fn folder_text(f: &PublishStatusReport) -> String {
+    match f.state {
+        kentos_commands::PublishFolderState::Published if f.stale.is_empty() => {
+            format!("Teslim güncel: {} paftanın sayfası yayındakiyle aynı.", f.sheets.iter().filter(|x| x.state == SheetPublishState::Current).count())
+        }
+        kentos_commands::PublishFolderState::Published => format!(
+            "{} pafta güncelliğini yitirdi; yalnız onları yeniden yayınlayın.",
+            f.stale.len()
+        ),
+        kentos_commands::PublishFolderState::Stopped => "Bu klasörün yayını durduruldu; teslim oluşturulmadı.".into(),
+        kentos_commands::PublishFolderState::None => "Bu klasörde yayın yok.".into(),
+    }
+}
+
+/// A viewport's scale as the sheet reads it: 1:20, 1:37,5, 2:1.
+fn scale_text(d: f64) -> String {
+    let n = |v: f64| {
+        let t = format!("{v:.3}");
+        t.trim_end_matches('0').trim_end_matches('.').replace('.', ",")
+    };
+    if d > 0.0 && d < 1.0 { format!("{}:1", n(1.0 / d)) } else { format!("1:{}", n(d)) }
 }

@@ -75,6 +75,11 @@ pub struct SheetsSet {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub pictures: bool,
+    /// Include each frame's detail recipe and camera lock (docs/adr/1090 §2): what `cad.sheets.details` makes it
+    /// again from.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub recipes: bool,
 
 }
 
@@ -140,6 +145,17 @@ pub struct SetFrame {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub recipe: Option<u32>,
+    /// With `recipes`: the frame as a detail of `cad.sheets.details` (docs/adr/1090 §2): its extent, ratio, layers, overrides,
+    /// annotation choice and lock, which make it again; none for a frame that is not a placed, unturned viewport of
+    /// the drawing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "Record<string, unknown>"))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<kentos_sheet::details::SheetDetail>"))]
+    pub detail: Option<serde_json::Value>,
+    /// With `recipes`: its camera is locked, zooming on the screen leaves its print scale (docs/adr/0594).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub locked: bool,
 }
 
 /// A sheet of the set.
@@ -164,8 +180,12 @@ pub struct SetSheet {
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum AffectReason {
     /// An object's box meets the frame's ground box, and the frame draws it: on its level (or on none), its category
-    /// and phase not left out by its view's recipe (docs/adr/0774 §4).
+    /// and phase not left out by its view's recipe (docs/adr/0774 §4), on a layer the frame prints (its layer state,
+    /// list and overrides; docs/adr/1090 §6).
     Shows,
+    /// The frame shows a model table whose rows come from one of the objects (a coordinate, area or attribute table
+    /// of it, a block schedule counting its insert, a schedule listing it, a cell field reading it; docs/adr/1090 §6).
+    Table,
     /// One of the objects is a view mark pointing at the frame.
     Marked,
     /// The frame's ground is not known (no fixed view): it may show them.
@@ -181,10 +201,14 @@ pub enum AffectReason {
 pub struct AffectedFrame {
     pub sheet: String,
     pub item: String,
-    /// Its reasons, in this order: shows, marked, unknown.
+    /// Its reasons, in this order: shows, table, marked, unknown.
     pub reasons: Vec<AffectReason>,
     /// The objects that affect it, by persistent id, in the input's order (none for `unknown` alone).
     pub uids: Vec<String>,
+    /// With `table`: the tables it shows that read the objects, by persistent id, in the drawing's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub tables: Vec<String>,
 }
 
 /// Output of `cad.sheets.set` v1 (its plan's too).

@@ -74,6 +74,18 @@ fn drawn_by<'a>(
         });
     let hidden = recipe.map(|r| r.hidden).unwrap_or_default();
     let draws = recipe_draws(doc, level, phase, hidden);
+    // The layers the frame prints: its layer state, list and overrides over the drawing's (docs/adr/1090 §6).
+    let printed: Option<std::collections::HashSet<String>> = map.as_ref().map(|m| {
+        kentos_sheet::layers::map_layers(
+            doc.layers().nodes(),
+            &doc.settings().layer_states,
+            &m.layers,
+            &m.layer_overrides,
+        )
+        .into_iter()
+        .map(|n| n.id.clone())
+        .collect()
+    });
     move |uid: &String, bounds: &Bounds| {
         if crop.is_some_and(|c| !meets(bounds, &c)) {
             return false;
@@ -81,7 +93,9 @@ fn drawn_by<'a>(
         let Some(slot) = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
             return true;
         };
-        doc.get(slot).is_none_or(&draws)
+        doc.get(slot).is_none_or(|e| {
+            draws(e) && printed.as_ref().is_none_or(|p| p.contains(e.base().layer_id.as_str()))
+        })
     }
 }
 
@@ -190,6 +204,12 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     .and_then(|r| r.level.as_ref().map(|l| l.id.clone()))
                     .or_else(|| m.level.as_ref().map(|l| l.id.clone()));
                 Some(SetFrame {
+                    detail: input
+                        .recipes
+                        .then(|| kentos_sheet::details::detail_of(item))
+                        .flatten()
+                        .and_then(|d| serde_json::to_value(d).ok()),
+                    locked: input.recipes && m.view_locked,
                     missing: linked.is_some() && current.is_none(),
                     view: linked,
                     level,
@@ -251,12 +271,19 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                 _ => None,
             })
             .collect();
+        let tables = reading_tables(doc, &named);
+        let table_reads: Vec<Vec<String>> = tables.iter().map(|(_, e)| reads_of(doc, e, &named)).collect();
+        let table_boxes: Vec<(String, Bounds)> = tables
+            .iter()
+            .map(|(uid, e)| (uid.clone(), object_bounds(&shape(e), &blocks, font)))
+            .collect();
         let mut out = Vec::new();
         for s in &sheets {
             for f in &s.frames {
                 let target = ViewTarget::sheet(&s.id, &f.item);
                 let mut reasons = Vec::new();
                 let mut uids: Vec<String> = Vec::new();
+                let mut shown_tables: Vec<String> = Vec::new();
                 let mut add = |u: &String| {
                     if !uids.contains(u) {
                         uids.push(u.clone());
@@ -272,6 +299,19 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     if !showing.is_empty() {
                         reasons.push(AffectReason::Shows);
                         showing.into_iter().for_each(&mut add);
+                    }
+                    shown_tables = table_boxes
+                        .iter()
+                        .filter(|(u, x)| meets(x, b) && draws(u, x))
+                        .map(|(u, _)| u.clone())
+                        .collect();
+                    if !shown_tables.is_empty() {
+                        reasons.push(AffectReason::Table);
+                        for ((u, _), read) in tables.iter().zip(&table_reads) {
+                            if shown_tables.contains(u) {
+                                read.iter().for_each(&mut add);
+                            }
+                        }
                     }
                 }
                 let marking: Vec<&String> = pointing
@@ -295,6 +335,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                         item: f.item.clone(),
                         reasons,
                         uids,
+                        tables: shown_tables,
                     });
                 }
             }
@@ -322,6 +363,54 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         affected,
         revision: doc.revision().to_string(),
     })
+}
+
+/// Which of `named` a model table's rows or fields come from (docs/adr/1090 §6), by persistent id, in their order: a
+/// coordinate, area or attribute table of it, a block schedule counting its insert (every block's without names), a
+/// schedule listing it among its rows' members, a cell field reading it.
+fn reads_of(doc: &Document, table: &Entity, named: &[(usize, Slot, &Entity, &String)]) -> Vec<String> {
+    let Entity::Table(t) = table else {
+        return Vec::new();
+    };
+    let bytes = |u: &str| kentos_domain::Uuid::parse_str(u).ok().map(|u| *u.as_bytes());
+    let mut out = Vec::new();
+    for (_, _, e, uid) in named {
+        let Some(b) = bytes(uid) else { continue };
+        let by_source = match &t.source {
+            Some(kentos_commands::TableSource::Coordinates { objects })
+            | Some(kentos_commands::TableSource::Areas { objects })
+            | Some(kentos_commands::TableSource::Attributes { objects }) => objects.iter().any(|o| o.0 == b),
+            Some(kentos_commands::TableSource::Blocks { names, .. }) => match e {
+                Entity::Insert(i) => {
+                    names.is_empty()
+                        || doc.block(i.block).is_some_and(|d| names.contains(&d.name))
+                }
+                _ => false,
+            },
+            Some(kentos_commands::TableSource::Schedule { members, .. }) => {
+                members.iter().any(|row| row.iter().any(|m| m == *uid))
+            }
+            _ => false,
+        };
+        let by_field = t.fields.iter().any(|f| {
+            matches!(&f.source, kentos_commands::FieldSource::Object { uid: o, .. } if o.0 == b)
+        });
+        if (by_source || by_field) && !out.contains(*uid) {
+            out.push((*uid).clone());
+        }
+    }
+    out
+}
+
+/// The drawing's model tables that read some of `named` (and are not among them), by persistent id, in its order.
+fn reading_tables<'a>(doc: &'a Document, named: &[(usize, Slot, &Entity, &String)]) -> Vec<(String, &'a Entity)> {
+    doc.entities()
+        .filter(|e| matches!(e, Entity::Table(_)))
+        .filter_map(|e| {
+            let uid = doc.uid(Slot(e.base().id))?.to_string();
+            (!named.iter().any(|(_, _, _, u)| **u == uid) && !reads_of(doc, e, named).is_empty()).then_some((uid, e))
+        })
+        .collect()
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &SheetsSet) -> CommandResult<()> {

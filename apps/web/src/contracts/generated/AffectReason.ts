@@ -3,4 +3,4 @@
 /**
  * Why a frame is affected.
  */
-export type AffectReason = "shows" | "marked" | "unknown";
+export type AffectReason = "shows" | "table" | "marked" | "unknown";

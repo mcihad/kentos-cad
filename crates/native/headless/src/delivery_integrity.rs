@@ -151,6 +151,9 @@ pub(crate) fn replay_row(row: &kentos_commands::CallRecord) -> kentos_commands::
             source: serde_json::from_value(v["source"].clone()).map_err(|e| e.to_string())?,
             issues: Vec::new(),
             ready: true,
+            scope: Vec::new(),
+            pages: Vec::new(),
+            resumed: Vec::new(),
         };
         verify(&report)
     })();

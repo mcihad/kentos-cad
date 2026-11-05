@@ -61,6 +61,8 @@ pub(super) struct Page<'a> {
     /// again (a map's thousands of parcels share one pen).
     pen: Pen,
     pens: Vec<Pen>,
+    /// What the page paints, counted as it is written (docs/adr/1090 §4).
+    pub audit: super::PageAudit,
 }
 
 /// What of the graphics state the page last wrote; none: not known (the page's start, or a state that was not
@@ -90,6 +92,33 @@ impl<'a> Page<'a> {
             saved: Vec::new(),
             pen: Pen::default(),
             pens: Vec::new(),
+            audit: super::PageAudit::default(),
+        }
+    }
+
+    /// One painting counted: filled, stroked at `stroke` points wide, an even-odd fill, under the alpha in force.
+    pub fn note_paint(&mut self, fill: bool, stroke: Option<f64>, even_odd: bool) {
+        let a = &mut self.audit;
+        if fill {
+            a.fills += 1;
+            if even_odd {
+                a.even_odd_fills += 1;
+            }
+        }
+        if let Some(w) = stroke {
+            a.strokes += 1;
+            let mm = w * 25.4 / 72.0;
+            if mm <= 0.0 {
+                a.hairlines += 1;
+            } else {
+                if mm < super::THIN_LINE_MM {
+                    a.thin_lines += 1;
+                }
+                a.min_stroke_mm = Some(a.min_stroke_mm.map_or(mm, |m: f64| if mm < m { mm } else { m }));
+            }
+        }
+        if (fill || stroke.is_some()) && (self.set.0 < 0.999 || self.set.1 < 0.999) {
+            a.transparent += 1;
         }
     }
 
@@ -357,6 +386,11 @@ impl<'a> Page<'a> {
                 s.join,
             );
         }
+        self.note_paint(
+            fill.is_some(),
+            line.map(|(s, _)| (f64::from(s.width) * PT).max(0.0)),
+            even_odd,
+        );
         match (fill.is_some(), line.is_some(), even_odd) {
             (true, true, false) => self.c.fill_nonzero_and_stroke(),
             (true, true, true) => self.c.fill_even_odd_and_stroke(),
@@ -406,6 +440,7 @@ impl<'a> Page<'a> {
 
     /// A clip until its `restore`: the rectangle turned about its centre.
     pub fn clip(&mut self, c: &ClipPrim) {
+        self.audit.clips += 1;
         self.save();
         self.rect(&c.rect, c.rotation, 0);
         self.c.clip_nonzero();
@@ -472,6 +507,7 @@ impl<'a> Page<'a> {
         for (font, _) in &runs {
             self.used_fonts.insert(font.name.clone(), font.font);
         }
+        self.audit.texts += 1;
         let (x, y) = self.xy(at);
         let (s, k) = (libm::sin(turn) as f32, libm::cos(turn) as f32);
         // Clockwise on the paper is clockwise on the page: the baseline (cos, −sin), the letters' up (sin, cos);
@@ -536,6 +572,9 @@ impl<'a> Page<'a> {
             .begin_marked_content_with_properties(Name(b"Span"))
             .properties()
             .actual_text(TextStr(actual));
+        if !actual.is_empty() {
+            self.audit.texts += 1;
+        }
         for glyph in &text.glyphs {
             let Some(font) = self.fonts.glyphs.get(glyph.font) else {
                 continue;
@@ -582,6 +621,7 @@ impl<'a> Page<'a> {
         let opacity = f32::from(img.opacity.min(100)) / 100.0;
         match image {
             Some((name, r)) => {
+                self.audit.images += 1;
                 self.xobjects.insert(name.to_owned(), r);
                 self.save();
                 self.alpha_for(opacity, opacity);

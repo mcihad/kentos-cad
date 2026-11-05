@@ -30,4 +30,15 @@ dpi?: number, geo: boolean, layers: boolean,
 /**
  * A plan's immutable document pin; changed source refuses publication before any file is exposed.
  */
-pin?: SheetPublishPin, };
+pin?: SheetPublishPin, 
+/**
+ * Separate PDFs only (docs/adr/1090 §7): a publication that is stopped or fails keeps its finished pages and a
+ * journal in a hidden sibling folder (`.<folder>.kentos-devam`), never in the delivery folder, so `resume` can go on.
+ */
+resumable?: boolean, 
+/**
+ * Go on with the stopped publication of this folder: its finished pages are checked by SHA-256 and kept, the
+ * rest are made. Refused unless the drawing, its linked resources, the title context and the options are the ones
+ * it started with (`resume_stale`).
+ */
+resume?: boolean, };

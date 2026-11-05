@@ -2,10 +2,25 @@
 import type { SheetDeliveryResources } from "./SheetDeliveryResources";
 import type { SheetPublishIssue } from "./SheetPublishIssue";
 import type { SheetPublishPin } from "./SheetPublishPin";
+import type { SheetPublishScope } from "./SheetPublishScope";
 import type { SheetPublishedFile } from "./SheetPublishedFile";
+import type { SheetPublishedPage } from "./SheetPublishedPage";
 
 export type SheetsPublished = { resources?: SheetDeliveryResources, path: string, sheets: Array<string>, files: Array<SheetPublishedFile>, issues: Array<SheetPublishIssue>, source: SheetPublishPin, 
 /**
  * True after full output/source checks; validate-only deliberately leaves this false.
  */
-ready: boolean, manifest: string, sha256: string, };
+ready: boolean, manifest: string, sha256: string, 
+/**
+ * What is published, sheet by sheet (docs/adr/1090 §7): paper, viewports with their scales, locks and layer
+ * states, the plot profile.
+ */
+scope?: Array<SheetPublishScope>, 
+/**
+ * Each written page's audit and content digest (docs/adr/1090 §4), in the published order.
+ */
+pages?: Array<SheetPublishedPage>, 
+/**
+ * With `resume`: the sheets whose finished pages were kept from the stopped publication.
+ */
+resumed?: Array<string>, };

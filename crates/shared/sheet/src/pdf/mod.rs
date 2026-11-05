@@ -503,6 +503,92 @@ pub fn fonts_needed(
     write::faces_of(book, inputs, &sheets)
 }
 
+/// A stroke thinner than this on the paper is reported as a thin line (mm; ISO 128 / AutoCAD's thinnest weight).
+pub const THIN_LINE_MM: f64 = 0.05;
+
+/// What one written page paints (docs/adr/1090 §4), counted while it is written, and its content digest.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperPageAudit"))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct PageAudit {
+    pub sheet: SheetId,
+    /// SHA-256 of the page's uncompressed content stream, its size and the names of the faces, pictures and graphics
+    /// states it uses: equal digests draw the same page.
+    pub digest: String,
+    /// Stroked vector paths (sheet items and model content).
+    pub strokes: u32,
+    /// Filled vector paths; `evenOddFills` of them with holes (hatch and area fills).
+    pub fills: u32,
+    pub even_odd_fills: u32,
+    /// Strokes of zero width: the device's thinnest line, which differs from printer to printer.
+    pub hairlines: u32,
+    /// Strokes thinner than [`THIN_LINE_MM`].
+    pub thin_lines: u32,
+    /// The thinnest stroke over zero, paper mm.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub min_stroke_mm: Option<f64>,
+    /// Text runs written as real, searchable text (embedded subsets with a ToUnicode map).
+    pub texts: u32,
+    /// The faces those runs use, `family-weight[-italic]`, sorted.
+    pub fonts: Vec<String>,
+    /// Clip paths (viewport and item masks).
+    pub clips: u32,
+    /// Paintings under an alpha below one (a printer or RIP may flatten them).
+    pub transparent: u32,
+    /// Placed pictures.
+    pub images: u32,
+    /// Map frames drawn as a picture instead of vectors (lines and hatches are no longer vectors there).
+    pub raster_maps: u32,
+    /// Map frames drawn as the empty “harita” box (no content).
+    pub placeholders: u32,
+}
+
+/// A page's content digest (docs/adr/1090 §4): SHA-256 over the uncompressed content stream, the page size and the
+/// names of the resources it uses, each part length-prefixed.
+pub fn page_digest<'a>(
+    content: &[u8],
+    size: &crate::units::SizeUm,
+    fonts: impl Iterator<Item = &'a str>,
+    xobjects: impl Iterator<Item = &'a str>,
+    states: impl Iterator<Item = String>,
+) -> String {
+    let mut bytes = Vec::with_capacity(content.len() + 256);
+    let mut part = |b: &[u8]| {
+        bytes.extend_from_slice(&(b.len() as u64).to_be_bytes());
+        bytes.extend_from_slice(b);
+    };
+    part(b"kentos.page-digest/1");
+    part(content);
+    part(format!("{}x{}", size.width, size.height).as_bytes());
+    for f in fonts {
+        part(f.as_bytes());
+    }
+    part(b"|");
+    for x in xobjects {
+        part(x.as_bytes());
+    }
+    part(b"|");
+    for s in states {
+        part(s.as_bytes());
+    }
+    crate::template::sha256_hex(&bytes)
+}
+
+/// The book's chosen sheets as a PDF file and what each page paints, in page order (docs/adr/1090 §4).
+pub fn to_pdf_audited(
+    book: &SheetBook,
+    inputs: &PdfInputs,
+    options: &PdfOptions,
+) -> Result<(Vec<u8>, Vec<PageAudit>)> {
+    let sheets = chosen_sheets(book, options)?;
+    write::document_audited(book, inputs, options, &sheets)
+}
+
 /// The book's chosen sheets as a PDF file.
 pub fn to_pdf(book: &SheetBook, inputs: &PdfInputs, options: &PdfOptions) -> Result<Vec<u8>> {
     let sheets = chosen_sheets(book, options)?;
