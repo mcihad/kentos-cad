@@ -1866,6 +1866,11 @@ Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden
 çıkarılabilir; kaynak dosya ve çizim geometrisi değiştirilmez. Eski ön izleme
 ile sıralama engellenir. Otomatik testler ve gerçek arayüzde sıralama,
 çıkarma iptali, onay ve kaydedilen dosyanın bağımsız okunması doğrulandı.
+Okunamayan bağlı standart uygulanmaz, uygunluk raporu yerine uyarı gösterilir
+ve diğer bağlı belgeler geçerliyse açık onayla çıkarılabilir. Bu kurtarma
+akışı otomatik test ve gerçek arayüzde denendi; çizimin kaydedilen kopyasında
+diğer standart, katman ve nesne bağımsız okuyucuyla doğrulandı. Birden çok
+okunamayan belgenin tek tek çıkarılması henüz desteklenmez.
 Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
 komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
 tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve

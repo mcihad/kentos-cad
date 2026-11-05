@@ -41,6 +41,8 @@ pub struct Window {
     custom: Option<SelectedStandard>,
     choices: Vec<ProjectChoice>,
     load_error: Option<String>,
+    /// Unreadable embedded documents remain selectable for safe removal.
+    invalid_bound: Option<(String, String)>,
     confirm_remove: bool,
     pub layers: bool,
     pub restyle: bool,
@@ -125,6 +127,11 @@ fn selected_project(document: &ProjectStandardDocument) -> Result<SelectedStanda
     })
 }
 
+fn invalid_identity(document: &ProjectStandardDocument) -> Option<(String, String)> {
+    let value: serde_json::Value = serde_json::from_str(&document.text).ok()?;
+    Some((value.get("id")?.as_str()?.to_owned(), document.text.clone()))
+}
+
 fn msg(event: Event) -> Message {
     Message::DrawingStandard(event)
 }
@@ -189,16 +196,23 @@ impl App {
             .document
             .as_ref()
             .and_then(|doc| doc.model.settings().standard_docs.first());
-        let (custom, load_error) = match first.map(selected_project) {
-            None => (None, None),
-            Some(Ok(selected)) => (Some(selected), None),
-            Some(Err(why)) => (None, Some(format!("İlk bağlı standart geçersiz: {why}"))),
+        let (custom, load_error, invalid_bound) = match first {
+            None => (None, None, None),
+            Some(document) => match selected_project(document) {
+                Ok(selected) => (Some(selected), None, None),
+                Err(why) => (
+                    None,
+                    Some(format!("İlk bağlı standart geçersiz: {why}")),
+                    invalid_identity(document),
+                ),
+            },
         };
         self.drawing_standard = Some(Window {
             standard,
             custom,
             choices: Vec::new(),
             load_error,
+            invalid_bound,
             confirm_remove: false,
             layers: true,
             restyle: true,
@@ -333,12 +347,14 @@ impl App {
             Event::Loaded(Ok(Some(standard))) => {
                 w.custom = Some(standard);
                 w.load_error = None;
+                w.invalid_bound = None;
                 w.chosen = None;
                 w.confirm_remove = false;
             }
             Event::BuiltIn => {
                 w.custom = None;
                 w.load_error = None;
+                w.invalid_bound = None;
                 w.chosen = None;
                 w.confirm_remove = false;
             }
@@ -358,18 +374,26 @@ impl App {
                                 .as_deref()
                                 == Some(id.as_str())
                         })
-                        .map(selected_project)
+                        .cloned()
                 });
                 match selected {
-                    Some(Ok(selected)) => {
-                        w.custom = Some(selected);
-                        w.load_error = None;
-                        w.chosen = None;
+                    Some(document) => match selected_project(&document) {
+                        Ok(selected) => {
+                            w.custom = Some(selected);
+                            w.load_error = None;
+                            w.invalid_bound = None;
+                            w.chosen = None;
+                        }
+                        Err(why) => {
+                            w.custom = None;
+                            w.invalid_bound = invalid_identity(&document);
+                            w.load_error = Some(format!("Bağlı standart geçersiz: {why}"));
+                        }
+                    },
+                    None => {
+                        w.invalid_bound = None;
+                        w.load_error = Some("Bağlı standart artık bulunamıyor.".into());
                     }
-                    Some(Err(why)) => {
-                        w.load_error = Some(format!("Bağlı standart geçersiz: {why}"))
-                    }
-                    None => w.load_error = Some("Bağlı standart artık bulunamıyor.".into()),
                 }
             }
             Event::Attach => {
@@ -485,16 +509,23 @@ impl App {
         let Some(window) = self.drawing_standard.as_ref() else {
             return;
         };
-        if window.load_error.is_some() || (direction.is_none() && !window.confirm_remove) {
+        if (window.load_error.is_some() && (direction.is_some() || window.invalid_bound.is_none()))
+            || (direction.is_none() && !window.confirm_remove)
+        {
             return;
         }
-        let Some(selected) = window.custom.as_ref() else {
-            return;
-        };
-        if selected.bound_id.is_none() {
-            return;
-        }
-        let Some(text) = selected.document.as_deref() else {
+        let text = window
+            .invalid_bound
+            .as_ref()
+            .map(|(_, text)| text.as_str())
+            .or_else(|| {
+                window
+                    .custom
+                    .as_ref()
+                    .filter(|selected| selected.bound_id.is_some())
+                    .and_then(|selected| selected.document.as_deref())
+            });
+        let Some(text) = text else {
             return;
         };
         let Some(revision) = window
@@ -522,9 +553,7 @@ impl App {
         } else {
             documents.remove(index);
         }
-        let next = direction
-            .is_none()
-            .then(|| documents.first().map(selected_project));
+        let next = direction.is_none().then(|| documents.first().cloned());
         let result = settings_set::execute(
             &mut ExecutionContext::new(&mut doc.model),
             SettingsSet {
@@ -537,13 +566,15 @@ impl App {
             if let Some(w) = self.drawing_standard.as_mut() {
                 w.confirm_remove = false;
                 if let Some(next) = next {
-                    match next {
+                    w.invalid_bound = None;
+                    match next.as_ref().map(selected_project) {
                         Some(Ok(selected)) => {
                             w.custom = Some(selected);
                             w.load_error = None;
                         }
                         Some(Err(why)) => {
                             w.custom = None;
+                            w.invalid_bound = next.as_ref().and_then(invalid_identity);
                             w.load_error = Some(format!("İlk bağlı standart geçersiz: {why}"));
                         }
                         None => {
@@ -608,27 +639,37 @@ impl App {
             .as_ref()
             .map(|selected| selected.standard.clone())
             .or_else(|| built_in_standard(&w.standard));
-        let about = standard.as_ref().map_or_else(String::new, |s| {
+        let mut about = standard.as_ref().map_or_else(String::new, |s| {
             if s.description.trim().is_empty() {
                 s.name.clone()
             } else {
                 format!("{}: {}", s.name, s.description)
             }
         });
-        let (lines, issues): (Vec<Element<'_, Message>>, Vec<StandardIssue>) = match &w.report {
-            Err(why) if why.is_empty() => (Vec::new(), Vec::new()),
-            Err(why) => (vec![words::text_line(Kind::Warn, why.clone())], Vec::new()),
-            Ok(r) if r.issues.is_empty() => (
-                vec![words::text_line(
-                    Kind::Ok,
-                    format!("Çizim {} standardına uyuyor.", r.standard),
-                )],
-                Vec::new(),
-            ),
-            Ok(r) => (
-                vec![words::text_line(Kind::Info, report_words(r))],
-                r.issues.clone(),
-            ),
+        if w.invalid_bound.is_some() {
+            about = "Geçersiz bağlı standart".into();
+        }
+        let (lines, issues): (Vec<Element<'_, Message>>, Vec<StandardIssue>) = if w
+            .invalid_bound
+            .is_some()
+        {
+            (vec![words::text_line(Kind::Warn, "Bu standart denetlenemiyor; projeden çıkarabilir veya başka bir standart seçebilirsiniz.".to_owned())], Vec::new())
+        } else {
+            match &w.report {
+                Err(why) if why.is_empty() => (Vec::new(), Vec::new()),
+                Err(why) => (vec![words::text_line(Kind::Warn, why.clone())], Vec::new()),
+                Ok(r) if r.issues.is_empty() => (
+                    vec![words::text_line(
+                        Kind::Ok,
+                        format!("Çizim {} standardına uyuyor.", r.standard),
+                    )],
+                    Vec::new(),
+                ),
+                Ok(r) => (
+                    vec![words::text_line(Kind::Info, report_words(r))],
+                    r.issues.clone(),
+                ),
+            }
         };
         // Keep the command report order intact; show findings needing a person
         // first while retaining their original indices for selection and details.
@@ -727,33 +768,46 @@ impl App {
                 ]
                 .spacing(12),
             );
-        let (preview, ready) = match &w.preview {
-            Err(why) if why.is_empty() => (Vec::new(), false),
-            Err(why) => (vec![words::text_line(Kind::Warn, why.clone())], false),
-            Ok(p) if !p.changed => (
-                vec![words::text_line(
-                    Kind::Info,
-                    "Seçilen düzeltmelerle değişecek bir şey yok.".to_owned(),
-                )],
-                false,
-            ),
-            Ok(p) => (vec![words::text_line(Kind::Info, planned_words(p))], true),
+        let (preview, ready) = if w.invalid_bound.is_some() {
+            (Vec::new(), false)
+        } else {
+            match &w.preview {
+                Err(why) if why.is_empty() => (Vec::new(), false),
+                Err(why) => (vec![words::text_line(Kind::Warn, why.clone())], false),
+                Ok(p) if !p.changed => (
+                    vec![words::text_line(
+                        Kind::Info,
+                        "Seçilen düzeltmelerle değişecek bir şey yok.".to_owned(),
+                    )],
+                    false,
+                ),
+                Ok(p) => (vec![words::text_line(Kind::Info, planned_words(p))], true),
+            }
         };
-        let source = w.custom.as_ref().map_or_else(
-            || "Yerleşik standart".to_owned(),
-            |selected| {
-                if selected.bound_id.is_some() {
-                    selected.label.clone()
-                } else {
-                    format!("Geçici: {}", selected.label)
-                }
-            },
-        );
+        let source = if let Some((id, _)) = &w.invalid_bound {
+            format!("Projeye bağlı: {id} · geçersiz")
+        } else {
+            w.custom.as_ref().map_or_else(
+                || "Yerleşik standart".to_owned(),
+                |selected| {
+                    if selected.bound_id.is_some() {
+                        selected.label.clone()
+                    } else {
+                        format!("Geçici: {}", selected.label)
+                    }
+                },
+            )
+        };
         let choices = w.choices.clone();
         let current = w
-            .custom
+            .invalid_bound
             .as_ref()
-            .and_then(|selected| selected.bound_id.as_ref())
+            .map(|(id, _)| id)
+            .or_else(|| {
+                w.custom
+                    .as_ref()
+                    .and_then(|selected| selected.bound_id.as_ref())
+            })
             .and_then(|id| choices.iter().find(|choice| &choice.id == id))
             .cloned();
         let position = current
@@ -761,6 +815,7 @@ impl App {
             .and_then(|selected| choices.iter().position(|choice| choice.id == selected.id));
         let count = choices.len();
         let editable = w.load_error.is_none() && w.report.is_ok();
+        let removable = w.report.is_ok() && (editable || w.invalid_bound.is_some());
         let attach = w.custom.as_ref().is_some_and(|selected| {
             selected.document.is_some()
                 && selected.bound_id.is_none()
@@ -815,7 +870,7 @@ impl App {
                         words::secondary("Vazgeç", Some(msg(Event::RemoveCancel))),
                         words::secondary(
                             "Çıkarmayı onayla",
-                            editable.then(|| msg(Event::RemoveConfirm))
+                            removable.then(|| msg(Event::RemoveConfirm))
                         ),
                     ]
                     .spacing(8),
@@ -833,7 +888,7 @@ impl App {
                         ),
                         words::secondary(
                             "Projeden çıkar…",
-                            editable.then(|| msg(Event::RemoveAsk))
+                            removable.then(|| msg(Event::RemoveAsk))
                         ),
                     ]
                     .spacing(8),
@@ -845,7 +900,9 @@ impl App {
             .push(words::field("Bulgular", table, Some(hint)))
             .push(words::field("Düzeltme", parts, None))
             .push(words::summary(preview));
-        if let Some(error) = &w.load_error {
+        if let Some(error) = &w.load_error
+            && w.invalid_bound.is_none()
+        {
             body = body.push(words::text_line(Kind::Warn, error.clone()));
         }
         if w.custom
@@ -1047,6 +1104,37 @@ mod tests {
                 .as_deref(),
             Some("b")
         );
+    }
+
+    #[test]
+    fn invalid_embedded_standard_can_be_removed_but_not_applied() {
+        use super::Event;
+        use kentos_commands::ProjectStandardDocument;
+        let mut app = crate::selecting::tests::objects();
+        crate::files_testing::make_cad(&mut app);
+        let document = &mut app.document.as_mut().unwrap().model;
+        let mut settings = document.settings().clone();
+        settings.standard_docs = vec![ProjectStandardDocument {
+            text: serde_json::json!({"format":"kentos.drawing-standard", "version":1,
+                "id":"bad", "revision":"1", "standard":{"unsupported_rule":true}})
+            .to_string(),
+        }];
+        document.set_settings(settings);
+        app.open_drawing_standard();
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert!(app.drawing_standard.as_ref().unwrap().load_error.is_some());
+        assert!(!app.apply_standard());
+        let _ = app.drawing_standard_event(Event::RemoveConfirm);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        let _ = app.drawing_standard_event(Event::RemoveAsk);
+        let _ = app.drawing_standard_event(Event::RemoveConfirm);
+        let after = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert!(after.settings.standard_docs.is_empty());
+        assert_eq!(after.entities, before.entities);
+        assert_eq!(after.layers, before.layers);
     }
 
     #[test]
