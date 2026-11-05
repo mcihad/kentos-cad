@@ -1062,6 +1062,23 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.drawing.repair",
+        refusals: &[&[
+            "invalid_input",
+            "invalid_uid",
+            "invalid_gap",
+            "invalid_revision",
+            "revision_conflict",
+            "entity_not_found",
+            "repair_unsupported",
+            "layer_locked",
+            "repair_refused_measured",
+            "repair_target_missing",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.drawing.take",
         refusals: &[&[
             "invalid_input",
@@ -1217,7 +1234,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.drawing.inspect",
-        refusals: &[&["invalid_uid", "entity_not_found", "invalid_gap", "invalid_limit", "inspection_scope_limit"], REVISION],
+        refusals: &[&["invalid_uid", "entity_not_found", "invalid_gap", "invalid_angle_tolerance", "invalid_limit", "inspection_scope_limit"], REVISION],
         warnings: &["inspection_truncated"], targets: none,
     },
     Entry {

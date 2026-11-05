@@ -81,6 +81,7 @@ use crate::sources::{
 };
 use crate::sources_query;
 use crate::standards_install;
+use crate::drawing_repair;
 use crate::drawing_take;
 use crate::review_notes;
 use crate::review_notes::list_cmd as review_notes_list;
@@ -744,6 +745,7 @@ macro_rules! by_command {
             kentos_commands::CAD_DRAWING_AUDIT => $then!(drawing_audit, DrawingAudit),
             kentos_commands::CAD_DRAWING_COMPARE => $then!(drawing_compare, DrawingCompare),
             kentos_commands::CAD_DRAWING_TAKE => $then!(drawing_take, kentos_commands::DrawingTake),
+            kentos_commands::CAD_DRAWING_REPAIR => $then!(drawing_repair, kentos_commands::DrawingRepair),
             kentos_commands::CAD_REVIEW_NOTES_EDIT => $then!(review_notes, kentos_commands::ReviewNotesEdit),
             kentos_commands::CAD_REVIEW_NOTES_LIST => $then!(review_notes_list, kentos_commands::ReviewNotesList),
             kentos_commands::CAD_ADDRESSES_CHECK => $then!(addresses_check, AddressesCheck),

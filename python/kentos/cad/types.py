@@ -2814,12 +2814,18 @@ InputStateName = Literal["current", "changed", "gone"]
 
 
 class InspectionGroup(_StrEnum):
+    """- ``boundaries``
+    - ``hatches``
+    - ``annotations``
+    - ``health``: Drawing health (docs/adr/1005 §1): T junctions short of or over their edge, small angle deviations, stray
+    """
     BOUNDARIES = "boundaries"
     HATCHES = "hatches"
     ANNOTATIONS = "annotations"
+    HEALTH = "health"
 
 
-InspectionGroupName = Literal["boundaries", "hatches", "annotations"]
+InspectionGroupName = Literal["boundaries", "hatches", "annotations", "health"]
 """The names of :class:`InspectionGroup`, for a plain string."""
 
 
@@ -3455,6 +3461,16 @@ class LibraryOperation(_StrEnum):
 
 LibraryOperationName = Literal["create", "update", "duplicate", "rename", "move", "remove", "import", "export", "assign"]
 """The names of :class:`LibraryOperation`, for a plain string."""
+
+
+class LineEnd(_StrEnum):
+    """Which end of a line."""
+    START = "start"
+    END = "end"
+
+
+LineEndName = Literal["start", "end"]
+"""The names of :class:`LineEnd`, for a plain string."""
 
 
 class LineLabelMode(_StrEnum):
@@ -28014,6 +28030,7 @@ class DrawingInspect(_Model):
     Attributes:
         checks: Absent/empty: boundary, hatch and annotation checks.
         limit: Maximum findings, 1..1000; default 200. Work/geometry/result caps return explicit partial results. Unit: 1.
+        max_angle: Health: the largest deviation from a horizontal or vertical line to report, degrees, 0 to 10; default 0.5. Unit: deg.
         max_gap: Greatest gap to report, metres. Default 0.01; 0 disables near-gap pairing, not open-end checks.
             This is a diagnostic threshold; no source geometry is moved or healed. Unit: length.
         uids: Absent: all visible objects. Empty: no objects. Persistent UUIDs; duplicates count once.
@@ -28022,6 +28039,7 @@ class DrawingInspect(_Model):
     expected_revision: str | None | Unset = UNSET
     include_hidden: bool | Unset = UNSET
     limit: int | None | Unset = UNSET
+    max_angle: float | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
@@ -28035,6 +28053,8 @@ class DrawingInspect(_Model):
             out["includeHidden"] = self.include_hidden
         if self.limit is not UNSET:
             out["limit"] = self.limit
+        if self.max_angle is not UNSET:
+            out["maxAngle"] = None if self.max_angle is None else float(self.max_angle)
         if self.max_gap is not UNSET:
             out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
         if self.uids is not UNSET:
@@ -28048,6 +28068,7 @@ class DrawingInspect(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             include_hidden=data.get("includeHidden", UNSET),
             limit=data.get("limit", UNSET),
+            max_angle=UNSET if "maxAngle" not in data else None if data["maxAngle"] is None else float(data["maxAngle"]),
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
@@ -28203,6 +28224,64 @@ class DrawingProjectChange(_Model):
             name=data["name"],
             status=data["status"],
             fields=list(data["fields"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingRepair(_Model):
+    """Input of `cad.drawing.repair` v1. Refusals, in order: `invalid_input`, `invalid_uid`, `invalid_gap`,
+    `invalid_revision`, `revision_conflict`, `entity_not_found`, `repair_unsupported`, `layer_locked`,
+    `repair_refused_measured`, `repair_target_missing`.
+    Attributes:
+        fixes: 1 to 1000 fixes, a line end once.
+        max_gap: The most an end may move, metres, above 0 and at most 1000; absent: 0.01. Unit: length.
+    """
+    fixes: list[JunctionFix]
+    expected_revision: str | None | Unset = UNSET
+    max_gap: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fixes"] = [e0.to_json() for e0 in self.fixes]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.max_gap is not UNSET:
+            out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingRepair:
+        return cls(
+            fixes=[JunctionFix.from_json(e0) for e0 in data["fixes"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingRepaired(_Model):
+    """Output of `cad.drawing.repair` v1.
+    Attributes:
+        max_moved: The largest move, metres. Unit: length.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    fixed: list[JunctionFixed]
+    max_moved: float
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fixed"] = [e0.to_json() for e0 in self.fixed]
+        out["maxMoved"] = float(self.max_moved)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingRepaired:
+        return cls(
+            fixed=[JunctionFixed.from_json(e0) for e0 in data["fixed"]],
+            max_moved=float(data["maxMoved"]),
+            revision=data["revision"],
         )
 
 
@@ -43340,6 +43419,63 @@ class JunctionDef(_Model):
             radii=UNSET if "radii" not in data else None if data["radii"] is None else [float(e0) for e0 in data["radii"]],
             radius=float(data["radius"]) if "radius" in data else UNSET,
             revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionFix(_Model):
+    """One T-junction fix: the line `uid`'s `end` brought onto `target`'s nearest straight edge along the line."""
+    uid: str
+    end: LineEnd | LineEndName
+    target: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["end"] = _enum_out(self.end)
+        out["target"] = self.target
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionFix:
+        return cls(
+            uid=data["uid"],
+            end=_enum_in(LineEnd, data["end"]),
+            target=data["target"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionFixed(_Model):
+    """What one fix did.
+    Attributes:
+        moved: How far the end moved, metres. Unit: length.
+        length_before: Unit: length.
+        length_after: Unit: length.
+    """
+    uid: str
+    end: LineEnd | LineEndName
+    moved: float
+    length_before: float
+    length_after: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["end"] = _enum_out(self.end)
+        out["moved"] = float(self.moved)
+        out["lengthBefore"] = float(self.length_before)
+        out["lengthAfter"] = float(self.length_after)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionFixed:
+        return cls(
+            uid=data["uid"],
+            end=_enum_in(LineEnd, data["end"]),
+            moved=float(data["moved"]),
+            length_before=float(data["lengthBefore"]),
+            length_after=float(data["lengthAfter"]),
         )
 
 
@@ -114894,6 +115030,8 @@ __all__ = [
     "DrawingMatchSearch",
     "DrawingPaperViewportSource",
     "DrawingProjectChange",
+    "DrawingRepair",
+    "DrawingRepaired",
     "DrawingSetPaperTableSource",
     "DrawingStandard",
     "DrawingTake",
@@ -115493,6 +115631,8 @@ __all__ = [
     "JoinsWallsOperation",
     "JunctionClearanceAt",
     "JunctionDef",
+    "JunctionFix",
+    "JunctionFixed",
     "JunctionKind",
     "JunctionKindName",
     "JunctionLayer",
@@ -115699,6 +115839,8 @@ __all__ = [
     "LineArrayLayout",
     "LineCreate",
     "LineCreated",
+    "LineEnd",
+    "LineEndName",
     "LineEntity",
     "LineEntityGeometry",
     "LineLabelMode",

@@ -1692,6 +1692,32 @@ pub fn catalog() -> CommandCatalog {
         // Farkları al and İnceleme notları (docs/adr/1000), held together by fixtures/commands/v1/cad.drawing.take.json,
         // cad.review.notes.edit.json and cad.review.notes.list.json.
         CommandDescriptor {
+            id: crate::CAD_DRAWING_REPAIR.into(),
+            version: crate::CAD_DRAWING_REPAIR_VERSION,
+            title: "Çizimi onar".into(),
+            summary: "İncelenmiş T birleşimi bulgularını (cad.drawing.inspect, checks: health) düzeltir: çizginin ucunu kendi doğrultusunda hedefin en yakın doğru kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar. Tek geri alma adımı “Onar”; her ucun kayması ve çizginin önceki/sonraki boyu raporlanır. \
+                      Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured): ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi reddeder. \
+                      Retler: invalid_input, invalid_uid, invalid_gap, invalid_revision, revision_conflict, entity_not_found, repair_unsupported, layer_locked, repair_refused_measured, repair_target_missing."
+                .into(),
+            aliases: vec!["onar".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DrawingRepair>(),
+            output: schema::<crate::DrawingRepaired>(),
+            plan: Some(schema::<crate::DrawingRepaired>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kısa kalan çizgi ucunu kenara getir".into(),
+                input: json!({ "fixes": [{ "uid": "0192f5b0-0000-7000-8000-000000000101", "end": "end", "target": "0192f5b0-0000-7000-8000-000000000102" }], "maxGap": 0.01 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_DRAWING_TAKE.into(),
             version: crate::CAD_DRAWING_TAKE_VERSION,
             title: "Seçilen farkları al".into(),
@@ -15492,6 +15518,9 @@ mod tests {
                     }
                     crate::CAD_STANDARDS_INSTALL => {
                         serde_json::from_value::<crate::StandardsInstall>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_DRAWING_REPAIR => {
+                        serde_json::from_value::<crate::DrawingRepair>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_DRAWING_TAKE => {
                         serde_json::from_value::<crate::DrawingTake>(e.input.clone()).map(|_| ())

@@ -13,6 +13,7 @@ use kentos_domain::{Document, Uuid};
 use std::collections::BTreeSet;
 
 mod boundaries;
+mod health;
 pub mod annotations;
 mod texts;
 const WORK_MAX: u64 = 2_000_000;
@@ -47,6 +48,14 @@ fn scope(doc: &Document, input: &DrawingInspect) -> Result<Vec<Uuid>, Stop> {
             codes::INVALID_GAP,
             "Boşluk eşiği 0 ile 1000 metre arasında sonlu bir sayı olmalı.",
             "maxGap",
+        ));
+    }
+    let angle = input.max_angle.unwrap_or(0.5);
+    if !angle.is_finite() || !(0.0..=10.0).contains(&angle) {
+        return Err(failed(
+            codes::INVALID_ANGLE_TOLERANCE,
+            "Açı sapması eşiği 0 ile 10 derece arasında sonlu bir sayı olmalı.",
+            "maxAngle",
         ));
     }
     if !(1..=1000).contains(&input.limit.unwrap_or(200)) {
@@ -105,7 +114,8 @@ fn push(out: &mut DrawingInspected, finding: InspectionFinding, limit: usize) {
     }
 }
 fn check_group(input: &DrawingInspect, group: InspectionGroup) -> bool {
-    input.checks.is_empty() || input.checks.contains(&group)
+    // Health is asked for by name only (docs/adr/1005 §1): the default checks stay as they were.
+    (input.checks.is_empty() && group != InspectionGroup::Health) || input.checks.contains(&group)
 }
 fn known_open(e: &Entity) -> bool {
     match e {
@@ -221,6 +231,7 @@ fn run(
         work: 0,
         cut: false,
     };
+    let mut health = health::Health::default();
     let mut edges = Vec::new();
     let mut annotations = annotations::Context::default();
     for uid in ids {
@@ -253,6 +264,21 @@ fn run(
         if check_group(input, InspectionGroup::Boundaries) {
             boundaries::collect(e, uid, &mut edges, &mut out);
         }
+        if check_group(input, InspectionGroup::Health) {
+            health.collect(e, uid);
+        }
+    }
+    if check_group(input, InspectionGroup::Health) {
+        health::inspect(
+            doc,
+            &health,
+            input.max_gap.unwrap_or(0.01),
+            input.max_angle.unwrap_or(0.5),
+            limit,
+            &mut budget,
+            &mut stopped,
+            &mut out,
+        )?;
     }
     if check_group(input, InspectionGroup::Boundaries) {
         boundaries::inspect(

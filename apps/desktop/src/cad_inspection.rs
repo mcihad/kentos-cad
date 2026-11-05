@@ -29,6 +29,8 @@ pub(crate) struct Panel {
     boundaries: bool,
     hatches: bool,
     annotations: bool,
+    /// Çizim sağlığı (docs/adr/1005): asked for by name only.
+    health: bool,
     hidden: bool,
     busy: bool,
     token: u64,
@@ -47,6 +49,7 @@ impl Default for Panel {
             boundaries: true,
             hatches: true,
             annotations: true,
+            health: false,
             hidden: false,
             busy: false,
             token: 0,
@@ -83,6 +86,7 @@ pub enum Event {
     Boundaries(bool),
     Hatches(bool),
     Annotations(bool),
+    Health(bool),
     Sources,
     Hidden(bool),
     Ready(u64, u64, u64, Box<CommandResult<DrawingInspected>>),
@@ -153,11 +157,15 @@ impl App {
         if p.annotations {
             checks.push(InspectionGroup::Annotations);
         }
+        if p.health {
+            checks.push(InspectionGroup::Health);
+        }
         Some(DrawingInspect {
             uids,
             checks,
             max_gap: Some(p.gap),
             limit: Some(200),
+            max_angle: None,
             include_hidden: p.hidden,
             expected_revision: Some(doc.model.revision().to_string()),
         })
@@ -165,7 +173,8 @@ impl App {
     pub(crate) fn cad_inspection_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Run => {
-                if !self.cad_inspection.boundaries && !self.cad_inspection.hatches && !self.cad_inspection.annotations {
+                let p = &self.cad_inspection;
+                if !p.boundaries && !p.hatches && !p.annotations && !p.health {
                     return Task::none();
                 }
                 let Some(input) = self.cad_inspection_input() else {
@@ -271,6 +280,10 @@ impl App {
                 self.cad_inspection.annotations = on;
                 self.cad_inspection.invalidate();
             }
+            Event::Health(on) => {
+                self.cad_inspection.health = on;
+                self.cad_inspection.invalidate();
+            }
             Event::Hidden(on) => {
                 self.cad_inspection.hidden = on;
                 self.cad_inspection.invalidate();
@@ -372,6 +385,9 @@ impl App {
                     return self.run(if f.code.starts_with("leader_") { "leader.bindTip" }
                         else { "tool.dimensionReassociate" });
                 }
+                if f.code.starts_with("t_junction_") {
+                    return self.repair_junction(&f);
+                }
                 if f.group == InspectionGroup::Hatches {
                     self.memory.hatch_edit_mode = 2;
                     self.memory.hatch_assoc = true;
@@ -406,7 +422,7 @@ impl App {
             button(label::body("Denetle"))
                 .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::primary)
-                .on_press_maybe((!p.busy && (p.boundaries || p.hatches || p.annotations)).then(|| msg(Event::Run))),
+                .on_press_maybe((!p.busy && (p.boundaries || p.hatches || p.annotations || p.health)).then(|| msg(Event::Run))),
             button(label::body("Durdur")).padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary).on_press_maybe(p.busy.then(|| msg(Event::Stop))),
             container(Select::new(SCOPES.map(Choice::new), Some(p.scope), |i| msg(Event::Scope(i)))).width(220),
@@ -418,6 +434,7 @@ impl App {
             crate::exchange::words::check(p.boundaries, "Sınırlar", Some(msg(Event::Boundaries(!p.boundaries)))),
             crate::exchange::words::check(p.hatches, "Taramalar", Some(msg(Event::Hatches(!p.hatches)))),
             crate::exchange::words::check(p.annotations, "Yazı, ölçü, kılavuz", Some(msg(Event::Annotations(!p.annotations)))),
+            crate::exchange::words::check(p.health, "Çizim sağlığı", Some(msg(Event::Health(!p.health)))),
             label::muted("Boşluk eşiği"),
             NumberInput::new(p.gap, |n| msg(Event::Gap(n)))
                 .units(units::MILLIMETRE)
@@ -505,7 +522,9 @@ impl App {
                     button(label::body("Konuma yakınlaş")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary).on_press_maybe(current.then(|| msg(Event::Near))),
                     button(label::body("Kaynağa git")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
                         .on_press_maybe((current && finding.group == InspectionGroup::Annotations && finding.uids.len() > 1).then(|| msg(Event::Sources))),
-                    button(label::body(if finding.group == InspectionGroup::Hatches { "Taramayı düzenle…" }
+                    button(label::body(if finding.code.starts_with("t_junction_") { "Ucu kenara getir" }
+                        else if finding.group == InspectionGroup::Health { "Elle inceleyin" }
+                        else if finding.group == InspectionGroup::Hatches { "Taramayı düzenle…" }
                         else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" }
                         else if finding.code.starts_with("block_") { "Blok tanımını inceleyin" }
                         else if finding.code.starts_with("table_field_source_") { "Kaynak yazıyı inceleyin" }
@@ -514,7 +533,7 @@ impl App {
                         else if finding.code.starts_with("text_font_") { "Yazı stilini inceleyin" }
                         else if finding.code == "text_layout_unsupported" { "Yazı biçimini inceleyin" }
                         else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
-                        (current && finding.group != InspectionGroup::Boundaries && finding.code != "dimension_override"
+                        (current && (finding.code.starts_with("t_junction_") || (finding.group != InspectionGroup::Health && finding.group != InspectionGroup::Boundaries)) && finding.code != "dimension_override"
                             && !finding.code.starts_with("block_") && !finding.code.starts_with("table_field_source_") && finding.code != "table_field_unverified"
                             && !finding.code.starts_with("text_font_") && !matches!(finding.code.as_str(),"text_field_unverified"|"text_layout_unsupported"))
                             .then(|| msg(Event::Repair))
@@ -566,6 +585,14 @@ impl App {
 
 /// The scene keeps a short label; the panel contains the full explanation and repair advice.
 fn finding_title(code: &str) -> &'static str {
+    match code {
+        "t_junction_short" => return "T birleşimi kısa kalıyor",
+        "t_junction_overshoot" => return "T birleşimi taşıyor",
+        "angle_deviation" => return "Küçük açı sapması",
+        "stray_object" => return "Uzakta başıboş nesne",
+        "block_definition_duplicate" => return "Aynı içerikli blok tanımları",
+        _ => {}
+    }
     if let Some(leaf) = code.strip_prefix("block_") { return finding_title(leaf); }
     match code {
         "boundary_open_end" => "Açık uç",
@@ -643,5 +670,45 @@ mod tests {
         app.cad_inspection.generation = app.document.as_ref().unwrap().model.generation();
         app.command_expanded = false;
         assert!(app.cad_inspection_preview().is_none());
+    }
+}
+
+impl App {
+    /// Onar (docs/adr/1005 §2): the finding's line end brought onto its target's edge by `cad.drawing.repair`, by at
+    /// most the inspection's own gap; a measured or locked line is refused by the command and said.
+    fn repair_junction(&mut self, f: &kentos_commands::InspectionFinding) -> Task<Message> {
+        let (Some(line), Some(target), Some(end)) = (f.uids.first(), f.uids.get(1), f.points.first()) else {
+            return Task::none();
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let at_start = Uuid::parse_str(line)
+            .ok()
+            .and_then(|u| doc.model.slot_of(u))
+            .and_then(|s| doc.model.get(s))
+            .is_some_and(|e| matches!(e, kentos_commands::Entity::Line(l) if l.a == *end));
+        let input = kentos_commands::DrawingRepair {
+            fixes: vec![kentos_commands::JunctionFix {
+                uid: line.clone(),
+                end: if at_start { kentos_commands::LineEnd::Start } else { kentos_commands::LineEnd::End },
+                target: target.clone(),
+            }],
+            max_gap: Some(self.cad_inspection.gap.max(f.distance.unwrap_or(0.0) * (1.0 + 1e-9))),
+            expected_revision: Some(doc.model.revision().to_string()),
+        };
+        let result = kentos_native_application::drawing_repair::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        if let Some(done) = self.answered(result) {
+            let f = self.format();
+            self.say(
+                kentos_interaction::Level::Success,
+                format!("Çizginin ucu {} kaydırılarak kenara getirildi. Geri almak için Geri al.", f.length(done.max_moved)),
+            );
+            return self.cad_inspection_event(Event::Run);
+        }
+        Task::none()
     }
 }

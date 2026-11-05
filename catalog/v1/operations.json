@@ -2629,9 +2629,10 @@
     "cad.inspect": {
       "level": "semantic",
       "via": [
-        "cad.drawing.inspect"
+        "cad.drawing.inspect",
+        "cad.drawing.repair"
       ],
-      "note": "Yazısız CAD sınır/tarama denetimi; kaynak UUID ve dünya noktaları ortak sorgudan gelir. Onarım ayrı komut/önizleme gerektirir."
+      "note": "Yazısız CAD sınır/tarama/sağlık denetimi; kaynak UUID ve dünya noktaları ortak sorgudan gelir. T birleşimi onarımı ayrı cad.drawing.repair komutudur (ADR 1005)."
     },
     "terrain.surfaces": {
       "level": "semantic",

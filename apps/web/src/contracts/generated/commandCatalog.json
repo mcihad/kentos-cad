@@ -4394,6 +4394,15 @@
             ],
             "x-unit": "1"
           },
+          "maxAngle": {
+            "description": "Health: the largest deviation from a horizontal or vertical line to report, degrees, 0 to 10; default 0.5.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
           "maxGap": {
             "description": "Greatest gap to report, metres. Default 0.01; 0 disables near-gap pairing, not open-end checks.\nThis is a diagnostic threshold; no source geometry is moved or healed.",
             "format": "double",
@@ -4542,6 +4551,7 @@
           "invalid_uid",
           "entity_not_found",
           "invalid_gap",
+          "invalid_angle_tolerance",
           "invalid_limit",
           "inspection_scope_limit",
           "invalid_revision",
@@ -7350,6 +7360,148 @@
               "path": "/veri/mahalle (revizyon 12).kcad"
             },
             "tolerance": 0.01
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.drawing.repair",
+      "version": 1,
+      "title": "Çizimi onar",
+      "summary": "İncelenmiş T birleşimi bulgularını (cad.drawing.inspect, checks: health) düzeltir: çizginin ucunu kendi doğrultusunda hedefin en yakın doğru kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar. Tek geri alma adımı “Onar”; her ucun kayması ve çizginin önceki/sonraki boyu raporlanır. Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured): ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi reddeder. Retler: invalid_input, invalid_uid, invalid_gap, invalid_revision, revision_conflict, entity_not_found, repair_unsupported, layer_locked, repair_refused_measured, repair_target_missing.",
+      "aliases": [
+        "onar"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.drawing.repair` v1. Refusals, in order: `invalid_input`, `invalid_uid`, `invalid_gap`,\n`invalid_revision`, `revision_conflict`, `entity_not_found`, `repair_unsupported`, `layer_locked`,\n`repair_refused_measured`, `repair_target_missing`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fixes": {
+            "description": "1 to 1000 fixes, a line end once.",
+            "items": {
+              "$ref": "#/$defs/JunctionFix"
+            },
+            "type": "array"
+          },
+          "maxGap": {
+            "description": "The most an end may move, metres, above 0 and at most 1000; absent: 0.01.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "fixes"
+        ],
+        "title": "DrawingRepair",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.repair` v1.",
+        "properties": {
+          "fixed": {
+            "items": {
+              "$ref": "#/$defs/JunctionFixed"
+            },
+            "type": "array"
+          },
+          "maxMoved": {
+            "description": "The largest move, metres.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fixed",
+          "maxMoved",
+          "revision"
+        ],
+        "title": "DrawingRepaired",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.drawing.repair` v1.",
+        "properties": {
+          "fixed": {
+            "items": {
+              "$ref": "#/$defs/JunctionFixed"
+            },
+            "type": "array"
+          },
+          "maxMoved": {
+            "description": "The largest move, metres.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fixed",
+          "maxMoved",
+          "revision"
+        ],
+        "title": "DrawingRepaired",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "invalid_uid",
+          "invalid_gap",
+          "invalid_revision",
+          "revision_conflict",
+          "entity_not_found",
+          "repair_unsupported",
+          "layer_locked",
+          "repair_refused_measured",
+          "repair_target_missing"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kısa kalan çizgi ucunu kenara getir",
+          "input": {
+            "fixes": [
+              {
+                "end": "end",
+                "target": "0192f5b0-0000-7000-8000-000000000102",
+                "uid": "0192f5b0-0000-7000-8000-000000000101"
+              }
+            ],
+            "maxGap": 0.01
           }
         }
       ]
@@ -89809,6 +89961,30 @@
       "meaning": "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı."
     },
     {
+      "code": "invalid_angle_tolerance",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Açı sapması eşiği 0 ile 10 derece arasında olmalı."
+    },
+    {
+      "code": "repair_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Onarım yalnız çizgi ucunu bir doğru kenara getirir; bu nesne ya da uç desteklenmiyor."
+    },
+    {
+      "code": "repair_target_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ucun uzantısı eşik içinde hedef kenarın içine değmiyor; bulgu eskimiş olabilir."
+    },
+    {
+      "code": "repair_refused_measured",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne bir kısıtın ya da ilişkili ölçünün kaynağı; ölçülmüş geometri onarımla taşınmaz."
+    },
+    {
       "code": "standard_resource_not_found",
       "kind": "failed",
       "retryable": false,
@@ -129767,12 +129943,21 @@
       "type": "object"
     },
     "InspectionGroup": {
-      "enum": [
-        "boundaries",
-        "hatches",
-        "annotations"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "boundaries",
+            "hatches",
+            "annotations"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "health",
+          "description": "Drawing health (docs/adr/1005 §1): T junctions short of or over their edge, small angle deviations, stray\nfar objects, block definitions of the same content. Only when asked for: absent `checks` leaves it out.",
+          "type": "string"
+        }
+      ]
     },
     "InspectionSeverity": {
       "enum": [
@@ -130497,6 +130682,62 @@
         "name",
         "kind",
         "legs"
+      ],
+      "type": "object"
+    },
+    "JunctionFix": {
+      "additionalProperties": false,
+      "description": "One T-junction fix: the line `uid`'s `end` brought onto `target`'s nearest straight edge along the line.",
+      "properties": {
+        "end": {
+          "$ref": "#/$defs/LineEnd"
+        },
+        "target": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "end",
+        "target"
+      ],
+      "type": "object"
+    },
+    "JunctionFixed": {
+      "description": "What one fix did.",
+      "properties": {
+        "end": {
+          "$ref": "#/$defs/LineEnd"
+        },
+        "lengthAfter": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "lengthBefore": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "moved": {
+          "description": "How far the end moved, metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "end",
+        "moved",
+        "lengthBefore",
+        "lengthAfter"
       ],
       "type": "object"
     },
@@ -134574,6 +134815,14 @@
         "message"
       ],
       "type": "object"
+    },
+    "LineEnd": {
+      "description": "Which end of a line.",
+      "enum": [
+        "start",
+        "end"
+      ],
+      "type": "string"
     },
     "LineEntity": {
       "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",

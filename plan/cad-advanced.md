@@ -2460,7 +2460,7 @@ aç–düzenle–dışa aktar–yeniden oku kanıtlı; ezdxf dışa aktarmayı b
 kapalı/kotlu yaylı yol, birim/OCS/blok/katman/kâğıt kararlarının tek yapılı rapor bölümü; AutoCAD denetimi yapılmadı
 (CAD-IO-20). Madde `[~]`.
 
-### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [ ]
+### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [~]
 
 **Öncelik:** P0 bütünlük/kurtarma; P1 ileri temizlik. **Kod:** [C28]–[C30].
 **Dayanak:** BricsCAD Drawing Health, Optimize ve zaman sınırlı arka
@@ -2489,6 +2489,13 @@ plan teşhisi. [R14], [R15], [R16]
 yazımlı tarama, sonra seçilmiş onarım yap. Gerçek test sürecini kayıt
 sırasında sonlandırıp kurtar; bütün kaynak/pafta bağlarını karşılaştır.
 Disk dolması ve iptalde önceki geçerli dosya ve Undo zinciri korunmalı.
+
+**Sağlık adayları ve T birleşimi onarımı (5 Kasım 2026, [ADR 1005](../docs/adr/1005-drawing-health-candidates-and-junction-repair.md)):**
+`cad.drawing.inspect` yalnız adıyla istenen `health` grubunu kazandı: T birleşiminde kısa kalma/taşma, küçük açı
+sapması, uzakta başıboş nesne, aynı içerikli blok tanımı; varsayılan denetimler değişmedi. `cad.drawing.repair`
+çizgi ucunu eşik içinde kenara getirir, ölçülmüş/kısıtlı ya da kilitli geometriye dokunmaz, kaymayı ve boy farkını
+raporlar, tek Undo. CAD denetimi penceresinde Çizim sağlığı ve Ucu kenara getir. Bağımsız başvuruyla 45 ortak durum.
+Açılışta bütçeli salt okunur denetim, onarım tarifinin kaydı, kurtarma senaryoları ve kısmi okuma açık; madde `[~]`.
 
 ### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [ ]
 

@@ -61,6 +61,7 @@ pub mod constraints_query;
 pub mod parameters_edit;
 pub mod audit_cmd;
 pub mod drawing_compare;
+pub mod drawing_repair;
 pub mod drawing_take;
 pub mod blocks;
 pub mod blocks_define;
@@ -1593,6 +1594,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_DRAWING_TAKE,
         kentos_commands::CAD_DRAWING_TAKE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_DRAWING_REPAIR,
+        kentos_commands::CAD_DRAWING_REPAIR_VERSION,
     ),
     (
         kentos_commands::CAD_REVIEW_NOTES_EDIT,

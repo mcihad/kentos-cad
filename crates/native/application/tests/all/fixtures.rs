@@ -495,6 +495,14 @@ impl Input for kentos_commands::StandardsInstall {
         None
     }
 }
+impl Input for kentos_commands::DrawingRepair {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "maxGap" => self.max_gap.as_mut(),
+            _ => None,
+        }
+    }
+}
 impl Input for kentos_commands::DrawingTake {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -4997,6 +5005,10 @@ fn run_op(
         }
         kentos_commands::CAD_DRAWING_TAKE => {
             run!(drawing_take, kentos_commands::DrawingTake)
+        }
+        kentos_commands::CAD_DRAWING_REPAIR => {
+            use kentos_native_application::drawing_repair;
+            run!(drawing_repair, kentos_commands::DrawingRepair)
         }
         kentos_commands::CAD_STANDARDS_INSTALL => {
             use kentos_native_application::standards_install;

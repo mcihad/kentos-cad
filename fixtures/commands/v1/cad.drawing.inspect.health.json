@@ -1,0 +1,2323 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.drawing.inspect",
+ "commandVersion": 1,
+ "title": "Çizim sağlığı",
+ "note": "ADR 1005. Bağımsız başvuru scripts/fixtures/drawing_repair_cases.py: kurallar ADR'den elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Çizim sağlığı",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "blocks": [
+   {
+    "id": "0192f5b0-6000-7000-8000-0000000000b1",
+    "name": "Kapı",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "0192f5b0-6000-7000-8000-0000000000b2",
+    "name": "Kapı-kopya",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1,
+       "y": 0
+      }
+     }
+    ]
+   }
+  ],
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 5.0,
+     "y": 0.004
+    },
+    "b": {
+     "x": 5.0,
+     "y": 5.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 8.0,
+     "y": -0.006
+    },
+    "b": {
+     "x": 8.0,
+     "y": 5.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 3.0
+    },
+    "b": {
+     "x": 3.0,
+     "y": 3.02
+    }
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 12.0,
+     "y": 0.003
+    },
+    "b": {
+     "x": 12.0,
+     "y": 4.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 11.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 15.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 20.0,
+     "y": 0.002
+    },
+    "b": {
+     "x": 20.0,
+     "y": 3.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 18.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 22.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 1.0,
+     "y": 1.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 2.0,
+     "y": 2.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 3.0,
+     "y": 1.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 5000.0,
+     "y": 5000.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Sağlık: kısa ve taşan T, açı sapması, uzak nokta, aynı bloklar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "stray_object",
+         "uids": [
+          "$uidOf:12"
+         ],
+         "points": [
+          {
+           "x": 5000.0,
+           "y": 5000.0
+          }
+         ],
+         "message": "Nesne çizimin ana bölgesinden 7054.808 m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir.",
+         "repair": "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
+         "distance": 7054.807514036084
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eşik 5 mm: 6 mm taşan ve kilitli dışındakiler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "maxGap": 0.005
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "stray_object",
+         "uids": [
+          "$uidOf:12"
+         ],
+         "points": [
+          {
+           "x": 5000.0,
+           "y": 5000.0
+          }
+         ],
+         "message": "Nesne çizimin ana bölgesinden 7054.808 m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir.",
+         "repair": "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
+         "distance": 7054.807514036084
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 0,1°: sapma bildirilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "maxAngle": 0.1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "stray_object",
+         "uids": [
+          "$uidOf:12"
+         ],
+         "points": [
+          {
+           "x": 5000.0,
+           "y": 5000.0
+          }
+         ],
+         "message": "Nesne çizimin ana bölgesinden 7054.808 m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir.",
+         "repair": "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
+         "distance": 7054.807514036084
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 0: açı denetlenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "maxAngle": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "stray_object",
+         "uids": [
+          "$uidOf:12"
+         ],
+         "points": [
+          {
+           "x": 5000.0,
+           "y": 5000.0
+          }
+         ],
+         "message": "Nesne çizimin ana bölgesinden 7054.808 m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir.",
+         "repair": "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
+         "distance": 7054.807514036084
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sağlık istenmezse varsayılan denetimler aynı kalır: sağlık bulgusu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "hatches"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapsam A ve B: kısa kalan uç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 2,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapsam A ve C: taşan uç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 2,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapsam E ve F: kilitli katmandaki kısa uç da bildirilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 2,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapsam G ve H: 2 mm kısa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 2,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapsam D: yalnız açı sapması",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 1,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapsam dört nokta: onun altında uzak nokta aranmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:9",
+       "$uidOf:10",
+       "$uidOf:11",
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 4,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapsam sekiz çizgi: uzak nokta yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:7",
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 8,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eşik 3,5 mm: E ve G",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:7",
+       "$uidOf:8"
+      ],
+      "maxGap": 0.0035
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 8,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eşik 2,5 mm: yalnız G",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:7",
+       "$uidOf:8"
+      ],
+      "maxGap": 0.0025
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 8,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 0,4°: D bildirilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:4"
+      ],
+      "maxAngle": 0.4
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 1,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 0,38°: D bildirilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "uids": [
+       "$uidOf:4"
+      ],
+      "maxAngle": 0.38
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 1,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sağlık ve tarama birlikte: tarama bulgusu yok, sağlık aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health",
+       "hatches"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "stray_object",
+         "uids": [
+          "$uidOf:12"
+         ],
+         "points": [
+          {
+           "x": 5000.0,
+           "y": 5000.0
+          }
+         ],
+         "message": "Nesne çizimin ana bölgesinden 7054.808 m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir.",
+         "repair": "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
+         "distance": 7054.807514036084
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gizli katmanlar dahil: aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "includeHidden": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "stray_object",
+         "uids": [
+          "$uidOf:12"
+         ],
+         "points": [
+          {
+           "x": 5000.0,
+           "y": 5000.0
+          }
+         ],
+         "message": "Nesne çizimin ana bölgesinden 7054.808 m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir.",
+         "repair": "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
+         "distance": 7054.807514036084
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan aynı cevabı yazmadan verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "checks": [
+       "health"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:2",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 5.0,
+           "y": 0.004
+          },
+          {
+           "x": 5.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0040 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.004
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_overshoot",
+         "uids": [
+          "$uidOf:3",
+          "$uidOf:1"
+         ],
+         "points": [
+          {
+           "x": 8.0,
+           "y": -0.006
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0060 m kenarı geçiyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.006
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "points": [
+          {
+           "x": 12.0,
+           "y": 0.003
+          },
+          {
+           "x": 12.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0030 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.003
+        },
+        {
+         "group": "health",
+         "severity": "warning",
+         "code": "t_junction_short",
+         "uids": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "points": [
+          {
+           "x": 20.0,
+           "y": 0.002
+          },
+          {
+           "x": 20.0,
+           "y": 0.0
+          }
+         ],
+         "message": "Çizginin başlangıç ucu öbür nesnenin kenarına 0.0020 m kenara ulaşmıyor.",
+         "repair": "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
+         "distance": 0.002
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "angle_deviation",
+         "uids": [
+          "$uidOf:4"
+         ],
+         "points": [
+          {
+           "x": 0.0,
+           "y": 3.0
+          },
+          {
+           "x": 3.0,
+           "y": 3.02
+          }
+         ],
+         "message": "Kenar yatay ya da düşeyden 0.3820° sapıyor; ucu 0.0200 m kayık.",
+         "repair": "Bilerek eğikse bırakın; değilse Döndür ya da Ortogonal ile düzeltin.",
+         "distance": 0.020000000000000018
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "stray_object",
+         "uids": [
+          "$uidOf:12"
+         ],
+         "points": [
+          {
+           "x": 5000.0,
+           "y": 5000.0
+          }
+         ],
+         "message": "Nesne çizimin ana bölgesinden 7054.808 m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir.",
+         "repair": "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
+         "distance": 7054.807514036084
+        },
+        {
+         "group": "health",
+         "severity": "info",
+         "code": "block_definition_duplicate",
+         "uids": [],
+         "points": [],
+         "message": "Aynı içerikli blok tanımları: Kapı, Kapı-kopya.",
+         "repair": "Yerleştirmeleri tek tanıma bağlayıp öbürlerini kullanılmayan tanım olarak temizleyin."
+        }
+       ],
+       "hatches": [],
+       "unsupported": [],
+       "examined": 12,
+       "comparisons": "$any",
+       "truncated": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 10°'den büyük: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "maxAngle": 11
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle_tolerance",
+       "message": "Açı sapması eşiği 0 ile 10 derece arasında sonlu bir sayı olmalı.",
+       "path": "maxAngle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksi açı eşiği: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "checks": [
+       "health"
+      ],
+      "maxAngle": -1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle_tolerance",
+       "message": "Açı sapması eşiği 0 ile 10 derece arasında sonlu bir sayı olmalı.",
+       "path": "maxAngle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

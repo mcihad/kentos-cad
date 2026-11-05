@@ -176,3 +176,36 @@ fn detail(app: &mut App) {
 pub(crate) fn detail_scenes() -> Vec<Scene> {
     vec![("kabul-detay-parametre", detail)]
 }
+
+/// docs/adr/1005: the health cases' drawing with CAD denetimi's Çizim sağlığı on: the short and over-running T
+/// junctions, the 0.38° edge, the far point and the two block definitions of one content; the first finding chosen.
+fn health(app: &mut App) {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.drawing.repair.json")).expect("the cases");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).expect("the drawing reads");
+    let doc = Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::make_cad(app);
+    app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: 23.0, max_y: 6.0 }, 24.0);
+    use crate::cad_inspection::Event as C;
+    let task = app.update(Message::Run("cad.inspect"));
+    crate::files_testing::drive(app, task);
+    for e in [C::Boundaries(false), C::Hatches(false), C::Annotations(false), C::Health(true)] {
+        let _ = app.update(Message::CadInspection(e));
+    }
+    let task = app.update(Message::CadInspection(C::Run));
+    crate::files_testing::drive(app, task);
+    let _ = app.update(Message::CadInspection(C::Show(0)));
+}
+
+pub(crate) fn health_scenes() -> Vec<Scene> {
+    vec![
+        ("saglik-bulgular", health),
+        ("saglik-onarildi", |app| {
+            health(app);
+            let task = app.update(Message::CadInspection(crate::cad_inspection::Event::Repair));
+            crate::files_testing::drive(app, task);
+        }),
+    ]
+}

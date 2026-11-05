@@ -16,6 +16,9 @@ pub enum InspectionGroup {
     Boundaries,
     Hatches,
     Annotations,
+    /// Drawing health (docs/adr/1005 §1): T junctions short of or over their edge, small angle deviations, stray
+    /// far objects, block definitions of the same content. Only when asked for: absent `checks` leaves it out.
+    Health,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -47,6 +50,11 @@ pub struct DrawingInspect {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_gap: Option<f64>,
+    /// Health: the largest deviation from a horizontal or vertical line to report, degrees, 0 to 10; default 0.5.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub max_angle: Option<f64>,
     /// Maximum findings, 1..1000; default 200. Work/geometry/result caps return explicit partial results.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -1292,12 +1292,13 @@
    "title": "CAD denetimi…",
    "level": "semantic",
    "via": [
-    "cad.drawing.inspect"
+    "cad.drawing.inspect",
+    "cad.drawing.repair"
    ],
    "operation": null,
-   "python": "kentos.cad.drawing.inspect",
-   "mcp": "cad.drawing.inspect",
-   "note": "Yazısız CAD sınır/tarama denetimi; kaynak UUID ve dünya noktaları ortak sorgudan gelir. Onarım ayrı komut/önizleme gerektirir.",
+   "python": "kentos.cad.drawing.inspect, kentos.cad.drawing.repair",
+   "mcp": "cad.drawing.inspect, cad.drawing.repair",
+   "note": "Yazısız CAD sınır/tarama/sağlık denetimi; kaynak UUID ve dünya noktaları ortak sorgudan gelir. T birleşimi onarımı ayrı cad.drawing.repair komutudur (ADR 1005).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

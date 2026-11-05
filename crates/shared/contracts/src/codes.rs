@@ -177,6 +177,10 @@ codes! {
     TOO_MANY_REVIEW_NOTES = "too_many_review_notes", Failed, false, "Bir çizim en çok 10 000 inceleme notu taşır.";
     TAKE_CONFLICT = "take_conflict", Failed, false, "Nesne ortak tabandan sonra iki tarafta da farklı değişmiş; üzerine yazmak açıkça seçilmeli.";
     BLOCK_DEFINITION_DIFFERS = "block_definition_differs", Warning, false, "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı.";
+    INVALID_ANGLE_TOLERANCE = "invalid_angle_tolerance", Failed, false, "Açı sapması eşiği 0 ile 10 derece arasında olmalı.";
+    REPAIR_UNSUPPORTED = "repair_unsupported", Failed, false, "Onarım yalnız çizgi ucunu bir doğru kenara getirir; bu nesne ya da uç desteklenmiyor.";
+    REPAIR_TARGET_MISSING = "repair_target_missing", Failed, false, "Ucun uzantısı eşik içinde hedef kenarın içine değmiyor; bulgu eskimiş olabilir.";
+    REPAIR_REFUSED_MEASURED = "repair_refused_measured", Failed, false, "Nesne bir kısıtın ya da ilişkili ölçünün kaynağı; ölçülmüş geometri onarımla taşınmaz.";
     STANDARD_RESOURCE_NOT_FOUND = "standard_resource_not_found", Failed, false, "Bağlı standartlarda bu ad ve türde kaynak yok.";
     INVALID_INSTALL_CHOICE = "invalid_install_choice", Failed, false, "Kaynak için seçilen işlem onun durumuna uymuyor ya da iki kez verildi.";
     PATTERN_TOO_LONG_FOR_LIN = "pattern_too_long_for_lin", Warning, false, "Çizgi tipinin deseni LIN dosyasının 12 öğe sınırını aşıyor; LIN'e yazılmadı, çizimde korunur.";
