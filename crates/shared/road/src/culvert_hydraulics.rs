@@ -74,6 +74,9 @@ impl Section {
                     } else {
                         lo = y;
                     }
+                    if hi - lo <= 1e-15 * diameter {
+                        break;
+                    }
                 }
                 0.5 * (lo + hi)
             }
@@ -225,6 +228,9 @@ impl Culvert {
             } else {
                 hi = m;
             }
+            if hi - lo <= 1e-15 * hi {
+                break;
+            }
         }
         0.5 * (lo + hi)
     }
@@ -299,6 +305,9 @@ pub fn perform(culvert: &Culvert, weir: &Weir, q: f64, tw: f64) -> Performance {
             lo = m;
         } else {
             hi = m;
+        }
+        if hi - lo <= 1e-15 * hi.max(1e-3) {
+            break;
         }
     }
     let h = 0.5 * (lo + hi);
