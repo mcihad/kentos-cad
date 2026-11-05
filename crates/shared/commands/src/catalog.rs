@@ -12550,6 +12550,36 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Detay paftaları (docs/adr/1090 §2), held together by fixtures/commands/v1/cad.sheets.details.json.
+        CommandDescriptor {
+            id: crate::CAD_SHEETS_DETAILS.into(),
+            version: crate::CAD_SHEETS_DETAILS_VERSION,
+            title: "Detay paftaları".into(),
+            summary: "Aynı modelin genel 2B detaylarını kesin oranlarla paftalara yerleştirir (docs/adr/1090 §2); mimari kat verisi gerekmez. Her detay: name, bounds (model kapsamı, metre: en küçük doğu, kuzey, en büyük doğu, kuzey) ya da table {table, part} (bölünmüş model tablosunun parçası, docs/adr/1030 §7), ratio {paper, model} (1:5 = paper 1, model 5; 2:1 = paper 2, model 1), isteğe bağlı layers (katman durumu {type:theme,name}; başka kullanıcının katman aç/kapası baskıyı değiştirmez), layerOverrides, annotation {type:fixed,scale} ve locked (yok: kilitli; ekran yakınlaştırması baskı ölçeğini değiştirmez). Pencere boyu kapsam × paper/model, en yakın µm'ye yuvarlanır. Detaylar şablonun (source; yok: sys:cad-teknik) ilk sabit görünüm penceresinin alanına verilen sırayla, soldan sağa satır satır (aralık 10 mm, başlık bandı 6,5 mm, hücre en az 40 mm) yerleşir; paftaya sığmayan detay setin sonraki paftasına geçer. Şablonun penceresi detaylara yer açar; her detayın altında “<ad> — Ölçek 1/N” yazısı görünümün kendi ölçeğini okur. Paftalar first'ten (yok: D-501) numaralanır, başlık title (yok: Detaylar), alt küme Detaylar. Plan yapılacak paftaları ve her detayın kâğıt çerçevesini verir; hepsi tek değişiklik, inverse geri alır. Boş kapsam invalid_extent, geçersiz oran invalid_ratio, 1 mm'den küçük pencere detail_too_small, boş alana bile sığmayan detay detail_does_not_fit, bounds ile table birlikte ya da hiçbiri ambiguous_source, tablo olmayan nesne not_a_table, olmayan parça table_part_missing."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SheetsDetails>(),
+            output: schema::<crate::SheetsDetailed>(),
+            plan: Some(schema::<crate::SheetsDetailed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Aynı bağlantının 1:1, 1:5, 1:20 ve 1:100 detayları".into(),
+                input: json!({ "details": [
+                    { "name": "Bulon", "bounds": [0.0, 0.0, 0.1, 0.06], "ratio": { "paper": 1.0, "model": 1.0 } },
+                    { "name": "Levha", "bounds": [0.0, 0.0, 0.5, 0.3], "ratio": { "paper": 1.0, "model": 5.0 } },
+                    { "name": "Bağlantı", "bounds": [-0.5, -0.5, 1.5, 1.0], "ratio": { "paper": 1.0, "model": 20.0 } },
+                    { "name": "Genel", "bounds": [-5.0, -3.0, 5.0, 3.0], "ratio": { "paper": 1.0, "model": 100.0 } }
+                ] }),
+                output: None,
+            }],
+        },
         // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
         // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -14418,6 +14448,16 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             input:schema::<crate::PublishSheets>(),output:schema::<crate::SheetsPublished>(),plan:Some(schema::<crate::SheetsPublished>()),capabilities:None,
             examples:vec![CommandExample{title:"Paftaların tamamı, ayrı PDF dosyaları".into(),input:json!({"path":"/tmp/pafta-teslimi","mode":"separate","naming":"{index}-{sheet}"}),output:None}],
         },
+        // Yayın durumu (docs/adr/1090 §6): a delivery against the drawing now, page by page.
+        CommandDescriptor {
+            id:crate::FILE_PUBLISH_STATUS.into(),version:crate::FILE_PUBLISH_STATUS_VERSION,
+            title:"Yayın durumu".into(),
+            summary:"Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği.".into(),
+            aliases:vec!["YAYINDURUMU".into()],effect:CommandEffect::Query,
+            hosts:vec![CommandHost::Desktop],headless:true,requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::None,cost:CommandCost::Job,
+            input:schema::<crate::PublishStatus>(),output:schema::<crate::PublishStatusReport>(),plan:Some(schema::<crate::PublishStatusReport>()),capabilities:None,
+            examples:vec![CommandExample{title:"Teslim klasörünün güncelliği".into(),input:json!({"path":"/tmp/pafta-teslimi"}),output:None}],
+        },
     ]
 }
 
@@ -15641,6 +15681,9 @@ mod tests {
                     crate::CAD_SHEETS_LEVELS => {
                         serde_json::from_value::<crate::SheetsLevels>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_SHEETS_DETAILS => {
+                        serde_json::from_value::<crate::SheetsDetails>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_CREATE => {
                         serde_json::from_value::<crate::SheetsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -15801,6 +15844,9 @@ mod tests {
                     }
                     crate::FILE_PUBLISH_SHEETS => {
                         serde_json::from_value::<crate::PublishSheets>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_PUBLISH_STATUS => {
+                        serde_json::from_value::<crate::PublishStatus>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
@@ -16573,6 +16619,10 @@ mod tests {
                         | crate::CAD_SHEETS_FIT
                         | crate::CAD_SHEETS_LEVELS => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SHEETS_DETAILS => {
+                            serde_json::from_value::<crate::SheetsDetailed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_UNITS_CHANGE => {

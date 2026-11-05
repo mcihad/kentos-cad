@@ -2642,3 +2642,160 @@ fn a_host_pdf_refusal_reopens_output_options_and_never_creates_the_chosen_file()
     assert_eq!(app.sheets.output_pdf_options(), options);
     assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
 }
+
+/// CAD-ADV-16 (docs/adr/1090): the general 2D detail set from `cad.sheets.details`, opened in the desktop.
+fn detail_set_app(theme: &str, text: u32) -> App {
+    let fx: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.sheets.details.json")).unwrap();
+    let mut model = kentos_domain::Document::from_snapshot(serde_json::from_value(fx["setup"].clone()).unwrap()).unwrap();
+    let r = |m: f64| serde_json::json!({"paper": 1.0, "model": m});
+    let table = model.uid(kentos_domain::Slot(4)).unwrap().to_string();
+    for details in [
+        serde_json::json!([
+            {"name": "Bulon", "bounds": [-0.1, -0.05, 0.2, 0.1], "ratio": r(1.)},
+            {"name": "Levha", "bounds": [-0.5, -0.25, 1.0, 0.5], "ratio": r(5.)},
+            {"name": "Bağlantı", "bounds": [-2.0, -1.0, 4.0, 2.0], "ratio": r(20.)},
+            {"name": "Genel", "bounds": [-15.0, -7.5, 15.0, 7.5], "ratio": r(100.)}
+        ]),
+        serde_json::json!([
+            {"name": "Ölçülü", "bounds": [-0.05, -0.3, 0.45, 0.1], "ratio": r(5.), "annotation": {"type": "fixed", "scale": 5.0}},
+            {"name": "Ölçüsüz", "bounds": [-0.05, -0.3, 0.45, 0.1], "ratio": r(5.), "layerOverrides": [{"layer": "olcu", "frozen": true}]},
+            {"name": "Poz listesi 1", "table": {"table": table, "part": 0}, "ratio": r(20.)},
+            {"name": "Poz listesi 2", "table": {"table": table, "part": 1}, "ratio": r(20.)}
+        ]),
+    ] {
+        let answer = kentos_native_application::call::call(&mut model, None, envelope(kentos_commands::CAD_SHEETS_DETAILS, serde_json::json!({ "options": {"values": [{"name": "kurum", "value": "KentOS"}, {"name": "birim", "value": "Proje"}, {"name": "referans", "value": "ADR 1090"}, {"name": "onaylayan", "value": "Denetçi"}, {"name": "cizim_no", "value": "D-1"}]}, "details": details })));
+        assert!(matches!(answer.result, kentos_commands::CommandResult::Completed { .. }), "{answer:?}");
+    }
+    let (mut app, _store) = app_with_store("adv16-details");
+    app.settings.choose(&[
+        ("appearance.theme", serde_json::json!(theme)),
+        ("appearance.textSize", serde_json::json!(text)),
+    ]);
+    app.apply_settings();
+    let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    drive(&mut app, task);
+    app
+}
+
+fn envelope(command: &str, input: serde_json::Value) -> kentos_commands::CallEnvelope {
+    kentos_commands::CallEnvelope {
+        command: command.into(),
+        version: Some(1),
+        op: kentos_commands::CallOp::Execute,
+        request_id: None,
+        expected: None,
+        relax_constraints: false,
+        input,
+    }
+}
+
+#[test]
+fn a_detail_set_is_published_and_its_delivery_read_back_as_current_from_the_window() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    let mut app = detail_set_app("light", 13);
+    let path = scratch("adv16-publish").join("teslim");
+    let _ = app.sheet_publish_open();
+    for e in [E::Path(path.display().to_string()), E::All(true), E::Separate(true), E::Plan] {
+        let _ = app.sheet_publish_event(e);
+    }
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
+    let plan = s.report.as_ref().unwrap();
+    assert!(plan.ready, "{:?}", plan.issues);
+    // Four detail sheets, then the twin 1:5 sheet and the table's two parts, which run on to further sheets.
+    assert_eq!(plan.scope.len(), 7);
+    assert_eq!(plan.pages.len(), 7);
+    let _ = app.sheet_publish_event(E::Publish);
+    wait_sheet_publication(&mut app);
+    assert!(path.join("yayin.json").is_file());
+    let _ = app.sheet_publish_event(E::Status);
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
+    assert!(s.folder.as_ref().is_some_and(|f| f.stale.is_empty() && !f.sheets.is_empty()), "{}", s.status);
+}
+
+#[test]
+#[ignore = "GPU detail set, publication scope, page audit, staleness and resume, run alone"]
+fn adv16_detail_set_screens() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).unwrap();
+    for (theme, text) in [("light", 13), ("dark", 13), ("dark", 18)] {
+        let mut app = detail_set_app(theme, text);
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        // The 1:5 sheet and the sheet of the two representations with the table's parts.
+        for (tab, name) in [(2, "scale-5"), (5, "pair"), (6, "table-part")] {
+            sheet(&mut app, Sheet::Tab(tab));
+            let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 900.)).unwrap();
+            snap.settle(&mut app, App::view, &mut update);
+            snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-sheet-{name}-{theme}-{text}.png"))).unwrap();
+        }
+        // Publication: the scope and page audit, then the delivery's state after a change, then a stopped run.
+        let path = scratch(&format!("adv16-shots-{theme}-{text}")).join("teslim");
+        let _ = app.sheet_publish_open();
+        for e in [E::Path(path.display().to_string()), E::All(true), E::Separate(true), E::Plan] {
+            let _ = app.sheet_publish_event(e);
+        }
+        wait_sheet_publication(&mut app);
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100., 720.)).unwrap();
+        snap.settle(&mut app, App::view, &mut update);
+        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.));
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-scope-{theme}-{text}.png"))).unwrap();
+        let _ = app.sheet_publish_event(E::Publish);
+        wait_sheet_publication(&mut app);
+        {
+            let model = &mut app.document.as_mut().unwrap().model;
+            let line = model.uid(kentos_domain::Slot(3)).unwrap().to_string();
+            let answer = kentos_native_application::call::call(
+                model,
+                None,
+                envelope("cad.entities.transform", serde_json::json!({"uids": [line], "transform": {"kind": "move", "dx": 0.01, "dy": 0.0}})),
+            );
+            assert!(matches!(answer.result, kentos_commands::CommandResult::Completed { .. }), "{answer:?}");
+        }
+        let _ = app.sheet_publish_event(E::Status);
+        wait_sheet_publication(&mut app);
+        let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
+        assert!(s.folder.as_ref().is_some_and(|f| !f.stale.is_empty()), "{}", s.status);
+        snap.settle(&mut app, App::view, &mut update);
+        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.));
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-stale-{theme}-{text}.png"))).unwrap();
+        // A stopped run: stopped once its journal holds a finished page.
+        let other = scratch(&format!("adv16-stop-{theme}-{text}")).join("teslim");
+        let journal = other.parent().unwrap().join(".teslim.kentos-devam/devam.json");
+        let _ = app.sheet_publish_event(E::Path(other.display().to_string()));
+        let _ = app.sheet_publish_event(E::Plan);
+        wait_sheet_publication(&mut app);
+        let _ = app.sheet_publish_event(E::Publish);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
+        while app.sheet_publish_running() {
+            if journal.exists() {
+                let _ = app.sheet_publish_event(E::Stop);
+            }
+            let _ = app.sheet_publish_event(E::Tick);
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+        let _ = app.sheet_publish_event(E::Status);
+        wait_sheet_publication(&mut app);
+        let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
+        assert!(s.folder.as_ref().and_then(|f| f.stopped.as_ref()).is_some(), "{}", s.status);
+        snap.settle(&mut app, App::view, &mut update);
+        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.));
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-stopped-{theme}-{text}.png"))).unwrap();
+        let _ = app.sheet_publish_event(E::Resume);
+        wait_sheet_publication(&mut app);
+        assert!(other.join("yayin.json").is_file());
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-resumed-{theme}-{text}.png"))).unwrap();
+    }
+}

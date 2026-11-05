@@ -6,10 +6,14 @@ import type { AffectReason } from "./AffectReason";
  */
 export type AffectedFrame = { sheet: string, item: string, 
 /**
- * Its reasons, in this order: shows, marked, unknown.
+ * Its reasons, in this order: shows, table, marked, unknown.
  */
 reasons: Array<AffectReason>, 
 /**
  * The objects that affect it, by persistent id, in the input's order (none for `unknown` alone).
  */
-uids: Array<string>, };
+uids: Array<string>, 
+/**
+ * With `table`: the tables it shows that read the objects, by persistent id, in the drawing's order.
+ */
+tables?: Array<string>, };

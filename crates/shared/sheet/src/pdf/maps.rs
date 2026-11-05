@@ -93,6 +93,7 @@ pub fn includes_text_anchor(map: &MapPrim, at: [f64; 2]) -> bool {
 
 /// The frame's clip (until the matching `restore`).
 fn clip_to(page: &mut Page<'_>, frame: &Frame) {
+    page.audit.clips += 1;
     page.save();
     if frame.shape.is_frame() {
         page.poly(&frame.corners(), true);
@@ -224,6 +225,7 @@ fn path(
         stroke_style(page, s);
     }
     let even_odd = !p.holes.is_empty();
+    page.note_paint(fill.is_some(), line.map(|(s, _)| mm(s.width).max(0.0)), even_odd);
     match (fill.is_some(), line.is_some()) {
         (true, true) if even_odd => page.c.fill_even_odd_and_stroke(),
         (true, true) => page.c.fill_nonzero_and_stroke(),
@@ -307,6 +309,7 @@ fn text(
 
 /// A map's picture (the host's PNG of the content box) over the box, turned with the frame.
 pub(super) fn raster(page: &mut Page<'_>, m: &MapPrim, image: (&str, Ref)) {
+    page.audit.raster_maps += 1;
     page.xobjects.insert(image.0.to_owned(), image.1);
     let frame = Frame::of(m);
     clip_to(page, &frame);
@@ -320,6 +323,7 @@ pub(super) const PLACEHOLDER: (&str, &str, u16) = ("harita", "barlow", 400);
 
 /// A map without content: a light grey box with “harita”, as the SVG writer draws it.
 pub(super) fn placeholder(page: &mut Page<'_>, m: &MapPrim) {
+    page.audit.placeholders += 1;
     if m.clip_shape.is_frame() {
         placeholder_body(page, m);
     } else {

@@ -1687,6 +1687,18 @@ codes! {
     SHEET_NOT_FIXED_MAP = "not_fixed_map", Failed, false, "Bu işlem sabit görünüm penceresi gerektiriyor.";
     /// Kat planı paftaları with every level asked already on a sheet (docs/adr/0718).
     LEVELS_HAVE_SHEETS = "levels_have_sheets", Failed, false, "Seçilen katların hepsinin planı bir paftada var; yeniden yapmak için Yeniden'i (again) seçin.";
+    /// Detay paftaları: a model table's part it does not have (docs/adr/1090 §3).
+    TABLE_PART_MISSING = "table_part_missing", Failed, false, "Tablonun bu numarada parçası yok; parçalar 0'dan sayılır.";
+    /// Detay paftaları: a paper:model ratio that is not finite, positive or within the denominator's range (docs/adr/1090 §2).
+    INVALID_RATIO = "invalid_ratio", Failed, false, "Oranın iki sayısı sonlu ve pozitif, paydası 0,000001 ile 100 000 000 arasında olmalı.";
+    /// Detay paftaları: a viewport under 1 mm on the paper at its ratio (docs/adr/1090 §2).
+    DETAIL_TOO_SMALL = "detail_too_small", Failed, false, "Detay bu oranda kâğıtta 1 mm'den küçük kalıyor; daha büyük bir ölçek seçin.";
+    /// Detay paftaları: a detail larger than the template's empty drawing area (docs/adr/1090 §2).
+    DETAIL_DOES_NOT_FIT = "detail_does_not_fit", Failed, false, "Detay şablonun boş çizim alanına bile sığmıyor; daha küçük bir ölçek ya da daha büyük kâğıt seçin.";
+    /// Sheet publication: resume asked for a folder without a stopped publication (docs/adr/1090 §7).
+    NO_RESUME = "no_resume", Failed, false, "Bu teslim klasörünün durdurulmuş bir yayını yok; yayını baştan başlatın.";
+    /// Sheet publication: the drawing, its resources or the options changed since the stopped publication (docs/adr/1090 §7).
+    RESUME_STALE = "resume_stale", Failed, false, "Çizim, bağlı kaynakları ya da seçenekler durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz, baştan yayınlayın.";
 
     // ── The change set (docs/adr/0253 §8) ───────────────────────────────
     /// No step given.

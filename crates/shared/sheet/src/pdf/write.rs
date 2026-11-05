@@ -298,6 +298,17 @@ pub(super) fn document(
     options: &PdfOptions,
     sheets: &[SheetId],
 ) -> Result<Vec<u8>> {
+    document_audited(book, inputs, options, sheets).map(|(bytes, _)| bytes)
+}
+
+/// [`document`] and what each page paints, with its content digest (docs/adr/1090 §4).
+pub(super) fn document_audited(
+    book: &SheetBook,
+    inputs: &PdfInputs,
+    options: &PdfOptions,
+    sheets: &[SheetId],
+) -> Result<(Vec<u8>, Vec<super::PageAudit>)> {
+    let mut audits: Vec<super::PageAudit> = Vec::new();
     let lists = lists(book, inputs, sheets)?;
     let usage = usage_of(&lists, inputs)?;
     let mut doc = Doc::new();
@@ -464,13 +475,25 @@ pub(super) fn document(
             if plot.is_some() {
                 page.restore();
             }
+            let mut audit = std::mem::take(&mut page.audit);
+            audit.sheet = l.sheet.clone();
+            audit.fonts = page.used_fonts.keys().map(|n| fonts.base_name(n)).collect();
             let used_fonts = std::mem::take(&mut page.used_fonts);
             let xobjects = std::mem::take(&mut page.xobjects);
             let page_states = std::mem::take(&mut page.gstates);
             let properties = std::mem::take(&mut page.properties);
+            let raw = page.c.finish();
+            audit.digest = super::page_digest(
+                raw.as_slice(),
+                &l.size,
+                audit.fonts.iter().map(String::as_str),
+                xobjects.keys().map(String::as_str),
+                page_states.iter().map(|(k, (f, s))| format!("{k}:{f}:{s}")),
+            );
+            audits.push(audit);
             built.push(Built {
                 l,
-                raw: page.c.finish(),
+                raw,
                 used_fonts,
                 xobjects,
                 page_states,
@@ -651,5 +674,5 @@ pub(super) fn document(
             di.modified_date(d);
         }
     }
-    Ok(geo::patch(pdf.finish(), &gpts))
+    Ok((geo::patch(pdf.finish(), &gpts), audits))
 }

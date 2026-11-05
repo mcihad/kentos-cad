@@ -77,6 +77,17 @@ pub struct PublishSheets {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pin: Option<SheetPublishPin>,
+    /// Separate PDFs only (docs/adr/1090 §7): a publication that is stopped or fails keeps its finished pages and a
+    /// journal in a hidden sibling folder (`.<folder>.kentos-devam`), never in the delivery folder, so `resume` can go on.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub resumable: bool,
+    /// Go on with the stopped publication of this folder: its finished pages are checked by SHA-256 and kept, the
+    /// rest are made. Refused unless the drawing, its linked resources, the title context and the options are the ones
+    /// it started with (`resume_stale`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub resume: bool,
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -102,7 +113,7 @@ pub struct SheetPublishIssue {
     pub fix: String,
     pub error: bool,
 }
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
@@ -120,7 +131,254 @@ pub struct SheetsPublished {
     pub ready: bool,
     pub manifest: String,
     pub sha256: String,
+    /// What is published, sheet by sheet (docs/adr/1090 §7): paper, viewports with their scales, locks and layer
+    /// states, the plot profile.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SheetPublishScope>>"))]
+    pub scope: Vec<SheetPublishScope>,
+    /// Each written page's audit and content digest (docs/adr/1090 §4), in the published order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SheetPublishedPage>>"))]
+    pub pages: Vec<SheetPublishedPage>,
+    /// With `resume`: the sheets whose finished pages were kept from the stopped publication.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub resumed: Vec<String>,
 }
+
+/// One viewport of a published sheet.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct SheetPublishFrame {
+    pub item: String,
+    pub name: String,
+    /// model / paper; none for an atlas frame.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub denominator: Option<f64>,
+    pub locked: bool,
+    /// `drawing` (the drawing's own visibility, which anyone's layer switching changes), `list`, or
+    /// `theme:<layer state>`.
+    pub layers: String,
+    /// The annotation representation chosen; none: the viewport's scale.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub annotation: Option<f64>,
+}
+
+/// One sheet of a publication's scope.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct SheetPublishScope {
+    pub sheet: String,
+    pub name: String,
+    pub number: String,
+    pub revision: String,
+    /// The page, mm: width, height.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub paper: [f64; 2],
+    /// The plot profile it prints with, by name; none: the objects' own looks.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profile: Option<String>,
+    pub frames: Vec<SheetPublishFrame>,
+    /// Table items on the sheet.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub tables: u32,
+}
+
+/// One written page: what it paints and its content digest (docs/adr/1090 §4).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct SheetPublishedPage {
+    pub sheet: String,
+    /// The PDF it is in.
+    pub file: String,
+    /// The page's content digest made without the title context (user, date): equal digests draw the same page.
+    pub digest: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub strokes: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub fills: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub even_odd_fills: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub hairlines: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub thin_lines: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub min_stroke_mm: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub texts: u32,
+    pub fonts: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub clips: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub transparent: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub images: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub raster_maps: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub placeholders: u32,
+    /// The page's audit findings (none an error by itself: the preflight's errors block publication).
+    pub findings: Vec<SheetPublishIssue>,
+}
+
+pub const FILE_PUBLISH_STATUS: &str = "file.publish.status";
+pub const FILE_PUBLISH_STATUS_VERSION: u32 = 1;
+
+/// Input of `file.publish.status` v1 (“Yayın durumu”, docs/adr/1090 §6): a delivery folder's last publication against
+/// the drawing as it is now, and a stopped publication's journal. Reads files, writes none.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PublishStatus {
+    /// The delivery folder (absolute), as given to `file.publish.sheets`.
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
+}
+
+/// A published sheet against the drawing now.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub enum SheetPublishState {
+    /// Its page now draws what was published.
+    Current,
+    /// Its page now draws otherwise: publish it again.
+    Stale,
+    /// The publication has no digest for it (made before docs/adr/1090): it cannot be compared.
+    Unknown,
+    /// The sheet is no longer in the book.
+    Removed,
+    /// In the book, not in the publication.
+    Unpublished,
+    /// Its delivered PDF is missing or not the published bytes.
+    FileChanged,
+    /// Its page cannot be made now; the reason is in `issue`.
+    Failed,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct SheetPublishStatus {
+    pub sheet: String,
+    pub name: String,
+    pub state: SheetPublishState,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<String>,
+    /// The digest published.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub published: Option<String>,
+    /// The digest now.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub issue: Option<SheetPublishIssue>,
+}
+
+/// Why a publication stopped.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub enum PublishStopReason {
+    Cancelled,
+    Failed,
+}
+
+/// A stopped publication's journal: no delivery folder was made; `resume` goes on from it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct StoppedPublication {
+    pub reason: PublishStopReason,
+    pub date: String,
+    pub source: SheetPublishPin,
+    /// The sheets chosen, in order.
+    pub sheets: Vec<String>,
+    /// Finished pages kept, and the ones still to make.
+    pub done: Vec<String>,
+    pub remaining: Vec<String>,
+    pub files: Vec<SheetPublishedFile>,
+    pub issues: Vec<SheetPublishIssue>,
+    /// The drawing is still the one it started with: `resume` can go on.
+    pub resumable: bool,
+}
+
+/// Where a delivery folder stands.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub enum PublishFolderState {
+    /// Published: `yayin.json` is there.
+    Published,
+    /// A publication of it stopped; nothing was delivered.
+    Stopped,
+    /// Neither.
+    None,
+}
+
+/// Output of `file.publish.status` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct PublishStatusReport {
+    pub path: String,
+    pub state: PublishFolderState,
+    /// The drawing now; kept apart from the published source.
+    pub current: SheetPublishPin,
+    /// The source the delivery was published from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub published: Option<SheetPublishPin>,
+    /// The publication's date.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub date: Option<String>,
+    /// The published sheets in their order, then the book's unpublished ones.
+    pub sheets: Vec<SheetPublishStatus>,
+    /// The published sheets to make again (stale, failed or whose file changed), in the published order.
+    pub stale: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stopped: Option<StoppedPublication>,
+}
+
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

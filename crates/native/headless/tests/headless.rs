@@ -2961,6 +2961,9 @@ mod sheet_transactions;
 #[path = "headless/sheet_publish.rs"]
 mod sheet_publish;
 
+#[path = "headless/sheet_sets.rs"]
+mod sheet_sets;
+
 #[path = "headless/sheet_delivery.rs"]
 mod sheet_delivery;
 

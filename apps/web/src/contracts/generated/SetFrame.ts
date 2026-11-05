@@ -41,4 +41,14 @@ level?: string,
 /**
  * Its view's recipe's version (docs/adr/0774 §1); none without a recipe.
  */
-recipe?: number, };
+recipe?: number, 
+/**
+ * With `recipes`: the frame as a detail of `cad.sheets.details` (docs/adr/1090 §2): its extent, ratio, layers, overrides,
+ * annotation choice and lock, which make it again; none for a frame that is not a placed, unturned viewport of
+ * the drawing.
+ */
+detail?: Record<string, unknown>, 
+/**
+ * With `recipes`: its camera is locked, zooming on the screen leaves its print scale (docs/adr/0594).
+ */
+locked?: boolean, };

@@ -480,7 +480,7 @@ fn the_read_only_hint_follows_the_catalogs_effect() {
             continue;
         };
         // A file command writes its file, but the print check; a query that writes a file of its own is destructive.
-        let writes_file = (id.starts_with("file.") && id != "file.preflight.sheets")
+        let writes_file = (id.starts_with("file.") && id != "file.preflight.sheets" && id != "file.publish.status")
             || tool["annotations"]["destructiveHint"] == true;
         let read_only = c["effect"] == "query" && !writes_file;
         assert_eq!(tool["annotations"]["readOnlyHint"], read_only, "{id}");
