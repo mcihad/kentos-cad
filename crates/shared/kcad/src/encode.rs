@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 171 (docs/adr/0950): a volume's numbered approvals and their history.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_history) {
+        return crate::SCHEMA_WITH_VOLUME_HISTORY;
+    }
     // Schema 170 (docs/adr/0946): a profile's crossings.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_profile_crossings) {
         return crate::SCHEMA_WITH_PROFILE_CROSSINGS;

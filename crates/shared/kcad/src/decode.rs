@@ -674,6 +674,13 @@ pub(crate) fn road_has_corridor_sampling(road: &kentos_contracts::RoadSettings) 
     road.corridors.iter().any(|c| c.vertical_sag.is_some() || c.refine.is_some())
 }
 
+/// Whether road settings carry schema 171's fields: a volume's numbered or ended approval, its history (docs/adr/0950).
+pub(crate) fn road_has_volume_history(road: &kentos_contracts::RoadSettings) -> bool {
+    road.volumes.iter().any(|v| {
+        !v.history.is_empty() || v.approved.as_ref().is_some_and(|a| a.number != 0 || a.ended.is_some())
+    })
+}
+
 /// Whether road settings carry schema 170's field: a profile's crossings (docs/adr/0946).
 pub(crate) fn road_has_profile_crossings(road: &kentos_contracts::RoadSettings) -> bool {
     road.profiles.iter().any(|p| !p.crossings.is_empty())
@@ -1327,6 +1334,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.profile_crossings && road_has_profile_crossings(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "boykesitin kesişmeleri şema 170 ister"));
+                }
+                if !has.volume_history && road_has_volume_history(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "kübajın numaralı onayı ve onay geçmişi şema 171 ister"));
                 }
                 if !has.section_breaks && road_has_section_breaks(&v) {
                     return Err(r.fail_at(

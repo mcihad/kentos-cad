@@ -516,18 +516,34 @@ pub(crate) fn compute_on(
 /// Within this (m³) two figures of a volume are the same; within this (m) two stations.
 const SAME_VOLUME: f64 = 1e-6;
 
-/// The approved figures against today's: the totals' changes and the stretches that changed, are new or gone.
-pub(crate) fn compare(a: &kentos_commands::VolumeApprovalDef, now: &VolumeReport) -> kentos_commands::VolumeApprovalReport {
+/// A volume's figures: its four totals and its stretches [from, to, cut, fill].
+pub(crate) struct Figures<'a> {
+    pub(crate) totals: [f64; 4],
+    pub(crate) rows: std::borrow::Cow<'a, [[f64; 4]]>,
+}
+
+impl<'a> Figures<'a> {
+    pub(crate) fn of_approval(a: &'a kentos_commands::VolumeApprovalDef) -> Self {
+        Figures { totals: [a.cut, a.fill, a.factored_cut, a.factored_fill], rows: std::borrow::Cow::Borrowed(&a.rows) }
+    }
+
+    pub(crate) fn of_report(r: &VolumeReport) -> Figures<'static> {
+        Figures {
+            totals: [r.cut, r.fill, r.factored_cut, r.factored_fill],
+            rows: std::borrow::Cow::Owned(r.rows.iter().filter_map(|x| Some([x.from, x.to, x.cut?, x.fill?])).collect()),
+        }
+    }
+}
+
+/// `after` against `before` (docs/adr/0950): the totals' changes and the stretches that changed (beyond 1e-6 m³), are
+/// new or gone; stations the same within 1e-6 m.
+pub(crate) fn change(before: &Figures<'_>, after: &Figures<'_>) -> kentos_commands::VolumeChange {
     use kentos_commands::VolumeRowChange;
-    let today: Vec<[f64; 4]> = now
-        .rows
-        .iter()
-        .filter_map(|r| Some([r.from, r.to, r.cut?, r.fill?]))
-        .collect();
+    let today = &after.rows;
     let same = |x: f64, y: f64| (x - y).abs() <= SAME_VOLUME;
     let mut rows = Vec::new();
     let mut used = vec![false; today.len()];
-    for p in &a.rows {
+    for p in before.rows.iter() {
         match today.iter().position(|t| same(t[0], p[0]) && same(t[1], p[1])) {
             Some(i) => {
                 used[i] = true;
@@ -543,21 +559,39 @@ pub(crate) fn compare(a: &kentos_commands::VolumeApprovalDef, now: &VolumeReport
         rows.push(VolumeRowChange { from: t[0], to: t[1], approved_cut: None, approved_fill: None, cut: Some(t[2]), fill: Some(t[3]) });
     }
     rows.sort_by(|x, y| x.from.total_cmp(&y.from).then(x.to.total_cmp(&y.to)));
-    let changes = [now.cut - a.cut, now.fill - a.fill, now.factored_cut - a.factored_cut, now.factored_fill - a.factored_fill];
-    kentos_commands::VolumeApprovalReport {
-        approved: a.clone(),
-        changed: !rows.is_empty() || changes.iter().any(|c| c.abs() > SAME_VOLUME),
-        cut_change: changes[0],
-        fill_change: changes[1],
-        factored_cut_change: changes[2],
-        factored_fill_change: changes[3],
+    let c: Vec<f64> = (0..4).map(|k| after.totals[k] - before.totals[k]).collect();
+    kentos_commands::VolumeChange {
+        changed: !rows.is_empty() || c.iter().any(|x| x.abs() > SAME_VOLUME),
+        cut_change: c[0],
+        fill_change: c[1],
+        factored_cut_change: c[2],
+        factored_fill_change: c[3],
         rows,
     }
 }
 
-/// The figures to approve: the volume as computed now.
+/// The approved figures against today's: the totals' changes and the stretches that changed, are new or gone.
+pub(crate) fn compare(a: &kentos_commands::VolumeApprovalDef, now: &VolumeReport) -> kentos_commands::VolumeApprovalReport {
+    let c = change(&Figures::of_approval(a), &Figures::of_report(now));
+    kentos_commands::VolumeApprovalReport {
+        approved: a.clone(),
+        changed: c.changed,
+        cut_change: c.cut_change,
+        fill_change: c.fill_change,
+        factored_cut_change: c.factored_cut_change,
+        factored_fill_change: c.factored_fill_change,
+        rows: c.rows,
+    }
+}
+
+/// The figures to approve: the volume as computed now, numbered after its approvals so far (docs/adr/0950).
 pub(crate) fn approval_of(def: &VolumeDef, now: &VolumeReport, at: String, note: Option<String>) -> kentos_commands::VolumeApprovalDef {
+    let last = def.history.iter().chain(&def.approved).map(|a| a.number).max().unwrap_or(0);
+    // An approval from before the numbers counts as one: the next is its successor, not the first.
+    let before = def.history.len() + usize::from(def.approved.is_some());
     kentos_commands::VolumeApprovalDef {
+        number: last.max(before as u32) + 1,
+        ended: None,
         revision: def.revision,
         at,
         note,

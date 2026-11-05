@@ -41196,7 +41196,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the\nday `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off. One undo step “Kübaj onayı”.\n\nRefusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),\n`invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),\n`invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the\nday `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off (`at` and `note` then the day\nand why, both optional). One undo step “Kübaj onayı”. An approval that ends — revoked, or replaced by a new one on\nits day — goes to the volume's `history` as it was; each approval is numbered from 1 (docs/adr/0950).\n\nRefusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),\n`invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),\n`invalid_revision`, `revision_conflict`.",
         "properties": {
           "at": {
             "type": [
@@ -42254,6 +42254,157 @@
               "step": 100.0
             },
             "top": 5,
+            "volume": "v-1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.volumes.history",
+      "version": 1,
+      "title": "Onay geçmişi",
+      "summary": "Kübajın onaylarını eskiden yeniye verir: biten onaylar onaylandıkları hâliyle, bitiş günü ve nedeniyle (kaldırıldı ya da yeni onay yerine geçti), geçerli onay ayrıca; her onay bir öncekine göre (toplamların farkı, değişen, yeni ve kalkan aralıklar); bugünkü hesap son onaya göre. Onaylı miktar hiç değişmez, silinmez: yeni onay ya da kaldırılan onay geçmişe geçer. Hesaplanamayan kübajın geçmişi yine verilir, nedeniyle. Yalnız okur. Retler: not_a_road_project, unknown_volume.",
+      "aliases": [
+        "onaygecmisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.volumes.history` v1 (plan/road.md Y44, docs/adr/0950; ROAD-VOL-17): an earthwork volume's\napprovals, oldest first, each against the one before it, and today's figures against the last.\n\nRefusals: `not_a_road_project`, `unknown_volume`. A volume that does not compute today still has its history; the\nanswer then says why.",
+        "properties": {
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume"
+        ],
+        "title": "VolumesHistory",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.history` v1 (docs/adr/0950): the volume, its approvals oldest first, today's figures (none\nwhere it does not compute, then why) and today against the last approval (none without one).",
+        "properties": {
+          "approvals": {
+            "items": {
+              "$ref": "#/$defs/VolumeHistoryEntry"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "problem": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "since": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "today": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeToday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "name",
+          "approvals"
+        ],
+        "title": "VolumeHistoryRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.volumes.history` v1 (docs/adr/0950): the volume, its approvals oldest first, today's figures (none\nwhere it does not compute, then why) and today against the last approval (none without one).",
+        "properties": {
+          "approvals": {
+            "items": {
+              "$ref": "#/$defs/VolumeHistoryEntry"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "problem": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "since": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "today": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VolumeToday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "volume": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volume",
+          "name",
+          "approvals"
+        ],
+        "title": "VolumeHistoryRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_volume"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana kübajın onayları",
+          "input": {
             "volume": "v-1"
           }
         }
@@ -173966,6 +174117,17 @@
           "type": "number",
           "x-unit": "volume"
         },
+        "ended": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeApprovalEnd"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How it ended, in the volume's history (docs/adr/0950; schema 171): none while it stands."
+        },
         "factoredCut": {
           "format": "double",
           "type": "number",
@@ -173986,6 +174148,13 @@
             "string",
             "null"
           ]
+        },
+        "number": {
+          "description": "Its number among the volume's approvals, from 1 (docs/adr/0950; schema 171); 0: approved before approvals were\nnumbered.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
         },
         "revision": {
           "format": "uint32",
@@ -174024,6 +174193,28 @@
         "factoredFill",
         "rows"
       ],
+      "type": "object"
+    },
+    "VolumeApprovalEnd": {
+      "additionalProperties": false,
+      "description": "How an approval ended (docs/adr/0950): the day (YYYY-MM-DD; none where it was not given), whether it was revoked\n(else a later approval took its place) and why.",
+      "properties": {
+        "at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revoked": {
+          "type": "boolean"
+        }
+      },
       "type": "object"
     },
     "VolumeApprovalReport": {
@@ -174094,6 +174285,49 @@
       ],
       "type": "object"
     },
+    "VolumeChange": {
+      "description": "One set of a volume's figures against another (docs/adr/0950): whether they differ (beyond 1e-6 m³), the totals'\nchanges and the stretches that changed, are new or gone (`approved*` the earlier's, the others the later's).",
+      "properties": {
+        "changed": {
+          "type": "boolean"
+        },
+        "cutChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredCutChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredFillChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillChange": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/VolumeRowChange"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "changed",
+        "cutChange",
+        "fillChange",
+        "factoredCutChange",
+        "factoredFillChange",
+        "rows"
+      ],
+      "type": "object"
+    },
     "VolumeCurve": {
       "description": "A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none\nwhere a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the\nThe curve correction's effect on a volume (docs/adr/0934): the corrected less the plain cut and fill (m³), and the\nstretches left plain because a section reaches past its curve's centre.",
       "properties": {
@@ -174157,6 +174391,13 @@
         "factors": {
           "items": {
             "$ref": "#/$defs/VolumeFactorDef"
+          },
+          "type": "array"
+        },
+        "history": {
+          "description": "Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):\nnever changed nor removed.",
+          "items": {
+            "$ref": "#/$defs/VolumeApprovalDef"
           },
           "type": "array"
         },
@@ -174236,6 +174477,32 @@
       "required": [
         "from",
         "to"
+      ],
+      "type": "object"
+    },
+    "VolumeHistoryEntry": {
+      "description": "An approval in a volume's history: as it was written (with how it ended), whether it stands, and against the\napproval before it (none for the first).",
+      "properties": {
+        "against": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeChange"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "approval": {
+          "$ref": "#/$defs/VolumeApprovalDef"
+        },
+        "standing": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "approval",
+        "standing"
       ],
       "type": "object"
     },
@@ -174733,6 +175000,38 @@
         "from",
         "to",
         "depth"
+      ],
+      "type": "object"
+    },
+    "VolumeToday": {
+      "description": "A volume's figures today: its cut, fill and their factored volumes.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredCut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "factoredFill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "cut",
+        "fill",
+        "factoredCut",
+        "factoredFill"
       ],
       "type": "object"
     },

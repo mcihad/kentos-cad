@@ -317,7 +317,9 @@ pub struct VolumesWritten {
 }
 
 /// Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the
-/// day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off. One undo step “Kübaj onayı”.
+/// day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off (`at` and `note` then the day
+/// and why, both optional). One undo step “Kübaj onayı”. An approval that ends — revoked, or replaced by a new one on
+/// its day — goes to the volume's `history` as it was; each approval is numbered from 1 (docs/adr/0950).
 ///
 /// Refusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),
 /// `invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),
@@ -916,4 +918,95 @@ pub struct VolumeLedgerRead {
     pub concentration: Vec<LedgerConcentration>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub gaps: Vec<[f64; 2]>,
+}
+
+pub const ROAD_VOLUMES_HISTORY: &str = "road.volumes.history";
+pub const ROAD_VOLUMES_HISTORY_VERSION: u32 = 1;
+
+/// Input of `road.volumes.history` v1 (plan/road.md Y44, docs/adr/0950; ROAD-VOL-17): an earthwork volume's
+/// approvals, oldest first, each against the one before it, and today's figures against the last.
+///
+/// Refusals: `not_a_road_project`, `unknown_volume`. A volume that does not compute today still has its history; the
+/// answer then says why.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumesHistory {
+    pub volume: String,
+}
+
+/// One set of a volume's figures against another (docs/adr/0950): whether they differ (beyond 1e-6 m³), the totals'
+/// changes and the stretches that changed, are new or gone (`approved*` the earlier's, the others the later's).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeChange {
+    pub changed: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_change: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_change: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_cut_change: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_fill_change: f64,
+    pub rows: Vec<VolumeRowChange>,
+}
+
+/// An approval in a volume's history: as it was written (with how it ended), whether it stands, and against the
+/// approval before it (none for the first).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeHistoryEntry {
+    pub approval: crate::VolumeApprovalDef,
+    pub standing: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub against: Option<VolumeChange>,
+}
+
+/// A volume's figures today: its cut, fill and their factored volumes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeToday {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub factored_fill: f64,
+}
+
+/// Output of `road.volumes.history` v1 (docs/adr/0950): the volume, its approvals oldest first, today's figures (none
+/// where it does not compute, then why) and today against the last approval (none without one).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeHistoryRead {
+    pub volume: String,
+    pub name: String,
+    pub approvals: Vec<VolumeHistoryEntry>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub today: Option<VolumeToday>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub problem: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub since: Option<VolumeChange>,
 }

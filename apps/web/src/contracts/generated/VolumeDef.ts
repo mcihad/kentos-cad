@@ -23,6 +23,11 @@ bench?: VolumeBenchDef,
  */
 approved?: VolumeApprovalDef, 
 /**
+ * Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):
+ * never changed nor removed.
+ */
+history?: Array<VolumeApprovalDef>, 
+/**
  * Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
  * ground, stripped when it strips (as before the rule).
  */

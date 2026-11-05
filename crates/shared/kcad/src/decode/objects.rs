@@ -337,6 +337,8 @@ pub(super) struct Features {
     pub(super) haul_sorting: bool,
     /// Schema 170: a profile's crossings (docs/adr/0946).
     pub(super) profile_crossings: bool,
+    /// Schema 171: a volume's numbered approvals and their history (docs/adr/0950).
+    pub(super) volume_history: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -587,6 +589,7 @@ impl Features {
             corridor_sampling: schema >= crate::SCHEMA_WITH_CORRIDOR_SAMPLING,
             haul_sorting: schema >= crate::SCHEMA_WITH_HAUL_SORTING,
             profile_crossings: schema >= crate::SCHEMA_WITH_PROFILE_CROSSINGS,
+            volume_history: schema >= crate::SCHEMA_WITH_VOLUME_HISTORY,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,

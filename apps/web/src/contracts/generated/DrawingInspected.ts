@@ -7,7 +7,7 @@ export type DrawingInspected = { findings: Array<InspectionFinding>, hatches: Ar
 /**
  * Real measured values, displayed text, overrides and association state of inspected dimensions.
  */
-dimensions?: Array<DimensionRead>,
+dimensions?: Array<DimensionRead>, 
 /**
  * Curves excluded from exact line/circular-arc topology diagnosis; never reported as clean.
  */

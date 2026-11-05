@@ -2,7 +2,9 @@
 
 /**
  * Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the
- * day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off. One undo step “Kübaj onayı”.
+ * day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off (`at` and `note` then the day
+ * and why, both optional). One undo step “Kübaj onayı”. An approval that ends — revoked, or replaced by a new one on
+ * its day — goes to the volume's `history` as it was; each approval is numbered from 1 (docs/adr/0950).
  *
  * Refusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),
  * `invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),

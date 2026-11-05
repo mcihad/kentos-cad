@@ -87214,6 +87214,9 @@ class VolumeApprovalDef(_Model):
         factored_fill: Unit: volume.
         rows: Unit: volume.
         bench: Unit: volume.
+        ended: How it ended, in the volume's history (docs/adr/0950; schema 171): none while it stands.
+        number: Its number among the volume's approvals, from 1 (docs/adr/0950; schema 171); 0: approved before approvals were
+            numbered. Unit: count.
         strip: Unit: volume.
     """
     revision: int
@@ -87224,7 +87227,9 @@ class VolumeApprovalDef(_Model):
     factored_fill: float
     rows: list[list[float]]
     bench: float | None | Unset = UNSET
+    ended: VolumeApprovalEnd | None | Unset = UNSET
     note: str | None | Unset = UNSET
+    number: int | Unset = UNSET
     strip: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -87238,8 +87243,12 @@ class VolumeApprovalDef(_Model):
         out["rows"] = [[float(e1) for e1 in e0] for e0 in self.rows]
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else float(self.bench)
+        if self.ended is not UNSET:
+            out["ended"] = None if self.ended is None else self.ended.to_json()
         if self.note is not UNSET:
             out["note"] = self.note
+        if self.number is not UNSET:
+            out["number"] = self.number
         if self.strip is not UNSET:
             out["strip"] = None if self.strip is None else float(self.strip)
         return out
@@ -87255,8 +87264,38 @@ class VolumeApprovalDef(_Model):
             factored_fill=float(data["factoredFill"]),
             rows=[[float(e1) for e1 in e0] for e0 in data["rows"]],
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
+            ended=UNSET if "ended" not in data else None if data["ended"] is None else VolumeApprovalEnd.from_json(data["ended"]),
             note=data.get("note", UNSET),
+            number=data.get("number", UNSET),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeApprovalEnd(_Model):
+    """How an approval ended (docs/adr/0950): the day (YYYY-MM-DD; none where it was not given), whether it was revoked
+    (else a later approval took its place) and why.
+    """
+    at: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    revoked: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.revoked is not UNSET:
+            out["revoked"] = self.revoked
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeApprovalEnd:
+        return cls(
+            at=data.get("at", UNSET),
+            note=data.get("note", UNSET),
+            revoked=data.get("revoked", UNSET),
         )
 
 
@@ -87328,6 +87367,45 @@ class VolumeBenchDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeChange(_Model):
+    """One set of a volume's figures against another (docs/adr/0950): whether they differ (beyond 1e-6 m³), the totals'
+    changes and the stretches that changed, are new or gone (`approved*` the earlier's, the others the later's).
+    Attributes:
+        cut_change: Unit: volume.
+        fill_change: Unit: volume.
+        factored_cut_change: Unit: volume.
+        factored_fill_change: Unit: volume.
+    """
+    changed: bool
+    cut_change: float
+    fill_change: float
+    factored_cut_change: float
+    factored_fill_change: float
+    rows: list[VolumeRowChange]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["cutChange"] = float(self.cut_change)
+        out["fillChange"] = float(self.fill_change)
+        out["factoredCutChange"] = float(self.factored_cut_change)
+        out["factoredFillChange"] = float(self.factored_fill_change)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeChange:
+        return cls(
+            changed=data["changed"],
+            cut_change=float(data["cutChange"]),
+            fill_change=float(data["fillChange"]),
+            factored_cut_change=float(data["factoredCutChange"]),
+            factored_fill_change=float(data["factoredFillChange"]),
+            rows=[VolumeRowChange.from_json(e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeCurve(_Model):
     """A row of an earthwork volume between two consecutive sections: their stations and km, the cut and fill (m³; none
     where a section is not solved), the factors over it (none: not converted), the factored cut and fill, and the
@@ -87366,6 +87444,8 @@ class VolumeDef(_Model):
         bench: The fill's foundation benched (a section method's).
         curve: The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
             `A + κ·Q`; the average end area method only.
+        history: Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):
+            never changed nor removed.
         revision: Unit: version.
         rule: Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
             ground, stripped when it strips (as before the rule).
@@ -87379,6 +87459,7 @@ class VolumeDef(_Model):
     bench: VolumeBenchDef | None | Unset = UNSET
     curve: bool | Unset = UNSET
     factors: list[VolumeFactorDef] | Unset = UNSET
+    history: list[VolumeApprovalDef] | Unset = UNSET
     revision: int | Unset = UNSET
     rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
     strip: list[VolumeStripDef] | Unset = UNSET
@@ -87397,6 +87478,8 @@ class VolumeDef(_Model):
             out["curve"] = self.curve
         if self.factors is not UNSET:
             out["factors"] = [e0.to_json() for e0 in self.factors]
+        if self.history is not UNSET:
+            out["history"] = [e0.to_json() for e0 in self.history]
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.rule is not UNSET:
@@ -87416,6 +87499,7 @@ class VolumeDef(_Model):
             bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
             curve=data.get("curve", UNSET),
             factors=[VolumeFactorDef.from_json(e0) for e0 in data["factors"]] if "factors" in data else UNSET,
+            history=[VolumeApprovalDef.from_json(e0) for e0 in data["history"]] if "history" in data else UNSET,
             revision=data.get("revision", UNSET),
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
             strip=[VolumeStripDef.from_json(e0) for e0 in data["strip"]] if "strip" in data else UNSET,
@@ -87454,6 +87538,69 @@ class VolumeFactorDef(_Model):
             to=float(data["to"]),
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeHistoryEntry(_Model):
+    """An approval in a volume's history: as it was written (with how it ended), whether it stands, and against the
+    approval before it (none for the first).
+    """
+    approval: VolumeApprovalDef
+    standing: bool
+    against: VolumeChange | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["approval"] = self.approval.to_json()
+        out["standing"] = self.standing
+        if self.against is not UNSET:
+            out["against"] = None if self.against is None else self.against.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeHistoryEntry:
+        return cls(
+            approval=VolumeApprovalDef.from_json(data["approval"]),
+            standing=data["standing"],
+            against=UNSET if "against" not in data else None if data["against"] is None else VolumeChange.from_json(data["against"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeHistoryRead(_Model):
+    """Output of `road.volumes.history` v1 (docs/adr/0950): the volume, its approvals oldest first, today's figures (none
+    where it does not compute, then why) and today against the last approval (none without one).
+    """
+    volume: str
+    name: str
+    approvals: list[VolumeHistoryEntry]
+    problem: str | None | Unset = UNSET
+    since: VolumeChange | None | Unset = UNSET
+    today: VolumeToday | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        out["name"] = self.name
+        out["approvals"] = [e0.to_json() for e0 in self.approvals]
+        if self.problem is not UNSET:
+            out["problem"] = self.problem
+        if self.since is not UNSET:
+            out["since"] = None if self.since is None else self.since.to_json()
+        if self.today is not UNSET:
+            out["today"] = None if self.today is None else self.today.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeHistoryRead:
+        return cls(
+            volume=data["volume"],
+            name=data["name"],
+            approvals=[VolumeHistoryEntry.from_json(e0) for e0 in data["approvals"]],
+            problem=data.get("problem", UNSET),
+            since=UNSET if "since" not in data else None if data["since"] is None else VolumeChange.from_json(data["since"]),
+            today=UNSET if "today" not in data else None if data["today"] is None else VolumeToday.from_json(data["today"]),
         )
 
 
@@ -87942,6 +88089,38 @@ class VolumeStripDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeToday(_Model):
+    """A volume's figures today: its cut, fill and their factored volumes.
+    Attributes:
+        cut: Unit: volume.
+        fill: Unit: volume.
+        factored_cut: Unit: volume.
+        factored_fill: Unit: volume.
+    """
+    cut: float
+    fill: float
+    factored_cut: float
+    factored_fill: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["factoredCut"] = float(self.factored_cut)
+        out["factoredFill"] = float(self.factored_fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeToday:
+        return cls(
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            factored_cut=float(data["factoredCut"]),
+            factored_fill=float(data["factoredFill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeUncertaintyReport(_Model):
     """Output of `road.volumes.uncertainty` v1 (docs/adr/0941): the volume, its method, σ and the shift asked; the cut, the
     fill and their net (cut − fill, linear in the heights: its σ exact) with their spreads; the plan areas of cut and
@@ -88026,7 +88205,9 @@ class VolumeUncertaintyReport(_Model):
 @dataclass(kw_only=True, slots=True)
 class VolumesApprove(_Model):
     """Input of `road.volumes.approve` v1 (docs/adr/0906 §5): the volume (id or name) approved as it computes now, on the
-    day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off. One undo step “Kübaj onayı”.
+    day `at` (YYYY-MM-DD) with an optional note; or, with `revoke`, its approval taken off (`at` and `note` then the day
+    and why, both optional). One undo step “Kübaj onayı”. An approval that ends — revoked, or replaced by a new one on
+    its day — goes to the volume's `history` as it was; each approval is numbered from 1 (docs/adr/0950).
 
     Refusals, in this order: `not_a_road_project`, `unknown_volume`, `volume_not_approved` (revoke one not approved),
     `invalid_volume` (approve without `at`, a day or note the rule refuses, a volume that does not compute),
@@ -88192,6 +88373,28 @@ class VolumesEdit(_Model):
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else [VolumeStripDef.from_json(e0) for e0 in data["strip"]],
             volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumesHistory(_Model):
+    """Input of `road.volumes.history` v1 (plan/road.md Y44, docs/adr/0950; ROAD-VOL-17): an earthwork volume's
+    approvals, oldest first, each against the one before it, and today's figures against the last.
+
+    Refusals: `not_a_road_project`, `unknown_volume`. A volume that does not compute today still has its history; the
+    answer then says why.
+    """
+    volume: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["volume"] = self.volume
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumesHistory:
+        return cls(
+            volume=data["volume"],
         )
 
 
@@ -112571,11 +112774,15 @@ __all__ = [
     "VisibilityBlockParameter",
     "VisibilityState",
     "VolumeApprovalDef",
+    "VolumeApprovalEnd",
     "VolumeApprovalReport",
     "VolumeBenchDef",
+    "VolumeChange",
     "VolumeCurve",
     "VolumeDef",
     "VolumeFactorDef",
+    "VolumeHistoryEntry",
+    "VolumeHistoryRead",
     "VolumeLayer",
     "VolumeLedgerRead",
     "VolumeListed",
@@ -112589,11 +112796,13 @@ __all__ = [
     "VolumeRuleName",
     "VolumeSpread",
     "VolumeStripDef",
+    "VolumeToday",
     "VolumeUncertaintyReport",
     "VolumesApprove",
     "VolumesCompare",
     "VolumesCompared",
     "VolumesEdit",
+    "VolumesHistory",
     "VolumesLedger",
     "VolumesProgress",
     "VolumesQueried",

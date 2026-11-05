@@ -7713,6 +7713,30 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_VOLUMES_HISTORY.into(),
+            version: crate::ROAD_VOLUMES_HISTORY_VERSION,
+            title: "Onay geçmişi".into(),
+            summary: "Kübajın onaylarını eskiden yeniye verir: biten onaylar onaylandıkları hâliyle, bitiş günü ve nedeniyle (kaldırıldı ya da yeni onay yerine geçti), geçerli onay ayrıca; her onay bir öncekine göre (toplamların farkı, değişen, yeni ve kalkan aralıklar); bugünkü hesap son onaya göre. Onaylı miktar hiç değişmez, silinmez: yeni onay ya da kaldırılan onay geçmişe geçer. Hesaplanamayan kübajın geçmişi yine verilir, nedeniyle. Yalnız okur. Retler: not_a_road_project, unknown_volume."
+                .into(),
+            aliases: vec!["onaygecmisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::VolumesHistory>(),
+            output: schema::<crate::VolumeHistoryRead>(),
+            plan: Some(schema::<crate::VolumeHistoryRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana kübajın onayları".into(),
+                input: json!({ "volume": "v-1" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_EDIT.into(),
             version: crate::ROAD_HAULS_EDIT_VERSION,
             title: "Brükneri düzenle".into(),
@@ -14777,6 +14801,9 @@ mod tests {
                     crate::ROAD_VOLUMES_LEDGER => {
                         serde_json::from_value::<crate::VolumesLedger>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_VOLUMES_HISTORY => {
+                        serde_json::from_value::<crate::VolumesHistory>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_HAULS_EDIT => serde_json::from_value::<crate::HaulsEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
@@ -15636,6 +15663,9 @@ mod tests {
                         }
                         crate::ROAD_VOLUMES_LEDGER => {
                             serde_json::from_value::<crate::VolumeLedgerRead>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_VOLUMES_HISTORY => {
+                            serde_json::from_value::<crate::VolumeHistoryRead>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_EDIT => {
                             serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())

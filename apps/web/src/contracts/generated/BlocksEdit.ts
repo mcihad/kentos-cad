@@ -121,7 +121,7 @@ renames?: { [key in string]: string },
  * migrates; other nested attributes and field caches are not silently synchronized. A conflicting nested
  * target or affected locked ancestor refuses the entire operation.
  */
-renameNested?: boolean,
+renameNested?: boolean, 
 /**
  * `sync`: tags whose values are taken off the inserts though no attribute has them.
  */

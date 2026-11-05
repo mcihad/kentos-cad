@@ -12,7 +12,7 @@ export type ParagraphLayout = {
 /**
  * Explicit metric/glyph profile; absent: the existing legacy layout.
  */
-engine?: TextLayoutEngine,
+engine?: TextLayoutEngine, 
 /**
  * A paragraph's first line from the others', heights; below 0 a hanging indent (a list's). Absent: 0.
  */

@@ -1,9 +1,10 @@
 //! `road.volumes.approve` v1 (plan/road.md Y8, docs/adr/0906 §5): an earthwork volume approved as it computes now (its
 //! totals and each stretch's cut and fill kept, the day and a note), or its approval taken off; one undo step
 //! “Kübaj onayı”. An approved volume's definition does not change; its sources may, and the query then says how today's
-//! figures differ. The shared cases are `fixtures/commands/v1/road.volumes.approve.json`.
+//! figures differ. An approval that ends — revoked, or replaced by a new one — goes to the volume's history as it was,
+//! with the day and why (docs/adr/0950): approved quantities are never changed nor removed. The shared cases are `fixtures/commands/v1/road.volumes.approve.json`.
 
-use kentos_commands::{CommandResult, VolumeDef, VolumesApprove, VolumesWritten};
+use kentos_commands::{CommandResult, VolumeApprovalEnd, VolumeDef, VolumesApprove, VolumesWritten};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -32,13 +33,23 @@ fn check(doc: &kentos_domain::Document, input: &VolumesApprove) -> Result<Checke
                 "volume",
             ));
         }
+        // Revoked, the approval goes to the history with the day and why: it is never removed (docs/adr/0950).
+        let mut ended = old.approved.clone().expect("checked above");
+        ended.ended = Some(VolumeApprovalEnd { at: input.at.clone(), revoked: true, note: input.note.clone() });
+        list[at].history.push(ended);
         list[at].approved = None;
     } else {
         let Some(day) = input.at.clone() else {
             return Err(fail(codes::INVALID_VOLUME, "Onay için günü (at, YYYY-AA-GG) verin.".into(), "at"));
         };
         let (now, _) = common::compute(doc, old)?;
-        list[at].approved = Some(common::approval_of(old, &now, day, input.note.clone()));
+        let next = common::approval_of(old, &now, day.clone(), input.note.clone());
+        // A new approval of an approved volume takes the old one's place; the old one goes to the history.
+        if let Some(mut before) = old.approved.clone() {
+            before.ended = Some(VolumeApprovalEnd { at: Some(day), revoked: false, note: None });
+            list[at].history.push(before);
+        }
+        list[at].approved = Some(next);
     }
     let mut road = doc.settings().road.clone().unwrap_or_default();
     road.volumes = list.clone();

@@ -74,6 +74,9 @@ pub(crate) const LARGEST: &str = "En büyük aralıklar";
 pub(crate) const LEDGER_STEP: &str = "Dilim (m)";
 pub(crate) const LEDGER_BY: &str = "Gruplama";
 pub(crate) const ROUNDING: &str = "Yuvarlama";
+/// The approvals' history (docs/adr/0950) and the note an approval or a revocation is written with.
+pub(crate) const HISTORY: &str = "Onay geçmişi";
+pub(crate) const APPROVAL_NOTE: &str = "Onay notu";
 const GROUPINGS: [&str; 2] = ["Km dilimleri", "Bölgeler"];
 const DECIMALS: [&str; 4] = ["Tam sayı", "1 basamak", "2 basamak", "3 basamak"];
 /// The previous survey's “none”.
@@ -107,6 +110,8 @@ pub enum Shown {
     /// The total by km, region and material, and the largest stretches (docs/adr/0949).
     Ledger,
     Largest,
+    /// The approvals, oldest first, each against the one before it (docs/adr/0950).
+    History,
 }
 
 impl std::fmt::Display for Shown {
@@ -120,6 +125,7 @@ impl std::fmt::Display for Shown {
             Shown::Compare => COMPARE,
             Shown::Ledger => LEDGER,
             Shown::Largest => LARGEST,
+            Shown::History => HISTORY,
         })
     }
 }
@@ -179,6 +185,8 @@ pub struct Row {
     bench: [String; 2],
     /// Its figures as approved, kept as they are.
     approved: Option<VolumeApprovalDef>,
+    /// Its ended approvals (docs/adr/0950): kept as they are; the window never edits them.
+    history: Vec<VolumeApprovalDef>,
     /// Its rule (docs/adr/0930 §2); none: as before the rule.
     pub(crate) rule: Option<kentos_commands::VolumeRule>,
     /// The curve correction (docs/adr/0934).
@@ -201,6 +209,7 @@ impl Row {
             strip: d.strip.iter().map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)]).collect(),
             bench: d.bench.as_ref().map_or_else(Default::default, |b| [trimmed(b.slope), trimmed(b.height)]),
             approved: d.approved.clone(),
+            history: d.history.clone(),
             rule: d.rule,
             curve: d.curve,
         }
@@ -247,6 +256,7 @@ impl Row {
             strip,
             bench,
             approved: self.approved.clone(),
+            history: self.history.clone(),
             rule: self.rule,
             curve: self.curve,
         })
@@ -293,6 +303,10 @@ pub struct Window {
     pub(crate) ledger_regions: bool,
     pub(crate) ledger_decimals: u32,
     pub(crate) ledger: Option<Result<(kentos_commands::VolumeLedgerRead, Vec<CommandWarning>), String>>,
+    /// The note the next approval or revocation is written with (docs/adr/0950).
+    pub(crate) approval_note: String,
+    /// The chosen volume's approvals as saved, read while shown.
+    pub(crate) history: Option<kentos_commands::VolumeHistoryRead>,
 }
 
 #[derive(Debug, Clone)]
@@ -321,6 +335,8 @@ pub enum Event {
     LedgerStep(String),
     LedgerRegions(bool),
     LedgerDecimals(u32),
+    /// The next approval's or revocation's note.
+    ApprovalNote(String),
     /// A factor row's from (0), to (1), cut (2) or fill (3).
     Factor(usize, usize, String),
     /// A strip row's from (0), to (1) or depth (2).
@@ -385,6 +401,8 @@ impl App {
             ledger_regions: false,
             ledger_decimals: 2,
             ledger: None,
+            approval_note: String::new(),
+            history: None,
         }));
         self.dialog = Some(Dialog::Volumes);
         self.refresh_volume();
@@ -456,6 +474,12 @@ impl App {
         w.traces = match &w.comparison {
             Some(Ok(_)) => kentos_native_application::road_volumes_compare::traces(&doc.model, &input),
             _ => Vec::new(),
+        };
+        // The approvals of the volume as saved, while shown.
+        let kept = w.kept.iter().find(|k| k.id == r.id).cloned();
+        w.history = match (w.shown == Shown::History, kept) {
+            (true, Some(def)) => Some(kentos_native_application::road_volumes_history::preview_of(&doc.model, &def)),
+            _ => None,
         };
         // The ledger, while it is shown: it computes the volume once more.
         let shown = matches!(w.shown, Shown::Ledger | Shown::Largest);
@@ -532,6 +556,7 @@ impl App {
                         strip: Vec::new(),
                         bench: Default::default(),
                         approved: None,
+                        history: Vec::new(),
                         rule: None,
                         curve: false,
                     });
@@ -648,6 +673,7 @@ impl App {
                 w.ledger_regions = on;
                 w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
             }
+            Event::ApprovalNote(t) => w.approval_note = t,
             Event::LedgerDecimals(d) => {
                 w.ledger_decimals = d.min(3);
                 w.shown = Shown::Ledger;
@@ -721,8 +747,9 @@ impl App {
         let input = kentos_commands::VolumesApprove {
             volume: r.id.clone(),
             revoke: !on,
-            at: on.then_some(day),
-            note: None,
+            // A revocation keeps its day and why in the history too (docs/adr/0950).
+            at: Some(day),
+            note: (!w.approval_note.trim().is_empty()).then(|| w.approval_note.trim().to_owned()),
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else { return Task::none() };
@@ -734,7 +761,10 @@ impl App {
                 w.kept = kept;
             }
             self.refresh_volume();
-            self.say(Level::Success, if on { "Kübaj onaylandı." } else { "Kübajın onayı kaldırıldı." });
+            if let Some(w) = self.volume_window.as_mut() {
+                w.approval_note.clear();
+            }
+            self.say(Level::Success, if on { "Kübaj onaylandı; önceki onayı varsa geçmişte." } else { "Kübajın onayı kaldırıldı; onay geçmişte." });
         }
         Task::none()
     }
@@ -847,6 +877,10 @@ impl App {
         let book = w.ledger.as_ref().and_then(|l| l.as_ref().ok()).filter(|_| matches!(w.shown, Shown::Ledger | Shown::Largest));
         if chosen.is_some() {
             d = match (works, plans) {
+                _ if w.shown == Shown::History && w.history.is_some() => {
+                    let read = w.history.as_ref().expect("checked");
+                    d.picture(iced::widget::canvas(Approvals { read }).width(Fill).height(Fill), 190.0)
+                }
                 _ if book.is_some() => {
                     let (read, _) = book.expect("checked");
                     d.picture(iced::widget::canvas(Book { read }).width(Fill).height(Fill), 190.0)
@@ -949,12 +983,19 @@ impl App {
                     }
                     options.push(Shown::Ledger);
                     options.push(Shown::Largest);
+                    if w.kept.iter().any(|k| k.id == chosen.map_or("", |c| c.id.as_str()) && (k.approved.is_some() || !k.history.is_empty())) {
+                        options.push(Shown::History);
+                    }
                     let now = if options.contains(&w.shown) { w.shown } else { Shown::Sheet };
                     let list: Element<'_, Message> = match (now, budget, progress, comparison) {
                         (Shown::Ledger | Shown::Largest, _, _, _) => match &w.ledger {
                             Some(Ok((l, _))) if now == Shown::Ledger => ledger_table(l),
                             Some(Ok((l, _))) => largest_table(l),
                             _ => label::caption("Defter okunamadı; nedeni yukarıda.").into(),
+                        },
+                        (Shown::History, _, _, _) => match &w.history {
+                            Some(h) => history_table(h),
+                            None => label::caption("Onay geçmişi kaydedilmiş kübajda okunur.").into(),
                         },
                         (Shown::Layers, _, _, _) => layers_table(rep),
                         (Shown::Budget, Some((b, _)), _, _) => budget_table(b),
@@ -1108,6 +1149,15 @@ impl App {
                 .field(PREVIOUS, on_previous)
                 .help("Bir önceki hakedişin ölçüsü: dönemin işi iki ölçünün birikmiş işlerinin farkıdır.")
         };
+        // The note of the next approval or revocation (docs/adr/0950).
+        form = form
+            .section("Onay")
+            .field(
+                APPROVAL_NOTE,
+                kentos_ui::widget::text_field("1. hakediş, zemin raporu değişti…", &w.approval_note)
+                    .on_input(|t| msg(Event::ApprovalNote(t))),
+            )
+            .help("Onayla ya da Onayı kaldır bu notla, bugünün günüyle yazar. Biten onay silinmez, onay geçmişine geçer.");
         // The ledger (docs/adr/0949): how the total is taken apart.
         let on_by = Select::new(GROUPINGS.map(Choice::new), Some(usize::from(w.ledger_regions)), |i| msg(Event::LedgerRegions(i == 1)));
         let on_decimals =
@@ -1168,6 +1218,8 @@ impl App {
             Control::Press(PROGRESS) => Some(msg(Event::View(Shown::Progress))),
             Control::Press(COMPARE) => Some(msg(Event::View(Shown::Compare))),
             Control::Press(LEDGER) => Some(msg(Event::View(Shown::Ledger))),
+            Control::Press(HISTORY) => Some(msg(Event::View(Shown::History))),
+            Control::Fill(APPROVAL_NOTE, text) => Some(msg(Event::ApprovalNote(text.to_owned()))),
             Control::Press(LARGEST) => Some(msg(Event::View(Shown::Largest))),
             Control::Fill(LEDGER_STEP, text) => Some(msg(Event::LedgerStep(text.to_owned()))),
             Control::Pick(LEDGER_BY, words) => Some(msg(Event::LedgerRegions(words == GROUPINGS[1]))),
@@ -1974,6 +2026,181 @@ impl canvas::Program<Message> for Book<'_> {
             frame.fill_rectangle(Point::new(at.x - 10.0, at.y + 6.0), iced::Size::new(8.0, 3.0), color);
             text(&mut frame, words, at, t.text, false);
         }
+        vec![frame.into_geometry()]
+    }
+}
+
+/// How an approval stands: “Geçerli”, “Yerine yenisi geldi · 2026-10-15” or “Kaldırıldı · 2026-10-10 · why”.
+fn approval_state(e: &kentos_commands::VolumeHistoryEntry) -> String {
+    match (&e.approval.ended, e.standing) {
+        (_, true) | (None, _) => "Geçerli".into(),
+        (Some(end), false) => {
+            let mut words = if end.revoked { "Kaldırıldı".to_owned() } else { "Yerine yenisi geldi".to_owned() };
+            if let Some(at) = &end.at {
+                words += &format!(" · {at}");
+            }
+            if let Some(n) = &end.note {
+                words += &format!(" · {n}");
+            }
+            words
+        }
+    }
+}
+
+/// The approvals, oldest first, each against the one before it; today against the last.
+fn history_table(h: &kentos_commands::VolumeHistoryRead) -> Element<'_, Message> {
+    use road_dialog::{col, num};
+    let change = |c: Option<&kentos_commands::VolumeChange>| -> [String; 3] {
+        match c {
+            None => ["—".into(), "—".into(), "—".into()],
+            Some(c) => [signed(c.cut_change), signed(c.fill_change), c.rows.len().to_string()],
+        }
+    };
+    let mut rows: Vec<Vec<String>> = h
+        .approvals
+        .iter()
+        .map(|e| {
+            let a = &e.approval;
+            let [dc, df, n] = change(e.against.as_ref());
+            vec![
+                if a.number == 0 { "—".into() } else { a.number.to_string() },
+                a.at.clone(),
+                approval_state(e),
+                grouped(a.cut, 1),
+                grouped(a.fill, 1),
+                dc,
+                df,
+                n,
+                a.note.clone().unwrap_or_default(),
+            ]
+        })
+        .collect();
+    match (&h.today, &h.problem) {
+        (Some(t), _) => {
+            let [dc, df, n] = change(h.since.as_ref());
+            rows.push(vec!["Bugün".into(), String::new(), "Son onaya göre".into(), grouped(t.cut, 1), grouped(t.fill, 1), dc, df, n, String::new()]);
+        }
+        (None, Some(why)) => rows.push(vec!["Bugün".into(), String::new(), why.clone(), "—".into(), "—".into(), String::new(), String::new(), String::new(), String::new()]),
+        _ => {}
+    }
+    road_dialog::sheet_fill(
+        vec![
+            col("#", 40.0),
+            col("Gün", 90.0),
+            col("Durum", 200.0),
+            num("Kazı (m³)", 90.0),
+            num("Dolgu (m³)", 86.0),
+            num("Kazı farkı", 80.0),
+            num("Dolgu farkı", 80.0),
+            num("Değişen aralık", 96.0),
+            col("Not", 180.0),
+        ],
+        rows,
+        "Onay yok",
+    )
+}
+
+/// The approvals drawn (docs/adr/0950): each approval's cut and fill as a step from the one before, standing ones
+/// filled, ended ones hollow and revoked ones crossed; today after them.
+struct Approvals<'a> {
+    read: &'a kentos_commands::VolumeHistoryRead,
+}
+
+impl canvas::Program<Message> for Approvals<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let t = Tokens::of(theme);
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let h = self.read;
+        let small = Pixels(typography::caption());
+        let text = |frame: &mut canvas::Frame, words: String, at: Point, color: Color| {
+            frame.fill_text(Text {
+                content: words,
+                position: at,
+                color,
+                size: small,
+                font: typography::ui(),
+                align_x: iced::alignment::Horizontal::Center.into(),
+                ..Text::default()
+            });
+        };
+        let mut points: Vec<(String, f64, f64, u8)> = h
+            .approvals
+            .iter()
+            .map(|e| {
+                let a = &e.approval;
+                let state = match (&a.ended, e.standing) {
+                    (_, true) | (None, _) => 0,
+                    (Some(end), _) if end.revoked => 2,
+                    _ => 1,
+                };
+                let name = if a.number == 0 { a.at.clone() } else { format!("#{} · {}", a.number, a.at) };
+                (name, a.cut, a.fill, state)
+            })
+            .collect();
+        if let Some(today) = &h.today {
+            points.push(("Bugün".into(), today.cut, today.fill, 3));
+        }
+        if points.is_empty() {
+            text(&mut frame, "Onay yok".into(), Point::new(bounds.width / 2.0, bounds.height / 2.0), t.muted);
+            return vec![frame.into_geometry()];
+        }
+        // Two strips, the cut's over the fill's, each on its own range: from 0 a hakediş's +96 m³ on 25.878 m³ was
+        // a flat line.
+        let (left, top, foot, gap) = (78.0_f32, 20.0_f32, 22.0_f32, 14.0_f32);
+        let w = bounds.width - left - 16.0;
+        let strip = (bounds.height - top - foot - gap) / 2.0;
+        let slot = w / points.len() as f32;
+        for (k, color, y0) in [(1usize, t.danger, top), (2, t.accent, top + strip + gap)] {
+            let value = |p: &(String, f64, f64, u8)| if k == 1 { p.1 } else { p.2 };
+            let (lo, hi) = points.iter().map(value).fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(v), b.max(v)));
+            let span = (hi - lo).max(1e-3 * hi.abs().max(1.0));
+            let (lo, hi) = (lo - 0.25 * span, hi + 0.35 * span);
+            let at = |i: usize, v: f64| Point::new(left + slot * (i as f32 + 0.5), y0 + strip * (1.0 - ((v - lo) / (hi - lo)) as f32));
+            frame.stroke(
+                &Path::rectangle(Point::new(left, y0), iced::Size::new(w, strip)),
+                Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0),
+            );
+            frame.fill_text(Text {
+                content: if k == 1 { "Kazı (m³)".into() } else { "Dolgu (m³)".into() },
+                position: Point::new(left - 6.0, y0 + strip / 2.0 - 7.0),
+                color,
+                size: small,
+                align_x: iced::alignment::Horizontal::Right.into(),
+                ..Text::default()
+            });
+            let line = Path::new(|b| {
+                for (i, p) in points.iter().enumerate() {
+                    let q = at(i, value(p));
+                    if i == 0 { b.move_to(q) } else { b.line_to(q) }
+                }
+            });
+            frame.stroke(&line, Stroke::default().with_color(color).with_width(1.6));
+            for (i, p) in points.iter().enumerate() {
+                let q = at(i, value(p));
+                text(&mut frame, grouped(value(p), 1), Point::new(q.x, q.y - 20.0), color);
+                match p.3 {
+                    0 => frame.fill(&Path::circle(q, 5.0), color),
+                    3 => frame.fill(&Path::rectangle(Point::new(q.x - 4.5, q.y - 4.5), iced::Size::new(9.0, 9.0)), color),
+                    _ => {
+                        frame.fill(&Path::circle(q, 5.0), t.surface);
+                        frame.stroke(&Path::circle(q, 5.0), Stroke::default().with_color(color).with_width(1.6));
+                        if p.3 == 2 {
+                            let d = 6.0;
+                            frame.stroke(&Path::line(Point::new(q.x - d, q.y - d), Point::new(q.x + d, q.y + d)), Stroke::default().with_color(t.danger).with_width(1.6));
+                            frame.stroke(&Path::line(Point::new(q.x - d, q.y + d), Point::new(q.x + d, q.y - d)), Stroke::default().with_color(t.danger).with_width(1.6));
+                        }
+                    }
+                }
+            }
+        }
+        let at = |i: usize, _: f64| Point::new(left + slot * (i as f32 + 0.5), 0.0);
+        for (i, p) in points.iter().enumerate() {
+            let q = at(i, 0.0);
+            text(&mut frame, p.0.clone(), Point::new(q.x, bounds.height - foot + 4.0), if p.3 == 3 { t.text } else { t.muted });
+        }
+        frame.fill_text(Text { content: "● geçerli  ○ yerine yenisi geldi  ⊗ kaldırıldı  ■ bugün".into(), position: Point::new(left, 2.0), color: t.muted, size: small, ..Text::default() });
         vec![frame.into_geometry()]
     }
 }

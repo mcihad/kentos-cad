@@ -452,8 +452,14 @@ def compare(a, now):
             "fillChange": ch[1], "factoredCutChange": ch[2], "factoredFillChange": ch[3], "rows": rows}
 
 
+def next_number(v):
+    """An approval's number (docs/adr/0950): one after the volume's approvals so far, an unnumbered one counting."""
+    approvals = list(v.get("history", [])) + ([v["approved"]] if v.get("approved") else [])
+    return max([a.get("number", 0) for a in approvals] + [len(approvals)]) + 1
+
+
 def approval_of(v, now, at, note=None):
-    out = {"revision": v.get("revision", 0), "at": at, "cut": now["cut"], "fill": now["fill"],
+    out = {"revision": v.get("revision", 0), "at": at, "number": next_number(v), "cut": now["cut"], "fill": now["fill"],
            "factoredCut": now["factoredCut"], "factoredFill": now["factoredFill"],
            "rows": [[r["from"], r["to"], r["cut"], r["fill"]] for r in now["rows"] if "cut" in r]}
     if note is not None:
@@ -465,8 +471,24 @@ def approval_of(v, now, at, note=None):
 
 
 def approved(v, at="2026-11-03", note=None, corridors=CORRIDORS):
-    """The volume approved as it computes with `corridors`."""
-    return {**v, "approved": approval_of(v, compute(v, corridors)[0], at, note)}
+    """The volume approved as it computes with `corridors`; an approval it had goes to its history, ended by this one
+    (docs/adr/0950)."""
+    out = {**v, "approved": approval_of(v, compute(v, corridors)[0], at, note)}
+    if v.get("approved"):
+        out["history"] = list(v.get("history", [])) + [{**v["approved"], "ended": {"at": at}}]
+    return out
+
+
+def revoked(v, at=None, note=None):
+    """The volume's approval taken off into its history (docs/adr/0950)."""
+    end = {"revoked": True}
+    if at is not None:
+        end["at"] = at
+    if note is not None:
+        end["note"] = note
+    out = {k: val for k, val in v.items() if k != "approved"}
+    out["history"] = list(v.get("history", [])) + [{**v["approved"], "ended": end}]
+    return out
 
 
 def broken(v, why):
@@ -632,6 +654,10 @@ def edit_cases():
     no("Onaylı kübaj silinmez", {"operation": "remove", "volume": "Ana kübaj"},
        failed("volume_approved", "“Ana kübaj” kübajı onaylı; değiştirmek ya da silmek için önce onayı kaldırın.", "volume"),
        setup([a1, V2]))
+    gone = revoked(a1, "2026-11-06")
+    no("Onay geçmişi olan kübaj silinmez", {"operation": "remove", "volume": "v-1"},
+       failed("volume_approved", "“Ana kübaj” kübajının 1 onaylı hâli geçmişte; onay geçmişi silinmez (ADR 0950). Kübajı "
+                                 "bırakıp yenisini yazın.", "volume"), setup([gone, V2]))
     used = setup()
     used["settings"]["road"]["hauls"] = [{"id": "h-1", "name": "Ana Brükner", "volume": "v-1", "revision": 1}]
     no("Brüknerin kullandığı kübaj silinmez", {"operation": "remove", "volume": "v-1"},
@@ -765,9 +791,12 @@ def approve_cases():
         """The road settings with each approval written as "$any": its figures are the volume's, which the output
         compares within the step's tolerance (a sum's last bit is the core's)."""
         road = road_of(volumes, corridors)
+        figures = ("cut", "fill", "factoredCut", "factoredFill", "strip", "bench", "rows")
         for v in road.get("volumes", []):
-            if "approved" in v:
-                v["approved"] = "$any"
+            for a in ([v["approved"]] if "approved" in v else []) + v.get("history", []):
+                for k in figures:
+                    if k in a:
+                        a[k] = "$any"
         return road
 
     def ok(name, input_, after, target, start=START, corridors=CORRIDORS, op="execute", undo=False):
@@ -796,15 +825,27 @@ def approve_cases():
     vs = {**V1, "strip": [{"from": 0.0, "to": 600.0, "depth": 0.3}], "bench": {"slope": 3.0, "height": 0.5}}
     ok("Sıyırma ve diş kazısıyla onay", {"volume": "v-1", "at": day}, [approved(vs, day), V2], "v-1", start=[vs, V2])
     a1 = approved(V1, day)
-    ok("Onay kaldırılır", {"volume": "v-1", "revoke": True}, [V1, V2], "v-1", start=[a1, V2])
-    ok("Yeniden onay eskisinin yerine geçer", {"volume": "v-1", "at": "2026-11-04"}, [approved(V1, "2026-11-04"), V2], "v-1",
-       start=[a1, V2])
+    ok("Onay kaldırılır, geçmişe yazılır", {"volume": "v-1", "revoke": True}, [revoked(a1), V2], "v-1", start=[a1, V2])
+    ok("Kaldırma günü ve nedeniyle", {"volume": "v-1", "revoke": True, "at": "2026-11-06", "note": "Zemin raporu değişti"},
+       [revoked(a1, "2026-11-06", "Zemin raporu değişti"), V2], "v-1", start=[a1, V2])
+    ok("Yeniden onay eskisinin yerine geçer, eskisi geçmişte", {"volume": "v-1", "at": "2026-11-04"},
+       [approved(a1, "2026-11-04"), V2], "v-1", start=[a1, V2])
+    r1 = revoked(a1, "2026-11-06")
+    ok("Kaldırılmış onaydan sonra ikinci onay", {"volume": "v-1", "at": "2026-11-07", "note": "2. hakediş"},
+       [approved(r1, "2026-11-07", "2. hakediş"), V2], "v-1", start=[r1, V2])
+    a3 = approved(approved(a1, "2026-11-04"), "2026-11-05")
+    ok("Üçüncü onay: geçmiş sırayla", {"volume": "v-1", "at": "2026-11-08"}, [approved(a3, "2026-11-08"), V2], "v-1",
+       start=[a3, V2])
+    legacy = {**a1, "approved": {k: val for k, val in a1["approved"].items() if k != "number"}}
+    ok("Numarasız eski onayın yerine gelen ikinci olur", {"volume": "v-1", "at": "2026-11-04"},
+       [approved(legacy, "2026-11-04"), V2], "v-1", start=[legacy, V2])
     ok("Onay tek geri alma adımı", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", undo=True)
     ok("Onaylı kübajın kaynağı değişince yeni onay farkı sıfırlar", {"volume": "v-1", "at": "2026-11-05"},
-       [approved(V1, "2026-11-05", corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2]), V2], "v-1",
+       [approved(a1, "2026-11-05", corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2]), V2], "v-1",
        start=[a1, V2], corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2])
     a2 = approved(V2, "2026-10-30")
-    ok("Yüzeyler arası kübajın onayı kaldırılır", {"volume": "Yan kübaj", "revoke": True}, [V1, V2], "v-2", start=[V1, a2])
+    ok("Yüzeyler arası kübajın onayı kaldırılır", {"volume": "Yan kübaj", "revoke": True}, [V1, revoked(a2)], "v-2",
+       start=[V1, a2])
     ok("Plan yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", op="plan")
     ok("Doğrulama yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", op="validate")
 

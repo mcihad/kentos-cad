@@ -47,6 +47,17 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
         None => None,
     };
     let target = match (input.operation, found) {
+        (RoadEditOperation::Remove, Some((_, old))) if !old.history.is_empty() => {
+            return Err(fail(
+                codes::VOLUME_APPROVED,
+                format!(
+                    "“{}” kübajının {} onaylı hâli geçmişte; onay geçmişi silinmez (ADR 0950). Kübajı bırakıp yenisini yazın.",
+                    old.name,
+                    old.history.len()
+                ),
+                "volume",
+            ));
+        }
         (RoadEditOperation::Remove, Some((at, old))) => {
             let users: Vec<&str> = doc.road_hauls().iter().filter(|h| h.volume == old.id).map(|h| h.name.as_str()).collect();
             if !users.is_empty() {
@@ -133,6 +144,7 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
                 strip: input.strip.clone().unwrap_or_default(),
                 bench: input.bench.clone().flatten(),
                 approved: None,
+                history: Vec::new(),
                 rule: input.rule,
                 curve: input.curve.unwrap_or(false),
             });

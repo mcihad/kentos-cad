@@ -40,6 +40,9 @@ pub const MAX_CORRIDOR_REGIONS: usize = 256;
 /// The most earthwork volumes a road project holds, factor rows one holds (docs/adr/0906).
 pub const MAX_VOLUMES: usize = 256;
 pub const MAX_VOLUME_FACTORS: usize = 1000;
+/// At most so many ended approvals in a volume's history (docs/adr/0950).
+pub const MAX_VOLUME_HISTORY: usize = 200;
+
 /// At most so many approved stretches: a corridor's stations at most (`kentos_road::corridor::MAX_STATIONS`).
 pub const MAX_VOLUME_ROWS: usize = 20000;
 pub const MAX_SECTION_STATIONS: usize = 10_000;
@@ -1198,6 +1201,35 @@ pub struct VolumeApprovalDef {
     pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub rows: Vec<[f64; 4]>,
+    /// Its number among the volume's approvals, from 1 (docs/adr/0950; schema 171); 0: approved before approvals were
+    /// numbered.
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub number: u32,
+    /// How it ended, in the volume's history (docs/adr/0950; schema 171): none while it stands.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ended: Option<VolumeApprovalEnd>,
+}
+
+/// How an approval ended (docs/adr/0950): the day (YYYY-MM-DD; none where it was not given), whether it was revoked
+/// (else a later approval took its place) and why.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeApprovalEnd {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub at: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub revoked: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
 }
 
 /// An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
@@ -1230,6 +1262,11 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<VolumeApprovalDef>,
+    /// Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):
+    /// never changed nor removed.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeApprovalDef>>", optional))]
+    pub history: Vec<VolumeApprovalDef>,
     /// Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
     /// ground, stripped when it strips (as before the rule).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2944,20 +2981,58 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
         {
             return fail(at("bench"), "diş kazısının eğimi 0'dan büyük, en çok %1000; basamak yüksekliği 0'dan büyük, en çok 10 m olur");
         }
-        if let Some(a) = &v.approved {
-            let day = a.at.as_bytes();
-            let date = day.len() == 10
-                && day.iter().enumerate().all(|(i, c)| if i == 4 || i == 7 { *c == b'-' } else { c.is_ascii_digit() });
-            if !date {
-                return fail(at("approved"), "onay günü YYYY-AA-GG biçiminde olmalı");
+        let is_day = |d: &str| {
+            let day = d.as_bytes();
+            day.len() == 10 && day.iter().enumerate().all(|(i, c)| if i == 4 || i == 7 { *c == b'-' } else { c.is_ascii_digit() })
+        };
+        let approval = |a: &VolumeApprovalDef, path: String| -> Option<(String, String)> {
+            if !is_day(&a.at) {
+                return fail(path, "onay günü YYYY-AA-GG biçiminde olmalı");
             }
             if a.note.as_ref().is_some_and(|n| n.chars().count() > 500) {
-                return fail(at("approved"), "onay notu en çok 500 karakter olur");
+                return fail(path, "onay notu en çok 500 karakter olur");
             }
             let numbers = [a.cut, a.fill, a.factored_cut, a.factored_fill].into_iter().chain(a.strip).chain(a.bench);
             if a.rows.len() > MAX_VOLUME_ROWS || !numbers.chain(a.rows.iter().flatten().copied()).all(f64::is_finite) {
-                return fail(at("approved"), &format!("onaylı kübajın sayıları sonlu, en çok {MAX_VOLUME_ROWS} satır olur"));
+                return fail(path, &format!("onaylı kübajın sayıları sonlu, en çok {MAX_VOLUME_ROWS} satır olur"));
             }
+            if let Some(e) = &a.ended {
+                if e.at.as_deref().is_some_and(|d| !is_day(d)) {
+                    return fail(path, "onayın bitiş günü YYYY-AA-GG biçiminde olmalı");
+                }
+                if e.note.as_ref().is_some_and(|n| n.chars().count() > 500) {
+                    return fail(path, "onayın bitiş notu en çok 500 karakter olur");
+                }
+            }
+            None
+        };
+        if let Some(a) = &v.approved {
+            if let Some(p) = approval(a, at("approved")) {
+                return Some(p);
+            }
+            if a.ended.is_some() {
+                return fail(at("approved"), "geçerli onayın bitişi olmaz; biten onay geçmişe yazılır");
+            }
+        }
+        if v.history.len() > MAX_VOLUME_HISTORY {
+            return fail(at("history"), &format!("onay geçmişi en çok {MAX_VOLUME_HISTORY} onay olur"));
+        }
+        let mut last = 0;
+        for (j, a) in v.history.iter().enumerate() {
+            let path = at(&format!("history[{j}]"));
+            if let Some(p) = approval(a, path.clone()) {
+                return Some(p);
+            }
+            if a.ended.is_none() {
+                return fail(path, "geçmişteki onayın bitişi yazılır");
+            }
+            if a.number != 0 && a.number <= last {
+                return fail(path, "geçmişteki onayların sıra numaraları artarak gider");
+            }
+            last = last.max(a.number);
+        }
+        if v.approved.as_ref().is_some_and(|a| a.number != 0 && a.number <= last) {
+            return fail(at("approved"), "geçerli onayın numarası geçmiştekilerden büyük olur");
         }
     }
     None

@@ -780,3 +780,99 @@ fn the_sheet_totals_are_rounded_once() {
     assert_eq!(l.columns[0].total_rounded, report.cut.round());
     assert_eq!(l.columns[0].residue, 1.0);
 }
+
+/// ROAD-VOL-17 (docs/adr/0950): approving again and revoking keep every approval in the history, numbered, with the
+/// day and why it ended; the history view reads them as `road.volumes.history` does; a volume with a history is not
+/// removed.
+#[test]
+fn approvals_are_kept_in_the_history() {
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::ApprovalNote("1. hakediş".into()));
+    send(&mut app, W::Approve(true));
+    let v = model(&mut app).road_volumes()[0].clone();
+    assert_eq!(v.approved.as_ref().map(|a| (a.number, a.note.clone())), Some((1, Some("1. hakediş".into()))));
+    assert!(app.volume_window.as_ref().unwrap().approval_note.is_empty(), "the note is the approval's, then cleared");
+    send(&mut app, W::Cancel);
+    densify(&mut app);
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::ApprovalNote("2. hakediş".into()));
+    send(&mut app, W::Approve(true));
+    send(&mut app, W::ApprovalNote("Zemin raporu değişti".into()));
+    send(&mut app, W::Approve(false));
+    let v = model(&mut app).road_volumes()[0].clone();
+    assert!(v.approved.is_none());
+    assert_eq!(v.history.iter().map(|a| a.number).collect::<Vec<_>>(), vec![1, 2]);
+    let ends: Vec<(bool, Option<String>)> = v.history.iter().map(|a| a.ended.as_ref().map(|e| (e.revoked, e.note.clone())).unwrap()).collect();
+    assert_eq!(ends, vec![(false, None), (true, Some("Zemin raporu değişti".into()))]);
+    assert!(v.history.iter().all(|a| a.ended.as_ref().is_some_and(|e| e.at.is_some())), "each ended on its day");
+    send(&mut app, W::View(crate::volume_window::Shown::History));
+    let h = app.volume_window.as_ref().unwrap().history.clone().expect("shown");
+    let read = {
+        let doc = &app.document.as_ref().unwrap().model;
+        let input = kentos_commands::VolumesHistory { volume: "v-1".into() };
+        let mut copy = doc.reading_copy();
+        match kentos_native_application::road_volumes_history::plan(&kentos_native_application::ExecutionContext::new(&mut copy), &input) {
+            kentos_commands::CommandResult::Completed { output, .. } => output,
+            other => panic!("{other:?}"),
+        }
+    };
+    assert_eq!(h, read, "the window reads the command's history");
+    assert!(h.approvals[1].against.as_ref().is_some_and(|c| c.changed), "the corridor was densified between the two");
+    send(&mut app, W::Remove);
+    send(&mut app, W::Save);
+    assert_eq!(model(&mut app).road_volumes().len(), 2, "a volume with a history stays");
+}
+
+/// The approvals' history in Kübaj, light and dark: two hakediş, the second after the corridor was sampled more densely,
+/// then revoked; `.run/gui-evidence/yol-y44/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_history -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_history() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y44");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::ApprovalNote("1. hakediş".into()));
+        send(&mut app, W::Approve(true));
+        send(&mut app, W::Cancel);
+        densify(&mut app);
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::ApprovalNote("2. hakediş".into()));
+        send(&mut app, W::Approve(true));
+        send(&mut app, W::View(crate::volume_window::Shown::History));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y44-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "iki-hakedis");
+        send(&mut app, W::ApprovalNote("Zemin raporu değişti".into()));
+        send(&mut app, W::Approve(false));
+        send(&mut app, W::View(crate::volume_window::Shown::History));
+        shot(&mut app, "kaldirildi");
+    }
+}
