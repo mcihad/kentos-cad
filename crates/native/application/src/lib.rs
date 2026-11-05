@@ -177,6 +177,7 @@ pub use match_props::entities_match;
 pub use region::{entities_boundary, entities_hatch};
 pub use reverse::entities_reverse;
 pub mod entities_order;
+pub mod entities_flatten;
 pub mod entities_pick;
 pub mod entities_relate;
 pub mod crs_models;
@@ -772,6 +773,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ANNOTATIONS_SCALES,
         kentos_commands::CAD_ANNOTATIONS_SCALES_VERSION,
+    ),
+    // 2B düzleme indir ([`entities_flatten`], docs/adr/1061 §4).
+    (
+        kentos_commands::CAD_ENTITIES_FLATTEN,
+        kentos_commands::CAD_ENTITIES_FLATTEN_VERSION,
     ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (

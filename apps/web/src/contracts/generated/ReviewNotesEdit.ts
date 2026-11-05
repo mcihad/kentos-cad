@@ -6,4 +6,8 @@ import type { ReviewNoteOp } from "./ReviewNoteOp";
  * `review_note_not_found`, `duplicate_review_note`, `not_finite`, `invalid_review_anchors`, `entity_not_found`,
  * `unknown_sheet`, `unknown_view`, `too_many_review_replies`, `too_many_review_notes`, `revision_conflict`.
  */
-export type ReviewNotesEdit = { op: ReviewNoteOp, expectedRevision?: string, };
+export type ReviewNotesEdit = { 
+/**
+ * The one change.
+ */
+change: ReviewNoteOp, expectedRevision?: string, };

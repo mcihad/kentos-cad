@@ -1711,6 +1711,10 @@ codes! {
     INVALID_FILE_PATH = "invalid_file_path", Failed, false, "Dosya yolu boş, göreli ya da bir klasör; ya da klasörü yok.";
     /// A file that exists, and `overwrite` is false.
     FILE_EXISTS = "file_exists", Failed, false, "Dosya var ve üzerine yazılması istenmedi.";
+    /// An export over a CAD drawing KentOS did not write, without `replaceSource` (docs/adr/1061 §5).
+    SOURCE_OVERWRITE = "source_overwrite", Failed, false, "Var olan dosya KentOS'un yazmadığı bir CAD çizimi; üzerine yazmak için replaceSource da verilmeli.";
+    /// A flatten whose objects hold no elevation or measure to remove (docs/adr/1061 §4).
+    NOTHING_TO_FLATTEN = "nothing_to_flatten", Failed, false, "Seçilen nesnelerde kaldırılacak kot (Z) ya da ölçü (M) yok.";
     /// The file could not be written or read back.
     FILE_UNWRITABLE = "file_unwritable", Failed, false, "Dosya yazılamadı ya da geri okunduğunda aynı çıkmadı; eski dosya olduğu gibi kaldı.";
     /// A drawing with nothing to write.

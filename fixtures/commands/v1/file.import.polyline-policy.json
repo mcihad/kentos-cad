@@ -4,7 +4,7 @@
   "command": "file.import.dxf",
   "commandVersion": 1,
   "title": "Çoklu çizgi bütünlüğü",
-  "note": "Independent Autodesk DXF group streams; integrity refusals, not a KentOS round-trip oracle.\nRun --check to verify both sources and command expectations without regenerating them.",
+  "note": "Independent Autodesk DXF group streams; integrity refusals, not a KentOS round-trip oracle.\nRun --check to verify both sources and command expectations without regenerating them.\n\nADR 1061 §3: a straight wide polyline under a block's nonuniform scale is no longer refused: an affine map sends\na strip between two parallel lines to a strip, so each edge keeps its widths times |det M| / |M t| (t its unit\ndirection). Those five sources are taken, their points and widths written here from the INSERT's own map.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -635,34 +635,7 @@
       ]
     },
     {
-      "name": "nonuniform-0-width / plan: kayıplı dönüşüm çizimi değiştirmez",
-      "steps": [
-        {
-          "op": "plan",
-          "input": {
-            "path": "$fixture:formats/v1/cad-io/nonuniform-0-width.dxf",
-            "explodeBlocks": true
-          },
-          "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
-          },
-          "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
-          }
-        }
-      ]
-    },
-    {
-      "name": "nonuniform-0-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "name": "nonuniform-0-width / execute: düz genişlikli kenarlar eşit olmayan ölçekte kesin genişlikle alınır",
       "steps": [
         {
           "op": "execute",
@@ -671,19 +644,50 @@
             "explodeBlocks": true
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
           },
+          "within": 1e-09,
           "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
+            "fields": {
+              "2": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 16.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 16.0,
+                    "y": 32.0
+                  }
+                ],
+                "widths": [
+                  [
+                    0.75,
+                    0.75
+                  ],
+                  [
+                    0.5,
+                    0.5
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "zs": [
+                  7.0,
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            "canUndo": true
           }
         }
       ]
@@ -743,34 +747,7 @@
       ]
     },
     {
-      "name": "nonuniform-1-width / plan: kayıplı dönüşüm çizimi değiştirmez",
-      "steps": [
-        {
-          "op": "plan",
-          "input": {
-            "path": "$fixture:formats/v1/cad-io/nonuniform-1-width.dxf",
-            "explodeBlocks": true
-          },
-          "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
-          },
-          "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
-          }
-        }
-      ]
-    },
-    {
-      "name": "nonuniform-1-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "name": "nonuniform-1-width / execute: düz genişlikli kenarlar eşit olmayan ölçekte kesin genişlikle alınır",
       "steps": [
         {
           "op": "execute",
@@ -779,19 +756,50 @@
             "explodeBlocks": true
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
           },
+          "within": 1e-09,
           "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
+            "fields": {
+              "2": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 14.0
+                  },
+                  {
+                    "x": -2.0,
+                    "y": 14.0
+                  }
+                ],
+                "widths": [
+                  [
+                    0.75,
+                    0.75
+                  ],
+                  [
+                    0.5,
+                    0.5
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "zs": [
+                  7.0,
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            "canUndo": true
           }
         }
       ]
@@ -851,34 +859,7 @@
       ]
     },
     {
-      "name": "nonuniform-2-width / plan: kayıplı dönüşüm çizimi değiştirmez",
-      "steps": [
-        {
-          "op": "plan",
-          "input": {
-            "path": "$fixture:formats/v1/cad-io/nonuniform-2-width.dxf",
-            "explodeBlocks": true
-          },
-          "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
-          },
-          "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
-          }
-        }
-      ]
-    },
-    {
-      "name": "nonuniform-2-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "name": "nonuniform-2-width / execute: düz genişlikli kenarlar eşit olmayan ölçekte kesin genişlikle alınır",
       "steps": [
         {
           "op": "execute",
@@ -887,19 +868,50 @@
             "explodeBlocks": true
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
           },
+          "within": 1e-09,
           "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
+            "fields": {
+              "2": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 15.196152422706632,
+                    "y": 23.0
+                  },
+                  {
+                    "x": 21.196152422706632,
+                    "y": 12.607695154586736
+                  }
+                ],
+                "widths": [
+                  [
+                    0.75,
+                    0.75
+                  ],
+                  [
+                    0.5,
+                    0.5
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "zs": [
+                  7.0,
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            "canUndo": true
           }
         }
       ]
@@ -959,34 +971,7 @@
       ]
     },
     {
-      "name": "nonuniform-3-width / plan: kayıplı dönüşüm çizimi değiştirmez",
-      "steps": [
-        {
-          "op": "plan",
-          "input": {
-            "path": "$fixture:formats/v1/cad-io/nonuniform-3-width.dxf",
-            "explodeBlocks": true
-          },
-          "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
-          },
-          "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
-          }
-        }
-      ]
-    },
-    {
-      "name": "nonuniform-3-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "name": "nonuniform-3-width / execute: düz genişlikli kenarlar eşit olmayan ölçekte kesin genişlikle alınır",
       "steps": [
         {
           "op": "execute",
@@ -995,19 +980,50 @@
             "explodeBlocks": true
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
           },
+          "within": 1e-09,
           "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
+            "fields": {
+              "2": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 18.5
+                  },
+                  {
+                    "x": 26.0,
+                    "y": 18.499999999999996
+                  }
+                ],
+                "widths": [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.125,
+                    0.125
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "zs": [
+                  7.0,
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            "canUndo": true
           }
         }
       ]
@@ -1067,34 +1083,7 @@
       ]
     },
     {
-      "name": "nonuniform-4-width / plan: kayıplı dönüşüm çizimi değiştirmez",
-      "steps": [
-        {
-          "op": "plan",
-          "input": {
-            "path": "$fixture:formats/v1/cad-io/nonuniform-4-width.dxf",
-            "explodeBlocks": true
-          },
-          "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
-          },
-          "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
-          }
-        }
-      ]
-    },
-    {
-      "name": "nonuniform-4-width / execute: kayıplı dönüşüm çizimi değiştirmez",
+      "name": "nonuniform-4-width / execute: düz genişlikli kenarlar eşit olmayan ölçekte kesin genişlikle alınır",
       "steps": [
         {
           "op": "execute",
@@ -1103,19 +1092,50 @@
             "explodeBlocks": true
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "polyline_geometry_loss",
-              "message": "$any",
-              "path": "allowPolylineLoss"
-            }
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
           },
+          "within": 1e-09,
           "expect": {
-            "ids": [
-              1
-            ],
-            "revision": "same",
-            "canUndo": false
+            "fields": {
+              "2": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 13.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 13.0,
+                    "y": 24.000000000004
+                  }
+                ],
+                "widths": [
+                  [
+                    0.25000000000025,
+                    0.25000000000025
+                  ],
+                  [
+                    0.25,
+                    0.25
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "zs": [
+                  7.0,
+                  7.0,
+                  7.0
+                ]
+              }
+            },
+            "canUndo": true
           }
         }
       ]

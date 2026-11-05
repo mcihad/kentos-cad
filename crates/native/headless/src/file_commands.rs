@@ -83,6 +83,52 @@ pub(crate) fn target(path: &str, overwrite: bool) -> Result<(PathBuf, bool), Ref
     Ok((p.to_path_buf(), exists))
 }
 
+/// Whether the file at `path` is a CAD drawing KentOS did not write (docs/adr/1061 §5): a DXF (its text opens with
+/// a SECTION) whose APPID table does not register KENTOS, or a DWG (its AC10xx signature) the codec does not read
+/// back with KENTOS registered. Anything else (no file, another kind of file) is not.
+pub fn foreign_cad(path: &Path) -> bool {
+    let Ok(bytes) = std::fs::read(path) else { return false };
+    if bytes.starts_with(b"AC10") || bytes.starts_with(b"AC1.") {
+        // A DWG: KentOS's own when the codec reads it back with KENTOS registered; else (another author, or one
+        // the codec cannot read) foreign.
+        return !kentos_dwg::written_by_kentos(&bytes);
+    }
+    let head = &bytes[..bytes.len().min(4096)];
+    let text = String::from_utf8_lossy(head);
+    let dxf = text.trim_start_matches('\u{feff}').trim_start().starts_with('0')
+        && text.lines().take(4).any(|l| l.trim() == "SECTION");
+    if !dxf {
+        return false;
+    }
+    // KentOS registers its application in APPID: a record whose name (group 2) is KENTOS.
+    let all = String::from_utf8_lossy(&bytes);
+    let mut lines = all.lines().map(str::trim);
+    let mut kentos = false;
+    while let Some(code) = lines.next() {
+        let Some(value) = lines.next() else { break };
+        if code == "2" && value == kentos_formats::dxf::xdata::APP {
+            kentos = true;
+            break;
+        }
+    }
+    !kentos
+}
+
+/// The refusal of an export over a CAD drawing KentOS did not write, unless `replace` says so (docs/adr/1061 §5).
+fn guard_source(path: &Path, exists: bool, replace: bool) -> Result<(), Refused> {
+    if exists && !replace && foreign_cad(path) {
+        return Err(refuse(
+            codes::SOURCE_OVERWRITE,
+            format!(
+                "{} KentOS'un yazmadığı bir CAD çizimi (açtığınız kaynak olabilir); üzerine dışa aktarmak onu geri dönüşsüz değiştirir. Başka bir ad verin ya da bilerek değiştirmek için replaceSource: true verin.",
+                path.display()
+            ),
+            "replaceSource",
+        ));
+    }
+    Ok(())
+}
+
 /// The DXF's bytes and what they hold, or the refusal.
 fn dxf(
     doc: &Document,
@@ -95,6 +141,7 @@ fn dxf_selected(
     doc: &Document, input: &ExportDxf, uids: Option<&[String]>,
 ) -> Result<(PathBuf, bool, Vec<u8>, DxfExported), Refused> {
     let (path, exists) = target(&input.path, input.overwrite)?;
+    guard_source(&path, exists, input.replace_source)?;
     let mut objects: Vec<&kentos_commands::Entity> = match &input.layers {
         None => doc.entities().collect(),
         Some(ids) => {
@@ -181,7 +228,7 @@ fn dwg(
     doc: &Document, input: &kentos_commands::ExportDwg,
 ) -> Result<(PathBuf, bool, Vec<u8>, kentos_commands::DwgExported), Refused> {
     let dxf_input = ExportDxf { allow_polyline_loss: input.allow_polyline_loss, path: input.path.clone(), layers: input.layers.clone(),
-        overwrite: input.overwrite, annotations: input.annotations };
+        overwrite: input.overwrite, replace_source: input.replace_source, annotations: input.annotations };
     let (path, exists, dxf, mut output) = dxf_selected(doc, &dxf_input, input.uids.as_deref())?;
     let source_version = std::str::from_utf8(&dxf)
         .ok()

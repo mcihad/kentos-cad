@@ -2407,7 +2407,7 @@ dışında. Sahnelerle sürülen pencere testinin dışında ayrı bir fare kayd
 öbürü korunmalı. Bağımsız PDF okuyucuda ölçü/vektör/metin kontrolü yap;
 güncelliğini yitiren pafta ve durdurulan yayın açık raporlansın.
 
-### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [ ]
+### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [~]
 
 **Öncelik:** P0. **Kod:** [C27], [C01], [C11], [C22].
 **Dayanak:** rakiplerde de özelleşmiş nesne ve ilişki taşımada kapsam
@@ -2437,6 +2437,16 @@ sınırları var; doğru görünen aktarım tam davranış uyumluluğu değildir
 ilişkili ölçü, karmaşık desen ve iki pafta içeren 2B dosya kümesi kullan.
 Aç–düzenle–kaydet–yeniden oku akışında her kayıp raporlansın; kaynak dosya
 habersiz ezilmesin. Atlanan gerçek AutoCAD testi yapılmış gibi yazılmasın.
+
+**Kesin geometri, açık düzleme indirme, kaynağın korunması (5 Kasım 2026, [ADR 1061](../docs/adr/1061-exchange-geometry-elevation-and-source-guard.md)):**
+Blok patlatılarak okunurken eşit olmayan ölçek altında düz genişlikli kenarlar şeridini kesin korur; açık, düz,
+genişliksiz yaylı yol kesin 2. derece ağırlıklı NURBS olur. `cad.entities.flatten` (2B düzleme indir) kotları ve
+isteğe bağlı ölçüleri önizlemeli, tek Undo ile kaldırır; açılışta Z/M silinmez. Dışa aktarma KentOS'un yazmadığı
+DXF/DWG'nin üzerine yalnız `replaceSource` ile yazar (`source_overwrite`). ezdxf'in yazdığı 2B kümeyle
+aç–düzenle–dışa aktar–yeniden oku kanıtlı; ezdxf dışa aktarmayı bağımsız okur. Destek matrisi
+`docs/cad/exchange-support.md`'de görüntü ve düzenlenebilirlik ayrı. Açık: KentOS içi Patlat'ta eşit olmayan yay,
+kapalı/kotlu yaylı yol, birim/OCS/blok/katman/kâğıt kararlarının tek yapılı rapor bölümü; AutoCAD denetimi yapılmadı
+(CAD-IO-20). Madde `[~]`.
 
 ### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [ ]
 

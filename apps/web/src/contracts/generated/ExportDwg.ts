@@ -14,7 +14,12 @@ allowPolylineLoss?: boolean, path: string,
 /**
  * Only the named persistent objects; intersected with layers when both are given.
  */
-uids?: Array<string>, layers?: Array<string>, overwrite: boolean, annotations?: DxfAnnotations, 
+uids?: Array<string>, layers?: Array<string>, overwrite: boolean, 
+/**
+ * Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
+ * (a DWG or a DXF without KentOS's APPID) is refused, `source_overwrite`.
+ */
+replaceSource?: boolean, annotations?: DxfAnnotations, 
 /**
  * A DWG file signature. AC1032 is shared by multiple AutoCAD product years.
  */

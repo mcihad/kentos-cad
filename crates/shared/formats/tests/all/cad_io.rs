@@ -318,6 +318,16 @@ fn twenty_independent_polyline_sources_refuse_by_default_and_allow_only_explicit
         if !(name.starts_with("ocs-") || name.starts_with("nonuniform-")) { continue; }
         let bytes = std::fs::read(&file).unwrap();
         let mut opts = DxfReadOptions { explode_blocks: name.starts_with("nonuniform-"), ..Default::default() };
+        if name.starts_with("nonuniform-") && name.ends_with("-width.dxf") {
+            // ADR 1061 §3: a straight wide edge keeps a strip under any affine map; read without loss, its widths
+            // the source's times |det M| / |M·t| (the command cases check each against the INSERT's own map).
+            let read = dxf::read_checked(&bytes, &opts).expect(&name);
+            let kentos_contracts::Entity::Polyline(p) = &read.entities[0] else { panic!("{name}: polyline") };
+            assert!(p.widths.is_some(), "{name}");
+            assert!(read.report.notes.iter().all(|r| r.details.iter().all(|d| !d.property.starts_with("polyline.loss."))), "{name}");
+            count += 1;
+            continue;
+        }
         let error = dxf::read_checked(&bytes, &opts).expect_err(&name);
         assert_eq!(error.code, "polyline_geometry_loss", "{name}");
         opts.allow_polyline_loss = true;

@@ -1,0 +1,2337 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.flatten",
+ "commandVersion": 1,
+ "title": "2B düzleme indir",
+ "note": "Written by scripts/fixtures/flatten_command_cases.py from docs/adr/1061 §4; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Düzlem",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "z": 12.5
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 1.0,
+     "y": 0.0
+    },
+    "z": 3.0,
+    "parts": [
+     {
+      "p": {
+       "x": 2.0,
+       "y": 0.0
+      },
+      "z": 4.0
+     },
+     {
+      "p": {
+       "x": 3.0,
+       "y": 0.0
+      }
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "za": 5.0,
+    "zb": 7.25,
+    "ma": 0.0,
+    "mb": 10.0
+   },
+   {
+    "kind": "polyline",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 5.0
+     }
+    ],
+    "zs": [
+     1.0,
+     null,
+     2.5
+    ],
+    "ms": [
+     0.0,
+     5.0,
+     10.0
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 8.0,
+      "y": 0.0
+     },
+     {
+      "x": 8.0,
+      "y": 8.0
+     },
+     {
+      "x": 0.0,
+      "y": 8.0
+     }
+    ],
+    "zs": [
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 2.0,
+        "y": 2.0
+       },
+       {
+        "x": 4.0,
+        "y": 2.0
+       },
+       {
+        "x": 4.0,
+        "y": 4.0
+       }
+      ],
+      "zs": [
+       9.0,
+       null,
+       9.0
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 1.0,
+      "y": 1.0
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 5.0,
+        "y": 5.0
+       },
+       {
+        "x": 6.0,
+        "y": 6.0
+       }
+      ],
+      "zs": [
+       -1.5,
+       -2.0
+      ],
+      "ms": [
+       3.0,
+       4.0
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 1.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "r": 1.0
+   },
+   {
+    "kind": "line",
+    "id": 9,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 1.0,
+     "y": 0.0
+    },
+    "za": 1.0,
+    "zb": 1.0
+   },
+   {
+    "kind": "line",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 1.0,
+     "y": 0.0
+    },
+    "ma": 1.0,
+    "mb": 2.0
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 5.0,
+     "y": 5.0
+    },
+    "z": 0.0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "nokta: kotu kaldırılır, tek adımda geri alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "vertices": 1,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 12.5,
+       "zMax": 12.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "z": 12.5
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok noktalı nokta: ilk ve ek noktaların kotları; kotsuz ek nokta kotsuz kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "ids": [
+        2
+       ],
+       "vertices": 2,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 3.0,
+       "zMax": 4.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 0.0
+        },
+        "parts": [
+         {
+          "p": {
+           "x": 2.0,
+           "y": 0.0
+          }
+         },
+         {
+          "p": {
+           "x": 3.0,
+           "y": 0.0
+          }
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 0.0
+        },
+        "z": 3.0,
+        "parts": [
+         {
+          "p": {
+           "x": 2.0,
+           "y": 0.0
+          },
+          "z": 4.0
+         },
+         {
+          "p": {
+           "x": 3.0,
+           "y": 0.0
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizgi: iki ucun kotu gider, ölçüler kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "ids": [
+        3
+       ],
+       "vertices": 2,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 5.0,
+       "zMax": 7.25
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "za": 5.0,
+        "zb": 7.25,
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizgi: measures ile ölçüler de gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "measures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "ids": [
+        3
+       ],
+       "vertices": 2,
+       "measures": 2,
+       "revision": "$current",
+       "zMin": 5.0,
+       "zMax": 7.25
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        }
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "za": 5.0,
+        "zb": 7.25,
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoklu çizgi: kotsuz köşe kotsuz kalır, ölçüler kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "ids": [
+        4
+       ],
+       "vertices": 2,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 1.0,
+       "zMax": 2.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "zs": [
+         1.0,
+         null,
+         2.5
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çoklu çizgi: measures ile ölçüler de gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "measures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "ids": [
+        4
+       ],
+       "vertices": 2,
+       "measures": 3,
+       "revision": "$current",
+       "zMin": 1.0,
+       "zMax": 2.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "zs": [
+         1.0,
+         null,
+         2.5
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "alan: dış halkanın ve deliğin kotları gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:5"
+       ],
+       "ids": [
+        5
+       ],
+       "vertices": 6,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 2.0,
+       "zMax": 9.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "5": {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 8.0
+         },
+         {
+          "x": 0.0,
+          "y": 8.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 2.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 4.0
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "5": {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 8.0
+         },
+         {
+          "x": 0.0,
+          "y": 8.0
+         }
+        ],
+        "zs": [
+         2.0,
+         2.0,
+         2.0,
+         2.0
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 2.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 4.0
+           }
+          ],
+          "zs": [
+           9.0,
+           null,
+           9.0
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok parçalı çoklu çizgi: parçanın kotları ve ölçüleri",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "measures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "ids": [
+        6
+       ],
+       "vertices": 2,
+       "measures": 2,
+       "revision": "$current",
+       "zMin": -2.0,
+       "zMax": -1.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "6": {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.0,
+          "y": 1.0
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 5.0,
+            "y": 5.0
+           },
+           {
+            "x": 6.0,
+            "y": 6.0
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "6": {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.0,
+          "y": 1.0
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 5.0,
+            "y": 5.0
+           },
+           {
+            "x": 6.0,
+            "y": 6.0
+           }
+          ],
+          "zs": [
+           -1.5,
+           -2.0
+          ],
+          "ms": [
+           3.0,
+           4.0
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "düzlem verilince her kot düzlemin kotu olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:5"
+      ],
+      "plane": 2.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5"
+       ],
+       "ids": [
+        3,
+        4,
+        5
+       ],
+       "vertices": 6,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 1.0,
+       "zMax": 9.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "za": 2.0,
+        "zb": 2.0,
+        "ma": 0.0,
+        "mb": 10.0
+       },
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "zs": [
+         2.0,
+         null,
+         2.0
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 8.0
+         },
+         {
+          "x": 0.0,
+          "y": 8.0
+         }
+        ],
+        "zs": [
+         2.0,
+         2.0,
+         2.0,
+         2.0
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 2.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 4.0
+           }
+          ],
+          "zs": [
+           2.0,
+           null,
+           2.0
+          ]
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "za": 5.0,
+        "zb": 7.25,
+        "ma": 0.0,
+        "mb": 10.0
+       },
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "zs": [
+         1.0,
+         null,
+         2.5
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 0.0
+         },
+         {
+          "x": 8.0,
+          "y": 8.0
+         },
+         {
+          "x": 0.0,
+          "y": 8.0
+         }
+        ],
+        "zs": [
+         2.0,
+         2.0,
+         2.0,
+         2.0
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 2.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 2.0
+           },
+           {
+            "x": 4.0,
+            "y": 4.0
+           }
+          ],
+          "zs": [
+           9.0,
+           null,
+           9.0
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "note": "5'in kotları zaten 2: değişmez, sayılmaz; deliğin 9'ları 2 olur."
+  },
+  {
+   "name": "düzlem 0: kotu zaten 0 olan nokta değişmez, öbürleri 0 olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:11"
+      ],
+      "plane": 0.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "vertices": 1,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 12.5,
+       "zMax": 12.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "z": 0.0
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "z": 12.5
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "birkaç nesne birlikte: en küçük ve en büyük kot",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:6"
+       ],
+       "ids": [
+        1,
+        2,
+        3,
+        4,
+        6
+       ],
+       "vertices": 9,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": -2.0,
+       "zMax": 12.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       },
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 0.0
+        },
+        "parts": [
+         {
+          "p": {
+           "x": 2.0,
+           "y": 0.0
+          }
+         },
+         {
+          "p": {
+           "x": 3.0,
+           "y": 0.0
+          }
+         }
+        ]
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "ma": 0.0,
+        "mb": 10.0
+       },
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       },
+       "6": {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.0,
+          "y": 1.0
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 5.0,
+            "y": 5.0
+           },
+           {
+            "x": 6.0,
+            "y": 6.0
+           }
+          ],
+          "ms": [
+           3.0,
+           4.0
+          ]
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "z": 12.5
+       },
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 1.0,
+         "y": 0.0
+        },
+        "z": 3.0,
+        "parts": [
+         {
+          "p": {
+           "x": 2.0,
+           "y": 0.0
+          },
+          "z": 4.0
+         },
+         {
+          "p": {
+           "x": 3.0,
+           "y": 0.0
+          }
+         }
+        ]
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "za": 5.0,
+        "zb": 7.25,
+        "ma": 0.0,
+        "mb": 10.0
+       },
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "zs": [
+         1.0,
+         null,
+         2.5
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       },
+       "6": {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.0,
+          "y": 1.0
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 5.0,
+            "y": 5.0
+           },
+           {
+            "x": 6.0,
+            "y": 6.0
+           }
+          ],
+          "zs": [
+           -1.5,
+           -2.0
+          ],
+          "ms": [
+           3.0,
+           4.0
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kotsuz nesne ve başka tür atlanır, kotlu olan değişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:8",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "vertices": 1,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 12.5,
+       "zMax": 12.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "z": 12.5
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmandaki atlanır ve söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "ids": [
+        3
+       ],
+       "vertices": 2,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 5.0,
+       "zMax": 7.25
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "$any",
+        "path": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "za": 5.0,
+        "zb": 7.25,
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız ölçüsü olan çizgi: measures ile ölçüleri gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "measures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:10"
+       ],
+       "ids": [
+        10
+       ],
+       "vertices": 0,
+       "measures": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "10": {
+        "kind": "line",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.0,
+         "y": 0.0
+        }
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "10": {
+        "kind": "line",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.0,
+         "y": 0.0
+        },
+        "ma": 1.0,
+        "mb": 2.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan önizlemedir: yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "ids": [
+        3,
+        4
+       ],
+       "vertices": 4,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 1.0,
+       "zMax": 7.25
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 10.0,
+         "y": 0.0
+        },
+        "za": 5.0,
+        "zb": 7.25,
+        "ma": 0.0,
+        "mb": 10.0
+       },
+       "4": {
+        "kind": "polyline",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 0.0
+         },
+         {
+          "x": 5.0,
+          "y": 5.0
+         }
+        ],
+        "zs": [
+         1.0,
+         null,
+         2.5
+        ],
+        "ms": [
+         0.0,
+         5.0,
+         10.0
+        ]
+       }
+      },
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tekrarlanan kimlik bir kez sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "vertices": 1,
+       "measures": 0,
+       "revision": "$current",
+       "zMin": 12.5,
+       "zMax": 12.5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        }
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "2B düzleme indir",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "z": 12.5
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "ölçüleri kalan çizgide kaldırılacak kot yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_flatten",
+       "message": "Seçilen nesnelerde kaldırılacak ya da değişecek kot (Z) yok; çizim zaten düzlemde. Ölçüleri (M) de kaldırmak için measures: true verin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kotsuz ve ölçüsüz nesneler: değişecek bir şey yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:8"
+      ],
+      "measures": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_flatten",
+       "message": "Seçilen nesnelerde kaldırılacak kot (Z) ya da ölçü (M) yok; çizim zaten düzlemde.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "düzlemdeki nokta düzleme indirilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ],
+      "plane": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_flatten",
+       "message": "$any",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hepsi kilitli katmanda: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "$any",
+       "path": "$any"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nesne verilmedi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_entities",
+       "message": "$any",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "nokta"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "$any",
+       "path": "$any"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "$any",
+       "path": "$any"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "düzlemin kotu sonsuz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "plane": 0.0
+     },
+     "nonFinite": {
+      "plane": "Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Düzlemin kotu sayı değil ya da sonsuz.",
+       "path": "plane"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "expectedRevision": "dün"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "$any",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "beklenen sürüm tutmazsa çakışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "$any",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

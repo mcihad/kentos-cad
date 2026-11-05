@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "cad.flatten": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.flatten"
+      ],
+      "note": "Seçimin kotları ve ölçüleri cad.entities.flatten ile; pencere komutun planını önizler, Uygula tek adım yazar (ADR 1061 §4)."
+    },
     "tool.confirm": {
       "level": "session"
     },

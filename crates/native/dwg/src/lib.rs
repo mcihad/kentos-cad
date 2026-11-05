@@ -93,6 +93,33 @@ fn strict(stats: &acadrust::ReadStats) -> Result<(), Error> {
     Ok(())
 }
 
+/// Whether a DWG registers KENTOS in its APPID table, KentOS's own export (docs/adr/1061 §5): decoded through the same
+/// codec to DXF text and looked at there. A file the codec cannot read is not KentOS's.
+pub fn written_by_kentos(bytes: &[u8]) -> bool {
+    if version(bytes).is_err() {
+        return false;
+    }
+    let dxf = guarded(|| {
+        let outcome = DwgReader::from_stream(Cursor::new(bytes))
+            .read_with_stats()
+            .map_err(|e| error("import_unreadable", format!("DWG okunamadı: {e}")))?;
+        DxfWriter::new(&outcome.document)
+            .with_version(DxfVersion::AC1032)
+            .write_to_vec()
+            .map_err(|e| error("import_unreadable", format!("DWG aktarma verisi üretilemedi: {e}")))
+    });
+    let Ok(dxf) = dxf else { return false };
+    let text = String::from_utf8_lossy(&dxf);
+    let mut lines = text.lines().map(str::trim);
+    while let Some(code) = lines.next() {
+        let Some(value) = lines.next() else { break };
+        if code == "2" && value == kentos_formats::dxf::xdata::APP {
+            return true;
+        }
+    }
+    false
+}
+
 pub fn read(bytes: &[u8], options: &DxfReadOptions) -> Result<ImportResult, Error> {
     read_watched(bytes, options, &mut Quiet)
 }

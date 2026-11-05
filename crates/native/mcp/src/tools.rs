@@ -693,6 +693,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.xrefs.edit"
             // Göm and Yeniden bağla change an image's source (docs/adr/0350 §1).
             | "cad.images.edit"
+            // 2B düzleme indir removes the objects' elevations and measures (docs/adr/1061 §4).
+            | "cad.entities.flatten"
             // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
             | "cad.rasters.mosaic"
             // With overwrite it writes over an existing GeoTIFF (docs/adr/0644 §3).

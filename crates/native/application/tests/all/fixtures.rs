@@ -90,7 +90,7 @@ use kentos_native_application::{
     array, blocks_define, blocks_edit, casework_edit, casework_query, casework_run, circle,
     columns_distances, constructions, crs_transform, curves_construct, delete, dimensions_edit,
     dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_order, entities_pick, entities_relate, entities_select,
+    entities_fillet, entities_flatten, entities_order, entities_pick, entities_relate, entities_select,
     entities_trim, entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit,
     images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
     layers_filter, layers_find, layers_indexes, layers_info, layers_labels, layers_renderer,
@@ -1863,6 +1863,15 @@ impl Input for AnnotationsScales {
                     .ok()?;
                 self.scales.get_mut(i)
             }
+        }
+    }
+}
+
+impl Input for kentos_commands::EntitiesFlatten {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "plane" => self.plane.as_mut(),
+            _ => None,
         }
     }
 }
@@ -5247,6 +5256,7 @@ fn run_op(
             run!(spaces_quantities, kentos_commands::SpacesQuantities)
         }
         kentos_commands::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
+        kentos_commands::CAD_ENTITIES_FLATTEN => run!(entities_flatten, kentos_commands::EntitiesFlatten),
         kentos_commands::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),

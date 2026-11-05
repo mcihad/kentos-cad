@@ -2563,6 +2563,12 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.entities.flatten",
+        refusals: &[OBJECTS, &["not_finite", "nothing_to_flatten"], REVISION],
+        warnings: &["layer_locked"],
+        targets: || vec![target(None, &["*"], &[], None, None)],
+    },
+    Entry {
         id: "cad.entities.order",
         refusals: &[
             OBJECTS,
@@ -6822,6 +6828,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[&[
             "invalid_file_path",
             "file_exists",
+            "source_overwrite",
             "layer_not_found",
             "invalid_uid",
             "entity_not_found",
@@ -6840,6 +6847,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[&[
             "invalid_file_path",
             "file_exists",
+            "source_overwrite",
             "layer_not_found",
             "nothing_to_export",
             "file_unwritable",

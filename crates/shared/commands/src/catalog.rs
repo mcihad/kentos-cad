@@ -1843,6 +1843,41 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         // Öne getir and Arkaya gönder (docs/adr/0260 §5), held together by
+        // 2B düzleme indir (docs/adr/1061 §4): fixtures/commands/v1/cad.entities.flatten.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_FLATTEN.into(),
+            version: crate::CAD_ENTITIES_FLATTEN_VERSION,
+            title: "2B düzleme indir".into(),
+            summary: "Kalıcı kimlikleriyle verilen noktaların, çizgilerin, çoklu çizgilerin ve alanların (parçaları ve delikleri dahil) köşe kotlarını (Z) kaldırır ya da plane verilince hepsini o kota getirir; measures: true ölçüleri (M) de kaldırır. Kotu olmayan köşe kotsuz kalır. Tek geri alma adımı “2B düzleme indir”. \
+                      Plan önizlemedir: değişecek nesneler, kotu giden köşe sayısı ve kotların en küçüğü ile en büyüğü (zMin, zMax), kaldırılacak ölçü sayısı; hiçbir şey yazılmaz. \
+                      Çizim açılırken kotlar ve ölçüler hiçbir zaman kendiliğinden silinmez; bu komut açıkça çalıştırılmadıkça kalır. \
+                      Kilitli katmandakiler atlanır (layer_locked uyarısı; hepsi kilitliyse ret). Değişecek bir şey yoksa nothing_to_flatten."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesFlatten>(),
+            output: schema::<crate::EntitiesFlattened>(),
+            plan: Some(schema::<crate::EntitiesFlattened>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Seçili çizgilerin kotlarını önizle".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kotları 0 düzlemine getir, ölçüleri de kaldır".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "plane": 0.0, "measures": true }),
+                    output: None,
+                },
+            ],
+        },
         // fixtures/commands/v1/cad.entities.order.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
             id: crate::CAD_ENTITIES_ORDER.into(),
@@ -14903,6 +14938,9 @@ mod tests {
                     }
                     crate::CAD_CASEWORK_QUERY => {
                         serde_json::from_value::<crate::CaseworkQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_FLATTEN => {
+                        serde_json::from_value::<crate::EntitiesFlatten>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())

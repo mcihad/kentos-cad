@@ -1942,7 +1942,55 @@ impl<'l> Emitter<'l> {
                 });
                 (pts, bulges, zs, widths)
             }
-            (false, None) => (pts.iter().map(|p| m.apply(*p)).collect(), bulges, zs, None),
+            (false, None) => {
+                // A straight wide edge is a strip between two lines; an affine map keeps lines parallel, so its
+                // image is again a strip, its width across the mapped edge the source's times |det M| / |M·t|
+                // (t the edge's unit direction; docs/adr/1061 §3). Only the end cuts lean.
+                // Only a level path (one elevation, or none): a tilted one's widths lie in its own plane, not the
+                // plan's, and stay the safe refusal (the plan's 3B boundary).
+                let level = zs.as_ref().is_none_or(|z| z.windows(2).all(|w| w[0] == w[1]));
+                let widths = widths.as_ref().filter(|_| level).and_then(|w| exact_widths(m, &pts, w, closed));
+                if widths.is_some() {
+                    self.note(
+                        "Genişlikli çoklu çizgi",
+                        "eşit olmayan ölçekle eklendi: her kenarın genişliği kenarına dik yeniden ölçüldü (kesin); uç ve köşe kesimleri kaynakta kenara dikti, burada değil",
+                        e.line,
+                    );
+                }
+                (pts.iter().map(|p| m.apply(*p)).collect(), bulges, zs, widths)
+            }
+            (true, None) if !closed && !wide && zs.is_none() => {
+                // An open, flat, widthless line with arcs: its image is exact as a rational quadratic NURBS, an arc
+                // being a rational Bézier whose control points an affine map moves and whose weights it keeps
+                // (docs/adr/1061 §3). The polyline's vertex editing is what goes, said; nothing is sampled.
+                if let Some((ctrl, weights, knots)) = arcs_as_nurbs(m, &pts, &bulges) {
+                    self.note(
+                        &e.name,
+                        "yaylı kenarları eşit olmayan ölçekle eklendi: eliptik yaylar kesin NURBS (2. derece, ağırlıklı) oldu; çoklu çizginin köşe düzenlemesi yerine NURBS düzenlemesi",
+                        e.line,
+                    );
+                    return self.push(Entity::Nurbs(NurbsEntity {
+                        base: b,
+                        degree: 2,
+                        ctrl,
+                        knots,
+                        weights: Some(weights),
+                        closed: false,
+                        periodic: false,
+                        fit: None,
+                        tangents: None,
+                        fit_tolerance: None,
+                    }));
+                }
+                let ring = bulge_path_points(&pts, &bulges, closed);
+                self.polyline_loss(
+                    "nonuniform_bulge", &e.name,
+                    "yaylı kenarları eşit olmayan ölçekle eklendiği için noktalara bölündü",
+                    e.line,
+                );
+                let n = ring.len();
+                (ring.iter().map(|p| m.apply(*p)).collect(), vec![0.0; n], zs, None)
+            }
             (true, None) => {
                 // A stretched arc is an elliptic arc; the model's paths hold circular arcs only.
                 let ring = bulge_path_points(&pts, &bulges, closed);
@@ -3567,9 +3615,176 @@ fn is_arch(e: &Entity) -> bool {
     ) || matches!(e, Entity::Polyline(p) if p.space_separator.is_some())
 }
 
+/// The widths of a straight path's edges under the affine map `m` (docs/adr/1061 §3): edge `i` (from vertex `i` to
+/// the next) keeps its start and end widths times |det M| / |M·t|, t its unit direction in the source. None when the
+/// map is singular or an edge has no length (its direction, so its width, is not defined): the caller reports it.
+fn exact_widths(m: Tf, pts: &[Vec2], widths: &[[f64; 2]], closed: bool) -> Option<Vec<[f64; 2]>> {
+    let det = (m.a * m.d - m.b * m.c).abs();
+    if !(det.is_finite() && det > 0.0) {
+        return None;
+    }
+    let n = pts.len();
+    let edges = if closed { n } else { n.saturating_sub(1) };
+    let mut out = Vec::with_capacity(n);
+    for (i, w) in widths.iter().enumerate().take(n) {
+        if i >= edges {
+            // An open path's last vertex starts no edge: its widths draw nothing.
+            out.push(*w);
+            continue;
+        }
+        let (p, q) = (pts[i], pts[(i + 1) % n]);
+        let len = dist(p, q);
+        if !(len > 0.0 && len.is_finite()) {
+            return None;
+        }
+        let (tx, ty) = ((q.x - p.x) / len, (q.y - p.y) / len);
+        let image = hypot(m.a * tx + m.c * ty, m.b * tx + m.d * ty);
+        if !(image > 0.0 && image.is_finite()) {
+            return None;
+        }
+        let k = det / image;
+        out.push([w[0] * k, w[1] * k]);
+    }
+    Some(out)
+}
+
+/// An open vertex path with bulges under the affine map `m` as one rational quadratic B-spline (docs/adr/1061 §3):
+/// each edge a rational Bézier piece (a straight edge its ends and their middle, weight 1; an arc of sweep φ, split in
+/// halves while |bulge| ≥ 1, its ends and the meeting of its end tangents, weight cos(φ/2) = (1 − b²)/(1 + b²) with
+/// b = tan(φ/4)), joined end to end (double inner knots). The control points are mapped, the weights kept: a rational
+/// Bézier's image under an affine map is the Bézier of the mapped points. Control points, weights and knots; none
+/// when an edge has no length or a number is not finite.
+fn arcs_as_nurbs(m: Tf, pts: &[Vec2], bulges: &[f64]) -> Option<(Vec<Vec2>, Vec<f64>, Vec<f64>)> {
+    if pts.len() < 2 {
+        return None;
+    }
+    let mut pieces: Vec<(Vec2, Vec2, f64)> = Vec::new();
+    let mut ctrl = vec![m.apply(pts[0])];
+    let mut weights = vec![1.0];
+    for i in 0..pts.len() - 1 {
+        let (p, q) = (pts[i], pts[i + 1]);
+        let c = dist(p, q);
+        if !(c > 0.0 && c.is_finite()) {
+            return None;
+        }
+        let b = bulges.get(i).copied().unwrap_or(0.0);
+        if !b.is_finite() {
+            return None;
+        }
+        // Halves of an arc as wide as a half circle or wider: tan(θ/8) = b / (1 + √(1 + b²)).
+        let mut arcs: Vec<(Vec2, Vec2, f64)> = vec![(p, q, b)];
+        while let Some(k) = arcs.iter().position(|a| a.2.abs() >= 1.0) {
+            let (a0, a1, ab) = arcs.remove(k);
+            let half = ab / (1.0 + hypot(1.0, ab));
+            let mid = bulge_point(a0, a1, ab);
+            arcs.insert(k, (mid, a1, half));
+            arcs.insert(k, (a0, mid, half));
+            if arcs.len() > 8 {
+                return None;
+            }
+        }
+        pieces.extend(arcs);
+    }
+    for (p, q, b) in pieces {
+        let (apex, w) = if b == 0.0 {
+            (v((p.x + q.x) / 2.0, (p.y + q.y) / 2.0), 1.0)
+        } else {
+            // The end tangents meet at the chord's middle moved to the arc's side by c/2 · tan(φ/2), tan(φ/2) =
+            // 2b/(1 − b²); a positive bulge turns counter-clockwise, its arc right of the chord.
+            let (dx, dy) = (q.x - p.x, q.y - p.y);
+            let rise = 2.0 * b / (1.0 - b * b) / 2.0;
+            (v((p.x + q.x) / 2.0 + dy * rise, (p.y + q.y) / 2.0 - dx * rise), (1.0 - b * b) / (1.0 + b * b))
+        };
+        if !(w > 0.0 && w.is_finite() && finite(apex)) {
+            return None;
+        }
+        ctrl.push(m.apply(apex));
+        weights.push(w);
+        ctrl.push(m.apply(q));
+        weights.push(1.0);
+    }
+    let n = (ctrl.len() - 1) / 2;
+    let mut knots = vec![0.0, 0.0, 0.0];
+    for k in 1..n {
+        knots.push(k as f64);
+        knots.push(k as f64);
+    }
+    knots.extend([n as f64; 3]);
+    ctrl.iter().all(|c| finite(*c)).then_some((ctrl, weights, knots))
+}
+
+/// The point at the middle of the arc from `p` to `q` with bulge `b`: the chord's middle moved right of it by the
+/// sagitta, c/2 · b.
+fn bulge_point(p: Vec2, q: Vec2, b: f64) -> Vec2 {
+    let (dx, dy) = (q.x - p.x, q.y - p.y);
+    v((p.x + q.x) / 2.0 + dy * b / 2.0, (p.y + q.y) / 2.0 - dx * b / 2.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A rational quadratic Bézier piece at t.
+    fn bezier(c: &[Vec2], w: &[f64], t: f64) -> Vec2 {
+        let b = [(1.0 - t) * (1.0 - t), 2.0 * t * (1.0 - t), t * t];
+        let s: f64 = (0..3).map(|i| b[i] * w[i]).sum();
+        v(
+            (0..3).map(|i| b[i] * w[i] * c[i].x).sum::<f64>() / s,
+            (0..3).map(|i| b[i] * w[i] * c[i].y).sum::<f64>() / s,
+        )
+    }
+
+    #[test]
+    fn arcs_under_a_nonuniform_map_are_exact_rational_pieces() {
+        // A half circle of radius 1 from (1, 0) to (−1, 0) counter-clockwise (bulge 1, through (0, 1); split in two
+        // quarters), then a line
+        // to (−1, −2), under x×3, y×0.5: every point of the first piece is on the ellipse (x/3)² + (y/0.5)² = 1 with
+        // y ≥ 0 (analytically, not by KentOS's NURBS code); the second piece is the straight line x = −3.
+        let m = Tf::scale(3.0, 0.5);
+        let (ctrl, w, knots) =
+            arcs_as_nurbs(m, &[v(1.0, 0.0), v(-1.0, 0.0), v(-1.0, -2.0)], &[1.0, 0.0]).expect("exact");
+        assert_eq!(knots, vec![0.0, 0.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 3.0]);
+        assert_eq!(ctrl.len(), 7);
+        for piece in 0..2 {
+            for k in 0..=64 {
+                let p = bezier(&ctrl[piece * 2..piece * 2 + 3], &w[piece * 2..piece * 2 + 3], f64::from(k) / 64.0);
+                let r = (p.x / 3.0) * (p.x / 3.0) + (p.y / 0.5) * (p.y / 0.5);
+                assert!((r - 1.0).abs() < 1e-12 && p.y >= -1e-15, "{p:?} {r}");
+            }
+        }
+        // The half circle is split in its middle, (0, 1), mapped exactly to (0, 0.5): two quarter pieces and the line.
+        let mid = ctrl[2];
+        assert!(mid.x.abs() < 1e-12 && (mid.y - 0.5).abs() < 1e-12, "{mid:?}");
+        for k in 0..=8 {
+            let p = bezier(&ctrl[4..7], &w[4..7], f64::from(k) / 8.0);
+            assert!((p.x + 3.0).abs() < 1e-12, "{p:?}");
+        }
+        // A clockwise quarter (bulge −tan(22.5°)) from (0, 0) to (1, 1) about (1, 0): on (x − 3)²/9 + (y/0.5)² = 1.
+        let b = -(hypot(1.0, 1.0) - 1.0); // tan(22.5°) = √2 − 1
+        let (c2, w2, _) = arcs_as_nurbs(m, &[v(0.0, 0.0), v(1.0, 1.0)], &[b]).expect("exact");
+        for k in 0..=32 {
+            let p = bezier(&c2, &w2, f64::from(k) / 32.0);
+            let r = ((p.x - 3.0) / 3.0) * ((p.x - 3.0) / 3.0) + (p.y / 0.5) * (p.y / 0.5);
+            assert!((r - 1.0).abs() < 1e-12, "{p:?} {r}");
+        }
+        assert!(arcs_as_nurbs(m, &[v(0.0, 0.0), v(0.0, 0.0)], &[0.5]).is_none());
+    }
+
+    #[test]
+    fn a_wide_straight_edge_keeps_its_strip_under_a_nonuniform_map() {
+        // A 2 wide edge along x under x×3, y×0.5: the strip's half widths ±1 in y go to ±0.5, the edge stays along
+        // x; along y under the same map, ±1 in x goes to ±3 across it. A 45° edge: |det| = 1.5, |M·t| = √(9+0.25)/√2.
+        let m = Tf::scale(3.0, 0.5);
+        let pts = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(8.0, 8.0)];
+        let w = exact_widths(m, &pts, &[[2.0, 2.0], [2.0, 1.0], [2.0, 2.0], [0.0, 0.0]], false).expect("widths");
+        assert_eq!(w[0], [1.0, 1.0]);
+        assert_eq!(w[1], [6.0, 3.0]);
+        let k = 1.5 * hypot(1.0, 1.0) / hypot(3.0, 0.5);
+        assert!((w[2][0] - 2.0 * k).abs() < 1e-12, "{w:?}");
+        assert_eq!(w[3], [0.0, 0.0]);
+        assert!(exact_widths(m, &[v(0.0, 0.0), v(0.0, 0.0)], &[[1.0, 1.0], [0.0, 0.0]], false).is_none());
+        assert!(exact_widths(Tf::scale(1.0, 0.0), &pts, &[[1.0, 1.0]; 4], false).is_none());
+    }
 
     #[test]
     fn a_clockwise_arc_edge_is_read_mirrored() {

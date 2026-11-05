@@ -18,7 +18,7 @@ use kentos_commands::{
     DimensionsEdit, DimensionsQuery, DimensionsReassociate, DrawingAudit, EntitiesArray,
     EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup, EntitiesCopy,
     EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode, EntitiesFillet,
-    EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset, EntitiesOrder,
+    EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset, EntitiesOrder, EntitiesFlatten,
     EntitiesPaste, EntitiesPick, EntitiesRelate, EntitiesReverse, EntitiesSelect,
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
     FieldsEdit, FieldsUsage, FontsReport, GisDerivation, GisDetach, GisTakeback, HatchPatternsEdit,
@@ -98,7 +98,7 @@ use crate::{
     dimensions_edit, dimensions_interior, dimensions_query, dimensions_reassociate, divide,
     drawing_audit, edit, entities_boundary, entities_break, entities_chamfer, entities_cleanup,
     entities_copy, entities_explode, entities_extend, entities_fillet, entities_hatch,
-    entities_join, entities_lengthen, entities_match, entities_order, entities_paste,
+    entities_join, entities_lengthen, entities_match, entities_order, entities_flatten, entities_paste,
     entities_pick, entities_relate, entities_reverse, entities_select, entities_trim,
     entities_vertex, fields_edit, fields_usage, file_import, file_import_csv, file_import_fgb,
     file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml, file_import_parquet,
@@ -690,6 +690,7 @@ macro_rules! by_command {
                 $then!(annotations_scales, AnnotationsScales)
             }
             kentos_commands::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
+            kentos_commands::CAD_ENTITIES_FLATTEN => $then!(entities_flatten, EntitiesFlatten),
             kentos_commands::CAD_UCS_SET => $then!(ucs_set, UcsSet),
             kentos_commands::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),
             kentos_commands::CAD_FORMS_EDIT => $then!(forms_edit, FormsEdit),

@@ -28,6 +28,7 @@ import type { ProjectProfileFile } from "./ProjectProfileFile";
 import type { ProjectRelation } from "./ProjectRelation";
 import type { ProjectStandardDocument } from "./ProjectStandardDocument";
 import type { ProjectVariable } from "./ProjectVariable";
+import type { ReviewNote } from "./ReviewNote";
 import type { RoadSettings } from "./RoadSettings";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SourceBase } from "./SourceBase";
@@ -238,6 +239,11 @@ profileFiles?: Array<ProjectProfileFile>,
  * entries take precedence; choosing a standard does not apply it.
  */
 standardDocs?: Array<ProjectStandardDocument>, 
+/**
+ * Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
+ * plotted or measured. Numbered; their stamps say which state of an object each was written for.
+ */
+reviewNotes?: Array<ReviewNote>, 
 /**
  * What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
  * and the geoid model; absent: not said, and no command takes them for either.
