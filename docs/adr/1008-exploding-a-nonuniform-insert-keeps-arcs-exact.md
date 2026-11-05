@@ -43,7 +43,8 @@ kopyalanıyordu.
 
 ## 4. Sınırlar
 
-- Çoklu çizginin köşe düzenlemesi yerine NURBS düzenlemesi gelir; Patlat bunu ayrıca uyarı olarak söylemez (DXF
-  okuyucusu not düşer). Uyarı kodu ayrı iştir.
+- Çoklu çizginin köşe düzenlemesi yerine NURBS düzenlemesi gelir. Ek (6 Kasım 2026): Patlat bunu
+  `semantics_lost` uyarısıyla sayarak söyler (“N yaylı çoklu çizgi eşit olmayan ölçek altında kesin NURBS oldu …”);
+  sayı `Blocks::explode_counted`'dan gelir, ortak vaka uyarıyı bekler.
 - Kapalı yaylı yol, genişlikli yaylı yol ve kotlu yaylı yol hâlâ örneklenir.
 - AutoCAD ile karşılaştırma yapılmadı (CAD-IO-20).

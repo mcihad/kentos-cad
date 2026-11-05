@@ -733,6 +733,18 @@ impl Blocks {
     /// (§7; an empty one none). The objects come without ids (they are new
     /// objects).
     pub fn explode(&self, insert: &Entity) -> Cut {
+        self.explode_counted(insert).0
+    }
+
+    /// [`Self::explode`], and how many of its paths with arcs became NURBS under unequal factors (docs/adr/1008):
+    /// Patlat says so, their vertex editing being NURBS editing now.
+    pub fn explode_counted(&self, insert: &Entity) -> (Cut, usize) {
+        let mut arcs_as_nurbs = 0;
+        let cut = self.explode_with_count(insert, &mut arcs_as_nurbs);
+        (cut, arcs_as_nurbs)
+    }
+
+    fn explode_with_count(&self, insert: &Entity, arcs_as_nurbs: &mut usize) -> Cut {
         let Some((flat, m, similar)) = self.placed(&insert.shape) else {
             return Cut::Error("Yerleştirilen blok çizimde tanımlı değil; patlatılamadı.".into());
         };
@@ -773,7 +785,15 @@ impl Blocks {
         let mut nested = Vec::with_capacity(flat.entities.len());
         for e in &flat.entities {
             nested.push(if similar || !matches!(e.shape, Shape::Insert { .. }) {
-                (!similar).then(|| exact_path(e, &m)).flatten().unwrap_or_else(|| place_in(&e.shape, &m, similar, self.font))
+                match (!similar).then(|| exact_path(e, &m)).flatten() {
+                    Some(exact) => {
+                        if matches!(exact, Shape::Nurbs { .. }) {
+                            *arcs_as_nurbs += 1;
+                        }
+                        exact
+                    }
+                    None => place_in(&e.shape, &m, similar, self.font),
+                }
             } else {
                 match insert_through(&e.shape, &m) {
                     Some(s) => s,

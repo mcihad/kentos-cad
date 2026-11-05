@@ -24,7 +24,8 @@ Writes fixtures/commands/v1/cad.entities.explode.json. The ADR's rules, computed
   control point where its end tangents meet (the centre plus r / cos(φ/2) towards the piece's middle angle), weight
   cos(φ/2); a straight edge its ends and middle, weight 1; the control points mapped, the weights kept, double inner
   knots. A straight wide polyline keeps its vertices mapped and each edge's widths times |det M| / |M·t|. Computed
-  here from the arcs' centres and angles, not from the bulge formulas KentOS uses.
+  here from the arcs' centres and angles, not from the bulge formulas KentOS uses. Patlat says how many such paths
+  became NURBS (`semantics_lost`): their vertices are edited as a NURBS's control points now.
 """
 import copy
 import math
@@ -247,7 +248,8 @@ def cases():
                 [6], undo=True),
         written("İki nesne birlikte, verildikleri sırayla: silme ve parçaları", [1, 2]),
         written("Eşit olmayan ölçekli bloğun yaylı yolu kesin NURBS, genişlikli düz yolu kenarına dik ölçülen genişlikler olur; geri alınır",
-                [11], undo=True, within=1e-12),
+                [11], undo=True, within=1e-12, warnings=[{"code": "semantics_lost", "path": "uids", "message":
+                    f"{sum(1 for d in CURVED_DEFINITION['entities'] if any(d.get('bulges', [])))} yaylı çoklu çizgi eşit olmayan ölçek altında kesin NURBS oldu: eğrisi aynı, ama köşe düzenlemesi yerine NURBS düzenlemesi (denetim noktaları) kullanılır."}]),
         written("Aynı kimlik iki kez: bir kez patlar", [1], input_ids=[1, 1]),
         written("Duvar görünüşünün çizgilerine açılır: iki yüzü ve uçları, rengi geçer; anlamını yitirdiği söylenir; geri alınır",
                 [10], warnings=[{"code": "semantics_lost", "message": f"1 duvar {LOST}", "path": "uids"}], undo=True),

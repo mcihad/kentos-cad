@@ -1240,7 +1240,13 @@
      },
      "result": {
       "status": "completed",
-      "warnings": [],
+      "warnings": [
+       {
+        "code": "semantics_lost",
+        "path": "uids",
+        "message": "1 yaylı çoklu çizgi eşit olmayan ölçek altında kesin NURBS oldu: eğrisi aynı, ama köşe düzenlemesi yerine NURBS düzenlemesi (denetim noktaları) kullanılır."
+       }
+      ],
       "output": {
        "changed": [],
        "created": [

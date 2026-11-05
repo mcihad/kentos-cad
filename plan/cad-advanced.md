@@ -2481,14 +2481,14 @@ kapalı/kotlu yaylı yol, birim/OCS/blok/katman/kâğıt kararlarının tek yap�
 ADR 1061'in kesin NURBS ve kesin genişlik kuralları ortak çekirdeğe taşındı; DXF okuyucusu ve Patlat aynı kodu
 kullanır. Eşit olmayan ölçekli bloğun açık yaylı yolu Patlat'ta kesin NURBS, genişlikli düz yolu kenarına dik ölçülen
 genişlikler olur. Bağımsız (merkez/açıyla hesaplanan) ortak vaka ve masaüstü resmi var. Açık: kapalı/genişlikli/
-kotlu yaylı yol, Patlat'ın NURBS uyarısı, tek yapılı rapor bölümü, AutoCAD denetimi.
+kotlu yaylı yol, AutoCAD denetimi. Patlat NURBS'e dönen yolları `semantics_lost` uyarısıyla sayar (ADR 1008 eki).
 
 **Okuyucu kararlarının tek bölümü (6 Kasım 2026, [ADR 1010](../docs/adr/1010-one-section-for-the-readers-decisions.md)):**
 DXF/DWG içe alma raporunda `decisions` bölümü birim, düzlem (OCS), blok, katman ve kâğıt kararlarını sabit kodlarla
 konu konu verir; eski notlar aynı sözlerle kalır, yeni kararlar (nesnesiz/tabloda olmayan/durumu korunan katman, ters
 ya da eğik düzlem, boş Layout1, inç pafta) yalnız bu bölümdedir. ezdxf'in yazdığı dosya ve kuruluşundan hesaplanan
-beklentiyle sınandı; Çizim al penceresi “Okuma kararları”nı gösterir. Açık: Patlat'ın NURBS uyarısı, kapalı/genişlikli/
-kotlu yaylı yol, AutoCAD denetimi.
+beklentiyle sınandı; Çizim al penceresi “Okuma kararları”nı gösterir. Açık: kapalı/genişlikli/kotlu yaylı yol, AutoCAD
+denetimi.
 
 ### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [~]
 

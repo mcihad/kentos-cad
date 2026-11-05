@@ -198,6 +198,7 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
     let mut skipped = 0;
     let mut walls_made_plain = 0;
     let mut openings_made_plain = 0;
+    let mut arcs_as_nurbs = 0;
     for (at, slot, e, uid) in open {
         if let Entity::Insert(i) = e
             && crate::blocks::contains_space_separator(doc, i.block)
@@ -255,7 +256,13 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
         }
         let insert = matches!(e, Entity::Insert(_));
         let cut = match (e, blocks) {
-            (Entity::Insert(_), Some(blocks)) => blocks.explode(&core_entity(e)),
+            (Entity::Insert(_), Some(blocks)) => {
+                let (cut, n) = blocks.explode_counted(&core_entity(e));
+                if matches!(cut, Cut::Pieces(_)) {
+                    arcs_as_nurbs += n;
+                }
+                cut
+            }
             _ => explode_with(&shape(e), &value_text(e, &f), font, density),
         };
         match cut {
@@ -302,6 +309,17 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
             code: codes::SEMANTICS_LOST.into(),
             message: format!(
                 "{openings_made_plain} açıklık düz çizgiler ve yaylar oldu: türü, numarası, yükseklikleri ve duvarına bağı artık taşınmıyor; duvarı onun yerinde kapanır."
+            ),
+            path: Some("uids".into()),
+        });
+    }
+    if arcs_as_nurbs > 0 {
+        // A path with arcs under unequal factors is an exact NURBS now (docs/adr/1008): its vertices are not edited
+        // as a polyline's any more.
+        warnings.push(CommandWarning {
+            code: codes::SEMANTICS_LOST.into(),
+            message: format!(
+                "{arcs_as_nurbs} yaylı çoklu çizgi eşit olmayan ölçek altında kesin NURBS oldu: eğrisi aynı, ama köşe düzenlemesi yerine NURBS düzenlemesi (denetim noktaları) kullanılır."
             ),
             path: Some("uids".into()),
         });
