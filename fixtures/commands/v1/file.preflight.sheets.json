@@ -1325,7 +1325,7 @@
         "textStyle": "font-style"
       },
       "expect": [
-        "missing_font"
+        "text_font_substituted"
       ]
     },
     {

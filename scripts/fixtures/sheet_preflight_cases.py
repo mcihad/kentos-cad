@@ -45,7 +45,7 @@ def make():
   if dpi:meta['dpi']=dpi
   add('paper-image-'+name,png=True,assetMeta=meta,pictureFrame=dict(left=10000,top=10000,width=w,height=h),fit=fit,factor=factor,expect=['low_resolution'] if ppi<150 else [],absent=[] if ppi<150 else ['low_resolution'])
  add('missing-model-annotation-link',entity=dict(kind='text',id=20,layerId='cizim',attrs={},p=dict(x=0,y=0),text='Son değer',height=.1,rotation=0,labelOf='00000000-0000-5000-8000-000000000099',labelScale=50),expect=['broken_annotation'])
- add('substituted-model-font',fontMissing=True,entity=dict(kind='text',id=20,layerId='cizim',attrs={},p=dict(x=0,y=0),text='Özgün',height=.1,rotation=0,textStyle='font-style'),expect=['missing_font'])
+ add('substituted-model-font',fontMissing=True,entity=dict(kind='text',id=20,layerId='cizim',attrs={},p=dict(x=0,y=0),text='Özgün',height=.1,rotation=0,textStyle='font-style'),expect=['text_font_substituted'])
  add('missing-paper-font',extraItem=dict(id='font',name='Özgün font',frame=dict(left=10000,top=10000,width=100000,height=10000),kind=dict(type='text',content='Türkçe ğüş',style=dict(size=3500,font='missing-office-font'))),expect=['missing_font'])
  png=base64.b64encode((ROOT/'fixtures/interaction/v1/logo.png').read_bytes()).decode()
  for name,body,bad in [('external-image','<image href="gone.png" width="10" height="10"/>',True),('external-css','<rect width="10" height="10" fill="url(gone.svg#paint)"/>',True),('internal-use','<defs><rect id="r" width="10" height="10" fill="red"/></defs><use href="#r"/>',False),('embedded-image',f'<image href="data:image/png;base64,{png}" width="10" height="10"/>',False)]:
