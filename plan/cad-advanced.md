@@ -2295,8 +2295,13 @@ ile temel KCAD dosyası bölünmüş görünümde açıldı; `0 eklendi · 0 sil
 3 değişti` sayacı ve sahnedeki fark vurgusu gerçek ekran görüntüsüyle
 doğrulandı. Yalnız katman rengi değişimi de `layerStyle` alanı ve
 `attributes` durumu olarak ayrıldı; bölünmüş görünümde mavi/açık kahverengi
-çizimler ve `3 değişti` sayacı gerçek uygulamada doğrulandı. Görüntüler
-repo dışında tutuldu. Ölçü/viewport semantiği, farklı UUID
+çizimler ve `3 değişti` sayacı gerçek uygulamada doğrulandı. Ölçü yazısı
+konumu ve yuvarlama override'ı `dimensionPresentation`, ölçü referansları
+`dimensionAssociation` olarak ayrıldı; yalnız sunum değişimi yanlışlıkla
+geometri farkı sayılmıyor. Gerçek uygulamada ölçü yazısı kaydırılmış dosya
+temel çizimle karşılaştırıldı; bölünmüş görünümde tek ölçü vurgulandı ve
+`0 eklendi · 0 silindi · 1 değişti` görüldü. Görüntüler repo dışında
+tutuldu. Viewport semantiği, farklı UUID
 eşleme adayları, inceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
 tamamlandı olarak işaretlenmedi.
 

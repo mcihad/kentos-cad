@@ -27,6 +27,8 @@ const UID: &str = "\0uid";
 const LAYER: &str = "\0layer";
 const DEFINITION: &str = "\0blockDefinition";
 const LAYER_STYLE: &str = "\0layerStyle";
+const DIMENSION_PRESENTATION: &str = "\0dimensionPresentation";
+const DIMENSION_ASSOCIATION: &str = "\0dimensionAssociation";
 
 /// One object in both states that differs.
 #[derive(Clone, Debug, PartialEq)]
@@ -112,6 +114,24 @@ fn member(
             definition_fingerprint(doc, insert.block, cache, &mut HashSet::new()),
         ));
     }
+    if let Entity::Dimension(dimension) = e {
+        let presentation = (
+            &dimension.text,
+            &dimension.style,
+            &dimension.mask,
+            &dimension.look,
+            &dimension.text_shift,
+            &dimension.breaks,
+            &dimension.annotative,
+            &dimension.level,
+        );
+        if let Ok(bytes) = serde_json::to_vec(&presentation) {
+            attrs.push((DIMENSION_PRESENTATION.to_owned(), sha256_hex(&bytes)));
+        }
+        if let Ok(bytes) = serde_json::to_vec(&dimension.refs) {
+            attrs.push((DIMENSION_ASSOCIATION.to_owned(), sha256_hex(&bytes)));
+        }
+    }
     Member {
         shape: crate::geometry::shape(e),
         attrs: Attrs(attrs),
@@ -192,21 +212,37 @@ pub fn diff(old: &Document, new: &Document, tolerance: f64) -> Diff {
                             "blockDefinition".to_owned()
                         } else if f == LAYER_STYLE {
                             "layerStyle".to_owned()
+                        } else if f == DIMENSION_PRESENTATION {
+                            "dimensionPresentation".to_owned()
+                        } else if f == DIMENSION_ASSOCIATION {
+                            "dimensionAssociation".to_owned()
                         } else {
                             f.clone()
                         }
                     })
                     .collect();
+                let appearance_only = match (old.get(a_slots[o]), new.get(b_slots[n])) {
+                    (Some(Entity::Dimension(a)), Some(Entity::Dimension(b))) => {
+                        a.a == b.a && a.b == b.b && a.c == b.c && a.offset == b.offset
+                            && a.height == b.height && a.angle == b.angle
+                            && a.za == b.za && a.zb == b.zb
+                    }
+                    _ => false,
+                };
                 out.changed.push(Changed {
                     old: a_slots[o],
                     new: b_slots[n],
-                    status: match status {
-                        Status::Geometry => "geometry",
-                        Status::Both => "both",
-                        _ => "attributes",
+                    status: if appearance_only {
+                        "attributes"
+                    } else {
+                        match status {
+                            Status::Geometry => "geometry",
+                            Status::Both => "both",
+                            _ => "attributes",
+                        }
                     },
                     fields,
-                    distance: row.distance,
+                    distance: if appearance_only { None } else { row.distance },
                 });
             }
             // A key problem or a half row: not paired, so told as what it is.
@@ -453,5 +489,50 @@ mod tests {
         assert!(delta.changed.iter().all(|c| {
             c.status == "attributes" && c.fields == ["layerStyle".to_owned()]
         }));
+    }
+
+    #[test]
+    fn moved_dimension_text_is_detected_without_false_geometry_change() {
+        let old: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dimension-options.json"
+        ))
+        .unwrap();
+        let mut revised = old.clone();
+        revised["entities"][1]["textShift"]["along"] = json!(2.5);
+        let before = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
+        )
+        .unwrap();
+        let after = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
+        )
+        .unwrap();
+        let delta = diff(&before, &after, COMPARE_TOLERANCE);
+        assert_eq!(delta.changed.len(), 1);
+        assert_eq!(delta.changed[0].status, "attributes");
+        assert_eq!(delta.changed[0].fields, ["dimensionPresentation".to_owned()]);
+        assert_eq!(delta.changed[0].distance, None);
+    }
+
+    #[test]
+    fn dimension_rounding_override_is_not_called_geometry() {
+        let old: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dimension-options.json"
+        ))
+        .unwrap();
+        let mut revised = old.clone();
+        revised["entities"][1]["options"]["round"] = json!(0.1);
+        let before = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
+        )
+        .unwrap();
+        let after = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
+        )
+        .unwrap();
+        let delta = diff(&before, &after, COMPARE_TOLERANCE);
+        assert_eq!(delta.changed.len(), 1);
+        assert_eq!(delta.changed[0].status, "attributes");
+        assert!(delta.changed[0].fields.contains(&"dimensionPresentation".to_owned()));
     }
 }
