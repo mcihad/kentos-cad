@@ -118,6 +118,14 @@ fn ledger(
             (r, n)
         }
         LedgerBy::Stations { .. } => (Vec::new(), Vec::new()),
+        LedgerBy::Factors => def
+            .factors
+            .iter()
+            .map(|f| {
+                let factor = |w: &str, v: Option<f64>| v.map_or_else(String::new, |v| format!(" · {w} {v}"));
+                ((f.from, f.to), format!("{} – {}{}{}", text(f.from), text(f.to), factor("kabarma", f.cut), factor("sıkışma", f.fill)))
+            })
+            .unzip(),
         LedgerBy::Regions => {
             let cdef = doc.road_corridors().iter().find(|c| c.id == def.corridor);
             cdef.map_or_else(
@@ -135,14 +143,30 @@ fn ledger(
             )
         }
     };
-    let grouped = group(&stretches, &ranges);
+    let mut grouped = group(&stretches, &ranges);
+    let mut names = names;
+    // By the factor rows, the stretches under none are a group of their own (ROAD-VOL-21): their factored volume is raw.
+    if input.by == LedgerBy::Factors {
+        let taken: std::collections::BTreeSet<usize> = grouped.iter().flat_map(|g| g.members.iter().copied()).collect();
+        let rest: Vec<usize> = (0..stretches.len()).filter(|i| !taken.contains(i)).collect();
+        if !rest.is_empty() {
+            let values = (0..width).map(|k| sum(rest.iter().filter_map(|&i| stretches[i].values[k]))).collect();
+            let from = rest.iter().map(|&i| stretches[i].from).fold(f64::INFINITY, f64::min);
+            let to = rest.iter().map(|&i| stretches[i].to).fold(f64::NEG_INFINITY, f64::max);
+            grouped.push(kentos_road::volume_ledger::Group { from, to, members: rest, values });
+            names.push("Katsayısız".into());
+        }
+    }
     let groups: Vec<LedgerGroup> = grouped
         .iter()
         .map(|g| {
-            let k = ranges.iter().position(|r| {
-                let m = 0.5 * (stretches[g.members[0]].from + stretches[g.members[0]].to);
-                r.0 <= m && m <= r.1
-            });
+            let m = 0.5 * (stretches[g.members[0]].from + stretches[g.members[0]].to);
+            let n = ranges.len();
+            let k = ranges
+                .iter()
+                .enumerate()
+                .position(|(k, r)| r.0 <= m && (m < r.1 || (k + 1 == n && m <= r.1)))
+                .or_else(|| (names.len() > ranges.len()).then_some(ranges.len()));
             LedgerGroup {
                 label: k.map_or_else(String::new, |k| names[k].clone()),
                 from: g.from,

@@ -128760,7 +128760,7 @@
       "type": "object"
     },
     "LedgerBy": {
-      "description": "How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; or by the\ncorridor's regions.",
+      "description": "How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; by the corridor's\nregions; or by the volume's factor rows (ROAD-VOL-21: which swell and shrink factor applied to which stretches,\nthose under none apart).",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -128786,6 +128786,19 @@
           "properties": {
             "kind": {
               "const": "regions",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "factors",
               "type": "string"
             }
           },

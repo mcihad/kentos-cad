@@ -753,8 +753,9 @@ pub struct VolumesCompared {
 pub const ROAD_VOLUMES_LEDGER: &str = "road.volumes.ledger";
 pub const ROAD_VOLUMES_LEDGER_VERSION: u32 = 1;
 
-/// How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; or by the
-/// corridor's regions.
+/// How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; by the corridor's
+/// regions; or by the volume's factor rows (ROAD-VOL-21: which swell and shrink factor applied to which stretches,
+/// those under none apart).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -766,6 +767,7 @@ pub enum LedgerBy {
         step: f64,
     },
     Regions,
+    Factors,
 }
 
 /// Input of `road.volumes.ledger` v1 (plan/road.md Y43, docs/adr/0949; ROAD-VOL-16, 18): an earthwork volume's total

@@ -8967,13 +8967,15 @@ class LeaderEdit(_Union):
 
 
 class LedgerBy(_Union):
-    """How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; or by the
-    corridor's regions.
+    """How a ledger groups a volume's stretches (docs/adr/0949): by km, `step` metres on its multiples; by the corridor's
+    regions; or by the volume's factor rows (ROAD-VOL-21: which swell and shrink factor applied to which stretches,
+    those under none apart).
 
     One of:
 
     - :class:`StationsLedgerBy` (``kind: stations``)
     - :class:`RegionsLedgerBy` (``kind: regions``)
+    - :class:`FactorsLedgerBy` (``kind: factors``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -99110,6 +99112,19 @@ class RegionsLedgerBy(LedgerBy):
 
 
 @dataclass(kw_only=True, slots=True)
+class FactorsLedgerBy(LedgerBy):
+    TAG_VALUE: ClassVar[str] = "factors"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "factors"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FactorsLedgerBy:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class DeltaLengthenChange(LengthenChange):
     """Fark: the length changed by `length` (negative shortens), or an arc's
     included angle by `angle` radians; exactly one of them.
@@ -109473,7 +109488,7 @@ _KNOWN_POINT: dict[str, type[KnownPoint]] = {"named": NamedKnownPoint, "at": AtK
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
-_LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions": RegionsLedgerBy}
+_LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions": RegionsLedgerBy, "factors": FactorsLedgerBy}
 
 
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
@@ -110683,6 +110698,7 @@ __all__ = [
     "ExtensionPointConstruction",
     "ExtentSourcesEditOp",
     "ExtentsPaperPlotArea",
+    "FactorsLedgerBy",
     "FeatureChange",
     "FeatureFeed",
     "FeatureRecord",

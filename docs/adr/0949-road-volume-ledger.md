@@ -1,6 +1,6 @@
 # 0949 — Kübaj defteri: toplamın nereden geldiği
 
-Tarih: 2026-11-05. Durum: kabul (Y43.1 çekirdek, Y43.2 komut, Y43.3 pencere). Kapsam ROAD-VOL-18, ROAD-VOL-16.
+Tarih: 2026-11-05. Durum: kabul (Y43.1 çekirdek, Y43.2 komut, Y43.3 pencere, katsayı satırlarına göre). Kapsam ROAD-VOL-18, ROAD-VOL-16, ROAD-VOL-21.
 
 ## Sorun
 
@@ -107,6 +107,21 @@ Ortak çizimin ana kübajı (uç alan, 36 aralık), 100 m'lik dilimler:
 - Dilim etiketleri, dilimin ilk kesitini (1+204.713) değil dilimin kendi km'sini (1+200) yazar.
 - **Bekçi:** `the_sheet_totals_are_rounded_once`. Cetvelin toplamı kübajın toplamıdır. Tam sayıda kazı satırlarının
   toplamı 25879, toplam 25878: satırları toplamak 1 m³ yanlış verirdi.
+
+## Katsayı satırlarına göre (ROAD-VOL-21)
+
+`by: factors`, kübajın kabarma–sıkışma tablosunun satırlarına göre gruplar.
+
+- Her grup satırın km aralığı ve katsayılarıyla adlanır: "1+000.000 – 1+300.000 · kabarma 1.25 · sıkışma 0.9".
+- Aralıklar satıra kübajın kendi kuralıyla düşer: ortası [baş, son), son satırın sonu dahil. Bu, aralığın düzeltilmiş
+  hacminin kullandığı kuraldır.
+- Hiçbir satıra düşmeyen aralıklar "Katsayısız" grubunda toplanır. Onların düzeltilmiş hacmi ham hacimdir.
+- Pencerede bu gruplamada düzeltilmiş kazı ve dolgu sütunları öne gelir.
+- 4 yeni durum: iki satır, tek satır (kalanı katsayısız), katsayısız kübaj (tek grup), yalnız kabarmalı satır. Defter
+  28 durum, Rust ve Python aynı.
+
+Ana kübajda 1+000 – 1+300 (kabarma 1,25, sıkışma 0,9) kazının %43,1'ini, 1+300 – 1+600 (kabarma 1,2) %56,9'unu
+taşır.
 
 ## Açık
 - Pafta sınırına göre gruplama (OpenRoads'un sheet clipping'i) ve yanlara (sol/sağ) göre bölüş; ikincisi kesitin

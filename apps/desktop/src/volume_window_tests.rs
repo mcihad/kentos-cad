@@ -703,6 +703,8 @@ fn the_window_reads_the_ledger_as_the_shared_cases_do() {
     check(&app, "100 m'lik dilimler");
     send(&mut app, W::LedgerRegions(true));
     check(&app, "Bölgelere göre");
+    send(&mut app, W::LedgerFactors);
+    check(&app, "Katsayı satırlarına göre");
     send(&mut app, W::LedgerRegions(false));
     send(&mut app, W::LedgerDecimals(0));
     check(&app, "Tam sayıya yuvarlama");
@@ -756,6 +758,9 @@ fn screens_ledger() {
         send(&mut app, W::LedgerDecimals(0));
         send(&mut app, W::LedgerRegions(true));
         shot(&mut app, "bolgeler");
+        send(&mut app, W::LedgerDecimals(2));
+        send(&mut app, W::LedgerFactors);
+        shot(&mut app, "katsayilar");
     }
 }
 

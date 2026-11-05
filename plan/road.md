@@ -229,7 +229,7 @@ Constrained Delaunay, sıradan Delaunay'dan farklı olarak korunan kenarları mo
 - [ ] **ROAD-TIN-13:** Partition sınırında empty-circle/constraint etkileşimi için proven merge veya adaptive genişleme kullan; aynı kaynak monolithic referansla karşılaştırılsın.
 - [ ] **ROAD-TIN-14:** Analiz topology ve display simplification ayrı olsun; decimation sonucu final volume veya aplikasyon query'si olmasın.
 - [ ] **ROAD-TIN-15:** Kontur üretimi vertex/edge eşitlik kuralı, plateau, hole ve snapping toleransıyla deterministic olsun.
-- [ ] **ROAD-TIN-16:** Slope/aspect ve surface roughness değerlerini yüzey türü/metot/units ile döndür; DEM raster yaklaşımıyla TIN'in farklı sonucunu açıklayabilsin.
+- [x] **ROAD-TIN-16:** Slope/aspect ve surface roughness değerlerini yüzey türü/metot/units ile döndür; DEM raster yaklaşımıyla TIN'in farklı sonucunu açıklayabilsin. *(ADR 0916: eğim ve bakı bantları, pürüzlülük, rasterin eğiminin TIN'den farkı ve en büyük farkın yeri; denetim 5 Kasım 2026.)*
 - [ ] **ROAD-TIN-17:** Surface smoothing/repair rollback ve diff sunsun; tasarım noktası veya breakline otomatik kaydırılmasın.
 - [ ] **ROAD-TIN-18:** İleri hedefte GPU broad phase/sorting/triangle candidates kullan; uncertified FP32 incircle ile authoritative topology yayınlama.
 
@@ -246,7 +246,7 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-ALIGN-05:** Doğru→spiral→kurp→spiral→doğru zincirinde konum/teğet/eğrilik süreklilik koşulları ve kalan residual raporlansın.
 - [ ] **ROAD-ALIGN-06:** Station, başlangıçtan analitik yatay uzunluk olsun; 3D uzunluk ve kullanıcıya gösterilen km label'ı ayrı query olsun.
 - [ ] **ROAD-ALIGN-07:** Station equations back/ahead, direction ve label discontinuity'yi taşısın; aynı label birden fazla yere karşılık gelirse branch/element ID istenmeli.
-- [ ] **ROAD-ALIGN-08:** Station→point ve point→station/offset dönüşümünde çoklu yakın çözüm, eğri üzerinde minimum ve tie-break politikası açık olsun.
+- [x] **ROAD-ALIGN-08:** Station→point ve point→station/offset dönüşümünde çoklu yakın çözüm, eğri üzerinde minimum ve tie-break politikası açık olsun. *(Y3.1, ADR 0901 §7: her elemanda bütün ayaklar kapalı biçimde ya da klotoidde ikiye bölme ve Newton'la, en yakını; 1e-9 m içinde eşit uzaklıklarda küçük km; denetim 5 Kasım 2026.)*
 - [ ] **ROAD-ALIGN-09:** Offset alignment'ı kaynak aksla kalıcı ilişkilendir; keskin/ters kurpta cusp/self-intersection detect ve ret/explicit çözüm sun.
 - [ ] **ROAD-ALIGN-10:** Alignment edit ve reverse için segment/station mapping üret; ölçü, profil, corridor region ve stakeout refs'e impact raporu ver.
 - [~] **ROAD-ALIGN-11:** DesignStandard speed/radius/spiral length/visibility kontrolünü sürümlü kurallar olarak uygula; kendi ilk sayılarımızı mevzuat limiti sayma. (Y21, ADR 0922: yarıçap, kurp ve klotoid boyu, aliyman kuralları kullanıcının değerleriyle; hıza bağlı ve sürümlü standart profili ROAD-DEC-01'i bekler.)
@@ -262,7 +262,7 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-PROFILE-02:** Yatay station t boyunca parabolic kurbu z(t)=z0+g1·t+(g2−g1)t²/(2L) ile tanımla; g oran, L yatay metre olsun.
 - [ ] **ROAD-PROFILE-03:** PVI/kurp uzunluğu, başlangıç/son station, kot ve grade constraint solver çıktısını residual ile doğrula.
 - [ ] **ROAD-PROFILE-04:** K=L/|g2−g1| raporunda grade yüzde mi oran mı açık olsun; standarttaki K birimiyle doğru çevir.
-- [ ] **ROAD-PROFILE-05:** Mevcut arazi profili TIN triangle edge geçişlerinde exact parçalı kesit olarak çıkarılsın; yalnız sabit aralıklı ekran örneklemesi olmasın.
+- [x] **ROAD-PROFILE-05:** Mevcut arazi profili TIN triangle edge geçişlerinde exact parçalı kesit olarak çıkarılsın; yalnız sabit aralıklı ekran örneklemesi olmasın. *(ADR 0902 §1, `profile/terrain.rs`: üçgen kenarlarını kestiği her yerde kesin, kurpta kiriş sapmasıyla bölünmüş; denetim 5 Kasım 2026.)*
 - [ ] **ROAD-PROFILE-06:** Boykesitte yatay/düşey çizim ölçekleri ayrı; exaggeration veri kotunu, slope veya hacmi değiştirmesin.
 - [x] **ROAD-PROFILE-07:** Bridge/tunnel/culvert/utility crossing ve clearance constraints profile'a referansla bağlansın.
 - [~] **ROAD-PROFILE-08:** Görüş mesafesi kontrolü araç/engel/göz yüksekliği, standart, terrain/corridor revision ve örnekleme hatasını açık alsın. (Y20, ADR 0921: boykesitte göz ve nesne yüksekliği, bakılan uzaklık ve adım kullanıcının, kapanma parça parça kesin, adım ve 1 mm çözünürlük cevapta; arazi ve koridor üstünden 3B ve yatay görüş açık.)
@@ -368,7 +368,7 @@ Kesit yöntemleri: `V_AEA=L(A0+A1)/2`; gerçek orta kesit alınırsa `V_prismoid
 - [x] **ROAD-VOL-18:** Hesap kaynak parçaları ve contribution ledger drill-down ile incelenebilsin; station/material/AOI bazında büyük toplamın nedeni görülsün. *(Y43, ADR 0949: km dilimi, bölge ve malzeme; en büyük aralıklar ve nedeni; yol boyunca yoğunlaşma. Yanlara ve paftaya göre döküm açık.)*
 - [ ] **ROAD-VOL-19:** Kübaj kuralları adlı ve sürümlü olsun: Yol–Zemin, Formasyon–Zemin, Yol–Bitkisel Toprak, Formasyon–Bitkisel Toprak, Sıyırma Kazısı (Netpro'nun adları); her kural hangi iki yüzeyi, hangi sınırları (yatay ve düşey) ve hangi malzeme durumunu kullandığını söylesin.
 - [ ] **ROAD-VOL-20:** Sıyırma kazısı (bitkisel toprak kalınlığı) ve diş kazısı (eğimli zeminde dolgu oturma basamakları) ayrı kesit kaynakları olsun; kalınlık, basamak boyu ve eşik eğim parametreleri ölçme ya da zemin raporundan gelir, örnek değer saha kararı sayılmaz.
-- [ ] **ROAD-VOL-21:** Km aralıklarına göre kabarma ve sıkışma katsayıları tablo olarak verilebilsin; hangi katsayının hangi aralıkta hangi hacme uygulandığı defterde görünsün; XLSX/ODS/CSV kübaj cetveli ADR 0223'ün yazıcısıyla.
+- [x] **ROAD-VOL-21:** Km aralıklarına göre kabarma ve sıkışma katsayıları tablo olarak verilebilsin; hangi katsayının hangi aralıkta hangi hacme uygulandığı defterde görünsün; XLSX/ODS/CSV kübaj cetveli ADR 0223'ün yazıcısıyla. *(Y8 tablo ve cetvel (ADR 0906, ADR 0223'ün yazıcısı); Y43 defterin katsayı satırlarına göre gruplaması: hangi satırın hangi aralıklara ve hacme uygulandığı, katsayısızlar ayrı (ADR 0949).)*
 
 **Kabul:** Düz prizma, eğik düzlem, işaret değiştiren yüzey, hole/no-data ve material katman örnekleri bağımsız analitik sonuçlarla geçer; kamera/LOD/GPU tier değişimi final miktarı değiştirmez.
 

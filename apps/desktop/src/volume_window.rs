@@ -77,7 +77,7 @@ pub(crate) const ROUNDING: &str = "Yuvarlama";
 /// The approvals' history (docs/adr/0950) and the note an approval or a revocation is written with.
 pub(crate) const HISTORY: &str = "Onay geçmişi";
 pub(crate) const APPROVAL_NOTE: &str = "Onay notu";
-const GROUPINGS: [&str; 2] = ["Km dilimleri", "Bölgeler"];
+const GROUPINGS: [&str; 3] = ["Km dilimleri", "Bölgeler", "Katsayı satırları"];
 const DECIMALS: [&str; 4] = ["Tam sayı", "1 basamak", "2 basamak", "3 basamak"];
 /// The previous survey's “none”.
 const NO_PREVIOUS: &str = "Yok (ilk araziden bu yana)";
@@ -301,6 +301,8 @@ pub struct Window {
     /// The ledger asked (docs/adr/0949): the km step, by regions instead, the rounding's decimals; read while shown.
     pub(crate) ledger_step: String,
     pub(crate) ledger_regions: bool,
+    /// The ledger by the volume's factor rows (ROAD-VOL-21), over the regions.
+    pub(crate) ledger_factors: bool,
     pub(crate) ledger_decimals: u32,
     pub(crate) ledger: Option<Result<(kentos_commands::VolumeLedgerRead, Vec<CommandWarning>), String>>,
     /// The note the next approval or revocation is written with (docs/adr/0950).
@@ -334,6 +336,8 @@ pub enum Event {
     /// The ledger's step, grouping and decimals (docs/adr/0949).
     LedgerStep(String),
     LedgerRegions(bool),
+    /// The ledger by the factor rows (ROAD-VOL-21).
+    LedgerFactors,
     LedgerDecimals(u32),
     /// The next approval's or revocation's note.
     ApprovalNote(String),
@@ -399,6 +403,7 @@ impl App {
             traces: Vec::new(),
             ledger_step: "100".into(),
             ledger_regions: false,
+            ledger_factors: false,
             ledger_decimals: 2,
             ledger: None,
             approval_note: String::new(),
@@ -489,7 +494,9 @@ impl App {
                 Ok(step) => {
                     let input = kentos_commands::VolumesLedger {
                         volume: def.id.clone(),
-                        by: if w.ledger_regions {
+                        by: if w.ledger_factors {
+                            kentos_commands::LedgerBy::Factors
+                        } else if w.ledger_regions {
                             kentos_commands::LedgerBy::Regions
                         } else {
                             kentos_commands::LedgerBy::Stations { step: step.unwrap_or(100.0) }
@@ -671,6 +678,12 @@ impl App {
             }
             Event::LedgerRegions(on) => {
                 w.ledger_regions = on;
+                w.ledger_factors = false;
+                w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
+            }
+            Event::LedgerFactors => {
+                w.ledger_factors = true;
+                w.ledger_regions = false;
                 w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
             }
             Event::ApprovalNote(t) => w.approval_note = t,
@@ -989,7 +1002,7 @@ impl App {
                     let now = if options.contains(&w.shown) { w.shown } else { Shown::Sheet };
                     let list: Element<'_, Message> = match (now, budget, progress, comparison) {
                         (Shown::Ledger | Shown::Largest, _, _, _) => match &w.ledger {
-                            Some(Ok((l, _))) if now == Shown::Ledger => ledger_table(l),
+                            Some(Ok((l, _))) if now == Shown::Ledger => ledger_table(l, w.ledger_factors),
                             Some(Ok((l, _))) => largest_table(l),
                             _ => label::caption("Defter okunamadı; nedeni yukarıda.").into(),
                         },
@@ -1159,11 +1172,15 @@ impl App {
             )
             .help("Onayla ya da Onayı kaldır bu notla, bugünün günüyle yazar. Biten onay silinmez, onay geçmişine geçer.");
         // The ledger (docs/adr/0949): how the total is taken apart.
-        let on_by = Select::new(GROUPINGS.map(Choice::new), Some(usize::from(w.ledger_regions)), |i| msg(Event::LedgerRegions(i == 1)));
+        let by_now = if w.ledger_factors { 2 } else { usize::from(w.ledger_regions) };
+        let on_by = Select::new(GROUPINGS.map(Choice::new), Some(by_now), |i| match i {
+            2 => msg(Event::LedgerFactors),
+            i => msg(Event::LedgerRegions(i == 1)),
+        });
         let on_decimals =
             Select::new(DECIMALS.map(Choice::new), Some(w.ledger_decimals as usize), |i| msg(Event::LedgerDecimals(i as u32)));
         form = form.section(LEDGER).field(LEDGER_BY, on_by);
-        if !w.ledger_regions {
+        if !w.ledger_regions && !w.ledger_factors {
             form = form.field(
                 LEDGER_STEP,
                 kentos_ui::widget::text_field("100", &w.ledger_step).on_input(|t| msg(Event::LedgerStep(t))),
@@ -1222,6 +1239,7 @@ impl App {
             Control::Fill(APPROVAL_NOTE, text) => Some(msg(Event::ApprovalNote(text.to_owned()))),
             Control::Press(LARGEST) => Some(msg(Event::View(Shown::Largest))),
             Control::Fill(LEDGER_STEP, text) => Some(msg(Event::LedgerStep(text.to_owned()))),
+            Control::Pick(LEDGER_BY, words) if words == GROUPINGS[2] => Some(msg(Event::LedgerFactors)),
             Control::Pick(LEDGER_BY, words) => Some(msg(Event::LedgerRegions(words == GROUPINGS[1]))),
             Control::Pick(ROUNDING, words) => {
                 let k = DECIMALS.iter().position(|d| *d == words).ok_or_else(|| format!("“{words}” diye bir yuvarlama yok"))?;
@@ -1860,11 +1878,19 @@ fn ledger_words(l: &kentos_commands::VolumeLedgerRead) -> String {
 }
 
 /// The groups: each column's sum and share; the totals; the rounded rows' residue.
-fn ledger_table(l: &kentos_commands::VolumeLedgerRead) -> Element<'_, Message> {
+fn ledger_table(l: &kentos_commands::VolumeLedgerRead, factored: bool) -> Element<'_, Message> {
     use road_dialog::{col, num};
     let d = l.decimals as usize;
-    let extra: Vec<usize> = (4..l.columns.len()).collect();
-    let mut cols = vec![col("Grup", 150.0), num("Kazı (m³)", 96.0), num("Pay", 56.0), num("Dolgu (m³)", 96.0), num("Pay", 56.0)];
+    // By the factor rows the factored volumes are the point (ROAD-VOL-21): they come first among the others.
+    let extra: Vec<usize> = if factored { (2..l.columns.len()).collect() } else { (4..l.columns.len()).collect() };
+    let longest = l.groups.iter().map(|g| g.label.chars().count()).max().unwrap_or(0) as f32;
+    let mut cols = vec![
+        col("Grup", (7.0 * longest + 16.0).clamp(150.0, 330.0)),
+        num("Kazı (m³)", 96.0),
+        num("Pay", 56.0),
+        num("Dolgu (m³)", 96.0),
+        num("Pay", 56.0),
+    ];
     for &k in &extra {
         cols.push(num(&l.columns[k].words, 110.0));
     }
@@ -1989,7 +2015,11 @@ impl canvas::Program<Message> for Book<'_> {
             let every = ((n as f32 * 70.0 / (split - left)).ceil() as usize).max(1);
             if i % every == 0 {
                 // A km step's own first km (its first section may lie past it), a region's name.
-                let words = if g.label.starts_with("Bölge") { g.label.clone() } else { g.label.split(" – ").next().unwrap_or(&g.from_text).to_owned() };
+                let words = if g.label.starts_with("Bölge") || g.label == "Katsayısız" {
+                    g.label.clone()
+                } else {
+                    g.label.split(" – ").next().unwrap_or(&g.from_text).to_owned()
+                };
                 text(&mut frame, words, Point::new(x, bounds.height - foot), t.muted, true);
             }
         }

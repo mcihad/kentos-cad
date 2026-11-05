@@ -92,6 +92,17 @@ def ledger(input_, volumes, corridors):
             names = [f"{text(a)} – {text(b)}" for a, b in ranges]
         else:
             ranges, names = [], []
+    elif by["kind"] == "factors":
+        # ROAD-VOL-21: the volume's factor rows, each named by its stations and factors; the stretches under none apart.
+        ranges = [[f["from"], f["to"]] for f in v.get("factors", [])]
+        names = []
+        for f in v.get("factors", []):
+            words = f"{text(f['from'])} – {text(f['to'])}"
+            if f.get("cut") is not None:
+                words += f" · kabarma {ccmd.num(f['cut'])}"
+            if f.get("fill") is not None:
+                words += f" · sıkışma {ccmd.num(f['fill'])}"
+            names.append(words)
     else:
         ranges = [[rg["from"], rg["to"]] for rg in c["regions"]]
         names = []
@@ -99,10 +110,21 @@ def ledger(input_, volumes, corridors):
             t = next((x for x in ccmd.TEMPLATES if x["id"] == rg["template"]), None)
             names.append(f"Bölge {k + 1} · {t['name'] if t else rg['template']}")
     groups = []
-    grouped = lref.group(stretches, ranges) if stretches else []
+    grouped = lref.group(stretches, ranges) if stretches and ranges else []
+    if by["kind"] == "factors":
+        taken = {i for g in grouped for i in g["members"]}
+        rest = [i for i in range(len(stretches)) if i not in taken]
+        if rest:
+            vals = [float(sum((F(stretches[i]["values"][k]) for i in rest if stretches[i]["values"][k] is not None),
+                              F(0))) for k in range(width)]
+            grouped.append({"members": rest, "from": min(stretches[i]["from"] for i in rest),
+                            "to": max(stretches[i]["to"] for i in rest), "values": vals})
+            names = names + ["Katsayısız"]
     for g in grouped:
         m0 = (F(stretches[g["members"][0]]["from"]) + F(stretches[g["members"][0]]["to"])) / 2
-        k = next(i for i, (a, b) in enumerate(ranges) if F(a) <= m0 <= F(b))
+        n = len(ranges)
+        k = next((i for i, (a, b) in enumerate(ranges) if F(a) <= m0 and (m0 < F(b) or (i == n - 1 and m0 <= F(b)))),
+                 len(ranges))
         sums = [sum((F(stretches[i]["values"][c_]) for i in g["members"] if stretches[i]["values"][c_] is not None),
                     F(0)) for c_ in range(width)]
         groups.append({"label": names[k], "from": g["from"], "to": g["to"], "fromText": text(g["from"]),
@@ -195,6 +217,13 @@ def cases():
     ok("25 m'lik dilimler", {"volume": "v-1", "by": {"kind": "stations", "step": 25.0}, "top": 20})
     c_dense = {**ccmd.C1, "tangent": 20.0}
     ok("Onaydan sonra koridor sıklaştı", {"volume": "v-1", "by": by100}, [vcmd.approved(V1), V2], [c_dense, ccmd.C2])
+    byf = {"kind": "factors"}
+    ok("Katsayı satırlarına göre", {"volume": "v-1", "by": byf})
+    ok("Katsayı yalnız bir aralıkta: kalanı katsayısız", {"volume": "v-1", "by": byf},
+       [v(factors=[{"from": 100.0, "to": 200.0, "cut": 1.3, "fill": 0.9}]), V2])
+    ok("Katsayısız kübaj: tek grup", {"volume": "v-1", "by": byf}, [v(factors=None), V2])
+    ok("Yalnız kabarmalı satır", {"volume": "v-1", "by": byf},
+       [v(factors=[{"from": 0.0, "to": 600.0, "cut": 1.15}]), V2])
     ok("Planı", {"volume": "v-1", "by": by100}, op="plan")
     ok("Doğrulama", {"volume": "v-2", "by": by100}, op="validate")
     no("Yol projesi değil", {"volume": "v-1", "by": by100}, setup_=vcmd.setup(work="map"))
