@@ -123,6 +123,14 @@ pub struct StyledCache {
     theme: Option<kentos_commands::LayerState>,
 }
 
+impl StyledCache {
+    /// The layer parts built now, every layer's (docs/adr/1062's edit scope).
+    #[cfg(test)]
+    pub fn part_count(&self) -> usize {
+        self.layers.values().map(|l| l.parts.len()).sum()
+    }
+}
+
 /// What a view-dependent layer was built for.
 #[derive(Clone, Copy, Debug)]
 struct ViewBuilt {

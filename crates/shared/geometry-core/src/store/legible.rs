@@ -640,11 +640,16 @@ fn value_box(r: &[f64], height: f64, font: crate::text::Font) -> Vec<Vec2> {
 
 /// Which groups stay: those drawn as they are, always (they take their
 /// cells); then the grown ones in order, each that finds its cells free.
+///
+/// The cells lie on the world, `CELL` pixels at this scale from its origin, not on the view's corner (docs/adr/1062
+/// §4): a pan of any number of pixels finds every text on the same cells, so the same texts stay; only a text the
+/// view's edge cuts in or out of the view may change who stays near it. A cell is 8 px whatever the view.
 fn keep_apart(groups: &[Group], view: &Bounds, scale: f64) -> Vec<bool> {
-    let cols =
-        (js_max(((view.max_x - view.min_x) * scale / CELL).ceil(), 1.0) as usize).min(1 << 14);
-    let rows =
-        (js_max(((view.max_y - view.min_y) * scale / CELL).ceil(), 1.0) as usize).min(1 << 14);
+    // The world cells the view touches: columns east from the origin, rows south (as the screen's y runs).
+    let col0 = (view.min_x * scale / CELL).floor();
+    let row0 = (-view.max_y * scale / CELL).floor();
+    let cols = (js_max((view.max_x * scale / CELL).floor() - col0 + 1.0, 1.0) as usize).min(1 << 14);
+    let rows = (js_max((-view.min_y * scale / CELL).floor() - row0 + 1.0, 1.0) as usize).min(1 << 14);
     let mut taken = vec![false; cols * rows];
     // A group's cells: its outline grown about its anchor, on the view's cells.
     let cells = |g: &Group| -> Option<(usize, usize, usize, usize)> {
@@ -659,7 +664,8 @@ fn keep_apart(groups: &[Group], view: &Bounds, scale: f64) -> Vec<bool> {
                 g.anchor.x + (p.x - g.anchor.x) * g.k,
                 g.anchor.y + (p.y - g.anchor.y) * g.k,
             );
-            let (x, y) = ((q.x - view.min_x) * scale, (view.max_y - q.y) * scale);
+            // Pixels from the first cell's corner: the world's cell lattice, read on the view's cells.
+            let (x, y) = (q.x * scale - col0 * CELL, -q.y * scale - row0 * CELL);
             b = [
                 js_min(b[0], x),
                 js_min(b[1], y),
@@ -954,6 +960,55 @@ mod tests {
                 {"id":2,"layerId":"a","kind":"text","p":{"x":60,"y":0},"text":"Ada 102","height":0.5,"rotation":0}]"#,
         );
         assert_eq!(shown(&s, 2.0, LabelSize::Legible).len(), 2);
+    }
+
+    /// A pan of any number of pixels keeps the same grown texts (docs/adr/1062 §4): the cells they keep apart on
+    /// lie on the world, not on the view's corner. A crowd of small texts at an overview, as the mixed drawing of
+    /// CAD-ADV-19 shows it, all of it well inside every view, so no text is cut in or out by the view's edge (that
+    /// may still change who stays near the edge, measured apart in perf::stability); the views a few pixels apart,
+    /// none a multiple of the 8 px cell.
+    #[test]
+    fn a_pan_keeps_the_same_grown_texts_in_the_middle() {
+        let mut objects = Vec::new();
+        let mut seed = 19u64;
+        let mut next = || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            (seed % 10_000) as f64 / 10_000.0
+        };
+        for i in 0..1200 {
+            let (x, y) = (next() * 260.0 - 130.0, next() * 260.0 - 130.0);
+            objects.push(format!(
+                r#"{{"id":{},"layerId":"a","kind":"text","p":{{"x":{x},"y":{y}}},"text":"Ada {i}","height":0.4,"rotation":0}}"#,
+                i + 1
+            ));
+        }
+        let s = store(&format!("[{}]", objects.join(",")));
+        let scale = 0.7;
+        // The texts kept with the view's corner `dx` px east and `dy` px north.
+        let kept = |dx: f64, dy: f64| -> Vec<u64> {
+            let (ox, oy) = (dx / scale, dy / scale);
+            let view = Bounds {
+                min_x: -250.0 + ox,
+                min_y: -250.0 + oy,
+                max_x: 250.0 + ox,
+                max_y: 250.0 + oy,
+            };
+            let mut ids: Vec<u64> = s
+                .labels_shown(&view, scale, None, LabelSize::Legible, PlaceOptions::default())
+                .records
+                .chunks_exact(LABEL_SHOWN_STRIDE)
+                .map(|r| r[0] as u64)
+                .collect();
+            ids.sort_unstable();
+            ids
+        };
+        let still = kept(0.0, 0.0);
+        assert!(still.len() > 25, "a crowd is kept apart: {}", still.len());
+        for (dx, dy) in [(37.0, -23.0), (3.0, 5.0), (-13.0, 1.0), (7.5, 0.25)] {
+            assert_eq!(kept(dx, dy), still, "a pan of {dx}, {dy} px");
+        }
     }
 
     #[test]

@@ -448,7 +448,7 @@ mod paragraph_editor;
 #[cfg(test)]
 mod parts_scenes;
 #[cfg(test)]
-mod perf;
+pub(crate) mod perf;
 mod photo_view;
 mod pictures;
 mod point_calc;
@@ -615,6 +615,8 @@ mod tools_screens;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;
+#[cfg(test)]
+mod large_scenes;
 #[cfg(test)]
 mod topology_tests;
 mod traces;

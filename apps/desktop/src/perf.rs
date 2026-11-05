@@ -42,6 +42,10 @@ mod bind;
 mod clouds;
 mod file;
 mod frame;
+// A large mixed 2D drawing: open, frames, keys, commands, cancel, memory (docs/adr/1062).
+mod large;
+pub(crate) mod mixed;
+mod stability;
 // The 2+1 apartment of the acceptance flow, 1, 20 and 100 copies (docs/adr/0776 §4).
 mod corpus;
 mod flat;
@@ -365,12 +369,16 @@ fn environment(root: &Path) -> Value {
             .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
             .unwrap_or_default()
     };
-    let cpu = std::fs::read_to_string("/proc/cpuinfo")
+    let mut cpu = std::fs::read_to_string("/proc/cpuinfo")
         .unwrap_or_default()
         .lines()
         .find_map(|l| l.strip_prefix("model name"))
         .map(|l| l.trim_start_matches([' ', '\t', ':']).to_owned())
         .unwrap_or_default();
+    // macOS has no /proc: sysctl and sw_vers say the same (docs/adr/1062).
+    if cpu.is_empty() {
+        cpu = text("sysctl", &["-n", "machdep.cpu.brand_string"]);
+    }
     let threads = std::thread::available_parallelism().map_or(0, |n| n.get());
     let memory_gb = std::fs::read_to_string("/proc/meminfo")
         .unwrap_or_default()
@@ -378,12 +386,26 @@ fn environment(root: &Path) -> Value {
         .find_map(|l| l.strip_prefix("MemTotal:"))
         .and_then(|v| v.trim().trim_end_matches("kB").trim().parse::<f64>().ok())
         .map_or(0.0, |kb| (kb / 1024.0 / 1024.0).round());
-    let os = std::fs::read_to_string("/etc/os-release")
+    let mut os = std::fs::read_to_string("/etc/os-release")
         .unwrap_or_default()
         .lines()
         .find_map(|l| l.strip_prefix("PRETTY_NAME="))
         .map(|l| l.trim_matches('"').to_owned())
         .unwrap_or_default();
+    if os.is_empty() {
+        os = format!(
+            "macOS {} ({})",
+            text("sw_vers", &["-productVersion"]),
+            text("sw_vers", &["-buildVersion"])
+        );
+    }
+    let memory_gb = if memory_gb == 0.0 {
+        text("sysctl", &["-n", "hw.memsize"])
+            .parse::<f64>()
+            .map_or(0.0, |b| (b / 1024.0 / 1024.0 / 1024.0).round())
+    } else {
+        memory_gb
+    };
     let rustc = text("rustc", &["--version"]);
     let kernel = text("uname", &["-r"]);
     json!({
