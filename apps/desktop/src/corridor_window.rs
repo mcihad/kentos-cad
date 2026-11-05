@@ -900,7 +900,9 @@ impl App {
                     for wn in warnings.iter().filter(|x| ["corridor_tight", "corridor_overlap", "corridor_seam", "corridor_folded"].contains(&x.code.as_str())) {
                         col = col.push(label::caption(wn.message.clone()).style(warn));
                     }
-                    col = col.push(preflight_table(c));
+                    if !c.clear || !c.seams.is_empty() {
+                        col = col.push(preflight_table(c));
+                    }
                 }
                 None => {}
             }
