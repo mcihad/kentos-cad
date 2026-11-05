@@ -1159,7 +1159,7 @@ impl App {
             })
             .section("Kabarma ve sıkışma")
             .wide(factors)
-            .wide(densities)
+            .wide(column![label::caption(DENSITIES), densities].spacing(4))
             .wide(
                 row![words::secondary(ADD, Some(msg(Event::Add))), words::ghost(REMOVE_ROW, w.line.map(|_| msg(Event::RemoveRow)))]
                     .spacing(8),

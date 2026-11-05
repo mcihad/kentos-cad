@@ -24,10 +24,13 @@ def shoulder(w, s):
     return {"kind": "shoulder", "width": w, "slope": s}
 
 
-def side(components, cut=1.0, fill=1.5, ditch=None):
+def side(components, cut=1.0, fill=1.5, ditch=None, bench=None):
     out = {"components": components, "cut": cut, "fill": fill}
     if ditch:
         out["ditch"] = {"fore": ditch[0], "depth": ditch[1], "bottom": ditch[2]}
+    if bench:
+        # Docs/adr/0958: (height, width, fall %) of a cut slope's benches.
+        out["bench"] = {"height": bench[0], "width": bench[1], "fall": bench[2]}
     return out
 
 
@@ -60,10 +63,16 @@ def height(t, u):
     return None
 
 
-def meet(t, u0, z0, m):
+def meet(t, u0, z0, m, u1=None):
+    """Where the line from (u0, z0) rising m outward first meets the terrain, at or beyond u0 (and up to u1)."""
     for (ua, za, _), (ub, zb, gap) in zip(t, t[1:]):
         if ub < u0 or gap or za is None or zb is None:
             continue
+        if u1 is not None and ua > u1:
+            break
+        if u1 is not None and ub > u1:
+            zb = za + (zb - za) * (u1 - ua) / (ub - ua)
+            ub = u1
         a = max(ua, u0)
         ga = za + (zb - za) * (a - ua) / (ub - ua)
         fa = z0 + m * (a - u0) - ga
@@ -98,8 +107,33 @@ def build_side(s, axis, ground, right):
             if d["bottom"] > 0:
                 bu += F(d["bottom"])
                 pts.append([bu, bz])
-        day = meet(t, bu, bz, 1 / F(s["cut"]))
-        kind = "cut" if day else "open"
+        b = s.get("bench")
+        if b:
+            # Docs/adr/0958: faces of the bench's height and benches of its width falling its fall outward, until the
+            # first meeting with the terrain; the corners passed are the section's.
+            m = 1 / F(s["cut"])
+            h, w, f = F(b["height"]), F(b["width"]), F(b.get("fall", 0)) / 100
+            reach = t[-1][0]
+            day, corners, (cu, cz) = None, [], (bu, bz)
+            for k in range(400):
+                if k % 2 == 0:
+                    nu, nz = cu + h / m, cz + h
+                else:
+                    nu, nz = cu + w, cz - w * f
+                slope = (nz - cz) / (nu - cu)
+                day = meet(t, cu, cz, slope, nu)
+                if day is not None:
+                    break
+                corners.append([nu, nz])
+                cu, cz = nu, nz
+                if cu > reach:
+                    break
+            if day is not None:
+                pts += corners
+            kind = "cut" if day else "open"
+        else:
+            day = meet(t, bu, bz, 1 / F(s["cut"]))
+            kind = "cut" if day else "open"
     else:
         day = meet(t, u, z, -1 / F(s["fill"]))
         kind = "fill" if day else "open"
@@ -147,7 +181,9 @@ def bad(s, right):
         if not (c["width"] > 0):
             return {"right": right, "component": i}
     d = s.get("ditch")
-    if not (s["cut"] > 0 and s["fill"] > 0) or (d and not (d["fore"] > 0 and d["depth"] > 0 and d["bottom"] >= 0)):
+    b = s.get("bench")
+    if not (s["cut"] > 0 and s["fill"] > 0) or (d and not (d["fore"] > 0 and d["depth"] > 0 and d["bottom"] >= 0)) or (
+            b and not (b["height"] > 0 and b["width"] > 0 and 0 <= b.get("fall", 0) <= 50)):
         return {"right": right, "component": None}
     return None
 
@@ -205,6 +241,23 @@ CASES = [
     make("Büyük kotlar", DITCH, 1251.37, g((-30, 1252.9), (-5, 1251.0), (5, 1250.6), (30, 1249.2))),
     make("Hendek arazinin altına iniyor", DITCH, 99.5, g((-40, 100.2), (40, 100.2))),
     make("Yalnız sağ yanda arazi", SYM, 102.0, g((0.5, 100), (40, 100))),
+    # Docs/adr/0958: benched cut slopes.
+    make("Basamaklı yarma: yüksek yamaç, iki basamak", {"left": side(ROAD, 1.0, 1.5, (2.0, 0.8, 0.5), (4, 3, 0)),
+                                                         "right": side(ROAD, 1.0, 1.5, (2.0, 0.8, 0.5), (4, 3, 0))},
+         100.0, g((-60, 120), (-8, 111), (0, 100.5), (60, 97))),
+    make("Ortalama eğim araziden yatık: buluşmaz", {"left": side(ROAD, 1.0, 1.5, (2.0, 0.8, 0.5), (4, 3, 0)), "right": side(ROAD)},
+         100.0, g((-60, 140), (0, 100.5), (60, 97))),
+    make("Basamak eğimli: dışa %5 düşer", {"left": side(ROAD, 0.5, 1.5, None, (5, 4, 5)), "right": side(ROAD)},
+         100.0, g((-80, 135), (-9, 118), (-5, 101), (0, 100.5), (60, 99))),
+    make("Basamağın üstünde buluşur", {"left": side(ROAD, 1.0, 1.5, None, (3, 2, 0)), "right": side(ROAD)},
+         100.0, g((-60, 102), (-9.5, 102.0), (-8, 103.2), (-5.5, 103.0), (-4.5, 100.5), (0, 100.5), (60, 99))),
+    make("Basamak kırık araziyi keser", {"left": side(ROAD, 0.75, 1.5, None, (2, 3, 10)), "right": side(ROAD)},
+         100.0, g((-60, 112), (-20, 106), (-12, 104.4), (-8, 104.6), (0, 100.5), (60, 99))),
+    make("Basamaklı ama dolgu: basamak işlemez", {"left": side(ROAD, 1.0, 1.5, None, (2, 2, 0)), "right": side(ROAD, 1.0, 1.5, None, (2, 2, 0))},
+         103.0, FLAT),
+    make("Basamaklı yarma şeride sığmıyor: açık", {"left": side(ROAD, 1.0, 1.5, None, (2, 2, 0)), "right": side(ROAD)},
+         100.0, g((-14, 120), (0, 100.5), (14, 99))),
+    make("Sıfır basamak genişliği: geçersiz", {"left": side(ROAD, 1.0, 1.5, None, (2, 0, 0)), "right": side(ROAD)}, 100.0, FLAT),
     make("Sıfır genişlik: geçersiz", {"left": side([lane(0.0, -2)]), "right": side(ROAD)}, 100.0, FLAT),
     make("Sıfır yarma şevi: geçersiz", {"left": side(ROAD), "right": side(ROAD, 0.0)}, 100.0, FLAT),
     make("Eksi hendek tabanı: geçersiz", {"left": side(ROAD, 1.0, 1.5, (2.0, 0.8, -1)), "right": side(ROAD)}, 100.0, FLAT),

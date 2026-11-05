@@ -572,6 +572,14 @@ def templates_cases():
     no("Derinliksiz hendek",
        {"operation": "set", "name": "x", "left": {**plain, "ditch": {"fore": 2.0, "depth": 0.0}}},
        rule("hendeğin iç şevi ve derinliği 0'dan büyük, tabanı eksi olmamalı", "left.ditch"))
+    # Docs/adr/0958: a cut slope's benches.
+    bench = {"height": 6.0, "width": 3.0, "fall": 5.0}
+    ok("Basamaklı yarma şevli yeni tip kesit", {"operation": "set", "name": "Basamaklı", "left": {**plain, "bench": bench}},
+       start + [{"id": "tk-3", "name": "Basamaklı", "revision": 1, "left": {**plain, "bench": bench}}], "tk-3")
+    no("Genişliksiz basamak", {"operation": "set", "name": "x", "left": {**plain, "bench": {"height": 6.0, "width": 0.0}}},
+       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.bench"))
+    no("Dik basamak eğimi", {"operation": "set", "name": "x", "left": {**plain, "bench": {**bench, "fall": 80.0}}},
+       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.bench"))
     no("Geçersiz beklenen sürüm", {"operation": "set", "template": "tk-1", "name": "Tip A", "expectedRevision": "on"},
        BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "set", "template": "tk-1", "name": "Tip A", "expectedRevision": "41"},

@@ -117,6 +117,9 @@ pub struct SideRow {
     fore: String,
     depth: String,
     bottom: String,
+    /// The cut slope's benches (docs/adr/0958): on, their height, width and outward fall (%).
+    pub(crate) bench: bool,
+    pub(crate) bench_fields: [String; 3],
 }
 
 impl SideRow {
@@ -137,6 +140,8 @@ impl SideRow {
             fore: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.fore)),
             depth: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.depth)),
             bottom: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.bottom)),
+            bench: s.bench.is_some(),
+            bench_fields: s.bench.map_or_else(Default::default, |b| [trimmed(b.height), trimmed(b.width), trimmed(b.fall)]),
         }
     }
 
@@ -158,11 +163,21 @@ impl SideRow {
         } else {
             None
         };
+        let bench = if self.bench {
+            Some(kentos_commands::TemplateBenchDef {
+                height: need(&self.bench_fields[0], &format!("{side} yanın basamak yüksekliği"))?,
+                width: need(&self.bench_fields[1], &format!("{side} yanın basamak genişliği"))?,
+                fall: number(&self.bench_fields[2]).ok().flatten().unwrap_or(0.0),
+            })
+        } else {
+            None
+        };
         Ok(TemplateSideDef {
             components,
             cut: need(&self.cut, &format!("{side} yanın yarma şevi"))?,
             fill: need(&self.fill, &format!("{side} yanın dolgu şevi"))?,
             ditch,
+            bench,
         })
     }
 }
@@ -442,9 +457,12 @@ pub enum Event {
     PartKind(usize, usize),
     Add,
     RemovePart,
-    /// The side's end: 0 cut, 1 fill, 2 the ditch's fore slope, 3 its depth, 4 its bottom.
+    /// The side's end: 0 cut, 1 fill, 2 the ditch's fore slope, 3 its depth, 4 its bottom; 5–7 the benches' height,
+    /// width and fall.
     End(usize, String),
     Ditch,
+    /// The cut slope's benches on or off (docs/adr/0958).
+    Bench,
     /// The template's pavement on or off (docs/adr/0930 §3).
     Pavement,
     /// The pavement's edge: a slope (true) or vertical.
@@ -820,13 +838,19 @@ impl App {
                         1 => s.fill = t,
                         2 => s.fore = t,
                         3 => s.depth = t,
-                        _ => s.bottom = t,
+                        4 => s.bottom = t,
+                        k => s.bench_fields[(k - 5).min(2)] = t,
                     }
                 }
             }
             Event::Ditch => {
                 if let Some(s) = w.side_mut() {
                     s.ditch = !s.ditch;
+                }
+            }
+            Event::Bench => {
+                if let Some(s) = w.side_mut() {
+                    s.bench = !s.bench;
                 }
             }
             Event::Pavement => {
@@ -1475,6 +1499,15 @@ fn sample_ground_near() -> Vec<GroundPoint> {
         .collect()
 }
 
+/// A high cut on the left for a template whose cut slope is benched (docs/adr/0958): the ground climbs 7 m between
+/// 5 and 8 m out and keeps rising 1 in 3.5, so a few benches show before the slope meets it; the right as before.
+pub(crate) fn sample_ground_benched() -> Vec<GroundPoint> {
+    [(-36.0, 116.0), (-8.0, 108.0), (-5.0, 101.0), (0.0, 100.0), (14.0, 98.0), (16.0, 98.0 - 4.0 / 26.0 * 2.0)]
+        .into_iter()
+        .map(|(offset, z)| GroundPoint { offset, z: Some(z), gap: false, crossing: false })
+        .collect()
+}
+
 
 /// Which side the template editor shows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1511,15 +1544,15 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
     let side = if editing_right { &t.right } else { &t.left };
     // The look on a sloping ground: a cut on the left, a fill on the right; the pavement under it.
     let def = t.def();
+    let benched = def.as_ref().is_ok_and(|d| d.left.bench.is_some() || d.right.as_ref().is_some_and(|r| r.bench.is_some()));
+    let ground = if benched { sample_ground_benched() } else { sample_ground_near() };
     let built = def.as_ref().ok().and_then(|d| {
         let core = road_sections::core_template(d);
-        let sec = tpl::build(&core, 100.0, &sample_ground_near()).ok()?;
-        let pav = d.pavement.as_ref().map(|p| {
-            kentos_road::section::pavement::build(&core, &sec, &road_volumes_core_pavement(p), &sample_ground_near())
-        });
+        let sec = tpl::build(&core, 100.0, &ground).ok()?;
+        let pav = d.pavement.as_ref().map(|p| kentos_road::section::pavement::build(&core, &sec, &road_volumes_core_pavement(p), &ground));
         Some((sec, pav))
     });
-    let sample = built.as_ref().map(|(s, _)| (sample_ground_near(), s.clone()));
+    let sample = built.as_ref().map(|(s, _)| (ground.clone(), s.clone()));
     let layers = built.as_ref().and_then(|(_, p)| p.as_ref()).and_then(|p| p.as_ref().ok()).map(|p| p.bottoms.clone());
     let exaggeration = number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0);
     let picture = crate::picture::picture(
@@ -1642,6 +1675,15 @@ fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a,
             .field("Derinlik (m)", end("0,5", &side.depth, 3))
             .field("Taban (m)", end("0", &side.bottom, 4))
             .help("Boş taban: V hendek.");
+    }
+    // The cut slope's benches (docs/adr/0958): from the geotechnical report; KentOS gives no number.
+    right = right.row(words::check(side.bench, "Yarma şevinde basamak (berme)", Some(msg(Event::Bench))));
+    if side.bench {
+        right = right
+            .field("Basamak yüksekliği (m)", end("6", &side.bench_fields[0], 5))
+            .field("Basamak genişliği (m)", end("3", &side.bench_fields[1], 6))
+            .field("Basamak eğimi (%)", end("0", &side.bench_fields[2], 7))
+            .help("Şev her basamak yüksekliğinde kesilir, araya dışa doğru düşen basamak girer. Basamaklı şevin ortalama eğimi h/(h·m + w): arazi ondan dik yükseliyorsa şev araziye varmaz.");
     }
     // The picture takes what a resized or full screen window has over (docs/adr/0937 §2).
     let col = kentos_ui::widget::grow::Grows::new()

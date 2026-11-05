@@ -171157,6 +171157,32 @@
       ],
       "type": "object"
     },
+    "TemplateBenchDef": {
+      "additionalProperties": false,
+      "description": "A cut slope's benches (docs/adr/0958): every `height` m up the slope a bench `width` m wide, its surface falling\n`fall` percent outward (toward the face above; absent: level). From the project's geotechnical report: KentOS gives\nnone.",
+      "properties": {
+        "fall": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "width": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "height",
+        "width"
+      ],
+      "type": "object"
+    },
     "TemplateComponentDef": {
       "additionalProperties": false,
       "description": "A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward\nnegative).",
@@ -171386,6 +171412,17 @@
       "additionalProperties": false,
       "description": "A template's side: its components outward from the axis and its end condition: the cut and fill slopes (horizontal\nper one vertical, 1.5 is 3/2) and an optional ditch in the cut.",
       "properties": {
+        "bench": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TemplateBenchDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The cut slope's benches (berme, docs/adr/0958; KCAD schema 175)."
+        },
         "components": {
           "items": {
             "$ref": "#/$defs/TemplateComponentDef"

@@ -409,3 +409,80 @@ fn screens_breaks() {
         send(&mut app, W::Cancel);
     }
 }
+
+/// Basamaklı yarma şevi (Y52, docs/adr/0958): a bench typed on the left of a template; Kaydet writes it with
+/// `road.templates.edit`, and on the window's high sample cut the left slope walks over benches before it meets.
+fn benched(app: &mut App) {
+    made(app);
+    send(app, W::Choose(Chosen::Template(0)));
+    send(app, W::Bench);
+    send(app, W::End(5, "3".into()));
+    send(app, W::End(6, "2".into()));
+    send(app, W::End(7, "4".into()));
+}
+
+#[test]
+fn the_template_takes_a_cut_bench_and_its_slope_walks_over_it() {
+    let mut app = app(false);
+    benched(&mut app);
+    send(&mut app, W::Save);
+    let t = model(&mut app).road_templates()[0].clone();
+    let b = t.left.bench.expect("written");
+    assert_eq!((b.height, b.width, b.fall), (3.0, 2.0, 4.0));
+    assert!(t.right.as_ref().is_none_or(|r| r.bench.is_none()), "the right is not benched");
+    let core = kentos_native_application::road_sections::core_template(&t);
+    let s = kentos_road::section::template::build(&core, 100.0, &crate::section_window::sample_ground_benched()).expect("builds");
+    assert_eq!(s.left.kind, kentos_road::section::template::Kind::Cut);
+    // Past the ditch, faces of 3 m rise at 1:1 and benches 2 m wide fall 4 % outward: each bench is a level pair.
+    let flats = s.left.points.windows(2).filter(|p| (p[1][0] - p[0][0]).abs() > 1.99 && (p[1][1] - p[0][1]).abs() < 0.1).count();
+    assert!(flats >= 2, "at least two benches on the 10 m cut: {:?}", s.left.points);
+    // Taken off again.
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Template(0)));
+    send(&mut app, W::Bench);
+    send(&mut app, W::Save);
+    assert!(model(&mut app).road_templates()[0].left.bench.is_none());
+}
+
+/// The benched template on its sample cut, wide and narrow, light and dark; `.run/gui-evidence/yol-y52/*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib section_window_tests::screens_benches -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_benches() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y52");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app(false);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y52-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        benched(&mut app);
+        shot(&mut app, "tip-kesit-basamak");
+        send(&mut app, W::Save);
+        let _ = app.update(Message::Run("section.editor"));
+        send(&mut app, W::Choose(Chosen::Set(0)));
+        send(&mut app, W::Next);
+        send(&mut app, W::Next);
+        shot(&mut app, "enkesit-basamak");
+        send(&mut app, W::Cancel);
+    }
+}

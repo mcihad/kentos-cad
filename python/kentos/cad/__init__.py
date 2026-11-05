@@ -3285,6 +3285,7 @@ __all__ = [
     "TangentLineConstruction",
     "TangentsCurveEdit",
     "TargetReference",
+    "TemplateBenchDef",
     "TemplateComponentDef",
     "TemplateComponentKind",
     "TemplateComponentKindName",

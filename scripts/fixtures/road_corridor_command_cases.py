@@ -56,8 +56,8 @@ C2 = {"id": "c-2", "name": "Yan koridor", "alignment": "g-2", "alignmentRevision
 START = [C1, C2]
 
 
-def road_of(corridors, supers=SUPERS, volumes=()):
-    out = scmd.road_of(TEMPLATES, [scmd.S1, scmd.S2], supers=supers)
+def road_of(corridors, supers=SUPERS, volumes=(), templates=None):
+    out = scmd.road_of(templates or TEMPLATES, [scmd.S1, scmd.S2], supers=supers)
     out["alignments"].append(copy.deepcopy(G4))
     out["profiles"] = copy.deepcopy(PROFILES)
     if corridors:
@@ -67,11 +67,11 @@ def road_of(corridors, supers=SUPERS, volumes=()):
     return out
 
 
-def setup(corridors=START, work="road", supers=SUPERS, layers=None, volumes=()):
+def setup(corridors=START, work="road", supers=SUPERS, layers=None, volumes=(), templates=None):
     base = scmd.setup(work=work, layers=layers)
     base["name"] = "Yol koridoru"
     if work == "road":
-        base["settings"]["road"] = road_of(list(corridors), supers, volumes)
+        base["settings"]["road"] = road_of(list(corridors), supers, volumes, templates)
     return base
 
 
@@ -102,7 +102,8 @@ def bad(path, message):
 def template_codes(t):
     def one(side):
         d = side.get("ditch")
-        return [len(side["components"]), d["bottom"] if d else None]
+        # [components, ditch bottom, kinds (none: by the template's), benched (docs/adr/0958)].
+        return [len(side["components"]), d["bottom"] if d else None, None, bool(side.get("bench"))]
     return {"left": one(t["left"]), "right": one(t.get("right") or t["left"])}
 
 
@@ -509,13 +510,14 @@ def edit_cases():
 def query_cases():
     cases = []
 
-    def q(name, input_, corridors=START, op="execute"):
+    def q(name, input_, corridors=START, op="execute", templates=None):
         one = input_.get("corridor")
+        tpls = templates or TEMPLATES
         if one is None:
             reports, warns = [], []
             for c in corridors:
                 try:
-                    r, w, _, _ = make(c)
+                    r, w, _, _ = make(c, templates=tpls)
                     reports.append(r)
                     warns += w
                 except Refused:
@@ -523,13 +525,13 @@ def query_cases():
             out = {"corridors": reports}
         else:
             c = next(x for x in corridors if x["id"] == one or x["name"].lower() == one.lower())
-            r, warns, tris, _ = make(c, input_.get("points", False))
+            r, warns, tris, _ = make(c, input_.get("points", False), templates=tpls)
             out = {"corridors": [r]}
             if input_.get("triangles"):
                 out["triangles"] = tris
         result = completed(None, warns) if op == "validate" else completed(out, warns)
-        cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(corridors)})],
-                          None if corridors is START else setup(corridors)))
+        cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(corridors, templates=templates)})],
+                          None if corridors is START and templates is None else setup(corridors, templates=templates)))
 
     def no(name, input_, result, corridors=START, setup_=None):
         road = None if setup_ is not None else road_of(corridors)
@@ -566,6 +568,9 @@ def query_cases():
     folded = {"id": "c-3", "name": "Dar kurp koridoru", "alignment": "g-4", "alignmentRevision": 1, "revision": 1,
               "profile": "b-4", "surface": "t-1", "left": 40.0, "right": 40.0, "tangent": 10.0, "curve": 2.0,
               "regions": [{"from": 0.0, "to": round(G4_LENGTH - 1.0, 3), "template": "tk-1"}]}
+    # Docs/adr/0958: the main corridor with its first template's cut slopes benched every 2 m.
+    benched = [{**scmd.TK1, "left": {**scmd.TK1["left"], "bench": {"height": 2.0, "width": 2.5, "fall": 5.0}}}, scmd.TK2]
+    q("Basamaklı yarma şevli koridor", {"corridor": "c-1", "points": True}, START, templates=benched)
     q("Dar kurpta kesitler kesişir", {"corridor": "c-3"}, START + [folded])
     # docs/adr/0939: the vertical curves divided by their chord height, the sections between measured and refined.
     q("Düşey kurplar kiriş yüksekliğiyle bölünür", {"corridor": "c-1"},

@@ -95,12 +95,16 @@ def place(cross, o):
     return [cross["at"][0] + math.sin(t) * o, cross["at"][1] - math.cos(t) * o]
 
 
-def codes(comps, ditch, side):
+def codes(comps, ditch, side, bench=False):
     out = ["axis"] + [f"c{i}" for i in range(1, comps + 1)]
     if side["kind"] == "cut" and ditch is not None:
         out.append("ditchToe")
         if ditch > 0:
             out.append("ditchBottom")
+    # Docs/adr/0958: a benched cut's corners, each bench's top and end.
+    if side["kind"] == "cut" and bench:
+        for k in range(max(0, len(side["points"]) - len(out) - 1)):
+            out.append(f"bench{k // 2 + 1}Top" if k % 2 == 0 else f"bench{k // 2 + 1}End")
     if len(out) < len(side["points"]):
         out.append("daylight")
     return out[: len(side["points"])]
@@ -108,7 +112,8 @@ def codes(comps, ditch, side):
 
 def coded(t, side, word):
     comps, ditch = t[word][0], t[word][1]
-    pts = [(f"{word}.{c}", p[0], p[1]) for c, p in list(zip(codes(comps, ditch, side), side["points"]))[1:]]
+    bench = t[word][3] if len(t[word]) > 3 else False
+    pts = [(f"{word}.{c}", p[0], p[1]) for c, p in list(zip(codes(comps, ditch, side, bench), side["points"]))[1:]]
     pts.append((f"{word}.hinge", side["hinge"][0], side["hinge"][1]))
     if side["daylight"] is not None and not any(c.endswith(".daylight") for c, _, _ in pts):
         pts.append((f"{word}.daylight", side["daylight"][0], side["daylight"][1]))
@@ -159,7 +164,7 @@ def top_roles(cross, t):
     def one(word):
         side = sec[word]
         comps = t[word][0]
-        kinds = t[word][2] if len(t[word]) > 2 else ["lane"] * comps
+        kinds = t[word][2] if len(t[word]) > 2 and t[word][2] is not None else ["lane"] * comps
         pts = side["points"][: comps + 1] if side["kind"] == "open" else side["points"]
         return [kinds[k] if k < comps else ("cut" if side["kind"] == "cut" else "fill") for k in range(len(pts) - 1)]
     return list(reversed(one("left"))) + one("right")

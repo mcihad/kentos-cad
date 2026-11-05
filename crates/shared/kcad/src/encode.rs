@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 175 (docs/adr/0958): a template side's cut slope benches.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cut_benches) {
+        return crate::SCHEMA_WITH_CUT_BENCHES;
+    }
     // Schema 174 (docs/adr/0957): a volume factor row's densities and source.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_states) {
         return crate::SCHEMA_WITH_VOLUME_STATES;

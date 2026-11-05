@@ -271,6 +271,13 @@ pub fn side_codes(side: &Side, built: &SideSection) -> Vec<String> {
             out.push("ditchBottom".into());
         }
     }
+    // A benched cut's corners (docs/adr/0958): each bench's top (the face's) and its end (the next face's foot).
+    if built.kind == Kind::Cut && side.bench.is_some() {
+        let corners = built.points.len().saturating_sub(out.len() + 1);
+        for k in 0..corners {
+            out.push(if k % 2 == 0 { format!("bench{}Top", k / 2 + 1) } else { format!("bench{}End", k / 2 + 1) });
+        }
+    }
     if out.len() < built.points.len() {
         out.push("daylight".into());
     }

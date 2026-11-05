@@ -72,6 +72,42 @@ def diagnose(side, axis, ground, right):
         m = 1 / F(side["cut"])
     else:
         u0, z0, m = u, z, -1 / F(side["fill"])
+    # Docs/adr/0958: a benched cut's slope is its corners' polyline; each terrain stretch is cut at them below.
+    corners = []
+    b = side.get("bench") if cut else None
+    if b:
+        h, w, f = F(b["height"]), F(b["width"]), F(b.get("fall", 0)) / 100
+        last_u = max(p[0] for p in t)
+        cu, cz = u0, z0
+        for k in range(400):
+            cu, cz = (cu + h / m, cz + h) if k % 2 == 0 else (cu + w, cz - w * f)
+            corners.append((cu, cz))
+            if cu > last_u:
+                break
+    pts = [(u0, z0)] + corners
+
+    def line(x):
+        if not corners:
+            return z0 + m * (x - u0)
+        for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+            if xa <= x <= xb:
+                return ya + (yb - ya) * (x - xa) / (xb - xa)
+        return pts[-1][1]
+
+    def pieces():
+        """The terrain stretches from u0 outward, cut at the slope's corners: on each, both the terrain and the slope
+        are lines."""
+        out = []
+        for ua, za, ub, zb in stretches(t):
+            a = max(ua, u0)
+            if ub < a:
+                continue
+            cuts = sorted({a, ub} | {cx for cx, _ in corners if a < cx < ub})
+            for x0, x1 in zip(cuts, cuts[1:]):
+                out.append((x0, za + (zb - za) * (x0 - ua) / (ub - ua), x1, za + (zb - za) * (x1 - ua) / (ub - ua)))
+            if a == ub:
+                out.append((a, za + (zb - za) * (a - ua) / (ub - ua), ub, zb))
+        return out
     if height(t, u0) is None:
         # A slope starting within a micrometre of the swath's end has no swath left, not a hole.
         if max(p[0] for p in t) - u0 <= F(1, 10**6):
@@ -79,12 +115,10 @@ def diagnose(side, axis, ground, right):
         return {"kind": "gap", "at": float(u0)}
     end, broken = reach(t, u0)
     hits = []
-    for ua, za, ub, zb in stretches(t):
-        a, b = max(ua, u0), ub
+    for a, ga, b, zb in pieces():
         if b < a or b > end:
             continue
-        ga = za + (zb - za) * (a - ua) / (ub - ua)
-        fa, fb = z0 + m * (a - u0) - ga, z0 + m * (b - u0) - zb
+        fa, fb = line(a) - ga, line(b) - zb
         slope = (fb - fa) / (b - a) if b > a else None
         if fa == 0:
             hits.append((a, slope))
@@ -100,16 +134,12 @@ def diagnose(side, axis, ground, right):
     xs = sorted(seen)
     # The outward stretch's slope at a place hit exactly: the stretch starting there, else the one ending there.
     def slope_at(x):
-        for ua, za, ub, zb in sorted(stretches(t)):
-            a = max(ua, u0)
+        for a, ga, ub, zb in sorted(pieces()):
             if a <= x < ub and ub <= end:
-                ga = za + (zb - za) * (a - ua) / (ub - ua)
-                return ((z0 + m * (ub - u0) - zb) - (z0 + m * (a - u0) - ga)) / (ub - a)
-        for ua, za, ub, zb in sorted(stretches(t)):
-            if ub == x:
-                a = max(ua, u0)
-                ga = za + (zb - za) * (a - ua) / (ub - ua)
-                return ((z0 + m * (ub - u0) - zb) - (z0 + m * (a - u0) - ga)) / (ub - a)
+                return ((line(ub) - zb) - (line(a) - ga)) / (ub - a)
+        for a, ga, ub, zb in sorted(pieces()):
+            if ub == x and ub > a:
+                return ((line(ub) - zb) - (line(a) - ga)) / (ub - a)
         return None
     if xs:
         first = xs[0]
@@ -164,6 +194,13 @@ def cases():
     mixed = [(-40.0, 106.0), (0.0, 100.0), (40.0, 94.0)]
     case("Sol yarma, sağ dolgu", ditched, plain, 100.0, g(mixed))
     case("Dar yarma şevi 1/1", {**plain, "cut": 1.0}, plain, 100.0, g(rising))
+    # Docs/adr/0958: benched cut slopes.
+    benched = {**ditched, "cut": 1.0, "bench": {"height": 4.0, "width": 3.0, "fall": 5.0}}
+    high = [(-60.0, 122.0), (-9.0, 112.0), (-5.0, 100.8), (0.0, 100.5), (5.0, 100.8), (9.0, 112.0), (60.0, 122.0)]
+    case("Basamaklı yarma: iki basamaktan geçer", benched, benched, 100.0, g(high))
+    bumpy = [(-60.0, 104.0), (-12.0, 103.6), (-9.6, 103.0), (-8.0, 104.4), (-5.0, 101.0), (0.0, 100.5), (40.0, 98.0)]
+    case("Basamaklı yarma tümsekli arazide", {**benched, "bench": {"height": 2.0, "width": 3.0, "fall": 0.0}}, plain,
+         100.0, g(bumpy))
     return out
 
 

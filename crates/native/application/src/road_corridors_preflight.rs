@@ -19,7 +19,8 @@ use crate::road_terrains::fail;
 /// Two crosses at a seam meet within this (m) where none is asked.
 pub const SEAM: f64 = 1e-3;
 
-/// A feature code in words: its side and point (“right.hinge” → “sağ şev başı”, “left.c2” → “sol 2. bileşen”).
+/// A feature code in words: its side and point (“right.hinge” → “sağ şev başı”, “left.c2” → “sol 2. bileşen”,
+/// “left.bench1Top” → “sol 1. basamak içi”, docs/adr/0958).
 pub fn code_words(code: &str) -> String {
     let (side, point) = code.split_once('.').map_or(("", code), |(s, p)| (s, p));
     let side = match side {
@@ -34,6 +35,12 @@ pub fn code_words(code: &str) -> String {
         "ditchToe" => "hendek ayağı".to_owned(),
         "ditchBottom" => "hendek tabanı".to_owned(),
         p if p.starts_with('c') && p[1..].parse::<u32>().is_ok() => format!("{}. bileşen", &p[1..]),
+        p if p.strip_prefix("bench").and_then(|r| r.strip_suffix("Top")).is_some_and(|k| k.parse::<u32>().is_ok()) => {
+            format!("{}. basamak içi", &p[5..p.len() - 3])
+        }
+        p if p.strip_prefix("bench").and_then(|r| r.strip_suffix("End")).is_some_and(|k| k.parse::<u32>().is_ok()) => {
+            format!("{}. basamak ucu", &p[5..p.len() - 3])
+        }
         p => p.to_owned(),
     };
     format!("{side}{point}")

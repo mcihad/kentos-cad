@@ -730,6 +730,29 @@ pub struct TemplateSideDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ditch: Option<TemplateDitchDef>,
+    /// The cut slope's benches (berme, docs/adr/0958; KCAD schema 175).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bench: Option<TemplateBenchDef>,
+}
+
+/// A cut slope's benches (docs/adr/0958): every `height` m up the slope a bench `width` m wide, its surface falling
+/// `fall` percent outward (toward the face above; absent: level). From the project's geotechnical report: KentOS gives
+/// none.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TemplateBenchDef {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub fall: f64,
 }
 
 /// A template (docs/adr/0903 §3): its left side and its right; absent right: the left's mirror.
@@ -1730,6 +1753,11 @@ fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
         && !(positive(d.fore) && positive(d.depth) && d.bottom.is_finite() && d.bottom >= 0.0)
     {
         return fail(format!("{at}.ditch"), "hendeğin iç şevi ve derinliği 0'dan büyük, tabanı eksi olmamalı");
+    }
+    if let Some(b) = &s.bench
+        && !(b.height.is_finite() && b.height > 0.0 && b.height <= 100.0 && b.width.is_finite() && b.width > 0.0 && b.width <= 50.0 && b.fall.is_finite() && (0.0..=50.0).contains(&b.fall))
+    {
+        return fail(format!("{at}.bench"), "basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur");
     }
     None
 }

@@ -34,14 +34,27 @@ pub struct Ditch {
 }
 
 /// A side of a template: its components and its end condition, the cut and fill slopes (horizontal per one vertical,
-/// 1.5 is 3/2) and an optional ditch in the cut.
+/// 1.5 is 3/2), an optional ditch in the cut and the cut slope's benches (docs/adr/0958).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Side {
     pub components: Vec<Component>,
     pub cut: f64,
     pub fill: f64,
     pub ditch: Option<Ditch>,
+    pub bench: Option<CutBench>,
 }
+
+/// A cut slope's benches (berme, docs/adr/0958; ROAD-GRADE-03): every `height` m up the slope a bench `width` m wide
+/// whose surface falls `fall` percent outward (toward the face above, where its ditch takes the water).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CutBench {
+    pub height: f64,
+    pub width: f64,
+    pub fall: f64,
+}
+
+/// The most benches a cut slope makes: past them the slope does not meet the terrain.
+pub const MAX_BENCHES: usize = 200;
 
 /// A template: its left and right sides.
 #[derive(Clone, Debug, PartialEq)]
@@ -98,7 +111,8 @@ fn judge(side: &Side, right: bool) -> Result<(), TemplateError> {
     let positive = |v: f64| v.is_finite() && v > 0.0;
     let ditch_ok =
         side.ditch.is_none_or(|d| positive(d.fore) && positive(d.depth) && d.bottom.is_finite() && d.bottom >= 0.0);
-    if !(positive(side.cut) && positive(side.fill) && ditch_ok) {
+    let bench_ok = side.bench.is_none_or(|b| positive(b.height) && positive(b.width) && b.fall.is_finite() && (0.0..=50.0).contains(&b.fall));
+    if !(positive(side.cut) && positive(side.fill) && ditch_ok && bench_ok) {
         return Err(TemplateError::Bad { right, component: None });
     }
     Ok(())
@@ -139,13 +153,23 @@ fn height(t: &[(f64, Option<f64>, bool)], u: f64) -> Option<f64> {
 
 /// Where the line from (u0, z0) rising `m` per metre outward first meets the terrain at or beyond u0.
 fn meet(t: &[(f64, Option<f64>, bool)], u0: f64, z0: f64, m: f64) -> Option<[f64; 2]> {
+    meet_within(t, u0, z0, m, f64::INFINITY)
+}
+
+/// Where the line from (u0, z0) rising `m` per metre outward first meets the terrain between u0 and u1.
+fn meet_within(t: &[(f64, Option<f64>, bool)], u0: f64, z0: f64, m: f64, u1: f64) -> Option<[f64; 2]> {
     let line = |u: f64| z0 + m * (u - u0);
     for w in t.windows(2) {
-        let ((ua, za, _), (ub, zb, gap)) = (w[0], w[1]);
-        if ub < u0 || gap {
+        let ((ua, za, _), (ub0, zb0, gap)) = (w[0], w[1]);
+        if ub0 < u0 || gap {
             continue;
         }
-        let (Some(za), Some(zb)) = (za, zb) else { continue };
+        if ua > u1 {
+            break;
+        }
+        let (Some(za), Some(zb0)) = (za, zb0) else { continue };
+        // The stretch up to where the line ends.
+        let (ub, zb) = if ub0 > u1 { (u1, za + (zb0 - za) * (u1 - ua) / (ub0 - ua)) } else { (ub0, zb0) };
         // The stretch from where the slope starts.
         let a = ua.max(u0);
         let ga = za + (zb - za) * (a - ua) / (ub - ua);
@@ -188,9 +212,34 @@ fn side(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> SideSect
                     pts.push([bu, bz]);
                 }
             }
-            match meet(&t, bu, bz, 1.0 / side.cut) {
-                Some(p) => (Kind::Cut, Some(p)),
-                None => (Kind::Open, None),
+            match side.bench {
+                // The benched slope (docs/adr/0958): face, bench, face …; its corners up to where it meets the terrain.
+                Some(b) => {
+                    let reach = t.last().map_or(bu, |p| p.0);
+                    let corners = bench_path([bu, bz], 1.0 / side.cut, b, reach);
+                    let (mut hit, before) = (None, pts.len());
+                    for w in corners.windows(2) {
+                        let (a, e) = (w[0], w[1]);
+                        let m = (e[1] - a[1]) / (e[0] - a[0]);
+                        if let Some(p) = meet_within(&t, a[0], a[1], m, e[0]) {
+                            hit = Some(p);
+                            break;
+                        }
+                        pts.push(e);
+                    }
+                    match hit {
+                        Some(p) => (Kind::Cut, Some(p)),
+                        None => {
+                            // Not met: the corners pushed are no slope.
+                            pts.truncate(before);
+                            (Kind::Open, None)
+                        }
+                    }
+                }
+                None => match meet(&t, bu, bz, 1.0 / side.cut) {
+                    Some(p) => (Kind::Cut, Some(p)),
+                    None => (Kind::Open, None),
+                },
             }
         }
         Some(_) => match meet(&t, u, z, -1.0 / side.fill) {
@@ -210,6 +259,32 @@ fn side(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> SideSect
         daylight: daylight.map(flip),
         kind,
     }
+}
+
+/// A benched cut slope's corners from `start` (docs/adr/0958): a face rising `m` per metre outward until it is `height`
+/// above its foot, a bench `width` wide falling `fall` percent outward, again, until past `reach` outward (or
+/// [`MAX_BENCHES`] benches). The last corner is beyond `reach`.
+pub fn bench_path(start: [f64; 2], m: f64, b: CutBench, reach: f64) -> Vec<[f64; 2]> {
+    let mut out = vec![start];
+    let [mut u, mut z] = start;
+    for _ in 0..MAX_BENCHES {
+        u += b.height / m;
+        z += b.height;
+        out.push([u, z]);
+        if u > reach {
+            return out;
+        }
+        u += b.width;
+        z -= b.width * b.fall / 100.0;
+        out.push([u, z]);
+        if u > reach {
+            return out;
+        }
+    }
+    // The last face, long enough to leave the swath.
+    let tail = (reach - u).max(0.0) + 1.0;
+    out.push([u + tail, z + m * tail]);
+    out
 }
 
 /// How a side's slope meets the terrain (docs/adr/0951, ROAD-COR-10): what [`build`]'s `Open` leaves together, apart.
@@ -256,7 +331,20 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
     } else {
         (u, z, -1.0 / side.fill)
     };
-    let line = |x: f64| z0 + m * (x - u0);
+    // The slope: a line, or a benched cut's corners (docs/adr/0958).
+    let reach_end = t.last().map_or(u0, |p| p.0);
+    let corners: Vec<[f64; 2]> = match (cut, side.bench) {
+        (true, Some(b)) => bench_path([u0, z0], m, b, reach_end),
+        _ => Vec::new(),
+    };
+    let line = |x: f64| -> f64 {
+        if corners.len() < 2 {
+            return z0 + m * (x - u0);
+        }
+        let i = corners.partition_point(|c| c[0] < x).clamp(1, corners.len() - 1);
+        let (a, b) = (corners[i - 1], corners[i]);
+        a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0])
+    };
     // The terrain's places from u0 outward while it lasts: (outward, f = line − terrain, the terrain's gradient after).
     let mut places: Vec<(f64, f64)> = Vec::new();
     let mut stop: Option<f64> = None;
@@ -282,6 +370,20 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
             break;
         };
         places.push((ub, line(ub) - zb));
+    }
+    // A benched slope's corners within the places are places too: between them and the terrain's, both are lines.
+    if corners.len() > 1
+        && let Some(end) = places.last().map(|p| p.0)
+    {
+        for c in &corners[1..] {
+            if c[0] > u0 && c[0] < end
+                && let Some(g) = height(&t, c[0])
+                && !places.iter().any(|p| p.0 == c[0])
+            {
+                places.push((c[0], line(c[0]) - g));
+            }
+        }
+        places.sort_by(|a, b| a.0.total_cmp(&b.0));
     }
     // The crossings: a place on the line, or a sign change inside a stretch.
     let mut hits: Vec<(f64, f64)> = Vec::new();

@@ -345,6 +345,8 @@ pub(super) struct Features {
     pub(super) haul_network: bool,
     /// Schema 174: a volume factor row's densities and source (docs/adr/0957).
     pub(super) volume_states: bool,
+    /// Schema 175: a template side's cut slope benches (docs/adr/0958).
+    pub(super) cut_benches: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -599,6 +601,7 @@ impl Features {
             haul_approval: schema >= crate::SCHEMA_WITH_HAUL_APPROVAL,
             haul_network: schema >= crate::SCHEMA_WITH_HAUL_NETWORK,
             volume_states: schema >= crate::SCHEMA_WITH_VOLUME_STATES,
+            cut_benches: schema >= crate::SCHEMA_WITH_CUT_BENCHES,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,

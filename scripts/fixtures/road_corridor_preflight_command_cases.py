@@ -26,6 +26,7 @@ import road_alignment_command_cases as acmd  # noqa: E402
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
+import road_section_command_cases as scmd  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1/road.corridors.preflight.json"
 completed, failed, step, case = ccmd.completed, ccmd.failed, ccmd.step, ccmd.case
@@ -45,6 +46,10 @@ def code_words(code):
         point = names[point]
     elif point.startswith("c") and point[1:].isdigit():
         point = f"{point[1:]}. bileşen"
+    elif point.startswith("bench") and point.endswith("Top") and point[5:-3].isdigit():
+        point = f"{point[5:-3]}. basamak içi"
+    elif point.startswith("bench") and point.endswith("End") and point[5:-3].isdigit():
+        point = f"{point[5:-3]}. basamak ucu"
     return side + point
 
 
@@ -187,7 +192,7 @@ def seams(regs):
     return out
 
 
-def answer(input_, corridors=ccmd.START):
+def answer(input_, corridors=ccmd.START, templates=None):
     name = input_["corridor"]
     c = next((x for x in corridors if x["id"] == name), None) or next(
         (x for x in corridors if x["name"].lower() == name.lower()), None)
@@ -200,7 +205,7 @@ def answer(input_, corridors=ccmd.START):
         raise bad("istenen pay 0 ile 1 arası olur (1: hiç daralmayan).", "margin")
     if tolerance is not None and not 0.0 < tolerance <= 10.0:
         raise bad("dikiş toleransı 0'dan büyük, en çok 10 m olur.", "tolerance")
-    report, warnings, tris, regs = ccmd.make(c)
+    report, warnings, tris, regs = ccmd.make(c) if templates is None else ccmd.make(c, templates=templates)
     text = lambda s: ccmd.km_text(c["alignment"], s)  # noqa: E731
     limit = margin if margin is not None else 0.0
     tol = tolerance if tolerance is not None else SEAM
@@ -294,12 +299,13 @@ def answer(input_, corridors=ccmd.START):
 def cases():
     out = []
 
-    def ok(name, input_, corridors=ccmd.START, op="execute"):
-        o, warns = answer(input_, corridors)
+    def ok(name, input_, corridors=ccmd.START, op="execute", templates=None):
+        o, warns = answer(input_, corridors, templates)
         result = completed(None, warns) if op == "validate" else completed(o, warns)
-        s = step(op, input_, result, {**UNCHANGED, "road": ccmd.road_of(corridors)})
+        s = step(op, input_, result, {**UNCHANGED, "road": ccmd.road_of(corridors, templates=templates)})
         s["within"] = W
-        out.append(case(name, [s], None if corridors is ccmd.START else ccmd.setup(corridors)))
+        same = corridors is ccmd.START and templates is None
+        out.append(case(name, [s], None if same else ccmd.setup(corridors, templates=templates)))
         return o
 
     def no(name, input_, corridors=ccmd.START, setup_=None, result=None):
@@ -331,6 +337,9 @@ def cases():
        [{**C1, "regions": [{"from": 0.0, "to": 200.0, "template": "tk-1"}, {"from": 200.0, "to": 400.0, "template": "tk-2"},
                            {"from": 400.0, "to": 600.0, "template": "tk-1"}]}, C2])
     ok("Yan koridor: düz aks", {"corridor": "c-2"})
+    # Docs/adr/0958: the first template's left cut slope benched; the seam names the benches only before it.
+    benched = [{**scmd.TK1, "left": {**scmd.TK1["left"], "bench": {"height": 2.0, "width": 2.5, "fall": 5.0}}}, scmd.TK2]
+    ok("Basamaklı yarma şevinin dikişi", {"corridor": "c-1"}, templates=benched)
     ok("Dar kurp: katlanma ve üst üste binme", {"corridor": "c-3"}, ccmd.START + [tight])
     ok("Dar kurp, yüzde 50 pay", {"corridor": "c-3", "margin": 0.5}, ccmd.START + [tight])
     ok("Dar kurp, dar şerit", {"corridor": "c-3"}, ccmd.START + [{**tight, "left": 3.0, "right": 3.0}])

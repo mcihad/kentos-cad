@@ -681,6 +681,11 @@ pub(crate) fn road_has_volume_history(road: &kentos_contracts::RoadSettings) -> 
     })
 }
 
+/// Whether road settings carry schema 175's field: a template side's cut slope benches (docs/adr/0958).
+pub(crate) fn road_has_cut_benches(road: &kentos_contracts::RoadSettings) -> bool {
+    road.templates.iter().any(|t| t.left.bench.is_some() || t.right.as_ref().is_some_and(|r| r.bench.is_some()))
+}
+
 /// Whether road settings carry schema 174's fields: a volume factor row's densities or source (docs/adr/0957).
 pub(crate) fn road_has_volume_states(road: &kentos_contracts::RoadSettings) -> bool {
     road.volumes.iter().any(|v| v.factors.iter().any(|f| f.densities.is_some() || f.source.is_some()))
@@ -1352,6 +1357,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.volume_history && road_has_volume_history(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "kübajın numaralı onayı ve onay geçmişi şema 171 ister"));
+                }
+                if !has.cut_benches && road_has_cut_benches(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "tip kesitin yarma basamakları şema 175 ister"));
                 }
                 if !has.volume_states && road_has_volume_states(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "kübaj katsayısının yoğunlukları ve kaynağı şema 174 ister"));

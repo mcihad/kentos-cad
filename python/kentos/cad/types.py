@@ -82896,6 +82896,37 @@ class TargetReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TemplateBenchDef(_Model):
+    """A cut slope's benches (docs/adr/0958): every `height` m up the slope a bench `width` m wide, its surface falling
+    `fall` percent outward (toward the face above; absent: level). From the project's geotechnical report: KentOS gives
+    none.
+    Attributes:
+        height: Unit: length.
+        width: Unit: length.
+        fall: Unit: percent.
+    """
+    height: float
+    width: float
+    fall: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["height"] = float(self.height)
+        out["width"] = float(self.width)
+        if self.fall is not UNSET:
+            out["fall"] = float(self.fall)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateBenchDef:
+        return cls(
+            height=float(data["height"]),
+            width=float(data["width"]),
+            fall=float(data["fall"]) if "fall" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TemplateComponentDef(_Model):
     """A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward
     negative).
@@ -83099,9 +83130,11 @@ class TemplateSideDef(_Model):
     Attributes:
         cut: Unit: 1.
         fill: Unit: 1.
+        bench: The cut slope's benches (berme, docs/adr/0958; KCAD schema 175).
     """
     cut: float
     fill: float
+    bench: TemplateBenchDef | None | Unset = UNSET
     components: list[TemplateComponentDef] | Unset = UNSET
     ditch: TemplateDitchDef | None | Unset = UNSET
 
@@ -83109,6 +83142,8 @@ class TemplateSideDef(_Model):
         out: dict[str, Any] = {}
         out["cut"] = float(self.cut)
         out["fill"] = float(self.fill)
+        if self.bench is not UNSET:
+            out["bench"] = None if self.bench is None else self.bench.to_json()
         if self.components is not UNSET:
             out["components"] = [e0.to_json() for e0 in self.components]
         if self.ditch is not UNSET:
@@ -83120,6 +83155,7 @@ class TemplateSideDef(_Model):
         return cls(
             cut=float(data["cut"]),
             fill=float(data["fill"]),
+            bench=UNSET if "bench" not in data else None if data["bench"] is None else TemplateBenchDef.from_json(data["bench"]),
             components=[TemplateComponentDef.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
             ditch=UNSET if "ditch" not in data else None if data["ditch"] is None else TemplateDitchDef.from_json(data["ditch"]),
         )
@@ -113967,6 +114003,7 @@ __all__ = [
     "TangentLineConstruction",
     "TangentsCurveEdit",
     "TargetReference",
+    "TemplateBenchDef",
     "TemplateComponentDef",
     "TemplateComponentKind",
     "TemplateComponentKindName",
