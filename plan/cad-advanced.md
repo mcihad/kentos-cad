@@ -2196,6 +2196,17 @@ blok çizelgesi kaynağındaki adetleri çizimden yeniden sayar ve son sütunu
 varken yerel sınama dışa aktarılan toplamı `3` buldu. Kaynak çizim salt okunur
 kalır. Birim taşıyan genel metraj alanları ve ortak çıkarım tarifi açık kalır.
 
+**Seçili tabloyu dışa aktarma (5 Kasım 2026):** CAD tablosunun bağlamsal
+sekmesine ve Açıklama sekmesindeki Tablo menüsüne `Tabloyu dışa aktar`
+eklendi. Seçili tablonun kalıcı kimliği, seçilen XLSX/ODS/CSV yolu ile
+`file.export.table` komutuna aktarılır; masaüstü, Python ve MCP aynı
+sayısal çalışma kitabı üretimini kullanır. Kaynak tablosu seçilmediğinde
+işlem kullanıcıyı uyarır. Gerçek CAD penceresinde üç bloklu çizelge
+seçilip XLSX olarak kaydedildi; komut geçmişi 3 satır/4 sütun yazıldığını
+gösterdi ve bağımsız XLSX okuması `Adet` sütununu sayı türünde `2, 1, 3`
+olarak doğruladı. Ekran görüntüsü repo dışındadır. Genel metraj alanları ve ortak çıkarım tarifi
+açık kaldığından madde `[~]` durumundadır.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].

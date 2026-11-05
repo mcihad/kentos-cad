@@ -1259,6 +1259,17 @@
       "status": "implemented"
     },
     {
+      "id": "table.export",
+      "title": "Tabloyu dışa aktar",
+      "short": "Dışa aktar",
+      "icon": "exportCsvTable",
+      "description": "Seçili CAD tablosunu XLSX, ODS veya CSV dosyasına aktarır. Bağlı blok çizelgesinin güncel sayıları dışa aktarma anında hesaplanır.",
+      "aliases": ["TABLOYUAKTAR"],
+      "shortcuts": [],
+      "category": "Tablo",
+      "status": "implemented"
+    },
+    {
       "id": "table.blockSchedule",
       "title": "Blok çizelgesi tablosu",
       "short": "Blok çizelgesi",

@@ -1621,6 +1621,11 @@
       ],
       "note": "Seçili tablonun kimliği, seçilen dosyanın yolu (çizimin klasöründeyse göreli) ve klasör link işlemine verilir (ADR 0327)."
     },
+    "table.export": {
+      "level": "semantic",
+      "via": ["file.export.table"],
+      "note": "Seçili tablonun kalıcı kimliği ve kullanıcının seçtiği dosya yolu aynı dışa aktarma komutuna verilir."
+    },
     "arch.revisionList": {
       "level": "semantic",
       "via": [

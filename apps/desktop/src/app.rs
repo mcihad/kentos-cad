@@ -796,6 +796,8 @@ pub enum Message {
     TableEditor(crate::tables::editor::Event),
     /// Tabloyu güncelle's files (tables/update.rs).
     TableUpdate(crate::tables::update::Event),
+    /// Selected CAD table to CSV, XLSX or ODS.
+    TableExport(crate::tables::export::Event),
     /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
     Navigation(crate::navigation_cards::Event),
     /// The map services' credits and windows (services/app.rs, docs/adr/0208).
@@ -2603,6 +2605,7 @@ impl App {
             Message::TableInsert(event) => return self.table_insert_event(event),
             Message::TableEditor(event) => return self.table_editor_event(event),
             Message::TableUpdate(event) => return self.table_update_event(event),
+            Message::TableExport(event) => return self.table_export_event(event),
             Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::ImageFile(file) => self.image_file_given(file),
@@ -3281,6 +3284,7 @@ impl App {
                 }
             }
             "table.update" => return self.update_tables(),
+            "table.export" => return self.export_selected_table(),
             // Tablonun dosyası ve blok çizelgesi (docs/adr/0327 §4–§5).
             "table.link" => return self.link_table(),
             "table.blockSchedule" => self.place_block_schedule(),
