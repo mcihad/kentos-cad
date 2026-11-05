@@ -676,6 +676,32 @@ fn moved_hand_edit(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>])
     false
 }
 
+/// A Keep override and the file changed the same cell since the embedded copy. Without an
+/// explicit resolution, refreshing would discard the hand edit. Formulas and fields are computed
+/// cells, so they are not treated as hand edits here.
+fn conflicting_hand_edits(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>]) -> usize {
+    copy.iter()
+        .enumerate()
+        .map(|(r, row)| {
+            row.iter()
+                .enumerate()
+                .filter(|(c, was)| {
+                    t.cells
+                        .get(r)
+                        .and_then(|own| own.get(*c))
+                        .is_some_and(|own| own != *was)
+                        && t.formula_at(r, *c).is_none()
+                        && t.field_at(r, *c).is_none()
+                        && fresh
+                            .get(r)
+                            .and_then(|new| new.get(*c))
+                            .is_some_and(|new| new != *was)
+                })
+                .count()
+        })
+        .sum()
+}
+
 struct Checked {
     changed: Vec<(Slot, Uuid, TableEntity)>,
     report: Vec<TableReport>,
@@ -771,6 +797,11 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                         None
                                     }
                                     Ok((fresh, aligns)) => {
+                                        let conflicts = if *overrides == SourceOverrides::Keep {
+                                            copy.as_ref().map_or(0, |old| conflicting_hand_edits(&t, old, &fresh))
+                                        } else {
+                                            0
+                                        };
                                         if *overrides == SourceOverrides::Keep
                                             && copy.as_ref().is_some_and(|old| moved_hand_edit(&t, old, &fresh))
                                         {
@@ -778,6 +809,13 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                             warnings.push(warning(
                                                 codes::SOURCE_UNREADABLE,
                                                 format!("“{path}” dosyasında elle düzeltilmiş bir satırın sırası veya kimliği değişti. Satır anahtarı tanımlı olmadığı için düzeltme başka kaleme aktarılmadı; tablo olduğu gibi kaldı."),
+                                            ));
+                                            None
+                                        } else if conflicts > 0 {
+                                            status = TableRefresh::Unreadable;
+                                            warnings.push(warning(
+                                                codes::SOURCE_UNREADABLE,
+                                                format!("“{path}” dosyasında kaynak ve elle düzeltme aynı {conflicts} hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."),
                                             ));
                                             None
                                         } else {
@@ -1060,5 +1098,63 @@ mod tests {
         .unwrap();
         let fresh = vec![copy[0].clone(), vec!["A".into(), "New".into(), "10".into()]];
         assert!(!moved_hand_edit(&table, &copy, &fresh));
+    }
+
+    #[test]
+    fn file_and_hand_edit_conflict_needs_explicit_replace() {
+        let path = std::env::temp_dir().join(format!(
+            "kentos-table-cell-conflict-{}.csv",
+            std::process::id()
+        ));
+        let original = b"ID,Price\nA,10\n";
+        std::fs::write(&path, b"ID,Price\nA,12\n").unwrap();
+        let (copy, _) = sheet_rows(original, None, true).unwrap();
+        let mut cells = copy.clone();
+        cells[1][1] = "11".to_owned();
+        let raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+        let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+        let table: TableEntity = serde_json::from_value(json!({
+            "id":0,"layerId":"duvar","attrs":{},"p":{"x":0,"y":-2},
+            "rotation":0,"height":0.1,"rows":[0.3,0.3],"columns":[1.0,1.0],
+            "cells":cells,"header":true,
+            "source":{"kind":"file","name":"prices.csv","path":path.to_string_lossy(),
+                      "digest":digest_of(original),"copy":copy}
+        }))
+        .unwrap();
+        let slot = doc.add(Entity::Table(table)).unwrap();
+        let uid = doc.uid(slot).unwrap().to_string();
+        let before = doc.to_snapshot_v2();
+        let history = doc.undo_labels();
+        let refresh = || TablesEdit {
+            operation: TablesOperation::Refresh { uids: vec![uid.clone()], base: None },
+            expected_revision: None,
+        };
+        let result = execute(&mut ExecutionContext::new(&mut doc), refresh());
+        let CommandResult::Completed { output, warnings } = result else {
+            panic!("refresh must report the conflict: {result:?}");
+        };
+        assert_eq!(output.report[0].status, TableRefresh::Unreadable);
+        assert!(warnings.iter().any(|w| w.message.contains("aynı 1 hücreyi")), "{warnings:?}");
+        assert!(output.changed.is_empty());
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert_eq!(doc.undo_labels(), history);
+
+        let Entity::Table(mut table) = doc.get(slot).unwrap().clone() else { panic!("table") };
+        let Some(TableSource::File { overrides, .. }) = &mut table.source else { panic!("file") };
+        *overrides = SourceOverrides::Replace;
+        doc.update_many(vec![(slot, Entity::Table(table))], "Choose replace");
+        let result = execute(&mut ExecutionContext::new(&mut doc), refresh());
+        let CommandResult::Completed { output, .. } = result else {
+            panic!("explicit replace must refresh: {result:?}");
+        };
+        assert_eq!(output.report[0].status, TableRefresh::Updated);
+        assert_eq!(output.report[0].replaced, 1);
+        let Some(Entity::Table(table)) = doc.get(slot) else { panic!("table") };
+        assert_eq!(table.cells[1][1], "12");
+        std::fs::remove_file(path).unwrap();
     }
 }

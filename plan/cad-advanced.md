@@ -2107,6 +2107,16 @@ açıklamasının değişmesi güncellemeyi gereksiz yere engellemez. Tekil alan
 frekansları yalnız gerekirse ve tek geçişte çıkarılır; çok satırlı tabloda
 her satır için tüm kaynak tekrar taranmaz.
 
+**Aynı hücre çatışması:** Dosyaya bağlı tabloda `Keep` kuralı seçiliyken hem
+kullanıcı hem kaynak dosya son okunan kopyaya göre aynı hücreyi değiştirmişse
+yenileme artık kullanıcı değerini sessizce silmez. Uyarıyla tablo ve kaynak
+özeti korunur; açıkça `Replace` seçimi dosya değerinin üzerine yazılmasını
+sağlar. Komut sınaması değerleri, rapor durumunu ve Undo geçmişini kontrol
+eder. Gerçek CAD penceresinde `A/11` tablosunun dosyadaki `A/12` değişimine
+rağmen korunduğu, uyarı ve "Çizimde değişiklik yok" kaydı ekran görüntüsüyle
+doğrulandı; görüntü repo dışındadır. Bu koruma satır anahtarıyla eşleme ve hücre bazında uyuşmazlık çözümü
+yerine geçmez; madde `[~]` kalır.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].
