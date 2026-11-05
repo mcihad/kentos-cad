@@ -23,7 +23,7 @@ fn sites(v: &Value) -> Vec<PlanSite> {
     v.as_array()
         .unwrap()
         .iter()
-        .map(|s| PlanSite { station: n(&s["station"]), capacity: n(&s["capacity"]), borrow: s["borrow"].as_bool().unwrap() })
+        .map(|s| PlanSite { station: n(&s["station"]), capacity: n(&s["capacity"]), borrow: s["borrow"].as_bool().unwrap(), access: 0.0 })
         .collect()
 }
 
@@ -72,8 +72,8 @@ fn with_nothing_unsuitable_and_no_barrier_it_is_the_plain_plan() {
             })
             .collect();
         let sites = [
-            PlanSite { station: -40.0, capacity: 1e5, borrow: false },
-            PlanSite { station: 800.0, capacity: 1e5, borrow: true },
+            PlanSite { station: -40.0, capacity: 1e5, borrow: false, access: 0.0 },
+            PlanSite { station: 800.0, capacity: 1e5, borrow: true, access: 0.0 },
         ];
         let mut points = vec![[rows[0].from, 0.0]];
         let mut mass = 0.0;

@@ -42776,6 +42776,17 @@
               "null"
             ]
           },
+          "network": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HaulNetworkDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The haul road network its sites off the road are reached by (docs/adr/0955); null takes it off."
+          },
           "operation": {
             "$ref": "#/$defs/RoadEditOperation"
           },
@@ -42954,6 +42965,15 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the\nfill more than the cut over the stretches, what moves, the haul moment (m³·m) and its average (m; none where nothing\nmoves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets\nand the cut no waste takes.",
         "properties": {
+          "accessMoment": {
+            "description": "The moment on the sites' access roads (m³·m; docs/adr/0955), part of `moment`; none where no site is off the\nroad.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume-m"
+          },
           "approval": {
             "anyOf": [
               {
@@ -43097,6 +43117,15 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.hauls.plan` v1: the diagram's id, whether everything is placed, the cut more than the fill and the\nfill more than the cut over the stretches, what moves, the haul moment (m³·m) and its average (m; none where nothing\nmoves), the sites as used, the segments' flows (none when infeasible), and where infeasible the fill no borrow meets\nand the cut no waste takes.",
         "properties": {
+          "accessMoment": {
+            "description": "The moment on the sites' access roads (m³·m; docs/adr/0955), part of `moment`; none where no site is off the\nroad.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "volume-m"
+          },
           "approval": {
             "anyOf": [
               {
@@ -43246,7 +43275,8 @@
           "haul_plan_infeasible",
           "corridor_stale",
           "volume_gap",
-          "haul_plan_stale"
+          "haul_plan_stale",
+          "haul_site_unconnected"
         ]
       },
       "examples": [
@@ -43405,6 +43435,184 @@
             "at": "2026-11-05",
             "haul": "h-1",
             "note": "1. hakediş"
+          }
+        }
+      ]
+    },
+    {
+      "id": "road.hauls.network",
+      "version": 1,
+      "title": "Taşıma ağı",
+      "summary": "Bir Brüknerin taşıma ağını okur; hiçbir şey yazmaz. Ağın katmanlarındaki çizgi ve çoklu çizgiler yoldur (yaylar düzleştirilir). İki yol yalnız birinin ucu ötekine bağlantı toleransı (connect) içinde değdiğinde birleşir: ucuna ya da gövdesine (T, öteki orada bölünür); gövdeleri yalnız ekranda kesişen yollar birleşmez ve söylenir. Yol, ucu aksa erişim uzaklığı (reach) içinde olduğu yerde o km'de aksa bağlanır; aksı gövdesiyle kesmek bağlamaz. Konumu verilen alan en yakın yola toleransla bağlanır; aksa en kısa yol (Dijkstra) erişim boyudur. Yolların uzunlukları ve noktaları, aksa bağlandıkları km'ler, birleşmeler, birleşmeyen yerler (kesişme, aksı kesme, boşta uç ve ne kadar açık olduğu), her alanın erişimi ya da neden bağlanmadığı. Uyarılar: haul_network_gap, haul_site_unconnected. Retler: not_a_road_project, unknown_haul, invalid_haul.",
+      "aliases": [
+        "tasimaagi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.hauls.network` v1 (plan/road.md Y49, docs/adr/0955; ROAD-HAUL-06): a mass haul diagram's haul road\nnetwork read: its roads, where they meet the alignment, how they join, what does not join, and how each site off the\nroad is reached. Reads only.\n\nRefusals: `not_a_road_project`, `unknown_haul`, `invalid_haul` (no network, a layer not in the drawing, a volume\nor alignment that does not compute).",
+        "properties": {
+          "haul": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "haul"
+        ],
+        "title": "HaulsNetwork",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.network` v1: the diagram, its tolerances, roads, junctions, joins, problems and sites.",
+        "properties": {
+          "connect": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "haul": {
+            "type": "string"
+          },
+          "joins": {
+            "description": "How many ends join another road.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/HaulJunction"
+            },
+            "type": "array"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/$defs/HaulNetworkProblem"
+            },
+            "type": "array"
+          },
+          "reach": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "roads": {
+            "items": {
+              "$ref": "#/$defs/HaulRoadRead"
+            },
+            "type": "array"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/$defs/HaulSiteAccess"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "haul",
+          "connect",
+          "reach",
+          "roads",
+          "junctions",
+          "joins",
+          "problems",
+          "sites"
+        ],
+        "title": "HaulNetworkRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.hauls.network` v1: the diagram, its tolerances, roads, junctions, joins, problems and sites.",
+        "properties": {
+          "connect": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "haul": {
+            "type": "string"
+          },
+          "joins": {
+            "description": "How many ends join another road.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/HaulJunction"
+            },
+            "type": "array"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/$defs/HaulNetworkProblem"
+            },
+            "type": "array"
+          },
+          "reach": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "roads": {
+            "items": {
+              "$ref": "#/$defs/HaulRoadRead"
+            },
+            "type": "array"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/$defs/HaulSiteAccess"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "haul",
+          "connect",
+          "reach",
+          "roads",
+          "junctions",
+          "joins",
+          "problems",
+          "sites"
+        ],
+        "title": "HaulNetworkRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_haul",
+          "invalid_haul"
+        ],
+        "warnings": [
+          "haul_network_gap",
+          "haul_site_unconnected"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana Brüknerin taşıma ağı",
+          "input": {
+            "haul": "h-1"
           }
         }
       ]
@@ -43851,7 +44059,8 @@
         "warnings": [
           "corridor_stale",
           "volume_gap",
-          "haul_unbalanced"
+          "haul_unbalanced",
+          "haul_site_unconnected"
         ]
       },
       "examples": [
@@ -88472,6 +88681,18 @@
       "meaning": "Onaylı taşıma planı eskidi; neyin değiştiği iletide."
     },
     {
+      "code": "haul_site_unconnected",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Konumu verilen alan taşıma ağıyla aksa bağlanmıyor; hesaba katılmadı, ileti nedenini söyler."
+    },
+    {
+      "code": "haul_network_gap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Taşıma ağında birleşmeyen yer var: gövdeden kesişen yollar ya da boşta kalan uçlar; ileti yerini söyler."
+    },
+    {
       "code": "haul_plan_infeasible",
       "kind": "warning",
       "retryable": false,
@@ -123104,6 +123325,17 @@
         "name": {
           "type": "string"
         },
+        "network": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HaulNetworkDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 173)."
+        },
         "revision": {
           "format": "uint32",
           "minimum": 0,
@@ -123131,6 +123363,41 @@
         "id",
         "name",
         "volume"
+      ],
+      "type": "object"
+    },
+    "HaulJunction": {
+      "description": "Where a road meets the alignment: the road (its index in `roads`), which end (true: its end), the station, km and\noffset.",
+      "properties": {
+        "end": {
+          "type": "boolean"
+        },
+        "km": {
+          "type": "string"
+        },
+        "offset": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "road": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "road",
+        "end",
+        "station",
+        "km",
+        "offset"
       ],
       "type": "object"
     },
@@ -123228,6 +123495,92 @@
         "overVolume",
         "overMoment",
         "unbalanced"
+      ],
+      "type": "object"
+    },
+    "HaulNetworkDef": {
+      "additionalProperties": false,
+      "description": "A mass haul diagram's haul road network (docs/adr/0955; KCAD schema 173): the line and polyline objects on these\nlayers are its roads; two join where an end of one lies within `connect` (m) of the other; a road joins the\nalignment where an end lies within `reach` (m) of its centre line (none: `connect`).",
+      "properties": {
+        "connect": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "layers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "reach": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "layers",
+        "connect"
+      ],
+      "type": "object"
+    },
+    "HaulNetworkIssue": {
+      "description": "What does not join: two roads crossing along their lengths, a road crossing the alignment along its length, an end\nthat joins nothing.",
+      "enum": [
+        "crossing",
+        "crossesAlignment",
+        "loose"
+      ],
+      "type": "string"
+    },
+    "HaulNetworkProblem": {
+      "description": "A thing in the network that does not join, in words, where, and the roads it is about (indices in `roads`).",
+      "properties": {
+        "gap": {
+          "description": "Of a loose end: how far the nearest road or the alignment lies (m).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "kind": {
+          "$ref": "#/$defs/HaulNetworkIssue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "roads": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "kind",
+        "roads",
+        "x",
+        "y",
+        "message"
       ],
       "type": "object"
     },
@@ -123369,6 +123722,15 @@
     "HaulPlanSite": {
       "description": "A site in a haul plan: its name, kind, station, capacity and the volume the plan gives or takes there.",
       "properties": {
+        "access": {
+          "description": "Of a site off the road (docs/adr/0955): its access road's length from the alignment (m); `station` is then\nwhere the access meets the alignment. None: on the road.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "capacity": {
           "format": "double",
           "type": "number",
@@ -123384,6 +123746,10 @@
           "format": "double",
           "type": "number",
           "x-unit": "m"
+        },
+        "unconnected": {
+          "description": "A site off the road the network does not reach: it is left out of the plan (used 0).",
+          "type": "boolean"
         },
         "used": {
           "format": "double",
@@ -123549,6 +123915,37 @@
       ],
       "type": "object"
     },
+    "HaulRoadRead": {
+      "description": "A haul road: its object, part, layer and length in plan (m).",
+      "properties": {
+        "entity": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "part": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "entity",
+        "layer",
+        "length"
+      ],
+      "type": "object"
+    },
     "HaulSegment": {
       "description": "A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).",
       "properties": {
@@ -123581,6 +123978,84 @@
         "from",
         "to",
         "flow"
+      ],
+      "type": "object"
+    },
+    "HaulSiteAccess": {
+      "description": "How a site off the road is reached: joined with its access length, the station, km and offset where it meets the\nalignment and the roads on the way (indices in `roads`, from the site); or why not.",
+      "properties": {
+        "joined": {
+          "type": "boolean"
+        },
+        "kind": {
+          "$ref": "#/$defs/HaulSiteKind"
+        },
+        "km": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "length": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "name": {
+          "type": "string"
+        },
+        "offset": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "roads": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        },
+        "station": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "why": {
+          "description": "Why it is not joined, in words.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "x",
+        "y",
+        "joined"
       ],
       "type": "object"
     },
@@ -123632,6 +124107,18 @@
       "additionalProperties": false,
       "description": "A borrow site or a waste site on a mass haul diagram (docs/adr/0907 §1): its name, kind, station and the volume\n(m³, in the volume sheet's state) it gives (borrow) or takes (waste) there.",
       "properties": {
+        "at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Vec2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where it lies off the road, in plan (docs/adr/0955; KCAD schema 173): it is reached along the diagram's haul\nroad network, which says where it meets the alignment and how far; `station` is then that station as last\nwritten. None: on the road at `station`.",
+          "x-unit": "length"
+        },
         "kind": {
           "$ref": "#/$defs/HaulSiteKind"
         },

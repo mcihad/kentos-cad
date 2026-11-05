@@ -7861,6 +7861,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_HAULS_NETWORK.into(),
+            version: crate::ROAD_HAULS_NETWORK_VERSION,
+            title: "Taşıma ağı".into(),
+            summary: "Bir Brüknerin taşıma ağını okur; hiçbir şey yazmaz. Ağın katmanlarındaki çizgi ve çoklu çizgiler yoldur (yaylar düzleştirilir). İki yol yalnız birinin ucu ötekine bağlantı toleransı (connect) içinde değdiğinde birleşir: ucuna ya da gövdesine (T, öteki orada bölünür); gövdeleri yalnız ekranda kesişen yollar birleşmez ve söylenir. Yol, ucu aksa erişim uzaklığı (reach) içinde olduğu yerde o km'de aksa bağlanır; aksı gövdesiyle kesmek bağlamaz. Konumu verilen alan en yakın yola toleransla bağlanır; aksa en kısa yol (Dijkstra) erişim boyudur. Yolların uzunlukları ve noktaları, aksa bağlandıkları km'ler, birleşmeler, birleşmeyen yerler (kesişme, aksı kesme, boşta uç ve ne kadar açık olduğu), her alanın erişimi ya da neden bağlanmadığı. \
+                      Uyarılar: haul_network_gap, haul_site_unconnected. Retler: not_a_road_project, unknown_haul, invalid_haul."
+                .into(),
+            aliases: vec!["tasimaagi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HaulsNetwork>(),
+            output: schema::<crate::HaulNetworkRead>(),
+            plan: Some(schema::<crate::HaulNetworkRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana Brüknerin taşıma ağı".into(),
+                input: json!({ "haul": "h-1" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_HAULS_TRUCKS.into(),
             version: crate::ROAD_HAULS_TRUCKS_VERSION,
             title: "Taşıma filosu".into(),
@@ -14887,6 +14912,7 @@ mod tests {
                     crate::ROAD_HAULS_QUERY => serde_json::from_value::<crate::HaulsQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_PLAN => serde_json::from_value::<crate::HaulsPlan>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_APPROVE => serde_json::from_value::<crate::HaulsApprove>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_HAULS_NETWORK => serde_json::from_value::<crate::HaulsNetwork>(e.input.clone()).map(|_| ()),
                     crate::ROAD_HAULS_TRUCKS => serde_json::from_value::<crate::HaulsTrucks>(e.input.clone()).map(|_| ()),
                     crate::ROAD_GUARDRAILS_EDIT => {
                         serde_json::from_value::<crate::GuardrailsEdit>(e.input.clone()).map(|_| ())
@@ -15764,6 +15790,9 @@ mod tests {
                         }
                         crate::ROAD_HAULS_APPROVE => {
                             serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_HAULS_NETWORK => {
+                            serde_json::from_value::<crate::HaulNetworkRead>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_TRUCKS => {
                             serde_json::from_value::<crate::HaulTrucked>(output.clone()).map(|_| ())

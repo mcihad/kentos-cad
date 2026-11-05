@@ -59,13 +59,14 @@ def solve(points, sites):
     base = {"cut": cut, "fill": fill, "shortage": 0.0, "surplus": 0.0}
     if shortage > tiny or surplus > tiny:
         return {**base, "feasible": False, "used": [0.0] * len(sites), "segments": [], "moment": 0.0, "moved": 0.0,
-                "shortage": shortage, "surplus": surplus}
+                "shortage": shortage, "surplus": surplus, "access": 0.0}
     stations = sorted({p[0] for p in places} | {s["station"] for s in sites})
     n, m = len(stations), len(sites)
     at = {s: k for k, s in enumerate(stations)}
     lengths = [stations[i + 1] - stations[i] for i in range(n - 1)]
     nv = 2 * (n - 1) + m
-    cost = np.array(lengths + lengths + [0.0] * m)
+    # Docs/adr/0955: a cubic metre a site gives or takes goes its access road's length more.
+    cost = np.array(lengths + lengths + [s.get("access", 0.0) for s in sites])
     rows = np.zeros((n, nv))
     rhs = np.zeros(n)
     for station, v in places:
@@ -90,7 +91,8 @@ def solve(points, sites):
                         method="highs")
             assert r.status == 0, r.message
             ends.append(sign * r.fun)
-        assert ends[1] - ends[0] < 1e-3, f"site {j}'s use is not unique: {ends}"
+        # HiGHS leaves ~1e-9 of a moment of 10⁷ m³·m: a use may move ~1e-6 of itself within it, not more.
+        assert ends[1] - ends[0] < 1e-3 + 1e-6 * abs(ends[0]), f"site {j}'s use is not unique: {ends}"
         used.append(ends[0])
     scale = max(cut + fill + gives + takes, 1.0)
     exact = []
@@ -137,8 +139,9 @@ def solve(points, sites):
         segments.append({"from": stations[i], "to": stations[i + 1], "flow": float(flow)})
         moment += abs(flow) * Fraction(lengths[i])
     borrowed = sum(float(e) for e, s in zip(exact, sites) if s["kind"] == "borrow")
-    return {**base, "feasible": True, "used": [float(e) for e in exact], "segments": segments, "moment": float(moment),
-            "moved": cut + borrowed}
+    access = sum(e * Fraction(s.get("access", 0.0)) for e, s in zip(exact, sites))
+    return {**base, "feasible": True, "used": [float(e) for e in exact], "segments": segments,
+            "moment": float(moment + access), "moved": cut + borrowed, "access": float(access)}
 
 
 def gauss(rows, rhs, n):
@@ -186,7 +189,9 @@ def solve_priced(points, sites, prices):
     src = [(q[0], q[1], None) for q in places if q[1] > 0] + [(x["station"], x["volume"], j) for j, x in enumerate(sites) if x["kind"] == "borrow"]
     snk = [(q[0], -q[1], None) for q in places if q[1] < 0] + [(x["station"], x["volume"], j) for j, x in enumerate(sites) if x["kind"] == "waste"]
     arcs = [(i, j) for i, a in enumerate(src) for j, b in enumerate(snk) if not (a[2] is not None and b[2] is not None)]
-    dist = [abs(snk[j][0] - src[i][0]) for i, j in arcs]
+    # Along the road and the access roads at either end (docs/adr/0955).
+    reach = lambda j: 0.0 if j is None else sites[j].get("access", 0.0)  # noqa: E731
+    dist = [abs(snk[j][0] - src[i][0]) + reach(src[i][2]) + reach(snk[j][2]) for i, j in arcs]
     cost = np.array([o * max(0.0, d - F) + (prices["borrow"] if src[i][2] is not None else 0.0)
                      + (prices["waste"] if snk[j][2] is not None else 0.0) for (i, j), d in zip(arcs, dist)])
     na = len(arcs)
@@ -287,9 +292,10 @@ def solve_priced(points, sites, prices):
     borrow = Fraction(prices["borrow"]) * borrowed
     total = overhaul + waste + borrow
     assert abs(float(total) - first.fun) < 1e-6 * max(1.0, abs(first.fun)), (float(total), first.fun)
+    access = sum(u * Fraction(x.get("access", 0.0)) for x, u in zip(sites, used))
     return {**base, "feasible": True, "used": [float(u) for u in used], "segments": segments, "moment": float(moment),
             "moved": cut + float(borrowed), "over": float(over), "overhaul": float(overhaul), "waste": float(waste),
-            "borrow": float(borrow), "total": float(total)}
+            "borrow": float(borrow), "total": float(total), "access": float(access)}
 
 
 # Docs/adr/0954: within this share (of the larger, at least 1) two of a plan's figures are the same.
@@ -446,8 +452,24 @@ def raw(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
     curve = hc.ordinate(rep)
     c = next(x for x in corridors if x["id"] == v["corridor"])
     first, last = curve[0][0], curve[-1][0]
-    sites = h.get("sites", [])
+    # Docs/adr/0955: a site off the road at the station its access meets the alignment, its access the extra way; one
+    # the network does not reach left out (no capacity), with a warning.
+    import road_haul_network_cases as net  # noqa: PLC0415
+    defs = h.get("sites", [])
+    where, unplaced = net.placed(h)
+    warnings += unplaced
+    sites = []
+    for x, (st, access, off) in zip(defs, where):
+        y = {**x, "station": st}
+        if access is not None:
+            y["access"] = access
+        if off:
+            y["volume"] = 0.0
+            y["unconnected"] = True
+        sites.append(y)
     for j, site in sorted(enumerate(sites), key=lambda t: (t[1]["station"], t[0])):
+        if site.get("unconnected"):
+            continue
         if site["station"] < first or site["station"] > last:
             raise hc.Refused("invalid_haul", f"“{site['name']}” alanı kübajın km'leri dışında: kübaj "
                                              f"{ccmd.km_text(c['alignment'], first)} – {ccmd.km_text(c['alignment'], last)} arası.",
@@ -457,7 +479,7 @@ def raw(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
         if objective == "cost":
             raise hc.Refused("invalid_haul", f"“{h['name']}” Brüknerinde uygunsuz malzeme ya da engel var; ekonomik plan "
                                              "onlarla henüz çözülmez, momentle planlayın.", "objective")
-        return sorted_answer(h, rep, sites, warnings)
+        return sorted_answer(h, rep, sites, warnings, defs)
     priced = None
     if objective == "cost":
         c = h.get("cost")
@@ -469,7 +491,7 @@ def raw(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
                              "objective")
         for kind, key, words in (("waste", "waste", "döküm alanı var ama döküm birim fiyatı yok"),
                                  ("borrow", "borrow", "ödünç alanı var ama ödünç birim fiyatı yok")):
-            if key not in c and any(x["kind"] == kind for x in sites):
+            if key not in c and any(x["kind"] == kind for x in defs):
                 raise hc.Refused("invalid_haul", f"“{h['name']}” Brüknerinin {words}.", "objective")
         prices = {"free": h.get("free", 0.0), "overhaul": c["overhaul"] / 1000, "waste": c.get("waste", 0.0),
                   "borrow": c.get("borrow", 0.0)}
@@ -484,9 +506,10 @@ def raw(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
                                     f"alanı ekleyin ya da büyütün."})
     out = {"haul": h["id"], "feasible": p["feasible"], "cut": p["cut"], "fill": p["fill"], "moved": p["moved"],
            "moment": p["moment"],
-           "sites": [{"name": s["name"], "kind": s["kind"], "station": s["station"], "capacity": s["volume"], "used": u}
-                     for s, u in zip(sites, p["used"])],
+           "sites": [site_row(d, s, u) for d, s, u in zip(defs, sites, p["used"])],
            "segments": p["segments"], "shortage": p["shortage"], "surplus": p["surplus"]}
+    if any("access" in s for s in sites):
+        out["accessMoment"] = p.get("access", 0.0)
     if p["feasible"] and p["moved"] > 0:
         out["average"] = p["moment"] / p["moved"]
     out["objective"] = objective
@@ -503,7 +526,17 @@ def raw(inp, hauls, volumes=VOLUMES, corridors=hc.CORRIDORS):
     return out, warnings
 
 
-def sorted_answer(h, rep, sites, warnings):
+def site_row(d, s, used):
+    """A site in the plan's answer: its own capacity, the station it is placed at, its access or that it is cut off."""
+    row = {"name": d["name"], "kind": d["kind"], "station": s["station"], "capacity": d["volume"], "used": used}
+    if "access" in s:
+        row["access"] = s["access"]
+    if s.get("unconnected"):
+        row["unconnected"] = True
+    return row
+
+
+def sorted_answer(h, rep, sites, warnings, defs=None):
     """A diagram with unsuitable cut or barriers (docs/adr/0944): road_haul_sorted_cases.py's programme on each
     stretch's factored cut and fill, the unsuitable share at its middle."""
     def share(s):
@@ -511,7 +544,9 @@ def sorted_answer(h, rep, sites, warnings):
     stretches = [{"from": r["from"], "to": r["to"], "cut": r["cut"] * r.get("cutFactor", 1.0),
                   "fill": r["fill"] * r.get("fillFactor", 1.0), "unsuitable": share((r["from"] + r["to"]) / 2)}
                  for r in rep["rows"] if r.get("cut") is not None and r.get("fill") is not None]
-    plan_sites = [{"station": x["station"], "capacity": x["volume"], "borrow": x["kind"] == "borrow"} for x in sites]
+    defs = defs if defs is not None else sites
+    plan_sites = [{"station": x["station"], "capacity": x["volume"], "borrow": x["kind"] == "borrow",
+                   "access": x.get("access", 0.0)} for x in sites]
     barriers = [{"station": b["station"], "detour": b.get("detour")} for b in h.get("barriers", [])]
     d = sref.solve(stretches, plan_sites, barriers, detail=True)
     tiny = 1e-6 * max(sum(r["cut"] + r["fill"] for r in stretches) + sum(x["volume"] for x in sites), 1.0)
@@ -531,8 +566,8 @@ def sorted_answer(h, rep, sites, warnings):
     if feasible and moved > 0:
         out["average"] = d["moment"] / moved
     out["sites"] = []
-    for x, u, ub in zip(sites, d["used"], d["usedUnsuitable"]):
-        row = {"name": x["name"], "kind": x["kind"], "station": x["station"], "capacity": x["volume"], "used": u}
+    for dd, x, u, ub in zip(defs, sites, d["used"], d["usedUnsuitable"]):
+        row = site_row(dd, x, u)
         if x["kind"] == "waste":
             row["usedUnsuitable"] = ub
         out["sites"].append(row)
@@ -543,6 +578,8 @@ def sorted_answer(h, rep, sites, warnings):
     if h.get("barriers"):
         out["barriers"] = [{"name": b["name"], "station": b["station"], **({"detour": b["detour"]} if "detour" in b else {}),
                             "crossed": c} for b, c in zip(h["barriers"], d["crossed"])]
+    if any("access" in x for x in sites):
+        out["accessMoment"] = d.get("access", 0.0)
     return out, warnings
 
 
@@ -700,6 +737,30 @@ def cases():
     hn = {**H1, "revision": 2, "sites": two}
     q("Ekonomik onay, fiyatlar kalktı: plan bugün kurulamıyor", {"haul": "h-1"},
       [{**hn, "approved": signed(hp, [hp, H2, H3], objective="cost")["approved"]}, H2, H3])
+    # Docs/adr/0955: sites off the road, reached by the haul road network.
+    import road_haul_network_cases as net  # noqa: PLC0415
+
+    def qn(name, inp, hauls, volumes=VOLUMES, relative=False):
+        o, w = answer(inp, hauls, volumes)
+        q(name, inp, hauls, volumes, setup_=net.setup(hauls, volumes), result=completed(o, w), relative=relative)
+
+    hn = {**H1, "network": net.NETWORK}
+    qn("Ağdan döküm alanı: erişim yolu momente katılır", {"haul": "h-1"}, [{**hn, "sites": [net.SITE_W]}, H2, H3])
+    on_road = {k: v for k, v in net.SITE_W.items() if k != "at"}
+    q("Aynı alan yol üstünde: erişimsiz", {"haul": "h-1"}, [{**H1, "sites": [on_road]}, H2, H3])
+    qn("Kopuk alan hesaba katılmaz", {"haul": "h-1"},
+       [{**hn, "sites": [net.SITE_C, site("Son döküm", "waste", 600.0, big)]}, H2, H3])
+    qn("Uzak alan hesaba katılmaz, plan kurulamaz", {"haul": "h-1"}, [{**hn, "sites": [net.SITE_F]}, H2, H3])
+    qn("Ağdan döküm ve yol üstü döküm birlikte", {"haul": "Ana Brükner"},
+       [{**hn, "sites": [net.SITE_W, site("D2", "waste", 590.0, 25000.0)]}, H2, H3], relative=True)
+    qn("Ekonomik: erişim fazla taşımaya katılır", {"haul": "h-1", "objective": "cost"},
+       [{**hn, "cost": P, "sites": [net.SITE_W, site("D2", "waste", 590.0, 25000.0)]}, H2, H3])
+    h3n = {**H3, "network": net.NETWORK}
+    qn("Ağdan ödünç alanı km 520'den dolguları besler", {"haul": "h-3"},
+       [H1, H2, {**h3n, "sites": [net.SITE_B, site("Ödünç", "borrow", 380.0, 12000.0)]}], relative=True)
+    qn("Uygunsuz yarma ağdaki dökümde", {"haul": "h-1"},
+       [{**hn, "sites": [net.SITE_W, site("Ödünç", "borrow", 560.0, big)],
+         "unsuitable": [{"from": 0.0, "to": 300.0, "share": 40.0}]}, H2, H3], relative=True)
     # Refusals.
     q("Yol projesi değil", {"haul": "h-1"}, [H1, H2, H3], setup_=hc.setup(work="map"), result=hc.NOT_ROAD)
     q("Olmayan Brükner", {"haul": "yok"}, [H1, H2, H3])

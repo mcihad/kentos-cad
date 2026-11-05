@@ -97,6 +97,11 @@ pub struct StatCard<'a, Message> {
     on_press: Option<Message>,
     selected: bool,
     width: Length,
+    /// The value's size (none: the figure size); [`StatRow`] fits it to the card.
+    value_size: Option<f32>,
+    height: Length,
+    /// The label on one line, its end “…” where it does not fit (in a [`StatRow`]).
+    elide: bool,
     _lifetime: std::marker::PhantomData<&'a ()>,
 }
 
@@ -114,6 +119,9 @@ impl<'a, Message: Clone + 'a> StatCard<'a, Message> {
             on_press: None,
             selected: false,
             width: Length::Fill,
+            value_size: None,
+            height: Length::Shrink,
+            elide: false,
             _lifetime: std::marker::PhantomData,
         }
     }
@@ -162,6 +170,24 @@ impl<'a, Message: Clone + 'a> StatCard<'a, Message> {
         self.width = width.into();
         self
     }
+
+    /// Kartın yüksekliği (ör. bir sıradaki kartlar eşit boyda).
+    pub fn height(mut self, height: impl Into<Length>) -> Self {
+        self.height = height.into();
+        self
+    }
+
+    /// Başlık tek satırda: sığmazsa sonu “…” ile kısalır.
+    pub fn elide_label(mut self, elide: bool) -> Self {
+        self.elide = elide;
+        self
+    }
+
+    /// Değerin yazı boyutu (yoksa figür boyu). Değer hiçbir boyda alt satıra kaymaz.
+    pub fn value_size(mut self, size: f32) -> Self {
+        self.value_size = Some(size);
+        self
+    }
 }
 
 impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Message> {
@@ -177,10 +203,18 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
             on_press,
             selected,
             width,
+            value_size,
+            height,
+            elide,
             ..
         } = card;
 
-        let mut top = row![label::muted(title)].spacing(6).align_y(Center);
+        let heading: Element<'a, Message> = if elide {
+            crate::widget::Elided::new(title).size(typography::body()).style(style::text::muted).width(Fill).into()
+        } else {
+            label::muted(title).into()
+        };
+        let mut top = row![heading].spacing(6).align_y(Center);
 
         if let Some((severity, _)) = &status {
             top = top
@@ -188,7 +222,13 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
                 .push(icon(severity.icon()).size(14.0).tone(severity.tone()));
         }
 
-        let mut figure = row![label::figure(value).style(style::text::default)]
+        // The value stays on one line: a card too narrow for it takes a smaller size (StatRow), never a second line.
+        let mut figure = row![
+            label::figure(value)
+                .size(value_size.unwrap_or_else(typography::figure))
+                .wrapping(iced::widget::text::Wrapping::None)
+                .style(style::text::default)
+        ]
             .spacing(6)
             .align_y(iced::Bottom);
 
@@ -267,17 +307,19 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
             content = content.push(label::caption(text));
         }
 
-        let body = container(content).padding([12, 14]).width(Fill);
+        let body = container(content).padding([12, 14]).width(Fill).height(height);
 
         let card: Element<'a, Message> = match on_press {
             Some(message) => button(body)
                 .on_press(message)
                 .padding(0)
                 .width(width)
+                .height(height)
                 .style(card_button(selected))
                 .into(),
             None => container(body)
                 .width(width)
+                .height(height)
                 .style(style::container::bordered)
                 .into(),
         };
@@ -425,5 +467,143 @@ mod tests {
         assert_eq!(gain.severity(), Some(Severity::Success));
         assert_eq!(neutral.severity(), None);
         assert_eq!(Delta::new(0.0, "0").severity(), None);
+    }
+}
+
+/// Bir değer yazısını sayıya ve birime ayırır: sondaki rakamsız sözcük(ler) birimdir
+/// (“1 974 258 m³·m” → “1 974 258”, “m³·m”; “31 451 / 3 335 m³” → “31 451 / 3 335”, “m³”;
+/// “Kurulur” → birim yok).
+pub fn split_unit(text: &str) -> (String, Option<String>) {
+    let t = text.trim();
+    match t.rsplit_once(' ') {
+        Some((value, unit))
+            if !unit.chars().any(|c| c.is_ascii_digit())
+                && value.chars().any(|c| c.is_ascii_digit())
+                && unit.chars().count() <= 8 =>
+        {
+            (value.trim_end().to_owned(), Some(unit.to_owned()))
+        }
+        _ => (t.to_owned(), None),
+    }
+}
+
+/// Gösterge sırası: bir sonucun birkaç değeri yan yana, eşit genişlikte ve eşit
+/// yükseklikte kartlarda (ör. yol pencerelerinde resmin altındaki değerler).
+///
+/// Değer hiçbir zaman alt satıra kaymaz ve kartın dışına taşmaz: her kart değerine
+/// kartta sığan en büyük basamağı verir ([`STEPS`]: figür boyundan gövde boyuna;
+/// Grafana stat panelinin “auto” yazı boyu, iOS'un “fit to width”'i). Basamaklar
+/// sabit olduğu için yan yana iki değer ya aynı boyda ya da belirgin biçimde
+/// farklıdır. Birim değerin yanında küçük yazılır. Başlık tek satırdır, sığmazsa sonu
+/// “…” ile kısalır (gerçek yazı tipiyle ölçülür, [`crate::widget::Elided`]): sıranın
+/// yüksekliği böylece her genişlikte aynıdır ve kartın kendi yüksekliğine eşittir.
+///
+/// ```ignore
+/// StatRow::new()
+///     .figure("Taşıma momenti", "1 974 258 m³·m")   // birim kendiliğinden ayrılır
+///     .push("Durum", "Kurulur", None)
+/// ```
+#[derive(Debug, Clone, Default)]
+pub struct StatRow {
+    cards: Vec<(String, String, Option<String>)>,
+}
+
+/// Değerin yazı boyu basamakları, büyükten küçüğe: figür (gövdenin 5/3'ü), 18, 16,
+/// başlık, alt başlık, gövde (12 piksellik gövde metninde).
+pub const STEPS: [fn() -> f32; 6] = [
+    typography::figure,
+    || typography::scaled(18.0),
+    || typography::scaled(16.0),
+    typography::title,
+    typography::heading,
+    typography::body,
+];
+
+/// Bir yazının yaklaşık genişliği: rakamlar ve harfler ailenin ortalama genişliğinde,
+/// boşluk ve ince boşluk, nokta, virgül, eğik çizgi ve orta nokta dar (yazı tipinin
+/// kendi oranlarına yakın: rakam ≈ 0,56 em, ince boşluk ≈ 0,2 em, nokta ≈ 0,28 em).
+fn span(text: &str, size: f32, strong: bool) -> f32 {
+    let ty = typography::current();
+    let letter = ty.text_width("x", size, strong);
+    text.chars()
+        .map(|c| match c {
+            '\u{202f}' | '\u{2009}' => 0.2 * size,
+            ' ' => 0.28 * size,
+            '.' | ',' | '·' | ':' | ';' | '\'' => 0.28 * size,
+            '/' | '(' | ')' | '−' | '-' | '+' => 0.4 * size,
+            c if c.is_ascii_digit() => 0.6 * size,
+            _ => letter,
+        })
+        .sum()
+}
+
+/// Kartın iç boşluğu (iki yanda) ve kenarı; satır arası.
+const CARD_PAD_X: f32 = 14.0;
+const CARD_PAD_Y: f32 = 12.0;
+const ROW_SPACING: f32 = 8.0;
+/// Bir satırın yüksekliği, yazı boyunun katı (iced'in varsayılanı).
+const LINE: f32 = 1.3;
+
+impl StatRow {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Bir kart: başlık, değer ve birim.
+    pub fn push(mut self, label: impl Into<String>, value: impl Into<String>, unit: Option<String>) -> Self {
+        self.cards.push((label.into(), value.into(), unit));
+        self
+    }
+
+    /// Bir kart, birimi değer yazısının sonundan ayrılarak ([`split_unit`]).
+    pub fn figure(self, label: impl Into<String>, text: impl AsRef<str>) -> Self {
+        let (value, unit) = split_unit(text.as_ref());
+        self.push(label, value, unit)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.cards.is_empty()
+    }
+
+    /// Kartlar `width` genişliğe dizildiğinde her kartın değer boyu.
+    pub fn fit(&self, width: f32) -> Vec<f32> {
+        let n = self.cards.len().max(1) as f32;
+        let room = (width - ROW_SPACING * (n - 1.0)) / n - 2.0 * CARD_PAD_X - 2.0;
+        self.cards
+            .iter()
+            .map(|(_, value, unit)| {
+                let unit_w = unit.as_ref().map_or(0.0, |u| 6.0 + span(u, typography::caption(), false));
+                STEPS.iter().map(|k| k()).find(|s| span(value, *s, true) + unit_w <= room).unwrap_or_else(typography::body)
+            })
+            .collect()
+    }
+
+    /// Sıranın yüksekliği: kartın iç boşluğu, başlığın satırları ve figür boyunda bir satır.
+    fn height(lines: usize) -> f32 {
+        2.0 * CARD_PAD_Y + 2.0 + lines as f32 * LINE * typography::body() + 4.0 + LINE * typography::figure()
+    }
+}
+
+impl<'a, Message: Clone + 'a> From<StatRow> for Element<'a, Message> {
+    fn from(row_of: StatRow) -> Self {
+        if row_of.cards.is_empty() {
+            return space::vertical().height(0).into();
+        }
+        // The height is set before the width is known (`responsive` needs a bounded box): one line of label, one of
+        // value at the figure size.
+        let height = StatRow::height(1);
+        let content = iced::widget::responsive(move |size| {
+            let sizes = row_of.fit(size.width);
+            let mut cards = iced::widget::Row::new().spacing(ROW_SPACING).height(Fill);
+            for ((label, value, unit), value_size) in row_of.cards.iter().cloned().zip(sizes) {
+                let mut card = StatCard::new(label, value).value_size(value_size).width(Fill).height(Fill).elide_label(true);
+                if let Some(u) = unit {
+                    card = card.unit(u);
+                }
+                cards = cards.push(card);
+            }
+            cards.into()
+        });
+        container(content).width(Fill).height(Length::Fixed(height)).into()
     }
 }

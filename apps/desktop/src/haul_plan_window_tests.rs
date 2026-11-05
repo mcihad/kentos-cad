@@ -351,3 +351,67 @@ fn screens_approval() {
         println!("{}", path.display());
     }
 }
+
+/// ROAD-HAUL-06 (docs/adr/0955): a site off the road stands where its access meets the alignment and the access is
+/// part of the moment; the network's view reads `road.hauls.network` as its cases do.
+#[test]
+fn the_window_reads_the_haul_road_network() {
+    const NAME: &str = "Ağdan döküm ve yol üstü döküm birlikte";
+    let mut app = plan_app(Some(NAME));
+    let _ = app.update(Message::Run("haul.plan"));
+    send(&mut app, W::Haul("h-1".into()));
+    send(&mut app, W::Show(crate::haul_plan_window::Shown::Network));
+    let w = app.haul_plan_window.as_ref().expect("open");
+    let Some(Ok(r)) = &w.preview else { panic!("a read") };
+    let want = &case(NAME)["steps"][0]["result"]["output"];
+    assert!((r.moment - want["moment"].as_f64().expect("a moment")).abs() < 1e-5 * r.moment);
+    let access = r.sites[0].access.expect("an access");
+    assert!((access - want["sites"][0]["access"].as_f64().expect("an access")).abs() < 1e-6);
+    assert!(r.access_moment.is_some_and(|a| (a - access * r.sites[0].used).abs() < 1e-6 * a.max(1.0)));
+    let Some(Ok((n, warnings))) = &w.network else { panic!("the network reads") };
+    assert_eq!(n.sites.len(), 1);
+    assert!(n.sites[0].joined && n.sites[0].roads == [0]);
+    assert!(n.problems.iter().any(|p| p.kind == kentos_commands::HaulNetworkIssue::Crossing));
+    assert!(warnings.iter().any(|x| x.contains("birleşmeyen")));
+    let drawn = w.drawn.as_ref().expect("drawn");
+    assert_eq!(drawn.roads.len(), n.roads.len());
+    assert!(drawn.axis.len() > 100);
+}
+
+/// The network in plan and the flow with a site off the road; a cut off site; `.run/gui-evidence/yol-y49/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib haul_plan_window_tests::screens_network -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_network() {
+    use crate::haul_plan_window::Shown;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y49");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (case_name, haul, theme, size, shown, name) in [
+        ("Ağdan döküm ve yol üstü döküm birlikte", "h-1", "light", Size::new(1440.0, 900.0), Shown::Network, "ag-acik-genis"),
+        ("Ağdan döküm ve yol üstü döküm birlikte", "h-1", "light", Size::new(1440.0, 900.0), Shown::Flow, "akis-acik-genis"),
+        ("Kopuk alan hesaba katılmaz", "h-1", "dark", Size::new(1440.0, 900.0), Shown::Network, "kopuk-koyu-genis"),
+        ("Ağdan ödünç alanı km 520'den dolguları besler", "h-3", "dark", Size::new(1100.0, 650.0), Shown::Network, "odunc-koyu-dar"),
+    ] {
+        let mut app = plan_app(Some(case_name));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("haul.plan"));
+        send(&mut app, W::Haul(haul.into()));
+        send(&mut app, W::Show(shown));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("y49-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        println!("{}", path.display());
+    }
+}

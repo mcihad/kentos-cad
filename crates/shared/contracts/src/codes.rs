@@ -804,6 +804,8 @@ codes! {
     /// A warning: the approved haul plan went stale — its diagram, volume or the volume's approval changed, a site's
     /// capacity, or the plan itself (docs/adr/0954).
     HAUL_PLAN_STALE = "haul_plan_stale", Warning, false, "Onaylı taşıma planı eskidi; neyin değiştiği iletide.";
+    HAUL_SITE_UNCONNECTED = "haul_site_unconnected", Warning, false, "Konumu verilen alan taşıma ağıyla aksa bağlanmıyor; hesaba katılmadı, ileti nedenini söyler.";
+    HAUL_NETWORK_GAP = "haul_network_gap", Warning, false, "Taşıma ağında birleşmeyen yer var: gövdeden kesişen yollar ya da boşta kalan uçlar; ileti yerini söyler.";
     /// A warning: the haul plan cannot place everything; the borrow or waste sites are too small (docs/adr/0924 §2).
     HAUL_PLAN_INFEASIBLE = "haul_plan_infeasible", Warning, false, "Taşıma planı her şeyi yerleştiremiyor; ödünç ya da döküm alanları yetmiyor.";
     HAUL_UNBALANCED = "haul_unbalanced", Warning, false, "Brüknerin ucunda dengelenmeyen hacim var; döküm ya da ödünç gerekir.";

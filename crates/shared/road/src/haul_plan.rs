@@ -7,12 +7,20 @@
 //! meeting a demand earns more than any haul costs, so a plan that can place everything does; among those, the moment
 //! is least. On a line the segments' flows follow from what each place gives or takes, so they are the plan's.
 
-/// A site: its station, its capacity (m³) and whether it gives (borrow) or takes (waste).
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// A site: its station, its capacity (m³) and whether it gives (borrow) or takes (waste); and the length of its
+/// access road from the alignment (m; 0 where it lies on the road, docs/adr/0955): every cubic metre it gives or takes
+/// goes that far more.
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct PlanSite {
     pub station: f64,
     pub capacity: f64,
     pub borrow: bool,
+    pub access: f64,
+}
+
+/// The longest access road of the sites (m).
+fn longest_access(sites: &[PlanSite]) -> f64 {
+    sites.iter().map(|s| s.access.max(0.0)).fold(0.0, f64::max)
 }
 
 /// A haul plan.
@@ -27,8 +35,10 @@ pub struct Plan {
     pub used: Vec<f64>,
     /// The segments between neighbouring places: from, to (stations) and the flow (m³; forward positive).
     pub segments: Vec<(f64, f64, f64)>,
-    /// Σ |flow| × length (m³·m).
+    /// Σ |flow| × length (m³·m), the access roads' part included.
     pub moment: f64,
+    /// Σ use × access over the sites (m³·m): the moment on the access roads (docs/adr/0955).
+    pub access_moment: f64,
     /// What moves: the cut and the borrow given (m³).
     pub moved: f64,
     /// Where infeasible: the fill no borrow site can meet, and the cut no waste site can take (m³).
@@ -166,7 +176,8 @@ pub fn plan(points: &[[f64; 2]], sites: &[PlanSite]) -> Plan {
     let (s, t) = (n, n + 1);
     let mut net = Network::new(n + 2);
     let span = stations.last().copied().unwrap_or(0.0) - stations.first().copied().unwrap_or(0.0);
-    let earn = -(2.0 * span + 1.0);
+    // Placing earns more than any route costs: along the road twice and two access roads.
+    let earn = -(2.0 * (span + longest_access(sites)) + 1.0);
     let mut forward = Vec::with_capacity(n.saturating_sub(1));
     for i in 0..n.saturating_sub(1) {
         let length = stations[i + 1] - stations[i];
@@ -183,12 +194,17 @@ pub fn plan(points: &[[f64; 2]], sites: &[PlanSite]) -> Plan {
     }
     let site_edges: Vec<usize> = sites
         .iter()
-        .map(|p| if p.borrow { net.add(s, at(p.station), p.capacity, [0.0, 0.0]) } else { net.add(at(p.station), t, p.capacity, [0.0, 0.0]) })
+        .map(|p| {
+            let cost = [p.access.max(0.0), 0.0];
+            if p.borrow { net.add(s, at(p.station), p.capacity, cost) } else { net.add(at(p.station), t, p.capacity, cost) }
+        })
         .collect();
     net.least_cost(s, t, tiny);
     for (j, k) in site_edges.iter().enumerate() {
         out.used[j] = net.edges[*k].flow;
+        out.access_moment += out.used[j] * sites[j].access.max(0.0);
     }
+    out.moment += out.access_moment;
     for (i, (f, b)) in forward.iter().enumerate() {
         let flow = net.edges[*f].flow - net.edges[*b].flow;
         let length = stations[i + 1] - stations[i];
@@ -249,6 +265,7 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
     }
     out.plan.feasible = true;
     // Sources: the cuts, then the borrow sites; sinks: the fills, then the waste sites.
+    let reach = |j: Option<usize>| j.map_or(0.0, |j| sites[j].access.max(0.0));
     let sources: Vec<(f64, f64, Option<usize>)> = places
         .iter()
         .filter(|p| p.1 > 0.0)
@@ -267,7 +284,7 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
     let haul = |d: f64| prices.overhaul * (d - prices.free).max(0.0);
     let span = sources.iter().chain(&sinks).map(|p| p.0).fold(f64::NEG_INFINITY, f64::max)
         - sources.iter().chain(&sinks).map(|p| p.0).fold(f64::INFINITY, f64::min);
-    let most = haul(span.max(0.0)) + prices.waste.max(0.0) + prices.borrow.max(0.0);
+    let most = haul(span.max(0.0) + 2.0 * longest_access(sites)) + prices.waste.max(0.0) + prices.borrow.max(0.0);
     let earn = -((ns + nk + 2) as f64 * most + 1.0);
     let mut pairs = Vec::new();
     for (i, a) in sources.iter().enumerate() {
@@ -275,7 +292,8 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
             if a.2.is_some() && b.2.is_some() {
                 continue;
             }
-            let d = (b.0 - a.0).abs();
+            // Along the road and the access roads at either end (docs/adr/0955).
+            let d = (b.0 - a.0).abs() + reach(a.2) + reach(b.2);
             pairs.push((net.add(i, ns + j, f64::INFINITY, [haul(d), d]), d));
         }
     }
@@ -305,6 +323,7 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
         out.plan.moment += f * d;
         out.over_moment += f * (d - prices.free).max(0.0);
     }
+    out.plan.access_moment = sites.iter().zip(&out.plan.used).map(|(p, u)| u * p.access.max(0.0)).sum();
     // The segments along the road: what each place gives (its net, a borrow's use) less what it takes.
     let mut stations: Vec<f64> = places.iter().map(|p| p.0).chain(sites.iter().map(|s| s.station)).collect();
     stations.sort_by(f64::total_cmp);
@@ -367,9 +386,12 @@ pub struct Sorted {
     /// The segments between neighbouring places: from, to, the suitable and the unsuitable flow (m³, forward
     /// positive).
     pub segments: Vec<(f64, f64, f64, f64)>,
-    /// Σ |flow| × (length + the detours of the barriers it crosses) (m³·m), and the unsuitable flow's part.
+    /// Σ |flow| × (length + the detours of the barriers it crosses) (m³·m), the access roads' part included, and the
+    /// unsuitable flow's part.
     pub moment: f64,
     pub unsuitable_moment: f64,
+    /// Σ use × access over the sites (m³·m; docs/adr/0955).
+    pub access_moment: f64,
     /// Each barrier's crossing (m³, both ways together) in the order given.
     pub crossed: Vec<f64>,
     /// Where infeasible: the fill not met, the suitable cut and the unsuitable cut not placed (m³).
@@ -419,7 +441,7 @@ pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[
     // The barriers on each segment: their detours, and whether one is closed. A barrier at a place's station lies
     // just after it.
     let on = |i: usize, b: &Barrier| stations[i] <= b.station && b.station < stations[i + 1];
-    let span = stations[n - 1] - stations[0] + barriers.iter().filter_map(|b| b.detour).sum::<f64>();
+    let span = stations[n - 1] - stations[0] + barriers.iter().filter_map(|b| b.detour).sum::<f64>() + longest_access(sites);
     let earn = -(2.0 * span + 1.0);
     let mut arcs = Vec::with_capacity(n.saturating_sub(1));
     for i in 0..n.saturating_sub(1) {
@@ -459,12 +481,13 @@ pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[
     let mut site_arcs: Vec<(usize, Option<usize>)> = Vec::with_capacity(sites.len());
     for (j, p) in sites.iter().enumerate() {
         let k = at(p.station);
+        let cost = [p.access.max(0.0), 0.0];
         if p.borrow {
-            site_arcs.push((net.add(s, k, p.capacity, [0.0, 0.0]), None));
+            site_arcs.push((net.add(s, k, p.capacity, cost), None));
         } else {
             let w = 2 * n + wastes.iter().position(|x| *x == j).unwrap_or(0);
-            net.add(k, w, f64::INFINITY, [0.0, 0.0]);
-            let from_bad = net.add(n + k, w, f64::INFINITY, [0.0, 0.0]);
+            net.add(k, w, f64::INFINITY, cost);
+            let from_bad = net.add(n + k, w, f64::INFINITY, cost);
             site_arcs.push((net.add(w, t, p.capacity, [0.0, 0.0]), Some(from_bad)));
         }
     }
@@ -472,7 +495,11 @@ pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[
     for (j, (k, bad)) in site_arcs.iter().enumerate() {
         out.used[j] = net.edges[*k].flow;
         out.used_unsuitable[j] = bad.map_or(0.0, |b| net.edges[b].flow);
+        let access = sites[j].access.max(0.0);
+        out.access_moment += out.used[j] * access;
+        out.unsuitable_moment += out.used_unsuitable[j] * access;
     }
+    out.moment += out.access_moment;
     for (k, v, bad) in &supplies {
         let left = (v - net.edges[*k].flow).max(0.0);
         if *bad {

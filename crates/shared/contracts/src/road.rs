@@ -1332,6 +1332,31 @@ pub struct HaulSiteDef {
     pub station: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: f64,
+    /// Where it lies off the road, in plan (docs/adr/0955; KCAD schema 173): it is reached along the diagram's haul
+    /// road network, which says where it meets the alignment and how far; `station` is then that station as last
+    /// written. None: on the road at `station`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Option<crate::Vec2>,
+}
+
+/// A mass haul diagram's haul road network (docs/adr/0955; KCAD schema 173): the line and polyline objects on these
+/// layers are its roads; two join where an end of one lies within `connect` (m) of the other; a road joins the
+/// alignment where an end lies within `reach` (m) of its centre line (none: `connect`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulNetworkDef {
+    pub layers: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub connect: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub reach: Option<f64>,
 }
 
 /// A site's kind: material brought in (borrow, ödünç) or taken away (waste, döküm).
@@ -1419,6 +1444,10 @@ pub struct HaulDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulApprovalDef>>", optional))]
     pub history: Vec<HaulApprovalDef>,
+    /// Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 173).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub network: Option<HaulNetworkDef>,
 }
 
 /// A haul plan as approved (docs/adr/0954): its number from 1, the day and a note; what it was made from — the
@@ -2965,6 +2994,26 @@ fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
             if !(site.volume.is_finite() && site.volume > 0.0 && site.volume <= 1e12) {
                 return fail(path, "alanın hacmi 0'dan büyük olmalı");
+            }
+            // Docs/adr/0955: a site off the road lies somewhere and is reached by the network.
+            if let Some(p) = &site.at {
+                if !(p.x.is_finite() && p.y.is_finite()) {
+                    return fail(path, "alanın konumu sonlu olmalı");
+                }
+                if h.network.is_none() {
+                    return fail(path, "konumu verilen alana taşıma ağıyla gidilir; önce taşıma ağının katmanlarını verin");
+                }
+            }
+        }
+        if let Some(n) = &h.network {
+            if n.layers.is_empty() || n.layers.len() > 20 || n.layers.iter().any(|l| l.is_empty() || l.chars().count() > 128) {
+                return fail(at("network"), "taşıma ağının 1 ile 20 arası katmanı olur");
+            }
+            if !(n.connect.is_finite() && n.connect > 0.0 && n.connect <= 50.0) {
+                return fail(at("network"), "bağlantı toleransı 0'dan büyük, en çok 50 m olur");
+            }
+            if n.reach.is_some_and(|r| !(r.is_finite() && r > 0.0 && r <= 200.0)) {
+                return fail(at("network"), "aksa erişim uzaklığı 0'dan büyük, en çok 200 m olur");
             }
         }
         if let Some(c) = &h.cost {

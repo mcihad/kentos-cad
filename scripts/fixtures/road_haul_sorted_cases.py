@@ -117,6 +117,11 @@ def solve(stretches, sites, barriers, detail=False):
     moment = np.zeros(nv)
     for (v, length, _) in flows:
         moment[v] = length
+    # Docs/adr/0955: what a site gives or takes goes its access road's length more.
+    for (j, v, _) in borrow:
+        moment[v] = sites[j].get("access", 0.0)
+    for (j, vg, vb, _) in waste:
+        moment[vg] = moment[vb] = sites[j].get("access", 0.0)
     a2 = (np.vstack([kw["A_ub"], -placed]) if kw["A_ub"] is not None else np.array([-placed]))
     b2 = (b_ub or []) + [-best + 1e-9 * max(best, 1.0)]
     two = linprog(moment, A_eq=kw["A_eq"], b_eq=kw["b_eq"], A_ub=a2, b_ub=b2, bounds=bounds, method="highs")
@@ -218,10 +223,14 @@ def plan_detail(x, var, flows, good, bad, met, borrow, waste, st, segs, sites, b
     for (j, vg, vb, _) in waste:
         used[j] = x[vg] + x[vb]
         used_bad[j] = x[vb]
+    access = sum(u * s.get("access", 0.0) for u, s in zip(used, sites))
+    moment_total += access
+    bad_moment += sum((b or 0.0) * s.get("access", 0.0) for b, s in zip(used_bad, sites))
     shortage = sum(cap - x[v] for v, cap in met)
     surplus = sum(cap - x[v] for v, cap in good)
     stranded = sum(cap - x[v] for v, cap in bad)
     return {"x": x, "segments": segments, "moment": moment_total, "unsuitableMoment": bad_moment, "crossed": crossed,
+            "access": access,
             "used": used, "usedUnsuitable": used_bad, "shortage": max(shortage, 0.0), "surplus": max(surplus, 0.0),
             "stranded": max(stranded, 0.0)}
 

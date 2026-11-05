@@ -19,6 +19,8 @@ use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{HaulObjective, HaulPlanned, HaulSiteKind, HaulsPlan};
 use kentos_interaction::Level;
+use kentos_commands::{HaulNetworkIssue, HaulNetworkRead, HaulsNetwork};
+use kentos_native_application::road_hauls_network::{self, Drawn};
 use kentos_native_application::{ExecutionContext, road_hauls_approve, road_hauls_plan};
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
@@ -41,6 +43,23 @@ pub(crate) const WRITE: &str = "Planı yaz…";
 pub(crate) const APPROVE: &str = "Onayla";
 pub(crate) const REVOKE: &str = "Onayı kaldır";
 pub(crate) const APPROVAL_NOTE: &str = "Onay notu";
+/// The haul road network in plan (ROAD-HAUL-06, docs/adr/0955).
+pub(crate) const FLOW_VIEW: &str = "Akış";
+pub(crate) const NETWORK_VIEW: &str = "Ağ";
+
+/// What the picture shows: the flow along the road, or the haul road network in plan.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Shown {
+    #[default]
+    Flow,
+    Network,
+}
+
+impl std::fmt::Display for Shown {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if *self == Shown::Flow { FLOW_VIEW } else { NETWORK_VIEW })
+    }
+}
 
 /// Which list the window shows.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -93,6 +112,10 @@ pub struct Window {
     pub(crate) format: Option<kentos_commands::WorkbookFormat>,
     /// The note the next approval or revocation is written with (docs/adr/0954).
     pub(crate) approval_note: String,
+    /// The picture shown, and the diagram's haul road network as read and drawn (docs/adr/0955); none without one.
+    pub(crate) shown: Shown,
+    pub(crate) network: Option<Result<(HaulNetworkRead, Vec<String>), String>>,
+    pub(crate) drawn: Option<Drawn>,
 }
 
 #[derive(Debug, Clone)]
@@ -110,6 +133,7 @@ pub enum Event {
     /// Approve the plan as planned now with the chosen objective (true), or take its approval off (false).
     Approve(bool),
     ApprovalNote(String),
+    Show(Shown),
     Close,
 }
 
@@ -184,6 +208,10 @@ impl App {
                 w.approval_note = t;
                 return Task::none();
             }
+            Event::Show(v) => {
+                w.shown = v;
+                return Task::none();
+            }
             Event::Approve(on) => return self.approve_haul(on),
             Event::Preview => {
                 let Some(doc) = &self.document else { return Task::none() };
@@ -202,6 +230,22 @@ impl App {
                     Err(why) => {
                         w.preview = Some(Err(why));
                         w.warnings.clear();
+                    }
+                }
+                // The haul road network, where the diagram has one (docs/adr/0955).
+                let has = w.haul.as_ref().and_then(|h| doc.model.road_hauls().iter().find(|d| &d.id == h)).is_some_and(|d| d.network.is_some());
+                match (has, w.haul.clone()) {
+                    (true, Some(haul)) => {
+                        w.network = Some(
+                            road_hauls_network::preview(&doc.model, &HaulsNetwork { haul: haul.clone() })
+                                .map(|(r, warnings)| (r, warnings.into_iter().map(|x| x.message).collect())),
+                        );
+                        w.drawn = road_hauls_network::drawn(&doc.model, &haul);
+                    }
+                    _ => {
+                        w.network = None;
+                        w.drawn = None;
+                        w.shown = Shown::Flow;
                     }
                 }
                 return Task::none();
@@ -296,6 +340,13 @@ impl App {
                     .on_input(|t| msg(Event::ApprovalNote(t))),
             )
             .help("Onayla planı seçili amaçla bugünkü hâliyle, bugünün günüyle yazar. Brükner, kübaj ya da alanlar değişince plan onaya göre okunur ve neyin değiştiği söylenir.");
+        let form = if w.network.is_some() {
+            form.section("Görünüş")
+                .field("Resim", Segmented::new([Shown::Flow, Shown::Network], w.shown, |v| msg(Event::Show(v))))
+                .help("Ağ, taşıma yollarını düzlemde gösterir: aksa bağlandıkları km'ler, alanların erişimi, birleşmeyen yerler.")
+        } else {
+            form
+        };
         let feasible = matches!(&w.preview, Some(Ok(r)) if r.feasible);
         let approved = matches!(&w.preview, Some(Ok(r)) if r.approval.is_some());
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Close))
@@ -308,17 +359,29 @@ impl App {
             None => {}
             Some(Err(why)) => d = d.note(Banner::error(why.clone())),
             Some(Ok(r)) => {
+                let network = w.network.as_ref().filter(|_| w.shown == Shown::Network);
+                d = match (network, &w.drawn) {
+                    (Some(Ok((n, _))), Some(drawn)) => d
+                        .picture(iced::widget::canvas(NetworkMap { read: n, drawn }).width(Fill).height(Fill), 320.0)
+                        .legend("Gri aks; mavi taşıma yolu, koyu mavi alanların aksa yolu; nokta aksa bağlantı; yeşil ödünç, kırmızı döküm alanı, içi boş bağlanmayan; turuncu × birleşmeyen kesişme, halka boşta uç"),
+                    (Some(Err(why)), _) => d.note(Banner::error(why.clone())),
+                    _ => d
+                        .picture(iced::widget::canvas(Flow { read: r }).width(Fill).height(Fill), 320.0)
+                        .legend(if r.unsuitable.is_some() {
+                            "Mavi ileri, turuncu geri taşınan hacim, mor uygunsuz kısmı; yeşil ödünç, kırmızı döküm alanı; gri çizgi engel"
+                        } else {
+                            "Mavi ileri, turuncu geri taşınan hacim; yeşil ödünç, kırmızı döküm alanı"
+                        }),
+                };
                 d = d
-                    .picture(iced::widget::canvas(Flow { read: r }).width(Fill).height(Fill), 320.0)
-                    .legend(if r.unsuitable.is_some() {
-                        "Mavi ileri, turuncu geri taşınan hacim, mor uygunsuz kısmı; yeşil ödünç, kırmızı döküm alanı; gri çizgi engel"
-                    } else {
-                        "Mavi ileri, turuncu geri taşınan hacim; yeşil ödünç, kırmızı döküm alanı"
-                    })
                     .figure("Durum", if r.feasible { "Kurulur".to_owned() } else { "Kurulamaz".to_owned() })
-                    .figure("Yarma / dolgu fazlası", format!("{} / {} m³", grouped(r.cut, 0), grouped(r.fill, 0)));
+                    .figure("Yarma / dolgu", format!("{} / {} m³", grouped(r.cut, 0), grouped(r.fill, 0)));
                 if r.feasible {
                     d = d.figure("Taşıma momenti", format!("{} m³·m", grouped(r.moment, 0)));
+                    // Docs/adr/0955: the part of the moment on the sites' access roads.
+                    if let Some(a) = r.access_moment {
+                        d = d.figure("Erişim yolu", format!("{} m³·m", grouped(a, 0)));
+                    }
                     d = match &r.cost {
                         Some(c) => d.figure("Toplam maliyet", format!("{} {}", grouped(c.total, 2), c.currency)),
                         None => d.figure("Ortalama uzaklık", r.average.map_or_else(|| "—".into(), |a| format!("{} m", grouped(a, 1)))),
@@ -375,11 +438,17 @@ impl App {
                     d = d.note(Banner::info(format!("Engeller: {}.", crossings.join("; "))));
                 }
                 let sorted = r.unsuitable.is_some();
-                let mut columns = vec![col("Alan", 180.0), col("Tür", 80.0), num("Km (m)", 100.0), num("Kullanılan (m³)", 130.0)];
+                let reached = r.access_moment.is_some();
+                // With the access column the others give room (the detail is ~730 px wide at 1440).
+                let (wide, mid, kind, km) = if reached { (120.0, 105.0, 60.0, 80.0) } else { (180.0, 130.0, 70.0, 90.0) };
+                let mut columns = vec![col("Alan", wide), col("Tür", kind), num("Km (m)", km), num("Kullanılan (m³)", mid)];
                 if sorted {
-                    columns.push(num("Uygunsuz (m³)", 120.0));
+                    columns.push(num("Uygunsuz (m³)", 110.0));
                 }
-                columns.push(num("Kapasite (m³)", 130.0));
+                columns.push(num("Kapasite (m³)", mid));
+                if reached {
+                    columns.push(num("Erişim (m)", 90.0));
+                }
                 let sites = road_dialog::table(
                     columns,
                     r.sites
@@ -395,6 +464,9 @@ impl App {
                                 row.push(s.used_unsuitable.map_or_else(|| "—".into(), |u| grouped(u, 1)));
                             }
                             row.push(grouped(s.capacity, 1));
+                            if reached {
+                                row.push(if s.unconnected { "bağlanmıyor".to_owned() } else { s.access.map_or_else(|| "—".into(), |a| grouped(a, 1)) });
+                            }
                             row
                         })
                         .collect(),
@@ -446,7 +518,48 @@ impl App {
                     options.push(Listed::Approval);
                 }
                 let list = if options.contains(&w.list) { w.list } else { Listed::Sites };
+                // The network's view (docs/adr/0955): what does not join, then each site's access.
+                if let Some(Some(Ok((n, _)))) = (w.shown == Shown::Network).then_some(&w.network) {
+                    let loose = n.problems.iter().filter(|p| p.kind == HaulNetworkIssue::Loose).count();
+                    let crossing = n.problems.len() - loose;
+                    if !n.problems.is_empty() {
+                        d = d.note(Banner::warning(format!(
+                            "Ağda birleşmeyen {} yer: {crossing} kesişme, {loose} boşta uç. {}",
+                            n.problems.len(),
+                            n.problems.iter().take(3).map(|p| p.message.clone()).collect::<Vec<_>>().join(" ")
+                        )));
+                    }
+                    let rows: Vec<Vec<String>> = n
+                        .sites
+                        .iter()
+                        .map(|s| {
+                            vec![
+                                s.name.clone(),
+                                s.length.map_or_else(|| "—".into(), |l| grouped(l, 1)),
+                                s.km.clone().unwrap_or_else(|| "—".into()),
+                                s.offset.map_or_else(|| "—".into(), |o| grouped(o, 1)),
+                                if s.roads.is_empty() { "—".into() } else { s.roads.iter().map(|x| (x + 1).to_string()).collect::<Vec<_>>().join(" → ") },
+                                s.why.clone().unwrap_or_else(|| "aksa bağlı".into()),
+                            ]
+                        })
+                        .collect();
+                    let table = road_dialog::table(
+                        vec![
+                            col("Alan", 130.0),
+                            num("Erişim (m)", 80.0),
+                            col("Aksa km", 85.0),
+                            num("Kayma (m)", 75.0),
+                            col("Yollar", 70.0),
+                            road_dialog::Col { title: "Durum", width: None, number: false },
+                        ],
+                        rows,
+                        "Konumu verilen alan yok: alanlar yol üstünde",
+                    );
+                    d = d.detail(table);
+                }
+                let shows_network = matches!(&w.network, Some(Ok(_))) && w.shown == Shown::Network;
                 d = match &r.cost {
+                    _ if shows_network => d,
                     _ if list == Listed::Approval => {
                         let Some(t) = approval else { unreachable!() };
                         d.detail(road_dialog::detail_choice(options, list, |l| msg(Event::List(l)), t))
@@ -517,6 +630,8 @@ impl App {
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
             Control::Press(WRITE) => Some(msg(Event::Write)),
             Control::Press(APPROVE) => Some(msg(Event::Approve(true))),
+            Control::Press(FLOW_VIEW) => Some(msg(Event::Show(Shown::Flow))),
+            Control::Press(NETWORK_VIEW) => Some(msg(Event::Show(Shown::Network))),
             Control::Press(REVOKE) => Some(msg(Event::Approve(false))),
             Control::Fill(APPROVAL_NOTE, text) => Some(msg(Event::ApprovalNote(text.to_owned()))),
             Control::Press(MOMENT) => Some(msg(Event::Aim(Aim::Moment))),
@@ -587,7 +702,8 @@ impl canvas::Program<Message> for Flow<'_> {
         frame.stroke(&Path::line(Point::new(x(x0), y(0.0)), Point::new(x(x1), y(0.0))), Stroke::default().with_width(1.0).with_color(tk.muted));
         caption(&mut frame, format!("{} m³", grouped(most, 0)), Point::new(4.0, y(most) - 6.0), tk.muted);
         caption(&mut frame, format!("{} m³", grouped(-most, 0)), Point::new(4.0, y(-most) - 6.0), tk.muted);
-        for s in &r.sites {
+        // A site the network does not reach is not in the plan (docs/adr/0955): not drawn on the road.
+        for s in r.sites.iter().filter(|s| !s.unconnected) {
             let at = x(s.station);
             let (color, up) = if s.kind == HaulSiteKind::Borrow { (tk.success, true) } else { (tk.danger, false) };
             let base = y(0.0);
@@ -606,4 +722,167 @@ impl canvas::Program<Message> for Flow<'_> {
         caption(&mut frame, format!("{} m", grouped(x1, 0)), Point::new(x(x1) - 30.0, (h - bottom + 8.0) as f32), tk.muted);
         vec![frame.into_geometry()]
     }
+}
+
+/// The haul road network in plan (docs/adr/0955): one scale both ways, north up.
+struct NetworkMap<'a> {
+    read: &'a HaulNetworkRead,
+    drawn: &'a Drawn,
+}
+
+impl canvas::Program<Message> for NetworkMap<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let tk = Tokens::of(theme);
+        let (n, dr) = (self.read, self.drawn);
+        let caption = |frame: &mut canvas::Frame, content: String, at: Point, color: Color| {
+            frame.fill_text(Text { content, position: at, color, size: Pixels(11.0), ..Text::default() });
+        };
+        // The extent: the roads, the sites and the alignment near them (the whole alignment where there are none).
+        let mut pts: Vec<[f64; 2]> = dr.roads.iter().flatten().copied().collect();
+        pts.extend(n.sites.iter().map(|s| [s.x, s.y]));
+        let near: Vec<[f64; 2]> = if pts.is_empty() {
+            dr.axis.clone()
+        } else {
+            let (lo, hi) = extent(&pts);
+            let pad = (hi[0] - lo[0]).max(hi[1] - lo[1]) * 0.25 + 20.0;
+            dr.axis.iter().copied().filter(|p| p[0] > lo[0] - pad && p[0] < hi[0] + pad && p[1] > lo[1] - pad && p[1] < hi[1] + pad).collect()
+        };
+        pts.extend(near.iter().copied());
+        if pts.is_empty() {
+            caption(&mut frame, "Ağın katmanlarında yol yok.".into(), Point::new(10.0, 10.0), tk.muted);
+            return vec![frame.into_geometry()];
+        }
+        let (lo, hi) = extent(&pts);
+        let (w, h) = (f64::from(bounds.width), f64::from(bounds.height));
+        let m = 24.0;
+        let scale = ((w - 2.0 * m) / (hi[0] - lo[0]).max(1e-6)).min((h - 2.0 * m) / (hi[1] - lo[1]).max(1e-6));
+        let (ox, oy) = (m + ((w - 2.0 * m) - (hi[0] - lo[0]) * scale) / 2.0, m + ((h - 2.0 * m) - (hi[1] - lo[1]) * scale) / 2.0);
+        let at = |p: [f64; 2]| Point::new((ox + (p[0] - lo[0]) * scale) as f32, (h - oy - (p[1] - lo[1]) * scale) as f32);
+        let line = |frame: &mut canvas::Frame, ps: &[[f64; 2]], stroke: Stroke| {
+            if ps.len() >= 2 {
+                let path = Path::new(|b| {
+                    b.move_to(at(ps[0]));
+                    for p in &ps[1..] {
+                        b.line_to(at(*p));
+                    }
+                });
+                frame.stroke(&path, stroke);
+            }
+        };
+        // The alignment: the visible stretch, thick and quiet.
+        let mut run: Vec<[f64; 2]> = Vec::new();
+        for p in &dr.axis {
+            let inside = p[0] >= lo[0] - 1.0 && p[0] <= hi[0] + 1.0 && p[1] >= lo[1] - 1.0 && p[1] <= hi[1] + 1.0;
+            if inside {
+                run.push(*p);
+            } else if !run.is_empty() {
+                line(&mut frame, &run, Stroke::default().with_width(5.0).with_color(Color { a: 0.35, ..tk.muted }));
+                run.clear();
+            }
+        }
+        line(&mut frame, &run, Stroke::default().with_width(5.0).with_color(Color { a: 0.35, ..tk.muted }));
+        // The roads; those on a site's way to the alignment stronger.
+        let used: Vec<usize> = n.sites.iter().flat_map(|s| s.roads.iter().map(|r| *r as usize)).collect();
+        for (k, road) in dr.roads.iter().enumerate() {
+            let on = used.contains(&k);
+            let color = if on { tk.accent } else { Color { a: 0.55, ..tk.accent } };
+            line(&mut frame, road, Stroke::default().with_width(if on { 3.0 } else { 1.5 }).with_color(color));
+            // Its number a third of the way along: the middle is where crossings and joins often fall.
+            if let Some(p) = along(road, 0.35) {
+                caption(&mut frame, format!("{}", k + 1), Point::new(at(p).x + 5.0, at(p).y - 13.0), tk.muted);
+            }
+        }
+        // Where the roads meet the alignment, with the km. The labels' boxes are kept: the sites' avoid them.
+        let wide = |t: &str| 6.3 * t.chars().count() as f32;
+        let mut taken: Vec<Rectangle> = Vec::new();
+        for j in &n.junctions {
+            let Some(road) = dr.roads.get(j.road as usize) else { continue };
+            let Some(p) = (if j.end { road.last() } else { road.first() }) else { continue };
+            frame.fill(&Path::circle(at(*p), 4.0), tk.accent);
+            let place = Point::new(at(*p).x + 6.0, at(*p).y + 2.0);
+            taken.push(Rectangle::new(place, iced::Size::new(wide(&j.km), 13.0)));
+            caption(&mut frame, j.km.clone(), place, tk.muted);
+        }
+        // What does not join.
+        for pr in &n.problems {
+            let c = at([pr.x, pr.y]);
+            match pr.kind {
+                HaulNetworkIssue::Loose => frame.stroke(&Path::circle(c, 6.0), Stroke::default().with_width(2.0).with_color(tk.warning)),
+                _ => {
+                    let s = 6.0;
+                    frame.stroke(&Path::line(Point::new(c.x - s, c.y - s), Point::new(c.x + s, c.y + s)), Stroke::default().with_width(2.5).with_color(tk.warning));
+                    frame.stroke(&Path::line(Point::new(c.x - s, c.y + s), Point::new(c.x + s, c.y - s)), Stroke::default().with_width(2.5).with_color(tk.warning));
+                }
+            }
+        }
+        // The sites: borrow up, waste down; hollow where the network does not reach them.
+        for s in &n.sites {
+            let c = at([s.x, s.y]);
+            let borrow = s.kind == HaulSiteKind::Borrow;
+            let color = if borrow { tk.success } else { tk.danger };
+            let tip = if borrow { c.y - 9.0 } else { c.y + 9.0 };
+            let base = if borrow { c.y + 5.0 } else { c.y - 5.0 };
+            let mark = Path::new(|p| {
+                p.move_to(Point::new(c.x, tip));
+                p.line_to(Point::new(c.x - 7.0, base));
+                p.line_to(Point::new(c.x + 7.0, base));
+                p.close();
+            });
+            if s.joined {
+                frame.fill(&mark, color);
+            } else {
+                frame.stroke(&mark, Stroke::default().with_width(2.0).with_color(color));
+            }
+            let words = match s.length {
+                Some(l) => format!("{} · {} m", s.name, grouped(l, 0)),
+                None => format!("{} · bağlanmıyor", s.name),
+            };
+            // Right of the mark, else left of it, else under it: wherever it does not cover another label.
+            let size = iced::Size::new(wide(&words), 13.0);
+            let tries = [
+                Point::new(c.x + 9.0, c.y - 6.0),
+                Point::new(c.x - 9.0 - size.width, c.y - 6.0),
+                Point::new(c.x - size.width / 2.0, c.y + 12.0),
+                Point::new(c.x - size.width / 2.0, c.y - 24.0),
+            ];
+            let place = tries
+                .iter()
+                .copied()
+                .find(|q| !taken.iter().any(|r| r.intersects(&Rectangle::new(*q, size))))
+                .unwrap_or(tries[0]);
+            taken.push(Rectangle::new(place, size));
+            caption(&mut frame, words, place, color);
+        }
+        // The scale: a round length about a fifth of the width.
+        let want = (w / 5.0) / scale;
+        let step = [1.0, 2.0, 5.0].iter().flat_map(|m| (0..6).map(move |e| m * 10f64.powi(e))).filter(|v| *v <= want).fold(1.0, f64::max);
+        let (sx, sy) = (m as f32, (h - 10.0) as f32);
+        frame.stroke(&Path::line(Point::new(sx, sy), Point::new(sx + (step * scale) as f32, sy)), Stroke::default().with_width(2.0).with_color(tk.muted));
+        caption(&mut frame, format!("{} m", grouped(step, 0)), Point::new(sx + (step * scale) as f32 + 6.0, sy - 7.0), tk.muted);
+        vec![frame.into_geometry()]
+    }
+}
+
+/// The point `share` of the way along a polyline.
+fn along(pts: &[[f64; 2]], share: f64) -> Option<[f64; 2]> {
+    let total: f64 = pts.windows(2).map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1])).sum();
+    let mut left = total * share;
+    for w in pts.windows(2) {
+        let l = (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]);
+        if l >= left && l > 0.0 {
+            let t = left / l;
+            return Some([w[0][0] + t * (w[1][0] - w[0][0]), w[0][1] + t * (w[1][1] - w[0][1])]);
+        }
+        left -= l;
+    }
+    pts.last().copied()
+}
+
+fn extent(pts: &[[f64; 2]]) -> ([f64; 2], [f64; 2]) {
+    pts.iter().fold(([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]), |(lo, hi), p| {
+        ([lo[0].min(p[0]), lo[1].min(p[1])], [hi[0].max(p[0]), hi[1].max(p[1])])
+    })
 }

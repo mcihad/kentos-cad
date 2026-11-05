@@ -97,7 +97,15 @@ def read(h, volumes=VOLUMES, corridors=CORRIDORS, points=False):
     c = next(x for x in corridors if x["id"] == v["corridor"])
     text = lambda s: ccmd.km_text(c["alignment"], s)  # noqa: E731
     first, last = curve[0][0], curve[-1][0]
-    sites = sorted(enumerate(h.get("sites", [])), key=lambda t: (t[1]["station"], t[0]))
+    # Docs/adr/0955: a site off the road stands where its access meets the alignment; one the network does not reach
+    # is left out, with a warning (road_haul_network_cases.py's reading; its roads are on the main alignment).
+    placed = [(x["station"], None, False) for x in h.get("sites", [])]
+    if any("at" in x for x in h.get("sites", [])):
+        import road_haul_network_cases as net  # noqa: PLC0415
+        placed, unplaced = net.placed(h)
+        warnings += unplaced
+    sites = sorted(((j, {**x, "station": p[0]}) for j, (x, p) in enumerate(zip(h.get("sites", []), placed)) if not p[2]),
+                   key=lambda t: (t[1]["station"], t[0]))
     for j, site in sites:
         if site["station"] < first or site["station"] > last:
             raise Refused("invalid_haul", f"“{site['name']}” alanı kübajın km'leri dışında: kübaj {text(first)} – {text(last)} arası.",
@@ -276,6 +284,26 @@ def edit_cases():
     no("Onay geçmişi olan Brükner silinmez", {"operation": "remove", "haul": "Ana Brükner"},
        failed("invalid_haul", "“Ana Brükner” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez "
                               "(ADR 0954). Brükneri bırakıp yenisini yazın.", "haul"), setup([hh, H2]))
+    # Docs/adr/0955: the haul road network and a site off the road.
+    import road_haul_network_cases as net  # noqa: PLC0415
+    nbase = net.setup(START, VOLUMES, CORRIDORS)
+    after = [{**H1, "network": net.NETWORK, "sites": [net.SITE_W], "revision": 2}, H2]
+    cases.append(case("Taşıma ağı ve ağdan alan yazılır", [step(
+        "execute", {"operation": "set", "haul": "h-1", "network": net.NETWORK, "sites": [net.SITE_W]},
+        completed({"hauls": listed(after), "revision": "$current", "haul": report(after[0])}),
+        {**STEPPED, "road": road_of(after)})], nbase))
+    nset = net.setup([after[0], H2], VOLUMES, CORRIDORS)
+    gone = [{**H1, "revision": 3}, H2]
+    cases.append(case("Ağ null ile kalkar, alanlar boş", [step(
+        "execute", {"operation": "set", "haul": "h-1", "network": None, "sites": []},
+        completed({"hauls": listed(gone), "revision": "$current", "haul": report(gone[0])}),
+        {**STEPPED, "road": road_of(gone)})], nset))
+    no("Ağsız konumlu alan", {"operation": "set", "haul": "h-1", "sites": [net.SITE_W]},
+       rulefail("konumu verilen alana taşıma ağıyla gidilir; önce taşıma ağının katmanlarını verin", "sites[0]"), nbase)
+    no("Ağın katmanı çizimde yok", {"operation": "set", "haul": "h-1", "network": {**net.NETWORK, "layers": ["yok"]}},
+       failed("invalid_haul", "Taşıma ağının “yok” kimlikli katmanı çizimde yok.", "network.layers[0]"), nbase)
+    no("Sıfır bağlantı toleransı", {"operation": "set", "haul": "h-1", "network": {**net.NETWORK, "connect": 0.0}},
+       rulefail("bağlantı toleransı 0'dan büyük, en çok 50 m olur", "network"), nbase)
     no("Yol projesi değil", {"operation": "remove", "haul": "h-1"}, NOT_ROAD, setup(work="map"))
     no("Yeniden bağlanmaz", {"operation": "rebind", "haul": "h-1"},
        failed("invalid_haul", "Brükner kübajını izler, yeniden bağlanmaz; kübajın koridorunu aksa yeniden bağlayın.", "operation"))
@@ -286,7 +314,7 @@ def edit_cases():
     no("Başka kübaja geçmez", {"operation": "set", "haul": "h-1", "volume": "v-2"},
        failed("invalid_haul", "“Ana Brükner” Brüknerinin kübajı değiştirilmez; başka kübaj için yeni bir Brükner yazın.", "volume"))
     no("Değiştirilecek bir şey yok", {"operation": "set", "haul": "h-1"},
-       failed("invalid_haul", "Değiştirilecek bir şey yok: name, balance, free, sites, cost, unsuitable ya da barriers verin."))
+       failed("invalid_haul", "Değiştirilecek bir şey yok: name, balance, free, sites, cost, unsuitable, barriers ya da network verin."))
     no("Yeni Brüknerin kübajı yok", {"operation": "set", "name": "x"},
        failed("invalid_haul", "Yeni Brükner için name ve volume verilmeli.", "volume"))
     no("Aynı ad", {**base, "name": "YAN Brükner"}, rulefail("bu adda başka bir Brükner var", "name"))
@@ -385,6 +413,14 @@ def query_cases():
     q("Plan cevabı verir", {"haul": "h-2"}, op="plan")
     q("Doğrulama uyarıları verir", {"haul": "h-2"}, op="validate")
     q("Brükner yok: boş liste", {}, [])
+    # Docs/adr/0955: sites off the road, placed by the haul road network.
+    import road_haul_network_cases as net  # noqa: PLC0415
+    hn = {**H1, "sites": [net.SITE_W, net.SITE_C], "network": net.NETWORK}
+    r, warns = read(hn)
+    base = net.setup([hn, H2], VOLUMES, CORRIDORS)
+    cases.append(case("Ağdan bağlanan ve kopuk alan", [step("execute", {"haul": "h-1", "points": True},
+                                                          completed({"hauls": [read(hn, points=True)[0]]}, warns),
+                                                          {**UNCHANGED, "road": base["settings"]["road"]})], base))
     broken_corr = {**ccmd.C1, "regions": [{"from": 0.0, "to": 100.0, "template": "tk-1"},
                                           {"from": 50.0, "to": 200.0, "template": "tk-1"}]}
     q("Okunamayan Brükner raporda nedeniyle", {}, START, VOLUMES, [broken_corr, ccmd.C2])

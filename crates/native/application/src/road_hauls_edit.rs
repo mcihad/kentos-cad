@@ -66,10 +66,11 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                 && input.cost.is_none()
                 && input.unsuitable.is_none()
                 && input.barriers.is_none()
+                && input.network.is_none()
             {
                 return Err(fail(
                     codes::INVALID_HAUL,
-                    "Değiştirilecek bir şey yok: name, balance, free, sites, cost, unsuitable ya da barriers verin.".into(),
+                    "Değiştirilecek bir şey yok: name, balance, free, sites, cost, unsuitable, barriers ya da network verin.".into(),
                     "",
                 ));
             }
@@ -94,6 +95,9 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
             }
             if let Some(b) = &input.barriers {
                 d.barriers = b.clone();
+            }
+            if let Some(n) = &input.network {
+                d.network = n.clone();
             }
             if d != *old {
                 d.revision = old.revision.saturating_add(1);
@@ -126,6 +130,7 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                 barriers: input.barriers.clone().unwrap_or_default(),
                 approved: None,
                 history: Vec::new(),
+                network: input.network.clone().flatten(),
             });
             Some(id)
         }
@@ -134,6 +139,14 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
     let mut road = doc.settings().road.clone().unwrap_or_default();
     road.hauls = list.clone();
     judged(&road, codes::INVALID_HAUL, "Brükner")?;
+    // Docs/adr/0955: the network's layers are the drawing's.
+    if let Some(n) = target.as_ref().and_then(|id| list.iter().find(|h| &h.id == id)).and_then(|d| d.network.as_ref()) {
+        for (i, id) in n.layers.iter().enumerate() {
+            if doc.layers().get(id).is_none() {
+                return Err(fail(codes::INVALID_HAUL, format!("Taşıma ağının “{id}” kimlikli katmanı çizimde yok."), &format!("network.layers[{i}]")));
+            }
+        }
+    }
     if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|h| &h.id == id)) {
         common::read(doc, d, false)?;
     }

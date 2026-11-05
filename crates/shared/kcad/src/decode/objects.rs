@@ -341,6 +341,8 @@ pub(super) struct Features {
     pub(super) volume_history: bool,
     /// Schema 172: a mass haul diagram's approved plan and its history (docs/adr/0954).
     pub(super) haul_approval: bool,
+    /// Schema 173: a mass haul diagram's haul road network and its sites off the road (docs/adr/0955).
+    pub(super) haul_network: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -593,6 +595,7 @@ impl Features {
             profile_crossings: schema >= crate::SCHEMA_WITH_PROFILE_CROSSINGS,
             volume_history: schema >= crate::SCHEMA_WITH_VOLUME_HISTORY,
             haul_approval: schema >= crate::SCHEMA_WITH_HAUL_APPROVAL,
+            haul_network: schema >= crate::SCHEMA_WITH_HAUL_NETWORK,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,

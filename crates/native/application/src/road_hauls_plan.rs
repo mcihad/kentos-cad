@@ -152,7 +152,18 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
         return Err(fail(codes::INVALID_HAUL, format!("“{}” kübajının hacimli aralığı yok; taşınacak bir şey yok.", vdef.name), "volume"));
     }
     let (first, last) = (curve[0][0], curve[curve.len() - 1][0]);
-    let mut order: Vec<(usize, &kentos_commands::HaulSiteDef)> = def.sites.iter().enumerate().collect();
+    // Docs/adr/0955: a site off the road at the station its access meets the alignment, its access the extra way.
+    let placed = crate::road_hauls_network::placed(doc, def, &alignment)?;
+    warnings.extend(placed.warnings.iter().cloned());
+    let mut order: Vec<(usize, kentos_commands::HaulSiteDef)> = def
+        .sites
+        .iter()
+        .zip(&placed.sites)
+        .zip(&placed.unconnected)
+        .enumerate()
+        .filter(|(_, (_, off))| !**off)
+        .map(|(j, ((s, p), _))| (j, kentos_commands::HaulSiteDef { station: p.station, ..s.clone() }))
+        .collect();
     order.sort_by(|a, b| a.1.station.total_cmp(&b.1.station).then(a.0.cmp(&b.0)));
     for (j, site) in order {
         if site.station < first || site.station > last {
@@ -168,11 +179,7 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
             ));
         }
     }
-    let sites: Vec<PlanSite> = def
-        .sites
-        .iter()
-        .map(|s| PlanSite { station: s.station, capacity: s.volume, borrow: s.kind == HaulSiteKind::Borrow })
-        .collect();
+    let sites: Vec<PlanSite> = placed.sites.clone();
     let objective = input.objective.unwrap_or(HaulObjective::Moment);
     if !def.unsuitable.is_empty() || !def.barriers.is_empty() {
         if objective == HaulObjective::Cost {
@@ -182,7 +189,7 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
                 "objective",
             ));
         }
-        return Ok(sorted(def, &report, &sites, warnings));
+        return Ok(sorted(def, &report, &placed, warnings));
     }
     let (p, priced) = match objective {
         HaulObjective::Moment => (solve(&curve, &sites), None),
@@ -243,14 +250,17 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
             sites: def
                 .sites
                 .iter()
+                .enumerate()
                 .zip(&p.used)
-                .map(|(s, u)| HaulPlanSite {
+                .map(|((j, s), u)| HaulPlanSite {
                     name: s.name.clone(),
                     kind: s.kind,
-                    station: s.station,
+                    station: placed.sites[j].station,
                     capacity: s.volume,
                     used: *u,
                     used_unsuitable: None,
+                    access: placed.access[j],
+                    unconnected: placed.unconnected[j],
                 })
                 .collect(),
             segments: p.segments.iter().map(|&(from, to, flow)| HaulSegment { from, to, flow, unsuitable_flow: None }).collect(),
@@ -263,6 +273,7 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
             stranded: None,
             unsuitable_moment: None,
             barriers: Vec::new(),
+            access_moment: placed.access.iter().any(Option::is_some).then_some(p.access_moment),
         },
         warnings,
     ))
@@ -278,9 +289,10 @@ fn share_at(def: &kentos_commands::HaulDef, s: f64) -> f64 {
 fn sorted(
     def: &kentos_commands::HaulDef,
     report: &kentos_commands::VolumeReport,
-    sites: &[PlanSite],
+    placed: &crate::road_hauls_network::Placed,
     mut warnings: Vec<CommandWarning>,
 ) -> (HaulPlanned, Vec<CommandWarning>) {
+    let sites = &placed.sites[..];
     let stretches: Vec<SortedStretch> = report
         .rows
         .iter()
@@ -330,10 +342,12 @@ fn sorted(
                 .map(|(j, s)| HaulPlanSite {
                     name: s.name.clone(),
                     kind: s.kind,
-                    station: s.station,
+                    station: placed.sites[j].station,
                     capacity: s.volume,
                     used: p.used[j],
                     used_unsuitable: (s.kind == HaulSiteKind::Waste).then_some(p.used_unsuitable[j]),
+                    access: placed.access[j],
+                    unconnected: placed.unconnected[j],
                 })
                 .collect(),
             segments: p
@@ -355,6 +369,7 @@ fn sorted(
                 .zip(&p.crossed)
                 .map(|(b, c)| kentos_commands::HaulPlanBarrier { name: b.name.clone(), station: b.station, detour: b.detour, crossed: *c })
                 .collect(),
+            access_moment: placed.access.iter().any(Option::is_some).then_some(p.access_moment),
         },
         warnings,
     )
@@ -510,6 +525,12 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
     if sorted {
         site_columns.push(n("Uygunsuz (m³)"));
     }
+    // Docs/adr/0955: a site off the road, its access road and the moment on it; one the network does not reach said so.
+    // The flows' moment and the access moments add up to the plan's.
+    let reached = planned.access_moment.is_some();
+    if reached {
+        site_columns.extend([n("Erişim yolu (m)"), n("Erişim momenti (m³·m)"), text("Ağ")]);
+    }
     let sites = planned
         .sites
         .iter()
@@ -524,9 +545,17 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
             if sorted {
                 r.push(s.used_unsuitable.map_or_else(String::new, decimal));
             }
+            if reached {
+                r.push(s.access.map_or_else(String::new, decimal));
+                r.push(s.access.map_or_else(String::new, |a| decimal(a * s.used)));
+                r.push(if s.unconnected { "bağlanmıyor" } else if s.access.is_some() { "ağdan" } else { "yol üstünde" }.to_owned());
+            }
             r
         })
         .collect();
+    if let Some(a) = planned.access_moment {
+        summary.push(row("Erişim yollarının momenti", decimal(a), "m³·m"));
+    }
     let mut out = vec![
         WorkbookSheet { name: "Özet".into(), columns: vec![text("Kalem"), text("Değer"), text("Birim")], rows: summary },
         WorkbookSheet { name: "Taşımalar".into(), columns: flow_columns, rows: flows },

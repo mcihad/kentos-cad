@@ -69,6 +69,11 @@ pub struct HaulsEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub barriers: Option<Vec<HaulBarrierDef>>,
+    /// The haul road network its sites off the road are reached by (docs/adr/0955); null takes it off.
+    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::HaulNetworkDef>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::HaulNetworkDef>"))]
+    pub network: Option<Option<crate::HaulNetworkDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -335,6 +340,16 @@ pub struct HaulPlanSite {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub used_unsuitable: Option<f64>,
+    /// Of a site off the road (docs/adr/0955): its access road's length from the alignment (m); `station` is then
+    /// where the access meets the alignment. None: on the road.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub access: Option<f64>,
+    /// A site off the road the network does not reach: it is left out of the plan (used 0).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub unconnected: bool,
 }
 
 /// A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).
@@ -438,6 +453,12 @@ pub struct HaulPlanned {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulPlanBarrier>>", optional))]
     pub barriers: Vec<HaulPlanBarrier>,
+    /// The moment on the sites' access roads (m³·m; docs/adr/0955), part of `moment`; none where no site is off the
+    /// road.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume-m")))]
+    pub access_moment: Option<f64>,
 }
 
 pub const ROAD_HAULS_TRUCKS: &str = "road.hauls.trucks";
@@ -756,4 +777,158 @@ pub struct HaulsApprove {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+pub const ROAD_HAULS_NETWORK: &str = "road.hauls.network";
+pub const ROAD_HAULS_NETWORK_VERSION: u32 = 1;
+
+/// Input of `road.hauls.network` v1 (plan/road.md Y49, docs/adr/0955; ROAD-HAUL-06): a mass haul diagram's haul road
+/// network read: its roads, where they meet the alignment, how they join, what does not join, and how each site off the
+/// road is reached. Reads only.
+///
+/// Refusals: `not_a_road_project`, `unknown_haul`, `invalid_haul` (no network, a layer not in the drawing, a volume
+/// or alignment that does not compute).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulsNetwork {
+    pub haul: String,
+}
+
+/// A haul road: its object, part, layer and length in plan (m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulRoadRead {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub entity: u64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub part: u32,
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+}
+
+fn is_zero(v: &u32) -> bool {
+    *v == 0
+}
+
+/// Where a road meets the alignment: the road (its index in `roads`), which end (true: its end), the station, km and
+/// offset.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulJunction {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub road: u32,
+    pub end: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub km: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub offset: f64,
+}
+
+/// What does not join: two roads crossing along their lengths, a road crossing the alignment along its length, an end
+/// that joins nothing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HaulNetworkIssue {
+    Crossing,
+    CrossesAlignment,
+    Loose,
+}
+
+/// A thing in the network that does not join, in words, where, and the roads it is about (indices in `roads`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulNetworkProblem {
+    pub kind: HaulNetworkIssue,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub roads: Vec<u32>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+    /// Of a loose end: how far the nearest road or the alignment lies (m).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gap: Option<f64>,
+    pub message: String,
+}
+
+/// How a site off the road is reached: joined with its access length, the station, km and offset where it meets the
+/// alignment and the roads on the way (indices in `roads`, from the site); or why not.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulSiteAccess {
+    pub name: String,
+    pub kind: crate::HaulSiteKind,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+    pub joined: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub km: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub offset: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub roads: Vec<u32>,
+    /// Why it is not joined, in words.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub why: Option<String>,
+}
+
+/// Output of `road.hauls.network` v1: the diagram, its tolerances, roads, junctions, joins, problems and sites.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HaulNetworkRead {
+    pub haul: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub connect: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub reach: f64,
+    pub roads: Vec<HaulRoadRead>,
+    pub junctions: Vec<HaulJunction>,
+    /// How many ends join another road.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub joins: u32,
+    pub problems: Vec<HaulNetworkProblem>,
+    pub sites: Vec<HaulSiteAccess>,
 }

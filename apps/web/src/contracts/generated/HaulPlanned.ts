@@ -33,4 +33,9 @@ approval?: HaulPlanApproval,
 /**
  * The barriers and what crosses each.
  */
-barriers?: Array<HaulPlanBarrier>, };
+barriers?: Array<HaulPlanBarrier>, 
+/**
+ * The moment on the sites' access roads (m³·m; docs/adr/0955), part of `moment`; none where no site is off the
+ * road.
+ */
+accessMoment?: number, };

@@ -2946,9 +2946,10 @@
       "via": [
         "road.hauls.plan",
         "road.hauls.trucks",
-        "road.hauls.approve"
+        "road.hauls.approve",
+        "road.hauls.network"
       ],
-      "note": "Önizle road.hauls.plan ile okur; Kamyon filosu road.hauls.trucks ile (plan/road.md Y23, Y32.3; ADR 0924 §3, 0936 §3); Onayla ve Onayı kaldır road.hauls.approve ile yazar, plan onaylıyla karşılaştırılır (Y48, ADR 0954)."
+      "note": "Önizle road.hauls.plan ile okur; Kamyon filosu road.hauls.trucks ile (plan/road.md Y23, Y32.3; ADR 0924 §3, 0936 §3); Onayla ve Onayı kaldır road.hauls.approve ile yazar, plan onaylıyla karşılaştırılır (Y48, ADR 0954); Ağ görünüşü taşıma ağını road.hauls.network ile okur (Y49, ADR 0955)."
     },
     "profile.new": {
       "level": "semantic",

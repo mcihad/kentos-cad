@@ -159,7 +159,7 @@ pub use search_box::{Found, SearchBox};
 pub use segmented::Segmented;
 pub use select::{Choice, Select};
 pub use severity::Severity;
-pub use stat_card::StatCard;
+pub use stat_card::{StatCard, StatRow, split_unit};
 pub use status::{Status, status_filter, status_pill};
 pub use status_bar::StatusBar;
 pub use status_tree::{Item as StatusItem, StatusTree};

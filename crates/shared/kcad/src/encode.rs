@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 173 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_network) {
+        return crate::SCHEMA_WITH_HAUL_NETWORK;
+    }
     // Schema 172 (docs/adr/0954): a mass haul diagram's approved plan and its history.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_approval) {
         return crate::SCHEMA_WITH_HAUL_APPROVAL;

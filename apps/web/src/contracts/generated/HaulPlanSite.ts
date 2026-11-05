@@ -8,4 +8,13 @@ export type HaulPlanSite = { name: string, kind: HaulSiteKind, station: number, 
 /**
  * Of a waste site's, the unsuitable cut (docs/adr/0944); none where the plan does not sort its material.
  */
-usedUnsuitable?: number, };
+usedUnsuitable?: number, 
+/**
+ * Of a site off the road (docs/adr/0955): its access road's length from the alignment (m); `station` is then
+ * where the access meets the alignment. None: on the road.
+ */
+access?: number, 
+/**
+ * A site off the road the network does not reach: it is left out of the plan (used 0).
+ */
+unconnected?: boolean, };

@@ -2656,6 +2656,19 @@ HatchWayName = Literal["object", "lines"]
 """The names of :class:`HatchWay`, for a plain string."""
 
 
+class HaulNetworkIssue(_StrEnum):
+    """What does not join: two roads crossing along their lengths, a road crossing the alignment along its length, an end
+    that joins nothing.
+    """
+    CROSSING = "crossing"
+    CROSSES_ALIGNMENT = "crossesAlignment"
+    LOOSE = "loose"
+
+
+HaulNetworkIssueName = Literal["crossing", "crossesAlignment", "loose"]
+"""The names of :class:`HaulNetworkIssue`, for a plain string."""
+
+
 class HaulObjective(_StrEnum):
     """What a haul plan makes least (docs/adr/0925).
 
@@ -37625,6 +37638,7 @@ class HaulDef(_Model):
         cost: Its prices and the truck's payload.
         free: Unit: m.
         history: Its approvals that ended, oldest first, as they were (docs/adr/0954): never changed nor removed.
+        network: Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 173).
         revision: Unit: version.
         unsuitable: The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).
     """
@@ -37637,6 +37651,7 @@ class HaulDef(_Model):
     cost: HaulCostDef | None | Unset = UNSET
     free: float | None | Unset = UNSET
     history: list[HaulApprovalDef] | Unset = UNSET
+    network: HaulNetworkDef | None | Unset = UNSET
     revision: int | Unset = UNSET
     sites: list[HaulSiteDef] | Unset = UNSET
     unsuitable: list[HaulUnsuitableDef] | Unset = UNSET
@@ -37658,6 +37673,8 @@ class HaulDef(_Model):
             out["free"] = None if self.free is None else float(self.free)
         if self.history is not UNSET:
             out["history"] = [e0.to_json() for e0 in self.history]
+        if self.network is not UNSET:
+            out["network"] = None if self.network is None else self.network.to_json()
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.sites is not UNSET:
@@ -37678,9 +37695,45 @@ class HaulDef(_Model):
             cost=UNSET if "cost" not in data else None if data["cost"] is None else HaulCostDef.from_json(data["cost"]),
             free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
             history=[HaulApprovalDef.from_json(e0) for e0 in data["history"]] if "history" in data else UNSET,
+            network=UNSET if "network" not in data else None if data["network"] is None else HaulNetworkDef.from_json(data["network"]),
             revision=data.get("revision", UNSET),
             sites=[HaulSiteDef.from_json(e0) for e0 in data["sites"]] if "sites" in data else UNSET,
             unsuitable=[HaulUnsuitableDef.from_json(e0) for e0 in data["unsuitable"]] if "unsuitable" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulJunction(_Model):
+    """Where a road meets the alignment: the road (its index in `roads`), which end (true: its end), the station, km and
+    offset.
+    Attributes:
+        road: Unit: index.
+        station: Unit: m.
+        offset: Unit: length.
+    """
+    road: int
+    end: bool
+    station: float
+    km: str
+    offset: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["road"] = self.road
+        out["end"] = self.end
+        out["station"] = float(self.station)
+        out["km"] = self.km
+        out["offset"] = float(self.offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulJunction:
+        return cls(
+            road=data["road"],
+            end=data["end"],
+            station=float(data["station"]),
+            km=data["km"],
+            offset=float(data["offset"]),
         )
 
 
@@ -37770,6 +37823,118 @@ class HaulLoop(_Model):
             over_moment=float(data["overMoment"]),
             unbalanced=float(data["unbalanced"]),
             average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulNetworkDef(_Model):
+    """A mass haul diagram's haul road network (docs/adr/0955; KCAD schema 173): the line and polyline objects on these
+    layers are its roads; two join where an end of one lies within `connect` (m) of the other; a road joins the
+    alignment where an end lies within `reach` (m) of its centre line (none: `connect`).
+    Attributes:
+        connect: Unit: length.
+        reach: Unit: length.
+    """
+    layers: list[str]
+    connect: float
+    reach: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = list(self.layers)
+        out["connect"] = float(self.connect)
+        if self.reach is not UNSET:
+            out["reach"] = None if self.reach is None else float(self.reach)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulNetworkDef:
+        return cls(
+            layers=list(data["layers"]),
+            connect=float(data["connect"]),
+            reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulNetworkProblem(_Model):
+    """A thing in the network that does not join, in words, where, and the roads it is about (indices in `roads`).
+    Attributes:
+        roads: Unit: index.
+        x: Unit: length.
+        y: Unit: length.
+        gap: Of a loose end: how far the nearest road or the alignment lies (m). Unit: length.
+    """
+    kind: HaulNetworkIssue | HaulNetworkIssueName
+    roads: list[int]
+    x: float
+    y: float
+    message: str
+    gap: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["roads"] = list(self.roads)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["message"] = self.message
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulNetworkProblem:
+        return cls(
+            kind=_enum_in(HaulNetworkIssue, data["kind"]),
+            roads=list(data["roads"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            message=data["message"],
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulNetworkRead(_Model):
+    """Output of `road.hauls.network` v1: the diagram, its tolerances, roads, junctions, joins, problems and sites.
+    Attributes:
+        connect: Unit: length.
+        reach: Unit: length.
+        joins: How many ends join another road. Unit: count.
+    """
+    haul: str
+    connect: float
+    reach: float
+    roads: list[HaulRoadRead]
+    junctions: list[HaulJunction]
+    joins: int
+    problems: list[HaulNetworkProblem]
+    sites: list[HaulSiteAccess]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        out["connect"] = float(self.connect)
+        out["reach"] = float(self.reach)
+        out["roads"] = [e0.to_json() for e0 in self.roads]
+        out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        out["joins"] = self.joins
+        out["problems"] = [e0.to_json() for e0 in self.problems]
+        out["sites"] = [e0.to_json() for e0 in self.sites]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulNetworkRead:
+        return cls(
+            haul=data["haul"],
+            connect=float(data["connect"]),
+            reach=float(data["reach"]),
+            roads=[HaulRoadRead.from_json(e0) for e0 in data["roads"]],
+            junctions=[HaulJunction.from_json(e0) for e0 in data["junctions"]],
+            joins=data["joins"],
+            problems=[HaulNetworkProblem.from_json(e0) for e0 in data["problems"]],
+            sites=[HaulSiteAccess.from_json(e0) for e0 in data["sites"]],
         )
 
 
@@ -37896,6 +38061,9 @@ class HaulPlanSite(_Model):
         station: Unit: m.
         capacity: Unit: volume.
         used: Unit: volume.
+        access: Of a site off the road (docs/adr/0955): its access road's length from the alignment (m); `station` is then
+            where the access meets the alignment. None: on the road. Unit: length.
+        unconnected: A site off the road the network does not reach: it is left out of the plan (used 0).
         used_unsuitable: Of a waste site's, the unsuitable cut (docs/adr/0944); none where the plan does not sort its material. Unit: volume.
     """
     name: str
@@ -37903,6 +38071,8 @@ class HaulPlanSite(_Model):
     station: float
     capacity: float
     used: float
+    access: float | None | Unset = UNSET
+    unconnected: bool | Unset = UNSET
     used_unsuitable: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -37912,6 +38082,10 @@ class HaulPlanSite(_Model):
         out["station"] = float(self.station)
         out["capacity"] = float(self.capacity)
         out["used"] = float(self.used)
+        if self.access is not UNSET:
+            out["access"] = None if self.access is None else float(self.access)
+        if self.unconnected is not UNSET:
+            out["unconnected"] = self.unconnected
         if self.used_unsuitable is not UNSET:
             out["usedUnsuitable"] = None if self.used_unsuitable is None else float(self.used_unsuitable)
         return out
@@ -37924,6 +38098,8 @@ class HaulPlanSite(_Model):
             station=float(data["station"]),
             capacity=float(data["capacity"]),
             used=float(data["used"]),
+            access=UNSET if "access" not in data else None if data["access"] is None else float(data["access"]),
+            unconnected=data.get("unconnected", UNSET),
             used_unsuitable=UNSET if "usedUnsuitable" not in data else None if data["usedUnsuitable"] is None else float(data["usedUnsuitable"]),
         )
 
@@ -37941,6 +38117,8 @@ class HaulPlanned(_Model):
         moment: Unit: volume-m.
         shortage: Unit: volume.
         surplus: Unit: volume.
+        access_moment: The moment on the sites' access roads (m³·m; docs/adr/0955), part of `moment`; none where no site is off the
+            road. Unit: volume-m.
         approval: The plan as approved against this one, where the diagram has an approved plan (docs/adr/0954).
         average: Unit: m.
         barriers: The barriers and what crosses each.
@@ -37962,6 +38140,7 @@ class HaulPlanned(_Model):
     shortage: float
     surplus: float
     objective: HaulObjective | HaulObjectiveName
+    access_moment: float | None | Unset = UNSET
     approval: HaulPlanApproval | None | Unset = UNSET
     average: float | None | Unset = UNSET
     barriers: list[HaulPlanBarrier] | Unset = UNSET
@@ -37984,6 +38163,8 @@ class HaulPlanned(_Model):
         out["shortage"] = float(self.shortage)
         out["surplus"] = float(self.surplus)
         out["objective"] = _enum_out(self.objective)
+        if self.access_moment is not UNSET:
+            out["accessMoment"] = None if self.access_moment is None else float(self.access_moment)
         if self.approval is not UNSET:
             out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.average is not UNSET:
@@ -38016,6 +38197,7 @@ class HaulPlanned(_Model):
             shortage=float(data["shortage"]),
             surplus=float(data["surplus"]),
             objective=_enum_in(HaulObjective, data["objective"]),
+            access_moment=UNSET if "accessMoment" not in data else None if data["accessMoment"] is None else float(data["accessMoment"]),
             approval=UNSET if "approval" not in data else None if data["approval"] is None else HaulPlanApproval.from_json(data["approval"]),
             average=UNSET if "average" not in data else None if data["average"] is None else float(data["average"]),
             barriers=[HaulPlanBarrier.from_json(e0) for e0 in data["barriers"]] if "barriers" in data else UNSET,
@@ -38125,6 +38307,38 @@ class HaulReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class HaulRoadRead(_Model):
+    """A haul road: its object, part, layer and length in plan (m).
+    Attributes:
+        entity: Unit: id.
+        length: Unit: length.
+        part: Unit: index.
+    """
+    entity: int
+    layer: str
+    length: float
+    part: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entity"] = self.entity
+        out["layer"] = self.layer
+        out["length"] = float(self.length)
+        if self.part is not UNSET:
+            out["part"] = self.part
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulRoadRead:
+        return cls(
+            entity=data["entity"],
+            layer=data["layer"],
+            length=float(data["length"]),
+            part=data.get("part", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HaulSegment(_Model):
     """A segment between neighbouring places of a haul plan: its stations and the flow (m³; forward positive).
     Attributes:
@@ -38154,6 +38368,69 @@ class HaulSegment(_Model):
             to=float(data["to"]),
             flow=float(data["flow"]),
             unsuitable_flow=UNSET if "unsuitableFlow" not in data else None if data["unsuitableFlow"] is None else float(data["unsuitableFlow"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulSiteAccess(_Model):
+    """How a site off the road is reached: joined with its access length, the station, km and offset where it meets the
+    alignment and the roads on the way (indices in `roads`, from the site); or why not.
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        length: Unit: length.
+        offset: Unit: length.
+        roads: Unit: index.
+        station: Unit: m.
+        why: Why it is not joined, in words.
+    """
+    name: str
+    kind: HaulSiteKind | HaulSiteKindName
+    x: float
+    y: float
+    joined: bool
+    km: str | None | Unset = UNSET
+    length: float | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    roads: list[int] | Unset = UNSET
+    station: float | None | Unset = UNSET
+    why: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["joined"] = self.joined
+        if self.km is not UNSET:
+            out["km"] = self.km
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.roads is not UNSET:
+            out["roads"] = list(self.roads)
+        if self.station is not UNSET:
+            out["station"] = None if self.station is None else float(self.station)
+        if self.why is not UNSET:
+            out["why"] = self.why
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulSiteAccess:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(HaulSiteKind, data["kind"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            joined=data["joined"],
+            km=data.get("km", UNSET),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            roads=list(data["roads"]) if "roads" in data else UNSET,
+            station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
+            why=data.get("why", UNSET),
         )
 
 
@@ -38204,11 +38481,15 @@ class HaulSiteDef(_Model):
     Attributes:
         station: Unit: m.
         volume: Unit: volume.
+        at: Where it lies off the road, in plan (docs/adr/0955; KCAD schema 173): it is reached along the diagram's haul
+            road network, which says where it meets the alignment and how far; `station` is then that station as last
+            written. None: on the road at `station`. Unit: length.
     """
     name: str
     kind: HaulSiteKind | HaulSiteKindName
     station: float
     volume: float
+    at: Vec2 | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -38216,6 +38497,8 @@ class HaulSiteDef(_Model):
         out["kind"] = _enum_out(self.kind)
         out["station"] = float(self.station)
         out["volume"] = float(self.volume)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
         return out
 
     @classmethod
@@ -38225,6 +38508,7 @@ class HaulSiteDef(_Model):
             kind=_enum_in(HaulSiteKind, data["kind"]),
             station=float(data["station"]),
             volume=float(data["volume"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
         )
 
 
@@ -38436,6 +38720,7 @@ class HaulsEdit(_Model):
         barriers: What the haul road crosses (docs/adr/0944); an empty list takes them off.
         cost: The prices and the truck's payload; null takes them off.
         free: The free haul distance; null takes it off. Unit: m.
+        network: The haul road network its sites off the road are reached by (docs/adr/0955); null takes it off.
         unsuitable: The cut unsuitable for fill by stations (docs/adr/0944); an empty list takes them off.
     """
     operation: RoadEditOperation | RoadEditOperationName
@@ -38446,6 +38731,7 @@ class HaulsEdit(_Model):
     free: float | None | Unset = UNSET
     haul: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    network: HaulNetworkDef | None | Unset = UNSET
     sites: list[HaulSiteDef] | None | Unset = UNSET
     unsuitable: list[HaulUnsuitableDef] | None | Unset = UNSET
     volume: str | None | Unset = UNSET
@@ -38467,6 +38753,8 @@ class HaulsEdit(_Model):
             out["haul"] = self.haul
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.network is not UNSET:
+            out["network"] = None if self.network is None else self.network.to_json()
         if self.sites is not UNSET:
             out["sites"] = None if self.sites is None else [e0.to_json() for e0 in self.sites]
         if self.unsuitable is not UNSET:
@@ -38486,9 +38774,33 @@ class HaulsEdit(_Model):
             free=UNSET if "free" not in data else None if data["free"] is None else float(data["free"]),
             haul=data.get("haul", UNSET),
             name=data.get("name", UNSET),
+            network=UNSET if "network" not in data else None if data["network"] is None else HaulNetworkDef.from_json(data["network"]),
             sites=UNSET if "sites" not in data else None if data["sites"] is None else [HaulSiteDef.from_json(e0) for e0 in data["sites"]],
             unsuitable=UNSET if "unsuitable" not in data else None if data["unsuitable"] is None else [HaulUnsuitableDef.from_json(e0) for e0 in data["unsuitable"]],
             volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HaulsNetwork(_Model):
+    """Input of `road.hauls.network` v1 (plan/road.md Y49, docs/adr/0955; ROAD-HAUL-06): a mass haul diagram's haul road
+    network read: its roads, where they meet the alignment, how they join, what does not join, and how each site off the
+    road is reached. Reads only.
+
+    Refusals: `not_a_road_project`, `unknown_haul`, `invalid_haul` (no network, a layer not in the drawing, a volume
+    or alignment that does not compute).
+    """
+    haul: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["haul"] = self.haul
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HaulsNetwork:
+        return cls(
+            haul=data["haul"],
         )
 
 
@@ -111186,8 +111498,14 @@ __all__ = [
     "HaulCostDef",
     "HaulCostReport",
     "HaulDef",
+    "HaulJunction",
     "HaulListed",
     "HaulLoop",
+    "HaulNetworkDef",
+    "HaulNetworkIssue",
+    "HaulNetworkIssueName",
+    "HaulNetworkProblem",
+    "HaulNetworkRead",
     "HaulObjective",
     "HaulObjectiveName",
     "HaulPlanApproval",
@@ -111196,7 +111514,9 @@ __all__ = [
     "HaulPlanSite",
     "HaulPlanned",
     "HaulReport",
+    "HaulRoadRead",
     "HaulSegment",
+    "HaulSiteAccess",
     "HaulSiteChange",
     "HaulSiteDef",
     "HaulSiteKind",
@@ -111208,6 +111528,7 @@ __all__ = [
     "HaulUnsuitableDef",
     "HaulsApprove",
     "HaulsEdit",
+    "HaulsNetwork",
     "HaulsPlan",
     "HaulsQueried",
     "HaulsQuery",

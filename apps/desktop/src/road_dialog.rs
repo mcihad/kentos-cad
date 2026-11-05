@@ -28,13 +28,12 @@
 //! - **The picture** zooms, pans and is saved as a PNG from its button group (picture.rs, docs/adr/0937); resized or
 //!   full screen, the window gives it the height the rest leaves, never less than its own height.
 
-use iced::widget::{Column, Row, column, container, row, space};
+use iced::widget::{Column, column, container, row, space};
 use kentos_ui::widget::grow::Grows;
 use iced::{Element, Fill, Length};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Form;
 use kentos_ui::widget::Banner;
-use kentos_ui::widget::StatCard;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::label;
 
@@ -53,7 +52,7 @@ pub struct RoadDialog<'a> {
     picture_name: Option<String>,
     legend: Option<String>,
     empty: Option<String>,
-    figures: Vec<StatCard<'a, Message>>,
+    figures: kentos_ui::widget::StatRow,
     notes: Vec<Banner<'a, Message>>,
     detail: Option<Element<'a, Message>>,
     status: Option<String>,
@@ -82,7 +81,7 @@ impl<'a> RoadDialog<'a> {
             picture_name: None,
             legend: None,
             empty: None,
-            figures: Vec::new(),
+            figures: kentos_ui::widget::StatRow::new(),
             notes: Vec::new(),
             detail: None,
             status: None,
@@ -124,8 +123,9 @@ impl<'a> RoadDialog<'a> {
     }
 
     /// A figure under the picture: a label and a value; at most four read at a glance.
+    /// The value's unit, its trailing word, is written small beside it; the value never wraps (`StatRow`).
     pub fn figure(mut self, label: impl Into<String>, value: impl Into<String>) -> Self {
-        self.figures.push(StatCard::new(label, value));
+        self.figures = std::mem::take(&mut self.figures).figure(label, value.into());
         self
     }
 
@@ -207,11 +207,7 @@ impl<'a> RoadDialog<'a> {
             result = result.push(label::caption(empty).style(muted));
         }
         if !self.figures.is_empty() {
-            let mut figures = Row::new().spacing(8);
-            for f in self.figures {
-                figures = figures.push(f.width(Fill));
-            }
-            result = result.push(figures);
+            result = result.push(Element::from(self.figures));
         }
         for n in self.notes {
             result = result.push(n);

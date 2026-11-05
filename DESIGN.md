@@ -575,7 +575,13 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 - **Sağda sonuç.**
   - Önce çizim gelir, alan kutusunun içinde. Çizginin ne olduğunu çizimin altındaki tek satır söyler; çizimin içine
     yazı yazılmaz.
-  - Ardından en çok dört özet kart (`StatCard`) gelir. Sonra notlar (uyarı, hata) gelir.
+  - Ardından en çok beş özet kart gelir, tek bir gösterge sırasında (`StatRow`). Sonra notlar (uyarı, hata) gelir.
+  - **Gösterge sırası kuralı.** Kartlar eşit genişlikte ve eşit yüksekliktedir. Değer hiçbir zaman alt satıra kaymaz
+    ve kartın dışına taşmaz: her kart değerine sığan en büyük basamağı verir (figür, 18, 16, başlık, alt başlık,
+    gövde; Grafana stat panelinin “auto” yazı boyu). Birim değerden ayrılıp yanında küçük yazılır (“2 577 177 m³·m”
+    → değer “2 577 177”, birim “m³·m”). Başlık tek satırdır; dar kartta sonu “…” ile kısalır (`Elided`, gerçek yazı tipiyle ölçülür), sıranın yüksekliği
+    her genişlikte aynıdır. Ölçüm: 1100 px pencerede beş kartta
+    “1 974 258 m³·m” dört satıra taşıyordu; şimdi tek satır.
   - En altta tek tablo durur. Hangi liste olduğunu üstündeki parçalı seçim belirler (PVI'lar | Eğimler). Listeler
     alt alta yığılmaz.
 - **Sonuç formu izler.** Yalnız okuyan pencere değer değişince kendiliğinden yeniden okur, “Önizle” düğmesi yoktur.

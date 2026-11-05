@@ -1942,7 +1942,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.hauls.query",
         refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
-        warnings: &["corridor_stale", "volume_gap", "haul_unbalanced"],
+        warnings: &["corridor_stale", "volume_gap", "haul_unbalanced", "haul_site_unconnected"],
         targets: none,
     },
     Entry {
@@ -1952,9 +1952,15 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.hauls.network",
+        refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
+        warnings: &["haul_network_gap", "haul_site_unconnected"],
+        targets: none,
+    },
+    Entry {
         id: "road.hauls.plan",
         refusals: &[&["not_a_road_project", "unknown_haul", "invalid_haul"]],
-        warnings: &["haul_plan_infeasible", "corridor_stale", "volume_gap", "haul_plan_stale"],
+        warnings: &["haul_plan_infeasible", "corridor_stale", "volume_gap", "haul_plan_stale", "haul_site_unconnected"],
         targets: none,
     },
     Entry {

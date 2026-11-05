@@ -105,7 +105,19 @@ pub(crate) fn read(doc: &Document, def: &HaulDef, points: bool) -> Result<(HaulR
         return Err(fail(codes::INVALID_HAUL, format!("“{}” kübajının hacimli aralığı yok; Brükner çizilemez.", vdef.name), "volume"));
     }
     let (first, last) = (curve[0][0], curve[curve.len() - 1][0]);
-    let mut sites: Vec<(usize, &kentos_commands::HaulSiteDef)> = def.sites.iter().enumerate().collect();
+    // A site off the road stands where its access meets the alignment; one the network does not reach is left out
+    // (docs/adr/0955).
+    let placed = crate::road_hauls_network::placed(doc, def, &alignment)?;
+    warnings.extend(placed.warnings.iter().cloned());
+    let mut sites: Vec<(usize, kentos_commands::HaulSiteDef)> = def
+        .sites
+        .iter()
+        .zip(&placed.sites)
+        .zip(&placed.unconnected)
+        .enumerate()
+        .filter(|(_, (_, off))| !**off)
+        .map(|(j, ((s, p), _))| (j, kentos_commands::HaulSiteDef { station: p.station, ..s.clone() }))
+        .collect();
     sites.sort_by(|a, b| a.1.station.total_cmp(&b.1.station).then(a.0.cmp(&b.0)));
     for (j, site) in sites {
         if site.station < first || site.station > last {
@@ -226,4 +238,14 @@ pub fn read_hauls(doc: &Document) -> Vec<(HaulDef, ReadHaul)> {
 /// A diagram (perhaps not written) read now with its points, for the Brükner window.
 pub fn preview(doc: &Document, def: &HaulDef) -> ReadHaul {
     read(doc, def, true).map_err(crate::road_corridors::words)
+}
+
+/// The alignment a diagram's volume's corridor lies on, built (docs/adr/0955: its haul road network joins it).
+pub(crate) fn alignment_of(doc: &Document, def: &HaulDef) -> Result<crate::road_alignments::Built, Stop> {
+    let bad = |words: String, path: &str| crate::road_terrains::fail(codes::INVALID_HAUL, words, path);
+    let v = doc.road_volumes().iter().find(|v| v.id == def.volume).ok_or_else(|| bad(format!("“{}” kimlikli kübaj hesabı projede yok.", def.volume), "volume"))?;
+    let c = doc.road_corridors().iter().find(|c| c.id == v.corridor).ok_or_else(|| bad(format!("“{}” kimlikli koridor projede yok.", v.corridor), "volume"))?;
+    let list = crate::road_alignments::alignments(doc);
+    let a = list.iter().find(|a| a.id == c.alignment).ok_or_else(|| bad(format!("“{}” kimlikli aks projede yok.", c.alignment), "volume"))?;
+    crate::road_alignments::build(list, a, "").map_err(|stop| bad(format!("“{}” aksı kurulamıyor: {}", a.name, crate::road_corridors::words(stop)), "volume"))
 }

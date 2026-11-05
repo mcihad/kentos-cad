@@ -43,6 +43,7 @@ pub mod drainage;
 pub mod guardrail;
 pub mod haul;
 pub mod haul_fleet;
+pub mod haul_network;
 pub mod haul_plan;
 pub mod junction;
 pub mod platform_water;

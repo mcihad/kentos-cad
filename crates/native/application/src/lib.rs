@@ -298,6 +298,7 @@ pub mod road_hauls;
 pub mod road_hauls_edit;
 pub mod road_hauls_query;
 pub mod road_hauls_approve;
+pub mod road_hauls_network;
 pub mod road_hauls_plan;
 pub mod road_hauls_trucks;
 pub mod road_guardrails;
@@ -1328,6 +1329,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_HAULS_QUERY, kentos_commands::ROAD_HAULS_QUERY_VERSION),
     (kentos_commands::ROAD_HAULS_PLAN, kentos_commands::ROAD_HAULS_PLAN_VERSION),
     (kentos_commands::ROAD_HAULS_APPROVE, kentos_commands::ROAD_HAULS_APPROVE_VERSION),
+    (kentos_commands::ROAD_HAULS_NETWORK, kentos_commands::ROAD_HAULS_NETWORK_VERSION),
     (kentos_commands::ROAD_HAULS_TRUCKS, kentos_commands::ROAD_HAULS_TRUCKS_VERSION),
     (kentos_commands::ROAD_GUARDRAILS_EDIT, kentos_commands::ROAD_GUARDRAILS_EDIT_VERSION),
     (kentos_commands::ROAD_GUARDRAILS_QUERY, kentos_commands::ROAD_GUARDRAILS_QUERY_VERSION),

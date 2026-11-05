@@ -2,6 +2,7 @@
 import type { HaulApprovalDef } from "./HaulApprovalDef";
 import type { HaulBarrierDef } from "./HaulBarrierDef";
 import type { HaulCostDef } from "./HaulCostDef";
+import type { HaulNetworkDef } from "./HaulNetworkDef";
 import type { HaulSiteDef } from "./HaulSiteDef";
 import type { HaulUnsuitableDef } from "./HaulUnsuitableDef";
 
@@ -29,4 +30,8 @@ approved?: HaulApprovalDef,
 /**
  * Its approvals that ended, oldest first, as they were (docs/adr/0954): never changed nor removed.
  */
-history?: Array<HaulApprovalDef>, };
+history?: Array<HaulApprovalDef>, 
+/**
+ * Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 173).
+ */
+network?: HaulNetworkDef, };

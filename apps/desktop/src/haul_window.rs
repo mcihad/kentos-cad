@@ -52,6 +52,11 @@ const ADD_UNSUITABLE: &str = "Uygunsuz satır ekle";
 const REMOVE_UNSUITABLE: &str = "Uygunsuz satırı sil";
 const ADD_BARRIER: &str = "Engel ekle";
 const REMOVE_BARRIER: &str = "Engeli sil";
+/// The haul road network (docs/adr/0955): its layer and tolerances; the connection tolerance where none is typed.
+pub(crate) const NET_LAYER: &str = "Taşıma ağı katmanı";
+const NET_CONNECT_LABEL: &str = "Bağlantı toleransı (m)";
+const NET_REACH_LABEL: &str = "Aksa erişim (m)";
+const NET_CONNECT: f64 = 0.5;
 
 fn trimmed(v: f64) -> String {
     let s = format!("{v:.6}");
@@ -99,6 +104,13 @@ pub struct Row {
     /// Its approved plan and the history (docs/adr/0954), kept as they are: the window does not edit them.
     approved: Option<kentos_commands::HaulApprovalDef>,
     history: Vec<kentos_commands::HaulApprovalDef>,
+    /// Its haul road network (docs/adr/0955): the roads' layer (the first; any others kept), the connection tolerance
+    /// and the reach of the alignment, as typed.
+    pub(crate) net_layer: Option<String>,
+    net_more: Vec<String>,
+    pub(crate) net_fields: [String; 2],
+    /// Each site's place off the road (east, north), as typed; both empty: on the road at its station.
+    pub(crate) xy: Vec<[String; 2]>,
 }
 
 impl Row {
@@ -125,6 +137,13 @@ impl Row {
             barriers: d.barriers.iter().map(|b| [b.name.clone(), trimmed(b.station), b.detour.map(trimmed).unwrap_or_default()]).collect(),
             approved: d.approved.clone(),
             history: d.history.clone(),
+            net_layer: d.network.as_ref().and_then(|n| n.layers.first().cloned()),
+            net_more: d.network.as_ref().map(|n| n.layers.iter().skip(1).cloned().collect()).unwrap_or_default(),
+            net_fields: [
+                d.network.as_ref().map(|n| trimmed(n.connect)).unwrap_or_default(),
+                d.network.as_ref().and_then(|n| n.reach).map(trimmed).unwrap_or_default(),
+            ],
+            xy: d.sites.iter().map(|s| s.at.map_or_else(Default::default, |p| [trimmed(p.x), trimmed(p.y)])).collect(),
         }
     }
 
@@ -149,13 +168,22 @@ impl Row {
             }),
         };
         let mut sites = Vec::new();
+        // A site's place off the road (docs/adr/0955): both or neither.
+        let place = |i: usize| -> Result<Option<kentos_commands::Vec2>, String> {
+            let xy = self.xy.get(i).cloned().unwrap_or_default();
+            match (number(&xy[0]), number(&xy[1])) {
+                (Ok(Some(x)), Ok(Some(y))) => Ok(Some(kentos_commands::Vec2 { x, y })),
+                (Ok(None), Ok(None)) => Ok(None),
+                _ => Err(format!("{}. alanın konumu doğu ve kuzey iki sayı olmalı (ikisi de boşsa alan yol üstündedir).", i + 1)),
+            }
+        };
         for (i, (name, kind, station, volume)) in self.sites.iter().enumerate() {
             let n = i + 1;
             let need = |t: &str, what: &str| match number(t) {
                 Ok(Some(v)) => Ok(v),
                 _ => Err(format!("{n}. alanın {what} bir sayı olmalı.")),
             };
-            sites.push(HaulSiteDef { name: name.clone(), kind: *kind, station: need(station, "km'si")?, volume: need(volume, "hacmi")? });
+            sites.push(HaulSiteDef { name: name.clone(), kind: *kind, station: need(station, "km'si")?, volume: need(volume, "hacmi")?, at: place(i)? });
         }
         let mut unsuitable = Vec::new();
         for (i, u) in self.unsuitable.iter().enumerate() {
@@ -189,6 +217,16 @@ impl Row {
             barriers,
             approved: self.approved.clone(),
             history: self.history.clone(),
+            network: match &self.net_layer {
+                None => None,
+                Some(layer) => Some(kentos_commands::HaulNetworkDef {
+                    layers: std::iter::once(layer.clone()).chain(self.net_more.iter().cloned()).collect(),
+                    connect: number(&self.net_fields[0])
+                        .map_err(|()| "Bağlantı toleransı bir sayı olmalı.".to_owned())?
+                        .unwrap_or(NET_CONNECT),
+                    reach: number(&self.net_fields[1]).map_err(|()| "Aksa erişim bir sayı olmalı.".to_owned())?,
+                }),
+            },
         })
     }
 }
@@ -221,8 +259,12 @@ pub enum Event {
     Volume(String),
     /// 0 the balance line, 1 the free haul, 2 the currency, 3–5 the overhaul, waste and borrow prices, 6 the payload.
     Field(usize, String),
-    /// A site's name (0), station (2) or volume (3).
+    /// A site's name (0), station (2), volume (3), east (4) or north (5).
     Site(usize, usize, String),
+    /// The haul road network's layer (docs/adr/0955); none: no network.
+    NetLayer(Option<String>),
+    /// The connection tolerance (0) or the reach of the alignment (1).
+    NetField(usize, String),
     Kind(usize, HaulSiteKind),
     Line(usize),
     /// An unsuitable row's from (0), to (1) or share (2) (docs/adr/0944).
@@ -326,6 +368,10 @@ impl App {
                         barriers: Vec::new(),
                         approved: None,
                         history: Vec::new(),
+                        net_layer: None,
+                        net_more: Vec::new(),
+                        net_fields: Default::default(),
+                        xy: Vec::new(),
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.line = None;
@@ -358,12 +404,33 @@ impl App {
             Event::Site(j, k, t) => {
                 if let Some(x) = chosen_row(w).and_then(|r| r.sites.get_mut(j)) {
                     match k {
-                        0 => x.0 = t,
-                        2 => x.2 = t,
-                        _ => x.3 = t,
+                        0 => x.0 = t.clone(),
+                        2 => x.2 = t.clone(),
+                        3 => x.3 = t.clone(),
+                        _ => {}
+                    }
+                }
+                if k >= 4
+                    && let Some(r) = chosen_row(w)
+                {
+                    if r.xy.len() < r.sites.len() {
+                        r.xy.resize(r.sites.len(), Default::default());
+                    }
+                    if let Some(xy) = r.xy.get_mut(j) {
+                        xy[(k - 4).min(1)] = t;
                     }
                 }
                 w.line = Some(j);
+            }
+            Event::NetLayer(l) => {
+                if let Some(r) = chosen_row(w) {
+                    r.net_layer = l;
+                }
+            }
+            Event::NetField(k, t) => {
+                if let Some(r) = chosen_row(w) {
+                    r.net_fields[k.min(1)] = t;
+                }
             }
             Event::Kind(j, kind) => {
                 if let Some(x) = chosen_row(w).and_then(|r| r.sites.get_mut(j)) {
@@ -377,6 +444,7 @@ impl App {
                     // A new site's name follows the count; its station and volume are the user's.
                     let n = r.sites.len() + 1;
                     r.sites.push((format!("Alan {n}"), HaulSiteKind::Waste, String::new(), String::new()));
+                    r.xy.resize(n, Default::default());
                     w.line = Some(n - 1);
                 }
             }
@@ -384,6 +452,9 @@ impl App {
                 if let Some(j) = w.line {
                     if let Some(r) = chosen_row(w).filter(|r| j < r.sites.len()) {
                         r.sites.remove(j);
+                        if j < r.xy.len() {
+                            r.xy.remove(j);
+                        }
                     }
                     w.line = None;
                 }
@@ -456,6 +527,7 @@ impl App {
             cost: None,
             unsuitable: None,
             barriers: None,
+            network: None,
             expected_revision: None,
         }
     }
@@ -497,6 +569,7 @@ impl App {
                 cost: Some(d.cost.clone()),
                 unsuitable: Some(d.unsuitable.clone()),
                 barriers: Some(d.barriers.clone()),
+                network: Some(d.network.clone()),
                 ..Self::blank_haul_edit(RoadEditOperation::Set, &d.id)
             };
             if !self.haul_write(edit) {
@@ -605,19 +678,25 @@ impl App {
         let sites = &r.sites;
         let table = road_dialog::edit_table(
             vec![
-                road_dialog::Col { title: "Ad", width: None, number: false },
-                road_dialog::col("Tür", 110.0),
-                road_dialog::col("Km (m)", 100.0),
-                road_dialog::col("Hacim (m³)", 110.0),
+                // A name the width of the window's names; the place (docs/adr/0955) beside the station and volume.
+                road_dialog::col("Ad", 120.0),
+                road_dialog::col("Tür", 90.0),
+                road_dialog::col("Km (m)", 65.0),
+                road_dialog::col("Hacim (m³)", 85.0),
+                road_dialog::col("Doğu (m)", 85.0),
+                road_dialog::Col { title: "Kuzey (m)", width: None, number: true },
             ],
             sites.len(),
             move |j, k| {
                 let (name, kind, station, volume) = &sites[j];
+                let xy = r.xy.get(j);
                 match k {
                     0 => road_dialog::edit(name, false, move |v| msg(Event::Site(j, 0, v))),
                     1 => road_dialog::pick(kinds.map(|k| k.1), kinds.iter().position(|k| k.0 == *kind), move |i| msg(Event::Kind(j, kinds[i].0))),
                     2 => road_dialog::edit(station, true, move |v| msg(Event::Site(j, 2, v))),
-                    _ => road_dialog::edit(volume, true, move |v| msg(Event::Site(j, 3, v))),
+                    3 => road_dialog::edit(volume, true, move |v| msg(Event::Site(j, 3, v))),
+                    4 => road_dialog::edit(xy.map_or("", |p| p[0].as_str()), true, move |v| msg(Event::Site(j, 4, v))),
+                    _ => road_dialog::edit(xy.map_or("", |p| p[1].as_str()), true, move |v| msg(Event::Site(j, 5, v))),
                 }
             },
             w.line,
@@ -636,6 +715,33 @@ impl App {
                 .spacing(6),
             ]
             .spacing(16),
+        );
+        // The haul road network (docs/adr/0955): the layer of its roads and its tolerances; a site with a place is
+        // reached along it.
+        let layers = self.relation_layers();
+        let mut layer_ids: Vec<Option<String>> = vec![None];
+        layer_ids.extend(layers.iter().map(|l| Some(l.0.clone())));
+        let names: Vec<String> = std::iter::once("Ağ yok".to_owned()).chain(layers.iter().map(|l| l.1.clone())).collect();
+        let at = layer_ids.iter().position(|l| *l == r.net_layer);
+        let on_layer = Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::NetLayer(layer_ids[i].clone())));
+        let net_field = |hint: &'a str, k: usize| {
+            kentos_ui::widget::text_field(hint, &r.net_fields[k]).on_input(move |t| msg(Event::NetField(k, t))).width(110)
+        };
+        col = col.push(
+            row![
+                words::field(NET_LAYER, container(on_layer).width(220), None),
+                words::field(NET_CONNECT_LABEL, net_field("0,5", 0), None),
+                words::field(NET_REACH_LABEL, net_field("toleransla", 1), None),
+                container(
+                    label::caption(
+                        "Katmandaki çizgiler taşıma yoludur. Yollar yalnız birinin ucu ötekine toleransla değdiğinde birleşir; konumu (doğu, kuzey) verilen alan aksa en kısa yoldan gider. Birleşmeyen yerler Taşıma planı → Ağ'da görünür."
+                    )
+                    .style(muted)
+                )
+                .width(Fill),
+            ]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom),
         );
         // The cut unsuitable for fill and the barriers (docs/adr/0944): the plan sorts by them.
         let rows_u = &r.unsuitable;
