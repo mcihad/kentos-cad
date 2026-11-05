@@ -1821,6 +1821,13 @@ kendiliğinden değiştirmez. Komut sınamaları ile gerçek arayüzde 4 → 2,5
 yazı ve 3 → 2,5 mm ölçü yazısı farkları, uygulamadan sonra korunmalarıyla
 birlikte doğrulandı. Bu çalışma sürümlü standart paketinin tamamı değildir.
 
+Çizim standardı penceresi mevcut `cad.standards.check/apply` komutlarının
+desteklediği özel JSON standart tanımını geçici olarak seçebilir. Dosya
+boyutu ve tanımı denetlenir, bilinmeyen alanlar reddedilir; kaynak ve seçimin
+çizime kaydedilmediği gösterilir. Gerçek arayüzde iki farklı tanımla rapor
+değişimi, yerleşik standarda dönüş ve hatalı dosyanın reddi doğrulandı.
+Bu seçim kalıcı veya sürümlü ofis paketi değildir; paket kapsamı açık kalır.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

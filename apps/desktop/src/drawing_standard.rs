@@ -8,8 +8,9 @@
 use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, StandardIssue, StandardIssueKind, StandardsApplied, StandardsApply,
-    StandardsCheck, StandardsReport, built_in_standard, built_in_standards,
+    CommandResult, DrawingStandard, StandardIssue, StandardIssueKind, StandardsApplied,
+    StandardsApply, StandardsCheck, StandardsReport, built_in_standard, built_in_standards,
+    standard_problem,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, standards};
@@ -36,6 +37,9 @@ const ROW: f32 = 26.0;
 pub struct Window {
     /// The built-in standard's id.
     pub standard: String,
+    /// A temporary file standard; absent means the built-in standard.
+    custom: Option<(String, DrawingStandard)>,
+    load_error: Option<String>,
     pub layers: bool,
     pub restyle: bool,
     pub rename: bool,
@@ -48,6 +52,9 @@ pub struct Window {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    Load,
+    Loaded(Result<Option<(String, DrawingStandard)>, String>),
+    BuiltIn,
     Layers(bool),
     Restyle(bool),
     Rename(bool),
@@ -88,7 +95,8 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
 impl Window {
     fn apply_input(&self) -> StandardsApply {
         StandardsApply {
-            name: Some(self.standard.clone()),
+            name: self.custom.is_none().then(|| self.standard.clone()),
+            standard: self.custom.as_ref().map(|(_, standard)| standard.clone()),
             layers: self.layers,
             restyle: self.restyle,
             rename: self.rename,
@@ -111,6 +119,8 @@ impl App {
             .unwrap_or_default();
         self.drawing_standard = Some(Window {
             standard,
+            custom: None,
+            load_error: None,
             layers: true,
             restyle: true,
             rename: true,
@@ -132,8 +142,8 @@ impl App {
         let report = match standards::plan_check(
             &ExecutionContext::new(&mut copy),
             &StandardsCheck {
-                name: Some(w.standard.clone()),
-                standard: None,
+                name: w.custom.is_none().then(|| w.standard.clone()),
+                standard: w.custom.as_ref().map(|(_, standard)| standard.clone()),
             },
         ) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -173,6 +183,100 @@ impl App {
             return Task::none();
         };
         match event {
+            Event::Load => {
+                return Task::perform(
+                    async {
+                        let Some(file) = rfd::AsyncFileDialog::new()
+                            .set_title("Çizim standardı seç")
+                            .add_filter("Standart tanımı (.json)", &["json"])
+                            .pick_file()
+                            .await
+                        else {
+                            return Ok(None);
+                        };
+                        use std::io::Read;
+                        let mut bytes = Vec::new();
+                        std::fs::File::open(file.path())
+                            .map_err(|e| e.to_string())?
+                            .take(1_048_577)
+                            .read_to_end(&mut bytes)
+                            .map_err(|e| e.to_string())?;
+                        if bytes.len() > 1_048_576 {
+                            return Err("Standart dosyası 1 MiB sınırını aşıyor.".into());
+                        }
+                        let value: serde_json::Value = serde_json::from_slice(&bytes)
+                            .map_err(|e| format!("Standart okunamadı: {e}"))?;
+                        let object = value
+                            .as_object()
+                            .ok_or("Standart bir JSON nesnesi olmalı.")?;
+                        const FIELDS: &[&str] = &[
+                            "name",
+                            "description",
+                            "layers",
+                            "naming",
+                            "fonts",
+                            "textStyles",
+                            "dimensionStyles",
+                            "lineTypes",
+                            "byLayer",
+                        ];
+                        if let Some(key) = object.keys().find(|key| !FIELDS.contains(&key.as_str()))
+                        {
+                            return Err(format!("Standartta bilinmeyen alan: {key}."));
+                        }
+                        for (section, allowed) in [
+                            (
+                                "layers",
+                                &[
+                                    "name",
+                                    "description",
+                                    "color",
+                                    "lineType",
+                                    "lineWeight",
+                                    "plot",
+                                    "from",
+                                ][..],
+                            ),
+                            ("textStyles", &["name", "font", "height"][..]),
+                            ("dimensionStyles", &["name", "height"][..]),
+                        ] {
+                            if let Some(items) = object.get(section).and_then(|v| v.as_array()) {
+                                for item in items {
+                                    if let Some(key) = item.as_object().and_then(|o| {
+                                        o.keys().find(|k| !allowed.contains(&k.as_str()))
+                                    }) {
+                                        return Err(format!(
+                                            "{section} içinde bilinmeyen alan: {key}."
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                        let standard: DrawingStandard = serde_json::from_value(value)
+                            .map_err(|e| format!("Standart okunamadı: {e}"))?;
+                        if let Some(problem) = standard_problem(&standard) {
+                            return Err(format!("Standart geçersiz: {problem}."));
+                        }
+                        Ok(Some((file.file_name(), standard)))
+                    },
+                    |result| msg(Event::Loaded(result)),
+                );
+            }
+            Event::Loaded(Ok(None)) => return Task::none(),
+            Event::Loaded(Err(error)) => {
+                w.load_error = Some(error);
+                return Task::none();
+            }
+            Event::Loaded(Ok(Some(standard))) => {
+                w.custom = Some(standard);
+                w.load_error = None;
+                w.chosen = None;
+            }
+            Event::BuiltIn => {
+                w.custom = None;
+                w.load_error = None;
+                w.chosen = None;
+            }
             Event::Layers(v) => w.layers = v,
             Event::Restyle(v) => w.restyle = v,
             Event::Rename(v) => w.rename = v,
@@ -237,7 +341,11 @@ impl App {
         let Some(w) = &self.drawing_standard else {
             return text("").into();
         };
-        let standard = built_in_standard(&w.standard);
+        let standard = w
+            .custom
+            .as_ref()
+            .map(|(_, s)| s.clone())
+            .or_else(|| built_in_standard(&w.standard));
         let about = standard
             .as_ref()
             .map_or_else(String::new, |s| format!("{}: {}", s.name, s.description));
@@ -365,13 +473,40 @@ impl App {
             ),
             Ok(p) => (vec![words::text_line(Kind::Info, planned_words(p))], true),
         };
-        let body = Column::new()
+        let source = w.custom.as_ref().map_or_else(
+            || "Yerleşik standart".to_owned(),
+            |(name, _)| format!("Geçici: {name}"),
+        );
+        let mut body = Column::new()
             .spacing(12)
             .push(words::field("Standart", label::body(about), None))
+            .push(
+                row![
+                    words::secondary("Dosyadan seç…", Some(msg(Event::Load))),
+                    words::secondary(
+                        "Yerleşik standarda dön",
+                        w.custom.as_ref().map(|_| msg(Event::BuiltIn))
+                    ),
+                    Elided::new(source)
+                        .size(typography::caption())
+                        .font(typography::ui())
+                        .width(Fill),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
             .push(words::summary(lines))
             .push(words::field("Bulgular", table, Some(hint)))
             .push(words::field("Düzeltme", parts, None))
             .push(words::summary(preview));
+        if let Some(error) = &w.load_error {
+            body = body.push(words::text_line(Kind::Warn, error.clone()));
+        }
+        if w.custom.is_some() {
+            body = body.push(label::caption(
+                "Bu dosya seçimi pencere kapanınca unutulur; çizime kaydedilmez.",
+            ));
+        }
         Frame::new(STANDARD_TITLE)
             .push(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
