@@ -2131,12 +2131,12 @@ taşınır; başlık ve tüm tablo stili kapsamı korunur. Gerçek CAD penceresi
 `B/10` mavi, `A/11` kırmızı dolgusunu sıra değişiminden sonra korudu. Bu
 ekran kontrolü koyu dolguda tablo düzenleyicisinin varsayılan siyah yazısının
 okunmadığını da gösterdi; varsayılan yazı rengi arka planın karşıtlığına göre
-seçilecek biçimde düzeltildi. Çok satıra yayılan birleşim veya formül konumu varsa yeniden
+seçilecek biçimde düzeltildi. Çok satıra yayılan birleşim veya formül aralığı varsa yeniden
 sıralama henüz güvenle taşınamadığı için durdurulur.
 Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
 B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
 korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç içe blok
-sayımı, konuma bağlı formül/çok satırlı birleşimlerin taşınması ve çok paftalı çıktı açık kaldığından
+sayımı, formül aralıkları/çok satırlı birleşimlerin taşınması ve çok paftalı çıktı açık kaldığından
 madde `[~]` durumundadır.
 
 **Çakışma kuralı arayüzü (5 Kasım 2026):** Dosyaya bağlı tablonun
@@ -2177,8 +2177,16 @@ bağlanan field hücresi, anahtarlı dış kaynak satırı yeniden sıralandığ
 aynı kaydın yeni satırına taşınır. Alanın kaydı kaynaktan silindiyse yenileme
 reddedilir. Yerel sınamada `A` satırındaki field adresi 1'den 2'ye taşındı;
 gerçek CAD penceresinde `B/20, A/Dinamik bloklar` sırası ve başarılı yenileme
-görüldü. Ekran görüntüsü repo dışında tutuldu. Konuma bağlı formüller ve
+görüldü. Ekran görüntüsü repo dışında tutuldu. Formül aralıkları ve
 birden çok satıra yayılan birleşimler için güvenli taşıma hâlâ açıktır.
+
+**Formül başvurularının taşınması (5 Kasım 2026):** Tek hücre başvurulu
+formüllerin hem kendi hücresi hem de başvurdukları kaynak satırı, yenilemede
+satır anahtarlarıyla yeniden eşlenir. Silinen satıra başvuru veya aralık
+başvurusu bulunan formül için yenileme, çizimi değiştirmeden durur. Yerel
+sınamada `$B$3` başvurusu `$B$2` oldu; gerçek CAD penceresinde `A/10/20,
+B/20/40` tablosu `B/20/40, A/10/20` sırasına yenilendi. Ekran görüntüsü
+repo dışında tutuldu. Aralıkların anahtarlı taşıması hâlâ açık kabul işidir.
 
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 

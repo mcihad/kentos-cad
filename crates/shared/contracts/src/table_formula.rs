@@ -962,6 +962,41 @@ pub fn shift(formula: &str, axis: Axis, at: usize, count: isize) -> String {
     out
 }
 
+/// Move scalar row references through an explicit old-row to new-row map.
+/// A range needs a separate set-preserving rewrite and is refused here.
+/// This is used when a linked file reorders keyed records rather than
+/// inserting a contiguous run of rows.
+pub fn remap_scalar_rows(formula: &str, rows: &[Option<usize>]) -> Option<String> {
+    let mut out = String::with_capacity(formula.len());
+    let mut rest = formula;
+    while let Some(c) = rest.chars().next() {
+        if c == '$' || c.is_ascii_alphabetic() {
+            let word_len = rest
+                .char_indices()
+                .find(|(_, ch)| !(ch.is_ascii_alphanumeric() || *ch == '$' || *ch == '_'))
+                .map_or(rest.len(), |(i, _)| i);
+            if let Some((n, col, row)) = reference_at(rest).filter(|(n, ..)| *n == word_len) {
+                let word = &rest[..n];
+                let after = &rest[n..];
+                if after.trim_start().starts_with(':') {
+                    return None;
+                }
+                let (dc, dr) = dollars(word);
+                let new_row = rows.get(row).copied().flatten()?;
+                out.push_str(&reference_words(dc, col, dr, new_row));
+                rest = after;
+                continue;
+            }
+            out.push_str(&rest[..word_len.max(c.len_utf8())]);
+            rest = &rest[word_len.max(c.len_utf8())..];
+            continue;
+        }
+        out.push(c);
+        rest = &rest[c.len_utf8()..];
+    }
+    Some(out)
+}
+
 /// Whether a reference's column and row are marked `$`.
 fn dollars(word: &str) -> (bool, bool) {
     let col = word.starts_with('$');
@@ -1015,6 +1050,14 @@ mod tests {
         assert_eq!(column_letters(99), "CV");
         assert_eq!(column_index("cv"), Some(99));
         assert_eq!(column_index("AAA"), None);
+    }
+
+    #[test]
+    fn scalar_references_follow_keyed_rows_without_changing_functions() {
+        let rows = [Some(0), Some(2), Some(1)];
+        assert_eq!(remap_scalar_rows("=ROUND($B$2+B3;2)", &rows).as_deref(), Some("=ROUND($B$3+B2;2)"));
+        assert_eq!(remap_scalar_rows("=SUM(B2:B3)", &rows), None);
+        assert_eq!(remap_scalar_rows("=B4", &rows), None);
     }
 
     #[test]

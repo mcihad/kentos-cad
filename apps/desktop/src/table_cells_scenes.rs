@@ -375,6 +375,29 @@ mod qa {
         crate::document::write(&field_doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());
 
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-formula-row.csv");
+        std::fs::write(&csv, "ID,Base,Double\nB,20,\nA,10,\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32],"columns":[1.0,1.5,1.5],
+            "cells":[["ID","Base","Double"],["A","10","20"],["B","20","40"]],
+            "formulas":[{"row":1,"col":2,"formula":"=B2*2"},
+                        {"row":2,"col":2,"formula":"=B3*2"}],
+            "header":true,
+            "source":{"kind":"file","name":"formulas.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Base","Double"],["A","10",""],["B","20",""]],
+                "keyColumn":0}
+        })).unwrap();
+        let mut formula_doc = kentos_domain::Document::from_snapshot_v2(conflict_doc.to_snapshot_v2()).unwrap();
+        let kentos_commands::Entity::Table(table) = table else { unreachable!() };
+        let table = formula_doc.table_worked_out(&table);
+        formula_doc.add(kentos_commands::Entity::Table(table)).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-formula-row.kcad");
+        crate::document::write(&formula_doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+
         let csv = std::env::temp_dir().join("kentos-cad-adv13-cell-conflict.csv");
         std::fs::write(&csv, "ID,Price\nA,12\n").unwrap();
         let table: kentos_commands::Entity = serde_json::from_value(json!({

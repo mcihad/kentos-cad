@@ -778,10 +778,6 @@ fn keyed_overrides(
     {
         return Err("Satır anahtarı hücresi elle değiştirildi; kaynak satırı güvenle eşlenemiyor.".to_owned());
     }
-    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
-    if reordered && !t.formulas.is_empty() {
-        return Err("Satır sırası değişti; formül konumu güvenle taşınamadığı için tablo korunuyor.".to_owned());
-    }
     for (key, old_r) in &old_keys {
         if new_keys.contains_key(key) {
             continue;
@@ -945,6 +941,32 @@ fn keyed_fields(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], co
     }).collect()
 }
 
+/// Formula cells and scalar references follow the same keyed source row.
+/// Ranges and references to removed rows remain unsafe and stop refresh.
+fn keyed_formulas(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellFormula>, String> {
+    let old_keys = row_keys(copy, column)?;
+    let new_keys = row_keys(fresh, column)?;
+    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    if !reordered {
+        return Ok(t.formulas.clone());
+    }
+    let mut rows = vec![None; copy.len()];
+    rows[0] = Some(0);
+    for (key, old_row) in old_keys {
+        rows[old_row] = new_keys.get(key).copied();
+    }
+    t.formulas.iter().map(|formula| {
+        let row = rows.get(formula.row as usize).copied().flatten()
+            .ok_or_else(|| "Formül satırı kaynaktan silindi; tablo korunuyor.".to_owned())?;
+        let words = table_formula::remap_scalar_rows(&formula.formula, &rows)
+            .ok_or_else(|| "Formül aralığı veya silinen satır başvurusu güvenle taşınamadı; tablo korunuyor.".to_owned())?;
+        let mut next = formula.clone();
+        next.row = row as u32;
+        next.formula = words;
+        Ok(next)
+    }).collect()
+}
+
 struct Checked {
     changed: Vec<(Slot, Uuid, TableEntity)>,
     report: Vec<TableReport>,
@@ -1047,7 +1069,8 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                                     .and_then(|(cells, kept, replaced)| keyed_styles(&t, old, &fresh, *column as usize)
                                                         .and_then(|styles| keyed_merges(&t, old, &fresh, *column as usize)
                                                             .and_then(|merges| keyed_fields(&t, old, &fresh, *column as usize)
-                                                                .map(|fields| (cells, kept, replaced, Some((styles, merges, fields))))))),
+                                                                .and_then(|fields| keyed_formulas(&t, old, &fresh, *column as usize)
+                                                                    .map(|formulas| (cells, kept, replaced, Some((styles, merges, fields, formulas)))))))),
                                                 None => Err("Anahtarlı tablonun son kaynak kopyası yok; elle düzeltmeler güvenle eşlenemiyor.".to_owned()),
                                             }
                                         } else if *overrides == SourceOverrides::Keep
@@ -1079,10 +1102,11 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                             Ok((cells, k, r, placement)) => {
                                                 (kept, replaced) = (k, r);
                                                 refreshed(doc, &t, &cells, &aligns).map(|mut n| {
-                                                    if let Some((styles, merges, fields)) = placement {
+                                                    if let Some((styles, merges, fields, formulas)) = placement {
                                                         n.styles = styles;
                                                         n.merges = merges;
                                                         n.fields = fields;
+                                                        n.formulas = formulas;
                                                     }
                                                     if let (Some(column), Some(old)) = (key_column, copy.as_ref()) {
                                                         if let Ok(old_keys) = row_keys(old, *column as usize) {
@@ -1522,6 +1546,15 @@ mod tests {
         assert_eq!(keyed_fields(&fielded, &copy, &reordered, 0).unwrap()[0].row, 2);
         assert!(keyed_fields(&fielded, &copy, &reordered[..2], 0)
             .unwrap_err().contains("silindi"));
+        let mut calculated = table.clone();
+        calculated.formulas = vec![CellFormula { row: 1, col: 1, formula: "=$B$3+2".into() }];
+        let formulas = keyed_formulas(&calculated, &copy, &reordered, 0).unwrap();
+        assert_eq!((formulas[0].row, formulas[0].formula.as_str()), (2, "=$B$2+2"));
+        assert!(keyed_formulas(&calculated, &copy, &reordered[..2], 0)
+            .unwrap_err().contains("silindi"));
+        calculated.formulas[0].formula = "=TOPLA(B2:B3)".into();
+        assert!(keyed_formulas(&calculated, &copy, &reordered, 0)
+            .unwrap_err().contains("Formül aralığı"));
         let mut styled = table.clone();
         styled.styles = vec![serde_json::from_value(json!({
             "row":1,"col":0,"rows":2,"cols":1,"fill":"#ff0000"
