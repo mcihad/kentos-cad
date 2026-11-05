@@ -132,3 +132,47 @@ pub(crate) fn install_scenes() -> Vec<Scene> {
         }),
     ]
 }
+
+/// docs/adr/1004: the CAD-ADV-20 acceptance detail (fixtures/acceptance/v1/detail.json) run through the desktop's
+/// commands up to the 10 m width, with Parametreler open beside the plate and its associative dimension.
+fn detail(app: &mut App) {
+    let scenario: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/acceptance/v1/detail.json")).expect("the scenario");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&scenario["setup"].to_string()).expect("the drawing reads");
+    let doc = Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::make_cad(app);
+    let mut names = std::collections::BTreeMap::new();
+    for (i, n) in scenario["names"].as_array().expect("names").iter().enumerate() {
+        names.insert(n.as_str().unwrap().to_owned(), uid(app, i as u32 + 1));
+    }
+    fn bind(v: &serde_json::Value, names: &std::collections::BTreeMap<String, String>) -> serde_json::Value {
+        match v {
+            serde_json::Value::String(s) if s.starts_with('$') && names.contains_key(&s[1..]) => names[&s[1..]].clone().into(),
+            serde_json::Value::Array(a) => a.iter().map(|x| bind(x, names)).collect(),
+            serde_json::Value::Object(m) => m.iter().map(|(k, x)| (k.clone(), bind(x, names))).collect(),
+            other => other.clone(),
+        }
+    }
+    for step in scenario["steps"].as_array().expect("steps").iter().take(3) {
+        let doc = app.document.as_mut().expect("open");
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            step["command"].as_str().expect("a command"),
+            kentos_commands::CallOp::Execute,
+            bind(&step["input"], &names),
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    }
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: -1.5, min_y: -2.0, max_x: 11.5, max_y: 5.0 },
+        24.0,
+    );
+    let _ = app.update(Message::Run("constraint.parameters"));
+}
+
+pub(crate) fn detail_scenes() -> Vec<Scene> {
+    vec![("kabul-detay-parametre", detail)]
+}

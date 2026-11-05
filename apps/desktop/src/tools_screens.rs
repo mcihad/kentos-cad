@@ -593,6 +593,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::standard_scenes::scenes());
     all.extend(crate::review_scenes::scenes());
     all.extend(crate::review_scenes::install_scenes());
+    all.extend(crate::review_scenes::detail_scenes());
     all.extend(crate::long_pattern_scenes::scenes());
     all.extend(crate::profile_scenes::scenes());
     all.extend(crate::address_compare_scenes::scenes());

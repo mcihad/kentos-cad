@@ -2548,6 +2548,13 @@ kendi yaptığına eşler ve sonraki `cad.arrays.edit` doğru diziye uygulanır 
 ADR 0873'ün bu maddeye bıraktığı açık kapandı. Maddenin GUI/Python/MCP eşdeğerlik kabulü, eklenti ve AI sağlayıcı
 kapsamı açık; madde `[ ]` → başladı.
 
+**Konaklar arası kabul (5 Kasım 2026, [ADR 1004](../docs/adr/1004-parametric-detail-acceptance-across-hosts.md)):**
+KentOS kodu kullanmayan `acceptance_detail.py` parametreli bağlantı plakası senaryosunu yazar; Python ve MCP aynı
+dosyayı oynatır ve ilk koşuda aynı sonuçları verir: kısıtlarla dikdörtgen, ilişkili ölçü, parametreyle genişlik 10 ve
+`1200cm`, Undo, eski revizyon reti, kilitli adım yüzünden atomik ret, istek tekrarının bir kez uygulanması ve
+kaydet–aç. Masaüstünde aynı adımlar Parametreler penceresiyle görüntülendi. Pafta/iptal bu senaryoda değil (oda
+senaryosu ve protokol testlerinde); eklenti ve AI sağlayıcı kabulü açık; madde `[~]`.
+
 ## Teslim sırası ve ortak kabul
 
 Ana görev sayısı 20'dir. Aşağıdaki aşamalar bu maddelerin uygulanma

@@ -1,0 +1,1127 @@
+{
+ "format": "kentos.acceptance",
+ "version": 1,
+ "id": "detail",
+ "title": "Parametreli bağlantı plakası",
+ "source": "scripts/fixtures/acceptance_detail.py (KentOS kodu yok; değerler dikdörtgenin kenarlarından)",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlantı plakası",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 20,
+   "workspace": "cad",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 6,
+     "y": 0.3
+    }
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 6,
+     "y": 0.3
+    },
+    "b": {
+     "x": 6.2,
+     "y": 4
+    }
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 6.2,
+     "y": 4
+    },
+    "b": {
+     "x": 0,
+     "y": 4.1
+    }
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 4.1
+    },
+    "b": {
+     "x": 0,
+     "y": 0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": -5
+    },
+    "b": {
+     "x": 6,
+     "y": -4.5
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "names": [
+  "l1",
+  "l2",
+  "l3",
+  "l4",
+  "locked"
+ ],
+ "tolerance": 1e-09,
+ "steps": [
+  {
+   "name": "Kısıtlar: dikdörtgen, sol alt köşe sabit, genişlik 8 m, yükseklik 4 m",
+   "command": "cad.constraints.edit",
+   "input": {
+    "edit": {
+     "kind": "add",
+     "constraints": [
+      {
+       "rule": {
+        "kind": "coincident",
+        "a": {
+         "uid": "$l1",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "end"
+          }
+         }
+        },
+        "b": {
+         "uid": "$l2",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "coincident",
+        "a": {
+         "uid": "$l2",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "end"
+          }
+         }
+        },
+        "b": {
+         "uid": "$l3",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "coincident",
+        "a": {
+         "uid": "$l3",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "end"
+          }
+         }
+        },
+        "b": {
+         "uid": "$l4",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "coincident",
+        "a": {
+         "uid": "$l4",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "end"
+          }
+         }
+        },
+        "b": {
+         "uid": "$l1",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "horizontal",
+        "a": {
+         "uid": "$l1",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "parallel",
+        "a": {
+         "uid": "$l1",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "b": {
+         "uid": "$l3",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "parallel",
+        "a": {
+         "uid": "$l2",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "b": {
+         "uid": "$l4",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "perpendicular",
+        "a": {
+         "uid": "$l1",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "b": {
+         "uid": "$l2",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "fix",
+        "a": {
+         "uid": "$l1",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "start"
+          }
+         }
+        }
+       }
+      },
+      {
+       "rule": {
+        "kind": "distance",
+        "a": {
+         "uid": "$l1",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "start"
+          }
+         }
+        },
+        "b": {
+         "uid": "$l1",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "end"
+          }
+         }
+        },
+        "parameter": "genislik"
+       },
+       "value": "8"
+      },
+      {
+       "rule": {
+        "kind": "distance",
+        "a": {
+         "uid": "$l2",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "start"
+          }
+         }
+        },
+        "b": {
+         "uid": "$l2",
+         "element": {
+          "kind": "point",
+          "place": {
+           "kind": "end"
+          }
+         }
+        },
+        "parameter": "yukseklik"
+       },
+       "value": "4"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       8.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       8.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "l1": 8.0,
+     "l2": 4.0
+    }
+   }
+  },
+  {
+   "name": "İlişkili ölçü alt kenarın iki ucuna bağlanır",
+   "command": "cad.entities.create",
+   "input": {
+    "layerId": "cizim",
+    "objects": [
+     {
+      "geometry": {
+       "kind": "dimension",
+       "a": {
+        "x": 0,
+        "y": 0
+       },
+       "b": {
+        "x": 0,
+        "y": 0
+       },
+       "offset": -0.6,
+       "height": 0.25,
+       "refs": {
+        "a": {
+         "uid": "$l1",
+         "place": {
+          "kind": "start"
+         }
+        },
+        "b": {
+         "uid": "$l1",
+         "place": {
+          "kind": "end"
+         }
+        }
+       }
+      }
+     }
+    ]
+   },
+   "as": [
+    "dim"
+   ],
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       8.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       8.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 8.0,
+     "l1": 8.0,
+     "l2": 4.0
+    }
+   }
+  },
+  {
+   "name": "Genişlik parametresi 10: plaka ve ölçü izler",
+   "command": "cad.parameters.edit",
+   "input": {
+    "edits": [
+     {
+      "kind": "set",
+      "name": "genislik",
+      "expression": "10"
+     }
+    ]
+   },
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 4.0
+    }
+   }
+  },
+  {
+   "name": "Birimli değer 1200cm: 12 m",
+   "command": "cad.parameters.edit",
+   "input": {
+    "edits": [
+     {
+      "kind": "set",
+      "name": "genislik",
+      "expression": "1200cm"
+     }
+    ]
+   },
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       12.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       12.0,
+       0.0
+      ],
+      "b": [
+       12.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       12.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       12.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 12.0,
+     "l1": 12.0,
+     "l2": 4.0
+    }
+   }
+  },
+  {
+   "name": "Geri al: 10 m",
+   "undo": "Parametreler",
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 4.0
+    }
+   }
+  },
+  {
+   "name": "Eski revizyona dayanan yazım: çatışma, yazım yok",
+   "command": "cad.parameters.edit",
+   "input": {
+    "edits": [
+     {
+      "kind": "set",
+      "name": "genislik",
+      "expression": "20"
+     }
+    ]
+   },
+   "expected": {
+    "revision": "0"
+   },
+   "refuse": "revision_conflict",
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 4.0
+    }
+   }
+  },
+  {
+   "name": "Değişiklik kümesinin ikinci adımı kilitli katmana çarpar: ilk adım da yazılmaz",
+   "command": "cad.changeset.apply",
+   "input": {
+    "label": "Toplu",
+    "steps": [
+     {
+      "command": "cad.parameters.edit",
+      "input": {
+       "edits": [
+        {
+         "kind": "set",
+         "name": "genislik",
+         "expression": "11"
+        }
+       ]
+      }
+     },
+     {
+      "command": "cad.entities.transform",
+      "input": {
+       "uids": [
+        "$locked"
+       ],
+       "transform": {
+        "kind": "move",
+        "dx": 1.0,
+        "dy": 0.0
+       }
+      }
+     }
+    ]
+   },
+   "refuse": "layer_locked",
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 4.0
+    }
+   }
+  },
+  {
+   "name": "Aynı istek iki kez: yükseklik bir kez 5 olur",
+   "command": "cad.parameters.edit",
+   "input": {
+    "edits": [
+     {
+      "kind": "set",
+      "name": "yukseklik",
+      "expression": "5"
+     }
+    ]
+   },
+   "requestId": "detay-yukseklik-5",
+   "twice": true,
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       5.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       5.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 5.0
+    }
+   }
+  },
+  {
+   "name": "Kaydet ve aç: kaynak, bağ ve parametreler aynı",
+   "reopen": true,
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       5.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       5.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 5.0
+    }
+   }
+  },
+  {
+   "name": "Açılan çizimde genişlik 9: ölçü bağı korunmuş",
+   "command": "cad.parameters.edit",
+   "input": {
+    "edits": [
+     {
+      "kind": "set",
+      "name": "genislik",
+      "expression": "9"
+     }
+    ]
+   },
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       9.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       9.0,
+       0.0
+      ],
+      "b": [
+       9.0,
+       5.0
+      ]
+     },
+     "l3": {
+      "a": [
+       9.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       5.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       9.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 9.0,
+     "l1": 9.0,
+     "l2": 5.0
+    }
+   }
+  }
+ ]
+}
