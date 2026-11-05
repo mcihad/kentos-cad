@@ -131,6 +131,9 @@ For a publication mismatch, the finding reports direct placements in its
 `objects` count and states separately how many references occur inside block
 definitions. These counts are an impact hint; they do not authorize replacing
 the definition or prove that equal publication metadata means equal geometry.
+The check builds direct and nested insert counts once for the drawing, then
+looks up every required block by its normalized name. Office packages with
+many block references do not trigger a new full drawing scan per definition.
 If a block reference specifies `units`, a different or unspecified local unit
 gets a separate, non-fixable `blockUnit` finding even when publication metadata
 matches. This helps identify scale risks without rescaling inserts or replacing

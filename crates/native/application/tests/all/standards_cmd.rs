@@ -720,6 +720,62 @@ fn annotation_style_findings_count_local_id_uses_without_changing_the_drawing() 
 }
 
 #[test]
+fn office_block_impact_keeps_direct_and_nested_counts_for_multiple_definitions() {
+    use kentos_commands::{CallOp, DocumentSnapshotV2, StandardBlockReference, StandardResources};
+    use kentos_native_application::registry;
+
+    let snapshot: DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/blocks.json")).unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let published: DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/block-publication.json"
+    ))
+    .unwrap();
+    let publication = Document::from_snapshot_v2(published).unwrap().blocks()[0]
+        .card
+        .as_ref()
+        .unwrap()
+        .publication
+        .clone()
+        .unwrap();
+    let references = doc
+        .blocks()
+        .iter()
+        .map(|block| StandardBlockReference {
+            name: block.name.clone(),
+            publication: publication.clone(),
+            units: None,
+        })
+        .collect();
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let checked = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.check",
+        CallOp::Execute,
+        json!({
+            "standard": kentos_commands::built_in_standard("mimari-ofis").unwrap(),
+            "resources": StandardResources { blocks: references, ..Default::default() }
+        }),
+    )
+    .unwrap();
+    let issues = checked["output"]["issues"].as_array().unwrap();
+    for (name, direct, nested) in [("Aydınlatma direği", 1, 0), ("Rögar", 2, 1)] {
+        let issue = issues
+            .iter()
+            .find(|issue| issue["kind"] == "blockPublication" && issue["subject"] == name)
+            .unwrap();
+        assert_eq!(issue["objects"], direct);
+        assert!(issue["message"].as_str().unwrap().contains(&format!(
+            "{direct} doğrudan yerleştirme ve blok tanımlarında {nested} iç başvuru"
+        )));
+        assert_eq!(issue["fixable"], false);
+    }
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+}
+
+#[test]
 fn published_block_references_resolve_conflict_and_check_without_replacing_geometry() {
     use kentos_commands::{
         CallOp, DocumentSnapshotV2, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,

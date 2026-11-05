@@ -2027,6 +2027,12 @@ yazı ve bir blok parçası, Mimari için bir doğrudan ölçü görüldü; iki 
 ayrıntısı ve pasif Uygula düğmesi ekran görüntüleriyle doğrulandı (repo dışında).
 Bu etki bilgisi stil eşleme veya değiştirme işlemi değildir; 12. madde `[~]`
 kalır.
+Ofis paketindeki çok sayıda blok için doğrudan ve iç içe yerleştirme etkisi
+artık çizim başına tek taramada hesaplanır. İki tanımlı blok sınaması doğrudan
+1/2 ve iç başvuru 0/1 sayılarını, çizim ile Undo geçmişinin korunmasını
+doğruladı. Gerçek CAD penceresinde iki bulgu seçilip aynı sayılar, satır
+taşması olmadan ve pasif Uygula düğmesiyle ekran görüntülerinde doğrulandı
+(repo dışında). Bu performans/rapor işi kaynak eşleme kabulünü kapatmaz.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

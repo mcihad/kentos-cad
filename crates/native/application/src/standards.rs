@@ -1576,6 +1576,27 @@ fn resource_issues(
             }
         }
     }
+    let mut block_uses = std::collections::BTreeMap::<kentos_commands::BlockId, [usize; 2]>::new();
+    let local_blocks: std::collections::BTreeMap<_, _> = if resources.blocks.is_empty() {
+        Default::default()
+    } else {
+        for entity in doc.entities() {
+            if let kentos_commands::Entity::Insert(insert) = entity {
+                block_uses.entry(insert.block).or_default()[0] += 1;
+            }
+        }
+        for block in doc.blocks() {
+            for entity in &block.entities {
+                if let kentos_commands::Entity::Insert(insert) = entity {
+                    block_uses.entry(insert.block).or_default()[1] += 1;
+                }
+            }
+        }
+        doc.blocks()
+            .iter()
+            .map(|block| (kentos_commands::blocks::name_key(&block.name), block))
+            .collect()
+    };
     fn unit_name(unit: kentos_commands::BlockUnits) -> &'static str {
         use kentos_commands::BlockUnits as U;
         match unit {
@@ -1693,21 +1714,16 @@ fn resource_issues(
         });
     }
     for expected in &resources.blocks {
-        let found = doc.blocks().iter().find(|item| {
-            kentos_commands::blocks::name_key(&item.name)
-                == kentos_commands::blocks::name_key(&expected.name)
-        });
+        let found = local_blocks
+            .get(&kentos_commands::blocks::name_key(&expected.name))
+            .copied();
         // Direct placements and references inside other block definitions are
         // distinct: replacing a definition can affect both. Never infer that
         // matching publication metadata proves its geometry is identical.
-        let direct_placements = found.map_or(0, |block| doc.block_uses(block.id));
-        let nested_references = found.map_or(0, |block| {
-            doc.blocks()
-                .iter()
-                .flat_map(|definition| &definition.entities)
-                .filter(|part| matches!(part, kentos_commands::Entity::Insert(insert) if insert.block == block.id))
-                .count()
-        });
+        let [direct_placements, nested_references] = found
+            .and_then(|block| block_uses.get(&block.id))
+            .copied()
+            .unwrap_or_default();
         let impact = format!(
             " Çizimde {direct_placements} doğrudan yerleştirme ve blok tanımlarında {nested_references} iç başvuru var."
         );
