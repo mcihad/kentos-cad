@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use kentos_contracts::{ExportReport, ImportReport, ReportItem, SourceFact};
+use kentos_contracts::{ExportReport, ImportDecision, ImportDecisionTopic, ImportReport, ReportItem, SourceFact};
 
 /// Source lines kept per report line.
 const LINES_KEPT: usize = 5;
@@ -63,6 +63,8 @@ pub struct Report {
     skipped: Items,
     notes: Items,
     source: Vec<SourceFact>,
+    /// The decisions on the drawing as a whole (docs/adr/1010), counted per code, subject and words.
+    decisions: Vec<ImportDecision>,
 }
 
 impl Report {
@@ -97,6 +99,48 @@ impl Report {
     /// no count, shown without one (`what: reason`).
     pub fn about(&mut self, what: &str, reason: &str) {
         self.notes.add(what, reason, 0, 0);
+    }
+
+    /// A decision on the drawing as a whole (docs/adr/1010) at `line` (0: the file's): in `decisions` under its
+    /// topic and code, and in the notes in the same words.
+    pub fn decide(&mut self, topic: ImportDecisionTopic, code: &str, subject: &str, decision: &str, line: u32) {
+        if line == 0 {
+            self.about(subject, decision);
+        } else {
+            self.note(subject, decision, line);
+        }
+        self.record(topic, code, subject, decision, line, 1);
+    }
+
+    /// A decision only in `decisions` (docs/adr/1010): one the notes never said (a layer with nothing on it, a
+    /// unit used as declared), so a reader of the notes alone sees what it always saw.
+    pub fn decide_quiet(&mut self, topic: ImportDecisionTopic, code: &str, subject: &str, decision: &str, line: u32) {
+        self.record(topic, code, subject, decision, line, 1);
+    }
+
+    fn record(&mut self, topic: ImportDecisionTopic, code: &str, subject: &str, decision: &str, line: u32, n: u32) {
+        let at = self
+            .decisions
+            .iter()
+            .position(|d| d.topic == topic && d.code == code && d.subject == subject && d.decision == decision);
+        let d = match at {
+            Some(i) => &mut self.decisions[i],
+            None => {
+                self.decisions.push(ImportDecision {
+                    topic,
+                    code: code.into(),
+                    subject: subject.into(),
+                    decision: decision.into(),
+                    count: 0,
+                    lines: Vec::new(),
+                });
+                self.decisions.last_mut().expect("pushed")
+            }
+        };
+        d.count += n;
+        if line > 0 && d.lines.len() < LINES_KEPT && d.lines.last() != Some(&line) {
+            d.lines.push(line);
+        }
     }
 
     /// Something at `line` was read with a change the user should know about.
@@ -153,12 +197,23 @@ impl Report {
             self.notes.absorb(item);
         }
         self.source.extend(other.source);
+        for d in other.decisions {
+            let first = d.lines.first().copied().unwrap_or(0);
+            self.record(d.topic, &d.code, &d.subject, &d.decision, first, d.count);
+            for line in d.lines.into_iter().skip(1) {
+                self.record(d.topic, &d.code, &d.subject, &d.decision, line, 0);
+            }
+        }
     }
 
     /// Paper-space diagnostics join the file report without changing model counts.
     pub fn absorb_losses(&mut self, report: ImportReport) {
         for item in report.notes { self.notes.absorb(item); }
         for item in report.skipped { self.skipped.absorb(item); }
+        for d in report.decisions {
+            let first = d.lines.first().copied().unwrap_or(0);
+            self.record(d.topic, &d.code, &d.subject, &d.decision, first, d.count);
+        }
     }
 
     pub fn total(&self) -> u32 {
@@ -166,11 +221,15 @@ impl Report {
     }
 
     pub fn import(self) -> ImportReport {
+        let mut decisions = self.decisions;
+        // By topic, then as taken: a reader shows the unit first and the paper last.
+        decisions.sort_by_key(|d| d.topic);
         ImportReport {
             counts: self.counts,
             skipped: self.skipped.list,
             notes: self.notes.list,
             source: self.source,
+            decisions,
         }
     }
 

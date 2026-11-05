@@ -46,6 +46,10 @@ created: Array<string>, changed: Array<string>, removed: Array<string>,
  */
 dimensionSets?: NodeChanges, 
 /**
+ * Associative array identities, mapped by a replay as objects are (docs/adr/1003 §1).
+ */
+arrays?: NodeChanges, 
+/**
  * Whether an object list was cut at [`JOURNAL_IDS`].
  */
 truncated?: boolean, 

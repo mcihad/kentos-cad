@@ -8,6 +8,7 @@ mod dxf;
 mod cad_io;
 mod chunked;
 mod cad_spatial;
+mod import_decisions;
 mod cad_sheet;
 mod dxf_units;
 mod exif;

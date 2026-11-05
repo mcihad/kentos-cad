@@ -170,6 +170,53 @@ pub fn report_lines<'a, Message: 'a>(
     lines
 }
 
+/// A decision topic's name in a report (docs/adr/1010).
+pub fn decision_topic(topic: kentos_commands::ImportDecisionTopic) -> &'static str {
+    use kentos_commands::ImportDecisionTopic as T;
+    match topic {
+        T::Unit => "Birim",
+        T::Ocs => "Düzlem",
+        T::Block => "Blok",
+        T::Layer => "Katman",
+        T::Paper => "Pafta",
+    }
+}
+
+/// One decision as its line says it: `Katman “YOK”: katman tablosunda yok; … (3 kez)`. A subject that only repeats
+/// the topic (“Birim”, “Katman”, “Pafta”) is not said twice.
+pub fn decision_text(d: &kentos_commands::ImportDecision) -> String {
+    let topic = decision_topic(d.topic);
+    let general = d.subject == topic || matches!(d.subject.as_str(), "Blok birimi" | "Blok ölçeği" | "Ölçek doğrulaması");
+    let head = if general { topic.to_owned() } else { format!("{topic} “{}”", d.subject) };
+    let times = if d.count > 1 { format!(" ({} kez)", d.count) } else { String::new() };
+    format!("{head}: {}{times}", d.decision)
+}
+
+/// The reader's decisions on the drawing as a whole, by topic (docs/adr/1010), at most `max` lines.
+pub fn decision_lines<'a, Message: 'a>(
+    decisions: &[kentos_commands::ImportDecision],
+    max: usize,
+) -> Vec<Element<'a, Message>> {
+    if decisions.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![line(Kind::Info, label::strong("Okuma kararları"))];
+    lines.extend(decisions.iter().take(max).map(|d| text_line(Kind::Info, decision_text(d))));
+    if decisions.len() > max {
+        lines.push(text_line(Kind::Info, format!("… ve {} başka karar.", decisions.len() - max)));
+    }
+    lines
+}
+
+/// The notes a decision does not already say (docs/adr/1010): shown once, under the decisions.
+pub fn notes_beside(notes: &[ReportItem], decisions: &[kentos_commands::ImportDecision]) -> Vec<ReportItem> {
+    notes
+        .iter()
+        .filter(|n| !decisions.iter().any(|d| d.subject == n.what && d.decision == n.reason))
+        .cloned()
+        .collect()
+}
+
 /// Object counts by kind, largest first (a stable sort of the order they came
 /// in), without plurals: “12 çizgi, 3 yay”.
 pub fn kind_counts(counts: &[(&str, u32)]) -> String {

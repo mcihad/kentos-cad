@@ -48,6 +48,10 @@ blocks: NodeChanges,
  */
 dimensionSets?: NodeChanges, 
 /**
+ * Associative array identities added, changed and removed (docs/adr/1003 §1). Absent when none.
+ */
+arrays?: NodeChanges, 
+/**
  * The project's parts that changed; `undo.outside` identifies those not restored by undo.
  */
 project: Array<ProjectPart>, undo: UndoInfo, 

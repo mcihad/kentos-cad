@@ -2483,6 +2483,13 @@ kullanır. Eşit olmayan ölçekli bloğun açık yaylı yolu Patlat'ta kesin NU
 genişlikler olur. Bağımsız (merkez/açıyla hesaplanan) ortak vaka ve masaüstü resmi var. Açık: kapalı/genişlikli/
 kotlu yaylı yol, Patlat'ın NURBS uyarısı, tek yapılı rapor bölümü, AutoCAD denetimi.
 
+**Okuyucu kararlarının tek bölümü (6 Kasım 2026, [ADR 1010](../docs/adr/1010-one-section-for-the-readers-decisions.md)):**
+DXF/DWG içe alma raporunda `decisions` bölümü birim, düzlem (OCS), blok, katman ve kâğıt kararlarını sabit kodlarla
+konu konu verir; eski notlar aynı sözlerle kalır, yeni kararlar (nesnesiz/tabloda olmayan/durumu korunan katman, ters
+ya da eğik düzlem, boş Layout1, inç pafta) yalnız bu bölümdedir. ezdxf'in yazdığı dosya ve kuruluşundan hesaplanan
+beklentiyle sınandı; Çizim al penceresi “Okuma kararları”nı gösterir. Açık: Patlat'ın NURBS uyarısı, kapalı/genişlikli/
+kotlu yaylı yol, AutoCAD denetimi.
+
 ### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [~]
 
 **Öncelik:** P0 bütünlük/kurtarma; P1 ileri temizlik. **Kod:** [C28]–[C30].

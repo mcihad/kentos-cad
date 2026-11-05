@@ -1,0 +1,80 @@
+{
+ "format": "kentos.import-decisions",
+ "version": 1,
+ "decisions": [
+  {
+   "topic": "unit",
+   "code": "unit_converted",
+   "subject": "Birim",
+   "count": 1
+  },
+  {
+   "topic": "ocs",
+   "code": "ocs_flipped_mirrored",
+   "subject": "CIRCLE",
+   "count": 1
+  },
+  {
+   "topic": "ocs",
+   "code": "ocs_tilted_projected",
+   "subject": "ARC",
+   "count": 1
+  },
+  {
+   "topic": "block",
+   "code": "block_nonuniform_arcs_nurbs",
+   "subject": "LWPOLYLINE",
+   "count": 1
+  },
+  {
+   "topic": "block",
+   "code": "block_nonuniform_widths_exact",
+   "subject": "Genişlikli çoklu çizgi",
+   "count": 1
+  },
+  {
+   "topic": "layer",
+   "code": "layer_unused_left_out",
+   "subject": "Katman",
+   "count": 1,
+   "layers": [
+    "0",
+    "Defpoints",
+    "BOS",
+    "BOS2"
+   ]
+  },
+  {
+   "topic": "layer",
+   "code": "layer_missing_created",
+   "subject": "YOK",
+   "count": 1
+  },
+  {
+   "topic": "layer",
+   "code": "layer_state_kept",
+   "subject": "KAPALI",
+   "count": 1
+  },
+  {
+   "topic": "layer",
+   "code": "layer_state_kept",
+   "subject": "DONUK",
+   "count": 1
+  },
+  {
+   "topic": "paper",
+   "code": "paper_empty_layout_left_out",
+   "subject": "Layout1",
+   "count": 1
+  },
+  {
+   "topic": "paper",
+   "code": "paper_layouts_read",
+   "subject": "Pafta",
+   "count": 1,
+   "sheets": 1,
+   "viewports": 1
+  }
+ ]
+}

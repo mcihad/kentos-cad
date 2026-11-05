@@ -364,6 +364,52 @@ pub struct ImportReport {
     /// Imported with a change the user should know about (a conversion, an approximation).
     pub notes: Vec<ReportItem>,
     pub source: Vec<SourceFact>,
+    /// The reader's decisions on the drawing as a whole (docs/adr/1010): its unit, tilted planes, blocks, layers
+    /// and paper, each with a stable code. The same words are in `notes` too, for a reader that lists only those.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ImportDecision>>", optional))]
+    pub decisions: Vec<ImportDecision>,
+}
+
+/// What a decision of the reader is about (docs/adr/1010).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ImportDecisionTopic {
+    /// The length unit the values were read in, and why.
+    Unit,
+    /// An object in a tilted plane (its extrusion, 210): how it came into the plan.
+    Ocs,
+    /// Block definitions and inserts: their unit, scale, depth and unequal factors.
+    Block,
+    /// Layers: which came, which the table lacked, which had nothing on them.
+    Layer,
+    /// Paper space: layouts, their size and viewports.
+    Paper,
+}
+
+/// One decision the reader took, counted where it took it (docs/adr/1010).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImportDecision {
+    pub topic: ImportDecisionTopic,
+    /// Stable: `unit_converted`, `layer_unused_left_out` …
+    pub code: String,
+    /// What it is about ("Birim", a block's name, "LAYOUT").
+    pub subject: String,
+    /// What was decided and, where it helps, what to check (Turkish, for the user).
+    pub decision: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u32,
+    /// The first source lines where it was taken; none for the file as a whole.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub lines: Vec<u32>,
 }
 
 /// Where a file's statement of its coordinate system comes from.

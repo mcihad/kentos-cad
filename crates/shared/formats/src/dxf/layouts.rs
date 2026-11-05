@@ -11,6 +11,7 @@ use crate::{
     units,
     watch::{STOPPED, Watch},
 };
+use kentos_contracts::ImportDecisionTopic::Paper;
 use kentos_contracts::{CadLayout, CadViewport, DxfReadOptions, Vec2};
 use std::collections::{BTreeMap, HashMap};
 
@@ -73,9 +74,12 @@ pub(super) fn read(
             let width = num(&groups, 44, 420.);
             let height = num(&groups, 45, 297.);
             if !(width > 0. && height > 0. && width <= 1_000_000. && height <= 1_000_000.) {
-                report.about(
+                report.decide(
+                    Paper,
+                    "paper_layout_invalid_size",
                     "LAYOUT",
                     "pafta boyutu geçersiz; boyutsuz/boş pafta kaydı oluşturulmadı",
+                    0,
                 );
                 continue;
             }
@@ -86,9 +90,13 @@ pub(super) fn read(
                     "piksel/özel plot birimli pafta 2B kâğıt ölçüsüne çevrilemedi",
                     p.line,
                 );
+                report.decide_quiet(Paper, "paper_units_unsupported", &name, "piksel/özel plot birimli pafta 2B kâğıt ölçüsüne çevrilemedi; alınmadı", p.line);
                 continue;
             }
             let per = if paper_units == 0. { 25.4 } else { 1. };
+            if paper_units == 0. {
+                report.decide_quiet(Paper, "paper_inches_to_mm", &name, "pafta inç biriminde; ölçüleri 25,4 ile milimetreye çevrildi", p.line);
+            }
             let owner = layout_groups
                 .iter()
                 .find(|p| p.code == 330)
@@ -130,9 +138,12 @@ pub(super) fn read(
         }
     }
     if layouts.is_empty() && (!paper.is_empty() || !viewports.is_empty()) {
-        report.about(
+        report.decide(
+            Paper,
+            "paper_default_a3",
             "LAYOUT",
             "kâğıt uzayı var, LAYOUT boyutu yok; A3 (420 × 297 mm) pafta oluşturuldu",
+            0,
         );
         let mut names: std::collections::BTreeSet<String> = paper
             .iter()
@@ -316,7 +327,9 @@ pub(super) fn read(
             twist,
         });
         if groups.iter().any(|p| p.code == 331) {
-            report.note(
+            report.decide(
+                Paper,
+                "paper_viewport_frozen_layers_dropped",
                 "VIEWPORT",
                 "görünümde dondurulmuş katmanlar bu CAD köprüsünde aktarılmadı",
                 line,
@@ -360,10 +373,25 @@ pub(super) fn read(
     // Many writers emit an empty default Layout1 even for model-only drawings.
     // It is not a user sheet until it has paper content or an actual model view.
     result.retain(|l| {
-        !l.name.eq_ignore_ascii_case("Layout1") || !l.entities.is_empty() || !l.viewports.is_empty()
+        let kept = !l.name.eq_ignore_ascii_case("Layout1") || !l.entities.is_empty() || !l.viewports.is_empty();
+        if !kept {
+            report.decide_quiet(Paper, "paper_empty_layout_left_out", &l.name, "boş varsayılan pafta (nesnesi ve görünümü yok) alınmadı", 0);
+        }
+        kept
     });
     result.sort_by_key(|l| l.tab_order);
     if !result.is_empty() {
+        report.decide_quiet(
+            Paper,
+            "paper_layouts_read",
+            "Pafta",
+            &format!(
+                "{} pafta, {} görünüm penceresiyle alındı",
+                result.len(),
+                result.iter().map(|l| l.viewports.len()).sum::<usize>()
+            ),
+            0,
+        );
         report.fact(
             "Pafta",
             format!(

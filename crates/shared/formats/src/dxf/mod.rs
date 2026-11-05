@@ -46,6 +46,7 @@ pub use writer::{WriteInput, input_from_json, write};
 /// Shared by the writer's loss report and the desktop's pre-export disclosure.
 pub const DIMENSION_REFERENCE_LOSS: &str = "Ölçünün mevcut değeri ve çizimi korunur; ölçülen nesneye bağlı güncellenme ilişkisi aktarılmaz. Yeniden açıldığında geometri değişirse ölçü kendiliğinden izlemez. İlişkiyi korumak için kaynak çizimi KCAD olarak saklayın.";
 
+use kentos_contracts::ImportDecisionTopic as Topic;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{
@@ -149,7 +150,7 @@ fn decide_units(
     let known = declared.and_then(|u| units::insunits(u).map(|(s, name)| (u, s, name)));
     let (used, scale, name, source, assumed) = if let Some((reference,factor))=opts.scale_reference.and_then(|r|r.factor().map(|f|(r,f))) {
         let code=kentos_contracts::FileUnit::ALL.into_iter().find(|u|units::insunits(u.code()).is_some_and(|(s,_)|s.factor()==factor)).map_or(0,|u|u.code());
-        report.about("Ölçek doğrulaması", &format!("Dosyadaki {} birim = {} m; kaynak uzunlukları ×{factor} ile metreye çevrildi. Blokların kendi fiziksel birimi korunur.",reference.source_length,reference.real_length));
+        report.decide(Topic::Unit, "unit_scale_reference", "Ölçek doğrulaması", &format!("Dosyadaki {} birim = {} m; kaynak uzunlukları ×{factor} ile metreye çevrildi. Blokların kendi fiziksel birimi korunur.",reference.source_length,reference.real_length), 0);
         (code,units::insunits(code).map_or(Scale{mul:factor,div:1.},|(s,_)|s),if code==0{"özel ölçü"}else{units_name(code)},UnitSource::Chosen,false)
     } else { match (opts.file_unit, opts.unit) {
         (Some(chosen), project) => {
@@ -165,19 +166,30 @@ fn decide_units(
                 )),
             };
             // A local project in the chosen unit itself has nothing more to say.
-            if let Some(said) = said.filter(|_| {
+            let declared_other = matches!(known, Some((u, _, _)) if u != code);
+            match said.filter(|_| {
                 project.is_none_or(|p| units::insunits_of(p) != code) || known.is_some()
             }) {
-                report.about("Birim", &said);
+                Some(said) => {
+                    let code = if declared_other { "unit_chosen_over_declared" } else { "unit_chosen_undeclared" };
+                    report.decide(Topic::Unit, code, "Birim", &said, 0);
+                }
+                None => report.decide_quiet(Topic::Unit, "unit_chosen", "Birim", &format!("değerler seçilen birimde, {name} okundu"), 0),
             }
             (code, scale, name, UnitSource::Chosen, false)
         }
         (None, None) => {
             if let Some(u) = declared.filter(|u| *u != 0 && *u != 6) {
-                report.about(
+                report.decide(
+                    Topic::Unit,
+                    "unit_declared_not_scaled",
                     "Birim",
                     &format!("dosya birimini {} olarak bildiriyor; koordinatlar ölçeklenmeden alındı (metre sayıldı)", units_name(u)),
+                    0,
                 );
+            } else {
+                let why = if declared == Some(6) { "dosya metre bildiriyor" } else { "dosya birim bildirmiyor" };
+                report.decide_quiet(Topic::Unit, "unit_metres", "Birim", &format!("{why}; koordinatlar metre sayıldı"), 0);
             }
             (6, Scale::ONE, "metre", UnitSource::Metres, known.is_none())
         }
@@ -186,9 +198,20 @@ fn decide_units(
             match known {
                 Some((u, scale, name)) => {
                     if name != own {
-                        report.about(
+                        report.decide(
+                            Topic::Unit,
+                            "unit_converted",
                             "Birim",
                             &format!("dosya {name} biriminde; değerler çizimin birimine, {own}ye çevrildi"),
+                            0,
+                        );
+                    } else {
+                        report.decide_quiet(
+                            Topic::Unit,
+                            "unit_declared_same",
+                            "Birim",
+                            &format!("dosya {name} biriminde; çizimin birimiyle aynı, değerler çevrilmeden alındı"),
+                            0,
                         );
                     }
                     (u, scale, name, UnitSource::Declared, false)
@@ -198,9 +221,12 @@ fn decide_units(
                         Some(0) | None => "dosya birim bildirmiyor".to_owned(),
                         Some(u) => format!("dosyanın bildirdiği birim ({u}) tanınmıyor"),
                     };
-                    report.about(
+                    report.decide(
+                        Topic::Unit,
+                        "unit_assumed_project",
                         "Birim",
                         &format!("{why}; değerler çizimin biriminde ({own}) sayıldı"),
+                        0,
                     );
                     (
                         units::insunits_of(project),
@@ -229,12 +255,15 @@ fn decide_units(
             .iter()
             .map(|b| format!("{} ({})", b.name, units_name(b.code)))
             .collect();
-        report.about(
+        report.decide(
+            Topic::Block,
+            "block_own_unit",
             "Blok birimi",
             &format!(
                 "{}: blok kendi birimiyle metreye çevrildi; mevcut yerleştirmelerin boyu ölçek oranı düzeltilerek korundu",
                 listed.join(", ")
             ),
+            0,
         );
     }
     let decision = UnitDecision {
@@ -865,7 +894,9 @@ fn read_once(
         );
     }
     if deep {
-        em.out.report.note(
+        em.out.report.decide(
+            Topic::Block,
+            "block_exploded_too_deep",
             "Blok",
             &format!(
                 "bloklar {} düzeyden derin iç içe; bloklar patlatılarak alındı",
@@ -971,6 +1002,45 @@ fn read_once(
         .filter(|(n, _)| !listed.contains(*n))
         .collect();
     extra.sort();
+    // What came of the layers (docs/adr/1010): those the table lists with nothing on them stay out, those the objects
+    // name and the table lacks come with the defaults.
+    let unused: Vec<&str> = rd.layers.iter().filter(|l| !listed.contains(&l.name)).map(|l| l.name.as_str()).collect();
+    if !unused.is_empty() {
+        let shown: Vec<&str> = unused.iter().copied().take(10).collect();
+        let more = if unused.len() > shown.len() { format!(" ve {} katman daha", unused.len() - shown.len()) } else { String::new() };
+        out.report.decide_quiet(
+            Topic::Layer,
+            "layer_unused_left_out",
+            "Katman",
+            &format!("{} katmanda nesne yok; alınmadı: {}{more}", unused.len(), shown.join(", ")),
+            0,
+        );
+    }
+    for (name, _) in &extra {
+        out.report.decide_quiet(
+            Topic::Layer,
+            "layer_missing_created",
+            name,
+            "katman tablosunda yok; nesneleri için varsayılan görünüşle (mürekkep rengi, sürekli, görünür) oluşturuldu",
+            0,
+        );
+    }
+    for l in rd.layers.iter().filter(|l| listed.contains(&l.name)) {
+        let mut said = Vec::new();
+        if !l.visible { said.push("kapalı"); }
+        if l.frozen { said.push("dondurulmuş"); }
+        if l.locked { said.push("kilitli"); }
+        if !l.plot { said.push("basılmaz"); }
+        if !said.is_empty() {
+            out.report.decide_quiet(
+                Topic::Layer,
+                "layer_state_kept",
+                &l.name,
+                &format!("katman {} olarak alındı, durumu korundu", said.join(", ")),
+                0,
+            );
+        }
+    }
     for (name, &count) in extra {
         layers.push(ImportLayer {
             line_pattern: None,
@@ -1040,7 +1110,7 @@ fn read_once(
     }
     if !reuse_scales.is_empty(){
         let samples=reuse_scales.iter().take(5).map(|(name,(x,y))|format!("{name}: X ×{x:.6}, Y ×{y:.6}")).collect::<Vec<_>>().join("; ");
-        out.report.about("Blok ölçeği",&format!("Mevcut blok örnekleri tanımlarından farklı boyutta: {samples}. Yeni blok ölçek 1 ile tanımın fiziksel boyutunda eklenir. Bu fark beklenmiyorsa dosya birimini veya bilinen gerçek uzunluğu denetleyin."));
+        out.report.decide(Topic::Block, "block_insert_scale_differs", "Blok ölçeği",&format!("Mevcut blok örnekleri tanımlarından farklı boyutta: {samples}. Yeni blok ölçek 1 ile tanımın fiziksel boyutunda eklenir. Bu fark beklenmiyorsa dosya birimini veya bilinen gerçek uzunluğu denetleyin."), 0);
     }
 
     if !scale.is_one() && let Some(b) = &mut out.bounds {

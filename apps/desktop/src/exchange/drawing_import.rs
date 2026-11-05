@@ -254,6 +254,12 @@ pub struct State {
 }
 
 impl State {
+    /// What the file read to, once read.
+    #[cfg(test)]
+    pub(crate) fn read_result(&self) -> Option<&ImportResult> {
+        self.result.as_deref()
+    }
+
     /// Asks the read under way to stop (the window closes, or another file is picked).
     pub(super) fn stop_reading(&self) {
         if let Some((_, stop)) = &self.reading {
@@ -1491,7 +1497,10 @@ impl App {
         if let Some(unusable) = &s.unusable {
             lines.push(words::text_line(Line::Error, unusable.clone()));
         }
-        lines.extend(words::report_lines(&r.report.notes, Line::Info, 12));
+        // The reader's decisions by topic, then the notes they do not already say (docs/adr/1010).
+        lines.extend(words::decision_lines(&r.report.decisions, 12));
+        let notes = words::notes_beside(&r.report.notes, &r.report.decisions);
+        lines.extend(words::report_lines(&notes, Line::Info, 12));
         lines.extend(words::report_lines(&r.report.skipped, Line::Warn, 12));
         if let (Some(b), Some(doc)) = (&r.bounds, &self.document) {
             lines.push(words::text_line(

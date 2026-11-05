@@ -17,6 +17,7 @@ use kentos_contracts::{
     RingGeometry, SplineEntity, TableEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
+use kentos_contracts::ImportDecisionTopic as Topic;
 use super::aci;
 use super::dimension;
 use super::entity::{Color, Kind, P3, Parsed, Vertex, Weight};
@@ -340,6 +341,9 @@ struct Frame {
     /// 1: neither narrowed nor widened.
     width_factor: f64,
 }
+
+/// The skip's words for an extrusion (210) that names no direction.
+const BAD_EXTRUSION: &str = "doğrultusu (210) geçersiz";
 
 /// The world transform of an entity in object coordinates at `elevation`.
 fn ocs(ctx: &Ctx, extrusion: P3, elevation: f64) -> Option<Tf> {
@@ -887,10 +891,43 @@ impl<'l> Emitter<'l> {
 
     fn skip(&mut self, what: &str, reason: &str, line: u32) {
         self.out.report.skip(what, reason, line);
+        if reason == BAD_EXTRUSION {
+            self.out.report.decide_quiet(Topic::Ocs, "ocs_invalid_extrusion", what, "doğrultusu (210) geçersiz; nesne alınmadı", line);
+        }
     }
 
     fn polyline_loss(&mut self, code: &str, what: &str, reason: &str, line: u32) {
         self.out.report.polyline_loss(code, what, reason, line);
+        // The losses that are decisions on the drawing's planes and blocks (docs/adr/1010).
+        match code {
+            "block_ocs" => self.out.report.decide_quiet(Topic::Ocs, "ocs_block_tilted", what, reason, line),
+            "nonuniform_bulge" => {
+                self.out.report.decide_quiet(Topic::Block, "block_nonuniform_arcs_sampled", what, reason, line)
+            }
+            _ => {}
+        }
+    }
+
+    /// How an object in its own plane (its extrusion, 210) came into the plan (docs/adr/1010): one whose plane is
+    /// the plan's turned over is mirrored exactly; one in a tilted plane is projected straight down.
+    fn plane_decision(&mut self, e: &Parsed) {
+        if !matches!(
+            e.kind,
+            Kind::Circle { .. } | Kind::Arc { .. } | Kind::LwPolyline { .. } | Kind::Text { .. } | Kind::Insert { .. }
+                | Kind::Hatch(_)
+        ) {
+            return;
+        }
+        let [x, y, z] = e.common.extrusion;
+        if x == 0.0 && y == 0.0 && z > 0.0 {
+            return;
+        }
+        let (code, words) = if x == 0.0 && y == 0.0 && z < 0.0 {
+            ("ocs_flipped_mirrored", "düzlemi ters (210: 0, 0, −1); plana aynalanarak kesin alındı")
+        } else {
+            ("ocs_tilted_projected", "eğik düzlemde; plana dik izdüşümüyle alındı, kendi düzlemi saklanmadı")
+        };
+        self.out.report.decide_quiet(Topic::Ocs, code, &e.name, words, e.line);
     }
 
     fn note(&mut self, what: &str, reason: &str, line: u32) {
@@ -1263,6 +1300,7 @@ impl<'l> Emitter<'l> {
         let weight = self.weight_of(e, ctx);
         let b = || base(&layer, color.clone(), weight);
         let ext = e.common.extrusion;
+        self.plane_decision(e);
         // Straight XYZ paths are representable exactly after an explicit
         // explode. Other source planes still need the persistent frame model.
         if ctx.full.mixes_z() && !matches!(&e.kind,
@@ -1307,7 +1345,7 @@ impl<'l> Emitter<'l> {
             }
             Kind::Circle { c, r } => {
                 let Some(m) = ocs(ctx, ext, c[2]) else {
-                    return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
+                    return self.skip(&e.name, BAD_EXTRUSION, e.line);
                 };
                 if !(*r > 0.0) {
                     return self.skip(&e.name, "yarıçapı sıfır ya da negatif", e.line);
@@ -1316,7 +1354,7 @@ impl<'l> Emitter<'l> {
             }
             Kind::Arc { c, r, a0, a1 } => {
                 let Some(m) = ocs(ctx, ext, c[2]) else {
-                    return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
+                    return self.skip(&e.name, BAD_EXTRUSION, e.line);
                 };
                 if !(*r > 0.0) {
                     return self.skip(&e.name, "yarıçapı sıfır ya da negatif", e.line);
@@ -1349,7 +1387,7 @@ impl<'l> Emitter<'l> {
                 widths,
             } => {
                 let Some(local) = Map3::ocs(ext) else {
-                    return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
+                    return self.skip(&e.name, BAD_EXTRUSION, e.line);
                 };
                 let placement = local.then(ctx.full);
                 let m = placement.plane(*elevation);
@@ -1499,7 +1537,7 @@ impl<'l> Emitter<'l> {
                     Some(ctx.full)
                 };
                 let Some(m) = m else {
-                    return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
+                    return self.skip(&e.name, BAD_EXTRUSION, e.line);
                 };
                 let order: [usize; 4] = if *solid { [0, 1, 3, 2] } else { [0, 1, 2, 3] };
                 let mut ring: Vec<P3> = order.iter().map(|&i| m.point(pts[i])).collect();
@@ -1859,7 +1897,7 @@ impl<'l> Emitter<'l> {
         // The minor axis is the normal × major (both in world coordinates); only their plan views count.
         let l = (ext[0] * ext[0] + ext[1] * ext[1] + ext[2] * ext[2]).sqrt();
         if !(l > 0.0) {
-            return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
+            return self.skip(&e.name, BAD_EXTRUSION, e.line);
         }
         let n = [ext[0] / l, ext[1] / l, ext[2] / l];
         let minor = [
@@ -1951,7 +1989,9 @@ impl<'l> Emitter<'l> {
                 let level = zs.as_ref().is_none_or(|z| z.windows(2).all(|w| w[0] == w[1]));
                 let widths = widths.as_ref().filter(|_| level).and_then(|w| exact_widths(m, &pts, w, closed));
                 if widths.is_some() {
-                    self.note(
+                    self.out.report.decide(
+                        Topic::Block,
+                        "block_nonuniform_widths_exact",
                         "Genişlikli çoklu çizgi",
                         "eşit olmayan ölçekle eklendi: her kenarın genişliği kenarına dik yeniden ölçüldü (kesin); uç ve köşe kesimleri kaynakta kenara dikti, burada değil",
                         e.line,
@@ -1964,7 +2004,9 @@ impl<'l> Emitter<'l> {
                 // being a rational Bézier whose control points an affine map moves and whose weights it keeps
                 // (docs/adr/1061 §3). The polyline's vertex editing is what goes, said; nothing is sampled.
                 if let Some((ctrl, weights, knots)) = arcs_as_nurbs(m, &pts, &bulges) {
-                    self.note(
+                    self.out.report.decide(
+                        Topic::Block,
+                        "block_nonuniform_arcs_nurbs",
                         &e.name,
                         "yaylı kenarları eşit olmayan ölçekle eklendi: eliptik yaylar kesin NURBS (2. derece, ağırlıklı) oldu; çoklu çizginin köşe düzenlemesi yerine NURBS düzenlemesi",
                         e.line,
@@ -2116,7 +2158,7 @@ impl<'l> Emitter<'l> {
             return self.path(Tf::IDENTITY, true, pts, Vec::new(), closed, zs, None, b, e);
         }
         let Some(local) = Map3::ocs(ext) else {
-            return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
+            return self.skip(&e.name, BAD_EXTRUSION, e.line);
         };
         let placement = local.then(ctx.full);
         let m = placement.plane(elevation);
@@ -2332,7 +2374,7 @@ impl<'l> Emitter<'l> {
             return Err("yazı yüksekliği yok");
         }
         let Some(m) = ocs(ctx, t.ext, t.p[2]) else {
-            return Err("doğrultusu (210) geçersiz");
+            return Err(BAD_EXTRUSION);
         };
         let mut width_factor = t.width;
         if !width_factor_ok(width_factor) {
@@ -2457,7 +2499,7 @@ impl<'l> Emitter<'l> {
         });
         match placed {
             Err(why) => self.skip(WHAT, why, e.line),
-            Ok((None, _)) => self.skip(WHAT, "doğrultusu (210) geçersiz", e.line),
+            Ok((None, _)) => self.skip(WHAT, BAD_EXTRUSION, e.line),
             Ok((Some((p, rotation, height, widen)), f)) => {
                 let prompt = text_codes(&caret_decode(prompt));
                 self.out.attributes.push(AttributeDefinition {
@@ -2580,7 +2622,7 @@ impl<'l> Emitter<'l> {
                 let Some(o) = ocs_tf(ext, 0.0) else {
                     return self.skip(
                         "Çok satırlı yazı (MTEXT)",
-                        "doğrultusu (210) geçersiz",
+                        BAD_EXTRUSION,
                         e.line,
                     );
                 };
@@ -2673,7 +2715,7 @@ impl<'l> Emitter<'l> {
             );
         }
         let Some(o) = Map3::ocs(e.common.extrusion) else {
-            return self.skip("Blok (INSERT)", "doğrultusu (210) geçersiz", e.line);
+            return self.skip("Blok (INSERT)", BAD_EXTRUSION, e.line);
         };
         let [sx, sy, sz] = scale;
         let nz = super::extrusion_z(e.common.extrusion);
@@ -3104,7 +3146,7 @@ impl<'l> Emitter<'l> {
             );
         };
         let Some(o) = Map3::ocs(e.common.extrusion) else {
-            return self.skip(what, "doğrultusu (210) geçersiz", e.line);
+            return self.skip(what, BAD_EXTRUSION, e.line);
         };
         let byblock = match e.common.color {
             Color::ByLayer => self
@@ -3143,7 +3185,7 @@ impl<'l> Emitter<'l> {
 
     fn hatch(&mut self, ctx: &Ctx, ext: P3, h: &Hatch, b: EntityBase, e: &Parsed) {
         let Some(m) = ocs(ctx, ext, h.elevation) else {
-            return self.skip("Tarama (HATCH)", "doğrultusu (210) geçersiz", e.line);
+            return self.skip("Tarama (HATCH)", BAD_EXTRUSION, e.line);
         };
         let mut rings: Vec<Vec<Vec2>> = Vec::new();
         // Each ring's path exact (docs/adr/0328 §1), in drawing coordinates; none where it cannot be.
