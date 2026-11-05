@@ -522,7 +522,7 @@ fn impact_words(imp: &kentos_commands::ProfileImpact) -> String {
 }
 
 /// What the row builds to now, or why it does not build.
-fn status(r: &Row, stale: bool, ground: &Ground) -> (String, bool) {
+pub(crate) fn status(r: &Row, stale: bool, ground: &Ground) -> (String, bool) {
     let v = match r.vertical() {
         Ok(v) => v,
         Err(e) => return (format!("Kurulamıyor: {e}"), true),
@@ -534,6 +534,8 @@ fn status(r: &Row, stale: bool, ground: &Ground) -> (String, bool) {
         return (format!("PVI aksın dışında: aksın km'si 0 ile {} m arası.", comma(ground.length, 3)), true);
     }
     let mut words = format!("{} PVI · {} kurp", r.pvis.len(), v.curves.len());
+    // Its two lengths apart (docs/adr/0968): the km's horizontal one and the red line's in space.
+    words.push_str(&format!(" · yatay {} m · 3B {} m", comma(v.end - v.start, 3), comma(v.length(), 3)));
     // K in its unit and the radius H beside it (docs/adr/0961): a standard writes the one or the other.
     if let Some(k) = v.curves.iter().filter_map(|c| c.k).min_by(f64::total_cmp) {
         words.push_str(&format!(" · en küçük K {} m/%", comma(k, 1)));

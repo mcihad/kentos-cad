@@ -62,6 +62,34 @@ impl Piece {
             }
         }
     }
+
+    /// The red line's length in space from the piece's start to `s` (docs/adr/0968): the arc length
+    /// ∫ √(1 + z′²) ds, in closed form. A grade's is `Δs·√(1 + g²)`. A parabola's grade u = g0 + r·t is linear, so
+    /// its length is `[F(u)]/r` with `F(u) = (u·√(1 + u²) + asinh u)/2`; where the grade hardly changes the difference
+    /// would cancel and five-point Gauss–Legendre takes it (exact to Δu¹⁰). A circle's is `R·|Δφ|`, φ the angle
+    /// `asin((s − sc)/R)` from the centre's vertical.
+    pub fn length_to(&self, s: f64) -> f64 {
+        match *self {
+            Piece::Grade { s0, g, .. } => (s - s0) * g.hypot(1.0),
+            Piece::Parabola { s0, g0, r, .. } => {
+                let t = s - s0;
+                let (u0, u1) = (g0, g0 + r * t);
+                if (u1 - u0).abs() > 1e-3 {
+                    let f = |u: f64| 0.5 * (u * u.hypot(1.0) + u.asinh());
+                    (f(u1) - f(u0)) / r
+                } else {
+                    const X: [f64; 5] = [0.0, -0.538_469_310_105_683_1, 0.538_469_310_105_683_1, -0.906_179_845_938_664, 0.906_179_845_938_664];
+                    const W: [f64; 5] = [0.568_888_888_888_888_9, 0.478_628_670_499_366_5, 0.478_628_670_499_366_5, 0.236_926_885_056_189_1, 0.236_926_885_056_189_1];
+                    let h = 0.5 * t;
+                    X.iter().zip(W).map(|(x, w)| w * (g0 + r * h * (1.0 + x)).hypot(1.0)).sum::<f64>() * h
+                }
+            }
+            Piece::Circle { s0, sc, radius, .. } => {
+                let phi = |x: f64| ((x - sc) / radius).clamp(-1.0, 1.0).asin();
+                radius * (phi(s) - phi(s0))
+            }
+        }
+    }
 }
 
 /// What a curve on a PVI came to.
@@ -292,5 +320,27 @@ impl Vertical {
         }
         let i = self.pieces.partition_point(|p| p.range().0 <= s).saturating_sub(1);
         self.pieces.get(i).map(|p| p.at(s))
+    }
+
+    /// The red line's length in space from the first PVI to a station (docs/adr/0968); none off the profile. The
+    /// km stays the horizontal length along the alignment (ROAD-ALIGN-06); this is the other length, asked apart.
+    pub fn length_to(&self, s: f64) -> Option<f64> {
+        if !(self.start..=self.end).contains(&s) {
+            return None;
+        }
+        let mut sum = 0.0;
+        for p in &self.pieces {
+            let (a, b) = p.range();
+            if s <= a {
+                break;
+            }
+            sum += p.length_to(s.min(b));
+        }
+        Some(sum)
+    }
+
+    /// The red line's whole length in space, first PVI to last.
+    pub fn length(&self) -> f64 {
+        self.length_to(self.end).unwrap_or(0.0)
     }
 }

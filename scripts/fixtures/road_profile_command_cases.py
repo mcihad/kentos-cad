@@ -154,6 +154,46 @@ def curve_radius(p, g_in, g_out):
     return (l1 + l2) / dg * min(l1 / l2, l2 / l1)
 
 
+_PIECES = {}
+
+
+def _pieces(d):
+    """The profile's pieces between its PVIs and its curves' ends, each with its length in space ∫ √(1 + z′²) ds by
+    mpmath's tanh–sinh quadrature over the reference's own grades — not the closed forms KentOS uses (docs/adr/0968)."""
+    key = json.dumps(d["pvis"], sort_keys=True)
+    if key in _PIECES:
+        return _PIECES[key]
+    curves, _, S, G = solve(d)
+    cuts = sorted({vref.mpf(x) for x in S} | {vref.mpf(c[0]) for c in curves.values()} | {vref.mpf(c[1]) for c in curves.values()})
+
+    def grade(q):
+        for b_, e_, ev, _, _ in curves.values():
+            if vref.mpf(b_) <= q <= vref.mpf(e_):
+                return ev(q)[1]
+        i = next(i for i in range(len(S) - 1) if vref.mpf(S[i]) <= q <= vref.mpf(S[i + 1]))
+        return vref.mpf(G[i])
+
+    f = lambda q: mp.sqrt(1 + grade(q) ** 2)
+    out = (cuts, f, [mp.quad(f, [a_, b_]) for a_, b_ in zip(cuts, cuts[1:])])
+    _PIECES[key] = out
+    return out
+
+
+def length3d_to(d, s):
+    """The red line's length in space from the first PVI to `s`; none off the profile."""
+    cuts, f, whole = _pieces(d)
+    s = mp.mpf(s)
+    if s < cuts[0] or s > cuts[-1]:
+        return None
+    total = mp.mpf(0)
+    for (a_, b_), w in zip(zip(cuts, cuts[1:]), whole):
+        if s >= b_:
+            total += w
+        elif s > a_:
+            total += mp.quad(f, [a_, s])
+    return float(total)
+
+
 def report(d):
     b = ALIGNED[d["alignment"]]
     pvis = d["pvis"]
@@ -179,6 +219,7 @@ def report(d):
            "alignmentRevision": d.get("alignmentRevision", 0), "alignmentNow": now,
            "stale": now != d.get("alignmentRevision", 0),
            "stations": [first, last], "kms": [float(aref.km_of(b.regions, first)), float(aref.km_of(b.regions, last))],
+           "length3d": length3d_to(d, last),
            "grades": [{"between": [a["id"], c["id"]], "stations": [a["station"], c["station"]],
                        "grade": (c["elevation"] - a["elevation"]) / (c["station"] - a["station"])}
                       for a, c in zip(pvis, pvis[1:])],
@@ -217,6 +258,7 @@ def at(d, s, surface=True):
         out["rate"] = red[2]
         if red[2] != 0:
             out["radius"] = (1 + red[1] ** 2) ** 1.5 / abs(red[2])
+        out["along3d"] = length3d_to(d, s)
     black = black_at(b, s) if surface and d.get("surface") == "t-1" else None
     if black is not None:
         out["black"] = black
@@ -587,6 +629,16 @@ def query_cases():
     curv = [100.0, 150.0, 170.0, 320.0, 340.0, 360.0, 500.0, 540.0]
     q("Noktada eğrilik: eğimde, parabolde, dairede, asimetrik kollarda", {"profile": "b-1", "stations": curv},
       one(MAIN, at=[at(MAIN, s) for s in curv]))
+    # Docs/adr/0968: the length in space apart from the km. On a 15 % grade 150 m of km is 150·√1.0225 = 151.678 m;
+    # the parabola and the circle by quadrature; every row's along3d and the report's length3d.
+    steep = {"id": "b-4", "name": "Dik kot", "alignment": "g-2", "alignmentRevision": 3, "revision": 1,
+             "pvis": [pv("a", 0, 100), pv("v1", 200, 130, length=100), pv("v2", 400, 110, radius=500),
+                      pv("b", 600, 140)]}
+    assert abs(length3d_to(steep, 150.0) - 150 * math.sqrt(1.0225)) < 1e-9
+    places = [0.0, 150.0, 200.0, 250.0, 400.0, 600.0]
+    q("3B boy: dik eğimde km'den uzun, kurplarda integral", {"profile": "b-4", "stations": places},
+      {"profiles": [report(steep)], "at": [at(steep, x) for x in places], "ticks": [], "terrain": []},
+      (), setup([MAIN, SIDE, PART, steep]), [MAIN, SIDE, PART, steep])
     broken = {**MAIN, "surface": "t-2"}
     q("Kurulamayan yüzey: siyah kot yok, uyarı", {"profile": "b-1", "stations": [100.0, 300.0]},
       {"profiles": [report(broken)], "at": [at(broken, s, False) for s in (100.0, 300.0)], "ticks": [], "terrain": []},

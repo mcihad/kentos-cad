@@ -222,6 +222,7 @@ pub(crate) fn report(doc: &Document, def: &ProfileDef, built: &Built) -> Profile
         surface: def.surface.clone(),
         stations: [first, last],
         kms: [built.alignment.km(first), built.alignment.km(last)],
+        length3d: built.vertical.length(),
         grades: def
             .pvis
             .windows(2)
@@ -292,6 +293,7 @@ pub(crate) fn at(built: &Built, surface: Option<&Surface>, station: f64) -> Opti
         // The curvature there (docs/adr/0966): z″ and the plane curve's radius (1 + z′²)^{3/2}/|z″|.
         rate: red.map(|r| r.2),
         radius: red.filter(|r| r.2 != 0.0).map(|r| (1.0 + r.1 * r.1).powf(1.5) / r.2.abs()),
+        along3d: built.vertical.length_to(station),
         black,
         difference: red.zip(black).map(|(r, b)| r.0 - b),
     })

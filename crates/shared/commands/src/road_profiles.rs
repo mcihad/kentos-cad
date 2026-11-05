@@ -225,6 +225,10 @@ pub struct ProfileReport {
     pub stations: [f64; 2],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub kms: [f64; 2],
+    /// The red line's length in space from the first PVI to the last, ∫ √(1 + z′²) ds (docs/adr/0968): the km and
+    /// `stations` stay horizontal lengths along the alignment; this is the other length, asked apart (ROAD-ALIGN-06).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length3d: f64,
     pub grades: Vec<ProfileGradeRow>,
     pub curves: Vec<ProfileCurveRow>,
     /// `kentos.profile/1`.
@@ -295,6 +299,12 @@ pub struct ProfileAt {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: Option<f64>,
+    /// The red line's length in space from the first PVI to here (docs/adr/0968); absent outside the profile. Two
+    /// rows' difference is the length in space between their kms.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub along3d: Option<f64>,
     /// The terrain (black) elevation; absent off the surface or without one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

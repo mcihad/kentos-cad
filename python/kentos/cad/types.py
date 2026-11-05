@@ -61263,6 +61263,8 @@ class ProfileAt(_Model):
         station: Unit: m.
         km: Unit: m.
         km_text: The km written `2+345.678`.
+        along3d: The red line's length in space from the first PVI to here (docs/adr/0968); absent outside the profile. Two
+            rows' difference is the length in space between their kms. Unit: m.
         black: The terrain (black) elevation; absent off the surface or without one. Unit: elevation.
         difference: Red − black: fill positive, cut negative; absent without both. Unit: elevation.
         grade: Unit: 1.
@@ -61275,6 +61277,7 @@ class ProfileAt(_Model):
     station: float
     km: float
     km_text: str
+    along3d: float | None | Unset = UNSET
     black: float | None | Unset = UNSET
     difference: float | None | Unset = UNSET
     grade: float | None | Unset = UNSET
@@ -61287,6 +61290,8 @@ class ProfileAt(_Model):
         out["station"] = float(self.station)
         out["km"] = float(self.km)
         out["kmText"] = self.km_text
+        if self.along3d is not UNSET:
+            out["along3d"] = None if self.along3d is None else float(self.along3d)
         if self.black is not UNSET:
             out["black"] = None if self.black is None else float(self.black)
         if self.difference is not UNSET:
@@ -61307,6 +61312,7 @@ class ProfileAt(_Model):
             station=float(data["station"]),
             km=float(data["km"]),
             km_text=data["kmText"],
+            along3d=UNSET if "along3d" not in data else None if data["along3d"] is None else float(data["along3d"]),
             black=UNSET if "black" not in data else None if data["black"] is None else float(data["black"]),
             difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
@@ -62322,6 +62328,8 @@ class ProfileReport(_Model):
         stale: The alignment changed since.
         stations: Its first and last PVI's stations and kms. Unit: m.
         kms: Unit: m.
+        length3d: The red line's length in space from the first PVI to the last, ∫ √(1 + z′²) ds (docs/adr/0968): the km and
+            `stations` stay horizontal lengths along the alignment; this is the other length, asked apart (ROAD-ALIGN-06). Unit: m.
         algorithm: `kentos.profile/1`.
     """
     id: str
@@ -62333,6 +62341,7 @@ class ProfileReport(_Model):
     stale: bool
     stations: list[float]
     kms: list[float]
+    length3d: float
     grades: list[ProfileGradeRow]
     curves: list[ProfileCurveRow]
     algorithm: str
@@ -62349,6 +62358,7 @@ class ProfileReport(_Model):
         out["stale"] = self.stale
         out["stations"] = [float(e0) for e0 in self.stations]
         out["kms"] = [float(e0) for e0 in self.kms]
+        out["length3d"] = float(self.length3d)
         out["grades"] = [e0.to_json() for e0 in self.grades]
         out["curves"] = [e0.to_json() for e0 in self.curves]
         out["algorithm"] = self.algorithm
@@ -62368,6 +62378,7 @@ class ProfileReport(_Model):
             stale=data["stale"],
             stations=[float(e0) for e0 in data["stations"]],
             kms=[float(e0) for e0 in data["kms"]],
+            length3d=float(data["length3d"]),
             grades=[ProfileGradeRow.from_json(e0) for e0 in data["grades"]],
             curves=[ProfileCurveRow.from_json(e0) for e0 in data["curves"]],
             algorithm=data["algorithm"],

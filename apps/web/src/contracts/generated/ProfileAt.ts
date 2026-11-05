@@ -23,6 +23,11 @@ rate?: number,
  */
 radius?: number, 
 /**
+ * The red line's length in space from the first PVI to here (docs/adr/0968); absent outside the profile. Two
+ * rows' difference is the length in space between their kms.
+ */
+along3d?: number, 
+/**
  * The terrain (black) elevation; absent off the surface or without one.
  */
 black?: number, 

@@ -589,7 +589,10 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 - **Denetim formda:** standart sınırları (hız, sürtünme, 1:n) formun son bölümüdür; sonuç yazılan tanımda kaydetmeden
   okunur (Dever, ADR 0931 §3). Oran sınırı 1:n'nin n'i olarak yazılır.
 - **Alt çubuk.** Solda durum yazar, sağda Kapat ve tek birincil eylem durur (yazan iş: “Yeni boykesit olarak yaz”).
-  Yazılacak bir şey yoksa birincil eylem kapalıdır.
+  Yazılacak bir şey yoksa birincil eylem kapalıdır. Durum `Dialog::status` ile verilir: düğmelerin bıraktığı yeri alır
+  ve orada alt satıra kırılır, düğmeler kendi genişliğinde kalır (CSS Flexible Box Layout: durum `flex: 1 1 0;
+  min-width: 0`, düğmeler `flex: none`). Ölçüm: Görünüşler'de km satırı uzayınca Kapat pencereden taşıyordu (1440 px'te
+  “Ka”); şimdi durum iki satır, Kapat yerinde (Y62).
 - **Tablo formda:** birkaç sütunlu girdi tablosu (bileşenler, tabakalar, katsayılar) `Form::wide` ile etiket sütunu
   dahil bütün genişliği alır; etiketin sağına sıkıştırılmaz.
 - **Ölü denetim gösterilmez:** seçili şeye uymayan satır gizlenir. Örnek: Enkesit'te Çizime satırı ve Aksa yeniden bağla

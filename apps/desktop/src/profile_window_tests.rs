@@ -243,3 +243,25 @@ fn screens_impact() {
         shot(&mut app, "asimetrik");
     }
 }
+
+/// The two lengths apart (docs/adr/0968): the status says the km's horizontal length and the red line's in space, the
+/// latter `road.profiles.query`'s `length3d`.
+#[test]
+fn the_status_says_the_length_in_space_apart_from_the_km_s() {
+    let mut app = app(true);
+    app.open_profiles();
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let input = kentos_commands::ProfilesQuery { profile: Some("b-1".into()), stations: vec![], every: None, terrain: false };
+    let kentos_commands::CommandResult::Completed { output, .. } =
+        kentos_native_application::road_profiles_query::execute(&mut kentos_native_application::ExecutionContext::new(doc), input)
+    else {
+        panic!("the query reads")
+    };
+    let asked = output.profiles[0].length3d;
+    let w = app.profile_window.as_ref().expect("open");
+    let (said, bad) = crate::profile_window::status(&w.rows[0], false, &w.ground);
+    assert!(!bad, "{said}");
+    let want = format!("yatay 669,000 m · 3B {} m", format!("{asked:.3}").replace('.', ","));
+    assert!(said.contains(&want), "{said} / {want}");
+    assert!(asked > 669.0, "the red line in space is longer than its horizontal run");
+}

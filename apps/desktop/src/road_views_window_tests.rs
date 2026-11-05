@@ -139,6 +139,6 @@ fn the_red_line_at_the_km_is_the_query_s() {
             panic!("the query reads")
         };
         let asked = output.at.first().cloned();
-        assert_eq!(shown.as_ref().map(|p| (p.red, p.grade, p.rate, p.radius)), asked.map(|p| (p.red, p.grade, p.rate, p.radius)), "km {s}");
+        assert_eq!(shown.as_ref().map(|p| (p.red, p.grade, p.rate, p.radius, p.along3d)), asked.map(|p| (p.red, p.grade, p.rate, p.radius, p.along3d)), "km {s}");
     }
 }

@@ -29,6 +29,8 @@ pub struct Dialog<'a, Message> {
     actions: Vec<Element<'a, Message>>,
     /// A footer row of the window's own (buttons with a layer select between them), in place of `aside`/`action`.
     footer: Option<Element<'a, Message>>,
+    /// What the window says at the footer's left ([`Dialog::status`]).
+    status: Option<Element<'a, Message>>,
     width: f32,
     max_height: Option<f32>,
     /// The key its size is kept by (docs/adr/0746); none: its title. `None` after `fixed`: not sized.
@@ -48,6 +50,7 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
             aside: Vec::new(),
             actions: Vec::new(),
             footer: None,
+            status: None,
             width: 500.0,
             max_height: None,
             key: None,
@@ -145,6 +148,15 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
         self
     }
 
+    /// The window's status at the footer's left, beside `aside`/`action` (DESIGN.md §7.19 “Alt çubuk”). It takes the
+    /// room the buttons leave and wraps there; the buttons keep their own width: CSS Flexible Box Layout's
+    /// `flex: 1 1 0; min-width: 0` for the status, `flex: none` for the buttons. A status in a row of its own pushed
+    /// Görünüşler' Kapat past the window's edge once the km's line grew (Y62: 1440 px wide, “Kapat” cut to “Ka”).
+    pub fn status(mut self, status: impl Into<Element<'a, Message>>) -> Self {
+        self.status = Some(status.into());
+        self
+    }
+
     pub fn action(mut self, action: impl Into<Element<'a, Message>>) -> Self {
         self.actions.push(action.into());
         self
@@ -239,20 +251,25 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
             };
         }
 
-        let has_footer = !dialog.actions.is_empty() || !dialog.aside.is_empty() || dialog.footer.is_some();
+        let has_footer =
+            !dialog.actions.is_empty() || !dialog.aside.is_empty() || dialog.footer.is_some() || dialog.status.is_some();
         // A kept size (resized or full screen): the box takes all its height, the body's scrolling part grows and
         // the buttons sit on the bottom edge (a footer), not under the content.
         content = content.fill(kept).footer(has_footer);
         if let Some(row) = dialog.footer {
             content = content.push(row);
         } else if has_footer {
-            let mut actions = iced::widget::Row::new().spacing(6);
+            let mut actions = iced::widget::Row::new().spacing(6).align_y(iced::alignment::Vertical::Center);
 
             for action in dialog.aside {
                 actions = actions.push(action);
             }
 
-            actions = actions.push(space::horizontal());
+            // The status takes what the buttons leave and wraps there; without one, a space pushes the actions right.
+            actions = match dialog.status {
+                Some(status) => actions.push(container(status).width(Fill).padding([0.0, 6.0])),
+                None => actions.push(space::horizontal()),
+            };
 
             for action in dialog.actions {
                 actions = actions.push(action);

@@ -21,7 +21,12 @@ stale: boolean, surface?: string,
 /**
  * Its first and last PVI's stations and kms.
  */
-stations: [number, number], kms: [number, number], grades: Array<ProfileGradeRow>, curves: Array<ProfileCurveRow>, 
+stations: [number, number], kms: [number, number], 
+/**
+ * The red line's length in space from the first PVI to the last, ∫ √(1 + z′²) ds (docs/adr/0968): the km and
+ * `stations` stay horizontal lengths along the alignment; this is the other length, asked apart (ROAD-ALIGN-06).
+ */
+length3d: number, grades: Array<ProfileGradeRow>, curves: Array<ProfileCurveRow>, 
 /**
  * `kentos.profile/1`.
  */

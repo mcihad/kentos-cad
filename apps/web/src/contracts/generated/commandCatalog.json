@@ -152128,6 +152128,15 @@
     "ProfileAt": {
       "description": "The elevations at a station of the alignment.",
       "properties": {
+        "along3d": {
+          "description": "The red line's length in space from the first PVI to here (docs/adr/0968); absent outside the profile. Two\nrows' difference is the length in space between their kms.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
         "black": {
           "description": "The terrain (black) elevation; absent off the surface or without one.",
           "format": "double",
@@ -153250,6 +153259,12 @@
           "type": "array",
           "x-unit": "m"
         },
+        "length3d": {
+          "description": "The red line's length in space from the first PVI to the last, ∫ √(1 + z′²) ds (docs/adr/0968): the km and\n`stations` stay horizontal lengths along the alignment; this is the other length, asked apart (ROAD-ALIGN-06).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
         "name": {
           "type": "string"
         },
@@ -153291,6 +153306,7 @@
         "stale",
         "stations",
         "kms",
+        "length3d",
         "grades",
         "curves",
         "algorithm"

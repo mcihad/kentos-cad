@@ -21,7 +21,7 @@
 //! km's; the slider and the typed km (with the alignment's equations) move it anywhere, the section shown the nearest.
 
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
-use iced::widget::{container, row, slider, space};
+use iced::widget::{column, container, row, slider};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
 use kentos_commands::{ProfileDef, SectionRow};
 use kentos_native_application::road_corridors::CorridorSections;
@@ -426,7 +426,9 @@ impl App {
                 let bend = r.map_or_else(|| "düz eğim".to_owned(), |r| format!("R {} m", comma(r, 0)));
                 // Said with its own km: the section shown is the nearest one, the red line is read at the km itself.
                 let km = red.as_ref().map_or_else(String::new, |p| p.km_text.clone());
-                format!("{said} · km {km}: kırmızı kot {} · eğim %{} · {bend}", comma(z, 2), comma(100.0 * g, 2))
+                // The length in space from the first PVI (docs/adr/0968), apart from the km's horizontal one.
+                let along = red.as_ref().and_then(|p| p.along3d).map_or_else(String::new, |a| format!(" · ilk PVI'dan 3B {} m", comma(a, 3)));
+                format!("{said} · km {km}: kırmızı kot {} · eğim %{} · {bend}{along}", comma(z, 2), comma(100.0 * g, 2))
             }
             None => said,
         };
@@ -445,17 +447,19 @@ impl App {
             .spacing(8)
             .align_y(iced::alignment::Vertical::Bottom),
         );
-        // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                label::caption(said),
-                space::horizontal().width(Fill),
-                label::caption("Plana ya da boykesite basın, sürükleyin: km oraya gider.").style(muted),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-            ]
-            .spacing(10)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
+        // The status at the footer's left wraps in what Kapat leaves (Dialog::status, DESIGN.md §7.19); resized or
+        // full screen they sit on the bottom edge (ADR 0746 eki).
+        let status = column![
+            label::caption(said),
+            label::caption("Plana ya da boykesite basın, sürükleyin: km oraya gider.").style(muted),
+        ]
+        .spacing(2);
+        Frame::new(TITLE)
+            .scroll(body)
+            .status(status)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .width(1080.0)
+            .modal(msg(Event::Close))
     }
 
     pub(crate) fn road_views_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
