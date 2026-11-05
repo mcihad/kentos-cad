@@ -77,6 +77,8 @@ pub struct StandardProvenance {
     pub blocks: std::collections::BTreeMap<String, StandardOrigin>,
     pub sheet_templates: std::collections::BTreeMap<String, StandardOrigin>,
     pub leader_styles: std::collections::BTreeMap<String, StandardOrigin>,
+    pub text_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
+    pub dimension_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
@@ -265,6 +267,15 @@ pub struct StandardResources {
         ts(optional, as = "Option<Vec<crate::LeaderStyleDef>>")
     )]
     pub leader_styles: Vec<crate::LeaderStyleDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::TextStyleDef>>"))]
+    pub text_style_definitions: Vec<crate::TextStyleDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::DimensionStyleDef>>")
+    )]
+    pub dimension_style_definitions: Vec<crate::DimensionStyleDef>,
 }
 
 /// Approved sheet-template origin. It identifies a template revision, not a
@@ -411,6 +422,15 @@ pub fn parse_standard_document(
                 if let Some(problem) = crate::leader_styles_problem(&resources.leader_styles) {
                     return Err(format!("Kılavuz stili kaynağı geçersiz: {problem}."));
                 }
+                if let Some(problem) = crate::text_styles_problem(&resources.text_style_definitions)
+                {
+                    return Err(format!("Yazı stili kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) =
+                    crate::dimension_styles_problem(&resources.dimension_style_definitions)
+                {
+                    return Err(format!("Ölçü stili kaynağı geçersiz: {problem}."));
+                }
             }
             _ => {}
         }
@@ -523,6 +543,8 @@ fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
             "blocks",
             "sheetTemplates",
             "leaderStyles",
+            "textStyleDefinitions",
+            "dimensionStyleDefinitions",
         ],
     )?;
     let root = object(resources, "resources")?;
@@ -563,6 +585,63 @@ fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
                 item,
                 &format!("resources.leaderStyles[{i}]"),
                 &["id", "name", "height", "arrow", "arrowSize", "mask"],
+            )?;
+        }
+    }
+    if let Some(value) = root.get("textStyleDefinitions") {
+        let styles = value
+            .as_array()
+            .ok_or("resources.textStyleDefinitions bir dizi olmalı.")?;
+        for (i, item) in styles.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.textStyleDefinitions[{i}]"),
+                &[
+                    "id",
+                    "name",
+                    "font",
+                    "bold",
+                    "italic",
+                    "oblique",
+                    "height",
+                    "widthFactor",
+                    "fontFile",
+                ],
+            )?;
+        }
+    }
+    if let Some(value) = root.get("dimensionStyleDefinitions") {
+        let styles = value
+            .as_array()
+            .ok_or("resources.dimensionStyleDefinitions bir dizi olmalı.")?;
+        for (i, item) in styles.iter().enumerate() {
+            keys(
+                item,
+                &format!("resources.dimensionStyleDefinitions[{i}]"),
+                &[
+                    "id",
+                    "name",
+                    "height",
+                    "arrow",
+                    "arrowSize",
+                    "extOffset",
+                    "extBeyond",
+                    "textGap",
+                    "textPlace",
+                    "decimals",
+                    "unit",
+                    "prefix",
+                    "suffix",
+                    "font",
+                    "dimLineColor",
+                    "dimLineWeight",
+                    "dimLineType",
+                    "extColor",
+                    "extWeight",
+                    "extLineType",
+                    "textColor",
+                    "options",
+                ],
             )?;
         }
     }
@@ -799,6 +878,10 @@ pub enum StandardIssueKind {
     SheetTemplateOrigin,
     MissingLeaderStyleDefinition,
     LeaderStyleDefinition,
+    MissingTextStyleDefinition,
+    TextStyleDefinition,
+    MissingDimensionStyleDefinition,
+    DimensionStyleDefinition,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.
@@ -1026,6 +1109,7 @@ mod tests {
                 blocks: vec![],
                 sheet_templates: vec![],
                 leader_styles: vec![],
+                ..Default::default()
             }),
         };
         let mut value = serde_json::to_value(&package).unwrap();
@@ -1168,6 +1252,63 @@ mod tests {
             .as_array_mut()
             .unwrap()
             .push(serde_json::json!({"id":"office-leader-2", "name":"a-not", "height":2.5}));
+        assert!(parse(&value).unwrap_err().contains("iki kez"));
+    }
+
+    #[test]
+    fn version_two_complete_annotation_styles_reject_unknown_and_invalid_content() {
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                text_style_definitions: vec![
+                    serde_json::from_value(serde_json::json!({
+                        "id":"office-text", "name":"A-NOT", "font":"arimo",
+                        "height":2.5, "widthFactor":0.9,
+                    }))
+                    .unwrap(),
+                ],
+                dimension_style_definitions: vec![
+                    serde_json::from_value(serde_json::json!({
+                        "id":"office-dim", "name":"A-DIM", "height":2.5,
+                        "dimLineColor":"#ff0000", "options":{"round":0.001},
+                    }))
+                    .unwrap(),
+                ],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["textStyleDefinitions"][0]["unknown"] = true.into();
+        assert!(parse(&value).unwrap_err().contains("bilinmeyen alan"));
+        value["resources"]["textStyleDefinitions"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["resources"]["dimensionStyleDefinitions"][0]["options"]["unknown"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["dimensionStyleDefinitions"][0]["options"]
+            .as_object_mut()
+            .unwrap()
+            .remove("unknown");
+        value["resources"]["textStyleDefinitions"][0]["height"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("Yazı stili kaynağı"));
+        value["resources"]["textStyleDefinitions"][0]["height"] = 2.5.into();
+        value["resources"]["dimensionStyleDefinitions"][0]["height"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("Ölçü stili kaynağı"));
+        value["resources"]["dimensionStyleDefinitions"][0]["height"] = 2.5.into();
+        value["resources"]["textStyleDefinitions"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "id":"other-text", "name":"a-not", "font":"arimo"
+            }));
         assert!(parse(&value).unwrap_err().contains("iki kez"));
     }
 

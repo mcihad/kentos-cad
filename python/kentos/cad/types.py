@@ -6449,6 +6449,10 @@ class StandardIssueKind(_StrEnum):
     - ``sheetTemplateOrigin``
     - ``missingLeaderStyleDefinition``
     - ``leaderStyleDefinition``
+    - ``missingTextStyleDefinition``
+    - ``textStyleDefinition``
+    - ``missingDimensionStyleDefinition``
+    - ``dimensionStyleDefinition``
     - ``missingLayer``: A standard layer the drawing lacks.
     - ``layerName``: A layer whose name the standard does not have nor allow.
     - ``projectFont``: The project's drawing font is not one of the standard's.
@@ -6475,6 +6479,10 @@ class StandardIssueKind(_StrEnum):
     SHEET_TEMPLATE_ORIGIN = "sheetTemplateOrigin"
     MISSING_LEADER_STYLE_DEFINITION = "missingLeaderStyleDefinition"
     LEADER_STYLE_DEFINITION = "leaderStyleDefinition"
+    MISSING_TEXT_STYLE_DEFINITION = "missingTextStyleDefinition"
+    TEXT_STYLE_DEFINITION = "textStyleDefinition"
+    MISSING_DIMENSION_STYLE_DEFINITION = "missingDimensionStyleDefinition"
+    DIMENSION_STYLE_DEFINITION = "dimensionStyleDefinition"
     MISSING_LAYER = "missingLayer"
     LAYER_NAME = "layerName"
     PROJECT_FONT = "projectFont"
@@ -6486,7 +6494,7 @@ class StandardIssueKind(_StrEnum):
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
@@ -75783,6 +75791,8 @@ class StandardProvenance(_Model):
     blocks: dict[str, StandardOrigin]
     sheet_templates: dict[str, StandardOrigin]
     leader_styles: dict[str, StandardOrigin]
+    text_style_definitions: dict[str, StandardOrigin]
+    dimension_style_definitions: dict[str, StandardOrigin]
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75795,6 +75805,8 @@ class StandardProvenance(_Model):
         out["blocks"] = {k0: e0.to_json() for k0, e0 in self.blocks.items()}
         out["sheetTemplates"] = {k0: e0.to_json() for k0, e0 in self.sheet_templates.items()}
         out["leaderStyles"] = {k0: e0.to_json() for k0, e0 in self.leader_styles.items()}
+        out["textStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.text_style_definitions.items()}
+        out["dimensionStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.dimension_style_definitions.items()}
         return out
 
     @classmethod
@@ -75809,6 +75821,8 @@ class StandardProvenance(_Model):
             blocks={k0: StandardOrigin.from_json(e0) for k0, e0 in data["blocks"].items()},
             sheet_templates={k0: StandardOrigin.from_json(e0) for k0, e0 in data["sheetTemplates"].items()},
             leader_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["leaderStyles"].items()},
+            text_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["textStyleDefinitions"].items()},
+            dimension_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyleDefinitions"].items()},
         )
 
 
@@ -75818,15 +75832,19 @@ class StandardResources(_Model):
     Association alone never overwrites the project's definitions.
     """
     blocks: list[StandardBlockReference] | Unset = UNSET
+    dimension_style_definitions: list[DimensionStyleDef] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     leader_styles: list[LeaderStyleDef] | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
     sheet_templates: list[StandardSheetTemplateReference] | Unset = UNSET
+    text_style_definitions: list[TextStyleDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.blocks is not UNSET:
             out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        if self.dimension_style_definitions is not UNSET:
+            out["dimensionStyleDefinitions"] = [e0.to_json() for e0 in self.dimension_style_definitions]
         if self.hatch_patterns is not UNSET:
             out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
         if self.leader_styles is not UNSET:
@@ -75835,16 +75853,20 @@ class StandardResources(_Model):
             out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
         if self.sheet_templates is not UNSET:
             out["sheetTemplates"] = [e0.to_json() for e0 in self.sheet_templates]
+        if self.text_style_definitions is not UNSET:
+            out["textStyleDefinitions"] = [e0.to_json() for e0 in self.text_style_definitions]
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> StandardResources:
         return cls(
             blocks=[StandardBlockReference.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
+            dimension_style_definitions=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyleDefinitions"]] if "dimensionStyleDefinitions" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             sheet_templates=[StandardSheetTemplateReference.from_json(e0) for e0 in data["sheetTemplates"]] if "sheetTemplates" in data else UNSET,
+            text_style_definitions=[TextStyleDef.from_json(e0) for e0 in data["textStyleDefinitions"]] if "textStyleDefinitions" in data else UNSET,
         )
 
 

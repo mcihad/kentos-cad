@@ -13,6 +13,30 @@ import kcad  # The independent KCAD reader.
 
 
 class ProjectStandardDocuments(unittest.TestCase):
+    def test_complete_annotation_style_resources_are_read_only_through_python(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
+        document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        resources = cad.StandardResources(
+            text_style_definitions=[cad.TextStyleDef.from_json({
+                "id": "office-text", "name": "A-NOT", "font": "arimo", "height": 2.5,
+            })],
+            dimension_style_definitions=[cad.DimensionStyleDef.from_json({
+                "id": "office-dim", "name": "A-DIM", "height": 2.5,
+            })],
+        )
+        standard = cad.DrawingStandard.from_json({"name": "Ofis", "layers": []})
+        before = document.to_bytes()
+        report = cad.standards.check(document, standard=standard, resources=resources)
+        kinds = {issue.kind for issue in report.issues}
+        self.assertIn(cad.StandardIssueKind.MISSING_TEXT_STYLE_DEFINITION, kinds)
+        self.assertIn(cad.StandardIssueKind.MISSING_DIMENSION_STYLE_DEFINITION, kinds)
+        self.assertTrue(all(not issue.fixable for issue in report.issues
+                            if issue.kind in {
+                                cad.StandardIssueKind.MISSING_TEXT_STYLE_DEFINITION,
+                                cad.StandardIssueKind.MISSING_DIMENSION_STYLE_DEFINITION,
+                            }))
+        self.assertEqual(document.to_bytes(), before)
+
     def test_named_leader_style_check_is_available_through_python(self):
         fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
         document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())

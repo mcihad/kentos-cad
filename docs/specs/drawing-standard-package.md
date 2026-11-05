@@ -33,7 +33,8 @@ blocks, hatch definitions, templates, palette items or viewport overrides.
 
 Version 2 keeps the same `format`, `id`, `revision` and `standard` fields and
 requires a `resources` object. Its supported fields are `lineTypes`,
-`hatchPatterns`, `blocks`, `sheetTemplates` and `leaderStyles`. The first two
+`hatchPatterns`, `blocks`, `sheetTemplates`, `leaderStyles`,
+`textStyleDefinitions` and `dimensionStyleDefinitions`. The first two
 hold the corresponding KentOS project definitions. `blocks` holds a block name and its existing library
 `publication` metadata (`familyId`, `typeId`, `typeName`, `release`), without
 embedding geometry. `sheetTemplates` holds approved template IDs and revision
@@ -52,22 +53,26 @@ valid. For example:
     "hatchPatterns": [{ "name": "OFFICE-HATCH", "lines": [{ "angle": 45, "origin": [0, 0], "offset": [0, 2] }] }],
     "blocks": [{ "name": "OFFICE-DOOR", "publication": { "familyId": "22222222-3333-4444-8555-666666666666", "typeId": "33333333-4444-4555-8666-777777777777", "typeName": "Standard door", "release": 2 } }],
     "sheetTemplates": [{ "templateId": "office-a3", "revision": 2 }],
-    "leaderStyles": [{ "id": "office-note", "name": "A-NOTE", "height": 2.5, "arrow": "open", "arrowSize": 1.5 }]
+    "leaderStyles": [{ "id": "office-note", "name": "A-NOTE", "height": 2.5, "arrow": "open", "arrowSize": 1.5 }],
+    "textStyleDefinitions": [{ "id": "office-text", "name": "A-TEXT", "font": "arimo", "height": 2.5, "widthFactor": 0.9 }],
+    "dimensionStyleDefinitions": [{ "id": "office-dim", "name": "A-DIM", "height": 2.5, "dimLineColor": "#ff0000", "options": { "round": 0.001 } }]
   }
 }
 ```
 
-Unknown resource fields, including nested definition and pattern fields, are
-rejected. Definition validity and duplicate names are checked using the same
+Package loading rejects unknown resource fields, including nested definition
+and pattern fields. Definition validity and duplicate names are checked using the same
 rules as project line types, hatch patterns and published block cards. Block
 names use the drawing's Turkish case folding, must be unique, and the
 publication identifiers and release must be valid. Template IDs must be unique
 without regard to case, must contain 1–128 bytes, and revisions must be
 positive. Named leader styles use the project's validated leader-style shape;
 their IDs are transported but a local style with the same name and appearance
-can satisfy the standard even if its local ID differs. Version 1 rejects
-`resources`;
-version 2 without `resources` and unsupported later versions are rejected.
+can satisfy the standard even if its local ID differs. Complete text and dimension style definitions use the project's
+validated style shapes; the short `standard.textStyles` and
+`standard.dimensionStyles` rules remain separate. Source IDs are not compared
+with local IDs. Version 1 rejects `resources`; version 2 without `resources`
+and unsupported later versions are rejected.
 The project keeps the original JSON text, including the order and content of
 both versions. Attaching it through `cad.settings.set` remains revision checked
 and does not replace, install, purge or rename a drawing resource.
@@ -75,7 +80,8 @@ and does not replace, install, purge or rename a drawing resource.
 `cad.standards.resolve` returns the first definition of each resource name in
 binding order under `resources`, with its source document and revision in
 `provenance.lineTypes`, `provenance.hatchPatterns`, `provenance.blocks`,
-`provenance.sheetTemplates` or `provenance.leaderStyles`.
+`provenance.sheetTemplates`, `provenance.leaderStyles`,
+`provenance.textStyleDefinitions` or `provenance.dimensionStyleDefinitions`.
 Line and hatch names use the project resource tables' case insensitive
 comparison; block names use the block table's Turkish case folding. The
 standard's drawing rules still resolve as before. `cad.standards.conflicts` reports differing
@@ -89,6 +95,10 @@ the first revision for checking.
 Leader-style conflicts compare appearance fields, excluding the local style ID
 and the case of its name. Numeric height and arrow-size differences use the
 standard check's 1e-9 tolerance. The first named definition wins for checking.
+Complete text and dimension style conflicts use the same identity rule and
+compare every supplied appearance field, including nested dimension options.
+Numeric differences within 1e-9 are treated as equal. A missing field is not
+silently equated to an explicit value.
 
 `cad.standards.check` may receive the resolved or a single package's
 `resources` alongside its `standard`. It reports missing named line/hatch
@@ -113,11 +123,15 @@ metadata, not a content digest.
 Named leader styles are checked by name and their paper height, arrow type,
 arrow size and mask. A missing or different style is a non-fixable finding;
 the check never replaces an existing style or rewrites its leaders.
+Complete text and dimension styles are likewise checked by name and all
+serialized appearance fields. These findings are non-fixable and do not rewrite
+existing annotations or style tables. The short rules may also report their
+own, narrower name/font/height findings.
 
 Version 2 currently transports and checks definitions for explicit
 mapping work. It does not apply them to the drawing. In particular, named
 patterns in layers and objects, SHX shape files referenced by a line type,
-block geometry, complete text/dimension/table style content, sheet-template
+block geometry, table style content, sheet-template
 contents, palette recipes and viewport overrides are not yet packaged or
 reconciled. An office standard
 must not be marked fully applied on the basis of these resource queries.

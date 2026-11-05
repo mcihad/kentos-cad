@@ -174,6 +174,10 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::SheetTemplateOrigin => "Pafta şablonu",
         K::MissingLeaderStyleDefinition => "Eksik kılavuz stili",
         K::LeaderStyleDefinition => "Kılavuz stili",
+        K::MissingTextStyleDefinition => "Eksik yazı stili tanımı",
+        K::TextStyleDefinition => "Yazı stili tanımı",
+        K::MissingDimensionStyleDefinition => "Eksik ölçü stili tanımı",
+        K::DimensionStyleDefinition => "Ölçü stili tanımı",
         K::ObjectLineType => "Nesne çizgi tipi",
         K::OwnLook => "Nesne görünüşü",
     }
@@ -201,6 +205,12 @@ fn conflict_field(field: &str) -> &'static str {
         "arrow" => "Ok ucu",
         "arrowSize" => "Ok boyu oranı",
         "mask" => "Yazı maskesi",
+        "bold" => "Kalın yazı",
+        "italic" => "Eğik yazı",
+        "oblique" => "Eğiklik",
+        "widthFactor" => "En oranı",
+        "fontFile" => "Yazı tipi dosyası",
+        "options" => "Ölçü seçenekleri",
         "byLayer" => "Katmana göre görünüş",
         _ => "Özellik",
     }
@@ -862,6 +872,12 @@ impl App {
                     StandardIssueKind::SheetTemplateOrigin => Some(&p.sheet_templates),
                     StandardIssueKind::MissingLeaderStyleDefinition
                     | StandardIssueKind::LeaderStyleDefinition => Some(&p.leader_styles),
+                    StandardIssueKind::MissingTextStyleDefinition
+                    | StandardIssueKind::TextStyleDefinition => Some(&p.text_style_definitions),
+                    StandardIssueKind::MissingDimensionStyleDefinition
+                    | StandardIssueKind::DimensionStyleDefinition => {
+                        Some(&p.dimension_style_definitions)
+                    }
                     _ => None,
                 });
                 let resource = matches!(
@@ -875,6 +891,10 @@ impl App {
                         | StandardIssueKind::SheetTemplateOrigin
                         | StandardIssueKind::MissingLeaderStyleDefinition
                         | StandardIssueKind::LeaderStyleDefinition
+                        | StandardIssueKind::MissingTextStyleDefinition
+                        | StandardIssueKind::TextStyleDefinition
+                        | StandardIssueKind::MissingDimensionStyleDefinition
+                        | StandardIssueKind::DimensionStyleDefinition
                 );
                 if let Some(origin) = definitions.and_then(|entries| {
                     entries
@@ -915,6 +935,10 @@ impl App {
                         | StandardIssueKind::SheetTemplateOrigin
                         | StandardIssueKind::MissingLeaderStyleDefinition
                         | StandardIssueKind::LeaderStyleDefinition
+                        | StandardIssueKind::MissingTextStyleDefinition
+                        | StandardIssueKind::TextStyleDefinition
+                        | StandardIssueKind::MissingDimensionStyleDefinition
+                        | StandardIssueKind::DimensionStyleDefinition
                 ) {
                     if let Some(found) = &issue.found {
                         if block {
@@ -1174,7 +1198,7 @@ impl App {
                         let item = &conflicts[i];
                         let kind = match item.kind.as_str() {
                             "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural",
-                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", "blockReference" => "Blok yayını", "sheetTemplateReference" => "Pafta şablonu", "leaderStyleDefinition" => "Kılavuz stili", _ => "Tanım",
+                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", "blockReference" => "Blok yayını", "sheetTemplateReference" => "Pafta şablonu", "leaderStyleDefinition" => "Kılavuz stili", "textStyleDefinition" => "Yazı stili tanımı", "dimensionStyleDefinition" => "Ölçü stili tanımı", _ => "Tanım",
                         };
                         let fields = item.fields.iter().map(|field| conflict_field(field)).collect::<Vec<_>>().join(", ");
                         let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
@@ -1197,7 +1221,18 @@ impl App {
         }
         body = body
             .push(words::summary(lines))
-            .push(words::field("Bulgular", table, Some(hint)))
+            .push(
+                Column::new()
+                    .spacing(4)
+                    .push(label::caption("Bulgular"))
+                    .push(table)
+                    .push(
+                        label::caption(hint)
+                            .width(Fill)
+                            .wrapping(iced::widget::text::Wrapping::WordOrGlyph),
+                    )
+                    .width(Fill),
+            )
             .push(words::field("Düzeltme", parts, None))
             .push(words::summary(preview));
         if let Some(error) = &w.load_error
@@ -1290,12 +1325,19 @@ fn change_words(issue: &StandardIssue) -> String {
         StandardIssueKind::MissingLeaderStyleDefinition => {
             return "yok → standartta tanımlı".into();
         }
+        StandardIssueKind::MissingTextStyleDefinition
+        | StandardIssueKind::MissingDimensionStyleDefinition => {
+            return "yok → standartta tanımlı".into();
+        }
         StandardIssueKind::LineTypeDefinition
         | StandardIssueKind::HatchPatternDefinition
         | StandardIssueKind::BlockPublication => {
             return "tanım farklı → standart tanımı".into();
         }
         StandardIssueKind::LeaderStyleDefinition => {
+            return "tanım farklı → standart tanımı".into();
+        }
+        StandardIssueKind::TextStyleDefinition | StandardIssueKind::DimensionStyleDefinition => {
             return "tanım farklı → standart tanımı".into();
         }
         StandardIssueKind::SheetTemplateOrigin => {

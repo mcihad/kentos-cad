@@ -159909,7 +159909,11 @@
             "blockPublication",
             "sheetTemplateOrigin",
             "missingLeaderStyleDefinition",
-            "leaderStyleDefinition"
+            "leaderStyleDefinition",
+            "missingTextStyleDefinition",
+            "textStyleDefinition",
+            "missingDimensionStyleDefinition",
+            "dimensionStyleDefinition"
           ],
           "type": "string"
         },
@@ -160029,6 +160033,12 @@
           },
           "type": "object"
         },
+        "dimensionStyleDefinitions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
         "dimensionStyles": {
           "additionalProperties": {
             "$ref": "#/$defs/StandardOrigin"
@@ -160068,6 +160078,12 @@
           },
           "type": "object"
         },
+        "textStyleDefinitions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
         "textStyles": {
           "additionalProperties": {
             "$ref": "#/$defs/StandardOrigin"
@@ -160084,7 +160100,9 @@
         "hatchPatterns",
         "blocks",
         "sheetTemplates",
-        "leaderStyles"
+        "leaderStyles",
+        "textStyleDefinitions",
+        "dimensionStyleDefinitions"
       ],
       "type": "object"
     },
@@ -160095,6 +160113,12 @@
         "blocks": {
           "items": {
             "$ref": "#/$defs/StandardBlockReference"
+          },
+          "type": "array"
+        },
+        "dimensionStyleDefinitions": {
+          "items": {
+            "$ref": "#/$defs/DimensionStyleDef"
           },
           "type": "array"
         },
@@ -160119,6 +160143,12 @@
         "sheetTemplates": {
           "items": {
             "$ref": "#/$defs/StandardSheetTemplateReference"
+          },
+          "type": "array"
+        },
+        "textStyleDefinitions": {
+          "items": {
+            "$ref": "#/$defs/TextStyleDef"
           },
           "type": "array"
         }

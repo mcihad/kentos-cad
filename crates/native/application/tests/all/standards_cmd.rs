@@ -232,6 +232,7 @@ fn version_two_resource_definitions_resolve_by_order_and_report_content_conflict
                 blocks: vec![],
                 sheet_templates: vec![],
                 leader_styles: vec![],
+                ..Default::default()
             }),
         })
         .unwrap(),
@@ -350,6 +351,7 @@ fn named_resources_are_checked_without_installing_or_replacing_drawing_definitio
         blocks: vec![],
         sheet_templates: vec![],
         leader_styles: vec![],
+        ..Default::default()
     };
     let input = json!({"standard":kentos_commands::built_in_standard("mimari-ofis").unwrap(), "resources":resources});
     let kinds = |doc: &mut Document| {
@@ -658,6 +660,172 @@ fn office_leader_style_checks_appearance_without_matching_local_ids() {
             .unwrap()
             .iter()
             .any(|issue| issue["kind"] == "missingLeaderStyleDefinition")
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+}
+
+#[test]
+fn office_complete_annotation_styles_report_appearance_without_replacing_local_styles() {
+    use kentos_commands::{
+        CallOp, DimensionStyleDef, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,
+        STANDARD_PACKAGE_RESOURCES_VERSION, StandardPackage, StandardResources, TextStyleDef,
+    };
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let local_text: TextStyleDef = serde_json::from_value(json!({
+        "id":"local-text", "name":"A-NOT", "font":"arimo", "height":2.5,
+        "widthFactor":0.9
+    }))
+    .unwrap();
+    let local_dim: DimensionStyleDef = serde_json::from_value(json!({
+        "id":"local-dim", "name":"A-DIM", "height":2.5,
+        "dimLineColor":"#ff0000", "options":{"round":0.001}
+    }))
+    .unwrap();
+    let mut settings = doc.settings().clone();
+    settings.text_styles = vec![local_text.clone()];
+    settings.dimension_styles = vec![local_dim.clone()];
+    doc.set_settings(settings);
+    let mut office_text = local_text.clone();
+    office_text.id = "office-text".into();
+    office_text.name = "a-not".into();
+    let mut office_dim = local_dim.clone();
+    office_dim.id = "office-dim".into();
+    office_dim.name = "a-dim".into();
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let package =
+        |id: &str, text: TextStyleDef, dimension: DimensionStyleDef| ProjectStandardDocument {
+            text: serde_json::to_string(&StandardPackage {
+                format: STANDARD_PACKAGE_FORMAT.into(),
+                version: STANDARD_PACKAGE_RESOURCES_VERSION,
+                id: id.into(),
+                revision: "2".into(),
+                standard: standard.clone(),
+                resources: Some(StandardResources {
+                    text_style_definitions: vec![text],
+                    dimension_style_definitions: vec![dimension],
+                    ..Default::default()
+                }),
+            })
+            .unwrap(),
+        };
+    let mut changed_text = office_text.clone();
+    changed_text.width_factor = Some(0.8);
+    let mut changed_dim = office_dim.clone();
+    changed_dim.dim_line_color = Some("#0000ff".into());
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![
+        package("office-a", office_text.clone(), office_dim.clone()),
+        package("office-b", changed_text.clone(), changed_dim.clone()),
+    ];
+    doc.set_settings(settings);
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let resolved = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.resolve",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert_eq!(
+        resolved["output"]["resources"]["textStyleDefinitions"][0]["id"],
+        "office-text"
+    );
+    assert_eq!(
+        resolved["output"]["provenance"]["dimensionStyleDefinitions"]["a-dim"]["id"],
+        "office-a"
+    );
+    let conflicts = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.conflicts",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    let entries = conflicts["output"]["conflicts"].as_array().unwrap();
+    assert!(
+        entries
+            .iter()
+            .any(|item| item["kind"] == "textStyleDefinition"
+                && item["fields"] == json!(["widthFactor"]))
+    );
+    assert!(
+        entries
+            .iter()
+            .any(|item| item["kind"] == "dimensionStyleDefinition"
+                && item["fields"] == json!(["dimLineColor"]))
+    );
+    let check = |doc: &mut Document, text: TextStyleDef, dim: DimensionStyleDef| {
+        registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.standards.check",
+            CallOp::Execute,
+            json!({"standard":standard,"resources":StandardResources {
+                text_style_definitions: vec![text], dimension_style_definitions: vec![dim],
+                ..Default::default()
+            }}),
+        )
+        .unwrap()
+    };
+    let equal = check(&mut doc, office_text.clone(), office_dim.clone());
+    let resource_kinds = [
+        "textStyleDefinition",
+        "dimensionStyleDefinition",
+        "missingTextStyleDefinition",
+        "missingDimensionStyleDefinition",
+    ];
+    assert!(
+        !equal["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| resource_kinds.iter().any(|kind| issue["kind"] == *kind))
+    );
+    let mut near_text = office_text.clone();
+    near_text.height = Some(2.5 + 0.5e-9);
+    let near = check(&mut doc, near_text, office_dim.clone());
+    assert!(
+        !near["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "textStyleDefinition")
+    );
+    let different = check(&mut doc, changed_text, changed_dim);
+    assert!(
+        different["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "textStyleDefinition"
+                && !issue["fixable"].as_bool().unwrap())
+    );
+    assert!(
+        different["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "dimensionStyleDefinition"
+                && !issue["fixable"].as_bool().unwrap())
+    );
+    let mut missing_text = office_text;
+    missing_text.name = "A-OTHER".into();
+    let missing = check(&mut doc, missing_text, office_dim);
+    assert!(
+        missing["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["kind"] == "missingTextStyleDefinition")
     );
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);

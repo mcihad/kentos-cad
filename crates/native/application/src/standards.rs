@@ -121,6 +121,8 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         blocks: Default::default(),
         sheet_templates: Default::default(),
         leader_styles: Default::default(),
+        text_style_definitions: Default::default(),
+        dimension_style_definitions: Default::default(),
     };
     let mut layers: BTreeSet<_> = result
         .layers
@@ -142,6 +144,8 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
     let mut blocks = BTreeSet::new();
     let mut sheet_templates = BTreeSet::new();
     let mut leader_styles = BTreeSet::new();
+    let mut text_style_definitions = BTreeSet::new();
+    let mut dimension_style_definitions = BTreeSet::new();
     for package in &packages {
         let Some(source) = &package.resources else {
             continue;
@@ -182,6 +186,22 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
                     .leader_styles
                     .insert(item.name.clone(), origin(package));
                 resources.leader_styles.push(item.clone());
+            }
+        }
+        for item in &source.text_style_definitions {
+            if text_style_definitions.insert(item.name.trim().to_lowercase()) {
+                provenance
+                    .text_style_definitions
+                    .insert(item.name.clone(), origin(package));
+                resources.text_style_definitions.push(item.clone());
+            }
+        }
+        for item in &source.dimension_style_definitions {
+            if dimension_style_definitions.insert(item.name.trim().to_lowercase()) {
+                provenance
+                    .dimension_style_definitions
+                    .insert(item.name.clone(), origin(package));
+                resources.dimension_style_definitions.push(item.clone());
             }
         }
     }
@@ -319,6 +339,12 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
     > = BTreeMap::new();
     let mut leader_styles: BTreeMap<String, (&String, &kentos_commands::LeaderStyleDef)> =
         BTreeMap::new();
+    let mut text_style_definitions: BTreeMap<String, (&String, &kentos_commands::TextStyleDef)> =
+        BTreeMap::new();
+    let mut dimension_style_definitions: BTreeMap<
+        String,
+        (&String, &kentos_commands::DimensionStyleDef),
+    > = BTreeMap::new();
     let mut conflicts = Vec::new();
     for package in &packages {
         if let Some(first) = packages.first().filter(|first| first.id != package.id) {
@@ -559,6 +585,48 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     leader_styles.insert(key, (&package.id, item));
                 }
             }
+            for item in &resources.text_style_definitions {
+                let key = item.name.trim().to_lowercase();
+                if let Some((first_id, first)) = text_style_definitions.get(&key) {
+                    let first_value = resource_appearance(first);
+                    let later_value = resource_appearance(item);
+                    let fields = style_differences(&first_value, &later_value);
+                    if !fields.is_empty() {
+                        conflicts.push(StandardConflict {
+                            kind: "textStyleDefinition".into(),
+                            name: item.name.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    text_style_definitions.insert(key, (&package.id, item));
+                }
+            }
+            for item in &resources.dimension_style_definitions {
+                let key = item.name.trim().to_lowercase();
+                if let Some((first_id, first)) = dimension_style_definitions.get(&key) {
+                    let first_value = resource_appearance(first);
+                    let later_value = resource_appearance(item);
+                    let fields = style_differences(&first_value, &later_value);
+                    if !fields.is_empty() {
+                        conflicts.push(StandardConflict {
+                            kind: "dimensionStyleDefinition".into(),
+                            name: item.name.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    dimension_style_definitions.insert(key, (&package.id, item));
+                }
+            }
         }
     }
     CommandResult::Completed {
@@ -584,15 +652,48 @@ fn resource_differences(first: &serde_json::Value, later: &serde_json::Value) ->
 }
 
 fn leader_style_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
-    resource_differences(first, later)
+    style_differences(first, later)
+}
+
+fn resource_appearance<T: serde::Serialize>(item: &T) -> serde_json::Value {
+    let mut value = serde_json::to_value(item).expect("validated style");
+    let object = value.as_object_mut().expect("style object");
+    object.remove("id");
+    object.remove("name");
+    value
+}
+
+fn style_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
+    fn equal(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+        match (a, b) {
+            (serde_json::Value::Number(a), serde_json::Value::Number(b)) => a
+                .as_f64()
+                .zip(b.as_f64())
+                .is_some_and(|(a, b)| (a - b).abs() <= 1e-9),
+            (serde_json::Value::Array(a), serde_json::Value::Array(b)) => {
+                a.len() == b.len() && a.iter().zip(b).all(|(a, b)| equal(a, b))
+            }
+            (serde_json::Value::Object(a), serde_json::Value::Object(b)) => {
+                a.len() == b.len()
+                    && a.iter()
+                        .all(|(key, value)| b.get(key).is_some_and(|other| equal(value, other)))
+            }
+            _ => a == b,
+        }
+    }
+    let mut fields = std::collections::BTreeSet::new();
+    for value in [first, later] {
+        if let Some(object) = value.as_object() {
+            fields.extend(object.keys().cloned());
+        }
+    }
+    fields
         .into_iter()
         .filter(|field| {
-            if matches!(field.as_str(), "height" | "arrowSize") {
-                if let (Some(a), Some(b)) = (first[field].as_f64(), later[field].as_f64()) {
-                    return (a - b).abs() > 1e-9;
-                }
-            }
-            true
+            !first
+                .get(field)
+                .zip(later.get(field))
+                .is_some_and(|(a, b)| equal(a, b))
         })
         .collect()
 }
@@ -1334,6 +1435,22 @@ fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Re
             "resources.leaderStyles",
         ));
     }
+    if let Some(problem) = kentos_commands::text_styles_problem(&resources.text_style_definitions) {
+        return Err(fail(
+            codes::INVALID_STANDARD,
+            problem,
+            "resources.textStyleDefinitions",
+        ));
+    }
+    if let Some(problem) =
+        kentos_commands::dimension_styles_problem(&resources.dimension_style_definitions)
+    {
+        return Err(fail(
+            codes::INVALID_STANDARD,
+            problem,
+            "resources.dimensionStyleDefinitions",
+        ));
+    }
     Ok(())
 }
 
@@ -1493,6 +1610,86 @@ fn resource_issues(
                         expected.name
                     ),
                     Some(resource_geometry(found).to_string()),
+                )
+            }
+            Some(_) => continue,
+        };
+        issues.push(StandardIssue {
+            kind,
+            subject: expected.name.clone(),
+            layer: None,
+            expected: Some(expected_value.to_string()),
+            found: found_value,
+            objects: 0,
+            fixable: false,
+            message,
+        });
+    }
+    for expected in &resources.text_style_definitions {
+        let found =
+            doc.settings().text_styles.iter().find(|item| {
+                item.name.trim().to_lowercase() == expected.name.trim().to_lowercase()
+            });
+        let expected_value = resource_appearance(expected);
+        let (kind, message, found_value) = match found {
+            None => (
+                StandardIssueKind::MissingTextStyleDefinition,
+                format!(
+                    "“{}” yazı stili çizimde yok; stili açıkça kurun.",
+                    expected.name
+                ),
+                None,
+            ),
+            Some(found)
+                if !style_differences(&resource_appearance(found), &expected_value).is_empty() =>
+            {
+                (
+                    StandardIssueKind::TextStyleDefinition,
+                    format!(
+                        "“{}” yazı stilinin tam tanımı ofis standardından farklı; değişimi açıkça inceleyin.",
+                        expected.name
+                    ),
+                    Some(resource_appearance(found).to_string()),
+                )
+            }
+            Some(_) => continue,
+        };
+        issues.push(StandardIssue {
+            kind,
+            subject: expected.name.clone(),
+            layer: None,
+            expected: Some(expected_value.to_string()),
+            found: found_value,
+            objects: 0,
+            fixable: false,
+            message,
+        });
+    }
+    for expected in &resources.dimension_style_definitions {
+        let found =
+            doc.settings().dimension_styles.iter().find(|item| {
+                item.name.trim().to_lowercase() == expected.name.trim().to_lowercase()
+            });
+        let expected_value = resource_appearance(expected);
+        let (kind, message, found_value) = match found {
+            None => (
+                StandardIssueKind::MissingDimensionStyleDefinition,
+                format!(
+                    "“{}” ölçü stili çizimde yok; stili açıkça kurun.",
+                    expected.name
+                ),
+                None,
+            ),
+            Some(found)
+                if !style_differences(&resource_appearance(found), &expected_value).is_empty() =>
+            {
+                (
+                    StandardIssueKind::DimensionStyleDefinition,
+                    format!(
+                        "“{}” ölçü stilinin tam tanımı ofis standardından farklı; değişimi açıkça inceleyin.",
+                        expected.name
+                    ),
+                    Some(resource_appearance(found).to_string()),
                 )
             }
             Some(_) => continue,

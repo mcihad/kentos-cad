@@ -1965,8 +1965,20 @@ gösterir; yerel stil kimliği farklı olsa da aynı ad ve görünüş uygun say
 Eksik veya farklı kılavuz stili denetimi salt okunurdur; mevcut liderleri
 sessizce değiştirmez. Paket/komut ve Python sınamaları geçti. Gerçek uygulamada
 eksik A-NOT stili bulgusu, satır seçimi ve pasif Uygula düğmesi ekran görüntüsüyle
-doğrulandı (repo dışında). Tablo stili, tam yazı/ölçü stili tarifi ve
-güvenli kaynak eşlemesi açık kaldığı için madde `[~]` kalır.
+doğrulandı (repo dışında).
+Sürüm 2 paketi yazı ve ölçü stillerinin kısa standart kurallarından ayrı,
+tam çizim tanımlarını da taşıyıp ilk kaynağı, revizyonu ve aynı adlı farklı
+görünüş alanlarını raporlar. Yerel kimlikler eşleşmek zorunda değildir; adı ve
+görünüşü eşit olan stil uygundur. Eksik/farklı tanımlar otomatik uygulanmaz;
+özellikle mevcut yazı ve ölçüler sessizce değiştirilmez. Paket, komut ve Python
+sınamaları geçti. Gerçek arayüzde A-NOT ve A-DIM eksik tanım bulguları,
+satırların ayrıntısı ve pasif Uygula düğmesi görüldü. Ölçü stili JSON ayrıntısı
+tek satırda kesildiği için görünüm satır kaydırmalı yapıldı; gerçek uygulamada
+aşağı kaydırılarak tanımın tamamının okunabildiği doğrulandı. Görüntüler repo
+dışındadır. Tablo stili,
+ham komut girdisindeki iç stil alanlarının sıkı reddi, güvenli kaynak eşlemesi,
+palet ve tam görünüş kökeni açık olduğundan madde
+`[~]` kalır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
