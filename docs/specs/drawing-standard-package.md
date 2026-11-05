@@ -26,8 +26,8 @@ The file is limited to 1 MiB by the desktop file picker.
 
 Version 1 contains drawing-standard rules only. It does not package styles,
 blocks, hatch definitions, templates, palette items or viewport overrides.
-The desktop file selection is temporary and does not associate the file with
-the project. Loading a document does not grant permission to change a drawing:
+The desktop file selection is temporary until the user explicitly chooses
+“Projeye bağla”. Loading or associating a document does not apply its rules:
 checking and applying are separate actions, and applying is revision-checked.
 
 `cad.settings.set` accepts `standardDocs`, an ordered list of objects with a
@@ -35,8 +35,8 @@ checking and applying are separate actions, and applying is revision-checked.
 all documents before replacing the list; an empty list removes the bindings.
 Use `expectedRevision` to protect the edit from intervening changes. The same
 field is available through the generated Python SDK and MCP command contract.
-Association does not apply a standard, and the standard-check window does not
-yet select or combine these project bindings.
+Association does not apply a standard. The standard-check window selects one
+project binding at a time; it does not yet combine multiple standards.
 
 This format is a starting point for CAD-ADV-12, not the complete office
 package. Future resource packaging and the complete association workflow

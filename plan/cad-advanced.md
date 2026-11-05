@@ -1857,8 +1857,11 @@ eski şema sınaması ve 235 KCAD testi doğrulandı. Gerçek uygulamada örnek
 karşılaştırıldı. `cad.settings.set` komutu sürümlü belgeler listesini
 doğrulayıp revizyon kontrolüyle bağlar, sıralar veya kaldırır; Python
 bağlamaları güncellendi. Python'un gerçek yerel motorunda bağlama, kaydetme,
-yeniden açma ve kaldırma doğrulandı. Seçim arayüzü ve birden fazla standart arasındaki
-öncelik çözümü henüz yoktur; denetim kayıtları otomatik kullanmaz.
+yeniden açma ve kaldırma doğrulandı. Standart penceresi sürümlü bir dosyayı
+projeye bağlayabilir ve bağlı belgelerden birini seçip denetleyebilir; ilk
+belge pencere açıldığında seçilir. Gerçek arayüzde üç belgeyle bağlama,
+kaydetme, yeniden açma, seçim ve küçük pencerede kaydırma doğrulandı. Birden
+fazla standardın birlikte denetimi ve öncelik çözümü henüz yoktur.
 Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
 komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
 tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve

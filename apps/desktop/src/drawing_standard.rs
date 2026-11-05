@@ -8,12 +8,12 @@
 use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, DrawingStandard, StandardIssue, StandardIssueKind, StandardsApplied,
-    StandardsApply, StandardsCheck, StandardsReport, built_in_standard, built_in_standards,
-    parse_standard_document,
+    CommandResult, DrawingStandard, ProjectStandardDocument, SettingsSet, StandardIssue,
+    StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsReport,
+    built_in_standard, built_in_standards, parse_standard_document,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, standards};
+use kentos_native_application::{ExecutionContext, settings_set, standards};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList};
@@ -38,7 +38,8 @@ pub struct Window {
     /// The built-in standard's id.
     pub standard: String,
     /// A temporary file standard; absent means the built-in standard.
-    custom: Option<(String, DrawingStandard)>,
+    custom: Option<SelectedStandard>,
+    choices: Vec<ProjectChoice>,
     load_error: Option<String>,
     pub layers: bool,
     pub restyle: bool,
@@ -53,8 +54,10 @@ pub struct Window {
 #[derive(Debug, Clone)]
 pub enum Event {
     Load,
-    Loaded(Result<Option<(String, DrawingStandard)>, String>),
+    Loaded(Result<Option<SelectedStandard>, String>),
     BuiltIn,
+    Project(String),
+    Attach,
     Layers(bool),
     Restyle(bool),
     Rename(bool),
@@ -63,6 +66,58 @@ pub enum Event {
     Pick(usize),
     Apply,
     Close,
+}
+
+#[derive(Debug, Clone)]
+pub struct SelectedStandard {
+    label: String,
+    standard: DrawingStandard,
+    /// Exact source text is retained only for a versioned document.
+    document: Option<String>,
+    bound_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct ProjectChoice {
+    id: String,
+    label: String,
+}
+
+impl std::fmt::Display for ProjectChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.label)
+    }
+}
+
+/// Parse once per report refresh, not on every rendered frame.
+fn project_choices(documents: &[ProjectStandardDocument]) -> Vec<ProjectChoice> {
+    documents
+        .iter()
+        .filter_map(|document| {
+            let value: serde_json::Value = serde_json::from_str(&document.text).ok()?;
+            let id = value.get("id")?.as_str()?.to_owned();
+            let revision = value.get("revision")?.as_str()?;
+            let invalid = parse_standard_document(document.text.as_bytes()).is_err();
+            Some(ProjectChoice {
+                label: format!(
+                    "{id} · {revision}{}",
+                    if invalid { " · geçersiz" } else { "" }
+                ),
+                id,
+            })
+        })
+        .collect()
+}
+
+fn selected_project(document: &ProjectStandardDocument) -> Result<SelectedStandard, String> {
+    let (standard, package) = parse_standard_document(document.text.as_bytes())?;
+    let package = package.ok_or("Bağlı standart sürümlü değil.")?;
+    Ok(SelectedStandard {
+        label: format!("Projeye bağlı: {} · sürüm {}", package.id, package.revision),
+        standard,
+        document: Some(document.text.clone()),
+        bound_id: Some(package.id),
+    })
 }
 
 fn msg(event: Event) -> Message {
@@ -96,7 +151,10 @@ impl Window {
     fn apply_input(&self) -> StandardsApply {
         StandardsApply {
             name: self.custom.is_none().then(|| self.standard.clone()),
-            standard: self.custom.as_ref().map(|(_, standard)| standard.clone()),
+            standard: self
+                .custom
+                .as_ref()
+                .map(|selected| selected.standard.clone()),
             layers: self.layers,
             restyle: self.restyle,
             rename: self.rename,
@@ -122,10 +180,20 @@ impl App {
             .first()
             .map(|s| (*s).to_owned())
             .unwrap_or_default();
+        let first = self
+            .document
+            .as_ref()
+            .and_then(|doc| doc.model.settings().standard_docs.first());
+        let (custom, load_error) = match first.map(selected_project) {
+            None => (None, None),
+            Some(Ok(selected)) => (Some(selected), None),
+            Some(Err(why)) => (None, Some(format!("İlk bağlı standart geçersiz: {why}"))),
+        };
         self.drawing_standard = Some(Window {
             standard,
-            custom: None,
-            load_error: None,
+            custom,
+            choices: Vec::new(),
+            load_error,
             layers: true,
             restyle: true,
             rename: true,
@@ -143,12 +211,20 @@ impl App {
         let (Some(w), Some(doc)) = (&self.drawing_standard, &self.document) else {
             return;
         };
+        let choices = project_choices(&doc.model.settings().standard_docs);
+        let bound_changed =
+            w.custom.as_ref().is_some_and(|selected| {
+                selected.bound_id.is_some()
+                    && !doc.model.settings().standard_docs.iter().any(|document| {
+                        selected.document.as_deref() == Some(document.text.as_str())
+                    })
+            });
         let mut copy = doc.model.reading_copy();
         let report = match standards::plan_check(
             &ExecutionContext::new(&mut copy),
             &StandardsCheck {
                 name: w.custom.is_none().then(|| w.standard.clone()),
-                standard: w.custom.as_ref().map(|(_, standard)| standard.clone()),
+                standard: w.custom.as_ref().map(|selected| selected.standard.clone()),
             },
         ) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -173,6 +249,11 @@ impl App {
             }
         };
         if let Some(w) = self.drawing_standard.as_mut() {
+            w.choices = choices;
+            if bound_changed {
+                w.load_error =
+                    Some("Bağlı standart değişti veya kaldırıldı; projeden yeniden seçin.".into());
+            }
             // An index belongs to the old report; after a fix the same index
             // can describe a different finding even when it remains in range.
             let same_findings = match (&w.report, &report) {
@@ -214,7 +295,7 @@ impl App {
                             return Err("Standart dosyası 1 MiB sınırını aşıyor.".into());
                         }
                         let (standard, package) = parse_standard_document(&bytes)?;
-                        let name = match package {
+                        let name = match &package {
                             Some(package) => format!(
                                 "{} · {} · sürüm {}",
                                 file.file_name(),
@@ -223,7 +304,17 @@ impl App {
                             ),
                             None => file.file_name(),
                         };
-                        Ok(Some((name, standard)))
+                        let document = if package.is_some() {
+                            Some(String::from_utf8(bytes).map_err(|e| e.to_string())?)
+                        } else {
+                            None
+                        };
+                        Ok(Some(SelectedStandard {
+                            label: name,
+                            standard,
+                            document,
+                            bound_id: None,
+                        }))
                     },
                     |result| msg(Event::Loaded(result)),
                 );
@@ -242,6 +333,38 @@ impl App {
                 w.custom = None;
                 w.load_error = None;
                 w.chosen = None;
+            }
+            Event::Project(id) => {
+                let selected = self.document.as_ref().and_then(|doc| {
+                    doc.model
+                        .settings()
+                        .standard_docs
+                        .iter()
+                        .find(|document| {
+                            serde_json::from_str::<serde_json::Value>(&document.text)
+                                .ok()
+                                .and_then(|value| {
+                                    value.get("id").and_then(|v| v.as_str()).map(str::to_owned)
+                                })
+                                .as_deref()
+                                == Some(id.as_str())
+                        })
+                        .map(selected_project)
+                });
+                match selected {
+                    Some(Ok(selected)) => {
+                        w.custom = Some(selected);
+                        w.load_error = None;
+                        w.chosen = None;
+                    }
+                    Some(Err(why)) => {
+                        w.load_error = Some(format!("Bağlı standart geçersiz: {why}"))
+                    }
+                    None => w.load_error = Some("Bağlı standart artık bulunamıyor.".into()),
+                }
+            }
+            Event::Attach => {
+                self.attach_standard();
             }
             Event::Layers(v) => w.layers = v,
             Event::Restyle(v) => w.restyle = v,
@@ -274,6 +397,73 @@ impl App {
         }
         self.refresh_standard();
         Task::none()
+    }
+
+    /// Associates the selected versioned file without applying its rules.
+    fn attach_standard(&mut self) {
+        let Some(window) = self.drawing_standard.as_ref() else {
+            return;
+        };
+        let Some(selected) = window.custom.as_ref() else {
+            return;
+        };
+        let Some(text) = selected.document.clone() else {
+            return;
+        };
+        if selected.bound_id.is_some() || window.load_error.is_some() {
+            return;
+        }
+        let Ok((_, Some(package))) = parse_standard_document(text.as_bytes()) else {
+            return;
+        };
+        let Some(revision) = window
+            .report
+            .as_ref()
+            .ok()
+            .map(|report| report.revision.clone())
+        else {
+            return;
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let mut documents = doc.model.settings().standard_docs.clone();
+        if documents.iter().any(|existing| {
+            parse_standard_document(existing.text.as_bytes())
+                .ok()
+                .and_then(|(_, package)| package)
+                .is_some_and(|existing| existing.id == package.id)
+        }) {
+            self.warn(format!(
+                "“{}” kimliği projeye zaten bağlı; önce bağlı standardı inceleyin.",
+                package.id
+            ));
+            return;
+        }
+        documents.push(ProjectStandardDocument { text });
+        let result = settings_set::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            SettingsSet {
+                standard_docs: Some(documents),
+                expected_revision: Some(revision),
+                ..SettingsSet::default()
+            },
+        );
+        if self.answered(result).is_some() {
+            if let Some(selected) = self
+                .drawing_standard
+                .as_mut()
+                .and_then(|w| w.custom.as_mut())
+            {
+                selected.label =
+                    format!("Projeye bağlı: {} · sürüm {}", package.id, package.revision);
+                selected.bound_id = Some(package.id);
+            }
+            self.say(
+                Level::Success,
+                "Standart projeye bağlandı; çizimi kaydedin.".to_owned(),
+            );
+        }
     }
 
     /// Writes the window's fix; whether it wrote (what it did said).
@@ -317,11 +507,15 @@ impl App {
         let standard = w
             .custom
             .as_ref()
-            .map(|(_, s)| s.clone())
+            .map(|selected| selected.standard.clone())
             .or_else(|| built_in_standard(&w.standard));
-        let about = standard
-            .as_ref()
-            .map_or_else(String::new, |s| format!("{}: {}", s.name, s.description));
+        let about = standard.as_ref().map_or_else(String::new, |s| {
+            if s.description.trim().is_empty() {
+                s.name.clone()
+            } else {
+                format!("{}: {}", s.name, s.description)
+            }
+        });
         let (lines, issues): (Vec<Element<'_, Message>>, Vec<StandardIssue>) = match &w.report {
             Err(why) if why.is_empty() => (Vec::new(), Vec::new()),
             Err(why) => (vec![words::text_line(Kind::Warn, why.clone())], Vec::new()),
@@ -448,8 +642,27 @@ impl App {
         };
         let source = w.custom.as_ref().map_or_else(
             || "Yerleşik standart".to_owned(),
-            |(name, _)| format!("Geçici: {name}"),
+            |selected| {
+                if selected.bound_id.is_some() {
+                    selected.label.clone()
+                } else {
+                    format!("Geçici: {}", selected.label)
+                }
+            },
         );
+        let choices = w.choices.clone();
+        let current = w
+            .custom
+            .as_ref()
+            .and_then(|selected| selected.bound_id.as_ref())
+            .and_then(|id| choices.iter().find(|choice| &choice.id == id))
+            .cloned();
+        let attach = w.custom.as_ref().is_some_and(|selected| {
+            selected.document.is_some()
+                && selected.bound_id.is_none()
+                && w.load_error.is_none()
+                && w.report.is_ok()
+        });
         let mut body = Column::new()
             .spacing(12)
             .push(words::field("Standart", label::body(about), None))
@@ -468,6 +681,25 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             )
+            .push(words::field(
+                "Projeye bağlı standartlar",
+                row![
+                    iced::widget::pick_list(choices, current, |choice: ProjectChoice| msg(
+                        Event::Project(choice.id)
+                    ))
+                    .placeholder("Bağlı standart seçin")
+                    .style(style::field::pick_list)
+                    .menu_style(style::field::menu)
+                    .width(Fill),
+                    words::secondary("Projeye bağla", attach.then(|| msg(Event::Attach))),
+                ]
+                .spacing(8)
+                .align_y(Center),
+                Some(
+                    "Denetim yalnız seçilen standardı inceler; bağlamak kuralları uygulamaz."
+                        .into(),
+                ),
+            ))
             .push(words::summary(lines))
             .push(words::field("Bulgular", table, Some(hint)))
             .push(words::field("Düzeltme", parts, None))
@@ -475,13 +707,16 @@ impl App {
         if let Some(error) = &w.load_error {
             body = body.push(words::text_line(Kind::Warn, error.clone()));
         }
-        if w.custom.is_some() {
+        if w.custom
+            .as_ref()
+            .is_some_and(|selected| selected.bound_id.is_none())
+        {
             body = body.push(label::caption(
                 "Bu dosya seçimi pencere kapanınca unutulur; çizime kaydedilmez.",
             ));
         }
         Frame::new(STANDARD_TITLE)
-            .push(body)
+            .scroll(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(
                 APPLY,
@@ -586,6 +821,89 @@ fn applied_words(p: &StandardsApplied) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn versioned_standard_attaches_and_selects_without_applying_changes() {
+        use super::{Event, SelectedStandard};
+        use kentos_commands::{
+            STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION, StandardPackage, built_in_standard,
+        };
+        let mut app = crate::selecting::tests::objects();
+        crate::files_testing::make_cad(&mut app);
+        app.open_drawing_standard();
+        let standard = built_in_standard("mimari-ofis").unwrap();
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_VERSION,
+            id: "ofis".into(),
+            revision: "1".into(),
+            standard: standard.clone(),
+        };
+        let text = serde_json::to_string(&package).unwrap();
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let _ = app.drawing_standard_event(Event::Loaded(Ok(Some(SelectedStandard {
+            label: "ofis.json".into(),
+            standard,
+            document: Some(text.clone()),
+            bound_id: None,
+        }))));
+        let _ = app.drawing_standard_event(Event::Attach);
+        let after = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert_eq!(after.entities, before.entities);
+        assert_eq!(after.layers, before.layers);
+        assert_eq!(after.settings.standard_docs[0].text, text);
+        let _ = app.drawing_standard_event(Event::BuiltIn);
+        let _ = app.drawing_standard_event(Event::Loaded(Ok(Some(SelectedStandard {
+            label: "aynı.json".into(),
+            standard: package.standard.clone(),
+            document: Some(text),
+            bound_id: None,
+        }))));
+        let _ = app.drawing_standard_event(Event::Attach);
+        assert_eq!(
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .settings()
+                .standard_docs
+                .len(),
+            1
+        );
+        let _ = app.drawing_standard_event(Event::Close);
+        app.open_drawing_standard();
+        assert_eq!(
+            app.drawing_standard
+                .as_ref()
+                .unwrap()
+                .custom
+                .as_ref()
+                .unwrap()
+                .bound_id
+                .as_deref(),
+            Some("ofis")
+        );
+        let _ = app.drawing_standard_event(Event::Project("ofis".into()));
+        assert_eq!(
+            app.drawing_standard
+                .as_ref()
+                .unwrap()
+                .custom
+                .as_ref()
+                .unwrap()
+                .bound_id
+                .as_deref(),
+            Some("ofis")
+        );
+        // A removed binding cannot remain silently selected and be applied.
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.standard_docs.clear();
+        doc.set_settings(settings);
+        app.refresh_standard();
+        assert!(app.drawing_standard.as_ref().unwrap().load_error.is_some());
+        assert!(!app.apply_standard());
+    }
+
     #[test]
     fn stale_standard_preview_cannot_apply_to_changed_document() {
         let mut app = crate::selecting::tests::objects();
