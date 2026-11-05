@@ -941,8 +941,8 @@ fn keyed_fields(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], co
     }).collect()
 }
 
-/// Formula cells and scalar references follow the same keyed source row.
-/// Ranges and references to removed rows remain unsafe and stop refresh.
+/// Formula cells and their references follow keyed source rows. A range that
+/// becomes disjoint, or a reference to a removed row, stops refresh.
 fn keyed_formulas(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellFormula>, String> {
     let old_keys = row_keys(copy, column)?;
     let new_keys = row_keys(fresh, column)?;
@@ -958,8 +958,8 @@ fn keyed_formulas(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], 
     t.formulas.iter().map(|formula| {
         let row = rows.get(formula.row as usize).copied().flatten()
             .ok_or_else(|| "Formül satırı kaynaktan silindi; tablo korunuyor.".to_owned())?;
-        let words = table_formula::remap_scalar_rows(&formula.formula, &rows)
-            .ok_or_else(|| "Formül aralığı veya silinen satır başvurusu güvenle taşınamadı; tablo korunuyor.".to_owned())?;
+        let words = table_formula::remap_rows(&formula.formula, &rows)
+            .ok_or_else(|| "Formül aralığı bölündü veya satır başvurusu silindi; tablo korunuyor.".to_owned())?;
         let mut next = formula.clone();
         next.row = row as u32;
         next.formula = words;
@@ -1553,8 +1553,11 @@ mod tests {
         assert!(keyed_formulas(&calculated, &copy, &reordered[..2], 0)
             .unwrap_err().contains("silindi"));
         calculated.formulas[0].formula = "=TOPLA(B2:B3)".into();
-        assert!(keyed_formulas(&calculated, &copy, &reordered, 0)
-            .unwrap_err().contains("Formül aralığı"));
+        assert_eq!(keyed_formulas(&calculated, &copy, &reordered, 0).unwrap()[0].formula, "=TOPLA(B2:B3)");
+        let inserted = vec![copy[0].clone(), copy[1].clone(), vec!["C".into(), "30".into()], copy[2].clone()];
+        calculated.formulas[0].formula = "=TOPLA(B2:B3)".into();
+        assert!(keyed_formulas(&calculated, &copy, &inserted, 0)
+            .unwrap_err().contains("aralığı bölündü"));
         let mut styled = table.clone();
         styled.styles = vec![serde_json::from_value(json!({
             "row":1,"col":0,"rows":2,"cols":1,"fill":"#ff0000"
