@@ -779,7 +779,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                 self.point,
             );
             self.build(state);
-            shell.invalidate_layout();
+            super::reactive::changed(shell);
         }
 
         if !state.editing {
@@ -804,7 +804,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                 keyboard::Key::Named(key::Named::Escape) => {
                     finish(state, &mut children[1]);
                     self.build(state);
-                    shell.invalidate_layout();
+                    super::reactive::changed(shell);
                     shell.capture_event();
                     return;
                 }
@@ -825,7 +825,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                     input_state_mut(&mut children[1]).select_all();
                     shell.publish((self.on_change)(value));
                     self.build(state);
-                    shell.invalidate_layout();
+                    super::reactive::changed(shell);
                     shell.capture_event();
                     return;
                 }
@@ -833,6 +833,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
             }
         }
 
+        let before = (state.buffer.clone(), state.error.clone(), state.editing);
         let mut edits = Vec::new();
         let mut local = Shell::new(&mut edits);
 
@@ -882,8 +883,14 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
             }
         }
 
-        self.build(state);
-        shell.invalidate_layout();
+        // Yazılan harf, beliren ya da kalkan hata, biten düzenleme: yerleşim kurulur ve kare hemen çizilir. Alan tuş
+        // için mesaj göndermez; yalnız geçersiz kılınan yerleşim çizilmiyor, harf imlecin sonraki yanıp sönmesini ya da
+        // bir zamanlayıcıyı bekliyordu (reactive.rs, docs/adr/0976). İmlecin yürümesi ve yanıp sönmesi alanın kendi
+        // karesidir: düzenlenirken her olayda (imlecin her kıpırtısı, her kare) pencereyi yeniden yerleştirmek boşunaydı.
+        if (state.buffer.as_str(), &state.error, state.editing) != (before.0.as_str(), &before.1, before.2) {
+            self.build(state);
+            super::reactive::changed(shell);
+        }
     }
 
     fn mouse_interaction(

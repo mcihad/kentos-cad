@@ -293,6 +293,71 @@ impl Snapshot {
         (messages, status)
     }
 
+    /// Girdiyi olaylara çevirir, her olayı iced'in çalışma zamanı gibi ayrı verir ve her olaydan sonra pencerenin
+    /// hemen çizilip çizilmeyeceğini söyler (iced 0.14'ün tepkisel çizimi, docs/adr/0976). Mesaj üreten olayda
+    /// uygulama güncellenir ve pencere çizilir; ağacı eskiyen arayüz yeniden kurulup çizilir; mesajsız bir değişiklik
+    /// ancak bir bileşen kareyi isterse (`RedrawRequest::NextFrame`) hemen çizilir, yoksa başka bir şeyin istediği
+    /// kareyi bekler. Mesajlar `update` ile uygulanır.
+    pub fn drawn<State, Message>(
+        &mut self,
+        state: &mut State,
+        view: impl Fn(&State) -> Element<'_, Message>,
+        update: &mut impl FnMut(&mut State, Message),
+        input: Input,
+    ) -> Vec<(Event, bool)> {
+        let events = self.events(input);
+        self.drawn_events(state, view, update, events)
+    }
+
+    /// [`Snapshot::drawn`] for the events given as they are (a frame's `RedrawRequested` among them).
+    pub fn drawn_events<State, Message>(
+        &mut self,
+        state: &mut State,
+        view: impl Fn(&State) -> Element<'_, Message>,
+        update: &mut impl FnMut(&mut State, Message),
+        events: Vec<Event>,
+    ) -> Vec<(Event, bool)> {
+        let mut out = Vec::new();
+
+        for event in events {
+            let _clock = crate::clock::freeze(self.clock);
+            let mut ui = UserInterface::build(
+                view(state),
+                self.size,
+                std::mem::take(&mut self.cache),
+                &mut self.renderer,
+            );
+
+            let mut messages = Vec::new();
+
+            let (ui_state, _) = ui.update(
+                std::slice::from_ref(&event),
+                self.cursor,
+                &mut self.renderer,
+                &mut clipboard::Null,
+                &mut messages,
+            );
+
+            self.cache = ui.into_cache();
+
+            let drawn = !messages.is_empty()
+                || match ui_state {
+                    user_interface::State::Outdated => true,
+                    user_interface::State::Updated { redraw_request, .. } => {
+                        redraw_request == window::RedrawRequest::NextFrame
+                    }
+                };
+
+            for message in messages {
+                update(state, message);
+            }
+
+            out.push((event, drawn));
+        }
+
+        out
+    }
+
     /// Olayları sırayla verir; her olayın mesajlarını uygulamaya uygular.
     pub fn step<State, Message>(
         &mut self,

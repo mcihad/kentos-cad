@@ -27,8 +27,13 @@ use crate::manifest::{self, Manifest};
 use crate::tones::Tone;
 use style::px;
 
-/// The window.
+/// The window: a widget's own change on an event is drawn at the next frame (kentos_ui's `presented`, docs/adr/0976).
 pub fn view(launcher: &Launcher) -> Element<'_, Message> {
+    kentos_ui::widget::presented(content_of(launcher)).into()
+}
+
+/// The window's content.
+fn content_of(launcher: &Launcher) -> Element<'_, Message> {
     let body: Element<'_, Message> = match launcher.page {
         Page::Apps => apps::page(launcher),
         Page::Recent => pages::recent(launcher),

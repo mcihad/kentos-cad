@@ -8,7 +8,7 @@ use crate::{
 };
 use iced::{
     Element, Subscription, Task,
-    widget::{column, text, text_input},
+    widget::{column, text},
 };
 use kentos_commands::{
     BlocksConvert, BlocksConvertPlan, BlocksConverted, CallEnvelope, CallOp, CommandResult,
@@ -264,7 +264,7 @@ impl App {
             )),
             words::field(
                 "Yeni blok adı",
-                text_input("Blok adı", &w.input.name)
+                kentos_ui::widget::text_field("Blok adı", &w.input.name)
                     .on_input_maybe((!w.busy && current).then_some(|s| msg(Event::Name(s)))),
                 None
             ),

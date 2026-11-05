@@ -75,7 +75,13 @@ fn ribbon_shade<'a>() -> Element<'a, Message> {
 }
 
 impl App {
+    /// The window: a widget's own change on an event (a letter typed into a number field, a grid's cell, a chip) is
+    /// drawn at the next frame, not at the next timer (kentos_ui's `presented`, docs/adr/0976).
     pub fn view(&self) -> Element<'_, Message> {
+        kentos_ui::widget::presented(self.shell_view()).into()
+    }
+
+    fn shell_view(&self) -> Element<'_, Message> {
         // A sheet in front: the sheet mode in place of the drawing and its docks,
         // the tabs under it (sheets.rs, docs/sheet/design.md §11).
         if self.sheets.is_active() {

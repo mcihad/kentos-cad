@@ -280,10 +280,12 @@ fn impact_words(imp: &kentos_commands::AlignmentImpact) -> String {
 
 /// The chosen alignment's status line, as the window writes it (for the tests).
 /// Whether the chosen row is refused: its status is said in red.
+#[cfg(test)]
 pub(crate) fn refused(w: &Window) -> bool {
     w.chosen.and_then(|i| w.rows.get(i)).is_some_and(|r| status(&w.rows, r).1)
 }
 
+#[cfg(test)]
 pub(crate) fn status_of(w: &Window) -> String {
     w.chosen.and_then(|i| w.rows.get(i)).map_or_else(String::new, |r| status(&w.rows, r).0)
 }

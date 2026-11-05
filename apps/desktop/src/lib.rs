@@ -548,6 +548,8 @@ mod sheet_model;
 mod shortcuts;
 #[cfg(test)]
 mod snap_commit_tests;
+#[cfg(test)]
+mod typing_tests;
 mod snap_cycle;
 mod snap_menu;
 #[cfg(test)]

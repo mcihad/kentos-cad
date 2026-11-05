@@ -72,7 +72,13 @@ const RADIAL_TOOLS: [Tool; 8] = [
 ];
 
 impl Showcase {
+    /// The window: a widget's own change on an event is drawn at the next frame (kentos_ui's `presented`,
+    /// docs/adr/0976).
     pub fn view(&self) -> Element<'_, Message> {
+        kentos_ui::widget::presented(self.window_content()).into()
+    }
+
+    fn window_content(&self) -> Element<'_, Message> {
         let workspace: Element<'_, Message> = if self.ribbon_tab == RibbonTab::Gallery {
             column![self.gallery(), self.command_line()]
                 .height(Fill)

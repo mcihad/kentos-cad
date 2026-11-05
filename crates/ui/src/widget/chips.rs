@@ -401,7 +401,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ChipInput<'a,
                         state.buffer = suggestion;
                         input_state_mut(&mut children[0]).move_cursor_to_end();
                         self.build(state);
-                        shell.invalidate_layout();
+                        super::reactive::changed(shell);
                         shell.capture_event();
                         return;
                     }
@@ -463,8 +463,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ChipInput<'a,
                 }
             }
 
+            // What was typed shows at once: it sends no message of its own (reactive.rs, docs/adr/0976).
             self.build(state);
-            shell.invalidate_layout();
+            super::reactive::changed(shell);
         }
 
         // Alanın boş yerine tıklamak yazı alanına odaklanır.

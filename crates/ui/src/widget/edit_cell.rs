@@ -324,7 +324,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
             }
             self.start(state);
             self.build(state);
-            shell.invalidate_layout();
+            // Drawn at once: a layout invalidated alone waits for another frame (reactive.rs, docs/adr/0976).
+            super::reactive::changed(shell);
             return;
         }
 
@@ -336,7 +337,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
         {
             finish(state, &mut children[0]);
             self.build(state);
-            shell.invalidate_layout();
+            super::reactive::changed(shell);
             shell.capture_event();
             return;
         }
@@ -389,9 +390,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
         }
         // Cursor motion, selection and caret blinking only need the child's redraw.
         // Invalidating on every event rebuilds the entire CAD window even while idle.
+        // A typed letter is laid out and drawn at once: it sends no message, and a layout invalidated alone waited for
+        // the caret's next blink or a timer, up to a second and a half (reactive.rs, docs/adr/0976).
         if changed {
             self.build(state);
-            shell.invalidate_layout();
+            super::reactive::changed(shell);
         }
     }
 

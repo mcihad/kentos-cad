@@ -659,7 +659,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                     let state = tree.state.downcast_mut::<State>();
                     if next != state.view {
                         state.view = next;
-                        shell.invalidate_layout();
+                        super::reactive::changed(shell);
                     }
                     return;
                 }

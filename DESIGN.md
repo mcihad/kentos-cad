@@ -642,6 +642,7 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 | Seçili satır | Tablo, ağaç, liste: yumuşak vurgu zemini. Birkaçı seçiliyken birincil satır ayrıca vurgu kenarında. Sol 2 px çubuk seçim değil “etkin” demektir (etkin katman). Döşemeler (malzeme, nesne) kenarlıdır: aralarında satır çizgisi yoktur. |
 | Küçük yazı | `Tokens::soft`: okunur en sessiz ton (AA). `faint` yazıda kullanılmaz, çizgi ve işaretlerindir. |
 | Not kutusu | Bilgi (mavi simge) ya da uyarı (amber zemin tonu, ⚠). İlk ifade kalın olabilir: "**Koordinatlar dönüştürülmez.**" |
+| Yazılan harf | Hemen görünür, sonraki karede ([ADR 0976](docs/adr/0976-reactive-rendering-typed-keys.md)). Iced 0.14 yalnız bir mesaj ya da bir bileşenin istediği kare için çizer. Yazılanı kendi tutan alan (sayı girişi, düzenlenen hücre, çip girişi) kendi değişikliğinde yerleşimle birlikte kareyi de ister (`reactive::changed`). Uygulamanın kökü `presented` ile sarılır; kareyi istemeyi unutan bileşen de böylece hemen çizilir. Ölçüm: Proje ayarları › Birim ve ölçek, Nesne denetçisi ve Poz metraj ızgarasında tuş bir buçuk saniyeye kadar gecikiyordu; şimdi her tuş kendi karesinde çiziliyor. |
 
 ---
 

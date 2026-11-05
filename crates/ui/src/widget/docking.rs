@@ -3266,7 +3266,7 @@ where
                         if let Some(frame) = state.frames.get_mut(index)
                             && frame.scroll.step(matches!(hit, Hit::Next(_)))
                         {
-                            shell.invalidate_layout();
+                            super::reactive::changed(shell);
                         }
                         Some(true)
                     }
@@ -3392,7 +3392,7 @@ where
                     return Some(false);
                 };
                 if frame.arrows.is_some() && frame.scroll.wheel(*delta) {
-                    shell.invalidate_layout();
+                    super::reactive::changed(shell);
                     return Some(true);
                 }
                 Some(false)

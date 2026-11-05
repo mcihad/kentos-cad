@@ -862,7 +862,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                     if index != self.active {
                         shell.publish((self.on_select)(index));
                     } else if state.scroll.reveal(index) {
-                        shell.invalidate_layout();
+                        super::reactive::changed(shell);
                     }
 
                     state.origin = cursor.position().map(|point| (index, point));

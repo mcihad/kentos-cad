@@ -1072,6 +1072,32 @@ iced::application(App::new, App::update, App::view)
 container(content).height(typography::scaled(26.0))
 ```
 
+## Tepkisel çizim: görünen her değişiklik çizilir
+
+Iced 0.14 pencereyi yalnız iki durumda çizer: uygulamaya bir mesaj gittiğinde ya da bir bileşen kare istediğinde
+(`Shell::request_redraw`). Yazılanı kendi tutan alanlar (`NumberInput`, `EditCell`, `ChipInput`) her tuşta mesaj
+göndermez. Tuşta yalnız `invalidate_layout` çağıran alanın yerleşimi kurulur ama kare çizilmez. Harf, başka bir şeyin
+istediği ilk karede görünür: imlecin sonraki yanıp sönmesi, fare, bir zamanlayıcı. KentOS'ta bu gecikme bir buçuk
+saniyeye çıkıyordu (docs/adr/0976).
+
+- **Kökü sarın.** Uygulamanın `view`'ı `presented` ile sarılır. Bir olayda geçersiz kılınan her yerleşim bir sonraki
+  karede çizilir; çizim olayının kendisi başka kare istemez.
+- **Bileşen yazarken:** Kendi durumu (tampon, düzenleme, kaydırma) görüneni değiştiren bileşen yerleşimle birlikte
+  kareyi de ister (`shell.invalidate_layout(); shell.request_redraw();`; kit içinde `reactive::changed`). Yerleşimi
+  yalnız gerçekten değişince geçersiz kılar; her olayda kılmak her karede bütün pencereyi yeniden yerleştirir.
+- **Sınamak:** `Snapshot::drawn` girdiyi olay olay verir ve her olayda kare çizilip çizilmediğini döndürür.
+  `tests/typing_is_drawn.rs` kitin bütün yazı alanlarını böyle sınar.
+
+```rust
+use kentos_ui::widget::presented;
+
+impl App {
+    pub fn view(&self) -> Element<'_, Message> {
+        presented(self.window()).into()
+    }
+}
+```
+
 ## Ekransız görüntü
 
 `snapshot` özelliği arayüzü pencere açmadan çizip PNG'ye yazar. Ekran kapalı
