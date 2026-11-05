@@ -28,7 +28,7 @@ açıklık bırakmayabiliyor, menfezin üstünde örtüsüz kalabiliyordu. Tasar
 
 ## Karar
 
-### Kayıt (KCAD şema 170)
+### Kayıt (KCAD şema 172)
 
 `ProfileDef.crossings` alanı her kesişme için şunları tutar:
 
@@ -37,7 +37,7 @@ açıklık bırakmayabiliyor, menfezin üstünde örtüsüz kalabiliyordu. Tasar
 - `elevation`: yapının alt ya da üst yüzü;
 - `clearance`: açıklık ya da örtü, 0–100 m.
 
-Şema 169 ve öncesi bu alanı `unknown_field` ile reddeder. `road.profiles.edit` kesişmeleri yazar; boş liste kaldırır.
+Şema 171 ve öncesi bu alanı `unknown_field` ile reddeder. `road.profiles.edit` kesişmeleri yazar; boş liste kaldırır.
 
 ### Çekirdek
 

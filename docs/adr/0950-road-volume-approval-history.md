@@ -20,7 +20,7 @@ silinmesin."
 
 ## Karar
 
-- **Onay numaralı:** `VolumeApprovalDef.number`, 1'den başlar. Numarasız eski onay (şema 171 öncesi) bir onay sayılır;
+- **Onay numaralı:** `VolumeApprovalDef.number`, 1'den başlar. Numarasız eski onay (şema 173 öncesi) bir onay sayılır;
   yerine gelen 2 olur.
 - **Biten onay geçmişe geçer:** `VolumeDef.history`, eskiden yeniye, onaylandığı hâliyle ve bitişiyle
   (`VolumeApprovalEnd`: `at` gün, `revoked`, `note` neden).
@@ -32,9 +32,9 @@ silinmesin."
   - **Geçmişi olan kübaj silinmez** (`volume_approved`): silmek denetim izini silmek olurdu.
 - **Kurallar** (`contracts::road`): geçerli onayın bitişi olmaz; geçmişteki her onayın olur; numaralar artarak gider;
   geçerli onayın numarası geçmiştekilerden büyüktür; geçmiş en çok 200 onaydır.
-- **KCAD şema 171:** `number`, `ended` ve `history`. Yazıcı 171'i yalnız bunlardan biri varken seçer; 170 ve öncesi
+- **KCAD şema 173:** `number`, `ended` ve `history`. Yazıcı 173'ü yalnız bunlardan biri varken seçer; 172 ve öncesi
   `unknown_field` ile reddeder. Örnek `road-volume-history.kcad` (iki biten onay, biri kaldırılmış), eski şemada
-  `broken/road-volume-history-in-schema-170.kcad`. Bağımsız okuyucu `tools/kcad/kcad.py` aynı kuralları denetler.
+  `broken/road-volume-history-in-schema-172.kcad`. Bağımsız okuyucu `tools/kcad/kcad.py` aynı kuralları denetler.
 - **Fark tek yerde:** `road_volumes::change(önceki, sonraki)`. Aralıklar km'leriyle eşlenir (1e-6 m); değişen
   (1e-6 m³'ten çok), yeni ve kalkan aralıklar ile toplamların farkı çıkar. Onayın bugüne göre karşılaştırması
   (`compare`) da bunu kullanır.

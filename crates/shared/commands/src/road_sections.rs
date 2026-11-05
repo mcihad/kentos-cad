@@ -69,7 +69,7 @@ pub struct TemplatesEdit {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
-    /// The pavement under the finish grade (docs/adr/0930 §2), replacing the template's.
+    /// The pavement under the finish grade (docs/adr/0975 §2), replacing the template's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pavement: Option<PavementDef>,
@@ -342,13 +342,13 @@ pub struct SectionRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill: Option<f64>,
-    /// The template's pavement on the section, where it has one and it builds (docs/adr/0930 §2).
+    /// The template's pavement on the section, where it has one and it builds (docs/adr/0975 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pavement: Option<SectionPavement>,
 }
 
-/// A pavement on a section (docs/adr/0930 §1): each layer's name and area, the pavement under and above the ground,
+/// A pavement on a section (docs/adr/0975 §1): each layer's name and area, the pavement under and above the ground,
 /// the formation line and each layer's bottom (offset, elevation; left to right), and the earthwork from the formation
 /// (Formasyon–Zemin): the road's cut plus the pavement under the ground, its fill less the pavement above it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

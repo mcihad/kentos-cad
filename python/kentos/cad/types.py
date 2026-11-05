@@ -7247,7 +7247,7 @@ class VolumeMethod(_StrEnum):
     - ``endArea``: The average end area between consecutive sections.
     - ``prismoidal``: The prismoidal formula with a section in the middle of each pair.
     - ``surfaces``: Between the corridor's top surface and the terrain, the triangulations laid over each other.
-    - ``grid``: Between the corridor's top surface and the terrain on a regular grid (docs/adr/0974; schema 177): at each cell's
+    - ``grid``: Between the corridor's top surface and the terrain on a regular grid (docs/adr/0974; schema 179): at each cell's
     """
     END_AREA = "endArea"
     PRISMOIDAL = "prismoidal"
@@ -7260,7 +7260,7 @@ VolumeMethodName = Literal["endArea", "prismoidal", "surfaces", "grid"]
 
 
 class VolumeRule(_StrEnum):
-    """An earthwork volume's rule (docs/adr/0930 §2): the road's top (Yol) or the formation (Formasyon) against the ground
+    """An earthwork volume's rule (docs/adr/0975 §2): the road's top (Yol) or the formation (Formasyon) against the ground
     (Zemin) or the ground with its topsoil stripped (Bitkisel Toprak). The topsoil stripped is its own item (Sıyırma
     Kazısı) whichever rule.
 
@@ -10077,7 +10077,7 @@ class PartitionExtent(_Union):
 
 
 class PavementEdge(_Union):
-    """How a pavement's layers end at a side's hinge (docs/adr/0930 §1).
+    """How a pavement's layers end at a side's hinge (docs/adr/0975 §1).
 
     One of:
 
@@ -21279,11 +21279,11 @@ class CorridorDef(_Model):
         alignment_revision: Unit: version.
         critical: The superelevation schedule's critical stations are sampled too.
         profile_points: The profile's PVIs, its vertical curves' ends and its high and low points are sampled too.
-        refine: The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 168).
+        refine: The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 170).
         revision: Unit: version.
         sag: Unit: m.
         stations: Stations the user wrote (the alignment's own, m). Unit: m.
-        vertical_sag: The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 168). Unit: elevation.
+        vertical_sag: The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 170). Unit: elevation.
     """
     id: str
     name: str
@@ -21683,7 +21683,7 @@ class CorridorRefineDef(_Model):
 @dataclass(kw_only=True, slots=True)
 class CorridorRegionDef(_Model):
     """A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template; and an optional
-    slope transition (docs/adr/0960, KCAD schema 176): over its first `transition` m the sides' cut and fill slopes go
+    slope transition (docs/adr/0960, KCAD schema 178): over its first `transition` m the sides' cut and fill slopes go
     linearly from the region before's template's to its own. The region before ends where it starts.
     Attributes:
         from_: Unit: m.
@@ -38219,15 +38219,15 @@ class HaulDef(_Model):
     """A mass haul diagram (docs/adr/0907): an earthwork volume's mass ordinate against a balance line (m³), with a free
     haul distance (m; absent: none, every haul is overhaul) and borrow and waste sites.
     Attributes:
-        approved: Its plan as approved (docs/adr/0954; KCAD schema 172): a plan read later against it says what changed.
+        approved: Its plan as approved (docs/adr/0954; KCAD schema 174): a plan read later against it says what changed.
         balance: Unit: volume.
-        barriers: What the haul road crosses (docs/adr/0944; KCAD schema 169).
+        barriers: What the haul road crosses (docs/adr/0944; KCAD schema 171).
         cost: Its prices and the truck's payload.
         free: Unit: m.
         history: Its approvals that ended, oldest first, as they were (docs/adr/0954): never changed nor removed.
-        network: Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 173).
+        network: Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 175).
         revision: Unit: version.
-        unsuitable: The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).
+        unsuitable: The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 171).
     """
     id: str
     name: str
@@ -38415,7 +38415,7 @@ class HaulLoop(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class HaulNetworkDef(_Model):
-    """A mass haul diagram's haul road network (docs/adr/0955; KCAD schema 173): the line and polyline objects on these
+    """A mass haul diagram's haul road network (docs/adr/0955; KCAD schema 175): the line and polyline objects on these
     layers are its roads; two join where an end of one lies within `connect` (m) of the other; a road joins the
     alignment where an end lies within `reach` (m) of its centre line (none: `connect`).
     Attributes:
@@ -39068,7 +39068,7 @@ class HaulSiteDef(_Model):
     Attributes:
         station: Unit: m.
         volume: Unit: volume.
-        at: Where it lies off the road, in plan (docs/adr/0955; KCAD schema 173): it is reached along the diagram's haul
+        at: Where it lies off the road, in plan (docs/adr/0955; KCAD schema 175): it is reached along the diagram's haul
             road network, which says where it meets the alignment and how far; `station` is then that station as last
             written. None: on the road at `station`. Unit: length.
     """
@@ -61602,7 +61602,7 @@ class ProfileDef(_Model):
         name: Its name (“Proje kotu”), unique in the project.
         alignment: The alignment's id.
         alignment_revision: The alignment's revision it was made or rebound against; absent: 0. Unit: version.
-        crossings: What the road crosses (docs/adr/0946; KCAD schema 170).
+        crossings: What the road crosses (docs/adr/0946; KCAD schema 172).
         revision: Grows by one with every change; absent: 0. Unit: version.
         surface: The terrain surface's id; absent: none.
     """
@@ -72276,7 +72276,7 @@ class SectionLayer(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SectionPavement(_Model):
-    """A pavement on a section (docs/adr/0930 §1): each layer's name and area, the pavement under and above the ground,
+    """A pavement on a section (docs/adr/0975 §1): each layer's name and area, the pavement under and above the ground,
     the formation line and each layer's bottom (offset, elevation; left to right), and the earthwork from the formation
     (Formasyon–Zemin): the road's cut plus the pavement under the ground, its fill less the pavement above it.
     Attributes:
@@ -72330,7 +72330,7 @@ class SectionRow(_Model):
         axis: The axis' design elevation; absent without a profile or outside it. Unit: elevation.
         cut: Unit: area.
         fill: Unit: area.
-        pavement: The template's pavement on the section, where it has one and it builds (docs/adr/0930 §2).
+        pavement: The template's pavement on the section, where it has one and it builds (docs/adr/0975 §2).
     """
     station: float
     km: float
@@ -83571,7 +83571,7 @@ class TemplateComponentDef(_Model):
 class TemplateDef(_Model):
     """A template (docs/adr/0903 §3): its left side and its right; absent right: the left's mirror.
     Attributes:
-        pavement: The pavement under the finish grade, both sides alike (docs/adr/0930 §2); absent: none (an older template).
+        pavement: The pavement under the finish grade, both sides alike (docs/adr/0975 §2); absent: none (an older template).
         revision: Unit: version.
     """
     id: str
@@ -83743,8 +83743,8 @@ class TemplateSideDef(_Model):
     Attributes:
         cut: Unit: 1.
         fill: Unit: 1.
-        bench: The cut slope's benches (berme, docs/adr/0958; KCAD schema 175).
-        fill_bench: The fill slope's benches (docs/adr/0958; KCAD schema 175).
+        bench: The cut slope's benches (berme, docs/adr/0958; KCAD schema 177).
+        fill_bench: The fill slope's benches (docs/adr/0958; KCAD schema 177).
     """
     cut: float
     fill: float
@@ -83884,7 +83884,7 @@ class TemplatesEdit(_Model):
     `revision_conflict`.
     Attributes:
         mirror: The right side mirrors the left (its own goes).
-        pavement: The pavement under the finish grade (docs/adr/0930 §2), replacing the template's.
+        pavement: The pavement under the finish grade (docs/adr/0975 §2), replacing the template's.
         remove_pavement: The template's pavement goes.
     """
     operation: RoadEditOperation | RoadEditOperationName
@@ -89051,8 +89051,8 @@ class VolumeApprovalDef(_Model):
         factored_fill: Unit: volume.
         rows: Unit: volume.
         bench: Unit: volume.
-        ended: How it ended, in the volume's history (docs/adr/0950; schema 171): none while it stands.
-        number: Its number among the volume's approvals, from 1 (docs/adr/0950; schema 171); 0: approved before approvals were
+        ended: How it ended, in the volume's history (docs/adr/0950; schema 173): none while it stands.
+        number: Its number among the volume's approvals, from 1 (docs/adr/0950; schema 173); 0: approved before approvals were
             numbered. Unit: count.
         strip: Unit: volume.
     """
@@ -89279,13 +89279,13 @@ class VolumeDef(_Model):
     Attributes:
         approved: Its figures as approved; an approved volume's definition does not change.
         bench: The fill's foundation benched (a section method's).
-        cell: The grid method's cell (m, docs/adr/0974; schema 177): 0.01 to 1000; the grid method only. Unit: m.
-        curve: The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
+        cell: The grid method's cell (m, docs/adr/0974; schema 179): 0.01 to 1000; the grid method only. Unit: m.
+        curve: The volume on a curve by the sections' moments (docs/adr/0934; schema 169): each section's effective area
             `A + κ·Q`; the average end area method only.
-        history: Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):
+        history: Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 173):
             never changed nor removed.
         revision: Unit: version.
-        rule: Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
+        rule: Which two lines it measures between (docs/adr/0975 §2, Netpro's names); absent: the road's top against the
             ground, stripped when it strips (as before the rule).
         strip: The topsoil stripped by stations (a section method's).
     """
@@ -89384,7 +89384,7 @@ class VolumeFactorDef(_Model):
         from_: Unit: m.
         to: Unit: m.
         cut: Unit: 1.
-        densities: The soil's densities from the soil report (docs/adr/0957; KCAD schema 174): the factors follow from them, the
+        densities: The soil's densities from the soil report (docs/adr/0957; KCAD schema 176): the factors follow from them, the
             cut's bank over loose, the fill's compacted over loose (both volumes in loose m³, as a truck carries them); a
             row with densities writes no factor of its own.
         fill: Unit: 1.
@@ -89488,7 +89488,7 @@ class VolumeHistoryRead(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class VolumeLayer(_Model):
-    """A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0930 §2).
+    """A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0975 §2).
     Attributes:
         volume: Unit: volume.
     """
@@ -89691,7 +89691,7 @@ class VolumeReport(_Model):
         fill_area: Unit: area.
         layers: The pavement layers its templates have, by name in the order met, with their volumes in all (m³). Empty without a
             pavement.
-        rule: Its rule, where it has one (docs/adr/0930 §2).
+        rule: Its rule, where it has one (docs/adr/0975 §2).
         step: The sampling step it used (docs/adr/0974): the grid's cell, else the largest interval between two consecutive
             sections (m); absent where there is no interval. Unit: m.
         strip: The topsoil stripped in all (m³), where the volume strips. Unit: volume.
@@ -90360,7 +90360,7 @@ class VolumesEdit(_Model):
         bench: The fill's foundation benched; null takes it off.
         cell: The grid method's cell (m, docs/adr/0974), 0.01 to 1000; a method other than the grid takes it off. Unit: m.
         curve: The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.
-        rule: Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
+        rule: Which two lines it measures between (docs/adr/0975 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
         strip: The topsoil stripped by stations; an empty list takes it off.
     """
     operation: RoadEditOperation | RoadEditOperationName
@@ -106962,7 +106962,7 @@ class RangeSectionStations(SectionStations):
         from_: Unit: m.
         to: Unit: m.
         every: Unit: m.
-        curve: On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 166). Unit: m.
+        curve: On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 168). Unit: m.
     """
     TAG_VALUE: ClassVar[str] = "range"
     from_: float
@@ -106998,7 +106998,7 @@ class BreaksSectionStations(SectionStations):
     """Where the centreline's ground breaks (it crosses a triangle's edge of the set's surface) from `from` to `to`,
     kept so the ground read linearly between two sections is within `tolerance` metres of the exact profile, with
     no gap longer than `most` metres where the profile has a break to fill it, and with the curves' points and the
-    profile's PVIs when `geometry` (docs/adr/0933 §3; schema 166).
+    profile's PVIs when `geometry` (docs/adr/0933 §3; schema 168).
     Attributes:
         from_: Unit: m.
         to: Unit: m.

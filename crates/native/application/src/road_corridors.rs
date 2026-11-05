@@ -587,7 +587,7 @@ pub type MadeCorridor = Result<(CorridorReport, core::Built), String>;
 /// at any station of a region with that region's template, as the section sets' rows are.
 pub struct CorridorSections {
     made: Made,
-    /// Each region's template's pavement (docs/adr/0930 §2), in the regions' order.
+    /// Each region's template's pavement (docs/adr/0975 §2), in the regions' order.
     pavements: Vec<Option<kentos_commands::PavementDef>>,
 }
 

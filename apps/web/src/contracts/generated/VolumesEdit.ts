@@ -29,7 +29,7 @@ strip?: Array<VolumeStripDef>,
  */
 bench?: VolumeBenchDef | null, 
 /**
- * Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
+ * Which two lines it measures between (docs/adr/0975 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
  */
 rule?: VolumeRule, 
 /**

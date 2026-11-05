@@ -204,7 +204,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
     bağlanmaz ve başka kübaja geçmez.  Uygunsuz malzeme (unsuitable: km aralıklarıyla
     kazının dolguya konamayan yüzde payı) ve engeller (barriers: ad, km, isteğe bağlı
     dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (docs/adr/0944, KCAD şema
-    169). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
+    171). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
     “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul,
     invalid_revision, revision_conflict.
     """
@@ -249,7 +249,7 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         bağlanmaz ve başka kübaja geçmez.  Uygunsuz malzeme (unsuitable: km aralıklarıyla
         kazının dolguya konamayan yüzde payı) ve engeller (barriers: ad, km, isteğe bağlı
         dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (docs/adr/0944, KCAD şema
-        169). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
+        171). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
         “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul,
         invalid_revision, revision_conflict.
 

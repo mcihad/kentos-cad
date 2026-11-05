@@ -2159,7 +2159,7 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pivot) {
         return crate::SCHEMA_WITH_ROAD_PIVOT;
     }
-    // Schema 164 (docs/adr/0930 §2): a road template's pavement or a volume's rule.
+    // Schema 164 (docs/adr/0975 §2): a road template's pavement or a volume's rule.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pavement) {
         return crate::SCHEMA_WITH_ROAD_PAVEMENT;
     }

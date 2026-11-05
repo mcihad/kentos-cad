@@ -2406,49 +2406,49 @@ def document(d):
         schema = max(schema, 162)
     road = d["settings"].get("road") or {}
     if any("pavement" in t for t in road.get("templates", [])) or any("rule" in v for v in road.get("volumes", [])):
-        # A road template's pavement or a volume's rule (docs/adr/0930 §2).
-        schema = max(schema, 164)
+        # A road template's pavement or a volume's rule (docs/adr/0975 §2).
+        schema = max(schema, 166)
     if any("pivot" in s for s in road.get("superelevations", [])):
         # A superelevation's axis of rotation (docs/adr/0931 §2).
-        schema = max(schema, 165)
+        schema = max(schema, 167)
     if any(s.get("clip") or s["stations"]["method"] == "breaks" or "curve" in s["stations"]
            for s in road.get("sections", [])):
         # A sample line set's clip, breaks method or curve step (docs/adr/0933 §3).
-        schema = max(schema, 166)
+        schema = max(schema, 168)
     if any(v.get("curve") for v in road.get("volumes", [])):
         # An earthwork volume's curve correction (docs/adr/0934 §2).
-        schema = max(schema, 167)
+        schema = max(schema, 169)
     if any("verticalSag" in c or "refine" in c for c in road.get("corridors", [])):
         # A corridor's vertical chord height or sampling check (docs/adr/0939).
-        schema = max(schema, 168)
+        schema = max(schema, 170)
     if any(h.get("unsuitable") or h.get("barriers") for h in road.get("hauls", [])):
         # A mass haul diagram's unsuitable cut or barriers (docs/adr/0944).
-        schema = max(schema, 169)
+        schema = max(schema, 171)
     if any(p.get("crossings") for p in road.get("profiles", [])):
         # A profile's crossings (docs/adr/0946).
-        schema = max(schema, 170)
+        schema = max(schema, 172)
     if any(v.get("history") or "number" in v.get("approved", {}) or "ended" in v.get("approved", {})
            for v in road.get("volumes", [])):
         # A volume's numbered approvals and their history (docs/adr/0950).
-        schema = max(schema, 171)
+        schema = max(schema, 173)
     if any("approved" in h or h.get("history") for h in road.get("hauls", [])):
         # A mass haul diagram's approved plan and its history (docs/adr/0954).
-        schema = max(schema, 172)
+        schema = max(schema, 174)
     if any("network" in h or any("at" in s for s in h.get("sites", [])) for h in road.get("hauls", [])):
         # A mass haul diagram's haul road network and its sites off the road (docs/adr/0955).
-        schema = max(schema, 173)
+        schema = max(schema, 175)
     if any("densities" in f or "source" in f for v in road.get("volumes", []) for f in v.get("factors", [])):
         # A volume factor row's soil densities and source (docs/adr/0957).
-        schema = max(schema, 174)
+        schema = max(schema, 176)
     if any(k in s for t in road.get("templates", []) for s in (t["left"], t.get("right") or {}) for k in ("bench", "fillBench")):
         # A template side's cut or fill slope benches (docs/adr/0958).
-        schema = max(schema, 175)
+        schema = max(schema, 177)
     if any("transition" in g for c in road.get("corridors", []) for g in c.get("regions", [])):
         # A corridor region's slope transition (docs/adr/0960).
-        schema = max(schema, 176)
+        schema = max(schema, 178)
     if any(v.get("method") == "grid" or "cell" in v for v in road.get("volumes", [])):
         # An earthwork volume on a grid and its cell (docs/adr/0974).
-        schema = max(schema, 177)
+        schema = max(schema, 179)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3319,7 +3319,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-178.kcad"] = container(root(cmap(parts), version=uint(178)))
+    files["schema-version-180.kcad"] = container(root(cmap(parts), version=uint(180)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5641,100 +5641,100 @@ def build():
     del bare["settings"]["road"]
     out["broken/road-work-in-schema-161.kcad"] = container(
         document(bare).replace(b"\x67version\x18\xa2", b"\x67version\x18\xa1"))
-    # Schema 164 (docs/adr/0930 §2): a template's pavement and a volume's rule; schema 163 refuses them as unknown.
+    # Schema 166 (docs/adr/0975 §2): a template's pavement and a volume's rule; schema 163 refuses them as unknown.
     pv = document(load("road-pavement.json"))
-    assert pv.count(b"\x67version\x18\xa4") == 1, "the pavement is schema 164"
+    assert pv.count(b"\x67version\x18\xa6") == 1, "the pavement is schema 166"
     out["road-pavement.kcad"] = container(pv)
-    out["broken/road-pavement-in-schema-163.kcad"] = container(pv.replace(b"\x67version\x18\xa4", b"\x67version\x18\xa3"))
+    out["broken/road-pavement-in-schema-165.kcad"] = container(pv.replace(b"\x67version\x18\xa6", b"\x67version\x18\xa5"))
     ruled = load("road-work.json")
     ruled["settings"]["road"]["volumes"][0]["rule"] = "roadGround"
     rd2 = document(ruled)
-    assert rd2.count(b"\x67version\x18\xa4") == 1, "a volume's rule is schema 164"
-    out["broken/road-volume-rule-in-schema-163.kcad"] = container(rd2.replace(b"\x67version\x18\xa4", b"\x67version\x18\xa3"))
-    # Schema 165 (docs/adr/0931 §2): a superelevation's axis of rotation; schema 164 refuses it as unknown.
+    assert rd2.count(b"\x67version\x18\xa6") == 1, "a volume's rule is schema 166"
+    out["broken/road-volume-rule-in-schema-165.kcad"] = container(rd2.replace(b"\x67version\x18\xa6", b"\x67version\x18\xa5"))
+    # Schema 167 (docs/adr/0931 §2): a superelevation's axis of rotation; schema 166 refuses it as unknown.
     pivoted = load("road-work.json")
     pivoted["settings"]["road"]["superelevations"][0]["pivot"] = "insideEdge"
     pd = document(pivoted)
-    assert pd.count(b"\x67version\x18\xa5") == 1, "the pivot is schema 165"
+    assert pd.count(b"\x67version\x18\xa7") == 1, "the pivot is schema 167"
     out["road-pivot.kcad"] = container(pd)
-    out["broken/road-pivot-in-schema-164.kcad"] = container(pd.replace(b"\x67version\x18\xa5", b"\x67version\x18\xa4"))
+    out["broken/road-pivot-in-schema-166.kcad"] = container(pd.replace(b"\x67version\x18\xa7", b"\x67version\x18\xa6"))
     # Schema 166 (docs/adr/0933 §3): a sample line set at the terrain's breaks, clipped, and a range with a curve
-    # step; schema 165 refuses them as unknown.
+    # step; schema 167 refuses them as unknown.
     broke = load("road-work.json")
     sets = broke["settings"]["road"]["sections"]
     sets[0]["stations"] = {"method": "breaks", "from": 0.0, "to": 1000.0, "tolerance": 0.1, "most": 20.0, "geometry": True}
     sets[0]["clip"] = True
     sets[1]["stations"] = {"method": "range", "from": 0.0, "to": 500.0, "every": 20.0, "curve": 10.0}
     bd = document(broke)
-    assert bd.count(b"\x67version\x18\xa6") == 1, "the breaks are schema 166"
+    assert bd.count(b"\x67version\x18\xa8") == 1, "the breaks are schema 168"
     out["road-section-breaks.kcad"] = container(bd)
-    out["broken/road-section-breaks-in-schema-165.kcad"] = container(bd.replace(b"\x67version\x18\xa6", b"\x67version\x18\xa5"))
-    # Schema 167 (docs/adr/0934 §2): an earthwork volume corrected on a curve; schema 166 refuses it as unknown.
+    out["broken/road-section-breaks-in-schema-167.kcad"] = container(bd.replace(b"\x67version\x18\xa8", b"\x67version\x18\xa7"))
+    # Schema 169 (docs/adr/0934 §2): an earthwork volume corrected on a curve; schema 168 refuses it as unknown.
     curved = load("road-volume-curve.json")
     cd = document(curved)
-    assert cd.count(b"\x67version\x18\xa7") == 1, "the curve correction is schema 167"
+    assert cd.count(b"\x67version\x18\xa9") == 1, "the curve correction is schema 169"
     out["road-volume-curve.kcad"] = container(cd)
-    out["broken/road-volume-curve-in-schema-166.kcad"] = container(cd.replace(b"\x67version\x18\xa7", b"\x67version\x18\xa6"))
-    # Schema 168 (docs/adr/0939): a corridor's vertical chord height and sampling check; schema 167 refuses them.
+    out["broken/road-volume-curve-in-schema-168.kcad"] = container(cd.replace(b"\x67version\x18\xa9", b"\x67version\x18\xa8"))
+    # Schema 170 (docs/adr/0939): a corridor's vertical chord height and sampling check; schema 169 refuses them.
     sampled = load("road-corridor-sampling.json")
     sd = document(sampled)
-    assert sd.count(b"\x67version\x18\xa8") == 1, "the corridor's sampling check is schema 168"
+    assert sd.count(b"\x67version\x18\xaa") == 1, "the corridor's sampling check is schema 170"
     out["road-corridor-sampling.kcad"] = container(sd)
-    out["broken/road-corridor-sampling-in-schema-167.kcad"] = container(sd.replace(b"\x67version\x18\xa8", b"\x67version\x18\xa7"))
-    # Schema 169 (docs/adr/0944): a mass haul diagram's unsuitable cut and barriers; schema 168 refuses them.
+    out["broken/road-corridor-sampling-in-schema-169.kcad"] = container(sd.replace(b"\x67version\x18\xaa", b"\x67version\x18\xa9"))
+    # Schema 171 (docs/adr/0944): a mass haul diagram's unsuitable cut and barriers; schema 170 refuses them.
     sorting = load("road-haul-sorting.json")
     hd = document(sorting)
-    assert hd.count(b"\x67version\x18\xa9") == 1, "the haul's unsuitable cut and barriers are schema 169"
+    assert hd.count(b"\x67version\x18\xab") == 1, "the haul's unsuitable cut and barriers are schema 171"
     out["road-haul-sorting.kcad"] = container(hd)
-    out["broken/road-haul-sorting-in-schema-168.kcad"] = container(hd.replace(b"\x67version\x18\xa9", b"\x67version\x18\xa8"))
-    # Schema 170 (docs/adr/0946): a profile's crossings; schema 169 refuses them.
+    out["broken/road-haul-sorting-in-schema-170.kcad"] = container(hd.replace(b"\x67version\x18\xab", b"\x67version\x18\xaa"))
+    # Schema 172 (docs/adr/0946): a profile's crossings; schema 171 refuses them.
     crossed = load("road-profile-crossings.json")
     cd = document(crossed)
-    assert cd.count(b"\x67version\x18\xaa") == 1, "a profile's crossings are schema 170"
+    assert cd.count(b"\x67version\x18\xac") == 1, "a profile's crossings are schema 172"
     out["road-profile-crossings.kcad"] = container(cd)
-    out["broken/road-profile-crossings-in-schema-169.kcad"] = container(cd.replace(b"\x67version\x18\xaa", b"\x67version\x18\xa9"))
-    # Schema 171 (docs/adr/0950): a volume's numbered approvals and their history; schema 170 refuses them.
+    out["broken/road-profile-crossings-in-schema-171.kcad"] = container(cd.replace(b"\x67version\x18\xac", b"\x67version\x18\xab"))
+    # Schema 173 (docs/adr/0950): a volume's numbered approvals and their history; schema 172 refuses them.
     kept = load("road-volume-history.json")
     hd = document(kept)
-    assert hd.count(b"\x67version\x18\xab") == 1, "a volume's approval history is schema 171"
+    assert hd.count(b"\x67version\x18\xad") == 1, "a volume's approval history is schema 173"
     out["road-volume-history.kcad"] = container(hd)
-    out["broken/road-volume-history-in-schema-170.kcad"] = container(hd.replace(b"\x67version\x18\xab", b"\x67version\x18\xaa"))
-    # Schema 172 (docs/adr/0954): a mass haul diagram's approved plan and its history; schema 171 refuses them.
+    out["broken/road-volume-history-in-schema-172.kcad"] = container(hd.replace(b"\x67version\x18\xad", b"\x67version\x18\xac"))
+    # Schema 174 (docs/adr/0954): a mass haul diagram's approved plan and its history; schema 173 refuses them.
     signed = load("road-haul-approval.json")
     sd = document(signed)
-    assert sd.count(b"\x67version\x18\xac") == 1, "a haul plan's approval is schema 172"
+    assert sd.count(b"\x67version\x18\xae") == 1, "a haul plan's approval is schema 174"
     out["road-haul-approval.kcad"] = container(sd)
-    out["broken/road-haul-approval-in-schema-171.kcad"] = container(sd.replace(b"\x67version\x18\xac", b"\x67version\x18\xab"))
+    out["broken/road-haul-approval-in-schema-173.kcad"] = container(sd.replace(b"\x67version\x18\xae", b"\x67version\x18\xad"))
     # Schema 173 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road; 172 refuses them.
     netted = load("road-haul-network.json")
     nd = document(netted)
-    assert nd.count(b"\x67version\x18\xad") == 1, "a haul road network is schema 173"
+    assert nd.count(b"\x67version\x18\xaf") == 1, "a haul road network is schema 175"
     out["road-haul-network.kcad"] = container(nd)
-    out["broken/road-haul-network-in-schema-172.kcad"] = container(nd.replace(b"\x67version\x18\xad", b"\x67version\x18\xac"))
-    # Schema 174 (docs/adr/0957): a volume factor row's soil densities and source; schema 173 refuses them.
+    out["broken/road-haul-network-in-schema-174.kcad"] = container(nd.replace(b"\x67version\x18\xaf", b"\x67version\x18\xae"))
+    # Schema 176 (docs/adr/0957): a volume factor row's soil densities and source; schema 175 refuses them.
     dense = load("road-volume-states.json")
     dd = document(dense)
-    assert dd.count(b"\x67version\x18\xae") == 1, "a factor row's densities are schema 174"
+    assert dd.count(b"\x67version\x18\xb0") == 1, "a factor row's densities are schema 176"
     out["road-volume-states.kcad"] = container(dd)
-    out["broken/road-volume-states-in-schema-173.kcad"] = container(dd.replace(b"\x67version\x18\xae", b"\x67version\x18\xad"))
-    # Schema 175 (docs/adr/0958): a template side's cut and fill slope benches; schema 174 refuses them.
+    out["broken/road-volume-states-in-schema-175.kcad"] = container(dd.replace(b"\x67version\x18\xb0", b"\x67version\x18\xaf"))
+    # Schema 177 (docs/adr/0958): a template side's cut and fill slope benches; schema 176 refuses them.
     benched = load("road-cut-benches.json")
     bd = document(benched)
-    assert bd.count(b"\x67version\x18\xaf") == 1, "a template's slope benches are schema 175"
+    assert bd.count(b"\x67version\x18\xb1") == 1, "a template's slope benches are schema 177"
     out["road-cut-benches.kcad"] = container(bd)
-    out["broken/road-cut-benches-in-schema-174.kcad"] = container(bd.replace(b"\x67version\x18\xaf", b"\x67version\x18\xae"))
-    # Schema 176 (docs/adr/0960): a corridor region's slope transition; schema 175 refuses it.
+    out["broken/road-cut-benches-in-schema-176.kcad"] = container(bd.replace(b"\x67version\x18\xb1", b"\x67version\x18\xb0"))
+    # Schema 178 (docs/adr/0960): a corridor region's slope transition; schema 177 refuses it.
     eased = load("road-slope-transitions.json")
     ed = document(eased)
-    assert ed.count(b"\x67version\x18\xb0") == 1, "a region's slope transition is schema 176"
+    assert ed.count(b"\x67version\x18\xb2") == 1, "a region's slope transition is schema 178"
     out["road-slope-transitions.kcad"] = container(ed)
-    out["broken/road-slope-transitions-in-schema-175.kcad"] = container(ed.replace(b"\x67version\x18\xb0", b"\x67version\x18\xaf"))
-    # Schema 177 (docs/adr/0974): an earthwork volume on a grid and its cell; schema 176 refuses it.
+    out["broken/road-slope-transitions-in-schema-177.kcad"] = container(ed.replace(b"\x67version\x18\xb2", b"\x67version\x18\xb1"))
+    # Schema 179 (docs/adr/0974): an earthwork volume on a grid and its cell; schema 178 refuses it.
     gridded = load("road-volume-grid.json")
     gd = document(gridded)
-    assert gd.count(b"\x67version\x18\xb1") == 1, "a volume on a grid is schema 177"
+    assert gd.count(b"\x67version\x18\xb3") == 1, "a volume on a grid is schema 179"
     out["road-volume-grid.kcad"] = container(gd)
-    out["broken/road-volume-grid-in-schema-176.kcad"] = container(gd.replace(b"\x67version\x18\xb1", b"\x67version\x18\xb0"))
+    out["broken/road-volume-grid-in-schema-178.kcad"] = container(gd.replace(b"\x67version\x18\xb3", b"\x67version\x18\xb2"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

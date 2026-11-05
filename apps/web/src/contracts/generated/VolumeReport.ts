@@ -26,7 +26,7 @@ strip?: number,
  */
 bench?: number, gaps: Array<[number, number]>, 
 /**
- * Its rule, where it has one (docs/adr/0930 §2).
+ * Its rule, where it has one (docs/adr/0975 §2).
  */
 rule?: VolumeRule, 
 /**

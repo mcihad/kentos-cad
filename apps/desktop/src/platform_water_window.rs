@@ -1,6 +1,6 @@
 //! Platform suyu (plan/road.md Y22, docs/adr/0923 §3, `corridor.water`): water on a corridor's platform. The least
 //! slope is the user's; KentOS fills in none. The window reads `road.corridors.water` (nothing written) whenever a value
-//! changes (docs/adr/0930 §4: no Önizle): in plan the platform's triangles, those flatter than the least red, the slopes
+//! changes (docs/adr/0975 §4: no Önizle): in plan the platform's triangles, those flatter than the least red, the slopes
 //! beyond faint, the low points on the platform's edges marked; under it four figures and one list at a time: the flat
 //! stretches, the zero crossfall stations or the low points. The layout is the road windows' one (road_dialog.rs).
 //!
@@ -141,7 +141,7 @@ impl App {
                 return Task::none();
             }
         }
-        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        // The window only reads: it reads again with the new value (docs/adr/0975 §4).
         self.platform_water_event(Event::Preview)
     }
 

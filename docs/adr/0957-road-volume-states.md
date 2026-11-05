@@ -55,7 +55,7 @@ yazılması:
 - grafikteki açıklama "Σ dolgu (sıkışık)" yerine "Σ dolgunun istediği (gevşek)" oldu;
 - yardım metni tanımı söyler.
 
-### Model (KCAD şema 174)
+### Model (KCAD şema 176)
 
 Katsayı satırına iki alan eklendi:
 

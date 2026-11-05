@@ -7,6 +7,6 @@ import type { TemplateSideDef } from "./TemplateSideDef";
  */
 export type TemplateDef = { id: string, name: string, revision?: number, left: TemplateSideDef, right?: TemplateSideDef, 
 /**
- * The pavement under the finish grade, both sides alike (docs/adr/0930 §2); absent: none (an older template).
+ * The pavement under the finish grade, both sides alike (docs/adr/0975 §2); absent: none (an older template).
  */
 pavement?: PavementDef, };

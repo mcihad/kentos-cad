@@ -786,7 +786,7 @@ codes! {
     /// A warning: stretches where a section is not solved have no volume (docs/adr/0906 §2).
     VOLUME_GAP = "volume_gap", Warning, false, "Kesiti çözülmeyen aralıkların hacmi yok; ileti aralıkları söyler.";
     /// A warning: a template's pavement does not build on some sections (its edge flatter than the last component, a
-    /// side without a component); the stations are said (docs/adr/0930 §1).
+    /// side without a component); the stations are said (docs/adr/0975 §1).
     PAVEMENT_UNBUILT = "pavement_unbuilt", Warning, false, "Bazı kesitlerde üstyapı kurulamadı; ileti km'leri ve nedeni söyler.";
     /// A warning: the design's area the terrain does not cover (docs/adr/0906 §3).
     VOLUME_UNCOVERED = "volume_uncovered", Warning, false, "Tasarım yüzeyinin bir kısmını arazi örtmüyor; o alanın hacmi yok.";

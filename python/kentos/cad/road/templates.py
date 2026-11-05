@@ -92,7 +92,7 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
             left:
             mirror: The right side mirrors the left (its own goes).
             name:
-            pavement: The pavement under the finish grade (docs/adr/0930 §2), replacing the template's.
+            pavement: The pavement under the finish grade (docs/adr/0975 §2), replacing the template's.
             remove_pavement: The template's pavement goes.
             right:
             template:

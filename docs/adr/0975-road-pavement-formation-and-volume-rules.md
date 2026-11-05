@@ -1,7 +1,9 @@
-# 0930 — KentOS Yol: üstyapı tabakaları, formasyon ve kübaj kuralları
+# 0975 — KentOS Yol: üstyapı tabakaları, formasyon ve kübaj kuralları
 
 Tarih: 2026-11-04. plan/road.md Y26 (ROAD-COR-01, 11; ROAD-VOL-09, 19). Durum: Y26.1 kabul; Y26.2–Y26.4 bu belgeyle
 ilerler, açıklar aşağıda.
+
+**Not (2026-11-05):** Bu belge önce 0930 numarasıyla yazıldı. Ana dalda aynı numaralı başka bir belge (`0930-complex-linetype-renderer-audit`) açıldığı için birleştirmede 0975'e taşındı. Yol dalının KCAD şemaları da aynı nedenle iki kaydı: ana daldaki 164 (SHX kaynakları) ve 165 (çizim standardı belgeleri) korunur, yolun şemaları 166'dan (üstyapı) 179'a (ızgara kübajı) kadardır.
 
 ## Dayanak
 
@@ -73,14 +75,14 @@ Retler:
 - `layers[]`: ad, kalınlık (0–2 m), isteğe bağlı malzeme kodu. En çok 12 tabaka, toplam en çok 5 m.
 - `edge`: `{kind: vertical}` ya da `{kind: slope, h}` (0 < h ≤ 100).
 
-`.kcad` şema 164'tedir (`SCHEMA_WITH_ROAD_PAVEMENT`), kübajın `rule`'u da öyle. Üstyapısız ve kuralsız yol projesinin
+`.kcad` şema 166'dadı (`SCHEMA_WITH_ROAD_PAVEMENT`), kübajın `rule`'u da öyle. Üstyapısız ve kuralsız yol projesinin
 dosyası 162'de kalır, bayt bayt aynıdır.
 
 İlk denemede alanlar 162'ye konmuştu (Y2–Y25 alanları da orada). Sahibin elindeki ana daldan derlenmiş program örnek
 projeyi açamadı: “Dosya bozuk ya da KCAD 2 kurallarına uymuyor: … unknown field `pavement`”. 162 ana dalda yayımlanmış
-bir şemadır; ona yeni alan eklemek, onu okuyan programları kandırmaktır. Şema 164'le eski program “belge şeması sürümü
-164 bu uygulamada okunamıyor; KentOS'u güncelleyin” der. Yeni okuyucunun iletisi de değişti: “Bu dosya KentOS'un daha
-yeni bir sürümüyle yazılmış (belge şeması 165; bu sürüm en çok 164'ü okur).” Artık “bozuk” demez ve 160 sürüm numarası
+bir şemadır; ona yeni alan eklemek, onu okuyan programları kandırmaktır. Şema 166'yla eski program “belge şeması sürümü
+166 bu uygulamada okunamıyor; KentOS'u güncelleyin” der. Yeni okuyucunun iletisi de değişti: “Bu dosya KentOS'un daha
+yeni bir sürümüyle yazılmış (belge şeması 167; bu sürüm en çok 166'yı okur).” Artık “bozuk” demez ve 160 sürüm numarası
 sıralamaz. **Kural:** yayımlanmış bir şemaya alan eklenmez, yeni şema açılır.
 
 **Komutlar.**

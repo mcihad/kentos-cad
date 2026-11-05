@@ -11,11 +11,11 @@ export type VolumeApprovalDef = { revision: number,
  */
 at: string, note?: string, cut: number, fill: number, factoredCut: number, factoredFill: number, strip?: number, bench?: number, rows: Array<[number, number, number, number]>, 
 /**
- * Its number among the volume's approvals, from 1 (docs/adr/0950; schema 171); 0: approved before approvals were
+ * Its number among the volume's approvals, from 1 (docs/adr/0950; schema 173); 0: approved before approvals were
  * numbered.
  */
 number?: number, 
 /**
- * How it ended, in the volume's history (docs/adr/0950; schema 171): none while it stands.
+ * How it ended, in the volume's history (docs/adr/0950; schema 173): none while it stands.
  */
 ended?: VolumeApprovalEnd, };

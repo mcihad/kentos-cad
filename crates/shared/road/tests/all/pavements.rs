@@ -1,4 +1,4 @@
-//! A template's pavement against the shared cases (fixtures/road/v1/pavements.json, docs/adr/0930 §1): written in
+//! A template's pavement against the shared cases (fixtures/road/v1/pavements.json, docs/adr/0975 §1): written in
 //! exact fractions by scripts/fixtures/road_pavement_cases.py, no KentOS code.
 
 use kentos_road::section::GroundPoint;

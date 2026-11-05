@@ -40,8 +40,8 @@ o yanın alanı okunur.
 
 ### KCAD
 
-KCAD şema 175'e katıldı; yeni şema açılmadı. Şema 175 aynı gün, henüz yayımlanmamış Y52'de açılmıştı. Ayrı bir 176,
-iki alanı ayrı sürümlere bölüp aynı özelliği iki kez denetletirdi. 174 ve öncesi `fillBench`'i de `unknown_field`
+KCAD şema 177'ye katıldı; yeni şema açılmadı. Şema 177 aynı gün, henüz yayımlanmamış Y52'de açılmıştı. Ayrı bir 176,
+iki alanı ayrı sürümlere bölüp aynı özelliği iki kez denetletirdi. 176 ve öncesi `fillBench`'i de `unknown_field`
 ile reddeder.
 
 ### Geometri
@@ -116,8 +116,8 @@ Basamaklı dolgunun kırık çizgisi, ortalama eğimine yakın düşen araziyi b
 
 - **Pencere:** Sol yanda 3 m / 2 m / %4 yarma, 3 m / 2 m dolgu basamağı (sağ yan solun aynısı). Örnek arazide yarma
   86,31 m², dolgu 106,78 m². Aynı arazideki tip kesit referansı da dolguyu 106,78 m² bulur.
-- **KCAD:** `road-cut-benches` örneğinin yarma basamaklı yanına 5 m / 2 m dolgu basamağı eklendi. Dosya şema 175'te
-  geçerli, 174'te reddedilir.
+- **KCAD:** `road-cut-benches` örneğinin yarma basamaklı yanına 5 m / 2 m dolgu basamağı eklendi. Dosya şema 177'de
+  geçerli, 176'da reddedilir.
 
 ## Açık
 

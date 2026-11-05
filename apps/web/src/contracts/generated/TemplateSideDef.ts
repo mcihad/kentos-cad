@@ -9,10 +9,10 @@ import type { TemplateDitchDef } from "./TemplateDitchDef";
  */
 export type TemplateSideDef = { components?: Array<TemplateComponentDef>, cut: number, fill: number, ditch?: TemplateDitchDef, 
 /**
- * The cut slope's benches (berme, docs/adr/0958; KCAD schema 175).
+ * The cut slope's benches (berme, docs/adr/0958; KCAD schema 177).
  */
 bench?: TemplateBenchDef, 
 /**
- * The fill slope's benches (docs/adr/0958; KCAD schema 175).
+ * The fill slope's benches (docs/adr/0958; KCAD schema 177).
  */
 fillBench?: TemplateBenchDef, };

@@ -379,7 +379,7 @@ pub(crate) fn row_of(
 }
 
 /// A template's pavement on a section built from `template` (the one at its station) against the natural ground
-/// (docs/adr/0930 §2); none where it does not build.
+/// (docs/adr/0975 §2); none where it does not build.
 pub(crate) fn pavement_row(
     def: &kentos_commands::PavementDef,
     template: &Template,

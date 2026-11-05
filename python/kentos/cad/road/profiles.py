@@ -607,7 +607,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
     bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove:
     boykesit kalkar.  Kesişmeler (crossings: ad, km, side above/below, elevation alt ya
     da üst yüzü, clearance açıklık ya da örtü) da yazılır, boş liste kaldırır
-    (docs/adr/0946, KCAD şema 170).Boykesitin revizyonu her değişiklikte bir artar. Tek
+    (docs/adr/0946, KCAD şema 172).Boykesitin revizyonu her değişiklikte bir artar. Tek
     geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project,
     unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap,
     invalid_revision, revision_conflict.
@@ -642,7 +642,7 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar.  Kesişmeler
         (crossings: ad, km, side above/below, elevation alt ya da üst yüzü, clearance
         açıklık ya da örtü) da yazılır, boş liste kaldırır (docs/adr/0946, KCAD şema
-        170).Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti
+        172).Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti
         düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain,
         invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.
 

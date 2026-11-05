@@ -248,7 +248,7 @@ def edit_cases():
         "execute", {"operation": "set", "haul": "h-1", "cost": None},
         completed({"hauls": listed([{**H1, "revision": 2}, H2]), "revision": "$current", "haul": report({**H1, "revision": 2})}),
         {**STEPPED, "road": road_of([{**H1, "revision": 2}, H2])})], setup([hp, H2])))
-    # Docs/adr/0944: the cut unsuitable for fill and the barriers (schema 169).
+    # Docs/adr/0944: the cut unsuitable for fill and the barriers (schema 171).
     unsuitable = [{"from": 0.0, "to": 200.0, "share": 35.0}, {"from": 200.0, "to": 400.0, "share": 10.0}]
     barriers = [{"name": "Dere", "station": 250.0, "detour": 400.0}, {"name": "Kavşak", "station": 450.0}]
     ok("Uygunsuz malzeme ve engellerle", {**base, "unsuitable": unsuitable, "barriers": barriers},

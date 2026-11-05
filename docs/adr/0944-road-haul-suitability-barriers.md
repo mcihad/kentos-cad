@@ -56,7 +56,7 @@ ROAD-HAUL-05: "Barriers, köprü geçişi, temporary road closure ve erişilebil
 
 ### Komut ve kayıt (Y38.2)
 
-**Brükner tanımı** iki alan kazanır (KCAD şema 169; 168 ve öncesi `unknown_field` ile reddeder):
+**Brükner tanımı** iki alan kazanır (KCAD şema 171; 170 ve öncesi `unknown_field` ile reddeder):
 
 - `unsuitable`: km aralıklarıyla kazının dolguya konamayan yüzde payı. Satırlar kesişmez; pay 0–100 arasıdır.
 - `barriers`: ad, km ve isteğe bağlı dolaşma (m). Dolaşma yoksa engel kapalıdır.

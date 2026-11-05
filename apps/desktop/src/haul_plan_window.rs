@@ -1,6 +1,6 @@
 //! Taşıma planı (plan/road.md Y23 and Y24, docs/adr/0924 §3 and 0925, `haul.plan`): a mass haul diagram's earthwork moved
 //! at the least haul moment or the least cost (the diagram's free haul and prices), its borrow and waste sites taking up
-//! to their volume. The window reads `road.hauls.plan` (nothing written) whenever a value changes (docs/adr/0930 §4: no
+//! to their volume. The window reads `road.hauls.plan` (nothing written) whenever a value changes (docs/adr/0975 §4: no
 //! Önizle): the flow along the road (above the line forward, below it back), the sites marked where they stand; under
 //! it four figures and one list at a time: the sites against their capacity, or the costs. The layout is the road
 //! windows' one (road_dialog.rs).
@@ -277,7 +277,7 @@ impl App {
                 return Task::none();
             }
         }
-        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        // The window only reads: it reads again with the new value (docs/adr/0975 §4).
         self.haul_plan_event(Event::Preview)
     }
 

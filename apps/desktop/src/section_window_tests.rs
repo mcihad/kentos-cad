@@ -229,7 +229,7 @@ fn screens() {
     }
 }
 
-/// Üstyapı (docs/adr/0930 §3): four layers typed on a template, its edge on the fill slope; Kaydet writes them with
+/// Üstyapı (docs/adr/0975 §3): four layers typed on a template, its edge on the fill slope; Kaydet writes them with
 /// `road.templates.edit` and the set's sections carry the pavement.
 fn paved(app: &mut App) {
     let _ = app.update(Message::Run("section.editor"));

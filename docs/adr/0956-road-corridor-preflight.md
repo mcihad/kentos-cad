@@ -109,7 +109,7 @@ Bağımsız referans `scripts/fixtures/road_corridor_preflight_command_cases.py`
 ## Açık
 
 - **Malzeme şekillerinin kapanması** (ROAD-COR-13'ün kalanı): Üstyapı tabakaları koridorda değil kesit çiziminde
-  kuruluyor (ADR 0930); tabaka tabanlarının kesişip kesişmediği orada denetlenmeli.
+  kuruluyor (ADR 0975); tabaka tabanlarının kesişip kesişmediği orada denetlenmeli.
 - **Kırpma:** Civil 3D'nin "Clear bowtie"ı gibi katlanan ve üst üste binen parçayı kırpıp yüzeyi düzeltmek, öneri
   olarak ayrı bir komut olmalı. Ön denetim yalnız söyler, değiştirmez.
 - **Yol üstünden geçen yol:** Gerçek bir üst geçitte iki parça gerçekten üst üste olur; ayrımı şimdilik kot farkıyla

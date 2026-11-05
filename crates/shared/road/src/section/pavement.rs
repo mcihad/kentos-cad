@@ -1,5 +1,5 @@
 //! A template's pavement on a cross section: its layers, the formation under them and the earthwork measured from
-//! the formation (docs/adr/0930, plan/road.md Y26; ROAD-COR-01, 11, ROAD-VOL-09, 19).
+//! the formation (docs/adr/0975, plan/road.md Y26; ROAD-COR-01, 11, ROAD-VOL-09, 19).
 //!
 //! The layers lie under the finish grade, each its thickness deep, parallel to it (Civil 3D's lane subassemblies,
 //! OpenRoads' pavement components, the KGM typical section's aşınma, binder, temel, alttemel). Across the platform

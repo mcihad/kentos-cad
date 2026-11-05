@@ -23,21 +23,21 @@ bench?: VolumeBenchDef,
  */
 approved?: VolumeApprovalDef, 
 /**
- * Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):
+ * Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 173):
  * never changed nor removed.
  */
 history?: Array<VolumeApprovalDef>, 
 /**
- * Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
+ * Which two lines it measures between (docs/adr/0975 §2, Netpro's names); absent: the road's top against the
  * ground, stripped when it strips (as before the rule).
  */
 rule?: VolumeRule, 
 /**
- * The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
+ * The volume on a curve by the sections' moments (docs/adr/0934; schema 169): each section's effective area
  * `A + κ·Q`; the average end area method only.
  */
 curve?: boolean, 
 /**
- * The grid method's cell (m, docs/adr/0974; schema 177): 0.01 to 1000; the grid method only.
+ * The grid method's cell (m, docs/adr/0974; schema 179): 0.01 to 1000; the grid method only.
  */
 cell?: number, };

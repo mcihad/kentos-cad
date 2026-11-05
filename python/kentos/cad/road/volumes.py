@@ -416,7 +416,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             factors:
             method:
             name:
-            rule: Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
+            rule: Which two lines it measures between (docs/adr/0975 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
             strip: The topsoil stripped by stations; an empty list takes it off.
             volume:
             request_id: Names this write: sent again with the same call it is answered as

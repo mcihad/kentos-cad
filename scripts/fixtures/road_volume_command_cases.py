@@ -57,7 +57,7 @@ def road_of(volumes, corridors=CORRIDORS):
 
 
 class paved_templates:
-    """The corridors' templates with a pavement while the block runs (docs/adr/0930 §2): the main road's four layers on a
+    """The corridors' templates with a pavement while the block runs (docs/adr/0975 §2): the main road's four layers on a
     slope, the side road's two on a vertical edge; `flat_edge`: the side road's edge flatter than its shoulder."""
 
     def __init__(self, flat_edge=False):
@@ -138,7 +138,7 @@ def template_here(c, r, s):
 
 
 def rule_of(v):
-    """The volume's rule (docs/adr/0930 §2): whether it measures from the formation and against the stripped ground."""
+    """The volume's rule (docs/adr/0975 §2): whether it measures from the formation and against the stripped ground."""
     rule = v.get("rule")
     if rule is None:
         return False, bool(v.get("strip"))
@@ -147,7 +147,7 @@ def rule_of(v):
 
 def earthwork(c, r, s, v, names=()):
     """A section's cut, fill, topsoil and benches (docs/adr/0906 §6) in fractions as the volume's rule reads them
-    (docs/adr/0930 §2): the design line against the terrain lowered by the topsoil depth when the rule strips; the topsoil
+    (docs/adr/0975 §2): the design line against the terrain lowered by the topsoil depth when the rule strips; the topsoil
     the depth times the footprint where the terrain is, whichever the rule; the benches half their height times the
     width where the (rule's) terrain under a fill falls steeper than the bench's slope; with the template's pavement, each
     layer's area (by `names`, the report's layers) and, from the formation, the pavement under the ground added to the
@@ -659,7 +659,7 @@ def edit_cases():
         "execute", {"operation": "set", "volume": "v-1", "bench": None},
         completed({"volumes": listed([{**V1, "revision": 2}, V2]), "revision": "$current", "volume": report({**V1, "revision": 2})}),
         {**STEPPED, "road": road_of([{**V1, "revision": 2}, V2])})], setup([vb, V2])))
-    # Rules (docs/adr/0930 §2): Netpro's Yol/Formasyon against Zemin/Bitkisel Toprak.
+    # Rules (docs/adr/0975 §2): Netpro's Yol/Formasyon against Zemin/Bitkisel Toprak.
     ok("Yol–Zemin kuralı açıkça", {"operation": "set", "volume": "v-1", "rule": "roadGround"},
        put(0, {**V1, "rule": "roadGround", "revision": 2}), "v-1")
     ok("Yol–Bitkisel Toprak, sıyırmayla", {**base, "strip": strips, "rule": "roadTopsoil"},
@@ -846,7 +846,7 @@ def query_cases():
     q("Onaydan sonra koridor sıklaştı: fark", {"volume": "v-1"}, [approved(V1), V2], [c_dense, ccmd.C2])
     c_short = {**ccmd.C1, "regions": [{"from": 0.0, "to": 300.0, "template": "tk-1"}]}
     q("Onaydan sonra bölge kısaldı: kalkan aralıklar", {"volume": "v-1"}, [approved(V1), V2], [c_short, ccmd.C2])
-    # Rules and pavement layers (docs/adr/0930 §2), on templates with a pavement.
+    # Rules and pavement layers (docs/adr/0975 §2), on templates with a pavement.
     with paved_templates():
         q("Üstyapılı tip kesitler: tabaka hacimleri, Yol–Zemin", {"volume": "v-1"})
         q("Formasyon–Zemin", {"volume": "v-1"}, [v(rule="formationGround"), V2])

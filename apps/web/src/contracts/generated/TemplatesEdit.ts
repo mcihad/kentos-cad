@@ -17,7 +17,7 @@ export type TemplatesEdit = { operation: RoadEditOperation, template?: string, n
  */
 mirror?: boolean, 
 /**
- * The pavement under the finish grade (docs/adr/0930 §2), replacing the template's.
+ * The pavement under the finish grade (docs/adr/0975 §2), replacing the template's.
  */
 pavement?: PavementDef, 
 /**

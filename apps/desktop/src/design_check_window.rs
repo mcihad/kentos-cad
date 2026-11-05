@@ -1,7 +1,7 @@
 //! Tasarım denetimi (plan/road.md Y21, docs/adr/0922 §3, `alignment.check`): an alignment or a profile checked against
 //! the user's design rules, as Civil 3D's design check sets and OpenRoads' design standards do. The limits are the
 //! user's (the design standard's); KentOS fills in none, a rule left empty is not checked. The window reads
-//! `road.alignments.check` or `road.profiles.check` (nothing written) whenever a value changes (docs/adr/0930 §4: no
+//! `road.alignments.check` or `road.profiles.check` (nothing written) whenever a value changes (docs/adr/0975 §4: no
 //! Önizle): along the stations, the alignment's elements (tangent, clothoid, curve) or the profile, the stretches
 //! breaking a rule red; under it the findings and, for an alignment, its curve pairs, one list at a time. The rules are
 //! the form's column, not a row that scrolls sideways. The layout is the road windows' one (road_dialog.rs).
@@ -230,7 +230,7 @@ impl App {
                 return Task::none();
             }
         }
-        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        // The window only reads: it reads again with the new value (docs/adr/0975 §4).
         self.design_check_event(Event::Preview)
     }
 

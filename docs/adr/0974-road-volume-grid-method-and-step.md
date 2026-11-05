@@ -31,7 +31,7 @@ Eksikler:
 
 ## Karar
 
-### Yöntem (`VolumeMethod::Grid`, KCAD şema 177)
+### Yöntem (`VolumeMethod::Grid`, KCAD şema 179)
 
 - **Hücre:** Kübaj tanımına `cell` (m) eklenir. 0,01 ile 1000 m arasıdır, kullanıcının verdiğidir; KentOS öntanımlı
   sayı vermez. Başka yöntemde hücre reddedilir; yöntem değişince düzenleme onu kaldırır.
@@ -46,8 +46,8 @@ Eksikler:
   çalışır.
 - **Kesit işleri:** Sıyırma, diş kazısı ve Yol–Zemin dışındaki kurallar yalnız kesit yöntemlerindedir; ızgarada da
   reddedilir.
-- **KCAD:** Şema 177; yazıcı onu yalnız ızgaralı ya da hücreli kübaj varken seçer, 176 ve öncesi reddeder.
-  `road-volume-grid.kcad` ve eski şemada `broken/road-volume-grid-in-schema-176.kcad`. Geçerli dosya 194.
+- **KCAD:** Şema 179; yazıcı onu yalnız ızgaralı ya da hücreli kübaj varken seçer, 178 ve öncesi reddeder.
+  `road-volume-grid.kcad` ve eski şemada `broken/road-volume-grid-in-schema-178.kcad`. Geçerli dosya 194.
 
 ### Rapor
 

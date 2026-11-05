@@ -16,15 +16,15 @@ export type HaulDef = { id: string, name: string, volume: string, revision?: num
  */
 cost?: HaulCostDef, 
 /**
- * The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).
+ * The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 171).
  */
 unsuitable?: Array<HaulUnsuitableDef>, 
 /**
- * What the haul road crosses (docs/adr/0944; KCAD schema 169).
+ * What the haul road crosses (docs/adr/0944; KCAD schema 171).
  */
 barriers?: Array<HaulBarrierDef>, 
 /**
- * Its plan as approved (docs/adr/0954; KCAD schema 172): a plan read later against it says what changed.
+ * Its plan as approved (docs/adr/0954; KCAD schema 174): a plan read later against it says what changed.
  */
 approved?: HaulApprovalDef, 
 /**
@@ -32,6 +32,6 @@ approved?: HaulApprovalDef,
  */
 history?: Array<HaulApprovalDef>, 
 /**
- * Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 173).
+ * Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 175).
  */
 network?: HaulNetworkDef, };

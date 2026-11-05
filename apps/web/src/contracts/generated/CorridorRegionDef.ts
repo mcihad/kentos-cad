@@ -2,7 +2,7 @@
 
 /**
  * A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template; and an optional
- * slope transition (docs/adr/0960, KCAD schema 176): over its first `transition` m the sides' cut and fill slopes go
+ * slope transition (docs/adr/0960, KCAD schema 178): over its first `transition` m the sides' cut and fill slopes go
  * linearly from the region before's template's to its own. The region before ends where it starts.
  */
 export type CorridorRegionDef = { from: number, to: number, template: string, transition?: number, };

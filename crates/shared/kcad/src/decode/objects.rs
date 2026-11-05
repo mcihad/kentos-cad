@@ -323,7 +323,7 @@ pub(super) struct Features {
     pub(super) cad_work: bool,
     /// Schema 159 (plan/road.md Y1.1): `cadWork` may be `road`.
     pub(super) road_work: bool,
-    /// Schema 164: a road template's pavement and a volume's rule (docs/adr/0930 §2).
+    /// Schema 164: a road template's pavement and a volume's rule (docs/adr/0975 §2).
     pub(super) road_pavement: bool,
     /// Schema 165: a superelevation's axis of rotation (docs/adr/0931 §2).
     pub(super) road_pivot: bool,

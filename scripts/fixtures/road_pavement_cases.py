@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A template's pavement on its sections, shared cases (docs/adr/0930 §1, plan/road.md Y26.1), from an independent
+"""A template's pavement on its sections, shared cases (docs/adr/0975 §1, plan/road.md Y26.1), from an independent
 reference in exact fractions: the section as road_template_cases.py builds it; each layer the region between the
 finish grade lowered by the depths above and below it (outward from the axis, extended with the last component's
 slope past the hinge when the edge is a slope), not above the edge line from the hinge nor the finished line past it,

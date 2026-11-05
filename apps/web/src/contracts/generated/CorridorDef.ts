@@ -22,10 +22,10 @@ critical?: boolean,
  */
 stations?: Array<number>, regions: Array<CorridorRegionDef>, 
 /**
- * The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 168).
+ * The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 170).
  */
 verticalSag?: number, 
 /**
- * The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 168).
+ * The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 170).
  */
 refine?: CorridorRefineDef, };

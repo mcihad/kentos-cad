@@ -497,20 +497,20 @@ SCHEMA_WITH_BLOCK_TYPE_VALUES = 160  # ADR 0863: common drawing-type parameter v
 SCHEMA_WITH_LATTICE_ARRAYS = 161  # ADR 0882: independently directed grid axes
 SCHEMA_WITH_ROAD_WORK = 162  # plan/road.md Y1.1: cadWork may be road (KentOS Yol)
 SCHEMA_WITH_TEXT_ENGINE = 163  # ADR 0914: opt-in frozen Unicode text layout
-SCHEMA_WITH_ROAD_PAVEMENT = 164  # docs/adr/0930 §2: a road template's pavement and a volume's rule
-SCHEMA_WITH_ROAD_PIVOT = 165  # docs/adr/0931 §2: a superelevation's axis of rotation
-SCHEMA_WITH_SECTION_BREAKS = 166  # docs/adr/0933 §3: a sample line set's clip, breaks method and curve step
-SCHEMA_WITH_VOLUME_CURVE = 167  # docs/adr/0934 §2: an earthwork volume's curve correction
-SCHEMA_WITH_CORRIDOR_SAMPLING = 168  # docs/adr/0939: a corridor's vertical chord height and sampling check
-SCHEMA_WITH_HAUL_SORTING = 169  # docs/adr/0944: a mass haul diagram's unsuitable cut and barriers
-SCHEMA_WITH_PROFILE_CROSSINGS = 170  # docs/adr/0946: a profile's crossings
-SCHEMA_WITH_VOLUME_HISTORY = 171  # docs/adr/0950: a volume's numbered approvals and their history
-SCHEMA_WITH_HAUL_APPROVAL = 172  # docs/adr/0954: a mass haul diagram's approved plan and its history
-SCHEMA_WITH_HAUL_NETWORK = 173  # docs/adr/0955: a mass haul diagram's haul road network and its sites off the road
-SCHEMA_WITH_VOLUME_STATES = 174  # docs/adr/0957: a volume factor row's soil densities and source
-SCHEMA_WITH_CUT_BENCHES = 175  # docs/adr/0958: a template side's cut and fill slope benches
-SCHEMA_WITH_SLOPE_TRANSITIONS = 176  # docs/adr/0960: a corridor region's slope transition
-SCHEMA_WITH_VOLUME_GRID = 177  # docs/adr/0974: an earthwork volume on a grid and its cell
+SCHEMA_WITH_ROAD_PAVEMENT = 166  # docs/adr/0975 §2: a road template's pavement and a volume's rule
+SCHEMA_WITH_ROAD_PIVOT = 167  # docs/adr/0931 §2: a superelevation's axis of rotation
+SCHEMA_WITH_SECTION_BREAKS = 168  # docs/adr/0933 §3: a sample line set's clip, breaks method and curve step
+SCHEMA_WITH_VOLUME_CURVE = 169  # docs/adr/0934 §2: an earthwork volume's curve correction
+SCHEMA_WITH_CORRIDOR_SAMPLING = 170  # docs/adr/0939: a corridor's vertical chord height and sampling check
+SCHEMA_WITH_HAUL_SORTING = 171  # docs/adr/0944: a mass haul diagram's unsuitable cut and barriers
+SCHEMA_WITH_PROFILE_CROSSINGS = 172  # docs/adr/0946: a profile's crossings
+SCHEMA_WITH_VOLUME_HISTORY = 173  # docs/adr/0950: a volume's numbered approvals and their history
+SCHEMA_WITH_HAUL_APPROVAL = 174  # docs/adr/0954: a mass haul diagram's approved plan and its history
+SCHEMA_WITH_HAUL_NETWORK = 175  # docs/adr/0955: a mass haul diagram's haul road network and its sites off the road
+SCHEMA_WITH_VOLUME_STATES = 176  # docs/adr/0957: a volume factor row's soil densities and source
+SCHEMA_WITH_CUT_BENCHES = 177  # docs/adr/0958: a template side's cut and fill slope benches
+SCHEMA_WITH_SLOPE_TRANSITIONS = 178  # docs/adr/0960: a corridor region's slope transition
+SCHEMA_WITH_VOLUME_GRID = 179  # docs/adr/0974: an earthwork volume on a grid and its cell
 SCHEMA_WITH_INSTANCE_STOREYS = 155
 SCHEDULE_UNIT_FIELDS = ("unitKind", "building", "wing", "recordedArea", "shareWeight")
 UNIT_KINDS = ("unit", "common", "outdoor")
@@ -9560,7 +9560,7 @@ class _Schema:
 
         def profile(x):
             # Docs/adr/0902: a vertical alignment's PVIs on an alignment, the revision it was made against, a surface;
-            # 0946: what it crosses (schema 170).
+            # 0946: what it crosses (schema 172).
             t = self.fields({"id": (word, True), "name": (self.text, True), "alignment": (word, True),
                              "alignmentRevision": (self.uint(32), False), "revision": (self.uint(32), False),
                              "pvis": (self.array(pvi), True), "surface": (word, False),
@@ -9581,7 +9581,7 @@ class _Schema:
             comp = self.fields({"kind": (self.enum(("lane", "shoulder")), True), "width": (finite, True),
                                 "slope": (finite, True)})
             ditch = self.fields({"fore": (finite, True), "depth": (finite, True), "bottom": (finite, False)})
-            # Docs/adr/0958: the cut and fill slopes' benches (schema 175).
+            # Docs/adr/0958: the cut and fill slopes' benches (schema 177).
             bench = self.fields({"height": (finite, True), "width": (finite, True), "fall": (finite, False)})
             benches = {"bench": (bench, False), "fillBench": (bench, False)} if self.cut_benches else {}
             t = self.fields({"components": (self.array(comp), False), "cut": (finite, True), "fill": (finite, True),
@@ -9620,7 +9620,7 @@ class _Schema:
             return t
 
         def pavement(x):
-            # Docs/adr/0930 §2 (schema 164): the layers from the top down, how they end at the hinge.
+            # Docs/adr/0975 §2 (schema 166): the layers from the top down, how they end at the hinge.
             t = self.fields({"layers": (self.array(pavement_layer), True), "edge": (pavement_edge, True)})(x)
             if not 1 <= len(t["layers"]) <= 12 or sum(l["thickness"] for l in t["layers"]) > 5:
                 self.fail("bad_value", "üstyapının 1 ile 12 arasında tabakası olur, toplamı en çok 5 m")
@@ -9639,7 +9639,7 @@ class _Schema:
             # Docs/adr/0903 §2: a range, the stations written, or the lines crossing the alignment.
             methods = ("range", "stations", "lines") + (("breaks",) if self.section_breaks else ())
             if not isinstance(x, dict) or x.get("method") not in methods:
-                self.fail("bad_value", "kesit takımının km yöntemi range, stations, lines ya da (şema 166) breaks olur")
+                self.fail("bad_value", "kesit takımının km yöntemi range, stations, lines ya da (şema 168) breaks olur")
             m = x["method"]
             if m == "range":
                 t = self.fields({"method": (self.text, True), "from": (finite, True), "to": (finite, True),
@@ -9715,7 +9715,7 @@ class _Schema:
             return t
 
         def corridor_region(x):
-            # Docs/adr/0960: a region's slope transition from the region before (schema 176).
+            # Docs/adr/0960: a region's slope transition from the region before (schema 178).
             more = {"transition": (finite, False)} if self.slope_transitions else {}
             t = self.fields({"from": (finite, True), "to": (finite, True), "template": (word, True), **more})(x)
             if "transition" in t and not 0 < t["transition"] <= t["to"] - t["from"]:
@@ -9767,7 +9767,7 @@ class _Schema:
             return t
 
         def volume_factor(x):
-            # Docs/adr/0957: a row's soil densities and its source (schema 174).
+            # Docs/adr/0957: a row's soil densities and its source (schema 176).
             t = self.fields({"from": (finite, True), "to": (finite, True), "cut": (finite, False),
                              "fill": (finite, False),
                              **({"densities": (volume_densities, False), "source": (self.text, False)}
@@ -9806,7 +9806,7 @@ class _Schema:
             return t
 
         def volume_approval(x):
-            # Docs/adr/0906 §5: the figures as approved; 0950: its number and how it ended (schema 171).
+            # Docs/adr/0906 §5: the figures as approved; 0950: its number and how it ended (schema 173).
             t = self.fields({"revision": (self.uint(32), True), "at": (self.text, True), "note": (self.text, False),
                              "cut": (finite, True), "fill": (finite, True), "factoredCut": (finite, True),
                              "factoredFill": (finite, True), "strip": (finite, False), "bench": (finite, False),
@@ -9832,7 +9832,7 @@ class _Schema:
                              **({"rule": (self.enum(("roadGround", "formationGround", "roadTopsoil", "formationTopsoil")), False)}
                                 if self.road_pavement else {}),
                              **({"curve": (self.bool, False)} if self.volume_curve else {}),
-                             # Docs/adr/0974: the grid method's cell (schema 177).
+                             # Docs/adr/0974: the grid method's cell (schema 179).
                              **({"cell": (finite, False)} if self.volume_grid else {})})(x)
             if t["method"] == "grid" and not 0.01 <= t.get("cell", 0) <= 1000:
                 self.fail("bad_value", "ızgara yöntemi 0,01 ile 1000 m arası bir hücre boyu ister")
@@ -9863,7 +9863,7 @@ class _Schema:
             return self.fields({"x": (finite, True), "y": (finite, True)})(x)
 
         def haul_network(x):
-            # Docs/adr/0955: the layers of a diagram's haul roads, the connection tolerance and the reach (schema 173).
+            # Docs/adr/0955: the layers of a diagram's haul roads, the connection tolerance and the reach (schema 175).
             t = self.fields({"layers": (self.array(self.text), True), "connect": (finite, True),
                              "reach": (finite, False)})(x)
             if not 1 <= len(t["layers"]) <= 20 or any(not l or len(l) > 128 for l in t["layers"]):
@@ -9915,7 +9915,7 @@ class _Schema:
             return t
 
         def haul_approval(x):
-            # Docs/adr/0954: a haul plan as approved, its number and how it ended (schema 172).
+            # Docs/adr/0954: a haul plan as approved, its number and how it ended (schema 174).
             t = self.fields({"number": (self.uint(32), True), "at": (self.text, True), "note": (self.text, False),
                              "revision": (self.uint(32), True), "volumeRevision": (self.uint(32), True),
                              "volumeApproval": (self.uint(32), False), "cost": (self.bool, False),
@@ -9929,7 +9929,7 @@ class _Schema:
 
         def haul(x):
             # Docs/adr/0907: a volume's mass haul diagram, its balance line, free haul, sites and prices; 0944: its
-            # unsuitable cut and barriers (schema 169); 0954: its approved plan and history (schema 172).
+            # unsuitable cut and barriers (schema 171); 0954: its approved plan and history (schema 174).
             t = self.fields({"id": (word, True), "name": (self.text, True), "volume": (word, True),
                              "revision": (self.uint(32), False), "balance": (finite, False), "free": (finite, False),
                              "sites": (self.array(haul_site), False), "cost": (haul_cost, False),

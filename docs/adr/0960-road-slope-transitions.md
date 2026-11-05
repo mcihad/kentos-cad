@@ -31,7 +31,7 @@ bir boy boyunca değişir.
 
 ## Karar
 
-### Model (KCAD şema 176)
+### Model (KCAD şema 178)
 
 Koridor bölgesine isteğe bağlı `transition` (m) yazılır. Bölgenin başından o kadar metre boyunca her yanın yarma ve
 dolgu şevi, önceki bölgenin tip kesitininkinden bu bölgeninkine doğrusal geçer:
@@ -124,7 +124,7 @@ Ana koridorun tk-2 bölgesine 40 m geçiş verildiğinde:
 
 ### KCAD
 
-Şema 176 `road-slope-transitions` dosyası. Aynı içerik şema 175'te reddedilir; 193 geçerli dosya.
+Şema 178 `road-slope-transitions` dosyası. Aynı içerik şema 177'de reddedilir; 193 geçerli dosya.
 
 ## Açık
 

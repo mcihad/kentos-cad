@@ -8,7 +8,7 @@ import type { Vec2 } from "./Vec2";
  */
 export type HaulSiteDef = { name: string, kind: HaulSiteKind, station: number, volume: number, 
 /**
- * Where it lies off the road, in plan (docs/adr/0955; KCAD schema 173): it is reached along the diagram's haul
+ * Where it lies off the road, in plan (docs/adr/0955; KCAD schema 175): it is reached along the diagram's haul
  * road network, which says where it meets the alignment and how far; `station` is then that station as last
  * written. None: on the road at `station`.
  */

@@ -2,7 +2,7 @@
 import type { SectionLayer } from "./SectionLayer";
 
 /**
- * A pavement on a section (docs/adr/0930 §1): each layer's name and area, the pavement under and above the ground,
+ * A pavement on a section (docs/adr/0975 §1): each layer's name and area, the pavement under and above the ground,
  * the formation line and each layer's bottom (offset, elevation; left to right), and the earthwork from the formation
  * (Formasyon–Zemin): the road's cut plus the pavement under the ground, its fill less the pavement above it.
  */

@@ -121,7 +121,7 @@ ROAD-COR-09 dört şey sayar. Bu ölçüm dördünü kodlu noktalar üzerinden o
 
 ### §4 Komut ve kayıt (Y33.2)
 
-- **`CorridorDef`** iki isteğe bağlı alan alır (KCAD şema 168):
+- **`CorridorDef`** iki isteğe bağlı alan alır (KCAD şema 170):
   - `verticalSag`: düşey kurpların kiriş yüksekliği, m.
   - `refine { plan?, height?, least }`: sapma toleransları ve en kısa adım, m.
 - **Hiçbirine öntanımlı değer konmaz.** Yazılmazsa koridor eskisi gibi örneklenir; eski dosyalar bayt bayt aynı kalır.

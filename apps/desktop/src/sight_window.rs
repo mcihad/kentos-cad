@@ -1,7 +1,7 @@
 //! Görüş mesafesi (plan/road.md Y20, docs/adr/0921 §3, `profile.sight`): a profile's sight distance, an eye and an
 //! object over the profile, ahead and behind. The heights, how far to look, the step and the required distance are the
 //! user's (the design standard's); KentOS fills in none. The window reads `road.profiles.sight` (nothing written)
-//! whenever a value changes, once the four numbers it needs are written (docs/adr/0930 §4: no Önizle): above, the
+//! whenever a value changes, once the four numbers it needs are written (docs/adr/0975 §4: no Önizle): above, the
 //! profile; under it the distance seen each way at every station, the required distance dashed, the stations seen
 //! shorter red; the shortest each way as figures and the short stretches as a table. The layout is the road windows'
 //! one (road_dialog.rs).
@@ -134,7 +134,7 @@ impl App {
                 return Task::none();
             }
         }
-        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        // The window only reads: it reads again with the new value (docs/adr/0975 §4).
         self.sight_event(Event::Preview)
     }
 

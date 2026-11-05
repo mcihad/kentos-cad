@@ -70,7 +70,7 @@ pub struct RoadDialog<'a> {
     tail: Option<Element<'a, Message>>,
 }
 
-// `status`, `secondary` and `width` are the other road windows' as they move onto this layout (docs/adr/0930 §4).
+// `status`, `secondary` and `width` are the other road windows' as they move onto this layout (docs/adr/0975 §4).
 #[allow(dead_code)]
 impl<'a> RoadDialog<'a> {
     pub fn new(title: &'a str, form: Form<'a, Message>, close: Message) -> Self {

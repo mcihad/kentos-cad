@@ -7,7 +7,7 @@ import type { VolumeDensities } from "./VolumeDensities";
  */
 export type VolumeFactorDef = { from: number, to: number, cut?: number, fill?: number, 
 /**
- * The soil's densities from the soil report (docs/adr/0957; KCAD schema 174): the factors follow from them, the
+ * The soil's densities from the soil report (docs/adr/0957; KCAD schema 176): the factors follow from them, the
  * cut's bank over loose, the fill's compacted over loose (both volumes in loose m³, as a truck carries them); a
  * row with densities writes no factor of its own.
  */

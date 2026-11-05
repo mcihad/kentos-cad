@@ -33,6 +33,6 @@ revision?: number, pvis: Array<ProfilePvi>,
  */
 surface?: string, 
 /**
- * What the road crosses (docs/adr/0946; KCAD schema 170).
+ * What the road crosses (docs/adr/0946; KCAD schema 172).
  */
 crossings?: Array<ProfileCrossingDef>, };

@@ -755,36 +755,36 @@ pub const SCHEMA_WITH_LATTICE_ARRAYS: u32 = 161;
 pub const SCHEMA_WITH_ROAD_WORK: u32 = 162;
 /// Schema 163 (ADR 0914): opt-in frozen Unicode text layout; absent means legacy.
 pub const SCHEMA_WITH_TEXT_ENGINE: u32 = 163;
-/// Schema 164 (docs/adr/0930 §2): a road template's `pavement` and an earthwork volume's `rule`. A program that reads
+/// Schema 164 (docs/adr/0975 §2): a road template's `pavement` and an earthwork volume's `rule`. A program that reads
 /// 162 or 163 says the file is newer (schema_version) instead of calling it broken: the road settings are one JSON
 /// part whose types refuse a field they do not know.
-pub const SCHEMA_WITH_ROAD_PAVEMENT: u32 = 164;
+pub const SCHEMA_WITH_ROAD_PAVEMENT: u32 = 166;
 /// Schema 165 (docs/adr/0931 §2): a superelevation schedule's `pivot`, its axis of rotation.
-pub const SCHEMA_WITH_ROAD_PIVOT: u32 = 165;
+pub const SCHEMA_WITH_ROAD_PIVOT: u32 = 167;
 /// Schema 166 (docs/adr/0933 §3): a sample line set's `clip`, its `breaks` station method and a range's `curve` step.
-pub const SCHEMA_WITH_SECTION_BREAKS: u32 = 166;
+pub const SCHEMA_WITH_SECTION_BREAKS: u32 = 168;
 /// Schema 167 (docs/adr/0934 §2): an earthwork volume's `curve`, the correction on a curve by the sections' moments.
-pub const SCHEMA_WITH_VOLUME_CURVE: u32 = 167;
+pub const SCHEMA_WITH_VOLUME_CURVE: u32 = 169;
 /// Schema 168 (docs/adr/0939): a corridor's `verticalSag` and `refine`, its sampling densified and checked.
-pub const SCHEMA_WITH_CORRIDOR_SAMPLING: u32 = 168;
+pub const SCHEMA_WITH_CORRIDOR_SAMPLING: u32 = 170;
 /// Schema 169 (docs/adr/0944): a mass haul diagram's `unsuitable` cut and `barriers`.
-pub const SCHEMA_WITH_HAUL_SORTING: u32 = 169;
+pub const SCHEMA_WITH_HAUL_SORTING: u32 = 171;
 /// Schema 170 (docs/adr/0946): a profile's `crossings`, what the road crosses with its clearance or cover.
-pub const SCHEMA_WITH_PROFILE_CROSSINGS: u32 = 170;
+pub const SCHEMA_WITH_PROFILE_CROSSINGS: u32 = 172;
 /// Schema 171 (docs/adr/0950): a volume's approval `number` and `ended`, and its `history` of ended approvals.
-pub const SCHEMA_WITH_VOLUME_HISTORY: u32 = 171;
+pub const SCHEMA_WITH_VOLUME_HISTORY: u32 = 173;
 /// Schema 172 (docs/adr/0954): a mass haul diagram's `approved` plan and its `history` of ended approvals.
-pub const SCHEMA_WITH_HAUL_APPROVAL: u32 = 172;
+pub const SCHEMA_WITH_HAUL_APPROVAL: u32 = 174;
 /// Schema 173 (docs/adr/0955): a mass haul diagram's haul road `network` and a site's place `at` off the road.
-pub const SCHEMA_WITH_HAUL_NETWORK: u32 = 173;
+pub const SCHEMA_WITH_HAUL_NETWORK: u32 = 175;
 /// Schema 174 (docs/adr/0957): a volume factor row's soil `densities` and its `source`.
-pub const SCHEMA_WITH_VOLUME_STATES: u32 = 174;
+pub const SCHEMA_WITH_VOLUME_STATES: u32 = 176;
 /// Schema 175 (docs/adr/0958): a template side's cut slope `bench` and fill slope `fillBench`.
-pub const SCHEMA_WITH_CUT_BENCHES: u32 = 175;
+pub const SCHEMA_WITH_CUT_BENCHES: u32 = 177;
 /// Schema 176 (docs/adr/0960): a corridor region's slope `transition`.
-pub const SCHEMA_WITH_SLOPE_TRANSITIONS: u32 = 176;
+pub const SCHEMA_WITH_SLOPE_TRANSITIONS: u32 = 178;
 /// Schema 177 (docs/adr/0974): an earthwork volume's `grid` method and its `cell`.
-pub const SCHEMA_WITH_VOLUME_GRID: u32 = 177;
+pub const SCHEMA_WITH_VOLUME_GRID: u32 = 179;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 

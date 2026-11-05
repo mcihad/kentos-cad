@@ -69,7 +69,7 @@ en büyük hata ≤ tolerans).
 Sınır: ölçüm eksen arazisinindir. Kesit alanı kolun bütün genişliğindeki araziye bağlıdır. Eksenin kırığı yan
 arazinin kırığını garanti etmez. Bu ayrım pencerede ve yardımda söylenir.
 
-### §3 Kayıt ve komutlar (Y29.2, KCAD şema 166)
+### §3 Kayıt ve komutlar (Y29.2, KCAD şema 168)
 
 - **`SectionStations::Breaks { from, to, tolerance, most?, geometry }`:** km'ler, takımın yüzeyindeki eksen kırıklarının
   seyreltilmişi, uçlar ve `geometry` ile kurp noktaları ve PVI'lerdir. Takımın yüzeyi olmalıdır; tanımda yoksa kural
@@ -82,9 +82,9 @@ arazinin kırığını garanti etmez. Bu ayrım pencerede ve yardımda söylenir
   İkisi de boşsa yazılmaz, eski cevaplar bayt bayt aynı kalır. Kırpmayan takımın sorgusu `section_lines_cross` uyarısı
   verir; kırpan takımda uyarı yoktur.
 - **`road.sections.edit`'in `clip`'i:** `null` dokunmaz. "Değiştirilecek bir şey yok" iletisi de `clip`'i sayar.
-- **KCAD şema 166:** `clip`, `breaks` ve `curve`. Yazıcı 166'yı yalnız bunlardan biri varken seçer; 165 ve öncesi
+- **KCAD şema 168:** `clip`, `breaks` ve `curve`. Yazıcı 168'i yalnız bunlardan biri varken seçer; 167 ve öncesi
   bunları `unknown_field` ile reddeder (`fixtures/kcad/v2/road-section-breaks.kcad`,
-  `broken/road-section-breaks-in-schema-165.kcad`).
+  `broken/road-section-breaks-in-schema-167.kcad`).
 
 13 yeni ortak durum vardır (edit 7, query 6). Kırıklar boykesit referansının yürüyerek bulduğu kenar geçişlerinden
 gelir, seyreltme ve kırpma §1'in referansından. Ölçüm (örnek çizim, p1 sola döner, R 150 m, sol kol 180 m, her 20 m):

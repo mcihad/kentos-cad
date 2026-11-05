@@ -32,7 +32,7 @@
   kendiliğinden yeniden üret) ve Görünüşler (plan, boykesit ve enkesit tek km'de). Standart profili (KGM) sahibin
   kaynağını bekler, değer uydurulmaz. Resimler snapshot'la; gerçek pencerede elle kabul açık.
 
-- **KentOS Yol: üstyapı, formasyon, kübaj kuralları ve Yol pencerelerinin düzeni (4 Kasım 2026; [ADR 0930](../../docs/adr/0930-road-pavement-formation-and-volume-rules.md), plan/road.md Y26, dal `road-03-ustyapi`).**
+- **KentOS Yol: üstyapı, formasyon, kübaj kuralları ve Yol pencerelerinin düzeni (4 Kasım 2026; [ADR 0975](../../docs/adr/0975-road-pavement-formation-and-volume-rules.md), plan/road.md Y26, dal `road-03-ustyapi`).**
   - **Üstyapı:** tip kesitin `pavement`'ıdır: tabakalar yukarıdan aşağı, bitmiş yüze paralel; kenar dik ya da şevli
     (Civil 3D'nin şeridi ve ShoulderExtendAll'u). Bitmiş çizginin üstüne ve kesitin izinin dışına taşmaz.
     `kentos_road::section::pavement` tabaka alanlarını ve formasyonu kesin integralle hesaplar.
@@ -47,9 +47,9 @@
     görüntüleyicidir (`widget::picture::Picture`, ADR 0937): yakınlaştır, kaydır, PNG kaydet; büyüyen pencerede
     `widget::grow::Grows` ile kalan yeri alır; `layout` görüntüleyicinin durumunu değiştirmez (diyalog iki kez yerleştirir). Tablolar kitin veri tablosudur (`road_dialog::table`/`sheet`/`sheet_fill`/`edit_table`, ADR 0938); sütun genişliği yazı alanıdır, kit payları ekler. Taşınanlar: Kırmızı kot
     önerisi, Kübaj, tip kesit düzenleyicisi. `Form::wide` eklendi.
-  - **KCAD şema 164:** üstyapı ve kural `SCHEMA_WITH_ROAD_PAVEMENT` ile yazılır. Yayımlanmış şemaya (162) alan
+  - **KCAD şema 166:** üstyapı ve kural `SCHEMA_WITH_ROAD_PAVEMENT` ile yazılır. Yayımlanmış şemaya (162) alan
     eklemek, eski programın örnek projeye “bozuk” demesine yol açtı. Yeni okuyucu daha yeni şemaya “daha yeni bir
-    sürümle yazılmış” der. Sonrakiler aynı kuralla: 165 deverin dönme ekseni (Y27), 166 kesit takımının `clip`'i,
+    sürümle yazılmış” der. Sonrakiler aynı kuralla: 167 deverin dönme ekseni (Y27), 168 kesit takımının `clip`'i,
     `breaks` yöntemi ve kurp aralığı (Y29, ADR 0933). Yeni bir yol alanı = yeni şema, kapısı `decode.rs`'te.
   - **Kesit hatlarının yeri (Y29):** arazi kırıklarından seyreltilen kesitler eksen arazisini sabit aralıktan iyi
     taşır (0,10 m toleransla 67 kesit en çok 0,044 m; her 5 m 174 kesit 0,078 m). İç kurpta buluşan kollar

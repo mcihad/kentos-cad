@@ -77,7 +77,7 @@ def layer(name, thickness, material=None):
     return out
 
 
-# KGM'nin bitümlü sıcak karışım üstyapısı gibi dört tabaka; kalınlıklar örnektir, standart değildir (docs/adr/0930).
+# KGM'nin bitümlü sıcak karışım üstyapısı gibi dört tabaka; kalınlıklar örnektir, standart değildir (docs/adr/0975).
 PAVE = {"layers": [layer("Aşınma", 0.05, "KGM-a"), layer("Binder", 0.08), layer("Plentmiks temel", 0.2),
                    layer("Alttemel", 0.25)], "edge": {"kind": "slope", "h": 1.5}}
 PAVE_V = {"layers": [layer("Beton", 0.25), layer("Alttemel", 0.3)], "edge": {"kind": "vertical"}}
@@ -515,7 +515,7 @@ def templates_cases():
     ok("Doğrulama yazmaz", {"operation": "set", "template": "tk-1", "name": "Tip A"},
        put(0, {**TK1, "name": "Tip A", "revision": 2}), "tk-1", op="validate")
 
-    # The pavement (docs/adr/0930 §2): its layers from the top down and how they end; the thicknesses are examples.
+    # The pavement (docs/adr/0975 §2): its layers from the top down and how they end; the thicknesses are examples.
     ok("Üstyapı yazılır: dört tabaka, kenar dolgu şevinde", {"operation": "set", "template": "tk-1", "pavement": PAVE},
        put(0, {**TK1, "pavement": PAVE, "revision": 2}), "tk-1")
     ok("Yeni tip kesit üstyapısıyla, dik kenar", {"operation": "set", "name": "Üstyapılı", "left": plain, "pavement": PAVE_V},
@@ -815,7 +815,7 @@ def query_cases():
     ask("Km satırlarından dever, eskiyen takım", rows, {"set": "k-2"}, sets=[S1, rows])
     flat = {**S1, "template": "tk-2", "stations": {"method": "range", "from": 300.0, "to": 600.0, "every": 100.0}}
     ask("Hendeksiz tip kesit, aralığın her 100 m'si", flat, {"set": "k-1"}, sets=[flat, S2])
-    # The template's pavement on the sections (docs/adr/0930 §2): the layers, the formation, Formasyon–Zemin.
+    # The template's pavement on the sections (docs/adr/0975 §2): the layers, the formation, Formasyon–Zemin.
     for name, pave, stations_, sup_ in (
         ("Üstyapılı tip kesit: tabakalar, formasyon ve Formasyon–Zemin alanları", PAVE, None, None),
         ("Dik kenarlı üstyapı", PAVE_V, [150.0, 250.0], None),

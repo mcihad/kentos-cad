@@ -509,7 +509,7 @@ def edit_cases():
        put(2, {**PART, "surface": "t-1", "revision": 2}), "b-3")
     ok("Boykesit adıyla, büyük küçük harf ayrımsız", {"profile": "PROJE kotu", "operation": "set", "name": "Kot"},
        put(0, {**MAIN, "name": "Kot", "revision": 2}), "b-1")
-    # Docs/adr/0946: what the road crosses (schema 170).
+    # Docs/adr/0946: what the road crosses (schema 172).
     crossings = [{"name": "Üst geçit", "station": 150.0, "side": "above", "elevation": 109.0, "clearance": 5.2},
                  {"name": "Kutu menfez", "station": 430.0, "side": "below", "elevation": 104.0, "clearance": 0.8}]
     ok("Kesişmeler yazılır", {"profile": "b-1", "operation": "set", "crossings": crossings},

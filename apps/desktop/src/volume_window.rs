@@ -88,7 +88,7 @@ const NO_PREVIOUS: &str = "Yok (ilk araziden bu yana)";
 /// The curve correction's switch (docs/adr/0934 §3).
 pub(crate) const CURVE: &str = "Kesitlerin ağırlık merkeziyle düzelt";
 
-/// The rules a volume offers (docs/adr/0930 §2): none (as before the rule) and Netpro's four.
+/// The rules a volume offers (docs/adr/0975 §2): none (as before the rule) and Netpro's four.
 const RULES: [(Option<kentos_commands::VolumeRule>, &str); 5] = [
     (None, "Kuralsız (sıyırma varsa bitkisel toprağa göre)"),
     (Some(kentos_commands::VolumeRule::RoadGround), "Yol–Zemin"),
@@ -207,7 +207,7 @@ pub struct Row {
     approved: Option<VolumeApprovalDef>,
     /// Its ended approvals (docs/adr/0950): kept as they are; the window never edits them.
     history: Vec<VolumeApprovalDef>,
-    /// Its rule (docs/adr/0930 §2); none: as before the rule.
+    /// Its rule (docs/adr/0975 §2); none: as before the rule.
     pub(crate) rule: Option<kentos_commands::VolumeRule>,
     /// The curve correction (docs/adr/0934).
     pub(crate) curve: bool,
@@ -373,7 +373,7 @@ pub enum Event {
     Name(String),
     Corridor(String),
     Method(VolumeMethod),
-    /// The volume's rule (docs/adr/0930 §2).
+    /// The volume's rule (docs/adr/0975 §2).
     Rule(Option<kentos_commands::VolumeRule>),
     /// The curve correction on or off (docs/adr/0934 §3).
     Curve(bool),
@@ -1383,7 +1383,7 @@ fn rule_words(rep: &VolumeReport) -> String {
     format!("Kural: {rule}")
 }
 
-/// The pavement layers' volumes (docs/adr/0930 §2): each layer's name, material and volume in all.
+/// The pavement layers' volumes (docs/adr/0975 §2): each layer's name, material and volume in all.
 fn layers_table(rep: &VolumeReport) -> Element<'_, Message> {
     road_dialog::table(
         vec![road_dialog::col("Tabaka", 200.0), road_dialog::col("Malzeme kodu", 140.0), road_dialog::num("Hacim (m³)", 120.0)],

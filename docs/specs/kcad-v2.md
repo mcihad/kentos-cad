@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `177`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-178.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `179`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-180.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -774,91 +774,91 @@ kaynağı silinmiş bir modül), önceki şema örneği `broken/modules-in-schem
 
 **Şema 157** (docs/adr/0837), geometrik kısıt parçasına `{ "kind": "arcEdge", "part", "ring", "index" }` ekler: çoklu çizginin veya alanın dairesel kenarının alt dairesi; uçları ayrı `point/vertex` başvurularıdır. Düz `segment` ve bağımsız `circle` anlamı değişmez. Yazıcı yalnız böyle bir başvuru varken 157'yi seçer; önceki desteklenen şemada bu parça `bad_value` ile reddedilir. Bilinmeyen/rezerve şema önce `schema_version` verir. Örnek `arc-edge-constraints.kcad`; eski şema, fazla alan, fazla indeks ve düz etikette yarıçap örnekleri `broken/arc-edge-*.kcad`.
 
-**Şema 165** (ADR 0931 §2), dever çizelgesine `pivot` alanını ekler: dönme ekseni (`centerline`, `leftEdge`,
+**Şema 167** (ADR 0931 §2), dever çizelgesine `pivot` alanını ekler: dönme ekseni (`centerline`, `leftEdge`,
 `rightEdge`, `insideEdge`, `outsideEdge`). Eksen etrafında dönen çizelgede alan yazılmaz. Yazıcı yalnız kenar
-etrafında dönen bir çizelge varken 165'i seçer; 164 ve öncesi alanı `unknown_field` ile reddeder. Örnek
-`road-pivot.kcad`; eski şemada `broken/road-pivot-in-schema-164.kcad`.
+etrafında dönen bir çizelge varken 167'yi seçer; 166 ve öncesi alanı `unknown_field` ile reddeder. Örnek
+`road-pivot.kcad`; eski şemada `broken/road-pivot-in-schema-166.kcad`.
 
-**Şema 166** (ADR 0933 §3), kesit takımına üç alan ekler:
+**Şema 168** (ADR 0933 §3), kesit takımına üç alan ekler:
 
 - `clip`: iç kurpta buluşan kollar buluşma noktasına kısaltılır.
 - `breaks` km yöntemi: `from`, `to`, `tolerance`, isteğe bağlı `most` ve `geometry`; takımın yüzeyi olmalıdır.
 - `range` yönteminin `curve` alanı: kurpta ve klotoidde ek aralık.
 
-Yazıcı 166'yı yalnız bunlardan biri varken seçer; 165 ve öncesi bunları `unknown_field` ile reddeder. Örnek
-`road-section-breaks.kcad`; eski şemada `broken/road-section-breaks-in-schema-165.kcad`.
+Yazıcı 168'i yalnız bunlardan biri varken seçer; 167 ve öncesi bunları `unknown_field` ile reddeder. Örnek
+`road-section-breaks.kcad`; eski şemada `broken/road-section-breaks-in-schema-167.kcad`.
 
-**Şema 167** (ADR 0934 §2), kübaj hesabına `curve` alanını ekler: kurpta kesitlerin momentleriyle düzeltme, yalnız
-`endArea` yönteminde. Yazıcı 167'yi yalnız kurp düzeltmeli bir kübaj varken seçer; 166 ve öncesi alanı `unknown_field`
-ile reddeder. Örnek `road-volume-curve.kcad`; eski şemada `broken/road-volume-curve-in-schema-166.kcad`.
+**Şema 169** (ADR 0934 §2), kübaj hesabına `curve` alanını ekler: kurpta kesitlerin momentleriyle düzeltme, yalnız
+`endArea` yönteminde. Yazıcı 169'u yalnız kurp düzeltmeli bir kübaj varken seçer; 168 ve öncesi alanı `unknown_field`
+ile reddeder. Örnek `road-volume-curve.kcad`; eski şemada `broken/road-volume-curve-in-schema-168.kcad`.
 
-**Şema 168** (ADR 0939), koridora `verticalSag` (düşey kurpların kiriş yüksekliği, m) ve `refine` (örnekleme denetimi:
-`plan` ve `height` sapma toleransları, `least` en kısa adım) alanlarını ekler. Yazıcı 168'i yalnız bu alanlardan biri
-olan bir koridor varken seçer; 167 ve öncesi alanları `unknown_field` ile reddeder. Örnek `road-corridor-sampling.kcad`;
-eski şemada `broken/road-corridor-sampling-in-schema-167.kcad`.
+**Şema 170** (ADR 0939), koridora `verticalSag` (düşey kurpların kiriş yüksekliği, m) ve `refine` (örnekleme denetimi:
+`plan` ve `height` sapma toleransları, `least` en kısa adım) alanlarını ekler. Yazıcı 170'i yalnız bu alanlardan biri
+olan bir koridor varken seçer; 169 ve öncesi alanları `unknown_field` ile reddeder. Örnek `road-corridor-sampling.kcad`;
+eski şemada `broken/road-corridor-sampling-in-schema-169.kcad`.
 
-**Şema 169** (ADR 0944), Brükner'e `unsuitable` (dolguya konamayan kazının payı km aralıklarıyla: `from`, `to`, `share`
+**Şema 171** (ADR 0944), Brükner'e `unsuitable` (dolguya konamayan kazının payı km aralıklarıyla: `from`, `to`, `share`
 yüzde) ve `barriers` (taşıma yolunun geçtiği engeller: `name`, `station`, isteğe bağlı `detour` m; yoksa kapalı)
-alanlarını ekler. Yazıcı 169'u yalnız bunlardan biri olan bir Brükner varken seçer; 168 ve öncesi `unknown_field` ile
-reddeder. Örnek `road-haul-sorting.kcad`; eski şemada `broken/road-haul-sorting-in-schema-168.kcad`.
+alanlarını ekler. Yazıcı 171'i yalnız bunlardan biri olan bir Brükner varken seçer; 170 ve öncesi `unknown_field` ile
+reddeder. Örnek `road-haul-sorting.kcad`; eski şemada `broken/road-haul-sorting-in-schema-170.kcad`.
 
-**Şema 175** (ADR 0958), tip kesitin yanına `bench` (yarma şevinin basamakları: `height` her basamağın yüksekliği,
+**Şema 177** (ADR 0958), tip kesitin yanına `bench` (yarma şevinin basamakları: `height` her basamağın yüksekliği,
 `width` genişliği m, isteğe bağlı `fall` basamağın dışa düşen eğimi %) ve aynı biçimde `fillBench` (dolgu şevinin
-basamakları) alanlarını ekler. Yazıcı 175'i yalnız basamaklı bir yan varken seçer; 174 ve öncesi `unknown_field` ile
+basamakları) alanlarını ekler. Yazıcı 177'yi yalnız basamaklı bir yan varken seçer; 176 ve öncesi `unknown_field` ile
 reddeder. Örnek `road-cut-benches.kcad`; eski şemada
-`broken/road-cut-benches-in-schema-174.kcad`.
+`broken/road-cut-benches-in-schema-176.kcad`.
 
-**Şema 176** (ADR 0960), koridor bölgesine `transition` (m) alanını ekler: bölgenin başından o kadar metre boyunca
+**Şema 178** (ADR 0960), koridor bölgesine `transition` (m) alanını ekler: bölgenin başından o kadar metre boyunca
 tip kesitin yarma ve dolgu şevleri önceki bölgeninkinden bu bölgeninkine doğrusal geçer. Geçiş 0'dan uzun, bölgeden
-kısa olur; ilk bölgede ya da önceki bölgenin bittiği yerde başlamayan bölgede `bad_value`'dur. Yazıcı 176'yı yalnız
-geçişli bir bölge varken seçer; 175 ve öncesi `unknown_field` ile reddeder. Örnek `road-slope-transitions.kcad`; eski
-şemada `broken/road-slope-transitions-in-schema-175.kcad`.
+kısa olur; ilk bölgede ya da önceki bölgenin bittiği yerde başlamayan bölgede `bad_value`'dur. Yazıcı 178'i yalnız
+geçişli bir bölge varken seçer; 177 ve öncesi `unknown_field` ile reddeder. Örnek `road-slope-transitions.kcad`; eski
+şemada `broken/road-slope-transitions-in-schema-177.kcad`.
 
-**Şema 177** (ADR 0974), kübaja `grid` yöntemini ve `cell` (m) alanını ekler: tasarım ve arazi yüzeyleri düzenli bir
+**Şema 179** (ADR 0974), kübaja `grid` yöntemini ve `cell` (m) alanını ekler: tasarım ve arazi yüzeyleri düzenli bir
 ızgaranın hücre merkezlerinde okunur, hacim hücre alanı çarpı kot farkıdır. Izgara yönteminde hücre 0,01 ile 1000 m
-arasıdır; başka yöntemde `cell` ve ızgarada sıyırma ya da diş kazısı `bad_value`'dur. Yazıcı 177'yi yalnız ızgara
-yöntemli ya da hücre boylu bir kübaj varken seçer; 176 ve öncesi `unknown_field` ile reddeder. Örnek
-`road-volume-grid.kcad`; eski şemada `broken/road-volume-grid-in-schema-176.kcad`.
+arasıdır; başka yöntemde `cell` ve ızgarada sıyırma ya da diş kazısı `bad_value`'dur. Yazıcı 179'u yalnız ızgara
+yöntemli ya da hücre boylu bir kübaj varken seçer; 178 ve öncesi `unknown_field` ile reddeder. Örnek
+`road-volume-grid.kcad`; eski şemada `broken/road-volume-grid-in-schema-178.kcad`.
 
-**Şema 174** (ADR 0957), kübajın katsayı satırına `densities` (zemin raporunun yoğunlukları t/m³: `bank` yerinde,
+**Şema 176** (ADR 0957), kübajın katsayı satırına `densities` (zemin raporunun yoğunlukları t/m³: `bank` yerinde,
 `loose` gevşek, `compacted` sıkışık; katsayılar onlardan çıkar, satıra ayrıca katsayı yazılmaz) ve `source` (katsayının
-ya da yoğunluğun kaynağı, en çok 200 karakter) alanlarını ekler. Yazıcı 174'ü yalnız bunlardan biri olan bir satır
-varken seçer; 173 ve öncesi `unknown_field` ile reddeder. Örnek `road-volume-states.kcad`; eski şemada
-`broken/road-volume-states-in-schema-173.kcad`.
+ya da yoğunluğun kaynağı, en çok 200 karakter) alanlarını ekler. Yazıcı 176'yı yalnız bunlardan biri olan bir satır
+varken seçer; 175 ve öncesi `unknown_field` ile reddeder. Örnek `road-volume-states.kcad`; eski şemada
+`broken/road-volume-states-in-schema-175.kcad`.
 
-**Şema 173** (ADR 0955), Brükner'e `network` (taşıma ağı: `layers` yolların katmanları, `connect` bağlantı toleransı
+**Şema 175** (ADR 0955), Brükner'e `network` (taşıma ağı: `layers` yolların katmanları, `connect` bağlantı toleransı
 m, isteğe bağlı `reach` aksa erişim uzaklığı m) ve alana `at` (yol dışındaki konumu: `x`, `y`) alanlarını ekler. Konumlu
-alan ağ ister. Yazıcı 173'ü yalnız ağı ya da konumlu alanı olan bir Brükner varken seçer; 172 ve öncesi `unknown_field`
-ile reddeder. Örnek `road-haul-network.kcad`; eski şemada `broken/road-haul-network-in-schema-172.kcad`.
+alan ağ ister. Yazıcı 175'i yalnız ağı ya da konumlu alanı olan bir Brükner varken seçer; 174 ve öncesi `unknown_field`
+ile reddeder. Örnek `road-haul-network.kcad`; eski şemada `broken/road-haul-network-in-schema-174.kcad`.
 
-**Şema 172** (ADR 0954), Brükner'e `approved` (onaylı taşıma planı: `number` 1'den, `at` günü, `note`; dayandığı
+**Şema 174** (ADR 0954), Brükner'e `approved` (onaylı taşıma planı: `number` 1'den, `at` günü, `note`; dayandığı
 `revision` Brükner ve `volumeRevision` kübaj sürümü, `volumeApproval` kübaj onayının numarası, `cost` hedefi maliyet
 mi; o günkü `moment` m³·m, `moved` m³, `total` tutar ve `sites` alanların `name`, `capacity`, `used` değerleri) ve
-`history` (biten onaylar, eskiden yeniye, her biri `ended` ile) alanlarını ekler. Yazıcı 172'yi yalnız onaylı planı ya
-da onay geçmişi olan bir Brükner varken seçer; 171 ve öncesi `unknown_field` ile reddeder. Örnek
-`road-haul-approval.kcad`; eski şemada `broken/road-haul-approval-in-schema-171.kcad`.
+`history` (biten onaylar, eskiden yeniye, her biri `ended` ile) alanlarını ekler. Yazıcı 174'ü yalnız onaylı planı ya
+da onay geçmişi olan bir Brükner varken seçer; 173 ve öncesi `unknown_field` ile reddeder. Örnek
+`road-haul-approval.kcad`; eski şemada `broken/road-haul-approval-in-schema-173.kcad`.
 
-**Şema 171** (ADR 0950), kübajın onayına `number` (onayın sırası, 1'den) ve `ended` (bitişi: `at` günü, `revoked`
+**Şema 173** (ADR 0950), kübajın onayına `number` (onayın sırası, 1'den) ve `ended` (bitişi: `at` günü, `revoked`
 kaldırıldı mı, yoksa yeni onay mı yerine geçti, `note` neden) alanlarını, kübaja `history` (biten onaylar, eskiden yeniye,
-her biri onaylandığı hâliyle ve bitişiyle) alanını ekler. Yazıcı 171'i yalnız numaralı ya da biten onayı ya da onay
-geçmişi olan bir kübaj varken seçer; 170 ve öncesi `unknown_field` ile reddeder. Örnek `road-volume-history.kcad`; eski
-şemada `broken/road-volume-history-in-schema-170.kcad`.
+her biri onaylandığı hâliyle ve bitişiyle) alanını ekler. Yazıcı 173'ü yalnız numaralı ya da biten onayı ya da onay
+geçmişi olan bir kübaj varken seçer; 172 ve öncesi `unknown_field` ile reddeder. Örnek `road-volume-history.kcad`; eski
+şemada `broken/road-volume-history-in-schema-172.kcad`.
 
-**Şema 170** (ADR 0946), boykesite `crossings` alanını ekler: yolun kesiştiği yapılar (`name`, `station`, `side`
-`above` ya da `below`, `elevation` alt ya da üst yüzü, `clearance` açıklık ya da örtü). Yazıcı 170'i yalnız kesişmesi
-olan bir boykesit varken seçer; 169 ve öncesi `unknown_field` ile reddeder. Örnek `road-profile-crossings.kcad`; eski
-şemada `broken/road-profile-crossings-in-schema-169.kcad`.
+**Şema 172** (ADR 0946), boykesite `crossings` alanını ekler: yolun kesiştiği yapılar (`name`, `station`, `side`
+`above` ya da `below`, `elevation` alt ya da üst yüzü, `clearance` açıklık ya da örtü). Yazıcı 172'yi yalnız kesişmesi
+olan bir boykesit varken seçer; 171 ve öncesi `unknown_field` ile reddeder. Örnek `road-profile-crossings.kcad`; eski
+şemada `broken/road-profile-crossings-in-schema-171.kcad`.
 
-**Şema 164** (ADR 0930 §2), yol ayarlarına iki alan ekler:
+**Şema 166** (ADR 0975 §2), yol ayarlarına iki alan ekler:
 
 - tip kesitin `pavement`'ı: `layers[]` (`name`, `thickness` (0, 2] m, isteğe bağlı `material`; 1 ile 12 arası, toplam
   en çok 5 m) ve `edge` (`{kind: vertical}` ya da `{kind: slope, h}`, 0 < h ≤ 100);
 - kübaj hesabının `rule`'u (`roadGround`, `formationGround`, `roadTopsoil`, `formationTopsoil`).
 
-Yazıcı yalnız bunlardan biri varken 164'ü seçer. 162 ve 163'te ikisi de `unknown_field` ile reddedilir. Yol ayarları tek
+Yazıcı yalnız bunlardan biri varken 166'yı seçer. 162 ve 163'te ikisi de `unknown_field` ile reddedilir. Yol ayarları tek
 JSON parçasıdır ve tipleri bilmediği alanı reddeder; şema numarası olmasaydı eski program dosyaya “bozuk” derdi (örnek
-proje ilk açıldığında böyle oldu). Örnek `road-pavement.kcad`; eski şemada `broken/road-pavement-in-schema-163.kcad` ve
-`broken/road-volume-rule-in-schema-163.kcad`.
+proje ilk açıldığında böyle oldu). Örnek `road-pavement.kcad`; eski şemada `broken/road-pavement-in-schema-165.kcad` ve
+`broken/road-volume-rule-in-schema-165.kcad`.
 
 **Şema 163** (ADR 0914), yazının `layout.engine` alanını ekler: tek değer `unicode-v1`, sabitlenmiş font byte'ları ve ortak Unicode glyph yerleşimi. Alanın yokluğu önceki yerleşimdir; eski belgeler açılışta yükseltilmez. Motor tek başına boş olmayan bir düzen sayılır. Kök nesne veya blok tanımındaki herhangi bir yazı bu alanı taşıyorsa yazıcı 163'ü seçer. Eski şemada alan `unknown_field`, bilinmeyen motor `bad_value` ile reddedilir. Örnek `text-engine.kcad`; `broken/text-engine-in-schema-162.kcad` ve `broken/text-engine-unknown.kcad`. Bu dosya sözleşmesi hazırlığı yeni motoru sahnede kendiliğinden etkinleştirmez.
 

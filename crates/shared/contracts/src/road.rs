@@ -631,7 +631,7 @@ pub struct ProfileDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub surface: Option<String>,
-    /// What the road crosses (docs/adr/0946; KCAD schema 170).
+    /// What the road crosses (docs/adr/0946; KCAD schema 172).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileCrossingDef>>", optional))]
     pub crossings: Vec<ProfileCrossingDef>,
@@ -730,11 +730,11 @@ pub struct TemplateSideDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ditch: Option<TemplateDitchDef>,
-    /// The cut slope's benches (berme, docs/adr/0958; KCAD schema 175).
+    /// The cut slope's benches (berme, docs/adr/0958; KCAD schema 177).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub bench: Option<TemplateBenchDef>,
-    /// The fill slope's benches (docs/adr/0958; KCAD schema 175).
+    /// The fill slope's benches (docs/adr/0958; KCAD schema 177).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fill_bench: Option<TemplateBenchDef>,
@@ -775,7 +775,7 @@ pub struct TemplateDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub right: Option<TemplateSideDef>,
-    /// The pavement under the finish grade, both sides alike (docs/adr/0930 §2); absent: none (an older template).
+    /// The pavement under the finish grade, both sides alike (docs/adr/0975 §2); absent: none (an older template).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pavement: Option<PavementDef>,
@@ -797,7 +797,7 @@ pub struct PavementLayerDef {
     pub material: Option<String>,
 }
 
-/// How a pavement's layers end at a side's hinge (docs/adr/0930 §1).
+/// How a pavement's layers end at a side's hinge (docs/adr/0975 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -844,7 +844,7 @@ pub enum SectionStations {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         geometry: bool,
-        /// On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 166).
+        /// On curves and clothoids every round `curve` metres too (docs/adr/0933 §3; schema 168).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -853,7 +853,7 @@ pub enum SectionStations {
     /// Where the centreline's ground breaks (it crosses a triangle's edge of the set's surface) from `from` to `to`,
     /// kept so the ground read linearly between two sections is within `tolerance` metres of the exact profile, with
     /// no gap longer than `most` metres where the profile has a break to fill it, and with the curves' points and the
-    /// profile's PVIs when `geometry` (docs/adr/0933 §3; schema 166).
+    /// profile's PVIs when `geometry` (docs/adr/0933 §3; schema 168).
     #[serde(rename_all = "camelCase")]
     Breaks {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -1031,7 +1031,7 @@ impl SuperelevationPivot {
 }
 
 /// A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template; and an optional
-/// slope transition (docs/adr/0960, KCAD schema 176): over its first `transition` m the sides' cut and fill slopes go
+/// slope transition (docs/adr/0960, KCAD schema 178): over its first `transition` m the sides' cut and fill slopes go
 /// linearly from the region before's template's to its own. The region before ends where it starts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -1102,12 +1102,12 @@ pub struct CorridorDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: Vec<f64>,
     pub regions: Vec<CorridorRegionDef>,
-    /// The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 168).
+    /// The chord height the profile's vertical curves are divided by (m; docs/adr/0939 §1; schema 170).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub vertical_sag: Option<f64>,
-    /// The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 168).
+    /// The sections between stations measured and the stations refined (docs/adr/0939 §2; schema 170).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub refine: Option<CorridorRefineDef>,
@@ -1147,7 +1147,7 @@ pub enum VolumeMethod {
     Prismoidal,
     /// Between the corridor's top surface and the terrain, the triangulations laid over each other.
     Surfaces,
-    /// Between the corridor's top surface and the terrain on a regular grid (docs/adr/0974; schema 177): at each cell's
+    /// Between the corridor's top surface and the terrain on a regular grid (docs/adr/0974; schema 179): at each cell's
     /// centre the two heights' difference times the cell's area (the midpoint rule), the cell (`cell`, m) given by
     /// the volume; KentOS gives none.
     Grid,
@@ -1173,7 +1173,7 @@ pub struct VolumeFactorDef {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill: Option<f64>,
-    /// The soil's densities from the soil report (docs/adr/0957; KCAD schema 174): the factors follow from them, the
+    /// The soil's densities from the soil report (docs/adr/0957; KCAD schema 176): the factors follow from them, the
     /// cut's bank over loose, the fill's compacted over loose (both volumes in loose m³, as a truck carries them); a
     /// row with densities writes no factor of its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1273,13 +1273,13 @@ pub struct VolumeApprovalDef {
     pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub rows: Vec<[f64; 4]>,
-    /// Its number among the volume's approvals, from 1 (docs/adr/0950; schema 171); 0: approved before approvals were
+    /// Its number among the volume's approvals, from 1 (docs/adr/0950; schema 173); 0: approved before approvals were
     /// numbered.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub number: u32,
-    /// How it ended, in the volume's history (docs/adr/0950; schema 171): none while it stands.
+    /// How it ended, in the volume's history (docs/adr/0950; schema 173): none while it stands.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ended: Option<VolumeApprovalEnd>,
@@ -1334,29 +1334,29 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<VolumeApprovalDef>,
-    /// Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):
+    /// Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 173):
     /// never changed nor removed.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeApprovalDef>>", optional))]
     pub history: Vec<VolumeApprovalDef>,
-    /// Which two lines it measures between (docs/adr/0930 §2, Netpro's names); absent: the road's top against the
+    /// Which two lines it measures between (docs/adr/0975 §2, Netpro's names); absent: the road's top against the
     /// ground, stripped when it strips (as before the rule).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<VolumeRule>,
-    /// The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
+    /// The volume on a curve by the sections' moments (docs/adr/0934; schema 169): each section's effective area
     /// `A + κ·Q`; the average end area method only.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub curve: bool,
-    /// The grid method's cell (m, docs/adr/0974; schema 177): 0.01 to 1000; the grid method only.
+    /// The grid method's cell (m, docs/adr/0974; schema 179): 0.01 to 1000; the grid method only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cell: Option<f64>,
 }
 
-/// An earthwork volume's rule (docs/adr/0930 §2): the road's top (Yol) or the formation (Formasyon) against the ground
+/// An earthwork volume's rule (docs/adr/0975 §2): the road's top (Yol) or the formation (Formasyon) against the ground
 /// (Zemin) or the ground with its topsoil stripped (Bitkisel Toprak). The topsoil stripped is its own item (Sıyırma
 /// Kazısı) whichever rule.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1409,7 +1409,7 @@ pub struct HaulSiteDef {
     pub station: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: f64,
-    /// Where it lies off the road, in plan (docs/adr/0955; KCAD schema 173): it is reached along the diagram's haul
+    /// Where it lies off the road, in plan (docs/adr/0955; KCAD schema 175): it is reached along the diagram's haul
     /// road network, which says where it meets the alignment and how far; `station` is then that station as last
     /// written. None: on the road at `station`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1418,7 +1418,7 @@ pub struct HaulSiteDef {
     pub at: Option<crate::Vec2>,
 }
 
-/// A mass haul diagram's haul road network (docs/adr/0955; KCAD schema 173): the line and polyline objects on these
+/// A mass haul diagram's haul road network (docs/adr/0955; KCAD schema 175): the line and polyline objects on these
 /// layers are its roads; two join where an end of one lies within `connect` (m) of the other; a road joins the
 /// alignment where an end lies within `reach` (m) of its centre line (none: `connect`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1505,15 +1505,15 @@ pub struct HaulDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub cost: Option<HaulCostDef>,
-    /// The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 169).
+    /// The cut unsuitable for fill, by stations (docs/adr/0944; KCAD schema 171).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulUnsuitableDef>>", optional))]
     pub unsuitable: Vec<HaulUnsuitableDef>,
-    /// What the haul road crosses (docs/adr/0944; KCAD schema 169).
+    /// What the haul road crosses (docs/adr/0944; KCAD schema 171).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulBarrierDef>>", optional))]
     pub barriers: Vec<HaulBarrierDef>,
-    /// Its plan as approved (docs/adr/0954; KCAD schema 172): a plan read later against it says what changed.
+    /// Its plan as approved (docs/adr/0954; KCAD schema 174): a plan read later against it says what changed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<HaulApprovalDef>,
@@ -1521,7 +1521,7 @@ pub struct HaulDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<HaulApprovalDef>>", optional))]
     pub history: Vec<HaulApprovalDef>,
-    /// Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 173).
+    /// Its haul road network, by which its sites off the road are reached (docs/adr/0955; KCAD schema 175).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub network: Option<HaulNetworkDef>,
@@ -1822,7 +1822,7 @@ fn templates_problem(list: &[TemplateDef]) -> Option<(String, String)> {
 pub const MAX_PAVEMENT_LAYERS: usize = 12;
 pub const MAX_PAVEMENT_DEPTH: f64 = 5.0;
 
-/// What is wrong with a pavement (docs/adr/0930 §2): at least one layer, each named and in (0, 2] m, the whole not
+/// What is wrong with a pavement (docs/adr/0975 §2): at least one layer, each named and in (0, 2] m, the whole not
 /// deeper than 5 m; the edge's slope in (0, 100]. Whether its edge meets the layers is the template's (its last
 /// component's slope) and is said when a section is built.
 fn pavement_problem(p: &PavementDef, at: &str) -> Option<(String, String)> {

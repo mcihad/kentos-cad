@@ -37,7 +37,7 @@ eğimli sayılıyordu.
 
 ### Model
 
-Tip kesitin her yanına isteğe bağlı `bench` {`height`, `width`, `fall`} yazılır (KCAD şema 175):
+Tip kesitin her yanına isteğe bağlı `bench` {`height`, `width`, `fall`} yazılır (KCAD şema 177):
 
 - `height`: bir yüzün düşey yüksekliği, (0, 100] m;
 - `width`: basamağın yatay genişliği, (0, 50] m;
@@ -113,7 +113,7 @@ km 1+040 kesitinin sol yanı:
 
 ### KCAD
 
-Şema 175 `road-cut-benches` dosyası. Aynı içerik şema 174'te reddedilir. 192 geçerli dosya.
+Şema 177 `road-cut-benches` dosyası. Aynı içerik şema 176'da reddedilir. 192 geçerli dosya.
 
 ## Açık
 

@@ -226,7 +226,7 @@ fn screens() {
     }
 }
 
-/// The corridors' templates given a pavement through `road.templates.edit` (docs/adr/0930 §2).
+/// The corridors' templates given a pavement through `road.templates.edit` (docs/adr/0975 §2).
 fn paved(app: &mut App) {
     use kentos_commands::{PavementDef, PavementEdge, PavementLayerDef, RoadEditOperation, TemplatesEdit};
     let layer = |name: &str, thickness: f64| PavementLayerDef { name: name.into(), thickness, material: None };

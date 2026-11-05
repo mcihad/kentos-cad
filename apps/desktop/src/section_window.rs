@@ -191,7 +191,7 @@ impl SideRow {
     }
 }
 
-/// A template's pavement as typed (docs/adr/0930 §3): its layers (name, thickness, material code) from the top down and
+/// A template's pavement as typed (docs/adr/0975 §3): its layers (name, thickness, material code) from the top down and
 /// its edge, vertical or a slope.
 #[derive(Debug, Clone, Default)]
 pub struct PavementRow {
@@ -255,7 +255,7 @@ pub struct TemplateRow {
     right: SideRow,
     /// The right side mirrors the left.
     mirror: bool,
-    /// The pavement as typed (docs/adr/0930 §3).
+    /// The pavement as typed (docs/adr/0975 §3).
     pub(crate) pavement: PavementRow,
 }
 
@@ -474,7 +474,7 @@ pub enum Event {
     Bench,
     /// The fill slope's benches on or off.
     FillBench,
-    /// The template's pavement on or off (docs/adr/0930 §3).
+    /// The template's pavement on or off (docs/adr/0975 §3).
     Pavement,
     /// The pavement's edge: a slope (true) or vertical.
     PavementSloped(bool),
@@ -1507,7 +1507,7 @@ impl App {
     }
 }
 
-/// A sloping ground for a template's look, 16 m either side of the axis (from 40 m before docs/adr/0930 §3: the layers
+/// A sloping ground for a template's look, 16 m either side of the axis (from 40 m before docs/adr/0975 §3: the layers
 /// were not readable): over the axis on the left, under it on the right.
 fn sample_ground_near() -> Vec<GroundPoint> {
     [(-16.0, 101.5 + 4.5 / 28.0 * 4.0), (-12.0, 101.5), (0.0, 100.0), (14.0, 98.0), (16.0, 98.0 - 4.0 / 26.0 * 2.0)]
@@ -1553,7 +1553,7 @@ impl std::fmt::Display for EdgeChoice {
     }
 }
 
-/// The template editor (docs/adr/0930 §3, DESIGN.md §7.19): the template on a sample ground over two grouped columns:
+/// The template editor (docs/adr/0975 §3, DESIGN.md §7.19): the template on a sample ground over two grouped columns:
 /// the template and its end condition on the left; the side's components and the pavement on the right.
 fn section_template_editor<'a>(w: &'a Window, t: &'a TemplateRow) -> Element<'a, Message> {
     use kentos_ui::widget::{Form, Segmented};
@@ -1891,7 +1891,7 @@ impl canvas::Program<Message> for Chart<'_> {
             }
         });
         frame.stroke(&terrain, Stroke::default().with_color(t.text).with_width(1.4));
-        // The pavement (docs/adr/0930 §3): each layer a band between the line above it (the finish grade for the first)
+        // The pavement (docs/adr/0975 §3): each layer a band between the line above it (the finish grade for the first)
         // and its bottom, toned from dark to light; the formation dashed.
         let bottoms: Option<&Vec<Vec<[f64; 2]>>> = self.row.and_then(|r| r.pavement.as_ref()).map(|p| &p.bottoms).or(self.layers.as_ref());
         if let Some(bottoms) = bottoms {

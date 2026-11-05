@@ -23,7 +23,7 @@ topology gereksinimleri denetlensin."
 
 ## Karar
 
-### Model (KCAD şema 173)
+### Model (KCAD şema 175)
 
 - **Brükner'in `network`'ü:** `layers` (yolların katmanları), `connect` (bağlantı toleransı, m) ve isteğe bağlı
   `reach` (aksa erişim uzaklığı, m; yoksa `connect`).

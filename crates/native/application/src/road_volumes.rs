@@ -79,11 +79,11 @@ struct Raw {
     /// The volumes without the curve correction, where it applied (docs/adr/0934).
     plain: Option<(f64, f64)>,
     extra: Option<(f64, f64)>,
-    /// Each report layer's volume over the stretch (docs/adr/0930 §2); empty without a pavement.
+    /// Each report layer's volume over the stretch (docs/adr/0975 §2); empty without a pavement.
     layers: Vec<Option<f64>>,
 }
 
-/// A section's earthwork as a volume's rule reads it (docs/adr/0930 §2): the cut and fill between its two lines, the
+/// A section's earthwork as a volume's rule reads it (docs/adr/0975 §2): the cut and fill between its two lines, the
 /// topsoil stripped, the benches, and each report layer's area (none: the template has no such layer).
 #[derive(Clone)]
 struct Work {
@@ -164,7 +164,7 @@ pub(crate) fn compute_on(
     let mut raws: Vec<Raw> = Vec::new();
     let (mut cut_area, mut fill_area, mut uncovered) = (0.0, 0.0, 0.0);
     let bench = def.bench.as_ref().map(|b| tpl::Bench { slope: b.slope, height: b.height });
-    // The rule (docs/adr/0930 §2): without one, the road against the ground, stripped where it strips (as before).
+    // The rule (docs/adr/0975 §2): without one, the road against the ground, stripped where it strips (as before).
     let formation = def.rule.is_some_and(|r| r.formation());
     let topsoil = def.rule.map_or(!def.strip.is_empty(), |r| r.topsoil());
     let pavements: Vec<Option<&kentos_commands::PavementDef>> = cdef

@@ -46,7 +46,7 @@ Tarih: 2026-11-04. plan/road.md Y27 (ROAD-DEVER-01, 07, 11). Durum: Y27.1–Y27.
 
 ### §2 Kayıt ve komut (Y27.2)
 
-- Dever çizelgesinin `pivot`'u `.kcad` şema 165'tedir. ADR 0930'un dersi: yayımlanmış ya da sahibin elindeki şemaya alan
+- Dever çizelgesinin `pivot`'u `.kcad` şema 167'dedi. ADR 0975'in dersi: yayımlanmış ya da sahibin elindeki şemaya alan
   eklenmez.
 - Kesit takımları ve koridorlar kesiti ekseni kalkmış kotla kurar.
 - `road.superelevations.check` yalnız okur. Girdi: çizelge, tip kesit (şerit genişlikleri için), `speed` (km/s),

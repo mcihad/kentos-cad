@@ -567,7 +567,7 @@ Bütün uygulamaların paneli ([ADR 0803](docs/adr/0803-launcher-sheet-and-plate
 
 Sahibin sözü: “Dialog form tasarımları çok karmaşık oluyor, daha derli toplu hale getir.” KentOS Yol'un hesap
 pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
-[ADR 0930](docs/adr/0930-road-pavement-formation-and-volume-rules.md) §4). Bu, §7.11'in işlem penceresi ailesidir.
+[ADR 0975](docs/adr/0975-road-pavement-formation-and-volume-rules.md) §4). Bu, §7.11'in işlem penceresi ailesidir.
 
 - **Solda form.** Genişliği 300 px'tir, gruplu yazılır (Girdi, Kurallar, Çıktı) ve `Form` kullanılır. Etiket
   sütunu 130 px'tir. Yardım yalnız etiketin söylemediğini söyler ve alanın altında durur. Pencerenin üstünde açıklama

@@ -1,7 +1,7 @@
 //! Kırmızı kot önerisi (plan/road.md Y25, docs/adr/0926 §3, `profile.propose`): new elevations for a profile's PVIs
 //! that follow the terrain profile as closely as the user's rules allow: the ends held or not, a most grade, the area
 //! cut equal to the area filled. The rules are the user's; KentOS fills in none. The window reads
-//! `road.profiles.propose` (nothing written) whenever a value changes (docs/adr/0930 §4: no Önizle): the ground, the
+//! `road.profiles.propose` (nothing written) whenever a value changes (docs/adr/0975 §4: no Önizle): the ground, the
 //! profile as it is and the proposal; under it the root mean square difference, the areas cut and filled and the
 //! length on the surface; the PVIs (was → proposed) or the grades (those at the limit) one table at a time. Yeni
 //! boykesit olarak yaz, the window's one primary action, writes the proposal as a new profile with
@@ -235,7 +235,7 @@ impl App {
                 return Task::none();
             }
         }
-        // The window only reads: it reads again with the new value (docs/adr/0930 §4).
+        // The window only reads: it reads again with the new value (docs/adr/0975 §4).
         self.propose_event(Event::Preview)
     }
 

@@ -18,7 +18,7 @@ bulunamadı. Bu yüzden kübajın onayı (ADR 0906 §5, 0950) örnek alındı.
 
 ### Onay
 
-Brüknerin `approved` alanı (`HaulApprovalDef`, KCAD şema 172) planın o günkü hâlini tutar:
+Brüknerin `approved` alanı (`HaulApprovalDef`, KCAD şema 174) planın o günkü hâlini tutar:
 
 - **Kimlik:** `number` (1'den), `at` (gün), `note`.
 - **Dayandığı sürümler:** Brüknerin `revision`'ı, kübajın `volumeRevision`'ı, kübaj onayının `volumeApproval`

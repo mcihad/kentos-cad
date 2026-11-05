@@ -35,7 +35,7 @@ Tarih: 2026-11-04. plan/road.md Y30 (ROAD-VOL-03). Durum: Y30.1–Y30.3 kabul.
 - **`volume::effective`, `end_areas_curved`:** kesit kurbun merkezini geçiyorsa (`1 + κ·o ≤ 0`) etkin alan yoktur ve
   aralık sayılmaz. Bu, Y29'daki kesişen kolların hacimdeki karşılığıdır: o kesit kendisiyle örtüşür.
 
-### §2 Kübaj (Y30.2, KCAD şema 167)
+### §2 Kübaj (Y30.2, KCAD şema 169)
 
 - **`VolumeDef.curve`:** yalnız `endArea` ile olur (Civil 3D gibi). Prizmoidal ve yüzeyler yönteminde kural reddeder.
   Kayıtta 167. şemadadır.

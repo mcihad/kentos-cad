@@ -63,7 +63,7 @@ pub struct VolumesEdit {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<VolumeBenchDef>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<VolumeBenchDef>"))]
     pub bench: Option<Option<VolumeBenchDef>>,
-    /// Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
+    /// Which two lines it measures between (docs/adr/0975 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<VolumeRule>,
@@ -208,7 +208,7 @@ pub struct VolumeReport {
     pub bench: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub gaps: Vec<[f64; 2]>,
-    /// Its rule, where it has one (docs/adr/0930 §2).
+    /// Its rule, where it has one (docs/adr/0975 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<VolumeRule>,
@@ -231,7 +231,7 @@ pub struct VolumeReport {
     pub curve: Option<VolumeCurve>,
 }
 
-/// A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0930 §2).
+/// A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0975 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

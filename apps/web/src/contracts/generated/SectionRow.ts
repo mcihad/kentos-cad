@@ -17,6 +17,6 @@ ends: [[number, number], [number, number]],
  */
 axis?: number, ground: Array<SectionGround>, left?: SectionSide, right?: SectionSide, cut?: number, fill?: number, 
 /**
- * The template's pavement on the section, where it has one and it builds (docs/adr/0930 §2).
+ * The template's pavement on the section, where it has one and it builds (docs/adr/0975 §2).
  */
 pavement?: SectionPavement, };
