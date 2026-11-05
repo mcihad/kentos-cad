@@ -3,4 +3,4 @@
 /**
  * What a finding is about.
  */
-export type StandardIssueKind = "missingLayer" | "layerName" | "layerColor" | "layerLineType" | "layerWeight" | "layerPlot" | "projectFont" | "textFont" | "missingTextStyle" | "textStyleName" | "textStyleHeight" | "missingDimensionStyle" | "dimensionStyleName" | "dimensionStyleHeight" | "objectLineType" | "ownLook";
+export type StandardIssueKind = "missingLayer" | "layerName" | "layerColor" | "layerLineType" | "layerWeight" | "layerPlot" | "projectFont" | "textFont" | "missingTextStyle" | "textStyleName" | "textStyleHeight" | "missingDimensionStyle" | "dimensionStyleName" | "dimensionStyleHeight" | "missingLineTypeDefinition" | "lineTypeDefinition" | "missingHatchPatternDefinition" | "hatchPatternDefinition" | "objectLineType" | "ownLook";

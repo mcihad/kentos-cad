@@ -1925,6 +1925,15 @@ masaüstü derlemesi geçti. İki sürüm 2 paketi gerçek uygulamada bağlanıp
 çizgi tipi ile tarama tanımı farkları standart penceresinde görüldü; ekran
 görüntüsü repo dışında `/tmp/kentos-cad-adv12-v2-conflicts.png` konumunda.
 Kaynak tanımları çizime otomatik uygulanmaz.
+`cad.standards.check`, sürüm 2 paketindeki çizgi tipi ve tarama tanımlarını
+çizimin kaynak tablolarıyla artık karşılaştırır. Eksik veya geometrisi farklı
+tanımlar ayrı, salt okunur bulgulardır; açıklama/kaynak meta verisi görünüş
+farkı sayılmaz. `plan` ve `execute` bu tanımları kendiliğinden kurmaz veya
+değiştirmez. Komut ve Python sözleşmeleri güncellendi; eksik, farklı ve eşit
+tanımlar ile Undo otomatik sınandı. Gerçek standart penceresinde iki eksik
+kaynak bulgusu, kısa liste metni, seçilen satırın ayrıntılı tanımı ve pasif
+Uygula düğmesi doğrulandı (`/tmp/kentos-cad-adv12-resource-check.png`, repo
+dışında). Kaynakların güvenli eşleme/kurma akışı hâlâ açıktır.
 Blok, pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
 tam görünüş kökeni ile kabul senaryosu hâlâ açıktır.
 

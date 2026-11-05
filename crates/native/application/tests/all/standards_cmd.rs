@@ -325,6 +325,82 @@ fn version_two_resource_definitions_resolve_by_order_and_report_content_conflict
 }
 
 #[test]
+fn named_resources_are_checked_without_installing_or_replacing_drawing_definitions() {
+    use kentos_commands::{CallOp, StandardResources};
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let line = serde_json::from_value(
+        json!({"name":"OFFICE-DASH", "elements":[{"length":2.0},{"length":-1.0}]}),
+    )
+    .unwrap();
+    let hatch = serde_json::from_value(json!({"name":"OFFICE-HATCH", "lines":[{"angle":45.0,"origin":[0.0,0.0],"offset":[0.0,2.0]}]})).unwrap();
+    let resources = StandardResources {
+        line_types: vec![line],
+        hatch_patterns: vec![hatch],
+    };
+    let input = json!({"standard":kentos_commands::built_in_standard("mimari-ofis").unwrap(), "resources":resources});
+    let kinds = |doc: &mut Document| {
+        let before = doc.to_snapshot_v2();
+        let undo = doc.undo_labels();
+        let planned = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.standards.check",
+            CallOp::Plan,
+            input.clone(),
+        )
+        .unwrap();
+        let executed = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.standards.check",
+            CallOp::Execute,
+            input.clone(),
+        )
+        .unwrap();
+        assert_eq!(planned["output"], executed["output"]);
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert_eq!(doc.undo_labels(), undo);
+        executed["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|issue| issue["kind"].as_str())
+            .filter(|kind| kind.contains("Definition"))
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        kinds(&mut doc),
+        ["missingLineTypeDefinition", "missingHatchPatternDefinition"]
+    );
+    let mut settings = doc.settings().clone();
+    settings.line_types = resources.line_types.clone();
+    settings.hatch_patterns = resources.hatch_patterns.clone();
+    settings.line_types[0].elements[0].length = 3.0;
+    settings.hatch_patterns[0].lines[0].offset = [0.0, 3.0];
+    doc.set_settings(settings);
+    assert_eq!(
+        kinds(&mut doc),
+        ["lineTypeDefinition", "hatchPatternDefinition"]
+    );
+    let mut settings = doc.settings().clone();
+    settings.line_types = resources.line_types.clone();
+    settings.hatch_patterns = resources.hatch_patterns.clone();
+    settings.line_types[0].name = "office-dash".into();
+    settings.hatch_patterns[0].name = "office-hatch".into();
+    settings.line_types[0].source = Some("drawing.lin".into());
+    settings.hatch_patterns[0].description = "yerel açıklama".into();
+    doc.set_settings(settings);
+    assert!(kinds(&mut doc).is_empty());
+}
+
+#[test]
 fn project_standard_conflicts_report_sources_and_fields_without_mutating() {
     use kentos_commands::{
         CallOp, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION,
@@ -611,6 +687,7 @@ fn timing() {
         StandardsCheck {
             name: Some("mimari-ofis".into()),
             standard: None,
+            resources: None,
         },
     ) else {
         panic!("not checked")

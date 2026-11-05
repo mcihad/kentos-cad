@@ -12,6 +12,7 @@ from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # 
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     DrawingStandard,
+    StandardResources,
     StandardsApplied,
     StandardsApply,
     StandardsCheck,
@@ -237,6 +238,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         /,
         *,
         name: str | None | Unset = UNSET,
+        resources: StandardResources | None | Unset = UNSET,
         standard: DrawingStandard | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -257,6 +259,8 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         Args:
             doc: The drawing it works on.
             name: A built-in standard by its id (`mimari-ofis`); or
+            resources: Optional named definitions from a version 2 standard package. Checking
+                them never imports or replaces a drawing resource.
             standard: the standard itself.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -272,6 +276,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         """
         return self.execute_input(doc, StandardsCheck(
             name=name,
+            resources=resources,
             standard=standard,
         ), request_id=request_id, expected=expected)
 
@@ -281,6 +286,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         /,
         *,
         name: str | None | Unset = UNSET,
+        resources: StandardResources | None | Unset = UNSET,
         standard: DrawingStandard | None | Unset = UNSET,
     ) -> StandardsReport:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -288,6 +294,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         """
         return self.plan_input(doc, StandardsCheck(
             name=name,
+            resources=resources,
             standard=standard,
         ))
 
@@ -297,6 +304,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         /,
         *,
         name: str | None | Unset = UNSET,
+        resources: StandardResources | None | Unset = UNSET,
         standard: DrawingStandard | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -304,6 +312,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         """
         return self.validate_input(doc, StandardsCheck(
             name=name,
+            resources=resources,
             standard=standard,
         ))
 
@@ -313,6 +322,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         /,
         *,
         name: str | None | Unset = UNSET,
+        resources: StandardResources | None | Unset = UNSET,
         standard: DrawingStandard | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -325,6 +335,7 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         """
         return self.answer_input(doc, StandardsCheck(
             name=name,
+            resources=resources,
             standard=standard,
         ), op=op, request_id=request_id, expected=expected)
 

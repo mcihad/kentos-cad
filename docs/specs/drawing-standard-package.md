@@ -68,7 +68,16 @@ with different content; a case difference in the name alone is not a content
 conflict. Both queries are read only and available through the command
 registry, Python SDK and MCP contract.
 
-Version 2 currently transports definitions for inspection and explicit
+`cad.standards.check` may receive the resolved or a single package's
+`resources` alongside its `standard`. It reports missing named line/hatch
+definitions and different geometric content as separate, non-fixable issues.
+Names are compared case insensitively; source path and description do not
+change geometric equality. The command and the desktop standard window
+perform this check without installing or replacing a definition. The full
+expected and actual geometry stays in the structured command result; the
+window uses short row labels and shows the values after selecting a finding.
+
+Version 2 currently transports and checks definitions for explicit
 mapping work. It does not apply them to the drawing. In particular, named
 patterns in layers and objects, SHX shape files referenced by a line type,
 blocks, text/leader/table styles, sheet templates, palette recipes and

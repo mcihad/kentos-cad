@@ -6440,6 +6440,10 @@ class StandardIssueKind(_StrEnum):
     - ``missingTextStyle``
     - ``missingDimensionStyle``
     - ``dimensionStyleName``
+    - ``missingLineTypeDefinition``
+    - ``lineTypeDefinition``
+    - ``missingHatchPatternDefinition``
+    - ``hatchPatternDefinition``
     - ``missingLayer``: A standard layer the drawing lacks.
     - ``layerName``: A layer whose name the standard does not have nor allow.
     - ``projectFont``: The project's drawing font is not one of the standard's.
@@ -6457,6 +6461,10 @@ class StandardIssueKind(_StrEnum):
     MISSING_TEXT_STYLE = "missingTextStyle"
     MISSING_DIMENSION_STYLE = "missingDimensionStyle"
     DIMENSION_STYLE_NAME = "dimensionStyleName"
+    MISSING_LINE_TYPE_DEFINITION = "missingLineTypeDefinition"
+    LINE_TYPE_DEFINITION = "lineTypeDefinition"
+    MISSING_HATCH_PATTERN_DEFINITION = "missingHatchPatternDefinition"
+    HATCH_PATTERN_DEFINITION = "hatchPatternDefinition"
     MISSING_LAYER = "missingLayer"
     LAYER_NAME = "layerName"
     PROJECT_FONT = "projectFont"
@@ -6468,7 +6476,7 @@ class StandardIssueKind(_StrEnum):
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
@@ -75925,15 +75933,20 @@ class StandardsCheck(_Model):
     """`cad.standards.check` v1: what the drawing breaks of a standard. It writes nothing.
     Attributes:
         name: A built-in standard by its id (`mimari-ofis`); or
+        resources: Optional named definitions from a version 2 standard package. Checking
+            them never imports or replaces a drawing resource.
         standard: the standard itself.
     """
     name: str | None | Unset = UNSET
+    resources: StandardResources | None | Unset = UNSET
     standard: DrawingStandard | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.resources is not UNSET:
+            out["resources"] = None if self.resources is None else self.resources.to_json()
         if self.standard is not UNSET:
             out["standard"] = None if self.standard is None else self.standard.to_json()
         return out
@@ -75942,6 +75955,7 @@ class StandardsCheck(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsCheck:
         return cls(
             name=data.get("name", UNSET),
+            resources=UNSET if "resources" not in data else None if data["resources"] is None else StandardResources.from_json(data["resources"]),
             standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
         )
 

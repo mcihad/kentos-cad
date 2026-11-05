@@ -604,6 +604,11 @@ pub struct StandardsCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub standard: Option<DrawingStandard>,
+    /// Optional named definitions from a version 2 standard package. Checking
+    /// them never imports or replaces a drawing resource.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub resources: Option<StandardResources>,
 }
 
 /// What a finding is about.
@@ -634,6 +639,10 @@ pub enum StandardIssueKind {
     DimensionStyleName,
     /// A dimension style's paper text height differs from the standard.
     DimensionStyleHeight,
+    MissingLineTypeDefinition,
+    LineTypeDefinition,
+    MissingHatchPatternDefinition,
+    HatchPatternDefinition,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.

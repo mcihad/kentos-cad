@@ -57636,6 +57636,17 @@
               "null"
             ]
           },
+          "resources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StandardResources"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional named definitions from a version 2 standard package. Checking\nthem never imports or replaces a drawing resource."
+          },
           "standard": {
             "anyOf": [
               {
@@ -159872,7 +159883,11 @@
             "layerPlot",
             "missingTextStyle",
             "missingDimensionStyle",
-            "dimensionStyleName"
+            "dimensionStyleName",
+            "missingLineTypeDefinition",
+            "lineTypeDefinition",
+            "missingHatchPatternDefinition",
+            "hatchPatternDefinition"
           ],
           "type": "string"
         },

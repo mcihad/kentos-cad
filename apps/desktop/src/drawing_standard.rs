@@ -9,9 +9,9 @@ use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DrawingStandard, ProjectStandardDocument, SettingsSet, StandardIssue,
-    StandardIssueKind, StandardProvenance, StandardsApplied, StandardsApply, StandardsCheck,
-    StandardsConflicts, StandardsConflictsReport, StandardsReport, StandardsResolve,
-    built_in_standard, built_in_standards, parse_standard_document,
+    StandardIssueKind, StandardProvenance, StandardResources, StandardsApplied, StandardsApply,
+    StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
+    StandardsResolve, built_in_standard, built_in_standards, parse_standard_document,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, settings_set, standards};
@@ -86,6 +86,7 @@ pub enum Event {
 pub struct SelectedStandard {
     label: String,
     standard: DrawingStandard,
+    resources: Option<StandardResources>,
     /// Exact source text is retained only for a versioned document.
     document: Option<String>,
     bound_id: Option<String>,
@@ -130,6 +131,7 @@ fn selected_project(document: &ProjectStandardDocument) -> Result<SelectedStanda
     Ok(SelectedStandard {
         label: format!("Projeye bağlı: {} · sürüm {}", package.id, package.revision),
         standard,
+        resources: package.resources,
         document: Some(document.text.clone()),
         bound_id: Some(package.id),
         provenance: None,
@@ -163,6 +165,10 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::MissingDimensionStyle => "Eksik ölçü stili",
         K::DimensionStyleName => "Ölçü stili",
         K::DimensionStyleHeight => "Ölçü yazısı yüksekliği",
+        K::MissingLineTypeDefinition => "Eksik çizgi tipi tanımı",
+        K::LineTypeDefinition => "Çizgi tipi tanımı",
+        K::MissingHatchPatternDefinition => "Eksik tarama tanımı",
+        K::HatchPatternDefinition => "Tarama tanımı",
         K::ObjectLineType => "Nesne çizgi tipi",
         K::OwnLook => "Nesne görünüşü",
     }
@@ -307,6 +313,10 @@ impl App {
             &StandardsCheck {
                 name: w.custom.is_none().then(|| w.standard.clone()),
                 standard: w.custom.as_ref().map(|selected| selected.standard.clone()),
+                resources: w
+                    .custom
+                    .as_ref()
+                    .and_then(|selected| selected.resources.clone()),
             },
         ) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -406,6 +416,9 @@ impl App {
                         Ok(Some(SelectedStandard {
                             label: name,
                             standard,
+                            resources: package
+                                .as_ref()
+                                .and_then(|package| package.resources.clone()),
                             document,
                             bound_id: None,
                             provenance: None,
@@ -494,6 +507,7 @@ impl App {
                         w.custom = Some(SelectedStandard {
                             label: "Birleşik proje standartları".into(),
                             standard: output.standard,
+                            resources: Some(output.resources),
                             document: None,
                             bound_id: None,
                             provenance: Some(output.provenance),
@@ -830,14 +844,29 @@ impl App {
                     }
                     StandardIssueKind::MissingDimensionStyle
                     | StandardIssueKind::DimensionStyleHeight => Some(&p.dimension_styles),
+                    StandardIssueKind::MissingLineTypeDefinition
+                    | StandardIssueKind::LineTypeDefinition => Some(&p.line_types),
+                    StandardIssueKind::MissingHatchPatternDefinition
+                    | StandardIssueKind::HatchPatternDefinition => Some(&p.hatch_patterns),
                     _ => None,
                 });
+                let resource = matches!(
+                    issue.kind,
+                    StandardIssueKind::MissingLineTypeDefinition
+                        | StandardIssueKind::LineTypeDefinition
+                        | StandardIssueKind::MissingHatchPatternDefinition
+                        | StandardIssueKind::HatchPatternDefinition
+                );
                 if let Some(origin) = definitions.and_then(|entries| {
                     entries
                         .iter()
                         .find(|(name, _)| {
-                            kentos_commands::fold_name(name.trim())
-                                == kentos_commands::fold_name(issue.subject.trim())
+                            if resource {
+                                name.trim().to_lowercase() == issue.subject.trim().to_lowercase()
+                            } else {
+                                kentos_commands::fold_name(name.trim())
+                                    == kentos_commands::fold_name(issue.subject.trim())
+                            }
                         })
                         .map(|(_, source)| source)
                 }) {
@@ -845,6 +874,20 @@ impl App {
                         " Standart tanımının kaynağı: {} · sürüm {}.",
                         origin.id, origin.revision
                     ));
+                }
+                if matches!(
+                    issue.kind,
+                    StandardIssueKind::MissingLineTypeDefinition
+                        | StandardIssueKind::LineTypeDefinition
+                        | StandardIssueKind::MissingHatchPatternDefinition
+                        | StandardIssueKind::HatchPatternDefinition
+                ) {
+                    if let Some(found) = &issue.found {
+                        detail.push_str(&format!(" Çizimdeki tanım: {found}."));
+                    }
+                    if let Some(expected) = &issue.expected {
+                        detail.push_str(&format!(" Standart tanımı: {expected}."));
+                    }
                 }
                 detail
             });
@@ -1169,6 +1212,16 @@ fn report_words(r: &StandardsReport) -> String {
 
 /// A finding's change in a few words: what the drawing has and what the standard asks, or how many objects.
 fn change_words(issue: &StandardIssue) -> String {
+    match issue.kind {
+        StandardIssueKind::MissingLineTypeDefinition
+        | StandardIssueKind::MissingHatchPatternDefinition => {
+            return "yok → standartta tanımlı".into();
+        }
+        StandardIssueKind::LineTypeDefinition | StandardIssueKind::HatchPatternDefinition => {
+            return "tanım farklı → standart tanımı".into();
+        }
+        _ => {}
+    }
     match (&issue.found, &issue.expected) {
         _ if issue.objects > 0 => format!("{} nesne", issue.objects),
         (Some(f), Some(e)) => format!("{f} → {e}"),
@@ -1443,6 +1496,7 @@ mod tests {
         let _ = app.drawing_standard_event(Event::Loaded(Ok(Some(SelectedStandard {
             label: "ofis.json".into(),
             standard,
+            resources: None,
             document: Some(text.clone()),
             bound_id: None,
             provenance: None,
@@ -1456,6 +1510,7 @@ mod tests {
         let _ = app.drawing_standard_event(Event::Loaded(Ok(Some(SelectedStandard {
             label: "aynı.json".into(),
             standard: package.standard.clone(),
+            resources: None,
             document: Some(text),
             bound_id: None,
             provenance: None,

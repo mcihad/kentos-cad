@@ -1118,8 +1118,11 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
 
 /// Checks `input`.
 pub fn validate_check(_cx: &ExecutionContext<'_>, input: &StandardsCheck) -> CommandResult<()> {
-    match standard_of(input.name.as_deref(), input.standard.as_ref()) {
-        Ok(_) => CommandResult::Completed {
+    if let Err(stop) = standard_of(input.name.as_deref(), input.standard.as_ref()) {
+        return stop.into();
+    }
+    match check_resources(input.resources.as_ref()) {
+        Ok(()) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
         },
@@ -1148,7 +1151,13 @@ fn report(doc: &Document, input: &StandardsCheck) -> CommandResult<StandardsRepo
         Ok(s) => s,
         Err(stop) => return stop.into(),
     };
-    let issues = issues(doc, &standard);
+    if let Err(stop) = check_resources(input.resources.as_ref()) {
+        return stop.into();
+    }
+    let mut issues = issues(doc, &standard);
+    if let Some(resources) = &input.resources {
+        issues.extend(resource_issues(doc, resources));
+    }
     CommandResult::Completed {
         output: StandardsReport {
             standard: standard.name.clone(),
@@ -1158,6 +1167,115 @@ fn report(doc: &Document, input: &StandardsCheck) -> CommandResult<StandardsRepo
         },
         warnings: Vec::new(),
     }
+}
+
+fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Result<(), Stop> {
+    let Some(resources) = resources else {
+        return Ok(());
+    };
+    if let Some(problem) = kentos_commands::line_types_problem(&resources.line_types) {
+        return Err(fail(
+            codes::INVALID_STANDARD,
+            problem,
+            "resources.lineTypes",
+        ));
+    }
+    if let Some(problem) = kentos_commands::hatch_patterns_problem(&resources.hatch_patterns) {
+        return Err(fail(
+            codes::INVALID_STANDARD,
+            problem,
+            "resources.hatchPatterns",
+        ));
+    }
+    Ok(())
+}
+
+fn resource_issues(
+    doc: &Document,
+    resources: &kentos_commands::StandardResources,
+) -> Vec<StandardIssue> {
+    fn resource_geometry<T: serde::Serialize>(item: &T) -> serde_json::Value {
+        let mut value = serde_json::to_value(item).expect("validated resource");
+        let object = value.as_object_mut().expect("resource object");
+        for field in ["name", "description", "source"] {
+            object.remove(field);
+        }
+        value
+    }
+    let mut issues = Vec::new();
+    for expected in &resources.line_types {
+        let found = doc
+            .settings()
+            .line_types
+            .iter()
+            .find(|item| item.name.to_lowercase() == expected.name.to_lowercase());
+        let (kind, message, found_value) = match found {
+            None => (
+                StandardIssueKind::MissingLineTypeDefinition,
+                format!(
+                    "“{}” çizgi tipi çizimde yok; kaynağı inceleyip açıkça yükleyin.",
+                    expected.name
+                ),
+                None,
+            ),
+            Some(found) if resource_geometry(expected) != resource_geometry(found) => (
+                StandardIssueKind::LineTypeDefinition,
+                format!(
+                    "“{}” çizgi tipinin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.",
+                    expected.name
+                ),
+                Some(resource_geometry(found).to_string()),
+            ),
+            Some(_) => continue,
+        };
+        issues.push(StandardIssue {
+            kind,
+            subject: expected.name.clone(),
+            layer: None,
+            expected: Some(resource_geometry(expected).to_string()),
+            found: found_value,
+            objects: 0,
+            fixable: false,
+            message,
+        });
+    }
+    for expected in &resources.hatch_patterns {
+        let found = doc
+            .settings()
+            .hatch_patterns
+            .iter()
+            .find(|item| item.name.to_lowercase() == expected.name.to_lowercase());
+        let (kind, message, found_value) = match found {
+            None => (
+                StandardIssueKind::MissingHatchPatternDefinition,
+                format!(
+                    "“{}” tarama deseni çizimde yok; kaynağı inceleyip açıkça yükleyin.",
+                    expected.name
+                ),
+                None,
+            ),
+            Some(found) if resource_geometry(expected) != resource_geometry(found) => (
+                StandardIssueKind::HatchPatternDefinition,
+                format!(
+                    "“{}” tarama deseninin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.",
+                    expected.name
+                ),
+                Some(resource_geometry(found).to_string()),
+            ),
+            Some(_) => continue,
+        };
+        issues.push(StandardIssue {
+            kind,
+            subject: expected.name.clone(),
+            layer: None,
+            expected: Some(resource_geometry(expected).to_string()),
+            found: found_value,
+            objects: 0,
+            fixable: false,
+            message,
+        });
+    }
+    issues
 }
 
 // ── cad.standards.apply ─────────────────────────────────────────────────────
