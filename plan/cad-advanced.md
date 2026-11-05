@@ -2123,8 +2123,11 @@ komut/şema/KCAD dosyasında saklanır. Yenileme, kaynak satırları yer değiş
 de elle değiştirilen hücreyi aynı anahtarlı satıra taşır; yeni kaynak sırasını
 korur. Çakışan hücre değişimi, yinelenen/boş anahtar veya elle düzeltilmiş
 satırın kaynaktan silinmesi tabloyu ve Undo kaydını değiştirmeden uyarı verir.
-Birleşimler, formüller, field'lar, hücre stilleri veya farklı veri satırı
-yükseklikleri varsa yeniden sıralama henüz güvenle taşınamadığı için durdurulur.
+Farklı veri satırı yükseklikleri de satır anahtarıyla birlikte taşınır; gerçek
+CAD penceresinde `B/10` kısa, `A/11` uzun satırın yenileme sonrası da kendi
+yüksekliğini koruduğu görüldü.
+Birleşimler, formüller, field'lar veya hücre stilleri varsa yeniden sıralama
+henüz güvenle taşınamadığı için durdurulur.
 Gerçek CAD arayüzünde KentOS seçim bileşeninden `ID` anahtarı seçildi; `A/11,
 B/10` tablosu `B/10, A/11` sırasına yenilendi ve elle düzeltilen bir hücre
 korundu. Ekran görüntüleri repo dışındadır. Genel çıkarım tarifi, iç içe blok

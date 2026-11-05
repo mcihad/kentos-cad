@@ -297,7 +297,7 @@ mod qa {
         let table: kentos_commands::Entity = serde_json::from_value(json!({
             "kind":"table","id":0,"layerId":"duvar","attrs":{},
             "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
-            "rows":[0.32,0.32,0.32],"columns":[2.0,2.0],
+            "rows":[0.32,0.50,0.38],"columns":[2.0,2.0],
             "cells":[["ID","Price"],["A","11"],["B","10"]],
             "header":true,
             "source":{"kind":"file","name":"rows.csv","path":csv.to_string_lossy(),

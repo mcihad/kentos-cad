@@ -753,7 +753,7 @@ fn row_keys(rows: &[Vec<String>], column: usize) -> Result<HashMap<&str, usize>,
 
 /// Match file rows by a declared, unique column. Source order is retained; hand edits follow the
 /// key, and conflicting edits or disappearing edited rows stop the whole refresh. Row-scoped table
-/// extras need their own reindexing before a reorder can be accepted.
+/// styles, merges, formulas and fields need their own reindexing before a reorder can be accepted.
 fn keyed_overrides(
     t: &TableEntity,
     copy: &[Vec<String>],
@@ -774,9 +774,6 @@ fn keyed_overrides(
     let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
     if reordered && (!t.styles.is_empty() || !t.formulas.is_empty() || !t.fields.is_empty() || !t.merges.is_empty()) {
         return Err("Satır sırası değişti; hücre stili, birleşim, formül veya field konumu güvenle taşınamadığı için tablo korunuyor.".to_owned());
-    }
-    if reordered && t.rows.iter().skip(2).any(|h| Some(h) != t.rows.get(1)) {
-        return Err("Satır sırası değişti; farklı satır yükseklikleri güvenle taşınamadığı için tablo korunuyor.".to_owned());
     }
     for (key, old_r) in &old_keys {
         if new_keys.contains_key(key) {
@@ -964,6 +961,22 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                             Ok((cells, k, r)) => {
                                                 (kept, replaced) = (k, r);
                                                 refreshed(doc, &t, &cells, &aligns).map(|mut n| {
+                                                    if let (Some(column), Some(old)) = (key_column, copy.as_ref()) {
+                                                        if let Ok(old_keys) = row_keys(old, *column as usize) {
+                                                            for (new_row, fresh_row) in fresh.iter().enumerate().skip(1) {
+                                                                if let Some(old_row) = fresh_row
+                                                                    .get(*column as usize)
+                                                                    .and_then(|key| old_keys.get(key.as_str()))
+                                                                {
+                                                                    if let (Some(height), Some(target)) =
+                                                                        (t.rows.get(*old_row), n.rows.get_mut(new_row))
+                                                                    {
+                                                                        *target = *height;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                     let mut s = source.clone();
                                                     if let TableSource::File { digest, copy, .. } = &mut s {
                                                         *digest = Some(d);
@@ -1196,7 +1209,7 @@ mod tests {
         let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
         let table: TableEntity = serde_json::from_value(json!({
             "id":0,"layerId":"duvar","attrs":{},"p":{"x":0,"y":-2},
-            "rotation":0,"height":0.1,"rows":[0.3,0.3,0.3],"columns":[1.0,1.0],
+            "rotation":0,"height":0.1,"rows":[0.3,0.6,0.4],"columns":[1.0,1.0],
             "cells":cells,"header":true,
             "source":{"kind":"file","name":"rows.csv","path":path.to_string_lossy(),
                       "digest":digest_of(original),"copy":copy}
@@ -1235,6 +1248,7 @@ mod tests {
         let Some(Entity::Table(table)) = doc.get(slot) else { panic!("table") };
         assert_eq!(table.cells[1], vec!["B", "10"]);
         assert_eq!(table.cells[2], vec!["A", "11"]);
+        assert_eq!(table.rows, vec![0.3, 0.4, 0.6]);
         std::fs::remove_file(path).unwrap();
     }
 
