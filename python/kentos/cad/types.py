@@ -61596,6 +61596,8 @@ class ProjectSettings(_Model):
             reconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`
             objects has none.
         sources: The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
+        standard_docs: Ordered portable drawing standards retained with the project. Earlier
+            entries take precedence; choosing a standard does not apply it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
@@ -61652,6 +61654,7 @@ class ProjectSettings(_Model):
     second_srid: int | None | Unset = UNSET
     source_bases: list[SourceBase] | Unset = UNSET
     sources: list[SourceLink] | Unset = UNSET
+    standard_docs: list[ProjectStandardDocument] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
@@ -61740,6 +61743,8 @@ class ProjectSettings(_Model):
             out["sourceBases"] = [e0.to_json() for e0 in self.source_bases]
         if self.sources is not UNSET:
             out["sources"] = [e0.to_json() for e0 in self.sources]
+        if self.standard_docs is not UNSET:
+            out["standardDocs"] = [e0.to_json() for e0 in self.standard_docs]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.text_styles is not UNSET:
@@ -61804,6 +61809,7 @@ class ProjectSettings(_Model):
             second_srid=data.get("secondSrid", UNSET),
             source_bases=[SourceBase.from_json(e0) for e0 in data["sourceBases"]] if "sourceBases" in data else UNSET,
             sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
+            standard_docs=[ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]] if "standardDocs" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
@@ -61867,6 +61873,27 @@ class ProjectSheets(_Model):
         return cls(
             book=data["book"],
             pictures=[SheetPicture.from_json(e0) for e0 in data["pictures"]] if "pictures" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectStandardDocument(_Model):
+    """An exact versioned standard document retained in the drawing file.
+    Attributes:
+        text: UTF-8 JSON document, with its format, document version, identity and
+            office revision. Keeping the complete text allows exact re-export.
+    """
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectStandardDocument:
+        return cls(
+            text=data["text"],
         )
 
 
@@ -69792,6 +69819,9 @@ class SettingsSet(_Model):
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
     - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+    - `standardDocs`: the entire ordered list of versioned drawing-standard
+      documents retained by the project; an empty list removes all bindings.
+      This changes the association only and does not apply the standards.
 
     Settings are an edit of the project, no undo step (docs/adr/0049).
 
@@ -69830,6 +69860,8 @@ class SettingsSet(_Model):
         plot_scale: Unit: scale.
         second_srid: Unit: epsg.
         srid: Unit: epsg.
+        standard_docs: Replace the project's ordered drawing-standard documents. Missing keeps
+            the current list; an empty list removes it.
     """
     angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET
     arch: ArchSettings | None | Unset = UNSET
@@ -69850,6 +69882,7 @@ class SettingsSet(_Model):
     project_type: Workspace | WorkspaceName | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     srid: int | None | Unset = UNSET
+    standard_docs: list[ProjectStandardDocument] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69891,6 +69924,8 @@ class SettingsSet(_Model):
             out["secondSrid"] = self.second_srid
         if self.srid is not UNSET:
             out["srid"] = self.srid
+        if self.standard_docs is not UNSET:
+            out["standardDocs"] = None if self.standard_docs is None else [e0.to_json() for e0 in self.standard_docs]
         return out
 
     @classmethod
@@ -69915,6 +69950,7 @@ class SettingsSet(_Model):
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
             second_srid=data.get("secondSrid", UNSET),
             srid=data.get("srid", UNSET),
+            standard_docs=UNSET if "standardDocs" not in data else None if data["standardDocs"] is None else [ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]],
         )
 
 
@@ -107825,6 +107861,7 @@ __all__ = [
     "ProjectSettings",
     "ProjectShare",
     "ProjectSheets",
+    "ProjectStandardDocument",
     "ProjectState",
     "ProjectStateName",
     "ProjectStorage",

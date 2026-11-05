@@ -41,6 +41,101 @@ fn unknown_standard_rules_are_refused_by_command_registry_without_mutation() {
     }
 }
 
+#[test]
+fn project_standard_associations_are_validated_and_revision_checked() {
+    use kentos_commands::{
+        CallOp, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION, StandardPackage,
+    };
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let snapshot = DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap();
+    let mut doc = Document::from_snapshot(snapshot).unwrap();
+    let package = |id: &str| StandardPackage {
+        format: STANDARD_PACKAGE_FORMAT.into(),
+        version: STANDARD_PACKAGE_VERSION,
+        id: id.into(),
+        revision: "2026.1".into(),
+        standard: kentos_commands::built_in_standard("mimari-ofis").unwrap(),
+    };
+    let a = json!({"text":serde_json::to_string(&package("office-a")).unwrap()});
+    let b = json!({"text":serde_json::to_string(&package("office-b")).unwrap()});
+    let before = doc.to_snapshot_v2();
+    let revision = doc.revision().to_string();
+    let input = json!({"standardDocs":[a.clone(),b.clone()],"expectedRevision":revision});
+    let planned = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Plan,
+        input.clone(),
+    )
+    .unwrap();
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert_eq!(doc.to_snapshot_v2(), before);
+    let written = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        input.clone(),
+    )
+    .unwrap();
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(doc.settings().standard_docs.len(), 2);
+    let saved = doc.to_snapshot_v2();
+    let stale = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        input,
+    )
+    .unwrap();
+    assert_eq!(stale["status"], "conflict", "{stale}");
+    assert_eq!(doc.to_snapshot_v2(), saved);
+    let invalid = json!({"standardDocs":[{"text":"{}"}]});
+    let refused = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        invalid,
+    )
+    .unwrap();
+    assert_eq!(refused["status"], "failed", "{refused}");
+    assert_eq!(doc.to_snapshot_v2(), saved);
+    let mut unrecognized = serde_json::to_value(package("unknown-rule")).unwrap();
+    unrecognized["standard"]["unsupportedRule"] = json!(true);
+    let refused = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        json!({"standardDocs":[{"text":unrecognized.to_string()}]}),
+    )
+    .unwrap();
+    assert_eq!(refused["status"], "failed", "{refused}");
+    assert_eq!(doc.to_snapshot_v2(), saved);
+    let reordered = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        json!({"standardDocs":[b,a]}),
+    )
+    .unwrap();
+    assert_eq!(reordered["status"], "completed", "{reordered}");
+    let first: serde_json::Value =
+        serde_json::from_str(&doc.settings().standard_docs[0].text).unwrap();
+    assert_eq!(first["id"], "office-b");
+    let removed = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        json!({"standardDocs":[]}),
+    )
+    .unwrap();
+    assert_eq!(removed["status"], "completed", "{removed}");
+    assert!(doc.settings().standard_docs.is_empty());
+}
+
 fn drawing() -> Document {
     let old = ["duvar", "kapi", "aks", "mobilya", "A-PLAN"];
     let layers: Vec<_> = (0..500u32)

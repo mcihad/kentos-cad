@@ -1854,8 +1854,11 @@ KCAD şema 165, çizimde sıralı standart belgelerini saklama altyapısını ta
 bozuk veya yinelenen kimlikli belgeler reddedilir. Bağımsız Python okuyucusu,
 eski şema sınaması ve 235 KCAD testi doğrulandı. Gerçek uygulamada örnek
 çizim açılıp kaydedildi ve iki belgenin sırası/içeriği bağımsız okuyucuyla
-karşılaştırıldı. Henüz belge bağlama, seçme veya öncelik çözme komutu ve
-arayüzü yoktur; standart denetimi bu kayıtları otomatik kullanmaz.
+karşılaştırıldı. `cad.settings.set` komutu sürümlü belgeler listesini
+doğrulayıp revizyon kontrolüyle bağlar, sıralar veya kaldırır; Python
+bağlamaları güncellendi. Python'un gerçek yerel motorunda bağlama, kaydetme,
+yeniden açma ve kaldırma doğrulandı. Seçim arayüzü ve birden fazla standart arasındaki
+öncelik çözümü henüz yoktur; denetim kayıtları otomatik kullanmaz.
 Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
 komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
 tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve

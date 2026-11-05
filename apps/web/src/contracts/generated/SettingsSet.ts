@@ -7,6 +7,7 @@ import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { HeightReference } from "./HeightReference";
 import type { LengthStyle } from "./LengthStyle";
+import type { ProjectStandardDocument } from "./ProjectStandardDocument";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -47,6 +48,9 @@ import type { Workspace } from "./Workspace";
  *   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
  *   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
  * - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+ * - `standardDocs`: the entire ordered list of versioned drawing-standard
+ *   documents retained by the project; an empty list removes all bindings.
+ *   This changes the association only and does not apply the standards.
  *
  * Settings are an edit of the project, no undo step (docs/adr/0049).
  *
@@ -68,32 +72,37 @@ import type { Workspace } from "./Workspace";
  * sheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),
  * `heights_need_system` (ellipsoidal heights or an epoch for a project without a system).
  */
-export type SettingsSet = { name?: string, projectType?: Workspace, 
+export type SettingsSet = {
+/**
+ * Replace the project's ordered drawing-standard documents. Missing keeps
+ * the current list; an empty list removes it.
+ */
+standardDocs?: Array<ProjectStandardDocument>, name?: string, projectType?: Workspace,
 /**
  * What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
  */
-cadWork?: CadWork, srid?: number, secondSrid?: number, 
+cadWork?: CadWork, srid?: number, secondSrid?: number,
 /**
  * The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
  */
-mapSrid?: number, 
+mapSrid?: number,
 /**
  * Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
  * the active layer's. No object changes.
  */
-autoSelect?: boolean, drawingUnit?: DrawingUnit, 
+autoSelect?: boolean, drawingUnit?: DrawingUnit,
 /**
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.
  */
-lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, 
+lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont,
 /**
  * Whole architectural project preferences, including optional room name/usage lists and level prefixes, and the
  * level and view the drawing opens with (`activeLevel`, `levelView`, docs/adr/0720).
  * Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
  * These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
  */
-arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number, 
+arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number,
 /**
  * The document revision the input was prepared against, as decimal text.
  */

@@ -25,18 +25,25 @@ and unsupported versions are rejected instead of silently dropping rules.
 The file is limited to 1 MiB by the desktop file picker.
 
 Version 1 contains drawing-standard rules only. It does not package styles,
-blocks, hatch definitions, templates, palette items or viewport overrides;
-nor does choosing a document associate it with a project. The selection is
-temporary and the original file is not modified. In particular, loading a
-document does not grant permission to change a drawing: checking and applying
-are separate actions, and applying is revision-checked.
+blocks, hatch definitions, templates, palette items or viewport overrides.
+The desktop file selection is temporary and does not associate the file with
+the project. Loading a document does not grant permission to change a drawing:
+checking and applying are separate actions, and applying is revision-checked.
+
+`cad.settings.set` accepts `standardDocs`, an ordered list of objects with a
+`text` field containing the complete versioned JSON document. It validates
+all documents before replacing the list; an empty list removes the bindings.
+Use `expectedRevision` to protect the edit from intervening changes. The same
+field is available through the generated Python SDK and MCP command contract.
+Association does not apply a standard, and the standard-check window does not
+yet select or combine these project bindings.
 
 This format is a starting point for CAD-ADV-12, not the complete office
-package. Future resource packaging and project association require explicit
-format and project-schema evolution, conflict handling, migration tests, and
-the same command access for desktop, Python and MCP.
+package. Future resource packaging and the complete association workflow
+require explicit format and project-schema evolution, conflict handling,
+migration tests, and the same command access for desktop, Python and MCP.
 
-For subsequent project association, support more than one source with an
+For the remaining association workflow, support more than one source with an
 explicit, visible priority and conflict report. Autodesk documents both
 [drawing-to-standard associations](https://help.autodesk.com/cloudhelp/2023/ENU/AutoCAD-Core/files/GUID-3430632D-3294-44EA-ACDE-429CBE1F1BDD.htm)
 and [ordered precedence for conflicting standards](https://help.autodesk.com/cloudhelp/2022/ENU/AutoCAD-Architecture/files/GUID-22AC35EC-47D1-4FA4-96AF-671663396F55.htm).

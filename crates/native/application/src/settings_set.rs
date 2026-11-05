@@ -171,6 +171,7 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
         || input.drawing_font.is_some()
         || input.arch.is_some()
         || input.heights.is_some()
+        || input.standard_docs.is_some()
         || input.coordinate_epoch.is_some();
     if !given {
         return Err(Stop::failed(error(
@@ -245,6 +246,21 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
             &format!("heights.{path}"),
         ));
     }
+    if let Some(documents) = &input.standard_docs {
+        if let Some(why) = kentos_commands::project_standards_problem(documents) {
+            return Err(fail(codes::INVALID_STANDARD, why, "standardDocs"));
+        }
+        for (index, document) in documents.iter().enumerate() {
+            match kentos_commands::parse_standard_document(document.text.as_bytes()) {
+                Ok((_, Some(_))) => {}
+                Ok((_, None)) => return Err(fail(codes::INVALID_STANDARD,
+                    "Projeye yalnız sürümlü standart belgesi bağlanabilir.".into(),
+                    &format!("standardDocs[{index}]"))),
+                Err(why) => return Err(fail(codes::INVALID_STANDARD, why,
+                    &format!("standardDocs[{index}]"))),
+            }
+        }
+    }
     if let Some(why) = input
         .coordinate_epoch
         .filter(|e| *e != 0.0)
@@ -262,6 +278,9 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
 /// The settings the input leaves, or why not; the drawing's name apart.
 fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings, Stop> {
     let mut s = doc.settings().clone();
+    if let Some(documents) = &input.standard_docs {
+        s.standard_docs = documents.clone();
+    }
     if let Some(t) = input.project_type {
         if s.project_type().is_some_and(|kept| kept != t) {
             return Err(fail(
@@ -537,6 +556,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
         before.coordinate_epoch != after.coordinate_epoch,
         "coordinateEpoch",
     );
+    key(before.standard_docs != after.standard_docs, "standardDocs");
     let heights = after.annotation.clone().unwrap_or_default();
     let followed = follow_annotation_change(
         doc,

@@ -2407,6 +2407,7 @@ __all__ = [
     "ProjectSettings",
     "ProjectShare",
     "ProjectSheets",
+    "ProjectStandardDocument",
     "ProjectState",
     "ProjectStateName",
     "ProjectStorage",
