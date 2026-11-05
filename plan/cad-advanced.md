@@ -1869,6 +1869,11 @@ uygulanamaz. İki kaynaklı gerçek arayüz testinde ikinci kaynağın A-EK katm
 ön izlemede görüldü, uygulandı ve kayıt bağımsız okuyucuyla doğrulandı. Python
 üzerinden çözümleme, denetim ve uygulama planı da sınandı. Blok ve çizgi tipi
 tanımlarının paketlenmesi ve önceliği henüz desteklenmez.
+Birleşik sorgu genel kural ile her katman, yazı ve ölçü stili tanımının
+kaynak kimliğini ve ofis sürümünü de döndürür. Bulgu seçildiğinde ilgili
+tanımın kaynağı pencerede gösterilir; bu bilgi nesne veya viewport görünüşünün
+kaynağı değildir. Kaynak önceliği komut ve Python testleriyle, seçilen katmanın
+kaynağı gerçek arayüzde doğrulandı.
 `cad.standards.conflicts`, bağlı standartlardaki aynı adlı katman, yazı ve
 ölçü stili tanımlarının farklı alanlarını ve iki kaynağı raporlar. Sıra
 değişince ilk kaynak yeniden belirlenir; okunamayan belge varsa eksik rapor

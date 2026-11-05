@@ -13,10 +13,10 @@
 use kentos_commands::{
     CommandResult, CommandWarning, DimensionStyleDef, DrawingFont, DrawingStandard, LayerNode,
     LayerNodeType, LayerStyle, LayersTranslate, LineType, StandardConflict, StandardIssue,
-    StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsConflicts,
-    StandardsConflictsReport, StandardsReport, StandardsResolve, StandardsResolved, TextStyleDef,
-    TranslateRule, built_in_standard, built_in_standards, fold_name, font_id, font_label,
-    pattern_matches, standard_problem,
+    StandardIssueKind, StandardOrigin, StandardProvenance, StandardsApplied, StandardsApply,
+    StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
+    StandardsResolve, StandardsResolved, TextStyleDef, TranslateRule, built_in_standard,
+    built_in_standards, fold_name, font_id, font_label, pattern_matches, standard_problem,
 };
 use kentos_domain::{Document, NewLayer, Uuid};
 
@@ -93,6 +93,29 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         Err(stop) => return stop.into(),
     };
     let mut result = packages[0].standard.clone();
+    let origin = |package: &kentos_commands::StandardPackage| StandardOrigin {
+        id: package.id.clone(),
+        revision: package.revision.clone(),
+    };
+    let first_origin = origin(&packages[0]);
+    let mut provenance = StandardProvenance {
+        rules: first_origin.clone(),
+        layers: result
+            .layers
+            .iter()
+            .map(|item| (item.name.clone(), first_origin.clone()))
+            .collect(),
+        text_styles: result
+            .text_styles
+            .iter()
+            .map(|item| (item.name.clone(), first_origin.clone()))
+            .collect(),
+        dimension_styles: result
+            .dimension_styles
+            .iter()
+            .map(|item| (item.name.clone(), first_origin.clone()))
+            .collect(),
+    };
     let mut layers: BTreeSet<_> = result
         .layers
         .iter()
@@ -111,16 +134,23 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
     for package in packages.iter().skip(1) {
         for item in &package.standard.layers {
             if layers.insert(fold_name(item.name.trim())) {
+                provenance.layers.insert(item.name.clone(), origin(package));
                 result.layers.push(item.clone());
             }
         }
         for item in &package.standard.text_styles {
             if texts.insert(fold_name(item.name.trim())) {
+                provenance
+                    .text_styles
+                    .insert(item.name.clone(), origin(package));
                 result.text_styles.push(item.clone());
             }
         }
         for item in &package.standard.dimension_styles {
             if dimensions.insert(fold_name(item.name.trim())) {
+                provenance
+                    .dimension_styles
+                    .insert(item.name.clone(), origin(package));
                 result.dimension_styles.push(item.clone());
             }
         }
@@ -137,6 +167,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         output: StandardsResolved {
             standard: result,
             sources: packages.into_iter().map(|p| p.id).collect(),
+            provenance,
             revision: doc.revision().to_string(),
         },
         warnings: Vec::new(),

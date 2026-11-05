@@ -75556,10 +75556,7 @@ class StakeoutSent(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class StandardConflict(_Model):
-    """A later document differs from the first on named definitions or global rules.
-    Attributes:
-        first_values: Values for exactly the fields that differ; missing optional values are null.
-    """
+    """A later document differs from the first on named definitions or global rules."""
     kind: str
     name: str
     first_id: str
@@ -75711,6 +75708,52 @@ class StandardLayer(_Model):
             description=data.get("description", UNSET),
             from_=data.get("from", UNSET),
             plot=data.get("plot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardOrigin(_Model):
+    """Source identity and office revision of an effective definition."""
+    id: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardOrigin:
+        return cls(
+            id=data["id"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardProvenance(_Model):
+    """Provenance of the global rules and each effective named definition."""
+    rules: StandardOrigin
+    layers: dict[str, StandardOrigin]
+    text_styles: dict[str, StandardOrigin]
+    dimension_styles: dict[str, StandardOrigin]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules.to_json()
+        out["layers"] = {k0: e0.to_json() for k0, e0 in self.layers.items()}
+        out["textStyles"] = {k0: e0.to_json() for k0, e0 in self.text_styles.items()}
+        out["dimensionStyles"] = {k0: e0.to_json() for k0, e0 in self.dimension_styles.items()}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardProvenance:
+        return cls(
+            rules=StandardOrigin.from_json(data["rules"]),
+            layers={k0: StandardOrigin.from_json(e0) for k0, e0 in data["layers"].items()},
+            text_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["textStyles"].items()},
+            dimension_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyles"].items()},
         )
 
 
@@ -75960,12 +76003,14 @@ class StandardsResolved(_Model):
     """
     standard: DrawingStandard
     sources: list[str]
+    provenance: StandardProvenance
     revision: str
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["standard"] = self.standard.to_json()
         out["sources"] = list(self.sources)
+        out["provenance"] = self.provenance.to_json()
         out["revision"] = self.revision
         return out
 
@@ -75974,6 +76019,7 @@ class StandardsResolved(_Model):
         return cls(
             standard=DrawingStandard.from_json(data["standard"]),
             sources=list(data["sources"]),
+            provenance=StandardProvenance.from_json(data["provenance"]),
             revision=data["revision"],
         )
 
@@ -108607,6 +108653,8 @@ __all__ = [
     "StandardIssueKind",
     "StandardIssueKindName",
     "StandardLayer",
+    "StandardOrigin",
+    "StandardProvenance",
     "StandardTextStyle",
     "StandardsApplied",
     "StandardsApply",

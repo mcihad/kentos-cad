@@ -47,6 +47,10 @@ definitions are appended in order. The query itself does not change the
 drawing. Pass its standard and revision explicitly to check or apply; a stale
 revision cannot be applied. The window refuses a combined preview when its
 source documents have changed, and requires it to be prepared again.
+The resolved result also identifies the source document and office revision
+for the global rules and each effective layer, text style and dimension style.
+These origins describe the resolved standard definitions, not an object's
+effective appearance or a viewport override.
 `cad.standards.conflicts` reports differences in global rules and identically named layer,
 text-style and dimension-style definitions in the ordered documents. It
 identifies the first and later document and the differing fields. It does not

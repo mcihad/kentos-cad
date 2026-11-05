@@ -152,6 +152,10 @@ fn project_standards_resolve_by_order() {
     let resolved = query(&mut doc);
     assert_eq!(resolved["status"], "completed", "{resolved}");
     assert_eq!(resolved["output"]["sources"], json!(["first", "second"]));
+    let provenance = &resolved["output"]["provenance"];
+    assert_eq!(provenance["rules"], json!({"id":"first", "revision":"1"}));
+    assert_eq!(provenance["layers"][&first.layers[0].name]["id"], "first");
+    assert_eq!(provenance["layers"]["A-EK"]["id"], "second");
     let standard: kentos_commands::DrawingStandard =
         serde_json::from_value(resolved["output"]["standard"].clone()).unwrap();
     assert_eq!(standard.layers.len(), first.layers.len() + 1);
@@ -174,6 +178,11 @@ fn project_standards_resolve_by_order() {
         serde_json::from_value(resolved["output"]["standard"].clone()).unwrap();
     assert_eq!(standard.layers[0].color, "#ff0000");
     assert_eq!(standard.by_layer, second.by_layer);
+    assert_eq!(resolved["output"]["provenance"]["rules"]["id"], "second");
+    assert_eq!(
+        resolved["output"]["provenance"]["layers"][&second.layers[0].name]["id"],
+        "second"
+    );
     let mut settings = doc.settings().clone();
     settings.standard_docs[0].text = "{}".into();
     doc.set_settings(settings);

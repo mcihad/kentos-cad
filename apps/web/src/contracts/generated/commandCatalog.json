@@ -57451,6 +57451,9 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Read-only effective standard. Global rules and duplicate named definitions\ncome from the first document; other named definitions are added in order.",
         "properties": {
+          "provenance": {
+            "$ref": "#/$defs/StandardProvenance"
+          },
           "revision": {
             "type": "string"
           },
@@ -57467,6 +57470,7 @@
         "required": [
           "standard",
           "sources",
+          "provenance",
           "revision"
         ],
         "title": "StandardsResolved",
@@ -57476,6 +57480,9 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Read-only effective standard. Global rules and duplicate named definitions\ncome from the first document; other named definitions are added in order.",
         "properties": {
+          "provenance": {
+            "$ref": "#/$defs/StandardProvenance"
+          },
           "revision": {
             "type": "string"
           },
@@ -57492,6 +57499,7 @@
         "required": [
           "standard",
           "sources",
+          "provenance",
           "revision"
         ],
         "title": "StandardsResolved",
@@ -159741,7 +159749,6 @@
         },
         "firstValues": {
           "additionalProperties": true,
-          "description": "Values for exactly the fields that differ; missing optional values are null.",
           "type": "object"
         },
         "kind": {
@@ -159947,6 +159954,55 @@
         "color",
         "lineType",
         "lineWeight"
+      ],
+      "type": "object"
+    },
+    "StandardOrigin": {
+      "description": "Source identity and office revision of an effective definition.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "StandardProvenance": {
+      "description": "Provenance of the global rules and each effective named definition.",
+      "properties": {
+        "dimensionStyles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "layers": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
+        "rules": {
+          "$ref": "#/$defs/StandardOrigin"
+        },
+        "textStyles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "rules",
+        "layers",
+        "textStyles",
+        "dimensionStyles"
       ],
       "type": "object"
     },

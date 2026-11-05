@@ -9,9 +9,9 @@ use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DrawingStandard, ProjectStandardDocument, SettingsSet, StandardIssue,
-    StandardIssueKind, StandardsApplied, StandardsApply, StandardsCheck, StandardsConflicts,
-    StandardsConflictsReport, StandardsReport, StandardsResolve, built_in_standard,
-    built_in_standards, parse_standard_document,
+    StandardIssueKind, StandardProvenance, StandardsApplied, StandardsApply, StandardsCheck,
+    StandardsConflicts, StandardsConflictsReport, StandardsReport, StandardsResolve,
+    built_in_standard, built_in_standards, parse_standard_document,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, settings_set, standards};
@@ -89,6 +89,7 @@ pub struct SelectedStandard {
     /// Exact source text is retained only for a versioned document.
     document: Option<String>,
     bound_id: Option<String>,
+    provenance: Option<StandardProvenance>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -131,6 +132,7 @@ fn selected_project(document: &ProjectStandardDocument) -> Result<SelectedStanda
         standard,
         document: Some(document.text.clone()),
         bound_id: Some(package.id),
+        provenance: None,
     })
 }
 
@@ -400,6 +402,7 @@ impl App {
                             standard,
                             document,
                             bound_id: None,
+                            provenance: None,
                         }))
                     },
                     |result| msg(Event::Loaded(result)),
@@ -487,6 +490,7 @@ impl App {
                             standard: output.standard,
                             document: None,
                             bound_id: None,
+                            provenance: Some(output.provenance),
                         });
                         w.resolved_snapshot = Some(snapshot);
                         w.invalid_bound = None;
@@ -803,7 +807,41 @@ impl App {
         );
         let detail = chosen
             .and_then(|i| issues.iter().find(|(original, _)| *original == i))
-            .map(|(_, issue)| issue.message.clone());
+            .map(|(_, issue)| {
+                let mut detail = issue.message.clone();
+                let provenance = w
+                    .custom
+                    .as_ref()
+                    .and_then(|selected| selected.provenance.as_ref());
+                let definitions = provenance.and_then(|p| match issue.kind {
+                    StandardIssueKind::MissingLayer
+                    | StandardIssueKind::LayerColor
+                    | StandardIssueKind::LayerLineType
+                    | StandardIssueKind::LayerWeight
+                    | StandardIssueKind::LayerPlot => Some(&p.layers),
+                    StandardIssueKind::MissingTextStyle | StandardIssueKind::TextStyleHeight => {
+                        Some(&p.text_styles)
+                    }
+                    StandardIssueKind::MissingDimensionStyle
+                    | StandardIssueKind::DimensionStyleHeight => Some(&p.dimension_styles),
+                    _ => None,
+                });
+                if let Some(origin) = definitions.and_then(|entries| {
+                    entries
+                        .iter()
+                        .find(|(name, _)| {
+                            kentos_commands::fold_name(name.trim())
+                                == kentos_commands::fold_name(issue.subject.trim())
+                        })
+                        .map(|(_, source)| source)
+                }) {
+                    detail.push_str(&format!(
+                        " Standart tanımının kaynağı: {} · sürüm {}.",
+                        origin.id, origin.revision
+                    ));
+                }
+                detail
+            });
         let count = issues.len();
         let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
             let (original, issue) = &issues[i];
@@ -1397,6 +1435,7 @@ mod tests {
             standard,
             document: Some(text.clone()),
             bound_id: None,
+            provenance: None,
         }))));
         let _ = app.drawing_standard_event(Event::Attach);
         let after = app.document.as_ref().unwrap().model.to_snapshot_v2();
@@ -1409,6 +1448,7 @@ mod tests {
             standard: package.standard.clone(),
             document: Some(text),
             bound_id: None,
+            provenance: None,
         }))));
         let _ = app.drawing_standard_event(Event::Attach);
         assert_eq!(

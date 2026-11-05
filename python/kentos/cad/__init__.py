@@ -3049,6 +3049,8 @@ __all__ = [
     "StandardIssueKind",
     "StandardIssueKindName",
     "StandardLayer",
+    "StandardOrigin",
+    "StandardProvenance",
     "StandardTextStyle",
     "StandardsApplied",
     "StandardsApply",

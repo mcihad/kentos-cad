@@ -43,7 +43,32 @@ pub struct StandardsResolve {}
 pub struct StandardsResolved {
     pub standard: DrawingStandard,
     pub sources: Vec<String>,
+    pub provenance: StandardProvenance,
     pub revision: String,
+}
+
+/// Source identity and office revision of an effective definition.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardOrigin {
+    pub id: String,
+    pub revision: String,
+}
+
+/// Provenance of the global rules and each effective named definition.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardProvenance {
+    pub rules: StandardOrigin,
+    pub layers: std::collections::BTreeMap<String, StandardOrigin>,
+    pub text_styles: std::collections::BTreeMap<String, StandardOrigin>,
+    pub dimension_styles: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
