@@ -537,17 +537,17 @@ fn named_resource_findings_report_direct_and_nested_uses_without_editing() {
         (
             "GAZ",
             0,
-            "1 katmanda, 0 doğrudan nesnede ve 0 blok parçasında",
+            "1 katmanda, 0 kayıtlı katman durumunda, 0 doğrudan nesnede ve 0 blok parçasında",
         ),
         (
             "KESIK-İNCE",
             1,
-            "0 katmanda, 1 doğrudan nesnede ve 0 blok parçasında",
+            "0 katmanda, 1 kayıtlı katman durumunda, 1 doğrudan nesnede ve 0 blok parçasında",
         ),
         (
             "SINIR",
             0,
-            "0 katmanda, 0 doğrudan nesnede ve 1 blok parçasında",
+            "0 katmanda, 0 kayıtlı katman durumunda, 0 doğrudan nesnede ve 1 blok parçasında",
         ),
     ] {
         assert!(

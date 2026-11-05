@@ -2006,6 +2006,11 @@ blok parçası içeren komut sınamaları çizim ile Undo geçmişinin değişme
 doğruladı. Gerçek uygulamada GAZ çizgi tipinin farklı tanımı seçildiğinde
 1 katman, 0 doğrudan nesne ve 0 blok parçası açıklaması ile pasif Uygula
 düğmesi ekran görüntüsünde doğrulandı; görüntü repo dışında tutuldu.
+Kayıtlı katman durumundaki adlandırılmış çizgi tipi de etki sayısına eklendi;
+katman durumunun geri yüklenmesinde bu kaynak kullanılabilir. KESIK-İNCE
+örneğinde bir kayıtlı durum, bir doğrudan nesne ve sıfır blok parçası otomatik
+sınamada doğrulandı. Aynı sayılar gerçek uygulamanın kaynak ayrıntısında
+görüldü; Uygula düğmesi pasif kaldı ve ekran görüntüsü repo dışında tutuldu.
 Çizgi tipi ve tarama deseninin iç içe sayısal alanları, paketler arası çakışma
 ve çizim denetiminde aynı mutlak `1e-9` toleransını kullanır. Eşiğin altında
 gereksiz bulgu çıkmaması, üstünde hem çakışma hem yerel tanım farkının çıkması

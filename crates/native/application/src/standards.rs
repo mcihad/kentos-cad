@@ -1456,7 +1456,7 @@ fn resource_issues(
     // large drawing for each definition would make a read-only check expensive.
     // A hatch keeps its own pattern geometry, so its name is a reference hint,
     // not a promise that replacing the project definition changes that hatch.
-    let mut line_uses = std::collections::BTreeMap::<String, [usize; 3]>::new();
+    let mut line_uses = std::collections::BTreeMap::<String, [usize; 4]>::new();
     let mut hatch_uses = std::collections::BTreeMap::<String, [usize; 2]>::new();
     let line_names: std::collections::BTreeSet<_> = resources
         .line_types
@@ -1480,6 +1480,20 @@ fn resource_issues(
                     }
                 }
             }
+            for state in &doc.settings().layer_states {
+                for node in &state.nodes {
+                    if let Some(name) = node
+                        .style
+                        .as_ref()
+                        .and_then(|style| style.line_pattern.as_deref())
+                    {
+                        let key = name.trim().to_lowercase();
+                        if line_names.contains(&key) {
+                            line_uses.entry(key).or_default()[1] += 1;
+                        }
+                    }
+                }
+            }
         }
         let mut record_entity = |entity: &kentos_commands::Entity, direct: bool| {
             if !line_names.is_empty()
@@ -1487,7 +1501,7 @@ fn resource_issues(
             {
                 let key = name.trim().to_lowercase();
                 if line_names.contains(&key) {
-                    line_uses.entry(key).or_default()[if direct { 1 } else { 2 }] += 1;
+                    line_uses.entry(key).or_default()[if direct { 2 } else { 3 }] += 1;
                 }
             }
             if !hatch_names.is_empty()
@@ -1530,12 +1544,12 @@ fn resource_issues(
     }
     let mut issues = Vec::new();
     for expected in &resources.line_types {
-        let [layers, objects, block_parts] = line_uses
+        let [layers, states, objects, block_parts] = line_uses
             .get(&expected.name.trim().to_lowercase())
             .copied()
             .unwrap_or_default();
         let impact = format!(
-            " Bu ad {layers} katmanda, {objects} doğrudan nesnede ve {block_parts} blok parçasında kullanılıyor."
+            " Bu ad {layers} katmanda, {states} kayıtlı katman durumunda, {objects} doğrudan nesnede ve {block_parts} blok parçasında kullanılıyor."
         );
         let found = doc
             .settings()

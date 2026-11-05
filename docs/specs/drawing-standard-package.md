@@ -115,7 +115,8 @@ silently equated to an explicit value.
 `resources` alongside its `standard`. It reports missing named line/hatch
 definitions and different geometric content as separate, non-fixable issues.
 For each missing or different named line type, the finding states how many
-layers, direct objects and block-definition parts name it. For a hatch
+layers, saved layer-state nodes, direct objects and block-definition parts
+name it. For a hatch
 pattern, it reports direct hatches and block-definition parts with that name.
 `objects` holds only the direct object count; zero is omitted from JSON.
 The scan visits each drawing entity once for all package resources. Hatch
