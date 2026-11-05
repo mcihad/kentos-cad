@@ -69,11 +69,12 @@ fn daylights_of(
                 counts.unbuilt += 1;
                 continue;
             };
-            let Some((_, ground)) = made.sampler.sample(&region.template, s) else {
+            let built = made.template_at(ri, s);
+            let Some((_, ground)) = made.sampler.sample(&built, s) else {
                 counts.unbuilt += 1;
                 continue;
             };
-            let template = made.sampler.template_at(&region.template, s);
+            let template = made.sampler.template_at(&built, s);
             let both = daylights(&template, sec.axis, &ground);
             for (k, d) in both.iter().enumerate() {
                 match *d {

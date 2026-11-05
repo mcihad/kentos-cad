@@ -36,6 +36,8 @@ pub enum Why {
     Vertical,
     /// A station added where the section between two stations strays from their straight join (docs/adr/0939 §2).
     Refine,
+    /// The end of a region's slope transition (docs/adr/0960).
+    Transition,
 }
 
 /// A sampled station and why.

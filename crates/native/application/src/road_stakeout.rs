@@ -145,7 +145,7 @@ pub(crate) fn table(
                     return Err(bad("step", format!("Bu aralıkla {MOST_STATIONS}'den çok km çıkar; step'i büyütün.")));
                 }
                 for s in stations {
-                    if let Some(c) = made.sampler.cross(&region.template, s) {
+                    if let Some(c) = made.sampler.cross(&made.template_at(ri, s), s) {
                         crosses.push((ri, c));
                     }
                 }

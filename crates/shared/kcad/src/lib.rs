@@ -781,11 +781,13 @@ pub const SCHEMA_WITH_HAUL_NETWORK: u32 = 173;
 pub const SCHEMA_WITH_VOLUME_STATES: u32 = 174;
 /// Schema 175 (docs/adr/0958): a template side's cut slope `bench` and fill slope `fillBench`.
 pub const SCHEMA_WITH_CUT_BENCHES: u32 = 175;
+/// Schema 176 (docs/adr/0960): a corridor region's slope `transition`.
+pub const SCHEMA_WITH_SLOPE_TRANSITIONS: u32 = 176;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 173] = [
+pub const SCHEMAS: [u32; 174] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -959,6 +961,7 @@ pub const SCHEMAS: [u32; 173] = [
     SCHEMA_WITH_HAUL_NETWORK,
     SCHEMA_WITH_VOLUME_STATES,
     SCHEMA_WITH_CUT_BENCHES,
+    SCHEMA_WITH_SLOPE_TRANSITIONS,
 ];
 
 /// The file a drawing is saved as.

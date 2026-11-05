@@ -70,6 +70,23 @@ fn why_word(w: Why) -> &'static str {
         Why::Interval => "interval",
         Why::Vertical => "vertical",
         Why::Refine => "refine",
+        Why::Transition => "transition",
+    }
+}
+
+/// A region's slope transition (docs/adr/0960): the template before it and the stations it runs over.
+pub(crate) struct Transition {
+    pub before: tpl::Template,
+    pub from: f64,
+    pub to: f64,
+}
+
+/// A region's template as built at station `s`: within its slope transition, its slopes between the region before's
+/// and its own.
+pub(crate) fn region_template<'a>(template: &'a tpl::Template, transition: Option<&Transition>, s: f64) -> std::borrow::Cow<'a, tpl::Template> {
+    match transition {
+        Some(t) if s < t.to => std::borrow::Cow::Owned(tpl::slopes_between(&t.before, template, (s - t.from) / (t.to - t.from))),
+        _ => std::borrow::Cow::Borrowed(template),
     }
 }
 
@@ -82,6 +99,16 @@ pub(crate) struct Made {
     pub regions: Vec<RegionCrosses>,
     /// What builds a section at any station of the corridor (a volume's middle sections).
     pub sampler: Sampler,
+    /// Each region's slope transition, if any (docs/adr/0960).
+    pub transitions: Vec<Option<Transition>>,
+}
+
+impl Made {
+    /// Region `ri`'s template as built at station `s`, its slope transition counted (docs/adr/0960): every section
+    /// taken off the corridor goes through it, as the corridor's own crosses do.
+    pub fn template_at(&self, ri: usize, s: f64) -> std::borrow::Cow<'_, tpl::Template> {
+        region_template(&self.regions[ri].template, self.transitions.get(ri).and_then(Option::as_ref), s)
+    }
 }
 
 /// The corridor's sources built once: its alignment, its profile's elevations, its surface, its superelevation
@@ -252,12 +279,35 @@ pub(crate) fn make_with(
     let mut stations_out = Vec::new();
     let mut regions = Vec::new();
     let mut checks: Vec<Checked> = Vec::new();
+    let mut transitions: Vec<Option<Transition>> = Vec::new();
     for (ri, r) in def.regions.iter().enumerate() {
         let t = templates.iter().find(|t| t.id == r.template).ok_or_else(|| {
             fail(codes::UNKNOWN_ROAD_TEMPLATE, format!("“{}” kimlikli tip kesit projede yok.", r.template), &format!("regions[{ri}].template"))
         })?;
         let template = core_template(t);
-        let list = core::stations(&built.core, [r.from, r.to], &f, &events).map_err(|e| match e {
+        // The slope transition from the region before (docs/adr/0960): adjoining, its template's slopes; its end sampled.
+        let transition = match r.transition {
+            None => None,
+            Some(l) => {
+                let prev = ri.checked_sub(1).map(|k| &def.regions[k]).filter(|p| (p.to - r.from).abs() <= 1e-3);
+                let (Some(prev), true) = (prev, l.is_finite() && l > 0.0 && l <= r.to - r.from) else {
+                    return Err(bad(
+                        &format!("regions[{ri}].transition"),
+                        format!("{}. bölgenin şev geçişi 0'dan uzun, bölgeden kısa olur ve önceki bölgenin bittiği yerde başlar.", ri + 1),
+                    ));
+                };
+                let before = templates.iter().find(|t| t.id == prev.template).map(core_template).ok_or_else(|| {
+                    fail(codes::UNKNOWN_ROAD_TEMPLATE, format!("“{}” kimlikli tip kesit projede yok.", prev.template), &format!("regions[{}].template", ri - 1))
+                })?;
+                Some(Transition { before, from: r.from, to: r.from + l })
+            }
+        };
+        let mut region_events = events.clone();
+        if let Some(t) = &transition {
+            region_events.push(Station { station: t.to, why: Why::Transition });
+        }
+        let at = |s: f64| sampler.cross(&region_template(&template, transition.as_ref(), s), s);
+        let list = core::stations(&built.core, [r.from, r.to], &f, &region_events).map_err(|e| match e {
             CorridorError::TooMany => bad(
                 "tangent",
                 format!("Bu aralıklarla {}'den çok km çıkar; tangent ya da curve'ü büyütün.", core::MAX_STATIONS),
@@ -265,13 +315,13 @@ pub(crate) fn make_with(
             _ => bad("tangent", "Aralıklar ve sapma toleransı 0'dan büyük olmalı.".into()),
         })?;
         let mut sampled: Vec<(Station, Option<Cross>)> =
-            list.iter().map(|st| (*st, sampler.cross(&template, st.station))).collect();
+            list.iter().map(|st| (*st, at(st.station))).collect();
         if let Some(r) = &def.refine {
             // The sections between measured and the stations refined (docs/adr/0939 §2), within the stations left.
             let tol = kentos_road::sampling::Tolerance { plan: r.plan, height: r.height, least: r.least };
             let budget = core::MAX_STATIONS.saturating_sub(stations_out.len() + sampled.len());
             let given: Vec<(f64, Option<Cross>)> = sampled.iter().map(|(st, c)| (st.station, c.clone())).collect();
-            let refined = kentos_road::sampling::refine(&given, &tol, budget, |s| sampler.cross(&template, s), |c| {
+            let refined = kentos_road::sampling::refine(&given, &tol, budget, at, |c| {
                 c.as_ref().and_then(|c| core::coded_points(&template, c))
             });
             checks.push((ri, refined.before.clone(), refined.after.clone(), refined.left.clone(), refined.added.len()));
@@ -287,6 +337,7 @@ pub(crate) fn make_with(
             }
         }
         regions.push(RegionCrosses { template, crosses });
+        transitions.push(transition);
     }
     let made = core::assemble(&regions);
     let text = |s: f64| km_text(built.km(s), 3);
@@ -399,7 +450,7 @@ pub(crate) fn make_with(
         problem: None,
         sampling,
     };
-    Ok(Made { report, built: made, warnings, regions, sampler })
+    Ok(Made { report, built: made, warnings, regions, sampler, transitions })
 }
 
 /// A region's refinement as it was measured: the region, its first intervals, the ones at the end found within, those
@@ -557,12 +608,12 @@ impl CorridorSections {
             let (a, b) = (r.crosses.first().map(|c| c.line.station), r.crosses.last().map(|c| c.line.station));
             matches!((a, b), (Some(a), Some(b)) if s >= a - 1e-9 && s <= b + 1e-9)
         })?;
-        let region = &self.made.regions[ri];
+        let template = self.made.template_at(ri, s);
         let sampler = &self.made.sampler;
-        let (cross, terrain) = sampler.sample(&region.template, s)?;
+        let (cross, terrain) = sampler.sample(&template, s)?;
         let km = sampler.alignment.km(s);
         let paved = match (self.pavements.get(ri).and_then(Option::as_ref), &cross.section) {
-            (Some(p), Some(sec)) => crate::road_sections::pavement_row(p, &sampler.template_at(&region.template, s), sec, &terrain),
+            (Some(p), Some(sec)) => crate::road_sections::pavement_row(p, &sampler.template_at(&template, s), sec, &terrain),
             _ => None,
         };
         // The axis as the section has it: risen over the profile grade about an edge (docs/adr/0931 §1).

@@ -21387,20 +21387,26 @@ class CorridorRefineDef(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class CorridorRegionDef(_Model):
-    """A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template.
+    """A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template; and an optional
+    slope transition (docs/adr/0960, KCAD schema 176): over its first `transition` m the sides' cut and fill slopes go
+    linearly from the region before's template's to its own. The region before ends where it starts.
     Attributes:
         from_: Unit: m.
         to: Unit: m.
+        transition: Unit: m.
     """
     from_: float
     to: float
     template: str
+    transition: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = float(self.from_)
         out["to"] = float(self.to)
         out["template"] = self.template
+        if self.transition is not UNSET:
+            out["transition"] = None if self.transition is None else float(self.transition)
         return out
 
     @classmethod
@@ -21409,6 +21415,7 @@ class CorridorRegionDef(_Model):
             from_=float(data["from"]),
             to=float(data["to"]),
             template=data["template"],
+            transition=UNSET if "transition" not in data else None if data["transition"] is None else float(data["transition"]),
         )
 
 

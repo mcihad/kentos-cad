@@ -134,6 +134,23 @@ def vertical_divisions(prof, t):
     return out
 
 
+def template_at(c, ri, s, templates):
+    """Docs/adr/0960: corridor `c`'s region `ri`'s template at station `s` as (its id, the templates to find it in):
+    within the region's slope transition, the region's template with its slopes, horizontal per vertical, a straight
+    way from the region before's."""
+    r = c["regions"][ri]
+    t = next(x for x in templates if x["id"] == r["template"])
+    lt = r.get("transition")
+    if lt is None or ri == 0 or s >= r["from"] + lt:
+        return r["template"], templates
+    before = next(x for x in templates if x["id"] == c["regions"][ri - 1]["template"])
+    k = min(max((s - r["from"]) / lt, 0.0), 1.0)
+    both = lambda x: (x["left"], x.get("right") or x["left"])  # noqa: E731
+    sides = [{**now, "cut": was["cut"] + (now["cut"] - was["cut"]) * k, "fill": was["fill"] + (now["fill"] - was["fill"]) * k}
+             for was, now in zip(both(before), both(t))]
+    return "__eased", list(templates) + [{**t, "id": "__eased", "left": sides[0], "right": sides[1]}]
+
+
 def make(c, points=False, templates=TEMPLATES):
     """The corridor's report, its warnings and its triangles by the references; Refused where it does not build."""
     b = pcmd.ALIGNED[c["alignment"]]
@@ -185,7 +202,17 @@ def make(c, points=False, templates=TEMPLATES):
         if t is None:
             raise Refused("unknown_road_template", f"“{r['template']}” kimlikli tip kesit projede yok.",
                           f"regions[{ri}].template")
-        got = cref.stations(b.els, [r["from"], r["to"]], c["tangent"], c["curve"], c.get("sag"), events)
+        # Docs/adr/0960: the slope transition from the region before, its end sampled.
+        span = None
+        if "transition" in r:
+            lt = r["transition"]
+            prev = c["regions"][ri - 1] if ri > 0 else None
+            if prev is None or abs(prev["to"] - r["from"]) > 1e-3 or not 0 < lt <= r["to"] - r["from"]:
+                raise bad(f"regions[{ri}].transition", f"{ri + 1}. bölgenin şev geçişi 0'dan uzun, bölgeden kısa olur "
+                                                         "ve önceki bölgenin bittiği yerde başlar.")
+            span = (r["from"], r["from"] + lt)
+        region_events = events + ([[span[1], "transition"]] if span else [])
+        got = cref.stations(b.els, [r["from"], r["to"]], c["tangent"], c["curve"], c.get("sag"), region_events)
         if "error" in got:
             if got["error"]["kind"] == "TooMany":
                 raise bad("tangent", f"Bu aralıklarla {cref.MAX_STATIONS}'den çok km çıkar; tangent ya da curve'ü büyütün.")
@@ -198,7 +225,8 @@ def make(c, points=False, templates=TEMPLATES):
         def cross_at(s):
             if s in built_at:
                 return built_at[s]
-            row = scmd.sections(fake, [s], templates)[0][0]
+            tid, tl = template_at(c, ri, s, templates)
+            row = scmd.sections({**fake, "template": tid}, [s], tl)[0][0]
             e, (x, y) = aref.place_at(b.els, mp.mpf(s))
             th = e.theta(mp.mpf(s) - e.station)
             sec = None
@@ -490,6 +518,15 @@ def edit_cases():
        failed("invalid_road_corridor", "1. bölgenin sonu başından en az 1 mm sonra olmalı.", "regions[0]"))
     no("Aksın dışına taşan bölge", {**base, "regions": [{"from": 500.0, "to": 900.0, "template": "tk-1"}]},
        failed("invalid_road_corridor", f"1. bölge aksın dışına taşıyor: aks 0 ile {L1:.3f} m arası.", "regions[0]"))
+    # Docs/adr/0960: a region's slope transition from the region before.
+    eased = [{"from": 0.0, "to": 200.0, "template": "tk-1"}, {"from": 200.0, "to": 400.0, "template": "tk-2", "transition": 40.0}]
+    ok("Şev geçişli bölge", {**base, "regions": eased}, START + [new("c-3", regions=eased)], "c-3")
+    no("İlk bölgede şev geçişi", {**base, "regions": [{**one[0], "transition": 20.0}]},
+       rulefail("şev geçişi ancak önceki bölgenin bittiği yerde başlayan bölgede olur", "regions[0].transition"))
+    no("Bölgeden uzun şev geçişi", {**base, "regions": [eased[0], {**eased[1], "transition": 250.0}]},
+       rulefail("şev geçişi 0'dan uzun, bölgeden kısa olur", "regions[1].transition"))
+    no("Boşluktan sonra şev geçişi", {**base, "regions": [{"from": 0.0, "to": 150.0, "template": "tk-1"}, eased[1]]},
+       rulefail("şev geçişi ancak önceki bölgenin bittiği yerde başlayan bölgede olur", "regions[1].transition"))
     no("Aksın dışındaki km", {**base, "stations": [900.0], "regions": one},
        failed("invalid_road_corridor", f"900 m aksın üstünde değil: aks 0 ile {L1:.3f} m arası.", "stations[0]"))
     no("Çok sık örnekleme", {**base, "tangent": 0.02, "regions": [{"from": 0.0, "to": 600.0, "template": "tk-1"}]},
@@ -575,6 +612,19 @@ def query_cases():
     fb = {"height": 1.0, "width": 1.5, "fall": 4.0}
     filled = [scmd.TK1, {**scmd.TK2, "left": {**scmd.TK2["left"], "fillBench": fb}, "right": {**scmd.TK2["right"], "fillBench": fb}}]
     q("Basamaklı dolgu şevli koridor", {"corridor": "c-1", "points": True}, START, templates=filled)
+    # Docs/adr/0960: at km 1+300 tk-1 (cut 1, fill 1.5) gives way to its twin with flatter slopes (cut 2, fill 3):
+    # without a transition the slopes jump there; over 40 m they go from the one to the other.
+    flatter = [scmd.TK1, scmd.TK2, {**scmd.TK1, "id": "tk-3", "name": "Tip 1 yatık şev",
+                                    "left": {**scmd.TK1["left"], "cut": 2.0, "fill": 3.0}}]
+    twin = [{"from": 0.0, "to": 300.0, "template": "tk-1"}, {"from": 300.0, "to": 600.0, "template": "tk-3"}]
+    q("Yatık şevli ikiz tip kesit: geçişsiz", {"corridor": "c-1", "points": True}, [with_(C1, regions=twin), C2],
+      templates=flatter)
+    q("Şev geçişli bölge", {"corridor": "c-1", "points": True},
+      [with_(C1, regions=[twin[0], {**twin[1], "transition": 40.0}]), C2], templates=flatter)
+    q("Uzun şev geçişi", {"corridor": "c-1"}, [with_(C1, regions=[twin[0], {**twin[1], "transition": 120.0}]), C2],
+      templates=flatter)
+    q("Farklı bileşenli tip kesite şev geçişi", {"corridor": "c-1"},
+      [with_(C1, regions=[C1["regions"][0], {**C1["regions"][1], "transition": 40.0}]), C2])
     q("Dar kurpta kesitler kesişir", {"corridor": "c-3"}, START + [folded])
     # docs/adr/0939: the vertical curves divided by their chord height, the sections between measured and refined.
     q("Düşey kurplar kiriş yüksekliğiyle bölünür", {"corridor": "c-1"},

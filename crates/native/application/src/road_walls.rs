@@ -105,7 +105,7 @@ pub(crate) fn read(doc: &Document, def: &RetainingWallDef) -> Result<Read, Stop>
     for s in crate::road_stakeout::stepped(def.from, def.to, def.step) {
         let none = || bad(format!("“{}” istinat duvarının km {}'sinde koridorun kesiti yok.", def.name, text(s)), "from");
         let ri = corridor.regions.iter().position(|r| s >= r.from - 1e-9 && s <= r.to + 1e-9).ok_or_else(none)?;
-        let (cross, terrain) = made.sampler.sample(&made.regions[ri].template, s).ok_or_else(none)?;
+        let (cross, terrain) = made.sampler.sample(&made.template_at(ri, s), s).ok_or_else(none)?;
         let section = cross.section.as_ref().ok_or_else(none)?;
         let hinge = if def.side == WallSide::Right { section.right.hinge } else { section.left.hinge };
         let ground = ground_at(&terrain, hinge[0]).ok_or_else(|| {

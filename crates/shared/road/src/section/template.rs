@@ -489,6 +489,15 @@ pub fn moments(section: &Section, ground: &[GroundPoint], strip: f64) -> (f64, f
     (qcut, qfill)
 }
 
+/// `to` with its sides' cut and fill slopes `t` of the way (0 to 1) from `from`'s (docs/adr/0960; ROAD-GRADE-03): a
+/// region's slope transition. The slopes are horizontal per one vertical and go linearly, as a batter from 2:1 to 5:1
+/// is written; the components, the ditch and the benches are `to`'s.
+pub fn slopes_between(from: &Template, to: &Template, t: f64) -> Template {
+    let t = t.clamp(0.0, 1.0);
+    let side = |a: &Side, b: &Side| Side { cut: a.cut + (b.cut - a.cut) * t, fill: a.fill + (b.fill - a.fill) * t, ..b.clone() };
+    Template { left: side(&from.left, &to.left), right: side(&from.right, &to.right) }
+}
+
 /// The section a template builds with its axis at `axis` on the terrain `ground` (offsets from left to right).
 pub fn build(template: &Template, axis: f64, ground: &[GroundPoint]) -> Result<Section, TemplateError> {
     judge(&template.left, false)?;

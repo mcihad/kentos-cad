@@ -104,7 +104,8 @@ pub struct Row {
     profile_points: bool,
     critical: bool,
     /// From, to and the template's id.
-    regions: Vec<(String, String, Option<String>)>,
+    /// Each region's start, end, template and slope transition (m, docs/adr/0960; empty: none).
+    regions: Vec<(String, String, Option<String>, String)>,
 }
 
 impl Row {
@@ -132,7 +133,11 @@ impl Row {
             stations: d.stations.iter().map(|s| trimmed(*s)).collect::<Vec<_>>().join("; "),
             profile_points: d.profile_points,
             critical: d.critical,
-            regions: d.regions.iter().map(|r| (trimmed(r.from), trimmed(r.to), Some(r.template.clone()))).collect(),
+            regions: d
+                .regions
+                .iter()
+                .map(|r| (trimmed(r.from), trimmed(r.to), Some(r.template.clone()), r.transition.map_or_else(String::new, trimmed)))
+                .collect(),
         }
     }
 
@@ -144,12 +149,13 @@ impl Row {
             stations.push(need(t, &format!("{}. km", i + 1))?);
         }
         let mut regions = Vec::new();
-        for (i, (a, b, t)) in self.regions.iter().enumerate() {
+        for (i, (a, b, t, l)) in self.regions.iter().enumerate() {
             let n = i + 1;
             regions.push(CorridorRegionDef {
                 from: need(a, &format!("{n}. bölgenin başı"))?,
                 to: need(b, &format!("{n}. bölgenin sonu"))?,
                 template: t.clone().ok_or(format!("{n}. bölgenin tip kesitini seçin."))?,
+                transition: number(l).map_err(|_| format!("{n}. bölgenin şev geçişi bir sayı olmalı."))?,
             });
         }
         if regions.is_empty() {
@@ -334,16 +340,14 @@ impl App {
             (true, _, None) => Some(Err("Korunan alanlar kaydedilmiş koridorla okunur; önce koridoru kaydedin.".into())),
             _ => None,
         };
-        // The preflight while shown: the corridor as saved (docs/adr/0956).
-        w.preflight = match (w.checking, w.kept.iter().find(|k| k.id == r.id)) {
-            (true, Some(_)) => Some(match number(&w.margin) {
+        // The preflight while shown: the corridor as typed (docs/adr/0956), so that a slope transition typed shows
+        // what it does to the seam before it is saved (docs/adr/0960).
+        w.preflight = match (w.checking, r.def()) {
+            (true, Ok(def)) => Some(match number(&w.margin) {
                 Err(()) => Err(format!("{MARGIN} bir sayı olmalı.")),
-                Ok(m) => kentos_native_application::road_corridors_preflight::preview(
-                    &doc.model,
-                    &kentos_commands::CorridorsPreflight { corridor: r.id.clone(), margin: m, tolerance: None },
-                ),
+                Ok(m) => kentos_native_application::road_corridors_preflight::preview_of(&doc.model, &def, m),
             }),
-            (true, None) => Some(Err("Ön denetim kaydedilmiş koridorla okunur; önce koridoru kaydedin.".into())),
+            (true, Err(e)) => Some(Err(e)),
             _ => None,
         };
         // The daylights while shown: the corridor as typed is built once more.
@@ -459,10 +463,10 @@ impl App {
             }
             Event::Region(j, k, t) => {
                 if let Some(x) = chosen_row(w).and_then(|r| r.regions.get_mut(j)) {
-                    if k == 0 {
-                        x.0 = t;
-                    } else {
-                        x.1 = t;
+                    match k {
+                        0 => x.0 = t,
+                        1 => x.1 = t,
+                        _ => x.3 = t,
                     }
                 }
                 w.line = Some(j);
@@ -479,7 +483,7 @@ impl App {
                 if let Some(r) = chosen_row(w) {
                     // A new region starts where the last ends; its end is the user's.
                     let from = r.regions.last().map(|x| x.1.clone()).unwrap_or_else(|| "0".into());
-                    r.regions.push((from, String::new(), first));
+                    r.regions.push((from, String::new(), first, String::new()));
                     let n = r.regions.len() - 1;
                     w.line = Some(n);
                 }
@@ -951,13 +955,15 @@ impl App {
                 road_dialog::Col { title: "Baş (m)", width: None, number: true },
                 road_dialog::Col { title: "Son (m)", width: None, number: true },
                 road_dialog::Col { title: "Tip kesit", width: None, number: false },
+                road_dialog::Col { title: "Şev geçişi (m)", width: None, number: true },
             ],
             regions.len(),
             move |j, k| {
-                let (a, b, t) = &regions[j];
+                let (a, b, t, l) = &regions[j];
                 match k {
                     0 => road_dialog::edit(a, true, move |v| msg(Event::Region(j, 0, v))),
                     1 => road_dialog::edit(b, true, move |v| msg(Event::Region(j, 1, v))),
+                    3 => road_dialog::edit(l, true, move |v| msg(Event::Region(j, 2, v))),
                     _ => {
                         let ids = tids.clone();
                         road_dialog::pick(names.clone(), t.as_ref().and_then(|t| tids.iter().position(|i| i == t)), move |i| {
@@ -975,7 +981,7 @@ impl App {
                 .spacing(8),
         );
         col = col.push(
-            label::caption("Aralıklar ve bölgeler projeden yazılır; KentOS öntanımlı sayı vermez. Bölgeler kesişmez, aralarında boşluk kalabilir.")
+            label::caption("Aralıklar ve bölgeler projeden yazılır; KentOS öntanımlı sayı vermez. Bölgeler kesişmez, aralarında boşluk kalabilir. Şev geçişi: bölgenin başından o kadar metre boyunca şevler önceki bölgeninkinden bu bölgeninkine geçer.")
                 .style(muted),
         );
         container(col).padding(iced::Padding::default().right(14)).into()

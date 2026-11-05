@@ -196,7 +196,8 @@ pub(crate) fn compute_on(
             for (ri, region) in made.regions.iter().enumerate() {
                 let pavement = pavements[ri].map(core_pavement);
                 let work = |s: f64| -> Option<Work> {
-                    let (cross, terrain) = made.sampler.sample(&region.template, s)?;
+                    let built = made.template_at(ri, s);
+                    let (cross, terrain) = made.sampler.sample(&built, s)?;
                     let sec = cross.section?;
                     let depth = depth_at(def, s);
                     let used = if topsoil { depth } else { 0.0 };
@@ -222,7 +223,7 @@ pub(crate) fn compute_on(
                     if let Some(p) = &pavement {
                         let lowered: Vec<_> =
                             terrain.iter().map(|g| kentos_road::section::GroundPoint { z: g.z.map(|z| z - used), ..*g }).collect();
-                        match pav::build(&made.sampler.template_at(&region.template, s), &sec, p, &lowered) {
+                        match pav::build(&made.sampler.template_at(&built, s), &sec, p, &lowered) {
                             Ok(built) => {
                                 for (k, a) in built.layers.iter().enumerate() {
                                     w.layers[layer_at[ri][k]] = Some(*a);
@@ -308,7 +309,7 @@ pub(crate) fn compute_on(
             }
         }
         VolumeMethod::EndArea | VolumeMethod::Prismoidal => {
-            for region in &made.regions {
+            for (ri, region) in made.regions.iter().enumerate() {
                 for w in region.crosses.windows(2) {
                     let (s0, s1) = (w[0].line.station, w[1].line.station);
                     let l = s1 - s0;
@@ -317,7 +318,7 @@ pub(crate) fn compute_on(
                             VolumeMethod::EndArea => Some((l * (a.cut + b.cut) / 2.0, l * (a.fill + b.fill) / 2.0)),
                             _ => made
                                 .sampler
-                                .cross(&region.template, (s0 + s1) / 2.0)
+                                .cross(&made.template_at(ri, (s0 + s1) / 2.0), (s0 + s1) / 2.0)
                                 .and_then(|c| c.section)
                                 .map(|m| (prismoidal(a.cut, m.cut, b.cut, l), prismoidal(a.fill, m.fill, b.fill, l))),
                         },

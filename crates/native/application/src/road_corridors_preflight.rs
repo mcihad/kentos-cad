@@ -54,6 +54,11 @@ fn bad(words: String, path: &str) -> Stop {
 pub(crate) fn answer(doc: &Document, input: &CorridorsPreflight) -> Result<(CorridorPreflight, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_corridors(), &input.corridor, "corridor")?;
+    check(doc, def, input)
+}
+
+/// The check of `def` (saved or as typed) with `input`'s margin and tolerance.
+fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPreflight) -> Result<(CorridorPreflight, Vec<CommandWarning>), Stop> {
     if input.margin.is_some_and(|m| !(m.is_finite() && (0.0..1.0).contains(&m))) {
         return Err(bad("istenen pay 0 ile 1 arası olur (1: hiç daralmayan).".into(), "margin"));
     }
@@ -244,7 +249,9 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsPreflight) -> Comm
     plan(cx, &input)
 }
 
-/// The check for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &CorridorsPreflight) -> Result<(CorridorPreflight, Vec<CommandWarning>), String> {
-    answer(doc, input).map_err(common::words)
+/// The check of a corridor as typed in the Koridor window (perhaps not saved): a slope transition typed shows what
+/// it does to the seam before it is written (docs/adr/0960).
+pub fn preview_of(doc: &Document, def: &kentos_commands::CorridorDef, margin: Option<f64>) -> Result<(CorridorPreflight, Vec<CommandWarning>), String> {
+    common::road_project(doc).map_err(common::words)?;
+    check(doc, def, &CorridorsPreflight { corridor: def.id.clone(), margin, tolerance: None }).map_err(common::words)
 }

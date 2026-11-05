@@ -102,9 +102,11 @@ def section_row(c, r, s):
         d = next(x for x in ccmd.SUPERS if x["id"] == sup)
         if ccmd.supcmd.build(d)[1]:
             sup = None
+    # Docs/adr/0960: within a slope transition, the template as the corridor eases it there.
+    tid, tl = ccmd.template_at(c, c["regions"].index(r), s, ccmd.TEMPLATES)
     fake = {"name": c["name"], "alignment": c["alignment"], "surface": c["surface"], "profile": c["profile"],
-            "template": r["template"], "superelevation": sup, "left": c["left"], "right": c["right"]}
-    return scmd.sections(fake, [s], ccmd.TEMPLATES)[0][0]
+            "template": tid, "superelevation": sup, "left": c["left"], "right": c["right"]}
+    return scmd.sections(fake, [s], tl)[0][0]
 
 
 def mid_areas(c, r, s):
@@ -123,7 +125,8 @@ def depth_at(v, s):
 
 def template_here(c, r, s):
     """The region's template definition and the template as built at station `s` (the corridor's superelevation)."""
-    t = next(x for x in ccmd.TEMPLATES if x["id"] == r["template"])
+    tid, tl = ccmd.template_at(c, c["regions"].index(r), s, ccmd.TEMPLATES)
+    t = next(x for x in tl if x["id"] == tid)
     plain = {"left": t["left"], "right": t.get("right") or t["left"]}
     sup = c.get("superelevation")
     if sup:
@@ -756,6 +759,13 @@ def query_cases():
     q("Prizmoidal, sıyırma ve diş kazısı", {"volume": "v-1"},
       [v(method="prismoidal", strip=strips[:1], bench={"slope": 2.0, "height": 0.6}), V2])
     q("Sıyırma yalnız bir aralıkta", {"volume": "v-1"}, [v(strip=[{"from": 150.0, "to": 250.0, "depth": 0.25}]), V2])
+    # Docs/adr/0960: the second region's slopes ease from the first's over 40 m; the middle sections and the worked
+    # sections are taken as the corridor eases them.
+    c_eased = {**ccmd.C1, "regions": [ccmd.C1["regions"][0], {**ccmd.C1["regions"][1], "transition": 40.0}]}
+    q("Şev geçişli koridor", {"volume": "v-1"}, START, [c_eased, ccmd.C2])
+    q("Şev geçişli koridor, prizmoidal", {"volume": "v-1"}, [v(method="prismoidal"), V2], [c_eased, ccmd.C2])
+    q("Şev geçişli koridor, sıyırma ve diş kazısı", {"volume": "v-1"},
+      [v(strip=[{"from": 0.0, "to": 600.0, "depth": 0.3}], bench={"slope": 3.0, "height": 0.5}), V2], [c_eased, ccmd.C2])
     q("Dik eşikte diş kazısı yok", {"volume": "v-1"}, [v(bench={"slope": 900.0, "height": 0.5}), V2])
     q("Devere bağlı koridorda sıyırma", {"volume": "v-2"}, [V1, {**V2, "method": "endArea", "strip": strips}])
     q("Onaylı ve değişmemiş: uyarı yok", {"volume": "v-1"}, [approved(V1, note="Uygulama projesi"), V2])

@@ -22,7 +22,7 @@ OUT = Path(__file__).resolve().parents[2] / "fixtures" / "road" / "v1" / "corrid
 P = al.pi
 SAME = 1e-3
 MAX_STATIONS = 20_000
-WHY = ["region", "geometry", "critical", "profile", "user", "curve", "interval", "vertical", "refine"]
+WHY = ["region", "geometry", "critical", "profile", "user", "curve", "interval", "vertical", "refine", "transition"]
 
 
 # ---- regions ------------------------------------------------------------------------------------------------------

@@ -340,6 +340,16 @@ def cases():
     # Docs/adr/0958: the first template's left cut slope benched; the seam names the benches only before it.
     benched = [{**scmd.TK1, "left": {**scmd.TK1["left"], "bench": {"height": 2.0, "width": 2.5, "fall": 5.0}}}, scmd.TK2]
     ok("Basamaklı yarma şevinin dikişi", {"corridor": "c-1"}, templates=benched)
+    # Docs/adr/0960: tk-1 and its twin with flatter slopes meet at km 1+300 only with a slope transition; tk-1 and tk-2,
+    # whose components differ, do not meet with one either.
+    flatter = [scmd.TK1, scmd.TK2, {**scmd.TK1, "id": "tk-3", "name": "Tip 1 yatık şev",
+                                    "left": {**scmd.TK1["left"], "cut": 2.0, "fill": 3.0}}]
+    twin = [{"from": 0.0, "to": 300.0, "template": "tk-1"}, {"from": 300.0, "to": 600.0, "template": "tk-3"}]
+    ok("Yatık şevli ikize geçişsiz dikiş", {"corridor": "c-1"}, [{**C1, "regions": twin}, C2], templates=flatter)
+    ok("Yatık şevli ikize şev geçişli dikiş", {"corridor": "c-1"},
+       [{**C1, "regions": [twin[0], {**twin[1], "transition": 40.0}]}, C2], templates=flatter)
+    ok("Farklı bileşenli tip kesite şev geçişli dikiş", {"corridor": "c-1"},
+       [{**C1, "regions": [C1["regions"][0], {**C1["regions"][1], "transition": 40.0}]}, C2])
     ok("Dar kurp: katlanma ve üst üste binme", {"corridor": "c-3"}, ccmd.START + [tight])
     ok("Dar kurp, yüzde 50 pay", {"corridor": "c-3", "margin": 0.5}, ccmd.START + [tight])
     ok("Dar kurp, dar şerit", {"corridor": "c-3"}, ccmd.START + [{**tight, "left": 3.0, "right": 3.0}])

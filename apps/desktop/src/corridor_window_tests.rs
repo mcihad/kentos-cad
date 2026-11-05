@@ -507,3 +507,72 @@ fn screens_preflight() {
         println!("{}", file.display());
     }
 }
+
+/// Şev geçişi (Y54, docs/adr/0960; ROAD-GRADE-03): tk-1 gives way to its twin with flatter slopes at km 1+300; the
+/// preflight finds the seam apart until 40 m is typed as the second region's slope transition, then the two meet;
+/// Kaydet writes it with `road.corridors.edit`.
+#[test]
+fn a_slope_transition_closes_the_seam_and_is_written() {
+    let mut app = preflight_app("Yatık şevli ikize geçişsiz dikiş");
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Check(true));
+    let seam = |app: &App| {
+        let w = app.corridor_window.as_ref().expect("open");
+        let Some(Ok((c, _))) = &w.preflight else { panic!("the check reads: {:?}", w.preflight) };
+        c.seams[0].clone()
+    };
+    let before = seam(&app);
+    assert!(!before.meets && before.shift > 2.0, "{before:?}");
+    send(&mut app, W::Region(1, 2, "40".into()));
+    let after = seam(&app);
+    assert!(after.meets && after.shift < 1e-9 && after.step < 1e-9, "{after:?}");
+    send(&mut app, W::Save);
+    assert_eq!(model(&mut app).road_corridors()[0].regions[1].transition, Some(40.0));
+    // A transition on the first region is refused and the window says why.
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Region(0, 2, "10".into()));
+    send(&mut app, W::Save);
+    assert_eq!(model(&mut app).road_corridors()[0].regions[0].transition, None, "not written");
+}
+
+/// The slope transition typed and checked: the seam apart and met, the regions' table, light and wide, dark and
+/// narrow. `.run/gui-evidence/yol-y54/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib corridor_window_tests::screens_transition -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_transition() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y54");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = preflight_app("Yatık şevli ikize geçişsiz dikiş");
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("corridor.editor"));
+        send(&mut app, W::Choose(0));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y54-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        send(&mut app, W::Check(true));
+        shot(&mut app, "dikis-gecissiz");
+        send(&mut app, W::Region(1, 2, "40".into()));
+        shot(&mut app, "dikis-gecisli");
+        send(&mut app, W::Check(false));
+        shot(&mut app, "bolgeler");
+    }
+}

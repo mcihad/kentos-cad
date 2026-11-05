@@ -1030,7 +1030,9 @@ impl SuperelevationPivot {
     }
 }
 
-/// A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template.
+/// A corridor's region (docs/adr/0905 §1): the alignment's stations it spans (m) and its template; and an optional
+/// slope transition (docs/adr/0960, KCAD schema 176): over its first `transition` m the sides' cut and fill slopes go
+/// linearly from the region before's template's to its own. The region before ends where it starts.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1042,6 +1044,10 @@ pub struct CorridorRegionDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: f64,
     pub template: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub transition: Option<f64>,
 }
 
 /// A corridor (docs/adr/0905): on an alignment of its own PIs (its revision held), its profile's elevations, the
@@ -3363,6 +3369,14 @@ fn corridors_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
             if road.templates.iter().all(|t| t.id != r.template) {
                 return fail(at(&format!("regions[{j}].template")), "bölgenin tip kesiti projede yok");
+            }
+            if let Some(l) = r.transition {
+                if !(l.is_finite() && l > 0.0 && l <= r.to - r.from) {
+                    return fail(at(&format!("regions[{j}].transition")), "şev geçişi 0'dan uzun, bölgeden kısa olur");
+                }
+                if j == 0 || (c.regions[j - 1].to - r.from).abs() > 1e-3 {
+                    return fail(at(&format!("regions[{j}].transition")), "şev geçişi ancak önceki bölgenin bittiği yerde başlayan bölgede olur");
+                }
             }
         }
     }

@@ -2107,7 +2107,11 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
-    // Schema 175 (docs/adr/0958): a template side's cut slope benches.
+    // Schema 176 (docs/adr/0960): a corridor region's slope transition.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_slope_transitions) {
+        return crate::SCHEMA_WITH_SLOPE_TRANSITIONS;
+    }
+    // Schema 175 (docs/adr/0958): a template side's cut and fill slope benches.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cut_benches) {
         return crate::SCHEMA_WITH_CUT_BENCHES;
     }
