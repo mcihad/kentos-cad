@@ -108946,6 +108946,7 @@
       "type": "string"
     },
     "DrawingStandard": {
+      "additionalProperties": false,
       "description": "A drawing standard.",
       "properties": {
         "byLayer": {
@@ -159531,6 +159532,7 @@
       "type": "string"
     },
     "StandardDimensionStyle": {
+      "additionalProperties": false,
       "description": "A dimension style the standard asks for.",
       "properties": {
         "height": {
@@ -159667,6 +159669,7 @@
       ]
     },
     "StandardLayer": {
+      "additionalProperties": false,
       "description": "A layer the standard defines.",
       "properties": {
         "color": {
@@ -159710,6 +159713,7 @@
       "type": "object"
     },
     "StandardTextStyle": {
+      "additionalProperties": false,
       "description": "A text style the standard asks for.",
       "properties": {
         "font": {

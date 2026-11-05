@@ -37,7 +37,7 @@ fn is_zero(n: &u32) -> bool {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardLayer {
     /// Its name; the drawing's layer of this name (letters folded as Turkish writes them) is it.
@@ -67,7 +67,7 @@ pub struct StandardLayer {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardTextStyle {
     pub name: String,
@@ -83,7 +83,7 @@ pub struct StandardTextStyle {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardDimensionStyle {
     pub name: String,
@@ -96,7 +96,7 @@ pub struct StandardDimensionStyle {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DrawingStandard {
     pub name: String,
@@ -590,5 +590,25 @@ mod tests {
             .remove("unsupportedRule");
         value["id"] = " ".into();
         assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+    }
+
+    #[test]
+    fn direct_command_input_does_not_ignore_unknown_standard_rules() {
+        let standard = built_in_standard("mimari-ofis").unwrap();
+        let valid = serde_json::to_value(standard).unwrap();
+        for path in ["root", "layer", "text", "dimension"] {
+            let mut value = valid.clone();
+            let target = match path {
+                "root" => &mut value,
+                "layer" => &mut value["layers"][0],
+                "text" => &mut value["textStyles"][0],
+                _ => &mut value["dimensionStyles"][0],
+            };
+            target["unknownRule"] = serde_json::json!(true);
+            assert!(
+                serde_json::from_value::<DrawingStandard>(value).is_err(),
+                "{path}"
+            );
+        }
     }
 }

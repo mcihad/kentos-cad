@@ -9,6 +9,38 @@ use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, standards};
 use serde_json::json;
 
+#[test]
+fn unknown_standard_rules_are_refused_by_command_registry_without_mutation() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let snapshot = DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap();
+    let mut doc = Document::from_snapshot(snapshot).unwrap();
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let standard = json!({"name":"Ofis", "layers":[{
+        "name":"A-DUVAR", "color":"ink", "lineType":"continuous",
+        "lineWeight":0.5, "unsupportedRule":true
+    }]});
+    for command in ["cad.standards.check", "cad.standards.apply"] {
+        for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
+            let error = registry::run(
+                &mut ExecutionContext::new(&mut doc),
+                command,
+                op,
+                json!({"standard": standard}),
+            )
+            .unwrap_err();
+            assert_eq!(error.code, "invalid_input", "{command}: {error:?}");
+            assert_eq!(doc.to_snapshot_v2(), before);
+            assert_eq!(doc.undo_labels(), undo);
+        }
+    }
+}
+
 fn drawing() -> Document {
     let old = ["duvar", "kapi", "aks", "mobilya", "A-PLAN"];
     let layers: Vec<_> = (0..500u32)

@@ -1850,6 +1850,10 @@ Otomatik testler ve gerçek uygulamada dosya seçimiyle kimlik/revizyon gösteri
 doğrulandı. Bu ilk biçim yalnız mevcut standart kurallarını taşır; seçimi
 projeye kaydetmez ve blok, tarama, şablon veya palet kaynaklarını paketlemez.
 Dolayısıyla 12. maddenin kalıcı, kapsamlı ofis paketi kabulü açık kalır.
+Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
+komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
+tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve
+ilgili otomatik testler güncellendi.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
