@@ -15916,7 +15916,7 @@
       "id": "cad.xrefs.edit",
       "version": 1,
       "title": "Dış başvuru",
-      "summary": "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad ya da .pdf yolu; page PDF'in sayfası, 1'den, yoksa 1; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır); underlay PDF altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome tek renk, plot false yazdırılmaz). PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur, katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur, kanıtlanmış CAD geometrisi değildir (underlay_measure). Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.",
+      "summary": "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad ya da .pdf yolu; page PDF'in sayfası, 1'den, yoksa 1; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır); underlay PDF altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome tek renk, plot false yazdırılmaz); resetLayers bu çizimde dış başvurunun katmanlarına yapılan değişiklikleri (renk, çizgi tipi, kalınlık tek geri alma adımı; görünürlük, kilit, dondurma ve yazdırma katman bayrağı) kaynağınkine döndürür, katman durumları (paftaların kendi görünüşü) kalır. diff: true ile reload ve repath (planı önizlemedir) değişeni söyler: parçalar yerel kimlikleriyle same, changed, added, removed; getirdiği tanımlardan gelen ve giden; parçalara bağlı ölçü, kılavuz, tarama, yazı alanı ve tablo hücreleri followers'ta (follows, breaks, unties); kopan bağ ties_break uyarısıyla söylenir. Kaynağın kalıcı kimliğini tanımadığı nesne içeriğiyle bulunur; kaynakta silinen parçanın yeri ve yerel kimliği başka nesneye geçmez. PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur, katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur, kanıtlanmış CAD geometrisi değildir (underlay_measure). Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -15932,8 +15932,12 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.xrefs.edit` v1 (“Dış başvuru”): one undo step.\n\nRefusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `pdf_page_not_found`, `not_an_underlay`,\n`invalid_underlay`, `xref_cycle`, `xref_empty`, `invalid_revision`, `revision_conflict`. Warnings:\n`objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take).",
+        "description": "Input of `cad.xrefs.edit` v1 (“Dış başvuru”): one undo step.\n\nRefusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `pdf_page_not_found`, `not_an_underlay`,\n`invalid_underlay`, `xref_cycle`, `xref_empty`, `invalid_revision`, `revision_conflict`. Warnings:\n`objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take),\n`ties_break` (a reload or repath with `diff`: ties into the reference's pieces that will break, docs/adr/1060 §4).",
         "properties": {
+          "diff": {
+            "description": "Whether a reload or a repath says what it changes (`diff`, docs/adr/1060 §4): the pieces kept, changed, new\nand gone, and the objects tied into them that follow or break. A plan with it is the preview.",
+            "type": "boolean"
+          },
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one: a reference to it (or through it) is a cycle.",
             "type": [
@@ -15973,6 +15977,17 @@
             ],
             "description": "Its definition, by id (none once detached or bound)."
           },
+          "diff": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/XrefDiff"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`reload` and `repath` with `diff`: what changes."
+          },
           "insert": {
             "description": "`attach`: the insert placed, by persistent id.",
             "type": [
@@ -16025,6 +16040,13 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "reset": {
+            "description": "`resetLayers`: the layers and groups whose look the source's replaced, by name, in the tree's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -16055,6 +16077,17 @@
             ],
             "description": "Its definition, by id (none once detached or bound)."
           },
+          "diff": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/XrefDiff"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`reload` and `repath` with `diff`: what changes."
+          },
           "insert": {
             "description": "`attach`: the insert placed, by persistent id.",
             "type": [
@@ -16107,6 +16140,13 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "reset": {
+            "description": "`resetLayers`: the layers and groups whose look the source's replaced, by name, in the tree's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -16146,7 +16186,8 @@
         "warnings": [
           "objects_left_out",
           "layer_hidden",
-          "pdf_left_out"
+          "pdf_left_out",
+          "ties_break"
         ]
       },
       "examples": [
@@ -16168,6 +16209,37 @@
               "name": "plan"
             }
           }
+        },
+        {
+          "title": "Yeniden yüklemenin farkı (plan ile önizleme)",
+          "input": {
+            "diff": true,
+            "drawing": "/proje/ofis.kcad",
+            "operation": {
+              "kind": "reload",
+              "name": "plan"
+            }
+          }
+        },
+        {
+          "title": "Taşınan kaynağı içerikle bulunan adaya bağla",
+          "input": {
+            "diff": true,
+            "operation": {
+              "kind": "repath",
+              "name": "plan",
+              "path": "/arsiv/plan-tasindi.kcad"
+            }
+          }
+        },
+        {
+          "title": "Katmanları kaynağa döndür",
+          "input": {
+            "operation": {
+              "kind": "resetLayers",
+              "name": "plan"
+            }
+          }
         }
       ]
     },
@@ -16175,7 +16247,7 @@
       "id": "cad.xrefs.list",
       "version": 1,
       "title": "Dış başvurular",
-      "summary": "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir.",
+      "summary": "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir. review: true kaynak ağını inceler: kullanılan revizyon (digest, değiştiyse dosyanınki current), ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın kendisi, cached kaynak yok ya da başka revizyon, son yüklenen kopya; none boşaltılmış), getirdikleri (brings), katmanlarını adlandıran katman durumları (layerStates) ve bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun, göreli yolun ve çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512 dosya, dosya başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış ya da yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -16203,6 +16275,10 @@
               "string",
               "null"
             ]
+          },
+          "review": {
+            "description": "Whether to review each reference (docs/adr/1060 §1): its revision as used, its depth in the network, what the\ndrawing shows of it, the references it brought, the layer states naming its layers and, for one missing or\nchanged, the files in the allowed places that may be it (`candidates`).",
+            "type": "boolean"
           }
         },
         "title": "XrefsList",
@@ -16269,6 +16345,14 @@
           "input": {
             "affected": true,
             "drawing": "/proje/ofis.kcad"
+          }
+        },
+        {
+          "title": "Kaynak ağının incelemesi ve taşınan kaynağın adayları",
+          "input": {
+            "affected": true,
+            "drawing": "/proje/ofis.kcad",
+            "review": true
           }
         }
       ]
@@ -95840,6 +95924,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar)."
+    },
+    {
+      "code": "ties_break",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yeniden yükleme dış başvurunun parçalarına bağlı bazı ölçü, kılavuz, tarama ya da alan bağlarını koparıyor; iletisi kaçını söyler."
     },
     {
       "code": "partial_scope",
@@ -182141,11 +182231,223 @@
         }
       ]
     },
+    "XrefCandidate": {
+      "description": "A file that may be a reference's source (docs/adr/1060 §2): nothing is bound until Yolu değiştir is run with it.",
+      "properties": {
+        "digest": {
+          "description": "Its SHA-256.",
+          "type": "string"
+        },
+        "match": {
+          "$ref": "#/$defs/XrefMatch"
+        },
+        "path": {
+          "description": "Its absolute path.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "match",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "XrefContent": {
+      "description": "What the drawing shows of a reference (docs/adr/1060 §1).",
+      "oneOf": [
+        {
+          "const": "source",
+          "description": "Its file's content: the file is there and the same.",
+          "type": "string"
+        },
+        {
+          "const": "cached",
+          "description": "The content as last loaded, kept in the drawing: its file is not found or is another revision now.",
+          "type": "string"
+        },
+        {
+          "const": "none",
+          "description": "Nothing: unloaded.",
+          "type": "string"
+        }
+      ]
+    },
+    "XrefDiff": {
+      "description": "What a reload or a repath changes in the reference's definition (docs/adr/1060 §4): its pieces by their local ids\n(a piece is the same when its id and content are), and what follows them.",
+      "properties": {
+        "added": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "changed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "followers": {
+          "description": "The drawing's objects tied into its pieces that the step changes, in the drawing's order.",
+          "items": {
+            "$ref": "#/$defs/XrefFollower"
+          },
+          "type": "array"
+        },
+        "nestedAdded": {
+          "description": "The definitions it brings that it did not before, by name.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "nestedRemoved": {
+          "description": "The definitions it brought and no longer brings, by name.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "removed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "same": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "same",
+        "changed",
+        "added",
+        "removed"
+      ],
+      "type": "object"
+    },
+    "XrefFollowEffect": {
+      "description": "What a reload does to an object tied into the reference's pieces (docs/adr/1060 §4).",
+      "oneOf": [
+        {
+          "const": "follows",
+          "description": "It follows its piece to where it is now (or its value changes).",
+          "type": "string"
+        },
+        {
+          "const": "breaks",
+          "description": "A tie of it breaks: its piece is gone or has no such place; it keeps where it was and says why.",
+          "type": "string"
+        },
+        {
+          "const": "unties",
+          "description": "An associative hatch lets its boundary go and stays where it is.",
+          "type": "string"
+        }
+      ]
+    },
+    "XrefFollower": {
+      "description": "An object of the drawing a reload or a repath changes through its ties.",
+      "properties": {
+        "effect": {
+          "$ref": "#/$defs/XrefFollowEffect"
+        },
+        "kind": {
+          "$ref": "#/$defs/XrefFollowerKind"
+        },
+        "uid": {
+          "description": "Its lasting id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "kind",
+        "effect"
+      ],
+      "type": "object"
+    },
+    "XrefFollowerKind": {
+      "description": "What follows a reference's piece (docs/adr/1060 §4).",
+      "oneOf": [
+        {
+          "enum": [
+            "dimension",
+            "leader",
+            "hatch"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "text",
+          "description": "A text whose field reads a piece.",
+          "type": "string"
+        },
+        {
+          "const": "table",
+          "description": "A table whose cell reads a piece.",
+          "type": "string"
+        }
+      ]
+    },
     "XrefInfo": {
       "description": "A reference as `cad.xrefs.list` lists it.",
       "properties": {
         "block": {
           "$ref": "#/$defs/BlockId"
+        },
+        "brings": {
+          "description": "`review`: the references it brought, by name, in the drawing's block order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "candidates": {
+          "description": "`review`, one missing or changed: the files that may be it, those of the same content first.",
+          "items": {
+            "$ref": "#/$defs/XrefCandidate"
+          },
+          "type": "array"
+        },
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XrefContent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "`review`: what the drawing shows of it."
+        },
+        "current": {
+          "description": "`review`: its file's SHA-256 now, when it is another revision (`changed`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "depth": {
+          "description": "`review`: how deep in the network it is: 0 for one the drawing attached, 1 for one another brought, and so on.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "digest": {
+          "description": "`review`: the SHA-256 of the content as last loaded (the revision the drawing uses).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "group": {
           "description": "Its layer group's name.",
@@ -182162,6 +182464,13 @@
         },
         "kind": {
           "$ref": "#/$defs/XrefKind"
+        },
+        "layerStates": {
+          "description": "`review`: the project's layer states that name its layers (a sheet's or a view's own look of them), by name.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "name": {
           "type": "string"
@@ -182258,6 +182567,21 @@
         "overlay"
       ],
       "type": "string"
+    },
+    "XrefMatch": {
+      "description": "How a candidate file matches a reference (docs/adr/1060 §2).",
+      "oneOf": [
+        {
+          "const": "content",
+          "description": "Its SHA-256 is the one last loaded: the same bytes, moved or renamed.",
+          "type": "string"
+        },
+        {
+          "const": "name",
+          "description": "The same file name, other bytes: another drawing, or another revision of it, to be reviewed before it is bound.",
+          "type": "string"
+        }
+      ]
     },
     "XrefSource": {
       "additionalProperties": false,
@@ -182564,6 +182888,23 @@
                 "boolean",
                 "null"
               ]
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Katmanları kaynağa döndür (docs/adr/1060 §5): the drawing's changes to the reference's layers (their look,\nshown, locked, frozen, printed) let go, each layer as its source has it; one undo step for the looks. The\nproject's layer states (a sheet's or a view's own) stay.",
+          "properties": {
+            "kind": {
+              "const": "resetLayers",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
             }
           },
           "required": [

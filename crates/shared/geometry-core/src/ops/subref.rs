@@ -1345,10 +1345,13 @@ pub fn follow_path(
     let Some(was) = piece(before.0, before.1, path) else {
         return (Followed::Broken(Reason::NoSuchPlace), path.to_vec());
     };
-    let moved = before
+    // A piece its local id no longer names is gone: its place, now another object's, is not taken (docs/adr/1060 §3).
+    let Some(moved) = before
         .0
         .path_in(&before.1.shape, blocks_after, &after.shape, path)
-        .unwrap_or_else(|| path.to_vec());
+    else {
+        return (Followed::Broken(Reason::PieceGone), path.to_vec());
+    };
     let Some(now) = piece(blocks_after, after, &moved) else {
         return (Followed::Broken(Reason::PieceGone), path.to_vec());
     };

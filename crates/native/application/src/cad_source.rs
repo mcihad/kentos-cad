@@ -65,12 +65,30 @@ pub fn drawing(bytes: &[u8], path: &Path) -> Result<DocumentSnapshotV2, String> 
     let mut result = doc.to_snapshot_v2();
     // Handles are scoped to one xref definition. They stay stable on reload/repath;
     // the enclosing block identity distinguishes two drawings using equal handles.
+    // An object without a handle is known by its content and its turn among equal
+    // ones, never by its place in the file: a removed object before it would hand
+    // its place, and the ties into it, to another (docs/adr/1060 §3).
+    let mut seen: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    let contents: Vec<String> = result
+        .entities
+        .iter()
+        .map(|e| {
+            let json = serde_json::to_value(e)
+                .map(|v| kentos_domain::xref::content_of(&v).to_string())
+                .unwrap_or_default();
+            let key = kentos_commands::encoding::sha256_hex(json.as_bytes());
+            let turn = seen.entry(key.clone()).or_insert(0);
+            *turn += 1;
+            format!("content:{key}#{turn}")
+        })
+        .collect();
     for (i, stored) in result.uids.iter_mut().enumerate() {
         let source = read
             .source_handles
             .get(i)
             .and_then(|h| h.as_deref())
             .map(str::to_owned)
+            .or_else(|| contents.get(i).cloned())
             .unwrap_or_else(|| format!("index:{i}"));
         let hash =
             kentos_commands::encoding::sha256_hex(format!("kentos-cad-xref:{source}").as_bytes());

@@ -165,9 +165,15 @@ def cases():
     underlay["blocks"][1]["xref"] = {"path": "/proje/plan.pdf", "digest": "cd" * 32, "page": 1,
                                      "objects": ["0192f5a1-5555-7000-8000-000000000011",
                                                  "0192f5a1-5555-7000-8000-000000000012"]}
+    # ADR 1060 §7: how much drawing one point of paper is on it, 25.4/72 mm times the insert's larger scale (2 here),
+    # three decimals, a comma for the point.
+    point_mm = f"{25.4 / 72 * max(abs(INSERT['scale']), abs(INSERT.get('yScale', INSERT['scale']))):.3f}".replace(".", ",")
+    assert point_mm == "0,706", point_mm
     paper = {"code": "underlay_measure", "path": "snaps",
              "message": "1 kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), "
-                        "kanıtlanmış CAD geometrisi değildir."}
+                        f"kanıtlanmış CAD geometrisi değildir. Bu altlıkta kâğıdın 1 pt'si çizimde {point_mm} mm: PDF'in "
+                        "yuvarlaması ve baskı hatası bu ölçekle büyür, kaynak çizimin ölçüsünden fark buradan gelir. Kesin "
+                        "ölçü için kaynağı dış başvuru olarak bağlayın."}
     out.append({**case("PDF altlığının çizgisindeki kenet söylenir",
                        step({"at": at(E0 + 82.1, N0 + 4.1), "aperture": 0.5, "kinds": ["endpoint"]},
                             {**done(snap_in("endpoint", E0 + 82, N0 + 4, 7)), "warnings": [paper]}),

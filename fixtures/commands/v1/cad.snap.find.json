@@ -978,7 +978,7 @@
        {
         "code": "underlay_measure",
         "path": "snaps",
-        "message": "1 kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir."
+        "message": "1 kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir. Bu altlıkta kâğıdın 1 pt'si çizimde 0,706 mm: PDF'in yuvarlaması ve baskı hatası bu ölçekle büyür, kaynak çizimin ölçüsünden fark buradan gelir. Kesin ölçü için kaynağı dış başvuru olarak bağlayın."
        }
       ]
      },

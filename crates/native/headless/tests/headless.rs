@@ -47,6 +47,8 @@ mod own_file;
 
 #[path = "headless/package_cases.rs"]
 mod package_cases;
+#[path = "headless/xref_network.rs"]
+mod xref_network;
 
 #[path = "headless/geoparquet.rs"]
 mod geoparquet;

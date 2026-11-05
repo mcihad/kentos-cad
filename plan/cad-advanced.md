@@ -2261,6 +2261,19 @@ doğru olmayan dosyayı almadı. Doğru dosya ikinci arama klasörüne
 konunca `Yüklü · arama yolundan bulundu` durumu görüntülendi. İki
 durumun ekran görüntüleri repo dışında tutuldu.
 
+**Ağ, kimlik, önizleme ve paket (5 Kasım 2026, [ADR 1060](../docs/adr/1060-xref-network-review-identity-and-package.md)):**
+`cad.xrefs.list` `review` ile kaynak ağını tek görünümde verir: kullanılan revizyon, derinlik (iç içe zincir artık
+düzleşmez), çizimin gösterdiği (kaynak / son yüklenen kopya), getirdikleri, katmanlarını adlandıran katman durumları
+ve taşınan kaynağın adayları (önce aynı içerik, sonra aynı ad; kendiliğinden bağlanmaz). Yeniden yükle ve Yolu
+değiştir önce `diff` ile önizlenir: parça farkı ve bağlı ölçü/kılavuz/tarama/alan izler mi kopar mı (`ties_break`).
+Kaynakta silinen parçanın bağı aynı sıradaki nesneye geçmez (`piece_gone`); kimliği bilinmeyen kaynak nesneleri
+(PDF, v1, tutamaksız DXF) içerikle eşlenir. `resetLayers` çizim override'ını kaynağa döndürür, katman durumlarına
+dokunmaz. Bulma kuralı liste, paket ve “Kaynağı aç”ta aynıdır, yedekler özetle doğrulanır; başka dizinde açılan
+paket iç içe kaynaklarını `veri/` içinde bulur. PDF ölçü uyarısı kâğıt–çizim katsayısını söyler. Kabul
+`headless/tests/headless/xref_network.rs`'te kanıtlı; masaüstü ağ ve önizleme penceresi 1100×650/1440×900'de
+görüntülendi. Açık: pafta nesnesinin kendi katman override'ı (KentOS'ta katman durumu ve görünüş tarifi), paketin
+stil/desen ayrıntı raporu. Madde `[~]`.
+
 ### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [x]
 
 **Öncelik:** P1. **Kod:** [C24], [C22], [C25].

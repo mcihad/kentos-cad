@@ -7,10 +7,16 @@ import type { XrefsOperation } from "./XrefsOperation";
  * Refusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,
  * `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `pdf_page_not_found`, `not_an_underlay`,
  * `invalid_underlay`, `xref_cycle`, `xref_empty`, `invalid_revision`, `revision_conflict`. Warnings:
- * `objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take).
+ * `objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take),
+ * `ties_break` (a reload or repath with `diff`: ties into the reference's pieces that will break, docs/adr/1060 §4).
  */
 export type XrefsEdit = { operation: XrefsOperation, 
 /**
  * The open drawing's own file, an absolute path, when it has one: a reference to it (or through it) is a cycle.
  */
-drawing?: string, expectedRevision?: string, };
+drawing?: string, expectedRevision?: string, 
+/**
+ * Whether a reload or a repath says what it changes (`diff`, docs/adr/1060 §4): the pieces kept, changed, new
+ * and gone, and the objects tied into them that follow or break. A plan with it is the preview.
+ */
+diff?: boolean, };

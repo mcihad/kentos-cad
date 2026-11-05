@@ -578,8 +578,11 @@ def path_in(defs_b, ins_b, defs_a, ins_a, path):
         e = old["entities"][i]
         j = i
         if "id" in e and once(old["entities"], e["id"]) == i:
-            k = once(new["entities"], e["id"])
-            j = i if k is None else k
+            hits = [k for k, n in enumerate(new["entities"]) if n.get("id") == e["id"]]
+            if not hits:
+                # Its id gone from the new definition, the object is gone; its place is another's (ADR 1060 §3).
+                return None
+            j = hits[0] if len(hits) == 1 else i
         if j >= len(new["entities"]):
             return None
         out.append(j)
@@ -595,7 +598,9 @@ def follow_in(pl, path, defs_b, ins_b, defs_a, ins_a):
     pb = piece(defs_b, ins_b, path)
     if pb is None:
         return {"broken": "no_such_place"}
-    moved = path_in(defs_b, ins_b, defs_a, ins_a, path) or path
+    moved = path_in(defs_b, ins_b, defs_a, ins_a, path)
+    if moved is None:
+        return {"broken": "piece_gone"}
     pa = piece(defs_a, ins_a, moved)
     if pa is None:
         return {"broken": "piece_gone"}
@@ -958,6 +963,10 @@ DOOR_TWICE = dict(DOOR, entities=[dict(e, id=1) for e in DOOR["entities"]])
 DEFS_IDS = dict(DEFS, kapi=DOOR_IDS)
 DEFS_PUT_BEFORE = dict(DEFS, kapi=DOOR_PUT_BEFORE)
 DEFS_TWICE = dict(DEFS, kapi=DOOR_TWICE)
+# The wing (id 2) gone and another polyline (id 9) in its place (ADR 1060 §3): a reference's source that lost an object.
+DEFS_REPLACED = dict(DEFS, kapi=dict(DOOR, entities=[DOOR_IDS["entities"][0],
+                                                     {"kind": "polyline", "id": 9, "pts": pts((0, 0), (0, 2), (2, 2))},
+                                                     DOOR_IDS["entities"][2]]))
 DEFS_TWICE_PUT = dict(DEFS, kapi=dict(DOOR, entities=[{"kind": "line", "id": 9, "a": v(0, -0.2), "b": v(1, -0.2)}]
                                        + DOOR_TWICE["entities"]))
 
@@ -1001,6 +1010,8 @@ PIECE_FOLLOW_CASES = [
      DEFS_IDS, ROOM_IN, DEFS_PUT_BEFORE, ROOM_IN),
     ("Yerel kimlikleri tek olmayan kapı: yol yerinde kalır, önüne giren nesneyi anar", [1, 0], place("end"),
      DEFS_TWICE, ROOM_IN, DEFS_TWICE_PUT, ROOM_IN),
+    ("Kanadı silinip yerine aynı türde başka nesne gelen kapı: kimliği yok, yeri başkasına geçmez", [1, 1],
+     place("vertex", 0, 0, 1), DEFS_IDS, ROOM_IN, DEFS_REPLACED, ROOM_IN),
 ]
 
 PIECE_SNAP_CASES = [

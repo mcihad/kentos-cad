@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-ADV-14 / ADR 1060: Dış başvurular penceresinin inceleme, aday ve önizleme kartı; `resetLayers`; subref'in
+  `piece_gone` kuralının web oynatıcısı (`fixtures/subref/v1`) ve WASM yeniden derlemesi (TS türleri üretildi).
 - CAD-ADV-15 / ADR 1000: `.kcad` şema 180 `settings.reviewNotes`, `cad.review.notes.edit/list` ve
   `cad.drawing.take`. Web'e dönüldüğünde codec/kolon aktarımı, İnceleme notları paneli, eskime gösterimi ve
   bölünmüş revizyonun Farkları al tablosu aynı komutlara bağlanmalı; web paketinin şema 180'i okuduğu varsayılmamalı.

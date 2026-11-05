@@ -305,6 +305,7 @@ impl App {
             let input = XrefsList {
                 drawing: drawing.clone(),
                 affected: true,
+                review: false,
             };
             match kentos_native_application::xrefs_list::plan(
                 &kentos_native_application::ExecutionContext::new(&mut doc.model.clone()),
@@ -360,13 +361,25 @@ impl App {
                     .as_ref()
                     .map(|_| self.xrefs_state())
                     .unwrap_or_default();
-                for name in names {
-                    if listed
+                // The first changed one previewed in Dış başvurular (docs/adr/1060 §4): what changes and which ties
+                // break are seen before Uygula writes it.
+                let first = names.into_iter().find(|name| {
+                    listed
                         .iter()
-                        .any(|(n, s)| *n == name && *s == XrefState::Changed)
-                    {
-                        let _ = self.xref_reload(name);
-                    }
+                        .any(|(n, s)| n == name && *s == XrefState::Changed)
+                });
+                if let Some(name) = first {
+                    self.open_xrefs();
+                    let row = self
+                        .xrefs
+                        .listed
+                        .as_ref()
+                        .and_then(|l| l.iter().position(|x| x.name == name));
+                    self.xrefs.chosen = row.or(self.xrefs.chosen);
+                    self.xref_preview(
+                        XrefsOperation::Reload { name: name.clone() },
+                        format!("Yeniden yükle: {name}"),
+                    );
                 }
             }
             Event::Open => {
@@ -386,6 +399,7 @@ impl App {
         let input = XrefsList {
             drawing: self.drawing_file(),
             affected: false,
+            review: false,
         };
         kentos_native_application::xrefs::list_of(&doc.model, &input)
             .xrefs
@@ -395,18 +409,6 @@ impl App {
     }
 
     /// Yeniden yükle from the card: the same command as the window's.
-    fn xref_reload(&mut self, name: String) -> Option<()> {
-        let done = self.xref_run(XrefsOperation::Reload { name })?;
-        self.say(
-            kentos_interaction::Level::Success,
-            format!(
-                "“{}” yeniden yüklendi: {} nesne (tek adımda geri alınır).",
-                done.name, done.objects
-            ),
-        );
-        Some(())
-    }
-
     /// The card over the drawing, while a changed source is told.
     pub(crate) fn xref_notice_view(&self) -> Option<Element<'_, Message>> {
         let n = self.xref_watch.notice.as_ref()?;

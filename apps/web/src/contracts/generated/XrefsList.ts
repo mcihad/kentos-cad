@@ -11,4 +11,10 @@ drawing?: string,
 /**
  * Whether to say each reference's sheets and named views its inserts show (docs/adr/0349 §3).
  */
-affected?: boolean, };
+affected?: boolean, 
+/**
+ * Whether to review each reference (docs/adr/1060 §1): its revision as used, its depth in the network, what the
+ * drawing shows of it, the references it brought, the layer states naming its layers and, for one missing or
+ * changed, the files in the allowed places that may be it (`candidates`).
+ */
+review?: boolean, };

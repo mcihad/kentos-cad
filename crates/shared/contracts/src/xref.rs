@@ -263,6 +263,10 @@ pub enum XrefsOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         plot: Option<bool>,
     },
+    /// Katmanları kaynağa döndür (docs/adr/1060 §5): the drawing's changes to the reference's layers (their look,
+    /// shown, locked, frozen, printed) let go, each layer as its source has it; one undo step for the looks. The
+    /// project's layer states (a sheet's or a view's own) stay.
+    ResetLayers { name: String },
     /// Made an ordinary block, with those it brought.
     Bind {
         name: String,
@@ -277,7 +281,8 @@ pub enum XrefsOperation {
 /// Refusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,
 /// `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `pdf_page_not_found`, `not_an_underlay`,
 /// `invalid_underlay`, `xref_cycle`, `xref_empty`, `invalid_revision`, `revision_conflict`. Warnings:
-/// `objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take).
+/// `objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take),
+/// `ties_break` (a reload or repath with `diff`: ties into the reference's pieces that will break, docs/adr/1060 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -293,6 +298,82 @@ pub struct XrefsEdit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+    /// Whether a reload or a repath says what it changes (`diff`, docs/adr/1060 §4): the pieces kept, changed, new
+    /// and gone, and the objects tied into them that follow or break. A plan with it is the preview.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub diff: bool,
+}
+
+/// What follows a reference's piece (docs/adr/1060 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum XrefFollowerKind {
+    Dimension,
+    Leader,
+    Hatch,
+    /// A text whose field reads a piece.
+    Text,
+    /// A table whose cell reads a piece.
+    Table,
+}
+
+/// What a reload does to an object tied into the reference's pieces (docs/adr/1060 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum XrefFollowEffect {
+    /// It follows its piece to where it is now (or its value changes).
+    Follows,
+    /// A tie of it breaks: its piece is gone or has no such place; it keeps where it was and says why.
+    Breaks,
+    /// An associative hatch lets its boundary go and stays where it is.
+    Unties,
+}
+
+/// An object of the drawing a reload or a repath changes through its ties.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct XrefFollower {
+    /// Its lasting id.
+    pub uid: String,
+    pub kind: XrefFollowerKind,
+    pub effect: XrefFollowEffect,
+}
+
+/// What a reload or a repath changes in the reference's definition (docs/adr/1060 §4): its pieces by their local ids
+/// (a piece is the same when its id and content are), and what follows them.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct XrefDiff {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub same: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub changed: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub removed: u32,
+    /// The definitions it brings that it did not before, by name.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub nested_added: Vec<String>,
+    /// The definitions it brought and no longer brings, by name.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub nested_removed: Vec<String>,
+    /// The drawing's objects tied into its pieces that the step changes, in the drawing's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub followers: Vec<XrefFollower>,
 }
 
 /// Output of `cad.xrefs.edit` v1 (its plan's too: what it would do, nothing written).
@@ -330,6 +411,13 @@ pub struct XrefsEdited {
     /// `paths`: the project's search paths as kept.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub paths: Vec<String>,
+    /// `resetLayers`: the layers and groups whose look the source's replaced, by name, in the tree's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reset: Vec<String>,
+    /// `reload` and `repath` with `diff`: what changes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub diff: Option<XrefDiff>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -349,7 +437,61 @@ pub struct XrefsList {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub affected: bool,
+    /// Whether to review each reference (docs/adr/1060 §1): its revision as used, its depth in the network, what the
+    /// drawing shows of it, the references it brought, the layer states naming its layers and, for one missing or
+    /// changed, the files in the allowed places that may be it (`candidates`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub review: bool,
 }
+
+/// What the drawing shows of a reference (docs/adr/1060 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum XrefContent {
+    /// Its file's content: the file is there and the same.
+    Source,
+    /// The content as last loaded, kept in the drawing: its file is not found or is another revision now.
+    Cached,
+    /// Nothing: unloaded.
+    None,
+}
+
+/// How a candidate file matches a reference (docs/adr/1060 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum XrefMatch {
+    /// Its SHA-256 is the one last loaded: the same bytes, moved or renamed.
+    Content,
+    /// The same file name, other bytes: another drawing, or another revision of it, to be reviewed before it is bound.
+    Name,
+}
+
+/// A file that may be a reference's source (docs/adr/1060 §2): nothing is bound until Yolu değiştir is run with it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct XrefCandidate {
+    /// Its absolute path.
+    pub path: String,
+    #[serde(rename = "match")]
+    pub matched: XrefMatch,
+    /// Its SHA-256.
+    pub digest: String,
+}
+
+/// The most files a review reads to find candidates, over all the references (docs/adr/1060 §2).
+pub const MAX_CANDIDATE_FILES: usize = 512;
+/// The largest file a review reads to find candidates, in bytes (docs/adr/1060 §2).
+pub const MAX_CANDIDATE_BYTES: u64 = 512 * 1024 * 1024;
 
 /// A reference's state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -416,6 +558,32 @@ pub struct XrefInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub underlay: Option<UnderlayLook>,
+    /// `review`: the SHA-256 of the content as last loaded (the revision the drawing uses).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub digest: Option<String>,
+    /// `review`: its file's SHA-256 now, when it is another revision (`changed`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub current: Option<String>,
+    /// `review`: how deep in the network it is: 0 for one the drawing attached, 1 for one another brought, and so on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub depth: Option<u32>,
+    /// `review`: what the drawing shows of it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub content: Option<XrefContent>,
+    /// `review`: the references it brought, by name, in the drawing's block order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub brings: Vec<String>,
+    /// `review`: the project's layer states that name its layers (a sheet's or a view's own look of them), by name.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub layer_states: Vec<String>,
+    /// `review`, one missing or changed: the files that may be it, those of the same content first.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub candidates: Vec<XrefCandidate>,
 }
 
 /// Output of `cad.xrefs.list` v1.

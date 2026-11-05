@@ -662,7 +662,10 @@ fn xref(
         .unwrap_or_default()
         .to_owned();
     let relative = x.get("relative").and_then(Value::as_str).map(str::to_owned);
-    match find_in(&path, relative.as_deref(), from, search).at {
+    let digest = x.get("digest").and_then(Value::as_str).unwrap_or_default().to_owned();
+    // Found as the reference finds it (docs/adr/1060 §6): a fallback of the same name is copied only when its bytes
+    // are the ones last loaded, never another drawing that happens to share the name.
+    match kentos_native_application::xrefs::found_source_in(&path, relative.as_deref(), &digest, from, search).at {
         Some(at) => {
             let rel = copies.take(&at, PackagedKind::Xref);
             let abs = rel

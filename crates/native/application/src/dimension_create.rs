@@ -1068,12 +1068,20 @@ pub fn measured_in(
 /// The warning a dimension bound to a PDF underlay's lines carries (docs/adr/0351 §6): its value is read off paper.
 fn paper_warning(doc: &Document, m: &Measured) -> Option<kentos_commands::CommandWarning> {
     let refs = m.refs.as_ref()?;
-    let on = [&refs.a, &refs.b, &refs.c].into_iter().flatten().any(|r| {
-        !r.path.is_empty() && crate::snap_find::on_underlay(doc, &kentos_domain::Uuid::from_bytes(r.uid.0).to_string())
-    });
-    on.then(|| kentos_commands::CommandWarning {
+    let uids: Vec<String> = [&refs.a, &refs.b, &refs.c]
+        .into_iter()
+        .flatten()
+        .filter(|r| !r.path.is_empty())
+        .map(|r| kentos_domain::Uuid::from_bytes(r.uid.0).to_string())
+        .filter(|u| crate::snap_find::on_underlay(doc, u))
+        .collect();
+    let uids: Vec<&str> = uids.iter().map(String::as_str).collect();
+    (!uids.is_empty()).then(|| kentos_commands::CommandWarning {
         code: codes::UNDERLAY_MEASURE.into(),
-        message: "Ölçü bir PDF altlığının çizgilerine bağlı: değeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir.".into(),
+        message: format!(
+            "Ölçü bir PDF altlığının çizgilerine bağlı: değeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir.{}",
+            crate::snap_find::paper_words(doc, &uids)
+        ),
         path: Some("measure".into()),
     })
 }

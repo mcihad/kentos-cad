@@ -115,15 +115,18 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
         .map(|h| found(doc, h, scope.as_ref().map(|v| v.annotation_scale)))
         .collect();
     // A point on a PDF underlay's lines is read off paper (docs/adr/0351 §6): said, never passed as CAD geometry.
-    let paper = snaps
+    let on_paper: Vec<&str> = snaps
         .iter()
         .filter(|s| !s.path.is_empty() && s.uid.as_deref().is_some_and(|u| on_underlay(doc, u)))
-        .count();
+        .filter_map(|s| s.uid.as_deref())
+        .collect();
+    let paper = on_paper.len();
     let warnings = if paper > 0 {
         vec![kentos_commands::CommandWarning {
             code: codes::UNDERLAY_MEASURE.into(),
             message: format!(
-                "{paper} kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir."
+                "{paper} kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir.{}",
+                paper_words(doc, &on_paper)
             ),
             path: Some("snaps".into()),
         }]
@@ -140,6 +143,36 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
 }
 
 /// Whether the object `uid` is an insert of a PDF underlay (an external reference with a page).
+/// How much drawing one point of paper is on the underlays the inserts `uids` place (docs/adr/1060 §7): 25,4/72 mm
+/// times the insert's larger scale, the largest of them; none when none is an underlay's.
+pub fn paper_point_mm(doc: &Document, uids: &[&str]) -> Option<f64> {
+    uids.iter()
+        .filter(|u| on_underlay(doc, u))
+        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+        .filter_map(|u| doc.slot_of(u).and_then(|s| doc.get(s)))
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Insert(i) => {
+                let s = kentos_geometry_core::jsmath::js_max(
+                    i.scale.abs(),
+                    i.y_scale.unwrap_or(i.scale).abs(),
+                );
+                Some(25.4 / 72.0 * s)
+            }
+            _ => None,
+        })
+        .reduce(kentos_geometry_core::jsmath::js_max)
+}
+
+/// The words that say why a measure read off an underlay differs from the source drawing's (docs/adr/1060 §7).
+pub(crate) fn paper_words(doc: &Document, uids: &[&str]) -> String {
+    paper_point_mm(doc, uids).map_or_else(String::new, |mm| {
+        format!(
+            " Bu altlıkta kâğıdın 1 pt'si çizimde {} mm: PDF'in yuvarlaması ve baskı hatası bu ölçekle büyür, kaynak çizimin ölçüsünden fark buradan gelir. Kesin ölçü için kaynağı dış başvuru olarak bağlayın.",
+            kentos_geometry_core::display::fixed(mm, 3).replace('.', ",")
+        )
+    })
+}
+
 pub fn on_underlay(doc: &Document, uid: &str) -> bool {
     kentos_domain::Uuid::parse_str(uid)
         .ok()
