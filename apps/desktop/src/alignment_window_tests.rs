@@ -178,3 +178,77 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// `road.alignments.impact`'s drawing: profiles, section sets, corridors and superelevation on the main alignment, the
+/// main volume and haul plan approved (docs/adr/0963).
+fn impact_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.alignments.impact.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Aks değişikliğinin etkisi (Y57, docs/adr/0963; ROAD-ALIGN-10): the curve's radius typed 180, the window reads what
+/// saving it would do as the shared case does; typed back, nothing.
+#[test]
+fn typing_a_radius_tells_what_moves_on_the_stations() {
+    let mut app = impact_app();
+    let _ = app.update(Message::Run("alignment.editor"));
+    send(&mut app, W::Choose(0));
+    assert!(app.alignment_window.as_ref().expect("open").impact.is_none(), "nothing typed yet");
+    send(&mut app, W::Pi(1, 2, "180".into()));
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.alignments.impact.json")).expect("cases");
+    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Yarıçap 150'den 180'e").expect("the case")["steps"][0]
+        ["result"]["output"]
+        .clone();
+    let Some(Ok((imp, warnings))) = app.alignment_window.as_ref().expect("open").impact.clone() else { panic!("the impact reads") };
+    assert_eq!(imp.removed.len(), want["removed"].as_array().expect("removed").len());
+    assert!((imp.removed[0].from - want["removed"][0]["from"].as_f64().expect("from")).abs() < 1e-6);
+    assert_eq!(imp.refs.len(), want["refs"].as_array().expect("refs").len());
+    assert!(warnings.iter().any(|w| w.code == "alignment_impact_approved"));
+    send(&mut app, W::Pi(1, 2, "150".into()));
+    assert!(app.alignment_window.as_ref().expect("open").impact.is_none());
+}
+
+/// The impact under the alignment's form, wide and narrow, light and dark; `.run/gui-evidence/yol-y57/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib alignment_window_tests::screens_impact -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_impact() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y57");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = impact_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y57-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Pi(1, 2, "180".into()));
+        shot(&mut app, "yaricap");
+        send(&mut app, W::Pi(1, 2, "150".into()));
+        send(&mut app, W::Pi(0, 0, "0".into()));
+        send(&mut app, W::Pi(0, 1, "49,2857142857143".into()));
+        shot(&mut app, "baslangic");
+    }
+}

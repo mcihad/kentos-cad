@@ -204,6 +204,8 @@ pub struct Window {
     pub(crate) answer: String,
     /// Km'yi çizime yaz: the layer the km goes on.
     layer: Option<String>,
+    /// What the PIs typed would do to what hangs on the alignment's stations (docs/adr/0963).
+    pub(crate) impact: Option<Result<(kentos_commands::AlignmentImpact, Vec<kentos_commands::CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -239,6 +241,43 @@ fn msg(event: Event) -> Message {
 }
 
 /// What the row builds to now: its alignment's line, or why it does not build.
+/// The impact in words (docs/adr/0963): where the line leaves its place, how far the km after it slide, what moves and
+/// what is left without a place.
+fn impact_words(imp: &kentos_commands::AlignmentImpact) -> String {
+    if imp.clear {
+        return "Aks ve ona bağlı km'ler 1 mm'den çok değişmiyor.".into();
+    }
+    let comma = |v: f64| format!("{v:.3}").replace('.', ",");
+    let mut parts: Vec<String> = Vec::new();
+    for r in &imp.removed {
+        parts.push(match r.most {
+            Some(m) => format!("km {} – {} yerinden kayar (en çok {} m)", r.from_text, r.to_text, comma(m)),
+            None => format!("km {} – {} kalkar", r.from_text, r.to_text),
+        });
+    }
+    for r in &imp.added {
+        parts.push(format!("yeni km {} – {}", r.from_text, r.to_text));
+    }
+    if let Some(run) = imp.runs.iter().rev().find(|r| r.shift_to.abs() > 1e-6) {
+        parts.push(format!("km {}'den sonra km'ler {} m kayar", run.from_text, comma(run.shift_to)));
+    }
+    let mut said = format!("Kaydedilirse: {}.", parts.join("; "));
+    let moved = imp.refs.iter().filter(|r| r.to.is_some()).count();
+    let lost = imp.refs.len() - moved;
+    if !imp.refs.is_empty() {
+        said.push_str(&format!(" Bağlı km'lerden {moved} taşınır, {lost} yerini yitirir."));
+    }
+    let with = |d: &kentos_commands::ImpactDerived| if d.approved { format!("{} (onaylı)", d.name) } else { d.name.clone() };
+    let stale: Vec<String> = imp.volumes.iter().map(with).chain(imp.hauls.iter().map(with)).collect();
+    if !stale.is_empty() {
+        said.push_str(&format!(" Eskiyecekler: {}.", stale.join(", ")));
+    }
+    if !imp.parallels.is_empty() {
+        said.push_str(&format!(" İzleyen paralel akslar: {}.", imp.parallels.iter().map(|p| p.name.as_str()).collect::<Vec<_>>().join(", ")));
+    }
+    said
+}
+
 fn status(rows: &[Row], r: &Row) -> String {
     let defs: Result<Vec<AlignmentDef>, String> = rows.iter().map(Row::def).collect();
     let (defs, def) = match (defs, r.def()) {
@@ -527,7 +566,22 @@ impl App {
         if let Some(words) = warning {
             self.warn(words.to_owned());
         }
+        self.refresh_alignment_impact();
         Task::none()
+    }
+
+    /// The impact of the chosen alignment's PIs as typed against the saved ones (`road.alignments.impact`, docs/adr/0963):
+    /// none for a new alignment, a parallel axis, PIs that do not read or are the saved ones.
+    fn refresh_alignment_impact(&mut self) {
+        let Some(doc) = &self.document else { return };
+        let Some(w) = self.alignment_window.as_mut() else { return };
+        w.impact = w.chosen.and_then(|i| w.rows.get(i)).and_then(|r| r.def().ok()).and_then(|d| {
+            let kept = w.kept.iter().find(|k| k.id == d.id && k.offset_of.is_none())?;
+            (kept.pis != d.pis && d.offset_of.is_none()).then(|| {
+                let input = kentos_commands::AlignmentsImpact { alignment: d.id.clone(), pis: d.pis.clone(), tolerance: None };
+                kentos_native_application::road_alignments_impact::preview(&doc.model, &input)
+            })
+        });
     }
 
     /// Noktanın km'si: the typed place's km and offset on the chosen saved alignment (`road.alignments.query`).
@@ -905,8 +959,18 @@ impl App {
         let said = status(&w.rows, r);
         let bad = said.starts_with("Kurulamıyor") || said.starts_with("Paralel aks kıvrılıyor") || said.ends_with("olmalı.");
         let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        col.push(if bad { label::caption(said).style(danger) } else { label::caption(said) })
-            .push(row![words::field("Noktanın km'si", point.width(260), None), label::caption(w.answer.clone())]
+        let mut col = col.push(if bad { label::caption(said).style(danger) } else { label::caption(said) });
+        // What saving the PIs typed would do (docs/adr/0963).
+        if let Some(Ok((imp, warnings))) = &w.impact {
+            let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
+            let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+            let said = impact_words(imp);
+            col = col.push(if warnings.is_empty() { label::caption(said).style(muted) } else { label::caption(said).style(warn) });
+            for x in warnings {
+                col = col.push(label::caption(x.message.clone()).style(warn));
+            }
+        }
+        col.push(row![words::field("Noktanın km'si", point.width(260), None), label::caption(w.answer.clone())]
                 .spacing(12)
                 .align_y(iced::alignment::Vertical::Bottom))
             .into()

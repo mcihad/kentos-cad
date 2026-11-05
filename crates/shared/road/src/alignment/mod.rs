@@ -7,6 +7,7 @@ pub mod checks;
 pub mod element;
 pub mod fit;
 pub mod locate;
+pub mod impact;
 pub mod mapping;
 pub mod offset;
 pub mod stationing;

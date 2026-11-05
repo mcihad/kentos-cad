@@ -42569,6 +42569,248 @@
       ]
     },
     {
+      "id": "road.alignments.impact",
+      "version": 1,
+      "title": "Aks değişikliğinin etkisi",
+      "summary": "Bir aksın yeni PI'ları yazılmadan km'lere bağlı her şeye ne yapacağını söyler; hiçbir şey yazmaz. Eski aksın her km'sinin yeri yeni aksa izdüşürülür: toleransın (öntanımlı 1 mm) içindeyse km yeni aksın km'sine taşınır, değilse yer aksın üstünde kalmaz. Yeni aksın dışında kalan eski aralıklar, eski aksın dışında kalan yeni aralıklar, aradaki aralıkların km kayması; boykesit PVI'ları, kesit takımlarının km'leri, koridor bölgelerinin uçları ve km'leri, dever çizelgesinin satırları ve PI'ı kalkan kurpları taşınır ya da çözülmez diye; paralel akslar ve dokunulan koridorlardaki kübaj ve taşıma planları, onaylılar. Uyarılar: alignment_impact_unresolved, alignment_impact_approved. Retler: not_a_road_project, unknown_alignment, invalid_alignment, invalid_alignment_impact.",
+      "aliases": [
+        "aksetkisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "`road.alignments.impact` (plan/road.md Y57, docs/adr/0963; ROAD-ALIGN-10): what an alignment's new PIs would do to\nwhat hangs on its stations, before they are written. The old stretches whose places leave the new line by more than\n`tolerance` (m; absent: 1 mm), the new stretches off the old line, the runs between and how far their stations\nshift; every station a profile, a section set, a corridor or a superelevation schedule names, mapped to the new\nline or told unresolved; the parallel axes that follow; the volumes and haul plans on the corridors it touches, an\napproval among them told. Reads only.\n\nRefusals: `not_a_road_project`, `unknown_alignment`, `invalid_alignment` (PIs that make no line or a parallel\naxis), `invalid_alignment_impact` (a tolerance not above 0 or above 1 m).",
+        "properties": {
+          "alignment": {
+            "description": "The alignment's id or name.",
+            "type": "string"
+          },
+          "pis": {
+            "description": "The PIs it would have.",
+            "items": {
+              "$ref": "#/$defs/AlignmentPi"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "alignment",
+          "pis"
+        ],
+        "title": "AlignmentsImpact",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What an alignment's new PIs would do.",
+        "properties": {
+          "added": {
+            "description": "New stretches off the old line (new stations).",
+            "items": {
+              "$ref": "#/$defs/AlignmentStretch"
+            },
+            "type": "array"
+          },
+          "alignment": {
+            "type": "string"
+          },
+          "clear": {
+            "description": "The line and every station named stay as they are.",
+            "type": "boolean"
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "description": "The elements matched by id (as `road.alignments.edit` writes it).",
+            "items": {
+              "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "parallels": {
+            "items": {
+              "$ref": "#/$defs/AlignmentFollower"
+            },
+            "type": "array"
+          },
+          "refs": {
+            "description": "The stations named that move or are left unresolved.",
+            "items": {
+              "$ref": "#/$defs/StationRef"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Old stretches whose places leave the new line (old stations).",
+            "items": {
+              "$ref": "#/$defs/AlignmentStretch"
+            },
+            "type": "array"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/$defs/AlignmentRun"
+            },
+            "type": "array"
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignment",
+          "mapping",
+          "removed",
+          "added",
+          "runs",
+          "refs",
+          "parallels",
+          "volumes",
+          "hauls",
+          "clear"
+        ],
+        "title": "AlignmentImpact",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What an alignment's new PIs would do.",
+        "properties": {
+          "added": {
+            "description": "New stretches off the old line (new stations).",
+            "items": {
+              "$ref": "#/$defs/AlignmentStretch"
+            },
+            "type": "array"
+          },
+          "alignment": {
+            "type": "string"
+          },
+          "clear": {
+            "description": "The line and every station named stay as they are.",
+            "type": "boolean"
+          },
+          "hauls": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          },
+          "mapping": {
+            "description": "The elements matched by id (as `road.alignments.edit` writes it).",
+            "items": {
+              "$ref": "#/$defs/StationMapRow"
+            },
+            "type": "array"
+          },
+          "parallels": {
+            "items": {
+              "$ref": "#/$defs/AlignmentFollower"
+            },
+            "type": "array"
+          },
+          "refs": {
+            "description": "The stations named that move or are left unresolved.",
+            "items": {
+              "$ref": "#/$defs/StationRef"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "Old stretches whose places leave the new line (old stations).",
+            "items": {
+              "$ref": "#/$defs/AlignmentStretch"
+            },
+            "type": "array"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/$defs/AlignmentRun"
+            },
+            "type": "array"
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/$defs/ImpactDerived"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignment",
+          "mapping",
+          "removed",
+          "added",
+          "runs",
+          "refs",
+          "parallels",
+          "volumes",
+          "hauls",
+          "clear"
+        ],
+        "title": "AlignmentImpact",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_alignment",
+          "invalid_alignment",
+          "invalid_alignment_impact"
+        ],
+        "warnings": [
+          "alignment_impact_unresolved",
+          "alignment_impact_approved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana aksın PI'ları",
+          "input": {
+            "alignment": "g-1",
+            "pis": [
+              {
+                "id": "BA",
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "id": "BT",
+                "x": 500.0,
+                "y": 0.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "road.profiles.impact",
       "version": 1,
       "title": "Boykesit değişikliğinin etkisi",
@@ -89187,6 +89429,12 @@
       "meaning": "Koridor ön denetimi sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "invalid_alignment_impact",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aks etkisi sorusu geçerli değil (tolerans 0'dan büyük, en çok 1 m); ileti nedenini söyler."
+    },
+    {
       "code": "invalid_profile_impact",
       "kind": "failed",
       "retryable": false,
@@ -89329,6 +89577,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Katsayı verilmeyen aralıklar dönüştürülmedi; düzeltilmiş hacim ham hacimdir."
+    },
+    {
+      "code": "alignment_impact_unresolved",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aksın yeni PI'larıyla bir boykesitin, kesit takımının, koridorun ya da dever çizelgesinin bir km'sinin yeri aksın üstünde kalmıyor; kaydedilirse elle yeniden verilmeli."
+    },
+    {
+      "code": "alignment_impact_approved",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aksın yeni PI'ları onaylı bir kübajı ya da taşıma planını değiştirir; yazılınca onayları eskir."
     },
     {
       "code": "profile_impact_approved",
@@ -96701,6 +96961,22 @@
       ],
       "type": "string"
     },
+    "AlignmentFollower": {
+      "description": "An alignment that follows this one (a parallel axis).",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
     "AlignmentFoot": {
       "description": "A foot of a point.",
       "properties": {
@@ -97082,6 +97358,46 @@
       ],
       "type": "object"
     },
+    "AlignmentRun": {
+      "description": "A stretch of old stations still on the line, and how far their stations move at its ends (new − old).",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "shiftFrom": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "shiftTo": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText",
+        "shiftFrom",
+        "shiftTo"
+      ],
+      "type": "object"
+    },
     "AlignmentStationing": {
       "additionalProperties": false,
       "description": "An alignment's km: the km at its start and its equations in order.",
@@ -97099,6 +97415,42 @@
           "x-unit": "m"
         }
       },
+      "type": "object"
+    },
+    "AlignmentStretch": {
+      "description": "A stretch of one line off the other: its stations on that line and their km, the greatest offset where every place\nof it has a foot on the other line.",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": "string"
+        },
+        "most": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "fromText",
+        "toText"
+      ],
       "type": "object"
     },
     "AlignmentsEditOperation": {
@@ -167348,6 +167700,56 @@
       "required": [
         "element",
         "change"
+      ],
+      "type": "object"
+    },
+    "StationOwner": {
+      "description": "What names a station of the alignment.",
+      "enum": [
+        "profile",
+        "sectionSet",
+        "corridor",
+        "superelevation"
+      ],
+      "type": "string"
+    },
+    "StationRef": {
+      "description": "A station something names, where it lands: `to` on the new line, none where its place left the line.",
+      "properties": {
+        "id": {
+          "description": "The owner's id and name.",
+          "type": "string"
+        },
+        "item": {
+          "description": "Which station of it: a PVI's id, `from`, `to`, `region 2 from`, `station 3`, `row 1`, `curve PI2`.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/StationOwner"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "owner",
+        "id",
+        "name",
+        "item",
+        "station"
       ],
       "type": "object"
     },

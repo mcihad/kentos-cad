@@ -365,6 +365,7 @@ pub mod road_volumes_history;
 pub mod road_volumes_ledger;
 pub mod road_volumes_states;
 pub mod road_profiles_impact;
+pub mod road_alignments_impact;
 pub mod road_volumes_edit;
 pub mod road_volumes_query;
 pub mod road_sections;
@@ -1330,6 +1331,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_VOLUMES_LEDGER, kentos_commands::ROAD_VOLUMES_LEDGER_VERSION),
     (kentos_commands::ROAD_VOLUMES_STATES, kentos_commands::ROAD_VOLUMES_STATES_VERSION),
     (kentos_commands::ROAD_PROFILES_IMPACT, kentos_commands::ROAD_PROFILES_IMPACT_VERSION),
+    (kentos_commands::ROAD_ALIGNMENTS_IMPACT, kentos_commands::ROAD_ALIGNMENTS_IMPACT_VERSION),
     (kentos_commands::ROAD_VOLUMES_HISTORY, kentos_commands::ROAD_VOLUMES_HISTORY_VERSION),
     (kentos_commands::ROAD_HAULS_EDIT, kentos_commands::ROAD_HAULS_EDIT_VERSION),
     (kentos_commands::ROAD_HAULS_QUERY, kentos_commands::ROAD_HAULS_QUERY_VERSION),

@@ -506,3 +506,139 @@ pub struct AlignmentsLabelled {
     pub uids: Vec<String>,
     pub revision: String,
 }
+
+pub const ROAD_ALIGNMENTS_IMPACT: &str = "road.alignments.impact";
+pub const ROAD_ALIGNMENTS_IMPACT_VERSION: u32 = 1;
+
+/// `road.alignments.impact` (plan/road.md Y57, docs/adr/0963; ROAD-ALIGN-10): what an alignment's new PIs would do to
+/// what hangs on its stations, before they are written. The old stretches whose places leave the new line by more than
+/// `tolerance` (m; absent: 1 mm), the new stretches off the old line, the runs between and how far their stations
+/// shift; every station a profile, a section set, a corridor or a superelevation schedule names, mapped to the new
+/// line or told unresolved; the parallel axes that follow; the volumes and haul plans on the corridors it touches, an
+/// approval among them told. Reads only.
+///
+/// Refusals: `not_a_road_project`, `unknown_alignment`, `invalid_alignment` (PIs that make no line or a parallel
+/// axis), `invalid_alignment_impact` (a tolerance not above 0 or above 1 m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentsImpact {
+    /// The alignment's id or name.
+    pub alignment: String,
+    /// The PIs it would have.
+    pub pis: Vec<AlignmentPi>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub tolerance: Option<f64>,
+}
+
+/// A stretch of one line off the other: its stations on that line and their km, the greatest offset where every place
+/// of it has a foot on the other line.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentStretch {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub most: Option<f64>,
+}
+
+/// A stretch of old stations still on the line, and how far their stations move at its ends (new − old).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentRun {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub from_text: String,
+    pub to_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub shift_from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub shift_to: f64,
+}
+
+/// What names a station of the alignment.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum StationOwner {
+    Profile,
+    SectionSet,
+    Corridor,
+    Superelevation,
+}
+
+/// A station something names, where it lands: `to` on the new line, none where its place left the line.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StationRef {
+    pub owner: StationOwner,
+    /// The owner's id and name.
+    pub id: String,
+    pub name: String,
+    /// Which station of it: a PVI's id, `from`, `to`, `region 2 from`, `station 3`, `row 1`, `curve PI2`.
+    pub item: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: Option<f64>,
+}
+
+/// An alignment that follows this one (a parallel axis).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentFollower {
+    pub id: String,
+    pub name: String,
+}
+
+/// What an alignment's new PIs would do.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentImpact {
+    pub alignment: String,
+    /// The elements matched by id (as `road.alignments.edit` writes it).
+    pub mapping: Vec<StationMapRow>,
+    /// Old stretches whose places leave the new line (old stations).
+    pub removed: Vec<AlignmentStretch>,
+    /// New stretches off the old line (new stations).
+    pub added: Vec<AlignmentStretch>,
+    pub runs: Vec<AlignmentRun>,
+    /// The stations named that move or are left unresolved.
+    pub refs: Vec<StationRef>,
+    pub parallels: Vec<AlignmentFollower>,
+    pub volumes: Vec<crate::ImpactDerived>,
+    pub hauls: Vec<crate::ImpactDerived>,
+    /// The line and every station named stay as they are.
+    pub clear: bool,
+}

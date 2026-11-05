@@ -6578,6 +6578,18 @@ StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "l
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
+class StationOwner(_StrEnum):
+    """What names a station of the alignment."""
+    PROFILE = "profile"
+    SECTION_SET = "sectionSet"
+    CORRIDOR = "corridor"
+    SUPERELEVATION = "superelevation"
+
+
+StationOwnerName = Literal["profile", "sectionSet", "corridor", "superelevation"]
+"""The names of :class:`StationOwner`, for a plain string."""
+
+
 class StationText(_StrEnum):
     """The side the km text goes on (Yazı), or none."""
     LEFT = "left"
@@ -12239,6 +12251,26 @@ class AlignmentFitted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignmentFollower(_Model):
+    """An alignment that follows this one (a parallel axis)."""
+    id: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentFollower:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentFoot(_Model):
     """A foot of a point.
     Attributes:
@@ -12262,6 +12294,57 @@ class AlignmentFoot(_Model):
             at=AlignmentPlace.from_json(data["at"]),
             offset=float(data["offset"]),
             corner=data["corner"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentImpact(_Model):
+    """What an alignment's new PIs would do.
+    Attributes:
+        mapping: The elements matched by id (as `road.alignments.edit` writes it).
+        removed: Old stretches whose places leave the new line (old stations).
+        added: New stretches off the old line (new stations).
+        refs: The stations named that move or are left unresolved.
+        clear: The line and every station named stay as they are.
+    """
+    alignment: str
+    mapping: list[StationMapRow]
+    removed: list[AlignmentStretch]
+    added: list[AlignmentStretch]
+    runs: list[AlignmentRun]
+    refs: list[StationRef]
+    parallels: list[AlignmentFollower]
+    volumes: list[ImpactDerived]
+    hauls: list[ImpactDerived]
+    clear: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["mapping"] = [e0.to_json() for e0 in self.mapping]
+        out["removed"] = [e0.to_json() for e0 in self.removed]
+        out["added"] = [e0.to_json() for e0 in self.added]
+        out["runs"] = [e0.to_json() for e0 in self.runs]
+        out["refs"] = [e0.to_json() for e0 in self.refs]
+        out["parallels"] = [e0.to_json() for e0 in self.parallels]
+        out["volumes"] = [e0.to_json() for e0 in self.volumes]
+        out["hauls"] = [e0.to_json() for e0 in self.hauls]
+        out["clear"] = self.clear
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentImpact:
+        return cls(
+            alignment=data["alignment"],
+            mapping=[StationMapRow.from_json(e0) for e0 in data["mapping"]],
+            removed=[AlignmentStretch.from_json(e0) for e0 in data["removed"]],
+            added=[AlignmentStretch.from_json(e0) for e0 in data["added"]],
+            runs=[AlignmentRun.from_json(e0) for e0 in data["runs"]],
+            refs=[StationRef.from_json(e0) for e0 in data["refs"]],
+            parallels=[AlignmentFollower.from_json(e0) for e0 in data["parallels"]],
+            volumes=[ImpactDerived.from_json(e0) for e0 in data["volumes"]],
+            hauls=[ImpactDerived.from_json(e0) for e0 in data["hauls"]],
+            clear=data["clear"],
         )
 
 
@@ -12580,6 +12663,44 @@ class AlignmentReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignmentRun(_Model):
+    """A stretch of old stations still on the line, and how far their stations move at its ends (new − old).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        shift_from: Unit: m.
+        shift_to: Unit: m.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    shift_from: float
+    shift_to: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        out["shiftFrom"] = float(self.shift_from)
+        out["shiftTo"] = float(self.shift_to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentRun:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            shift_from=float(data["shiftFrom"]),
+            shift_to=float(data["shiftTo"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentStationing(_Model):
     """An alignment's km: the km at its start and its equations in order.
     Attributes:
@@ -12601,6 +12722,42 @@ class AlignmentStationing(_Model):
         return cls(
             equations=[StationEquationDef.from_json(e0) for e0 in data["equations"]] if "equations" in data else UNSET,
             start=float(data["start"]) if "start" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentStretch(_Model):
+    """A stretch of one line off the other: its stations on that line and their km, the greatest offset where every place
+    of it has a foot on the other line.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        most: Unit: m.
+    """
+    from_: float
+    to: float
+    from_text: str
+    to_text: str
+    most: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["fromText"] = self.from_text
+        out["toText"] = self.to_text
+        if self.most is not UNSET:
+            out["most"] = None if self.most is None else float(self.most)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentStretch:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            from_text=data["fromText"],
+            to_text=data["toText"],
+            most=UNSET if "most" not in data else None if data["most"] is None else float(data["most"]),
         )
 
 
@@ -12848,6 +13005,43 @@ class AlignmentsFit(_Model):
             radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
             reverse=data.get("reverse", UNSET),
             start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignmentsImpact(_Model):
+    """`road.alignments.impact` (plan/road.md Y57, docs/adr/0963; ROAD-ALIGN-10): what an alignment's new PIs would do to
+    what hangs on its stations, before they are written. The old stretches whose places leave the new line by more than
+    `tolerance` (m; absent: 1 mm), the new stretches off the old line, the runs between and how far their stations
+    shift; every station a profile, a section set, a corridor or a superelevation schedule names, mapped to the new
+    line or told unresolved; the parallel axes that follow; the volumes and haul plans on the corridors it touches, an
+    approval among them told. Reads only.
+
+    Refusals: `not_a_road_project`, `unknown_alignment`, `invalid_alignment` (PIs that make no line or a parallel
+    axis), `invalid_alignment_impact` (a tolerance not above 0 or above 1 m).
+    Attributes:
+        alignment: The alignment's id or name.
+        pis: The PIs it would have.
+        tolerance: Unit: m.
+    """
+    alignment: str
+    pis: list[AlignmentPi]
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["alignment"] = self.alignment
+        out["pis"] = [e0.to_json() for e0 in self.pis]
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentsImpact:
+        return cls(
+            alignment=data["alignment"],
+            pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]],
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -79520,6 +79714,45 @@ class StationMapRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StationRef(_Model):
+    """A station something names, where it lands: `to` on the new line, none where its place left the line.
+    Attributes:
+        id: The owner's id and name.
+        item: Which station of it: a PVI's id, `from`, `to`, `region 2 from`, `station 3`, `row 1`, `curve PI2`.
+        station: Unit: m.
+        to: Unit: m.
+    """
+    owner: StationOwner | StationOwnerName
+    id: str
+    name: str
+    item: str
+    station: float
+    to: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["owner"] = _enum_out(self.owner)
+        out["id"] = self.id
+        out["name"] = self.name
+        out["item"] = self.item
+        out["station"] = float(self.station)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StationRef:
+        return cls(
+            owner=_enum_in(StationOwner, data["owner"]),
+            id=data["id"],
+            name=data["name"],
+            item=data["item"],
+            station=float(data["station"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StepWarning(_Model):
     """Something a completed command wants the caller to know.
     Attributes:
@@ -111155,7 +111388,9 @@ __all__ = [
     "AlignmentFitMethod",
     "AlignmentFitMethodName",
     "AlignmentFitted",
+    "AlignmentFollower",
     "AlignmentFoot",
+    "AlignmentImpact",
     "AlignmentImported",
     "AlignmentJoinRow",
     "AlignmentLabelRow",
@@ -111164,7 +111399,9 @@ __all__ = [
     "AlignmentPi",
     "AlignmentPlace",
     "AlignmentReport",
+    "AlignmentRun",
     "AlignmentStationing",
+    "AlignmentStretch",
     "AlignmentsCheck",
     "AlignmentsChecked",
     "AlignmentsCreate",
@@ -111172,6 +111409,7 @@ __all__ = [
     "AlignmentsEditOperation",
     "AlignmentsEditOperationName",
     "AlignmentsFit",
+    "AlignmentsImpact",
     "AlignmentsImport",
     "AlignmentsImported",
     "AlignmentsLabel",
@@ -114144,6 +114382,9 @@ __all__ = [
     "StartSubPlace",
     "StationEquationDef",
     "StationMapRow",
+    "StationOwner",
+    "StationOwnerName",
+    "StationRef",
     "StationText",
     "StationTextName",
     "StationsAnnotationWork",

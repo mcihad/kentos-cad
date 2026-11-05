@@ -2414,6 +2414,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "road.alignments.impact",
+        refusals: &[&["not_a_road_project", "unknown_alignment", "invalid_alignment", "invalid_alignment_impact"]],
+        warnings: &["alignment_impact_unresolved", "alignment_impact_approved"],
+        targets: none,
+    },
+    Entry {
         id: "road.profiles.impact",
         refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_road_profile", "profile_curves_overlap", "invalid_profile_impact"]],
         warnings: &["profile_impact_approved"],

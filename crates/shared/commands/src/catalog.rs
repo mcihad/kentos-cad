@@ -7762,6 +7762,34 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_ALIGNMENTS_IMPACT.into(),
+            version: crate::ROAD_ALIGNMENTS_IMPACT_VERSION,
+            title: "Aks değişikliğinin etkisi".into(),
+            summary: "Bir aksın yeni PI'ları yazılmadan km'lere bağlı her şeye ne yapacağını söyler; hiçbir şey yazmaz. Eski aksın her km'sinin yeri yeni aksa izdüşürülür: toleransın (öntanımlı 1 mm) içindeyse km yeni aksın km'sine taşınır, değilse yer aksın üstünde kalmaz. Yeni aksın dışında kalan eski aralıklar, eski aksın dışında kalan yeni aralıklar, aradaki aralıkların km kayması; boykesit PVI'ları, kesit takımlarının km'leri, koridor bölgelerinin uçları ve km'leri, dever çizelgesinin satırları ve PI'ı kalkan kurpları taşınır ya da çözülmez diye; paralel akslar ve dokunulan koridorlardaki kübaj ve taşıma planları, onaylılar. \
+                      Uyarılar: alignment_impact_unresolved, alignment_impact_approved. Retler: not_a_road_project, unknown_alignment, invalid_alignment, invalid_alignment_impact."
+                .into(),
+            aliases: vec!["aksetkisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AlignmentsImpact>(),
+            output: schema::<crate::AlignmentImpact>(),
+            plan: Some(schema::<crate::AlignmentImpact>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana aksın PI'ları".into(),
+                input: json!({ "alignment": "g-1", "pis": [
+                    { "id": "BA", "x": 0.0, "y": 0.0 },
+                    { "id": "BT", "x": 500.0, "y": 0.0 }
+                ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_PROFILES_IMPACT.into(),
             version: crate::ROAD_PROFILES_IMPACT_VERSION,
             title: "Boykesit değişikliğinin etkisi".into(),
@@ -14992,6 +15020,9 @@ mod tests {
                     crate::ROAD_PROFILES_IMPACT => {
                         serde_json::from_value::<crate::ProfilesImpact>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_ALIGNMENTS_IMPACT => {
+                        serde_json::from_value::<crate::AlignmentsImpact>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_HISTORY => {
                         serde_json::from_value::<crate::VolumesHistory>(e.input.clone()).map(|_| ())
                     }
@@ -15871,6 +15902,9 @@ mod tests {
                         }
                         crate::ROAD_PROFILES_IMPACT => {
                             serde_json::from_value::<crate::ProfileImpact>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_ALIGNMENTS_IMPACT => {
+                            serde_json::from_value::<crate::AlignmentImpact>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_VOLUMES_HISTORY => {
                             serde_json::from_value::<crate::VolumeHistoryRead>(output.clone()).map(|_| ())
