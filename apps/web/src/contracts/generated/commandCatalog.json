@@ -41492,7 +41492,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram\nuses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or\nbenching between surfaces; a corridor that does not build; a Bitkisel Toprak rule without stripping, a Formasyon rule\nbetween surfaces or on a template without a pavement), `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram\nuses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or\nbenching between surfaces or on the grid; a corridor that does not build; a Bitkisel Toprak rule without stripping, a\nFormasyon rule between surfaces, on the grid or on a template without a pavement; the grid without a cell of 0.01 to\n1000 m, a cell on another method), `invalid_revision`, `revision_conflict`.",
         "properties": {
           "bench": {
             "anyOf": [
@@ -41504,6 +41504,15 @@
               }
             ],
             "description": "The fill's foundation benched; null takes it off."
+          },
+          "cell": {
+            "description": "The grid method's cell (m, docs/adr/0974), 0.01 to 1000; a method other than the grid takes it off.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
           },
           "corridor": {
             "type": [
@@ -177640,6 +177649,15 @@
           ],
           "description": "The fill's foundation benched (a section method's)."
         },
+        "cell": {
+          "description": "The grid method's cell (m, docs/adr/0974; schema 177): 0.01 to 1000; the grid method only.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
         "corridor": {
           "type": "string"
         },
@@ -177886,6 +177904,11 @@
           "const": "surfaces",
           "description": "Between the corridor's top surface and the terrain, the triangulations laid over each other.",
           "type": "string"
+        },
+        {
+          "const": "grid",
+          "description": "Between the corridor's top surface and the terrain on a regular grid (docs/adr/0974; schema 177): at each cell's\ncentre the two heights' difference times the cell's area (the midpoint rule), the cell (`cell`, m) given by\nthe volume; KentOS gives none.",
+          "type": "string"
         }
       ]
     },
@@ -178022,6 +178045,15 @@
         },
         "stale": {
           "type": "boolean"
+        },
+        "step": {
+          "description": "The sampling step it used (docs/adr/0974): the grid's cell, else the largest interval between two consecutive\nsections (m); absent where there is no interval.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
         },
         "strip": {
           "description": "The topsoil stripped in all (m³), where the volume strips.",

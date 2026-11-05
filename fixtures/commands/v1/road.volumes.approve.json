@@ -2538,6 +2538,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -3766,6 +3767,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -4623,6 +4625,7 @@
         "cutArea": 4552.665247117608,
         "fillArea": 3018.1736178371866,
         "uncovered": 26.998985395621585,
+        "step": 50.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -5748,6 +5751,7 @@
         "factoredCut": 28579.832745677122,
         "factoredFill": 4404.822845370665,
         "gaps": [],
+        "step": 25.0,
         "strip": 3392.7072682813873,
         "bench": 583.1882036466071,
         "approval": {
@@ -9037,7 +9041,8 @@
         "fill": 3507.380684331716,
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
-        "gaps": []
+        "gaps": [],
+        "step": 25.0
        }
       },
       "warnings": []
@@ -12298,7 +12303,8 @@
         "fill": 3507.380684331716,
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
-        "gaps": []
+        "gaps": [],
+        "step": 25.0
        }
       },
       "warnings": []
@@ -15560,6 +15566,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -19065,6 +19072,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -22578,6 +22586,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -26570,6 +26579,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -30072,6 +30082,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -31839,6 +31850,7 @@
         "factoredCut": 31727.36308977084,
         "factoredFill": 3509.714649183784,
         "gaps": [],
+        "step": 20.0,
         "approval": {
          "approved": {
           "revision": 1,
@@ -35000,7 +35012,8 @@
         "gaps": [],
         "cutArea": 4552.665247117608,
         "fillArea": 3018.1736178371866,
-        "uncovered": 26.998985395621585
+        "uncovered": 26.998985395621585,
+        "step": 50.0
        }
       },
       "warnings": []
@@ -38086,6 +38099,7 @@
         "factoredCut": 31611.668615970284,
         "factoredFill": 3495.464956323876,
         "gaps": [],
+        "step": 25.0,
         "approval": {
          "approved": {
           "revision": 1,

@@ -961,3 +961,56 @@ fn screens_states() {
         println!("{}", file.display());
     }
 }
+
+/// The grid method in the window (docs/adr/0974): without a cell it says so; with 2 m it computes on the grid and says
+/// the method and the cell; saved, the cell is kept.
+#[test]
+fn the_window_computes_on_a_grid() {
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.new"));
+    send(&mut app, W::Name("Izgara kübajı".into()));
+    send(&mut app, W::Method(kentos_commands::VolumeMethod::Grid));
+    let why = app.volume_window.as_ref().and_then(|w| w.preview.why.clone()).expect("no cell yet");
+    assert!(why.contains("hücre boyunu"), "{why}");
+    send(&mut app, W::Cell("2".into()));
+    let w = app.volume_window.as_ref().expect("open");
+    let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("computes: {:?}", w.preview.why));
+    assert_eq!(rep.step, Some(2.0));
+    assert!(rep.cut > 1000.0 && rep.cut_area.is_some(), "{rep:?}");
+    assert_eq!(crate::volume_window::method_words(rep), "Yöntem: Izgara, hücre 2 m.");
+    send(&mut app, W::Save);
+    assert_eq!(model(&mut app).road_volumes()[2].cell, Some(2.0));
+}
+
+/// `.run/gui-evidence/yol-y69/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib volume_window_tests::screens_grid -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_grid() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y69");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.new"));
+        send(&mut app, W::Name("Izgara kübajı".into()));
+        send(&mut app, W::Method(kentos_commands::VolumeMethod::Grid));
+        send(&mut app, W::Cell("2".into()));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y69-izgara-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

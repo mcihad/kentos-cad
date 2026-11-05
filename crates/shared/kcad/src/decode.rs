@@ -681,6 +681,11 @@ pub(crate) fn road_has_volume_history(road: &kentos_contracts::RoadSettings) -> 
     })
 }
 
+/// Whether road settings carry schema 177's fields: an earthwork volume on a grid or its cell (docs/adr/0974).
+pub(crate) fn road_has_volume_grid(road: &kentos_contracts::RoadSettings) -> bool {
+    road.volumes.iter().any(|v| v.method == kentos_contracts::VolumeMethod::Grid || v.cell.is_some())
+}
+
 /// Whether road settings carry schema 176's field: a corridor region's slope transition (docs/adr/0960).
 pub(crate) fn road_has_slope_transitions(road: &kentos_contracts::RoadSettings) -> bool {
     road.corridors.iter().any(|c| c.regions.iter().any(|r| r.transition.is_some()))
@@ -1363,6 +1368,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.volume_history && road_has_volume_history(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "kübajın numaralı onayı ve onay geçmişi şema 171 ister"));
+                }
+                if !has.volume_grid && road_has_volume_grid(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "kübajın ızgara yöntemi ve hücre boyu şema 177 ister"));
                 }
                 if !has.slope_transitions && road_has_slope_transitions(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "koridor bölgesinin şev geçişi şema 176 ister"));

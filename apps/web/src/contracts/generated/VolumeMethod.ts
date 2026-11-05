@@ -3,4 +3,4 @@
 /**
  * How an earthwork volume is computed (docs/adr/0906 §2–§3).
  */
-export type VolumeMethod = "endArea" | "prismoidal" | "surfaces";
+export type VolumeMethod = "endArea" | "prismoidal" | "surfaces" | "grid";

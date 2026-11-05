@@ -114,6 +114,13 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
             if let Some(c) = input.curve {
                 d.curve = c;
             }
+            // Docs/adr/0974: the grid's cell; another method takes it off.
+            if input.method.is_some_and(|m| m != kentos_commands::VolumeMethod::Grid) {
+                d.cell = None;
+            }
+            if let Some(c) = input.cell {
+                d.cell = Some(c);
+            }
             if d != *old {
                 d.revision = old.revision.saturating_add(1);
             }
@@ -147,6 +154,7 @@ fn check(doc: &kentos_domain::Document, input: &VolumesEdit) -> Result<Checked, 
                 history: Vec::new(),
                 rule: input.rule,
                 curve: input.curve.unwrap_or(false),
+                cell: input.cell,
             });
             Some(id)
         }

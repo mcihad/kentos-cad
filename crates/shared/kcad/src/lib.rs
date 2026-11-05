@@ -783,11 +783,13 @@ pub const SCHEMA_WITH_VOLUME_STATES: u32 = 174;
 pub const SCHEMA_WITH_CUT_BENCHES: u32 = 175;
 /// Schema 176 (docs/adr/0960): a corridor region's slope `transition`.
 pub const SCHEMA_WITH_SLOPE_TRANSITIONS: u32 = 176;
+/// Schema 177 (docs/adr/0974): an earthwork volume's `grid` method and its `cell`.
+pub const SCHEMA_WITH_VOLUME_GRID: u32 = 177;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 174] = [
+pub const SCHEMAS: [u32; 175] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -962,6 +964,7 @@ pub const SCHEMAS: [u32; 174] = [
     SCHEMA_WITH_VOLUME_STATES,
     SCHEMA_WITH_CUT_BENCHES,
     SCHEMA_WITH_SLOPE_TRANSITIONS,
+    SCHEMA_WITH_VOLUME_GRID,
 ];
 
 /// The file a drawing is saved as.

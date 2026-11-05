@@ -13,6 +13,11 @@ import type { VolumeRule } from "./VolumeRule";
  */
 export type VolumeReport = { id: string, name: string, revision: number, corridor: string, method: VolumeMethod, stale: boolean, rows: Array<VolumeRow>, cut: number, fill: number, factoredCut: number, factoredFill: number, cutArea?: number, fillArea?: number, uncovered?: number, 
 /**
+ * The sampling step it used (docs/adr/0974): the grid's cell, else the largest interval between two consecutive
+ * sections (m); absent where there is no interval.
+ */
+step?: number, 
+/**
  * The topsoil stripped in all (m³), where the volume strips.
  */
 strip?: number, 

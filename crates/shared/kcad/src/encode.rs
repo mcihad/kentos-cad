@@ -2107,6 +2107,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 177 (docs/adr/0974): an earthwork volume on a grid and its cell.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_grid) {
+        return crate::SCHEMA_WITH_VOLUME_GRID;
+    }
     // Schema 176 (docs/adr/0960): a corridor region's slope transition.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_slope_transitions) {
         return crate::SCHEMA_WITH_SLOPE_TRANSITIONS;

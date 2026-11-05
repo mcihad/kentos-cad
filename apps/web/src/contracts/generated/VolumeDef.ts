@@ -36,4 +36,8 @@ rule?: VolumeRule,
  * The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
  * `A + κ·Q`; the average end area method only.
  */
-curve?: boolean, };
+curve?: boolean, 
+/**
+ * The grid method's cell (m, docs/adr/0974; schema 177): 0.01 to 1000; the grid method only.
+ */
+cell?: number, };

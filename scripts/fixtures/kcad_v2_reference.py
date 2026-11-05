@@ -2446,6 +2446,9 @@ def document(d):
     if any("transition" in g for c in road.get("corridors", []) for g in c.get("regions", [])):
         # A corridor region's slope transition (docs/adr/0960).
         schema = max(schema, 176)
+    if any(v.get("method") == "grid" or "cell" in v for v in road.get("volumes", [])):
+        # An earthwork volume on a grid and its cell (docs/adr/0974).
+        schema = max(schema, 177)
 
     def indexed(nodes):
         return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
@@ -3316,7 +3319,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-177.kcad"] = container(root(cmap(parts), version=uint(177)))
+    files["schema-version-178.kcad"] = container(root(cmap(parts), version=uint(178)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5726,6 +5729,12 @@ def build():
     assert ed.count(b"\x67version\x18\xb0") == 1, "a region's slope transition is schema 176"
     out["road-slope-transitions.kcad"] = container(ed)
     out["broken/road-slope-transitions-in-schema-175.kcad"] = container(ed.replace(b"\x67version\x18\xb0", b"\x67version\x18\xaf"))
+    # Schema 177 (docs/adr/0974): an earthwork volume on a grid and its cell; schema 176 refuses it.
+    gridded = load("road-volume-grid.json")
+    gd = document(gridded)
+    assert gd.count(b"\x67version\x18\xb1") == 1, "a volume on a grid is schema 177"
+    out["road-volume-grid.kcad"] = container(gd)
+    out["broken/road-volume-grid-in-schema-176.kcad"] = container(gd.replace(b"\x67version\x18\xb1", b"\x67version\x18\xb0"))
     # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"

@@ -366,6 +366,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
+        cell: float | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -408,6 +409,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
             doc: The drawing it works on.
             operation:
             bench: The fill's foundation benched; null takes it off.
+            cell: The grid method's cell (m, docs/adr/0974), 0.01 to 1000; a method other than the grid takes it off. Unit: m.
             corridor:
             curve: The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.
             expected_revision:
@@ -432,6 +434,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         return self.execute_input(doc, VolumesEdit(
             operation=operation,
             bench=bench,
+            cell=cell,
             corridor=corridor,
             curve=curve,
             expected_revision=expected_revision,
@@ -450,6 +453,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
+        cell: float | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -466,6 +470,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         return self.plan_input(doc, VolumesEdit(
             operation=operation,
             bench=bench,
+            cell=cell,
             corridor=corridor,
             curve=curve,
             expected_revision=expected_revision,
@@ -484,6 +489,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
+        cell: float | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -500,6 +506,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         return self.validate_input(doc, VolumesEdit(
             operation=operation,
             bench=bench,
+            cell=cell,
             corridor=corridor,
             curve=curve,
             expected_revision=expected_revision,
@@ -518,6 +525,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         *,
         operation: RoadEditOperation | RoadEditOperationName,
         bench: VolumeBenchDef | None | Unset = UNSET,
+        cell: float | None | Unset = UNSET,
         corridor: str | None | Unset = UNSET,
         curve: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -539,6 +547,7 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         return self.answer_input(doc, VolumesEdit(
             operation=operation,
             bench=bench,
+            cell=cell,
             corridor=corridor,
             curve=curve,
             expected_revision=expected_revision,

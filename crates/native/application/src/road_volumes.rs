@@ -357,6 +357,37 @@ pub(crate) fn compute_on(
                 }
             }
         }
+        VolumeMethod::Grid => {
+            // Docs/adr/0974: each strip's top triangles against the terrain on the grid, a cell centre counted once.
+            let (Some(surface), Some(cell)) = (&made.sampler.surface, def.cell) else {
+                return Err(fail(
+                    codes::INVALID_VOLUME,
+                    format!("“{}” koridorunun yüzeyi kurulamıyor; ızgara hacmi hesaplanamaz.", cdef.name),
+                    "corridor",
+                ));
+            };
+            let terrain: Vec<Triangle> = surface
+                .triangles
+                .iter()
+                .map(|t| [surface.vertices[t[0] as usize], surface.vertices[t[1] as usize], surface.vertices[t[2] as usize]])
+                .collect();
+            let ground = Ground::new(&terrain);
+            let mut counted = std::collections::HashSet::new();
+            let strips = &made.built.strips;
+            for (ri, region) in made.regions.iter().enumerate() {
+                for w in region.crosses.windows(2) {
+                    let (s0, s1) = (w[0].line.station, w[1].line.station);
+                    let volumes = strips.iter().find(|s| s.0 == ri && s.1 == s0 && s.2 == s1).map(|s| {
+                        let v = ground.grid_volumes(&made.built.triangles[s.3.clone()], cell, &mut counted);
+                        cut_area += v.cut_area;
+                        fill_area += v.fill_area;
+                        uncovered += v.uncovered;
+                        (v.cut, v.fill)
+                    });
+                    raws.push(Raw { from: s0, to: s1, volumes, plain: None, extra: None, layers: Vec::new() });
+                }
+            }
+        }
     }
     let text = |s: f64| km_text(made.sampler.alignment.km(s), 3);
     let (mut cut, mut fill, mut fcut, mut ffill) = (0.0, 0.0, 0.0, 0.0);
@@ -447,7 +478,7 @@ pub(crate) fn compute_on(
             ),
         ));
     }
-    if def.method == VolumeMethod::Surfaces && uncovered > 1e-6 {
+    if matches!(def.method, VolumeMethod::Surfaces | VolumeMethod::Grid) && uncovered > 1e-6 {
         warnings.push(warning(
             codes::VOLUME_UNCOVERED,
             format!("“{}” kübajında tasarım yüzeyinin {uncovered:.3} m²'sini arazi örtmüyor; o alanın hacmi yok.", def.name),
@@ -462,7 +493,13 @@ pub(crate) fn compute_on(
             ),
         ));
     }
-    let surfaces = def.method == VolumeMethod::Surfaces;
+    let surfaces = matches!(def.method, VolumeMethod::Surfaces | VolumeMethod::Grid);
+    // The sampling step it used (docs/adr/0974; ROAD-VOL-03): the grid's cell, else the largest interval between two
+    // sections (the strip between them for the surfaces).
+    let step = match def.method {
+        VolumeMethod::Grid => def.cell,
+        _ => raws.iter().map(|r| r.to - r.from).reduce(f64::max),
+    };
     let report = VolumeReport {
         id: def.id.clone(),
         name: def.name.clone(),
@@ -478,6 +515,7 @@ pub(crate) fn compute_on(
         cut_area: surfaces.then_some(cut_area),
         fill_area: surfaces.then_some(fill_area),
         uncovered: surfaces.then_some(uncovered),
+        step,
         strip: (!def.strip.is_empty()).then_some(strip),
         bench: def.bench.as_ref().map(|_| benched),
         gaps: joined,
@@ -623,6 +661,7 @@ pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
         cut_area: None,
         fill_area: None,
         uncovered: None,
+        step: None,
         strip: None,
         bench: None,
         gaps: Vec::new(),

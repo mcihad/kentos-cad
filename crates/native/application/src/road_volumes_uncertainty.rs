@@ -101,9 +101,10 @@ fn budget(
     // The method's share: the volume by the other method (the curve correction is the end areas' own).
     let other = match def.method {
         VolumeMethod::EndArea => VolumeMethod::Prismoidal,
-        VolumeMethod::Prismoidal | VolumeMethod::Surfaces => VolumeMethod::EndArea,
+        VolumeMethod::Prismoidal | VolumeMethod::Surfaces | VolumeMethod::Grid => VolumeMethod::EndArea,
     };
-    let other_def = kentos_commands::VolumeDef { method: other, curve: def.curve && other == VolumeMethod::EndArea, ..def.clone() };
+    let other_def =
+        kentos_commands::VolumeDef { method: other, curve: def.curve && other == VolumeMethod::EndArea, cell: None, ..def.clone() };
     let other_rep = common::compute(doc, &other_def).ok().map(|(r, _)| r);
     let terms: Vec<f64> = rep.rows.iter().flat_map(|r| [r.cut, r.fill]).flatten().collect();
     let numeric = numeric_bound(terms.len(), terms.iter().map(|v| v.abs()).sum());

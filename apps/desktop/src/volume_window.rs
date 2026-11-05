@@ -136,11 +136,24 @@ impl std::fmt::Display for Shown {
     }
 }
 
-const METHODS: [(VolumeMethod, &str); 3] = [
+const METHODS: [(VolumeMethod, &str); 4] = [
     (VolumeMethod::EndArea, "Ortalama alan"),
     (VolumeMethod::Prismoidal, "Prizmoidal"),
     (VolumeMethod::Surfaces, "Yüzeyler arası"),
+    (VolumeMethod::Grid, "Izgara"),
 ];
+
+/// The method and the sampling step it used (docs/adr/0974; ROAD-VOL-03): the grid's cell, else the largest interval
+/// between two sections.
+pub(crate) fn method_words(rep: &VolumeReport) -> String {
+    let name = METHODS.iter().find(|m| m.0 == rep.method).map_or("", |m| m.1);
+    let comma = |v: f64| trimmed(v).replace('.', ",");
+    match (rep.method, rep.step) {
+        (VolumeMethod::Grid, Some(c)) => format!("Yöntem: {name}, hücre {} m.", comma(c)),
+        (_, Some(h)) => format!("Yöntem: {name}, en büyük kesit aralığı {} m.", comma(h)),
+        (_, None) => format!("Yöntem: {name}."),
+    }
+}
 
 fn trimmed(v: f64) -> String {
     let s = format!("{v:.6}");
@@ -198,6 +211,8 @@ pub struct Row {
     pub(crate) rule: Option<kentos_commands::VolumeRule>,
     /// The curve correction (docs/adr/0934).
     pub(crate) curve: bool,
+    /// The grid's cell as typed (docs/adr/0974).
+    pub(crate) cell: String,
 }
 
 impl Row {
@@ -231,6 +246,7 @@ impl Row {
             history: d.history.clone(),
             rule: d.rule,
             curve: d.curve,
+            cell: d.cell.map(trimmed).unwrap_or_default(),
         }
     }
 
@@ -275,6 +291,12 @@ impl Row {
             (Ok(Some(slope)), Ok(Some(height))) => Some(VolumeBenchDef { slope, height }),
             _ => return Err("Diş kazısı için eğimi (%) ve basamak yüksekliğini sayı olarak birlikte yazın.".into()),
         };
+        // Docs/adr/0974: the grid's cell, the user's; KentOS gives none.
+        let cell = match (self.method, number(&self.cell)) {
+            (VolumeMethod::Grid, Ok(Some(c))) => Some(c),
+            (VolumeMethod::Grid, _) => return Err("Izgara yöntemi için hücre boyunu (m) yazın.".into()),
+            _ => None,
+        };
         Ok(VolumeDef {
             id: self.id.clone(),
             name: self.name.clone(),
@@ -288,6 +310,7 @@ impl Row {
             history: self.history.clone(),
             rule: self.rule,
             curve: self.curve,
+            cell,
         })
     }
 }
@@ -354,6 +377,8 @@ pub enum Event {
     Rule(Option<kentos_commands::VolumeRule>),
     /// The curve correction on or off (docs/adr/0934 §3).
     Curve(bool),
+    /// The grid's cell (docs/adr/0974).
+    Cell(String),
     /// The list under the figures.
     View(Shown),
     /// The uncertainty's σ (0), shift (1) or share accepted (2) (docs/adr/0941).
@@ -603,6 +628,7 @@ impl App {
                         history: Vec::new(),
                         rule: None,
                         curve: false,
+                        cell: String::new(),
                     });
                     w.chosen = Some(w.rows.len() - 1);
                     w.line = None;
@@ -745,6 +771,11 @@ impl App {
                     row.curve = on;
                 }
             }
+            Event::Cell(t) => {
+                if let Some(row) = chosen_row(w) {
+                    row.cell = t;
+                }
+            }
             Event::Write => return self.write_volume_sheet(),
             Event::Cancel => {
                 self.volume_window = None;
@@ -772,6 +803,7 @@ impl App {
             bench: None,
             rule: None,
             curve: None,
+            cell: None,
             expected_revision: None,
         }
     }
@@ -861,6 +893,7 @@ impl App {
                 bench: Some(d.bench.clone()),
                 rule: d.rule,
                 curve: Some(d.curve),
+                cell: d.cell,
                 ..Self::blank_volume_edit(RoadEditOperation::Set, &d.id)
             };
             if !self.volume_write(edit) {
@@ -943,7 +976,8 @@ impl App {
                 (Some(e), _) => d = d.note(Banner::error(e.clone())),
                 (None, Some(rep)) => {
                     d = d
-                        .legend(rule_words(rep))
+                        // The rule, the method and its step on the one line under the picture (docs/adr/0974).
+                        .legend(format!("{} · {}", rule_words(rep), method_words(rep)))
                         .figure("Kazı", format!("{} m³", grouped(rep.cut, 1)))
                         .figure("Dolgu", format!("{} m³", grouped(rep.fill, 1)))
                         .figure("Düzeltilmiş fark", format!("{} m³", grouped(rep.factored_cut - rep.factored_fill, 1)))
@@ -1108,7 +1142,7 @@ impl App {
         let on_rule = Select::new(RULES.iter().map(|m| Choice::new(m.1.to_owned())), RULES.iter().position(|m| m.0 == r.rule), |i| {
             msg(Event::Rule(RULES[i].0))
         });
-        let sections = r.method != VolumeMethod::Surfaces;
+        let sections = matches!(r.method, VolumeMethod::EndArea | VolumeMethod::Prismoidal);
         let fill = |title| road_dialog::Col { title, width: None, number: true };
         let factors = road_dialog::edit_table(
             vec![fill("Baş (m)"), fill("Son (m)"), fill("Kabarma"), fill("Sıkışma")],
@@ -1141,7 +1175,13 @@ impl App {
             .section("Tanım")
             .field("Ad", kentos_ui::widget::text_field("Kübajın adı", &r.name).on_input(|t| msg(Event::Name(t))))
             .field("Koridor", on_corridor)
-            .field("Yöntem", on_method)
+            .field("Yöntem", on_method);
+        if r.method == VolumeMethod::Grid {
+            form = form
+                .field("Hücre (m)", kentos_ui::widget::text_field("", &r.cell).on_input(|t| msg(Event::Cell(t))))
+                .help("Izgara: iki yüzey her hücrenin ortasında okunur, hacim hücre alanı çarpı kot farkıdır. Hücre boyu sizin; KentOS öntanımlı sayı vermez.");
+        }
+        let mut form = form
             .field(RULE, on_rule)
             .help("NETPRO'nun adlarıyla: Yol ya da Formasyon, Zemin ya da Bitkisel Toprak. Formasyon üstyapı ister.")
             .field(
@@ -1155,7 +1195,7 @@ impl App {
             .help(if r.method == VolumeMethod::EndArea {
                 "Kurpta kesitler yelpaze gibi açılır: iç yanın hacmi az, dışınki çok sayılmalı (Pappus). Kesitlerin ağırlık merkezi kullanılır."
             } else {
-                "Kurp düzeltmesi ortalama alan yöntemindedir; prizmoidal ve yüzeyler yönteminde yoktur."
+                "Kurp düzeltmesi ortalama alan yöntemindedir; prizmoidal, yüzeyler arası ve ızgara yönteminde yoktur."
             })
             .section("Kabarma ve sıkışma")
             .wide(factors)
@@ -1322,6 +1362,7 @@ impl App {
                 },
             },
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
+            Control::Fill("Hücre (m)", text) => Some(msg(Event::Cell(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

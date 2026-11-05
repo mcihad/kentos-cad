@@ -27,6 +27,8 @@
     {"file": "broken/road-cut-benches-in-schema-174.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "road-slope-transitions.kcad", "sniff": "kcad", "content": "road-slope-transitions.json"},
     {"file": "broken/road-slope-transitions-in-schema-175.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "road-volume-grid.kcad", "sniff": "kcad", "content": "road-volume-grid.json"},
+    {"file": "broken/road-volume-grid-in-schema-176.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "road-pavement.kcad", "sniff": "kcad", "content": "road-pavement.json"},
     {"file": "broken/road-pavement-in-schema-163.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "broken/road-volume-rule-in-schema-163.kcad", "sniff": "kcad", "error": "unknown_field"},
@@ -403,7 +405,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-177.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-178.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

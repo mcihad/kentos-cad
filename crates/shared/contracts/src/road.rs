@@ -1147,6 +1147,10 @@ pub enum VolumeMethod {
     Prismoidal,
     /// Between the corridor's top surface and the terrain, the triangulations laid over each other.
     Surfaces,
+    /// Between the corridor's top surface and the terrain on a regular grid (docs/adr/0974; schema 177): at each cell's
+    /// centre the two heights' difference times the cell's area (the midpoint rule), the cell (`cell`, m) given by
+    /// the volume; KentOS gives none.
+    Grid,
 }
 
 /// The factors over a stretch of stations (docs/adr/0906 §4): the cut's (bank to the volume it makes, kabarma) and the
@@ -1345,6 +1349,11 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub curve: bool,
+    /// The grid method's cell (m, docs/adr/0974; schema 177): 0.01 to 1000; the grid method only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: Option<f64>,
 }
 
 /// An earthwork volume's rule (docs/adr/0930 §2): the road's top (Yol) or the formation (Formasyon) against the ground
@@ -3191,7 +3200,14 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
                 return fail(path, "katsayının kaynağı boş olmaz, en çok 200 karakter");
             }
         }
-        let sections = v.method != VolumeMethod::Surfaces;
+        let sections = matches!(v.method, VolumeMethod::EndArea | VolumeMethod::Prismoidal);
+        // Docs/adr/0974: the grid's cell, the grid method's only.
+        match (v.method, v.cell) {
+            (VolumeMethod::Grid, Some(c)) if c.is_finite() && (0.01..=1000.0).contains(&c) => {}
+            (VolumeMethod::Grid, _) => return fail(at("cell"), "ızgara yöntemi 0,01 ile 1000 m arası bir hücre boyu (cell) ister"),
+            (_, Some(_)) => return fail(at("cell"), "hücre boyu yalnız ızgara yönteminin"),
+            _ => {}
+        }
         if v.curve && v.method != VolumeMethod::EndArea {
             return fail(at("curve"), "kurp düzeltmesi yalnız ortalama alan yönteminde olur");
         }

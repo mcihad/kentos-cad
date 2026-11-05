@@ -29,8 +29,9 @@ pub const ROAD_VOLUMES_APPROVE_VERSION: u32 = 1;
 /// uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
 /// set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
 /// overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
-/// benching between surfaces; a corridor that does not build; a Bitkisel Toprak rule without stripping, a Formasyon rule
-/// between surfaces or on a template without a pavement), `invalid_revision`, `revision_conflict`.
+/// benching between surfaces or on the grid; a corridor that does not build; a Bitkisel Toprak rule without stripping, a
+/// Formasyon rule between surfaces, on the grid or on a template without a pavement; the grid without a cell of 0.01 to
+/// 1000 m, a cell on another method), `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -70,6 +71,11 @@ pub struct VolumesEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub curve: Option<bool>,
+    /// The grid method's cell (m, docs/adr/0974), 0.01 to 1000; a method other than the grid takes it off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -184,6 +190,12 @@ pub struct VolumeReport {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub uncovered: Option<f64>,
+    /// The sampling step it used (docs/adr/0974): the grid's cell, else the largest interval between two consecutive
+    /// sections (m); absent where there is no interval.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub step: Option<f64>,
     /// The topsoil stripped in all (m³), where the volume strips.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

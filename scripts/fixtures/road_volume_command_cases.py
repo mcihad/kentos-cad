@@ -14,6 +14,7 @@ overlay in fractions, strip by strip. The desktop (crates/native/application/tes
 
 import copy
 import json
+import math
 import sys
 from fractions import Fraction as F
 from pathlib import Path
@@ -249,6 +250,53 @@ def surfaces(design):
     return vref.between(design, near)
 
 
+def grid(design, cell, counted):
+    """Docs/adr/0974: the volumes between a strip's triangles and the terrain on a regular grid, the midpoint rule: the
+    cells `cell` m square on the project's multiples of `cell`, a centre inside a design triangle (its edges within
+    10⁻⁹ m) measured once across the strips (`counted`); there the design's plane less the TIN reference's height,
+    times the cell's area, to the fill when above, to the cut when below; a centre off the terrain uncovered."""
+    out = {"cut": 0.0, "fill": 0.0, "cutArea": 0.0, "fillArea": 0.0, "uncovered": 0.0}
+    area = cell * cell
+    for t in design:
+        (ax, ay, az), (bx, by, bz), (cx, cy, cz) = t
+        d2 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+        if d2 == 0:
+            continue
+        corners = [(ax, ay), (bx, by), (cx, cy)] if d2 > 0 else [(ax, ay), (cx, cy), (bx, by)]
+
+        def inside(px, py):
+            for k in range(3):
+                (x0, y0), (x1, y1) = corners[k], corners[(k + 1) % 3]
+                if ((x1 - x0) * (py - y0) - (y1 - y0) * (px - x0)) / math.hypot(x1 - x0, y1 - y0) < -1e-9:
+                    return False
+            return True
+
+        def plane(px, py):
+            wa = ((bx - px) * (cy - py) - (by - py) * (cx - px)) / d2
+            wb = ((cx - px) * (ay - py) - (cy - py) * (ax - px)) / d2
+            return wa * az + wb * bz + (1 - wa - wb) * cz
+
+        x0, y0, x1, y1 = bbox(t)
+        for j in range(math.ceil(y0 / cell - 0.5), math.floor(y1 / cell - 0.5) + 1):
+            for i in range(math.ceil(x0 / cell - 0.5), math.floor(x1 / cell - 0.5) + 1):
+                px, py = (i + 0.5) * cell, (j + 0.5) * cell
+                if not inside(px, py) or (i, j) in counted:
+                    continue
+                counted.add((i, j))
+                g = pcmd.TIN.height(px, py)
+                if g is None:
+                    out["uncovered"] += area
+                    continue
+                dz = plane(px, py) - g
+                if dz > 0:
+                    out["fill"] += dz * area
+                    out["fillArea"] += area
+                elif dz < 0:
+                    out["cut"] -= dz * area
+                    out["cutArea"] += area
+    return out
+
+
 def compute(v, corridors=CORRIDORS):
     """The volume's report and warnings; Refused where it does not compute."""
     c = next((x for x in corridors if x["id"] == v["corridor"]), None)
@@ -266,6 +314,10 @@ def compute(v, corridors=CORRIDORS):
     if method == "surfaces" and c["surface"] != "t-1":
         raise Refused("invalid_volume", f"“{c['name']}” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.",
                       "corridor")
+    if method == "grid" and c["surface"] != "t-1":
+        raise Refused("invalid_volume", f"“{c['name']}” koridorunun yüzeyi kurulamıyor; ızgara hacmi hesaplanamaz.",
+                      "corridor")
+    counted = set()
     tdefs = [next((x for x in ccmd.TEMPLATES if x["id"] == rg["template"]), {}) for rg in c["regions"]]
     formation, _ = rule_of(v)
     if formation:
@@ -340,7 +392,7 @@ def compute(v, corridors=CORRIDORS):
                     t = reg["template"]
                     got = cref.strip(cref.top(x, t), cref.top(y, t))
                     if not any(cref.area(g) <= 0 for g in got):
-                        r = surfaces(got)
+                        r = grid(got, v["cell"], counted) if method == "grid" else surfaces(got)
                         areas["cut"] += r["cutArea"]
                         areas["fill"] += r["fillArea"]
                         areas["uncovered"] += r["uncovered"]
@@ -400,7 +452,7 @@ def compute(v, corridors=CORRIDORS):
         warnings.append(warn("volume_curve_past_centre", f"“{v['name']}” kübajında {past} aralığın bir kesiti kurbun "
                                                          "merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı. Kesit "
                                                          "genişliğini kurbun yarıçapından küçük tutun."))
-    if method == "surfaces" and areas["uncovered"] > 1e-6:
+    if method in ("surfaces", "grid") and areas["uncovered"] > 1e-6:
         warnings.append(warn("volume_uncovered", f"“{v['name']}” kübajında tasarım yüzeyinin {areas['uncovered']:.3f} m²'sini "
                                                  "arazi örtmüyor; o alanın hacmi yok."))
     if unfactored:
@@ -409,8 +461,13 @@ def compute(v, corridors=CORRIDORS):
     report = {"id": v["id"], "name": v["name"], "revision": v.get("revision", 0), "corridor": v["corridor"],
               "method": method, "stale": cr["stale"], "rows": rows, "cut": cut, "fill": fill,
               "factoredCut": fcut, "factoredFill": ffill, "gaps": joined}
-    if method == "surfaces":
+    if method in ("surfaces", "grid"):
         report.update({"cutArea": areas["cut"], "fillArea": areas["fill"], "uncovered": areas["uncovered"]})
+    # Docs/adr/0974: the sampling step used, the grid's cell or the largest interval between two sections.
+    if method == "grid":
+        report["step"] = v["cell"]
+    elif raws:
+        report["step"] = max(s1 - s0 for s0, s1, *_ in raws)
     if v.get("strip"):
         report["strip"] = strip
     if v.get("bench") is not None:
@@ -568,6 +625,9 @@ def edit_cases():
        START + [new("kendi", corridor="c-2")], "kendi")
     ok("Prizmoidal yöntem", {**base, "method": "prismoidal"}, START + [new("v-3", method="prismoidal")], "v-3")
     ok("Yüzeyler arası yöntem", {**base, "method": "surfaces"}, START + [new("v-3", method="surfaces")], "v-3")
+    # Docs/adr/0974: the grid with its cell; a method other than the grid takes the cell off.
+    ok("Izgara yöntemi, 2 m hücre", {**base, "method": "grid", "cell": 2.0}, START + [new("v-3", method="grid", cell=2.0)],
+       "v-3")
     f2 = [{"from": 0.0, "to": 150.0, "cut": 1.3, "fill": 0.85}, {"from": 150.0, "to": 600.0, "fill": 0.95}]
     ok("Katsayılar km aralıklarına", {**base, "factors": f2}, START + [new("v-3", factors=f2)], "v-3")
     # Docs/adr/0957: a row's soil densities and its source.
@@ -657,6 +717,16 @@ def edit_cases():
     no("Kurulamayan yüzeyle yüzeyler arası", {**base, "method": "surfaces"},
        failed("invalid_volume", "“Ana koridor” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.", "corridor"),
        setup(START, [{**ccmd.C1, "surface": "t-2"}, ccmd.C2]))
+    no("Hücresiz ızgara", {**base, "method": "grid"},
+       rulefail("ızgara yöntemi 0,01 ile 1000 m arası bir hücre boyu (cell) ister", "cell"))
+    no("Sıfır hücreli ızgara", {**base, "method": "grid", "cell": 0.0},
+       rulefail("ızgara yöntemi 0,01 ile 1000 m arası bir hücre boyu (cell) ister", "cell"))
+    no("Ortalama alanda hücre olmaz", {**base, "cell": 2.0}, rulefail("hücre boyu yalnız ızgara yönteminin", "cell"))
+    no("Izgarada sıyırma olmaz", {**base, "method": "grid", "cell": 2.0, "strip": strips},
+       rulefail("sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır", "method"))
+    no("Kurulamayan yüzeyle ızgara", {**base, "method": "grid", "cell": 2.0},
+       failed("invalid_volume", "“Ana koridor” koridorunun yüzeyi kurulamıyor; ızgara hacmi hesaplanamaz.", "corridor"),
+       setup(START, [{**ccmd.C1, "surface": "t-2"}, ccmd.C2]))
     no("Yüzeyler arasında sıyırma olmaz", {"operation": "set", "volume": "v-2", "strip": strips},
        rulefail("sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır", "method"))
     no("Binen sıyırma satırları", {**base, "strip": [{"from": 0.0, "to": 200.0, "depth": 0.3},
@@ -740,6 +810,9 @@ def query_cases():
     q("Yüzeyler arası kübaj", {"volume": "v-2"})
     q("Prizmoidal", {"volume": "v-1"}, [v(method="prismoidal"), V2])
     q("Ana koridorda yüzeyler arası", {"volume": "v-1"}, [v(method="surfaces"), V2])
+    # Docs/adr/0974: the grid at 2 m and 1 m against the surfaces' overlay on the same corridor.
+    q("Ana koridorda ızgara, 2 m hücre", {"volume": "v-1"}, [v(method="grid", cell=2.0), V2])
+    q("Ana koridorda ızgara, 1 m hücre", {"volume": "v-1"}, [v(method="grid", cell=1.0), V2])
     q("Katsayısız: düzeltilmiş ham", {"volume": "v-1"}, [v(factors=None), V2])
     q("Katsayı yalnız bir aralıkta", {"volume": "v-1"}, [v(factors=[{"from": 100.0, "to": 200.0, "cut": 1.3, "fill": 0.9}]), V2])
     q("Son katsayı satırının sonu dahil", {"volume": "v-1"}, [v(factors=[{"from": 0.0, "to": 600.0, "cut": 1.1, "fill": 1.05}]), V2])

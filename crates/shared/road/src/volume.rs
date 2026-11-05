@@ -299,6 +299,69 @@ impl Ground {
     }
 }
 
+/// Whether `p` is in the counterclockwise triangle `t`, its edges and corners included within 10⁻⁹ m.
+fn holds(t: &Triangle, p: [f64; 2]) -> bool {
+    (0..3).all(|k| {
+        let (a, b) = ([t[k][0], t[k][1]], [t[(k + 1) % 3][0], t[(k + 1) % 3][1]]);
+        let len = (b[0] - a[0]).hypot(b[1] - a[1]);
+        len > 0.0 && area2(a, b, p) / len >= -1e-9
+    })
+}
+
+impl Ground {
+    /// The ground's height at a plan point: the plane of the first of its triangles holding it; none off them.
+    pub fn height(&self, p: [f64; 2]) -> Option<f64> {
+        let grid = self.grid.as_ref()?;
+        let [cx, cy] = grid.cell(p[0], p[1]);
+        grid.cells[cy * grid.nx + cx].iter().map(|&i| &self.tris[i as usize]).find(|g| holds(g, p)).map(|g| plane_z(g, p))
+    }
+
+    /// The volumes between a design and this ground on a regular grid (docs/adr/0974; ROAD-VOL-03): the cells `cell` m
+    /// square whose corners are multiples of `cell` in the project's plan coordinates, each centre in a design triangle
+    /// measured once (`counted` keeps the centres measured, so strips that share an edge do not count it twice). At a
+    /// centre `d = z_design − z_ground` and the cell's volume is `cell²·d` (the midpoint rule, O(h²)): `d > 0` to the
+    /// fill, `d < 0` to the cut, the cell's area to their plan areas; a centre the ground does not reach to `uncovered`.
+    pub fn grid_volumes(&self, design: &[Triangle], cell: f64, counted: &mut std::collections::HashSet<(i64, i64)>) -> Volumes {
+        let mut out = Volumes::default();
+        let area = cell * cell;
+        for d in design {
+            let Some(d) = ccw(d) else { continue };
+            let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+            for p in &d {
+                x0 = x0.min(p[0]);
+                y0 = y0.min(p[1]);
+                x1 = x1.max(p[0]);
+                y1 = y1.max(p[1]);
+            }
+            let (i0, i1) = ((x0 / cell - 0.5).ceil() as i64, (x1 / cell - 0.5).floor() as i64);
+            let (j0, j1) = ((y0 / cell - 0.5).ceil() as i64, (y1 / cell - 0.5).floor() as i64);
+            for j in j0..=j1 {
+                for i in i0..=i1 {
+                    let p = [(i as f64 + 0.5) * cell, (j as f64 + 0.5) * cell];
+                    if !holds(&d, p) || !counted.insert((i, j)) {
+                        continue;
+                    }
+                    match self.height(p) {
+                        None => out.uncovered += area,
+                        Some(g) => {
+                            out.covered += area;
+                            let dz = plane_z(&d, p) - g;
+                            if dz > 0.0 {
+                                out.fill += dz * area;
+                                out.fill_area += area;
+                            } else if dz < 0.0 {
+                                out.cut -= dz * area;
+                                out.cut_area += area;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        out
+    }
+}
+
 impl Ground {
     /// Each piece where a design triangle and a ground triangle overlap in plan, with `d = z_design − z_ground` at its
     /// corners (counterclockwise, convex); and the area both cover and the design's area the ground does not.

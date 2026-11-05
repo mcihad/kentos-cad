@@ -7247,13 +7247,15 @@ class VolumeMethod(_StrEnum):
     - ``endArea``: The average end area between consecutive sections.
     - ``prismoidal``: The prismoidal formula with a section in the middle of each pair.
     - ``surfaces``: Between the corridor's top surface and the terrain, the triangulations laid over each other.
+    - ``grid``: Between the corridor's top surface and the terrain on a regular grid (docs/adr/0974; schema 177): at each cell's
     """
     END_AREA = "endArea"
     PRISMOIDAL = "prismoidal"
     SURFACES = "surfaces"
+    GRID = "grid"
 
 
-VolumeMethodName = Literal["endArea", "prismoidal", "surfaces"]
+VolumeMethodName = Literal["endArea", "prismoidal", "surfaces", "grid"]
 """The names of :class:`VolumeMethod`, for a plain string."""
 
 
@@ -89277,6 +89279,7 @@ class VolumeDef(_Model):
     Attributes:
         approved: Its figures as approved; an approved volume's definition does not change.
         bench: The fill's foundation benched (a section method's).
+        cell: The grid method's cell (m, docs/adr/0974; schema 177): 0.01 to 1000; the grid method only. Unit: m.
         curve: The volume on a curve by the sections' moments (docs/adr/0934; schema 167): each section's effective area
             `A + κ·Q`; the average end area method only.
         history: Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 171):
@@ -89292,6 +89295,7 @@ class VolumeDef(_Model):
     method: VolumeMethod | VolumeMethodName
     approved: VolumeApprovalDef | None | Unset = UNSET
     bench: VolumeBenchDef | None | Unset = UNSET
+    cell: float | None | Unset = UNSET
     curve: bool | Unset = UNSET
     factors: list[VolumeFactorDef] | Unset = UNSET
     history: list[VolumeApprovalDef] | Unset = UNSET
@@ -89309,6 +89313,8 @@ class VolumeDef(_Model):
             out["approved"] = None if self.approved is None else self.approved.to_json()
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else self.bench.to_json()
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
         if self.curve is not UNSET:
             out["curve"] = self.curve
         if self.factors is not UNSET:
@@ -89332,6 +89338,7 @@ class VolumeDef(_Model):
             method=_enum_in(VolumeMethod, data["method"]),
             approved=UNSET if "approved" not in data else None if data["approved"] is None else VolumeApprovalDef.from_json(data["approved"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
             curve=data.get("curve", UNSET),
             factors=[VolumeFactorDef.from_json(e0) for e0 in data["factors"]] if "factors" in data else UNSET,
             history=[VolumeApprovalDef.from_json(e0) for e0 in data["history"]] if "history" in data else UNSET,
@@ -89685,6 +89692,8 @@ class VolumeReport(_Model):
         layers: The pavement layers its templates have, by name in the order met, with their volumes in all (m³). Empty without a
             pavement.
         rule: Its rule, where it has one (docs/adr/0930 §2).
+        step: The sampling step it used (docs/adr/0974): the grid's cell, else the largest interval between two consecutive
+            sections (m); absent where there is no interval. Unit: m.
         strip: The topsoil stripped in all (m³), where the volume strips. Unit: volume.
         uncovered: Unit: area.
     """
@@ -89708,6 +89717,7 @@ class VolumeReport(_Model):
     layers: list[VolumeLayer] | Unset = UNSET
     problem: str | None | Unset = UNSET
     rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
+    step: float | None | Unset = UNSET
     strip: float | None | Unset = UNSET
     uncovered: float | None | Unset = UNSET
 
@@ -89741,6 +89751,8 @@ class VolumeReport(_Model):
             out["problem"] = self.problem
         if self.rule is not UNSET:
             out["rule"] = None if self.rule is None else _enum_out(self.rule)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
         if self.strip is not UNSET:
             out["strip"] = None if self.strip is None else float(self.strip)
         if self.uncovered is not UNSET:
@@ -89770,6 +89782,7 @@ class VolumeReport(_Model):
             layers=[VolumeLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             problem=data.get("problem", UNSET),
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
             uncovered=UNSET if "uncovered" not in data else None if data["uncovered"] is None else float(data["uncovered"]),
         )
@@ -90340,16 +90353,19 @@ class VolumesEdit(_Model):
     uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
     set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
     overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
-    benching between surfaces; a corridor that does not build; a Bitkisel Toprak rule without stripping, a Formasyon rule
-    between surfaces or on a template without a pavement), `invalid_revision`, `revision_conflict`.
+    benching between surfaces or on the grid; a corridor that does not build; a Bitkisel Toprak rule without stripping, a
+    Formasyon rule between surfaces, on the grid or on a template without a pavement; the grid without a cell of 0.01 to
+    1000 m, a cell on another method), `invalid_revision`, `revision_conflict`.
     Attributes:
         bench: The fill's foundation benched; null takes it off.
+        cell: The grid method's cell (m, docs/adr/0974), 0.01 to 1000; a method other than the grid takes it off. Unit: m.
         curve: The volume on a curve by the sections' moments (docs/adr/0934), the average end area method only.
         rule: Which two lines it measures between (docs/adr/0930 §2): Yol or Formasyon against Zemin or Bitkisel Toprak.
         strip: The topsoil stripped by stations; an empty list takes it off.
     """
     operation: RoadEditOperation | RoadEditOperationName
     bench: VolumeBenchDef | None | Unset = UNSET
+    cell: float | None | Unset = UNSET
     corridor: str | None | Unset = UNSET
     curve: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -90365,6 +90381,8 @@ class VolumesEdit(_Model):
         out["operation"] = _enum_out(self.operation)
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else self.bench.to_json()
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
         if self.corridor is not UNSET:
             out["corridor"] = self.corridor
         if self.curve is not UNSET:
@@ -90390,6 +90408,7 @@ class VolumesEdit(_Model):
         return cls(
             operation=_enum_in(RoadEditOperation, data["operation"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else VolumeBenchDef.from_json(data["bench"]),
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
             corridor=data.get("corridor", UNSET),
             curve=data.get("curve", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
