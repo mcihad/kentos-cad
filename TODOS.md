@@ -53,6 +53,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 - CAD-ADV-13 / ADR 1030: `cad.extract` işleyicisi, tablo parçaları ve satır sonu (`io/kcad.ts` şema 182, `columns.ts`, WASM
   `tableLayout.line`), paket türü 38, `FORMATS_VERSION` 107, Veri çıkarımı penceresi.
+- CAD-ADV-16 / ADR 1090: `cad.sheets.details` arayüzü (detay listesi, oran seçici, seçimden kapsam, tablo parçası);
+  yayın penceresinde kapsam ve sayfa denetimi satırları, Durum ve Devam et, `file.publish.status` istemcisi;
+  `SetFrame.detail`/`locked` ve `AffectReason::table` sözleri; pafta tasarımcısında detay başlığının `@olcek` okuması.
+  TS türleri üretildi; WASM bağlayıcısı yok.
+- CAD-ADV-18 / ADR 1009: açılışta sağlık denetimi yalnız masaüstü ayarıdır (`appearance.openHealthCheck`); web'de
+  aynı denetim Worker'da, süre bütçesiyle eklenecekse ayarın konağına web yazılır.
 - CAD-ADV-17 / ADR 1061: 2B düzleme indir penceresi; dışa aktarmanın `replaceSource` seçeneği. TS türleri üretildi.
 - CAD-ADV-11/12 / ADR 1001–1002: `.kcad` şema 181 uzun desen codec'i ve web çizicisinin 12'den uzun deseni; Standart
   kaynaklarını kur penceresi `cad.standards.install`'a bağlanmalı.

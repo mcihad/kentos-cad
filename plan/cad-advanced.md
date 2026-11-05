@@ -2395,7 +2395,7 @@ penceresi 1440×900 ve 1100×650'de, iki temada görüntülendi; görüntüler r
 alt nesne bağı, özel durum modeli, PDF yorumu içe alma, blok tanımı/pafta farkı alma ve web karşılığı bu maddenin
 dışında. Sahnelerle sürülen pencere testinin dışında ayrı bir fare kaydı yapılmadı.
 
-### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [ ]
+### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [~]
 
 **Öncelik:** P1; yanlış ölçek/çıktı P0. **Kod:** [C25], [C26], [C03].
 **Dayanak:** pafta seti ve baskı önizlemesinin ölçekle üretim ilişkisi.
@@ -2424,6 +2424,17 @@ dışında. Sahnelerle sürülen pencere testinin dışında ayrı bir fare kayd
 üret. İki viewport farklı katman/ölçü temsili kullansın; birini değiştir,
 öbürü korunmalı. Bağımsız PDF okuyucuda ölçü/vektör/metin kontrolü yap;
 güncelliğini yitiren pafta ve durdurulan yayın açık raporlansın.
+
+**Detay seti, sayfa özeti, yayın durumu ve devamı (6 Kasım 2026, [ADR 1090](../docs/adr/1090-general-2d-sheet-set-and-publication-flow.md)):**
+`cad.sheets.details` aynı modelin kesin oranlı genel 2B detaylarını kilitli görünümlerle, detay başına katman
+durumu, ezme ve açıklama temsiliyle, mimari kat verisi olmadan pafta setine yerleştirir; tablo parçası da detay
+kaynağıdır (ADR 1030 §9). `cad.sheets.set` `recipes` ile tarifi geri verir; etki hesabı görünümün katman durumunu ve
+tabloyu okuyan nesneleri sayar. PDF sayfa denetimi çizgi, dolgu, sıfır kalınlık, aranabilir metin, yüz, kırpma,
+saydamlık ve resim görünümü sayar; bağlamsız sayfa özeti yayın kaydına yazılır. `file.publish.status` güncel ve eski
+paftaları ayırır; `resumable`/`resume` durdurulan yayını sürdürür. 1:1/1:5/1:20/1:100 seti, iki farklı temsilli
+viewport, bağımsız PDF okuyucu ve Poppler denetimi, eski pafta ve durdurulan yayın kabul testleriyle kanıtlı; 32
+bağımsız ortak vaka geçti. Açık: masaüstünde detay kurma penceresi, `table` nedeni için bağımsız vakalar, ikili
+CTB/STB, AutoCAD/Acrobat denetimi. Madde `[~]`.
 
 ### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [~]
 
