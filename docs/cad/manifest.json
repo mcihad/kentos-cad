@@ -1271,6 +1271,22 @@
    "tests": 0
   },
   {
+   "id": "cad.flatten",
+   "kind": "command",
+   "title": "2B düzleme indir…",
+   "level": "semantic",
+   "via": [
+    "cad.entities.flatten"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.flatten",
+   "mcp": "cad.entities.flatten",
+   "note": "Seçimin kotları ve ölçüleri cad.entities.flatten ile; pencere komutun planını önizler, Uygula tek adım yazar (ADR 1061 §4).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "cad.inspect",
    "kind": "command",
    "title": "CAD denetimi…",

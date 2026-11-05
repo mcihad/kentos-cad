@@ -965,6 +965,8 @@ __all__ = [
     "EntitiesEdited",
     "EntitiesExplode",
     "EntitiesFillet",
+    "EntitiesFlatten",
+    "EntitiesFlattened",
     "EntitiesHatch",
     "EntitiesIsolate",
     "EntitiesIsolated",

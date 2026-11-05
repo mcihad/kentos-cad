@@ -38,6 +38,30 @@ RealDWG'nin C++/.NET arayüzü ve güncel Windows gereksinimi [Autodesk'in ürü
 
 Bu tablo tam yetenek iddiası değildir; satırların uygulanmış davranışı, kayıp/ret ve testleri `crates/shared/formats/tests/all/cad_io.rs`, DWG adaptör korpusu, native ortak durumlar ve dosya entegrasyonu ile birlikte değerlendirilir. Komut kataloğundaki makinece okunabilir format kapsamı aynı ayrımları Python/AI'a sunar.
 
+## Görüntü ve düzenlenebilirlik: nesne ve özellik düzeyi (5 Kasım 2026, [ADR 1061](../adr/1061-exchange-geometry-elevation-and-source-guard.md))
+
+“Görüntü” çizilen şeklin korunmasıdır; “düzenlenebilirlik” analitik ya da ilişkisel modelin (yay, NURBS, ölçünün
+ölçtüğü, bloğun parametresi) korunmasıdır. İkisi ayrı sonuçlanır. Kanıt sütunu satırı sınayan testi gösterir; AutoCAD
+denetimi yapılmadı (CAD-IO-20).
+
+| Nesne / özellik | DXF/DWG'den açma | Görüntü | Düzenlenebilirlik | DXF'e yazma | Kanıt |
+|---|---|---|---|---|---|
+| Elips, rasyonel NURBS | ELLIPSE, SPLINE (derece, düğüm, ağırlık) | korunur | korunur (analitik) | ELLIPSE, SPLINE | `exchange_set.rs`, ezdxf `--roundtrip` |
+| Yaylı çoklu çizgi, düzgün dönüşüm | LWPOLYLINE çıkıntısı | korunur | korunur | LWPOLYLINE | ADR 0588 durumları |
+| Yaylı açık çoklu çizgi, eşit olmayan blok ölçeği (patlatılarak) | 2. derece rasyonel NURBS | kesin | NURBS olarak; çoklu çizginin köşe düzenlemesi gider (not) | SPLINE | `emit.rs` analitik testleri, ezdxf `--roundtrip` |
+| Kapalı ya da kotlu ya da genişlikli yaylı yol, eşit olmayan ölçek | örnekleme | yaklaşık | gider | — | varsayılan ret, `allowPolylineLoss` ile raporlu |
+| Düz genişlikli kenar, eşit olmayan ölçek (tek kotlu) | genişlik × \|det M\|/\|M·t\| | şerit kesin; uç/köşe kesimi eğik değil dik (not) | korunur | LWPOLYLINE genişlikleri | `file.import.polyline-policy` durumları, ezdxf `--roundtrip` |
+| Eğik (OCS) genişlikli yol | — | — | — | — | güvenli ret (3B kapsam dışı) |
+| Eşit olmayan ölçekli blok (açarken) | INSERT ölçekleri ve blok içeriği olduğu gibi | korunur | korunur | INSERT 41/42 | ezdxf `--roundtrip` |
+| Birimli iç içe blok | blok birimi metreye (ADR 0589) | korunur | korunur | BLOCK + INSERT | `exchange_set.rs` |
+| Z ve M | kotlar ve ölçüler korunur; kendiliğinden silinmez | korunur | korunur | LINE/POINT Z; 3B POLYLINE | `exchange_set.rs`, ezdxf `--roundtrip`; kaldırma yalnız `cad.entities.flatten` |
+| Yabancı DIMENSION | resmi (çizgi, ok, yazı) | korunur | ölçü olarak gider (raporda) | çizgi/ok/yazı | `exchange_set.rs`, ezdxf `--roundtrip` |
+| Karmaşık çizgi tipi (yazı/şekil öğesi) | basit kesik kısmı | yaklaşık | gider (raporda) | basit LTYPE | C19, ADR 0587 |
+| Desenli tarama | desen, sınır | korunur | sınır ilişkisi kaynağına göre | HATCH | ezdxf `--roundtrip` |
+| İki pafta | iki KentOS paftası, görünüm | korunur | korunur (2B ortografik) | LAYOUT/VIEWPORT | `exchange_set.rs`, ezdxf `--roundtrip` |
+| Dinamik blok | çözülmüş görünüş | korunur | AutoCAD değerlendirme grafiği gider | düz blok | ADR 0587 |
+| Kaynak dosya | okunur, yazılmaz | — | — | KentOS'un yazmadığı CAD çiziminin üzerine yalnız `replaceSource` ile | `exchange_set.rs` |
+
 ## Desteklenmeyen nesne ve opaque veri politikası
 
 1. **Kaynağı sakla:** özgün dosya değişmez; SHA-256 ve biçim/sürüm makbuzu kaydedilir. Tanınmayan nesne kaynakta kalır; içe aktarma raporu alınmadığını söyler. Kaynak tutulması, hedef dosyada yeniden yazılabilme garantisi değildir.

@@ -53,6 +53,7 @@ mod cad_inspection;
 mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;
+mod flatten_window;
 mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
@@ -723,6 +724,8 @@ mod viewmark_scenes;
 mod arch_project_scenes;
 #[cfg(test)]
 mod xref_scenes;
+#[cfg(test)]
+mod flatten_scenes;
 #[cfg(test)]
 mod underlay_scenes;
 

@@ -87,6 +87,11 @@ pub struct ExportDwg {
     pub layers: Option<Vec<String>>,
     #[serde(default)]
     pub overwrite: bool,
+    /// Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
+    /// (a DWG or a DXF without KentOS's APPID) is refused, `source_overwrite`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub replace_source: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub annotations: Option<crate::DxfAnnotations>,

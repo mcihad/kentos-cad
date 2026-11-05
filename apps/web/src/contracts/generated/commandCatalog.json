@@ -8154,6 +8154,240 @@
       ]
     },
     {
+      "id": "cad.entities.flatten",
+      "version": 1,
+      "title": "2B düzleme indir",
+      "summary": "Kalıcı kimlikleriyle verilen noktaların, çizgilerin, çoklu çizgilerin ve alanların (parçaları ve delikleri dahil) köşe kotlarını (Z) kaldırır ya da plane verilince hepsini o kota getirir; measures: true ölçüleri (M) de kaldırır. Kotu olmayan köşe kotsuz kalır. Tek geri alma adımı “2B düzleme indir”. Plan önizlemedir: değişecek nesneler, kotu giden köşe sayısı ve kotların en küçüğü ile en büyüğü (zMin, zMax), kaldırılacak ölçü sayısı; hiçbir şey yazılmaz. Çizim açılırken kotlar ve ölçüler hiçbir zaman kendiliğinden silinmez; bu komut açıkça çalıştırılmadıkça kalır. Kilitli katmandakiler atlanır (layer_locked uyarısı; hepsi kilitliyse ret). Değişecek bir şey yoksa nothing_to_flatten.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.entities.flatten` v1: the objects (points, lines, polylines and areas with their parts and holes)\nwhose vertex elevations go, or become `plane`; with `measures`, whose measures go too. An object with neither\nto change is left as it is; nothing to change at all is `nothing_to_flatten`. Other kinds hold no elevation and\nare passed over.\n\nRefusals, checked in this order: `no_entities`, `invalid_uid`, `not_finite` (`plane`), `invalid_revision`,\n`revision_conflict`, `entity_not_found`, `layer_locked` (every object on a locked layer; some: left out with the\nwarning `layer_locked`), `nothing_to_flatten`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "measures": {
+            "description": "Remove the measures (M) too; absent: they stay (a route's measure is not geometry).",
+            "type": "boolean"
+          },
+          "plane": {
+            "description": "The level every elevation becomes, m; absent: the elevations are removed (a vertex without one is not 0).\nA vertex without an elevation stays without one either way.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "uids": {
+            "description": "The objects' persistent ids, at least one; a repeated one counts once.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "EntitiesFlatten",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.flatten` v1 (its plan's too: what it would do, nothing written).",
+        "properties": {
+          "changed": {
+            "description": "The objects changed, by persistent id, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "ids": {
+            "description": "Their slots, in the same order.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "measures": {
+            "description": "The measures removed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "vertices": {
+            "description": "The vertices whose elevation went or changed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "zMax": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "zMin": {
+            "description": "The lowest and highest elevation those vertices had, m.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          }
+        },
+        "required": [
+          "changed",
+          "ids",
+          "vertices",
+          "measures",
+          "revision"
+        ],
+        "title": "EntitiesFlattened",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.flatten` v1 (its plan's too: what it would do, nothing written).",
+        "properties": {
+          "changed": {
+            "description": "The objects changed, by persistent id, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "ids": {
+            "description": "Their slots, in the same order.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "measures": {
+            "description": "The measures removed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "vertices": {
+            "description": "The vertices whose elevation went or changed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "zMax": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "zMin": {
+            "description": "The lowest and highest elevation those vertices had, m.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          }
+        },
+        "required": [
+          "changed",
+          "ids",
+          "vertices",
+          "measures",
+          "revision"
+        ],
+        "title": "EntitiesFlattened",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "*"
+            ]
+          }
+        ],
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "layer_locked",
+          "not_finite",
+          "nothing_to_flatten",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Seçili çizgilerin kotlarını önizle",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        },
+        {
+          "title": "Kotları 0 düzlemine getir, ölçüleri de kaldır",
+          "input": {
+            "measures": true,
+            "plane": 0.0,
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.order",
       "version": 1,
       "title": "Çizim sırasını değiştir",
@@ -87322,7 +87556,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory, no directory to go\ninto), `file_exists` (there is a file and `overwrite` is not set),\n`layer_not_found` (a layer named the drawing does not have, at\n`layers[i]`), `nothing_to_export` (no object to write), `file_unwritable`.",
+        "description": "Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory, no directory to go\ninto), `file_exists` (there is a file and `overwrite` is not set),\n`layer_not_found` (a layer named the drawing does not have, at\n`layers[i]`), `source_overwrite` (the file there is a CAD drawing KentOS did not write and `replaceSource` is not\nset, docs/adr/1061 §5), `nothing_to_export` (no object to write), `file_unwritable`.",
         "properties": {
           "allowPolylineLoss": {
             "description": "Permit explicitly reported polyline approximation or loss. False rejects\na conversion that cannot preserve bulges, widths or vertex elevations.",
@@ -87357,6 +87591,10 @@
           "path": {
             "description": "The file to write, an absolute path.",
             "type": "string"
+          },
+          "replaceSource": {
+            "description": "Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file\n(a DXF or a DWG without KentOS's APPID) is refused, `source_overwrite`: an export never replaces the drawing\nit was opened from unasked.",
+            "type": "boolean"
           }
         },
         "required": [
@@ -87553,6 +87791,7 @@
         "refusals": [
           "invalid_file_path",
           "file_exists",
+          "source_overwrite",
           "layer_not_found",
           "nothing_to_export",
           "file_unwritable",
@@ -87622,6 +87861,10 @@
           },
           "path": {
             "type": "string"
+          },
+          "replaceSource": {
+            "description": "Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file\n(a DWG or a DXF without KentOS's APPID) is refused, `source_overwrite`.",
+            "type": "boolean"
           },
           "uids": {
             "description": "Only the named persistent objects; intersected with layers when both are given.",
@@ -87835,6 +88078,7 @@
         "refusals": [
           "invalid_file_path",
           "file_exists",
+          "source_overwrite",
           "layer_not_found",
           "invalid_uid",
           "entity_not_found",
@@ -93292,6 +93536,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dosya var ve üzerine yazılması istenmedi."
+    },
+    {
+      "code": "source_overwrite",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Var olan dosya KentOS'un yazmadığı bir CAD çizimi; üzerine yazmak için replaceSource da verilmeli."
+    },
+    {
+      "code": "nothing_to_flatten",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Seçilen nesnelerde kaldırılacak kot (Z) ya da ölçü (M) yok."
     },
     {
       "code": "file_unwritable",

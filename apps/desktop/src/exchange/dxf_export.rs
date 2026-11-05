@@ -378,6 +378,7 @@ impl App {
             uids: Some(uids),
             layers: None,
             overwrite: true,
+            replace_source: false,
             annotations: Some(s.annotations),
             version,
         };

@@ -387,6 +387,8 @@ pub enum Dialog {
     SheetSet,
     /// Dış başvurular (xrefs_window.rs, docs/adr/0348 §5); its state is `App::xrefs`.
     Xrefs,
+    /// 2B düzleme indir (flatten_window.rs, docs/adr/1061 §4); its state is `App::flatten`.
+    Flatten,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
     XrefAttach,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
@@ -787,6 +789,7 @@ pub enum Message {
     ViewRefs(crate::viewmark_refs::Event),
     SheetSet(crate::sheet_set::Event),
     Xrefs(crate::xrefs_window::Event),
+    Flatten(crate::flatten_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
     BondNotice(crate::bond_notice::Event),
@@ -1427,6 +1430,7 @@ pub struct App {
     pub(crate) sheet_set: Option<crate::sheet_set::Window>,
     /// Dış başvurular and Dış başvuru ekle (xrefs_window.rs, docs/adr/0348 §5).
     pub(crate) xrefs: crate::xrefs_window::State,
+    pub(crate) flatten: crate::flatten_window::State,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
     pub(crate) xref_watch: crate::xrefs_watch::Watch,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
@@ -1859,6 +1863,7 @@ impl App {
             view_refs: None,
             sheet_set: None,
             xrefs: Default::default(),
+            flatten: Default::default(),
             xref_watch: Default::default(),
             quantities: None,
             reconcile: None,
@@ -2612,6 +2617,7 @@ impl App {
             Message::ViewRefs(event) => return self.view_refs_event(event),
             Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Xrefs(event) => return self.xrefs_event(event),
+            Message::Flatten(event) => return self.flatten_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
@@ -3440,6 +3446,7 @@ impl App {
             // Mimari denetim (arch_audit.rs, docs/adr/0703).
             "arch.audit" => return self.open_arch_audit(),
             "cad.inspect" => return self.open_cad_inspection(),
+            "cad.flatten" => return self.open_flatten(),
             "topology.rules" => return self.open_topology_rules(),
             // Ağlar (networks/, docs/adr/0209 §10).
             "network.manage" => return self.open_networks(),

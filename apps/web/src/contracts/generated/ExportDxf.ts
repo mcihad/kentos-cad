@@ -6,7 +6,8 @@ import type { DxfAnnotations } from "./DxfAnnotations";
  * `invalid_file_path` (empty, relative, a directory, no directory to go
  * into), `file_exists` (there is a file and `overwrite` is not set),
  * `layer_not_found` (a layer named the drawing does not have, at
- * `layers[i]`), `nothing_to_export` (no object to write), `file_unwritable`.
+ * `layers[i]`), `source_overwrite` (the file there is a CAD drawing KentOS did not write and `replaceSource` is not
+ * set, docs/adr/1061 §5), `nothing_to_export` (no object to write), `file_unwritable`.
  */
 export type ExportDxf = { 
 /**
@@ -26,6 +27,12 @@ layers?: Array<string>,
  * Write over a file that is there.
  */
 overwrite: boolean, 
+/**
+ * Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
+ * (a DXF or a DWG without KentOS's APPID) is refused, `source_overwrite`: an export never replaces the drawing
+ * it was opened from unasked.
+ */
+replaceSource?: boolean, 
 /**
  * How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
  */

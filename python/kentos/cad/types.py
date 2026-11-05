@@ -30110,6 +30110,93 @@ class EntitiesFillet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesFlatten(_Model):
+    """Input of `cad.entities.flatten` v1: the objects (points, lines, polylines and areas with their parts and holes)
+    whose vertex elevations go, or become `plane`; with `measures`, whose measures go too. An object with neither
+    to change is left as it is; nothing to change at all is `nothing_to_flatten`. Other kinds hold no elevation and
+    are passed over.
+
+    Refusals, checked in this order: `no_entities`, `invalid_uid`, `not_finite` (`plane`), `invalid_revision`,
+    `revision_conflict`, `entity_not_found`, `layer_locked` (every object on a locked layer; some: left out with the
+    warning `layer_locked`), `nothing_to_flatten`.
+    Attributes:
+        uids: The objects' persistent ids, at least one; a repeated one counts once.
+        measures: Remove the measures (M) too; absent: they stay (a route's measure is not geometry).
+        plane: The level every elevation becomes, m; absent: the elevations are removed (a vertex without one is not 0).
+            A vertex without an elevation stays without one either way. Unit: elevation.
+    """
+    uids: list[str]
+    expected_revision: str | None | Unset = UNSET
+    measures: bool | Unset = UNSET
+    plane: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.measures is not UNSET:
+            out["measures"] = self.measures
+        if self.plane is not UNSET:
+            out["plane"] = None if self.plane is None else float(self.plane)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesFlatten:
+        return cls(
+            uids=list(data["uids"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            measures=data.get("measures", UNSET),
+            plane=UNSET if "plane" not in data else None if data["plane"] is None else float(data["plane"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesFlattened(_Model):
+    """Output of `cad.entities.flatten` v1 (its plan's too: what it would do, nothing written).
+    Attributes:
+        changed: The objects changed, by persistent id, in the input's order.
+        ids: Their slots, in the same order. Unit: id.
+        vertices: The vertices whose elevation went or changed. Unit: count.
+        measures: The measures removed. Unit: count.
+        z_max: Unit: elevation.
+        z_min: The lowest and highest elevation those vertices had, m. Unit: elevation.
+    """
+    changed: list[str]
+    ids: list[int]
+    vertices: int
+    measures: int
+    revision: str
+    z_max: float | None | Unset = UNSET
+    z_min: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["ids"] = list(self.ids)
+        out["vertices"] = self.vertices
+        out["measures"] = self.measures
+        out["revision"] = self.revision
+        if self.z_max is not UNSET:
+            out["zMax"] = None if self.z_max is None else float(self.z_max)
+        if self.z_min is not UNSET:
+            out["zMin"] = None if self.z_min is None else float(self.z_min)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesFlattened:
+        return cls(
+            changed=list(data["changed"]),
+            ids=list(data["ids"]),
+            vertices=data["vertices"],
+            measures=data["measures"],
+            revision=data["revision"],
+            z_max=UNSET if "zMax" not in data else None if data["zMax"] is None else float(data["zMax"]),
+            z_min=UNSET if "zMin" not in data else None if data["zMin"] is None else float(data["zMin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesHatch(_Model):
     """Input of `cad.entities.hatch` v1: the regions of `region` hatched with
     `pattern` on `layerId`, one hatch each, as one undo step “Tarama”,
@@ -32082,6 +32169,8 @@ class ExportDwg(_Model):
     Attributes:
         allow_polyline_loss: Permit explicitly reported polyline approximation or loss. False rejects
             a conversion that cannot preserve bulges, widths or vertex elevations.
+        replace_source: Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
+            (a DWG or a DXF without KentOS's APPID) is refused, `source_overwrite`.
         uids: Only the named persistent objects; intersected with layers when both are given.
         version: A DWG file signature. AC1032 is shared by multiple AutoCAD product years.
     """
@@ -32090,6 +32179,7 @@ class ExportDwg(_Model):
     annotations: DxfAnnotations | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     overwrite: bool = False
+    replace_source: bool | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
     version: DwgVersion | DwgVersionName = DwgVersion.AC1032
 
@@ -32103,6 +32193,8 @@ class ExportDwg(_Model):
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
         out["overwrite"] = self.overwrite
+        if self.replace_source is not UNSET:
+            out["replaceSource"] = self.replace_source
         if self.uids is not UNSET:
             out["uids"] = None if self.uids is None else list(self.uids)
         out["version"] = _enum_out(self.version)
@@ -32116,6 +32208,7 @@ class ExportDwg(_Model):
             annotations=UNSET if "annotations" not in data else None if data["annotations"] is None else DxfAnnotations.from_json(data["annotations"]),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             overwrite=data["overwrite"] if "overwrite" in data else False,
+            replace_source=data.get("replaceSource", UNSET),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
             version=_enum_in(DwgVersion, data["version"]) if "version" in data else DwgVersion.AC1032,
         )
@@ -32127,7 +32220,8 @@ class ExportDxf(_Model):
     `invalid_file_path` (empty, relative, a directory, no directory to go
     into), `file_exists` (there is a file and `overwrite` is not set),
     `layer_not_found` (a layer named the drawing does not have, at
-    `layers[i]`), `nothing_to_export` (no object to write), `file_unwritable`.
+    `layers[i]`), `source_overwrite` (the file there is a CAD drawing KentOS did not write and `replaceSource` is not
+    set, docs/adr/1061 §5), `nothing_to_export` (no object to write), `file_unwritable`.
     Attributes:
         path: The file to write, an absolute path.
         allow_polyline_loss: Permit explicitly reported polyline approximation or loss. False rejects
@@ -32135,12 +32229,16 @@ class ExportDxf(_Model):
         annotations: How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
         layers: The layers whose objects to write (ids); every object when absent.
         overwrite: Write over a file that is there.
+        replace_source: Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
+            (a DXF or a DWG without KentOS's APPID) is refused, `source_overwrite`: an export never replaces the drawing
+            it was opened from unasked.
     """
     path: str
     allow_polyline_loss: bool | Unset = UNSET
     annotations: DxfAnnotations | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     overwrite: bool = False
+    replace_source: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -32152,6 +32250,8 @@ class ExportDxf(_Model):
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
         out["overwrite"] = self.overwrite
+        if self.replace_source is not UNSET:
+            out["replaceSource"] = self.replace_source
         return out
 
     @classmethod
@@ -32162,6 +32262,7 @@ class ExportDxf(_Model):
             annotations=UNSET if "annotations" not in data else None if data["annotations"] is None else DxfAnnotations.from_json(data["annotations"]),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             overwrite=data["overwrite"] if "overwrite" in data else False,
+            replace_source=data.get("replaceSource", UNSET),
         )
 
 
@@ -113929,6 +114030,8 @@ __all__ = [
     "EntitiesEdited",
     "EntitiesExplode",
     "EntitiesFillet",
+    "EntitiesFlatten",
+    "EntitiesFlattened",
     "EntitiesHatch",
     "EntitiesIsolate",
     "EntitiesIsolated",

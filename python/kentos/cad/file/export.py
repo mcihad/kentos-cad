@@ -642,6 +642,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         version: DwgVersion | DwgVersionName = DwgVersion.AC1032,
         request_id: str | None = None,
@@ -668,6 +669,8 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
             annotations:
             layers:
             overwrite:
+            replace_source: Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
+                (a DWG or a DXF without KentOS's APPID) is refused, `source_overwrite`.
             uids: Only the named persistent objects; intersected with layers when both are given.
             version: A DWG file signature. AC1032 is shared by multiple AutoCAD product years.
             request_id: Names this write: sent again with the same call it is answered as
@@ -688,6 +691,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
             uids=_opt(uids, lambda x: list(x)),
             version=version,
         ), request_id=request_id, expected=expected)
@@ -702,6 +706,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         version: DwgVersion | DwgVersionName = DwgVersion.AC1032,
     ) -> DxfExported:
@@ -714,6 +719,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
             uids=_opt(uids, lambda x: list(x)),
             version=version,
         ))
@@ -728,6 +734,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         version: DwgVersion | DwgVersionName = DwgVersion.AC1032,
     ) -> list[CommandNote]:
@@ -740,6 +747,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
             uids=_opt(uids, lambda x: list(x)),
             version=version,
         ))
@@ -754,6 +762,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         version: DwgVersion | DwgVersionName = DwgVersion.AC1032,
         op: str = "execute",
@@ -771,6 +780,7 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
             uids=_opt(uids, lambda x: list(x)),
             version=version,
         ), op=op, request_id=request_id, expected=expected)
@@ -811,6 +821,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DxfExported:
@@ -832,6 +843,9 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
             annotations: How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
             layers: The layers whose objects to write (ids); every object when absent.
             overwrite: Write over a file that is there.
+            replace_source: Write over a CAD drawing KentOS did not write (docs/adr/1061 §5): with `overwrite` too. Without it such a file
+                (a DXF or a DWG without KentOS's APPID) is refused, `source_overwrite`: an export never replaces the drawing
+                it was opened from unasked.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -850,6 +864,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -862,6 +877,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
     ) -> DxfExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -872,6 +888,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
         ))
 
     def validate(
@@ -884,6 +901,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -894,6 +912,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
         ))
 
     def answer(
@@ -906,6 +925,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
+        replace_source: bool | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -921,6 +941,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
             annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            replace_source=replace_source,
         ), op=op, request_id=request_id, expected=expected)
 
 
