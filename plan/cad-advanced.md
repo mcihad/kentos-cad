@@ -2305,7 +2305,19 @@ temel çizimle karşılaştırıldı; bölünmüş görünümde tek ölçü vurg
 değişikliği sayılmıyor, gerçek sınır değişikliği geometri olarak kalıyor.
 Altı karşılaştırma regresyonu geçti; gerçek bölünmüş görünümde yalnız
 bağı çözülmüş tarama vurgulandı ve `1 değişti` görüldü. Bu test tek KentOS
-süreciyle yapıldı. Görüntüler repo dışında tutuldu. Viewport semantiği, farklı UUID
+süreciyle yapıldı. Pafta/görünüş semantiği `projectChanges` listesine eklendi:
+viewport ölçeği/oranı, kırpma, kilit, katman kapsamı, çerçeve ve baskı ayarları;
+pafta sayfası/anteti/öğe sırası; kayıtlı görünüş ve şablon; kitap ayarları
+model nesnelerinden ayrı karşılaştırılıyor. 14 native regresyonu, 8 masaüstü
+bölünmüş görünüm testi ve 3 gerçek Python API testi geçti. Python testinde
+Undo/Redo ve salt okunurluk doğrulandı. Gerçek uygulamada yalnız viewport
+ölçeği farklı iki dosyada model sayacı `0 değişti`, ayrı sayaç `Pafta /
+görünüş: 1 fark` gösterdi. API ve kapsam ayrıntıları
+[revizyon karşılaştırma belgesinde](../docs/cad/revision-comparison.md).
+Genel `clippy -D warnings` kapısı, bu teslimin dışındaki mevcut
+`standards.rs`, `table_export.rs`, `registry.rs` ve `tables_edit.rs`
+uyarıları nedeniyle geçmedi; başarılı kontrol olarak sayılmadı.
+Görüntüler repo dışında tutuldu. Farklı UUID
 eşleme adayları, inceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
 tamamlandı olarak işaretlenmedi.
 

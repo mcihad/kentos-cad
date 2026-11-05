@@ -6,6 +6,8 @@ test_command_cases.py; this is the same questions through the plain API, and the
 from __future__ import annotations
 
 import unittest
+import json
+import tempfile
 from pathlib import Path
 
 import kentos.cad as cad
@@ -16,6 +18,29 @@ REVISIONS = ROOT / "fixtures/compare/v1/revisions"
 
 
 class DrawingCompare(unittest.TestCase):
+    def test_viewport_changes_are_separate_read_only_and_follow_undo(self) -> None:
+        sheet = json.loads((ROOT / "fixtures/sheet/v1/viewports.json").read_text())["cases"][0]["sheet"]
+        doc = cad.Document.new("Revizyon paftası", workspace="cad", drawing_unit="mm")
+        cad.sheets.edit(doc, ops=[dict(op="addSheet", sheet=sheet)])
+        with tempfile.TemporaryDirectory() as folder:
+            baseline = Path(folder) / "baseline.kcad"
+            baseline.write_bytes(doc.to_bytes())
+            with doc.group("Görünüş ölçeği"):
+                cad.sheets.edit(doc, ops=[dict(op="setViewport", id="viewport", ratio=dict(paper=1, model=20))])
+            before = doc.info()
+            against = cad.FileCompareAgainst(path=str(baseline))
+            got = cad.drawing.compare(doc, against=against)
+            self.assertEqual((got.changed, got.added, got.removed), (0, 0, 0))
+            self.assertEqual(len(got.project_changes), 1)
+            change = got.project_changes[0]
+            self.assertEqual((change.kind, change.id, change.status), ("viewport", "page/viewport", "changed"))
+            self.assertTrue(any(f.startswith("kind.view") for f in change.fields))
+            self.assertEqual(doc.info(), before)
+            doc.undo()
+            self.assertNotIn("projectChanges", cad.drawing.compare(doc, against=against).to_json())
+            doc.redo()
+            self.assertEqual(cad.drawing.compare(doc, against=against).project_changes, got.project_changes)
+
     def test_a_moved_object_is_changed_against_its_history_and_nothing_is_written(self) -> None:
         doc = cad.Document.from_bytes(EDITS.read_bytes())
         first = next(iter(doc.entities(page_size=1000))).uid

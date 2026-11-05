@@ -11,8 +11,8 @@ use std::path::Path;
 
 use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
-    BlockId, Entity, COMPARE_LIMIT, COMPARE_TOLERANCE, ChangedObject, CommandResult, CompareAgainst,
-    DrawingCompare, DrawingCompared, MAX_COMPARE_LIMIT, MAX_COMPARE_TOLERANCE,
+    BlockId, COMPARE_LIMIT, COMPARE_TOLERANCE, ChangedObject, CommandResult, CompareAgainst,
+    DrawingCompare, DrawingCompared, Entity, MAX_COMPARE_LIMIT, MAX_COMPARE_TOLERANCE,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::compare::{Attrs, Matching, Member, Settings, Status, compare};
@@ -21,6 +21,9 @@ use crate::ExecutionContext;
 use crate::checks::{Stop, error};
 use crate::codes;
 use crate::file_import_block::read_drawing;
+
+mod project;
+pub use project::diff as project_diff;
 
 /// The attribute names the pairing and the layer are carried by: no user attribute has a NUL in its name.
 const UID: &str = "\0uid";
@@ -102,12 +105,12 @@ fn member(
     attrs.push((LAYER.to_owned(), base.layer_id.clone()));
     if let Some(style) = layer_styles.get(&base.layer_id) {
         attrs.push((LAYER_STYLE.to_owned(), style.clone()));
-    } else if let Some(layer) = doc.layers().get(&base.layer_id) {
-        if let Ok(style) = serde_json::to_vec(&layer.style) {
-            let fingerprint = sha256_hex(&style);
-            layer_styles.insert(base.layer_id.clone(), fingerprint.clone());
-            attrs.push((LAYER_STYLE.to_owned(), fingerprint));
-        }
+    } else if let Some(layer) = doc.layers().get(&base.layer_id)
+        && let Ok(style) = serde_json::to_vec(&layer.style)
+    {
+        let fingerprint = sha256_hex(&style);
+        layer_styles.insert(base.layer_id.clone(), fingerprint.clone());
+        attrs.push((LAYER_STYLE.to_owned(), fingerprint));
     }
     if let Entity::Insert(insert) = e {
         attrs.push((
@@ -133,10 +136,10 @@ fn member(
             attrs.push((DIMENSION_ASSOCIATION.to_owned(), sha256_hex(&bytes)));
         }
     }
-    if let Entity::Hatch(hatch) = e {
-        if let Ok(bytes) = serde_json::to_vec(&hatch.assoc) {
-            attrs.push((HATCH_ASSOCIATION.to_owned(), sha256_hex(&bytes)));
-        }
+    if let Entity::Hatch(hatch) = e
+        && let Ok(bytes) = serde_json::to_vec(&hatch.assoc)
+    {
+        attrs.push((HATCH_ASSOCIATION.to_owned(), sha256_hex(&bytes)));
     }
     Member {
         shape: crate::geometry::shape(e),
@@ -231,13 +234,21 @@ pub fn diff(old: &Document, new: &Document, tolerance: f64) -> Diff {
                     .collect();
                 let appearance_only = match (old.get(a_slots[o]), new.get(b_slots[n])) {
                     (Some(Entity::Dimension(a)), Some(Entity::Dimension(b))) => {
-                        a.a == b.a && a.b == b.b && a.c == b.c && a.offset == b.offset
-                            && a.height == b.height && a.angle == b.angle
-                            && a.za == b.za && a.zb == b.zb
+                        a.a == b.a
+                            && a.b == b.b
+                            && a.c == b.c
+                            && a.offset == b.offset
+                            && a.height == b.height
+                            && a.angle == b.angle
+                            && a.za == b.za
+                            && a.zb == b.zb
                     }
                     (Some(Entity::Hatch(a)), Some(Entity::Hatch(b))) => {
-                        a.ring == b.ring && a.holes == b.holes && a.pattern == b.pattern
-                            && a.boundary == b.boundary && a.annotative == b.annotative
+                        a.ring == b.ring
+                            && a.holes == b.holes
+                            && a.pattern == b.pattern
+                            && a.boundary == b.boundary
+                            && a.annotative == b.annotative
                     }
                     _ => false,
                 };
@@ -401,6 +412,9 @@ pub(crate) fn compare_in(doc: &Document, input: &DrawingCompare) -> Result<Drawi
             })
         })
         .collect();
+    let mut project_changes = project_diff(&old, doc);
+    let cut_project = project_changes.len() > limit;
+    project_changes.truncate(limit);
     Ok(DrawingCompared {
         against,
         same: d.same as u32,
@@ -410,7 +424,8 @@ pub(crate) fn compare_in(doc: &Document, input: &DrawingCompare) -> Result<Drawi
         added_uids,
         removed_uids,
         changed_objects,
-        truncated: cut_added || cut_removed || d.changed.len() > limit,
+        project_changes,
+        truncated: cut_added || cut_removed || d.changed.len() > limit || cut_project,
         revision: doc.revision().to_string(),
     })
 }
@@ -457,10 +472,9 @@ mod tests {
         .unwrap();
         let mut revised = old.clone();
         revised["blocks"][0]["entities"][0]["b"]["y"] = json!(1.2);
-        let before = Document::from_snapshot_v2(
-            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
-        )
-        .unwrap();
+        let before =
+            Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(old).unwrap())
+                .unwrap();
         let after = Document::from_snapshot_v2(
             serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
         )
@@ -469,13 +483,21 @@ mod tests {
         assert_eq!(delta.added.len(), 0);
         assert_eq!(delta.removed.len(), 0);
         assert_eq!(delta.changed.len(), 3, "each visible insert must be marked");
-        assert!(delta
-            .changed
-            .iter()
-            .all(|c| c.fields.contains(&"blockDefinition".to_owned())));
+        assert!(
+            delta
+                .changed
+                .iter()
+                .all(|c| c.fields.contains(&"blockDefinition".to_owned()))
+        );
         let slot = delta.changed[0].old;
         assert_eq!(
-            differs(&before, slot, &after, delta.changed[0].new, COMPARE_TOLERANCE),
+            differs(
+                &before,
+                slot,
+                &after,
+                delta.changed[0].new,
+                COMPARE_TOLERANCE
+            ),
             Some(true)
         );
     }
@@ -488,19 +510,21 @@ mod tests {
         .unwrap();
         let mut revised = old.clone();
         revised["layers"][1]["style"]["color"] = json!("#6495ED");
-        let before = Document::from_snapshot_v2(
-            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
-        )
-        .unwrap();
+        let before =
+            Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(old).unwrap())
+                .unwrap();
         let after = Document::from_snapshot_v2(
             serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
         )
         .unwrap();
         let delta = diff(&before, &after, COMPARE_TOLERANCE);
         assert_eq!((delta.same, delta.changed.len()), (0, 3));
-        assert!(delta.changed.iter().all(|c| {
-            c.status == "attributes" && c.fields == ["layerStyle".to_owned()]
-        }));
+        assert!(
+            delta
+                .changed
+                .iter()
+                .all(|c| { c.status == "attributes" && c.fields == ["layerStyle".to_owned()] })
+        );
     }
 
     #[test]
@@ -511,10 +535,9 @@ mod tests {
         .unwrap();
         let mut revised = old.clone();
         revised["entities"][1]["textShift"]["along"] = json!(2.5);
-        let before = Document::from_snapshot_v2(
-            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
-        )
-        .unwrap();
+        let before =
+            Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(old).unwrap())
+                .unwrap();
         let after = Document::from_snapshot_v2(
             serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
         )
@@ -522,7 +545,10 @@ mod tests {
         let delta = diff(&before, &after, COMPARE_TOLERANCE);
         assert_eq!(delta.changed.len(), 1);
         assert_eq!(delta.changed[0].status, "attributes");
-        assert_eq!(delta.changed[0].fields, ["dimensionPresentation".to_owned()]);
+        assert_eq!(
+            delta.changed[0].fields,
+            ["dimensionPresentation".to_owned()]
+        );
         assert_eq!(delta.changed[0].distance, None);
     }
 
@@ -534,10 +560,9 @@ mod tests {
         .unwrap();
         let mut revised = old.clone();
         revised["entities"][1]["options"]["round"] = json!(0.1);
-        let before = Document::from_snapshot_v2(
-            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
-        )
-        .unwrap();
+        let before =
+            Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(old).unwrap())
+                .unwrap();
         let after = Document::from_snapshot_v2(
             serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
         )
@@ -545,7 +570,11 @@ mod tests {
         let delta = diff(&before, &after, COMPARE_TOLERANCE);
         assert_eq!(delta.changed.len(), 1);
         assert_eq!(delta.changed[0].status, "attributes");
-        assert!(delta.changed[0].fields.contains(&"dimensionPresentation".to_owned()));
+        assert!(
+            delta.changed[0]
+                .fields
+                .contains(&"dimensionPresentation".to_owned())
+        );
     }
 
     #[test]
@@ -556,10 +585,9 @@ mod tests {
         .unwrap();
         let mut revised = old.clone();
         revised["entities"][2]["assoc"] = Value::Null;
-        let before = Document::from_snapshot_v2(
-            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
-        )
-        .unwrap();
+        let before =
+            Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(old).unwrap())
+                .unwrap();
         let after = Document::from_snapshot_v2(
             serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
         )
@@ -579,10 +607,9 @@ mod tests {
         .unwrap();
         let mut revised = old.clone();
         revised["entities"][2]["ring"][0]["x"] = json!(500000.25);
-        let before = Document::from_snapshot_v2(
-            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
-        )
-        .unwrap();
+        let before =
+            Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(old).unwrap())
+                .unwrap();
         let after = Document::from_snapshot_v2(
             serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
         )

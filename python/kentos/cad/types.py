@@ -10443,6 +10443,8 @@ class TableEdit(_Union):
     - :class:`HeaderTableEdit` (``kind: header``)
     - :class:`GridTableEdit` (``kind: grid``)
     - :class:`FrameTableEdit` (``kind: frame``)
+    - :class:`SourceKeyTableEdit` (``kind: sourceKey``)
+    - :class:`SourceRuleTableEdit` (``kind: sourceRule``)
     - :class:`UnlinkTableEdit` (``kind: unlink``)
     """
     __slots__ = ()
@@ -25616,6 +25618,8 @@ class DrawingCompared(_Model):
         changed_objects: The changed objects, in the drawing's order.
         truncated: A list was cut at `limit`.
         revision: ^(0|[1-9][0-9]*)$
+        project_changes: Non-model differences: sheets, viewports, named views, view templates and book settings.
+            These are counted separately from model entities and do not create false geometry highlights.
     """
     against: str
     same: int
@@ -25627,6 +25631,7 @@ class DrawingCompared(_Model):
     changed_objects: list[ChangedObject]
     truncated: bool
     revision: str
+    project_changes: list[DrawingProjectChange] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -25640,6 +25645,8 @@ class DrawingCompared(_Model):
         out["changedObjects"] = [e0.to_json() for e0 in self.changed_objects]
         out["truncated"] = self.truncated
         out["revision"] = self.revision
+        if self.project_changes is not UNSET:
+            out["projectChanges"] = [e0.to_json() for e0 in self.project_changes]
         return out
 
     @classmethod
@@ -25655,6 +25662,7 @@ class DrawingCompared(_Model):
             changed_objects=[ChangedObject.from_json(e0) for e0 in data["changedObjects"]],
             truncated=data["truncated"],
             revision=data["revision"],
+            project_changes=[DrawingProjectChange.from_json(e0) for e0 in data["projectChanges"]] if "projectChanges" in data else UNSET,
         )
 
 
@@ -25745,6 +25753,41 @@ class DrawingInspected(_Model):
             truncated=data["truncated"],
             revision=data["revision"],
             dimensions=[DimensionRead.from_json(e0) for e0 in data["dimensions"]] if "dimensions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DrawingProjectChange(_Model):
+    """A non-model change, compared by the sheet/view's stable id rather than an entity slot.
+    Attributes:
+        kind: `sheet`, `viewport`, `namedView`, `viewTemplate` or `sheetBook`.
+        id: Stable id; a viewport uses its sheet id and item id, separated by `/`.
+        status: `added`, `removed` or `changed`.
+        fields: Changed JSON field paths; empty for an addition or removal. Array changes name the array.
+    """
+    kind: str
+    id: str
+    name: str
+    status: str
+    fields: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["id"] = self.id
+        out["name"] = self.name
+        out["status"] = self.status
+        out["fields"] = list(self.fields)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrawingProjectChange:
+        return cls(
+            kind=data["kind"],
+            id=data["id"],
+            name=data["name"],
+            status=data["status"],
+            fields=list(data["fields"]),
         )
 
 
@@ -103571,6 +103614,46 @@ class FrameTableEdit(TableEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourceKeyTableEdit(TableEdit):
+    """A linked file's unique, nonempty row-key column (null: position-based legacy refresh).
+    Attributes:
+        column: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "sourceKey"
+    column: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "sourceKey"}
+        if self.column is not UNSET:
+            out["column"] = self.column
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceKeyTableEdit:
+        return cls(
+            column=data.get("column", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceRuleTableEdit(TableEdit):
+    """What a linked file refresh does with hand-edited cells."""
+    TAG_VALUE: ClassVar[str] = "sourceRule"
+    rule: SourceOverrides | SourceOverridesName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "sourceRule"}
+        out["rule"] = _enum_out(self.rule)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceRuleTableEdit:
+        return cls(
+            rule=_enum_in(SourceOverrides, data["rule"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnlinkTableEdit(TableEdit):
     """Kaynağı bırak: the table follows no source."""
     TAG_VALUE: ClassVar[str] = "unlink"
@@ -103642,12 +103725,16 @@ class AttributesTableSource(TableSource):
 class FileTableSource(TableSource):
     """A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the
     drawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell
-    changed by hand differs from) and what is done with such a cell; unlinked, it is chosen again to update.
+    changed by hand differs from), what is done with such a cell, and an optional unique row key;
+    unlinked, it is chosen again to update.
+    Attributes:
+        key_column: Zero-based column whose nonempty values identify rows across file revisions.
     """
     TAG_VALUE: ClassVar[str] = "file"
     name: str
     copy: list[list[str]] | None | Unset = UNSET
     digest: str | None | Unset = UNSET
+    key_column: int | None | Unset = UNSET
     overrides: SourceOverrides | SourceOverridesName | Unset = UNSET
     path: str | None | Unset = UNSET
     sheet: str | None | Unset = UNSET
@@ -103659,6 +103746,8 @@ class FileTableSource(TableSource):
             out["copy"] = None if self.copy is None else [list(e0) for e0 in self.copy]
         if self.digest is not UNSET:
             out["digest"] = self.digest
+        if self.key_column is not UNSET:
+            out["keyColumn"] = self.key_column
         if self.overrides is not UNSET:
             out["overrides"] = _enum_out(self.overrides)
         if self.path is not UNSET:
@@ -103673,6 +103762,7 @@ class FileTableSource(TableSource):
             name=data["name"],
             copy=UNSET if "copy" not in data else None if data["copy"] is None else [list(e0) for e0 in data["copy"]],
             digest=data.get("digest", UNSET),
+            key_column=data.get("keyColumn", UNSET),
             overrides=_enum_in(SourceOverrides, data["overrides"]) if "overrides" in data else UNSET,
             path=data.get("path", UNSET),
             sheet=data.get("sheet", UNSET),
@@ -103810,12 +103900,16 @@ class RefreshTablesOperation(TablesOperation):
 @dataclass(kw_only=True, slots=True)
 class LinkTablesOperation(TablesOperation):
     """Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table
-    linked to it: its path, digest and copy kept, `overrides` its rule.
+    linked to it: its path, digest and copy kept, `overrides` its rule. An omitted key or override
+    keeps the existing file table's setting when relinking.
+    Attributes:
+        key_column: Zero-based file column with unique, nonempty row keys. Requires a header row.
     """
     TAG_VALUE: ClassVar[str] = "link"
     uid: str
     path: str
     base: str | None | Unset = UNSET
+    key_column: int | None | Unset = UNSET
     overrides: SourceOverrides | SourceOverridesName | None | Unset = UNSET
     sheet: str | None | Unset = UNSET
 
@@ -103825,6 +103919,8 @@ class LinkTablesOperation(TablesOperation):
         out["path"] = self.path
         if self.base is not UNSET:
             out["base"] = self.base
+        if self.key_column is not UNSET:
+            out["key_column"] = self.key_column
         if self.overrides is not UNSET:
             out["overrides"] = None if self.overrides is None else _enum_out(self.overrides)
         if self.sheet is not UNSET:
@@ -103837,6 +103933,7 @@ class LinkTablesOperation(TablesOperation):
             uid=data["uid"],
             path=data["path"],
             base=data.get("base", UNSET),
+            key_column=data.get("key_column", UNSET),
             overrides=UNSET if "overrides" not in data else None if data["overrides"] is None else _enum_in(SourceOverrides, data["overrides"]),
             sheet=data.get("sheet", UNSET),
         )
@@ -105815,7 +105912,7 @@ _SUPERELEVATION_METHOD: dict[str, type[SuperelevationMethod]] = {"curves": Curve
 _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "polar": PolarSurveyWork, "forward": ForwardSurveyWork, "resection": ResectionSurveyWork}
 
 
-_TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "unlink": UnlinkTableEdit}
+_TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "sourceKey": SourceKeyTableEdit, "sourceRule": SourceRuleTableEdit, "unlink": UnlinkTableEdit}
 
 
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource}
@@ -106625,6 +106722,7 @@ __all__ = [
     "DrawingInspect",
     "DrawingInspected",
     "DrawingPaperViewportSource",
+    "DrawingProjectChange",
     "DrawingSetPaperTableSource",
     "DrawingStandard",
     "DrawingUnit",
@@ -108688,6 +108786,7 @@ __all__ = [
     "SourceBase",
     "SourceCapabilities",
     "SourceColumn",
+    "SourceKeyTableEdit",
     "SourceKind",
     "SourceKindName",
     "SourceLink",
@@ -108699,6 +108798,7 @@ __all__ = [
     "SourceRelation",
     "SourceRelationKind",
     "SourceRelationKindName",
+    "SourceRuleTableEdit",
     "SourceState",
     "SourceTable",
     "SourceUncertainty",

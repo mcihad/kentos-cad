@@ -85,6 +85,24 @@ pub struct ChangedObject {
     pub distance: Option<f64>,
 }
 
+/// A non-model change, compared by the sheet/view's stable id rather than an entity slot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DrawingProjectChange {
+    /// `sheet`, `viewport`, `namedView`, `viewTemplate` or `sheetBook`.
+    pub kind: String,
+    /// Stable id; a viewport uses its sheet id and item id, separated by `/`.
+    pub id: String,
+    pub name: String,
+    /// `added`, `removed` or `changed`.
+    pub status: String,
+    /// Changed JSON field paths; empty for an addition or removal. Array changes name the array.
+    pub fields: Vec<String>,
+}
+
 /// Output of `cad.drawing.compare` v1.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -112,6 +130,11 @@ pub struct DrawingCompared {
     pub removed_uids: Vec<String>,
     /// The changed objects, in the drawing's order.
     pub changed_objects: Vec<ChangedObject>,
+    /// Non-model differences: sheets, viewports, named views, view templates and book settings.
+    /// These are counted separately from model entities and do not create false geometry highlights.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<DrawingProjectChange>>"))]
+    pub project_changes: Vec<DrawingProjectChange>,
     /// A list was cut at `limit`.
     pub truncated: bool,
     #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]

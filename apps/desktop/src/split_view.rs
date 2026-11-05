@@ -34,6 +34,7 @@ use kentos_geometry_core::tools::view_link::{self, Frame, Link};
 use kentos_geometry_core::vec2::Vec2 as Vec2d;
 use kentos_interaction::{Cursor, Level};
 use kentos_ui::theme::Tokens;
+use kentos_ui::widget::{Tip, tip};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
@@ -774,6 +775,40 @@ impl App {
                 ))
                 .into(),
             ));
+            if !r.project_changes.is_empty() {
+                let details = r
+                    .project_changes
+                    .iter()
+                    .take(8)
+                    .map(|c| {
+                        let kind = match c.kind.as_str() {
+                            "viewport" => "Görünüş çerçevesi",
+                            "namedView" => "Kayıtlı görünüm",
+                            "viewTemplate" => "Görünüş şablonu",
+                            "sheet" => "Pafta",
+                            _ => "Pafta kitabı",
+                        };
+                        let status = match c.status.as_str() {
+                            "added" => "eklendi",
+                            "removed" => "silindi",
+                            _ => "değişti",
+                        };
+                        format!("{kind}: {} — {status}", c.name)
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                col = col.push(tip(
+                    chip(
+                        label::caption(format!(
+                            "Pafta / görünüş: {} fark",
+                            r.project_changes.len()
+                        ))
+                        .into(),
+                    ),
+                    Tip::new("Pafta ve görünüş değişiklikleri").body(details),
+                    iced::widget::tooltip::Position::Bottom,
+                ));
+            }
         }
         // Grid north keeps its room at the right; a long line wraps short of it.
         match self.view_width(view) {

@@ -115,10 +115,13 @@ fn split_app() -> App {
     let mut app = crate::files_testing::app_with_drawing();
     sized(&mut app);
     let _ = app.update(Message::Run("view.split"));
-    let _ = app.update(Message::OtherViewport(0, ViewEvent::Resized(Rectangle::new(
-        Point::new(502.0, 0.0),
-        Size::new(500.0, 800.0),
-    ))));
+    let _ = app.update(Message::OtherViewport(
+        0,
+        ViewEvent::Resized(Rectangle::new(
+            Point::new(502.0, 0.0),
+            Size::new(500.0, 800.0),
+        )),
+    ));
     app
 }
 
@@ -128,11 +131,17 @@ fn split_app() -> App {
 fn the_link_follows_the_centre_or_the_centre_and_the_scale() {
     let mut app = split_app();
     // The other view at three times the scale.
-    let _ = app.update(Message::OtherViewport(0, ViewEvent::Zoomed {
-        factor: 3.0,
-        at: Point::new(250.0, 400.0),
-    }));
-    let own_scale = app.split.as_ref().expect("split").others[0].viewport.camera.scale;
+    let _ = app.update(Message::OtherViewport(
+        0,
+        ViewEvent::Zoomed {
+            factor: 3.0,
+            at: Point::new(250.0, 400.0),
+        },
+    ));
+    let own_scale = app.split.as_ref().expect("split").others[0]
+        .viewport
+        .camera
+        .scale;
     let _ = app.update(Message::Split(Event::Link(Link::Centre)));
     app.viewport.camera.zoom_at(2.0, 100.0, 100.0);
     let _ = app.update(Message::DialogClosed);
@@ -154,7 +163,10 @@ fn the_link_follows_the_centre_or_the_centre_and_the_scale() {
     let before = app.split.as_ref().expect("split").others[0].viewport.camera;
     app.viewport.camera.zoom_at(1.5, 50.0, 50.0);
     let _ = app.update(Message::DialogClosed);
-    assert_eq!(app.split.as_ref().expect("split").others[0].viewport.camera, before);
+    assert_eq!(
+        app.split.as_ref().expect("split").others[0].viewport.camera,
+        before
+    );
     // The scale each view says is the camera's.
     for c in [app.viewport.camera, before] {
         assert_eq!(view_link::screen_scale(c.scale), c.screen_scale());
@@ -252,10 +264,18 @@ fn the_other_view_shows_the_history_read_only_with_what_changed_marked() {
     assert!(app.viewport.other.is_none());
     // More steps than the history holds: said, the revision shown stays.
     let _ = app.update(Message::Split(Event::Source(0, Source::History(9))));
-    assert!(app.split.as_ref().is_some_and(|s| s.others[0].revision.is_some()));
+    assert!(
+        app.split
+            .as_ref()
+            .is_some_and(|s| s.others[0].revision.is_some())
+    );
     // The open drawing again.
     let _ = app.update(Message::Split(Event::Source(0, Source::Drawing)));
-    assert!(app.split.as_ref().is_some_and(|s| s.others[0].revision.is_none()));
+    assert!(
+        app.split
+            .as_ref()
+            .is_some_and(|s| s.others[0].revision.is_none())
+    );
 }
 
 fn revisions(name: &str) -> std::path::PathBuf {
@@ -272,11 +292,8 @@ fn revision_follows_block_definition_edits_without_insert_slot_changes() {
     .expect("block fixture");
     let mut now = Document::from_v2(snapshot, None).expect("drawing");
     let baseline = Document::of_model(now.model.clone());
-    let mut revision = crate::split_revision::Revision::new(
-        "baseline".to_owned(),
-        baseline,
-        Source::Drawing,
-    );
+    let mut revision =
+        crate::split_revision::Revision::new("baseline".to_owned(), baseline, Source::Drawing);
     revision.mark(&now);
     assert_eq!(revision.counts.same, 3);
     let mark = now.model.change_mark();
@@ -287,9 +304,14 @@ fn revision_follows_block_definition_edits_without_insert_slot_changes() {
         panic!("expected a line in the block");
     }
     assert!(now.model.update_block(block).expect("valid definition"));
-    assert!(matches!(now.model.changes_since(mark), kentos_domain::Changes::Slots(slots) if slots.is_empty()));
+    assert!(
+        matches!(now.model.changes_since(mark), kentos_domain::Changes::Slots(slots) if slots.is_empty())
+    );
     revision.mark(&now);
-    assert_eq!(revision.counts.changed, 3, "all placed inserts inherit the visible edit");
+    assert_eq!(
+        revision.counts.changed, 3,
+        "all placed inserts inherit the visible edit"
+    );
     assert_eq!(revision.marked.ids().len(), 3);
     assert_eq!(revision.counts, revision.whole(&now).0);
 }
@@ -302,21 +324,54 @@ fn revision_follows_layer_style_edits_without_entity_slot_changes() {
     .expect("block fixture");
     let mut now = Document::from_v2(snapshot, None).expect("drawing");
     let baseline = Document::of_model(now.model.clone());
-    let mut revision = crate::split_revision::Revision::new(
-        "baseline".to_owned(),
-        baseline,
-        Source::Drawing,
-    );
+    let mut revision =
+        crate::split_revision::Revision::new("baseline".to_owned(), baseline, Source::Drawing);
     revision.mark(&now);
     let mark = now.model.change_mark();
-    let mut style = now.model.layers().get("kapilar").expect("layer").style.clone();
+    let mut style = now
+        .model
+        .layers()
+        .get("kapilar")
+        .expect("layer")
+        .style
+        .clone();
     style.color = "#6495ED".to_owned();
     assert!(now.model.set_layer_style("kapilar", style, "Renk"));
-    assert!(matches!(now.model.changes_since(mark), kentos_domain::Changes::Slots(slots) if slots.is_empty()));
+    assert!(
+        matches!(now.model.changes_since(mark), kentos_domain::Changes::Slots(slots) if slots.is_empty())
+    );
     revision.mark(&now);
     assert_eq!(revision.counts.changed, 3);
     assert_eq!(revision.marked.ids().len(), 3);
     assert_eq!(revision.counts, revision.whole(&now).0);
+}
+
+#[test]
+fn revision_follows_sheet_changes_without_marking_model_geometry() {
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../fixtures/kcad/v2/sheets.json"))
+            .expect("sheet fixture");
+    let mut now = Document::from_v2(snapshot, None).expect("drawing");
+    let baseline = Document::of_model(now.model.clone());
+    let original = now.model.sheets().cloned();
+    let mut revision =
+        crate::split_revision::Revision::new("baseline".into(), baseline, Source::Drawing);
+    revision.mark(&now);
+    assert!(revision.project_changes.is_empty());
+    let mut sheets = original.clone().expect("book");
+    sheets.book["sheets"][0]["items"][0]["kind"]["view"]["scale"] = serde_json::json!(200);
+    now.model.set_sheets(Some(sheets)).expect("valid book");
+    revision.mark(&now);
+    assert_eq!(revision.project_changes.len(), 1);
+    assert_eq!(revision.project_changes[0].kind, "viewport");
+    assert_eq!(revision.counts.changed, 0);
+    assert!(revision.marked.ids().is_empty());
+    let unchanged = revision.project_changes.clone();
+    revision.mark(&now);
+    assert_eq!(revision.project_changes, unchanged);
+    now.model.set_sheets(original).expect("restored book");
+    revision.mark(&now);
+    assert!(revision.project_changes.is_empty());
 }
 
 /// A drawing file, and a downloaded revision, in the other view (docs/adr/0576 §3): the same counts the shared cases

@@ -49,6 +49,11 @@ pub(crate) struct Revision {
     chosen_for: Option<(u64, u64, u64)>,
     /// The counts of the last comparison.
     pub counts: Counts,
+    /// Sheet/view differences are separate from model entities and their highlights.
+    pub project_changes: Vec<kentos_commands::DrawingProjectChange>,
+    project_sheets: Option<std::sync::Arc<kentos_commands::ProjectSheets>>,
+    project_views: Vec<kentos_commands::NamedView>,
+    project_templates: Vec<kentos_commands::ViewTemplate>,
     /// The open drawing (its session and generation) the marks were made for.
     for_doc: Option<(u64, u64)>,
     /// Definition edits can change every insert without touching its entity slot.
@@ -95,6 +100,10 @@ impl Revision {
             chosen: Selection::new(),
             chosen_for: None,
             counts: Counts::default(),
+            project_changes: Vec::new(),
+            project_sheets: None,
+            project_views: Vec::new(),
+            project_templates: Vec::new(),
             for_doc: None,
             for_blocks: None,
             for_layers: None,
@@ -115,6 +124,23 @@ impl Revision {
         let same_drawing = self
             .for_doc
             .is_some_and(|(session, _)| session == now.session);
+        let sheets = now.model.sheets_shared();
+        let sheets_same = match (&self.project_sheets, sheets) {
+            (Some(a), Some(b)) => std::sync::Arc::ptr_eq(a, b),
+            (None, None) => true,
+            _ => false,
+        };
+        let settings = now.model.settings();
+        if !same_drawing
+            || !sheets_same
+            || self.project_views != settings.named_views
+            || self.project_templates != settings.view_templates
+        {
+            self.project_changes = drawing_compare::project_diff(&self.doc.model, &now.model);
+            self.project_sheets = sheets.cloned();
+            self.project_views.clone_from(&settings.named_views);
+            self.project_templates.clone_from(&settings.view_templates);
+        }
         self.for_doc = Some(key);
         let blocks = block_catalog_fingerprint(&now.model);
         let blocks_changed = self.for_blocks.as_ref().is_some_and(|old| old != &blocks);

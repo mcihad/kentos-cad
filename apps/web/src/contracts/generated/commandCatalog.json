@@ -7157,6 +7157,13 @@
             },
             "type": "array"
           },
+          "projectChanges": {
+            "description": "Non-model differences: sheets, viewports, named views, view templates and book settings.\nThese are counted separately from model entities and do not create false geometry highlights.",
+            "items": {
+              "$ref": "#/$defs/DrawingProjectChange"
+            },
+            "type": "array"
+          },
           "removed": {
             "description": "Objects the other state had and the drawing has not now.",
             "format": "uint32",
@@ -7235,6 +7242,13 @@
             "description": "The changed objects, in the drawing's order.",
             "items": {
               "$ref": "#/$defs/ChangedObject"
+            },
+            "type": "array"
+          },
+          "projectChanges": {
+            "description": "Non-model differences: sheets, viewports, named views, view templates and book settings.\nThese are counted separately from model entities and do not create false geometry highlights.",
+            "items": {
+              "$ref": "#/$defs/DrawingProjectChange"
             },
             "type": "array"
           },
@@ -109149,6 +109163,41 @@
       ],
       "type": "string"
     },
+    "DrawingProjectChange": {
+      "description": "A non-model change, compared by the sheet/view's stable id rather than an entity slot.",
+      "properties": {
+        "fields": {
+          "description": "Changed JSON field paths; empty for an addition or removal. Array changes name the array.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "Stable id; a viewport uses its sheet id and item id, separated by `/`.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "`sheet`, `viewport`, `namedView`, `viewTemplate` or `sheetBook`.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "description": "`added`, `removed` or `changed`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "status",
+        "fields"
+      ],
+      "type": "object"
+    },
     "DrawingStandard": {
       "additionalProperties": false,
       "description": "A drawing standard.",
@@ -162886,6 +162935,45 @@
           "type": "object"
         },
         {
+          "description": "A linked file's unique, nonempty row-key column (null: position-based legacy refresh).",
+          "properties": {
+            "column": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "index"
+            },
+            "kind": {
+              "const": "sourceKey",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "What a linked file refresh does with hand-edited cells.",
+          "properties": {
+            "kind": {
+              "const": "sourceRule",
+              "type": "string"
+            },
+            "rule": {
+              "$ref": "#/$defs/SourceOverrides"
+            }
+          },
+          "required": [
+            "kind",
+            "rule"
+          ],
+          "type": "object"
+        },
+        {
           "description": "Kaynağı bırak: the table follows no source.",
           "properties": {
             "kind": {
@@ -163370,7 +163458,7 @@
           "type": "object"
         },
         {
-          "description": "A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the\ndrawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell\nchanged by hand differs from) and what is done with such a cell; unlinked, it is chosen again to update.",
+          "description": "A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the\ndrawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell\nchanged by hand differs from), what is done with such a cell, and an optional unique row key;\nunlinked, it is chosen again to update.",
           "properties": {
             "copy": {
               "items": {
@@ -163387,6 +163475,15 @@
             "digest": {
               "type": [
                 "string",
+                "null"
+              ]
+            },
+            "keyColumn": {
+              "description": "Zero-based column whose nonempty values identify rows across file revisions.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
                 "null"
               ]
             },
@@ -163640,11 +163737,20 @@
           "type": "object"
         },
         {
-          "description": "Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table\nlinked to it: its path, digest and copy kept, `overrides` its rule.",
+          "description": "Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table\nlinked to it: its path, digest and copy kept, `overrides` its rule. An omitted key or override\nkeeps the existing file table's setting when relinking.",
           "properties": {
             "base": {
               "type": [
                 "string",
+                "null"
+              ]
+            },
+            "key_column": {
+              "description": "Zero-based file column with unique, nonempty row keys. Requires a header row.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
                 "null"
               ]
             },
