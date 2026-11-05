@@ -346,8 +346,19 @@ impl App {
             })
         };
         let mut out = Vec::new();
+        let favorites: Vec<TemplateLine> = self
+            .templates_panel
+            .favorites()
+            .iter()
+            .filter_map(|id| line(id))
+            .collect();
+        if !favorites.is_empty() {
+            out.push(TemplateLine::Header("Favoriler".to_owned()));
+            out.extend(favorites);
+        }
         let recent: Vec<TemplateLine> = self
-            .recent_templates
+            .templates_panel
+            .recent()
             .iter()
             .filter_map(|id| line(id))
             .collect();

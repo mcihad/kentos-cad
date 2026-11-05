@@ -189,11 +189,10 @@ impl App {
         run.runs = self.session.runs();
         self.template = Some(run);
         self.last_template = Some(id.to_owned());
-        // The Şablonlar panel's first group (templates_panel.rs).
-        self.recent_templates.retain(|r| r != id);
-        self.recent_templates.insert(0, id.to_owned());
-        self.recent_templates
-            .truncate(crate::templates_panel::RECENT);
+        // The Şablonlar panel's first groups are personal to this device.
+        if let Err(error) = self.templates_panel.used(id) {
+            self.warn(format!("Şablon geçmişi kaydedilemedi: {error}"));
+        }
         let title = catalog()
             .get(&format!("tool.{}", recipe.tool))
             .map_or(recipe.tool.as_str(), |command| command.title);

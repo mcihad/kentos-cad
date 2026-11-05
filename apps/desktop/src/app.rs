@@ -1026,7 +1026,6 @@ pub struct App {
     pub(crate) db_store: &'static kentos_postgis::connections::ConnectionStore,
     /// The connection PostGIS'e bağlan listed last, chosen when it opens again.
     pub(crate) postgis_last: Option<String>,
-    pub(crate) recent_templates: Vec<String>,
     /// Şablon düzenleyici while it is open (template_editor.rs).
     pub(crate) template_editor: Option<crate::template_editor::Editor>,
     /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
@@ -1625,7 +1624,6 @@ impl App {
             db_removing: None,
             db_store: kentos_postgis::connections::store(),
             postgis_last: None,
-            recent_templates: Vec::new(),
             template_editor: None,
             block_attributes: None,
             attribute_values: None,

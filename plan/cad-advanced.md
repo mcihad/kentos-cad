@@ -2033,6 +2033,16 @@ artık çizim başına tek taramada hesaplanır. İki tanımlı blok sınaması 
 doğruladı. Gerçek CAD penceresinde iki bulgu seçilip aynı sayılar, satır
 taşması olmadan ve pasif Uygula düğmesiyle ekran görüntülerinde doğrulandı
 (repo dışında). Bu performans/rapor işi kaynak eşleme kabulünü kapatmaz.
+Mevcut Şablonlar paneli kişisel araç paleti olarak genişletildi: şablonun
+sağ menüsünden favoriye ekleme/çıkarma, listenin başında Favoriler grubu ve
+satır yıldızı; şerit menüsünde de aynı grup vardır. Son kullanılan beş şablon
+ve favoriler kullanıcı ayar klasöründeki `sablon-paleti.json` dosyasında atomik
+olarak saklanır; çizim ve ofis standart paketi değişmez. Kaybolan proje
+şablonu o proje yeniden açılana kadar listede gizlenir. Arama, uygulama ve
+klavye akışı korunur. Panel sınamaları ve dosyadan yeniden okuma geçti;
+gerçek CAD penceresinde sağ menü, yıldız ve yeni uygulama oturumunda favorinin
+geri gelmesi ekran görüntüleriyle doğrulandı (repo dışında). Bu, tüm komutları
+kapsayan genel araç tarifi ve ofis paleti yayını değildir; madde `[~]` kalır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 
