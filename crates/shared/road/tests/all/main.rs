@@ -28,6 +28,7 @@ mod haul;
 mod haul_fleet;
 mod haul_sorted;
 mod volume;
+mod volume_convergence;
 mod volume_ledger;
 mod volume_uncertainty;
 mod volume_progress;
