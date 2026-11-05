@@ -29,6 +29,7 @@ const DEFINITION: &str = "\0blockDefinition";
 const LAYER_STYLE: &str = "\0layerStyle";
 const DIMENSION_PRESENTATION: &str = "\0dimensionPresentation";
 const DIMENSION_ASSOCIATION: &str = "\0dimensionAssociation";
+const HATCH_ASSOCIATION: &str = "\0hatchAssociation";
 
 /// One object in both states that differs.
 #[derive(Clone, Debug, PartialEq)]
@@ -132,6 +133,11 @@ fn member(
             attrs.push((DIMENSION_ASSOCIATION.to_owned(), sha256_hex(&bytes)));
         }
     }
+    if let Entity::Hatch(hatch) = e {
+        if let Ok(bytes) = serde_json::to_vec(&hatch.assoc) {
+            attrs.push((HATCH_ASSOCIATION.to_owned(), sha256_hex(&bytes)));
+        }
+    }
     Member {
         shape: crate::geometry::shape(e),
         attrs: Attrs(attrs),
@@ -216,6 +222,8 @@ pub fn diff(old: &Document, new: &Document, tolerance: f64) -> Diff {
                             "dimensionPresentation".to_owned()
                         } else if f == DIMENSION_ASSOCIATION {
                             "dimensionAssociation".to_owned()
+                        } else if f == HATCH_ASSOCIATION {
+                            "hatchAssociation".to_owned()
                         } else {
                             f.clone()
                         }
@@ -226,6 +234,10 @@ pub fn diff(old: &Document, new: &Document, tolerance: f64) -> Diff {
                         a.a == b.a && a.b == b.b && a.c == b.c && a.offset == b.offset
                             && a.height == b.height && a.angle == b.angle
                             && a.za == b.za && a.zb == b.zb
+                    }
+                    (Some(Entity::Hatch(a)), Some(Entity::Hatch(b))) => {
+                        a.ring == b.ring && a.holes == b.holes && a.pattern == b.pattern
+                            && a.boundary == b.boundary && a.annotative == b.annotative
                     }
                     _ => false,
                 };
@@ -534,5 +546,49 @@ mod tests {
         assert_eq!(delta.changed.len(), 1);
         assert_eq!(delta.changed[0].status, "attributes");
         assert!(delta.changed[0].fields.contains(&"dimensionPresentation".to_owned()));
+    }
+
+    #[test]
+    fn hatch_association_change_is_detected_without_false_geometry_change() {
+        let old: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/hatch-boundaries.json"
+        ))
+        .unwrap();
+        let mut revised = old.clone();
+        revised["entities"][2]["assoc"] = Value::Null;
+        let before = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
+        )
+        .unwrap();
+        let after = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
+        )
+        .unwrap();
+        let delta = diff(&before, &after, COMPARE_TOLERANCE);
+        assert_eq!(delta.changed.len(), 1);
+        assert_eq!(delta.changed[0].status, "attributes");
+        assert_eq!(delta.changed[0].fields, ["hatchAssociation".to_owned()]);
+        assert_eq!(delta.changed[0].distance, None);
+    }
+
+    #[test]
+    fn hatch_boundary_geometry_change_stays_geometry() {
+        let old: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/hatch-boundaries.json"
+        ))
+        .unwrap();
+        let mut revised = old.clone();
+        revised["entities"][2]["ring"][0]["x"] = json!(500000.25);
+        let before = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
+        )
+        .unwrap();
+        let after = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
+        )
+        .unwrap();
+        let delta = diff(&before, &after, COMPARE_TOLERANCE);
+        assert_eq!(delta.changed.len(), 1);
+        assert_ne!(delta.changed[0].status, "attributes");
     }
 }

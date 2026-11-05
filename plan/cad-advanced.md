@@ -2300,8 +2300,12 @@ konumu ve yuvarlama override'ı `dimensionPresentation`, ölçü referansları
 `dimensionAssociation` olarak ayrıldı; yalnız sunum değişimi yanlışlıkla
 geometri farkı sayılmıyor. Gerçek uygulamada ölçü yazısı kaydırılmış dosya
 temel çizimle karşılaştırıldı; bölünmüş görünümde tek ölçü vurgulandı ve
-`0 eklendi · 0 silindi · 1 değişti` görüldü. Görüntüler repo dışında
-tutuldu. Viewport semantiği, farklı UUID
+`0 eklendi · 0 silindi · 1 değişti` görüldü. Tarama bağı değişimi
+`hatchAssociation` alanı olarak raporlanıyor; yalnız bağı çözmek geometri
+değişikliği sayılmıyor, gerçek sınır değişikliği geometri olarak kalıyor.
+Altı karşılaştırma regresyonu geçti; gerçek bölünmüş görünümde yalnız
+bağı çözülmüş tarama vurgulandı ve `1 değişti` görüldü. Bu test tek KentOS
+süreciyle yapıldı. Görüntüler repo dışında tutuldu. Viewport semantiği, farklı UUID
 eşleme adayları, inceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
 tamamlandı olarak işaretlenmedi.
 
