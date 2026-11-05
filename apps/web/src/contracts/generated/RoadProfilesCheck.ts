@@ -8,4 +8,13 @@
  * Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_design_check` (no rule given, a
  * limit not above 0), and the profile's when it no longer builds. Warnings: `design_rule_broken`, `profile_stale`.
  */
-export type RoadProfilesCheck = { profile: string, mostGrade?: number, leastGrade?: number, leastCrestK?: number, leastSagK?: number, leastCurve?: number, leastGradeLength?: number, };
+export type RoadProfilesCheck = { profile: string, mostGrade?: number, leastGrade?: number, leastCrestK?: number, leastSagK?: number, 
+/**
+ * The least crest radius H (docs/adr/0961): as RAA (Kuppenhalbmesser) and the standards that write a radius give
+ * the rule; a parabola's 1/|z''| = 100·K.
+ */
+leastCrestRadius?: number, 
+/**
+ * The least sag radius H (Wannenhalbmesser).
+ */
+leastSagRadius?: number, leastCurve?: number, leastGradeLength?: number, };

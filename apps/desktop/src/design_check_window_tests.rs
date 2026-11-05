@@ -116,3 +116,70 @@ fn screens() {
         shot(&mut app, "boykesit");
     }
 }
+
+/// Düşey kurp yarıçapı (Y55, docs/adr/0961; ROAD-PROFILE-04): the crest and sag rules typed as radii read
+/// `road.profiles.check` as the shared case does, the K findings say their unit.
+#[test]
+fn the_profile_rules_take_radii_and_say_the_k_unit() {
+    let mut app = check_app();
+    let _ = app.update(Message::Run("alignment.check"));
+    send(&mut app, W::Mode(true));
+    send(&mut app, W::Profile("b-1".into()));
+    send(&mut app, W::ProfileField(6, "1500".into()));
+    send(&mut app, W::ProfileField(7, "2500".into()));
+    send(&mut app, W::Preview);
+    let Read::Profile(p) = read(&app) else { panic!("a profile") };
+    let want = &case(PROFILES, "Tepe ve çukur yarıçapı")["result"]["output"]["findings"];
+    let got: Vec<&str> = p.findings.iter().map(|f| f.message.as_str()).collect();
+    let want: Vec<&str> = want.as_array().expect("findings").iter().map(|f| f["message"].as_str().expect("words")).collect();
+    assert_eq!(got, want);
+    assert_eq!(got[0], "v1 tepe kurbunun yarıçapı 1000.000 m, en az 1500 m.");
+    send(&mut app, W::ProfileField(6, String::new()));
+    send(&mut app, W::ProfileField(7, String::new()));
+    send(&mut app, W::ProfileField(2, "15".into()));
+    send(&mut app, W::Preview);
+    let Read::Profile(p) = read(&app) else { panic!("a profile") };
+    assert!(p.findings[0].message.contains("10.000 m/%, en az 15 m/%"), "{}", p.findings[0].message);
+}
+
+/// The profile's rules with the radii, wide and narrow, light and dark; `.run/gui-evidence/yol-y55/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib design_check_window_tests::screens_radius -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_radius() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y55");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = check_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y55-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.check"));
+        send(&mut app, W::Mode(true));
+        send(&mut app, W::Profile("b-1".into()));
+        for (k, v) in [(2, "15"), (6, "1500"), (7, "2500")] {
+            send(&mut app, W::ProfileField(k, v.to_owned()));
+        }
+        send(&mut app, W::Preview);
+        shot(&mut app, "kurallar");
+        send(&mut app, W::Close);
+        let _ = app.update(Message::Run("profile.editor"));
+        shot(&mut app, "boykesit");
+    }
+}

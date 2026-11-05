@@ -69,10 +69,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         *,
         profile: str,
         least_crest_k: float | None | Unset = UNSET,
+        least_crest_radius: float | None | Unset = UNSET,
         least_curve: float | None | Unset = UNSET,
         least_grade: float | None | Unset = UNSET,
         least_grade_length: float | None | Unset = UNSET,
         least_sag_k: float | None | Unset = UNSET,
+        least_sag_radius: float | None | Unset = UNSET,
         most_grade: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -93,10 +95,13 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
             doc: The drawing it works on.
             profile:
             least_crest_k: Unit: m/%.
+            least_crest_radius: The least crest radius H (docs/adr/0961): as RAA (Kuppenhalbmesser) and the standards that write a radius give
+                the rule; a parabola's 1/|z''| = 100·K. Unit: m.
             least_curve: Unit: m.
             least_grade: Unit: 1.
             least_grade_length: Unit: m.
             least_sag_k: Unit: m/%.
+            least_sag_radius: The least sag radius H (Wannenhalbmesser). Unit: m.
             most_grade: Unit: 1.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -113,10 +118,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         return self.execute_input(doc, RoadProfilesCheck(
             profile=profile,
             least_crest_k=least_crest_k,
+            least_crest_radius=least_crest_radius,
             least_curve=least_curve,
             least_grade=least_grade,
             least_grade_length=least_grade_length,
             least_sag_k=least_sag_k,
+            least_sag_radius=least_sag_radius,
             most_grade=most_grade,
         ), request_id=request_id, expected=expected)
 
@@ -127,10 +134,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         *,
         profile: str,
         least_crest_k: float | None | Unset = UNSET,
+        least_crest_radius: float | None | Unset = UNSET,
         least_curve: float | None | Unset = UNSET,
         least_grade: float | None | Unset = UNSET,
         least_grade_length: float | None | Unset = UNSET,
         least_sag_k: float | None | Unset = UNSET,
+        least_sag_radius: float | None | Unset = UNSET,
         most_grade: float | None | Unset = UNSET,
     ) -> RoadProfilesChecked:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -139,10 +148,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         return self.plan_input(doc, RoadProfilesCheck(
             profile=profile,
             least_crest_k=least_crest_k,
+            least_crest_radius=least_crest_radius,
             least_curve=least_curve,
             least_grade=least_grade,
             least_grade_length=least_grade_length,
             least_sag_k=least_sag_k,
+            least_sag_radius=least_sag_radius,
             most_grade=most_grade,
         ))
 
@@ -153,10 +164,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         *,
         profile: str,
         least_crest_k: float | None | Unset = UNSET,
+        least_crest_radius: float | None | Unset = UNSET,
         least_curve: float | None | Unset = UNSET,
         least_grade: float | None | Unset = UNSET,
         least_grade_length: float | None | Unset = UNSET,
         least_sag_k: float | None | Unset = UNSET,
+        least_sag_radius: float | None | Unset = UNSET,
         most_grade: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -165,10 +178,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         return self.validate_input(doc, RoadProfilesCheck(
             profile=profile,
             least_crest_k=least_crest_k,
+            least_crest_radius=least_crest_radius,
             least_curve=least_curve,
             least_grade=least_grade,
             least_grade_length=least_grade_length,
             least_sag_k=least_sag_k,
+            least_sag_radius=least_sag_radius,
             most_grade=most_grade,
         ))
 
@@ -179,10 +194,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         *,
         profile: str,
         least_crest_k: float | None | Unset = UNSET,
+        least_crest_radius: float | None | Unset = UNSET,
         least_curve: float | None | Unset = UNSET,
         least_grade: float | None | Unset = UNSET,
         least_grade_length: float | None | Unset = UNSET,
         least_sag_k: float | None | Unset = UNSET,
+        least_sag_radius: float | None | Unset = UNSET,
         most_grade: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -196,10 +213,12 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         return self.answer_input(doc, RoadProfilesCheck(
             profile=profile,
             least_crest_k=least_crest_k,
+            least_crest_radius=least_crest_radius,
             least_curve=least_curve,
             least_grade=least_grade,
             least_grade_length=least_grade_length,
             least_sag_k=least_sag_k,
+            least_sag_radius=least_sag_radius,
             most_grade=most_grade,
         ), op=op, request_id=request_id, expected=expected)
 

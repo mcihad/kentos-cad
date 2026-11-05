@@ -92,6 +92,17 @@ pub struct RoadProfilesCheck {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/%")))]
     pub least_sag_k: Option<f64>,
+    /// The least crest radius H (docs/adr/0961): as RAA (Kuppenhalbmesser) and the standards that write a radius give
+    /// the rule; a parabola's 1/|z''| = 100·K.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub least_crest_radius: Option<f64>,
+    /// The least sag radius H (Wannenhalbmesser).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub least_sag_radius: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -121,6 +132,9 @@ pub enum DesignRule {
     LeastGrade,
     CrestK,
     SagK,
+    /// A vertical curve's radius H short (docs/adr/0961).
+    CrestRadius,
+    SagRadius,
     Curve,
     GradeLength,
     /// A crossing's clearance or cover short (docs/adr/0946).

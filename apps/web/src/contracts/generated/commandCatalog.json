@@ -37207,6 +37207,15 @@
             ],
             "x-unit": "m/%"
           },
+          "leastCrestRadius": {
+            "description": "The least crest radius H (docs/adr/0961): as RAA (Kuppenhalbmesser) and the standards that write a radius give\nthe rule; a parabola's 1/|z''| = 100·K.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
           "leastCurve": {
             "format": "double",
             "type": [
@@ -37238,6 +37247,15 @@
               "null"
             ],
             "x-unit": "m/%"
+          },
+          "leastSagRadius": {
+            "description": "The least sag radius H (Wannenhalbmesser).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
           },
           "mostGrade": {
             "format": "double",
@@ -111093,9 +111111,15 @@
             "leastGrade",
             "crestK",
             "sagK",
+            "sagRadius",
             "curve",
             "gradeLength"
           ],
+          "type": "string"
+        },
+        {
+          "const": "crestRadius",
+          "description": "A vertical curve's radius H short (docs/adr/0961).",
           "type": "string"
         },
         {
@@ -151570,6 +151594,15 @@
         "crest": {
           "description": "A crest (the grade falls) or a sag.",
           "type": "boolean"
+        },
+        "curveRadius": {
+          "description": "Its least radius H as the standards that write a radius take it (docs/adr/0961): a parabola's 1/|z''|\n(100·K when symmetric; an asymmetric one's sharper half), a circle's own; absent where the grade does not change.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
         },
         "end": {
           "items": {

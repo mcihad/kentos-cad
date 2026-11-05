@@ -17,8 +17,11 @@ fn words(rule: Rule, of: &[String], value: f64, limit: f64) -> String {
     match rule {
         Rule::Grade => format!("{a}–{b} eğimi %{:.3}, en çok %{:.3}.", 100.0 * value, 100.0 * limit),
         Rule::LeastGrade => format!("{a}–{b} eğimi %{:.3}, en az %{:.3}.", 100.0 * value, 100.0 * limit),
-        Rule::CrestK => format!("{a} tepe kurbunun K'si {value:.3}, en az {limit}."),
-        Rule::SagK => format!("{a} çukur kurbunun K'si {value:.3}, en az {limit}."),
+        // K in its unit, H as the radius it is (docs/adr/0961): a reader must not take K for a radius nor a percent.
+        Rule::CrestK => format!("{a} tepe kurbunun K'si {value:.3} m/%, en az {limit} m/%."),
+        Rule::SagK => format!("{a} çukur kurbunun K'si {value:.3} m/%, en az {limit} m/%."),
+        Rule::CrestH => format!("{a} tepe kurbunun yarıçapı {value:.3} m, en az {limit} m."),
+        Rule::SagH => format!("{a} çukur kurbunun yarıçapı {value:.3} m, en az {limit} m."),
         Rule::Curve => format!("{a} düşey kurbu {value:.3} m, en az {limit} m."),
         Rule::GradeLength => format!("{a} ile {b} kurpları arasındaki düz eğim {value:.3} m, en az {limit} m."),
     }
@@ -30,6 +33,8 @@ fn rule_of(rule: Rule) -> DesignRule {
         Rule::LeastGrade => DesignRule::LeastGrade,
         Rule::CrestK => DesignRule::CrestK,
         Rule::SagK => DesignRule::SagK,
+        Rule::CrestH => DesignRule::CrestRadius,
+        Rule::SagH => DesignRule::SagRadius,
         Rule::Curve => DesignRule::Curve,
         Rule::GradeLength => DesignRule::GradeLength,
     }
@@ -44,6 +49,8 @@ pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadP
         least_grade: input.least_grade,
         least_crest_k: input.least_crest_k,
         least_sag_k: input.least_sag_k,
+        least_crest_h: input.least_crest_radius,
+        least_sag_h: input.least_sag_radius,
         least_curve: input.least_curve,
         least_grade_length: input.least_grade_length,
     };
@@ -52,6 +59,8 @@ pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadP
         (rules.least_grade, "leastGrade"),
         (rules.least_crest_k, "leastCrestK"),
         (rules.least_sag_k, "leastSagK"),
+        (rules.least_crest_h, "leastCrestRadius"),
+        (rules.least_sag_h, "leastSagRadius"),
         (rules.least_curve, "leastCurve"),
         (rules.least_grade_length, "leastGradeLength"),
     ];

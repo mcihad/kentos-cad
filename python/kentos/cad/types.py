@@ -1517,8 +1517,10 @@ class DesignRule(_StrEnum):
     - ``leastGrade``
     - ``crestK``
     - ``sagK``
+    - ``sagRadius``
     - ``curve``
     - ``gradeLength``
+    - ``crestRadius``: A vertical curve's radius H short (docs/adr/0961).
     - ``clearance``: A crossing's clearance or cover short (docs/adr/0946).
     """
     RADIUS = "radius"
@@ -1533,12 +1535,14 @@ class DesignRule(_StrEnum):
     LEAST_GRADE = "leastGrade"
     CREST_K = "crestK"
     SAG_K = "sagK"
+    SAG_RADIUS = "sagRadius"
     CURVE = "curve"
     GRADE_LENGTH = "gradeLength"
+    CREST_RADIUS = "crestRadius"
     CLEARANCE = "clearance"
 
 
-DesignRuleName = Literal["radius", "arc", "spiral", "tangent", "reverse", "brokenBack", "radiusRatio", "kink", "grade", "leastGrade", "crestK", "sagK", "curve", "gradeLength", "clearance"]
+DesignRuleName = Literal["radius", "arc", "spiral", "tangent", "reverse", "brokenBack", "radiusRatio", "kink", "grade", "leastGrade", "crestK", "sagK", "sagRadius", "curve", "gradeLength", "crestRadius", "clearance"]
 """The names of :class:`DesignRule`, for a plain string."""
 
 
@@ -61067,6 +61071,8 @@ class ProfileCurveRow(_Model):
         a: A = 100·(gOut − gIn), percent. Unit: percent.
         k: K = length / |A|, metres per percent. Unit: m/%.
         crest: A crest (the grade falls) or a sag.
+        curve_radius: Its least radius H as the standards that write a radius take it (docs/adr/0961): a parabola's 1/|z''|
+            (100·K when symmetric; an asymmetric one's sharper half), a circle's own; absent where the grade does not change. Unit: m.
         extreme: Its highest (crest) or lowest (sag) point when it falls inside: station and elevation. Unit: m.
         radius: A circle's radius. Unit: m.
     """
@@ -61080,6 +61086,7 @@ class ProfileCurveRow(_Model):
     a: float
     k: float
     crest: bool
+    curve_radius: float | None | Unset = UNSET
     extreme: list[float] | None | Unset = UNSET
     radius: float | None | Unset = UNSET
 
@@ -61095,6 +61102,8 @@ class ProfileCurveRow(_Model):
         out["a"] = float(self.a)
         out["k"] = float(self.k)
         out["crest"] = self.crest
+        if self.curve_radius is not UNSET:
+            out["curveRadius"] = None if self.curve_radius is None else float(self.curve_radius)
         if self.extreme is not UNSET:
             out["extreme"] = None if self.extreme is None else [float(e0) for e0 in self.extreme]
         if self.radius is not UNSET:
@@ -61114,6 +61123,7 @@ class ProfileCurveRow(_Model):
             a=float(data["a"]),
             k=float(data["k"]),
             crest=data["crest"],
+            curve_radius=UNSET if "curveRadius" not in data else None if data["curveRadius"] is None else float(data["curveRadius"]),
             extreme=UNSET if "extreme" not in data else None if data["extreme"] is None else [float(e0) for e0 in data["extreme"]],
             radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
         )
@@ -69631,18 +69641,23 @@ class RoadProfilesCheck(_Model):
     limit not above 0), and the profile's when it no longer builds. Warnings: `design_rule_broken`, `profile_stale`.
     Attributes:
         least_crest_k: Unit: m/%.
+        least_crest_radius: The least crest radius H (docs/adr/0961): as RAA (Kuppenhalbmesser) and the standards that write a radius give
+            the rule; a parabola's 1/|z''| = 100·K. Unit: m.
         least_curve: Unit: m.
         least_grade: Unit: 1.
         least_grade_length: Unit: m.
         least_sag_k: Unit: m/%.
+        least_sag_radius: The least sag radius H (Wannenhalbmesser). Unit: m.
         most_grade: Unit: 1.
     """
     profile: str
     least_crest_k: float | None | Unset = UNSET
+    least_crest_radius: float | None | Unset = UNSET
     least_curve: float | None | Unset = UNSET
     least_grade: float | None | Unset = UNSET
     least_grade_length: float | None | Unset = UNSET
     least_sag_k: float | None | Unset = UNSET
+    least_sag_radius: float | None | Unset = UNSET
     most_grade: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -69650,6 +69665,8 @@ class RoadProfilesCheck(_Model):
         out["profile"] = self.profile
         if self.least_crest_k is not UNSET:
             out["leastCrestK"] = None if self.least_crest_k is None else float(self.least_crest_k)
+        if self.least_crest_radius is not UNSET:
+            out["leastCrestRadius"] = None if self.least_crest_radius is None else float(self.least_crest_radius)
         if self.least_curve is not UNSET:
             out["leastCurve"] = None if self.least_curve is None else float(self.least_curve)
         if self.least_grade is not UNSET:
@@ -69658,6 +69675,8 @@ class RoadProfilesCheck(_Model):
             out["leastGradeLength"] = None if self.least_grade_length is None else float(self.least_grade_length)
         if self.least_sag_k is not UNSET:
             out["leastSagK"] = None if self.least_sag_k is None else float(self.least_sag_k)
+        if self.least_sag_radius is not UNSET:
+            out["leastSagRadius"] = None if self.least_sag_radius is None else float(self.least_sag_radius)
         if self.most_grade is not UNSET:
             out["mostGrade"] = None if self.most_grade is None else float(self.most_grade)
         return out
@@ -69667,10 +69686,12 @@ class RoadProfilesCheck(_Model):
         return cls(
             profile=data["profile"],
             least_crest_k=UNSET if "leastCrestK" not in data else None if data["leastCrestK"] is None else float(data["leastCrestK"]),
+            least_crest_radius=UNSET if "leastCrestRadius" not in data else None if data["leastCrestRadius"] is None else float(data["leastCrestRadius"]),
             least_curve=UNSET if "leastCurve" not in data else None if data["leastCurve"] is None else float(data["leastCurve"]),
             least_grade=UNSET if "leastGrade" not in data else None if data["leastGrade"] is None else float(data["leastGrade"]),
             least_grade_length=UNSET if "leastGradeLength" not in data else None if data["leastGradeLength"] is None else float(data["leastGradeLength"]),
             least_sag_k=UNSET if "leastSagK" not in data else None if data["leastSagK"] is None else float(data["leastSagK"]),
+            least_sag_radius=UNSET if "leastSagRadius" not in data else None if data["leastSagRadius"] is None else float(data["leastSagRadius"]),
             most_grade=UNSET if "mostGrade" not in data else None if data["mostGrade"] is None else float(data["mostGrade"]),
         )
 

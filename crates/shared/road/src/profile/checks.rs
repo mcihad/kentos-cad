@@ -13,6 +13,9 @@ pub struct ProfileRules {
     pub least_grade: Option<f64>,
     pub least_crest_k: Option<f64>,
     pub least_sag_k: Option<f64>,
+    /// The least crest and sag radius H (m, docs/adr/0961): the rule as RAA and the standards that write a radius give it.
+    pub least_crest_h: Option<f64>,
+    pub least_sag_h: Option<f64>,
     /// A vertical curve's horizontal length.
     pub least_curve: Option<f64>,
     /// The straight grade between two vertical curves.
@@ -26,6 +29,8 @@ pub enum Rule {
     LeastGrade,
     CrestK,
     SagK,
+    CrestH,
+    SagH,
     Curve,
     GradeLength,
 }
@@ -62,6 +67,13 @@ pub fn check(v: &Vertical, pvis: &[Pvi], rules: &ProfileRules) -> Vec<Finding> {
             if let Some(l) = limit.filter(|l| k < *l) {
                 let rule = if c.crest { Rule::CrestK } else { Rule::SagK };
                 out.push(Finding { rule, pvis: vec![c.pvi.clone()], from, to, value: k, limit: l });
+            }
+        }
+        if let Some(h) = c.h {
+            let limit = if c.crest { rules.least_crest_h } else { rules.least_sag_h };
+            if let Some(l) = limit.filter(|l| h < *l) {
+                let rule = if c.crest { Rule::CrestH } else { Rule::SagH };
+                out.push(Finding { rule, pvis: vec![c.pvi.clone()], from, to, value: h, limit: l });
             }
         }
         if let Some(l) = rules.least_curve.filter(|l| to - from < *l) {

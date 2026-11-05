@@ -191,8 +191,9 @@ def a_answer(inp):
 
 
 # ── road.profiles.check ───────────────────────────────────────────────────────────────────────────────────────────
-P_RULES = ("mostGrade", "leastGrade", "leastCrestK", "leastSagK", "leastCurve", "leastGradeLength")
-P_ORDER = ["grade", "leastGrade", "crestK", "sagK", "curve", "gradeLength"]
+P_RULES = ("mostGrade", "leastGrade", "leastCrestK", "leastSagK", "leastCurve", "leastGradeLength", "leastCrestRadius",
+           "leastSagRadius")
+P_ORDER = ["grade", "leastGrade", "crestK", "sagK", "crestRadius", "sagRadius", "curve", "gradeLength"]
 
 
 def p_words(rule, of, value, limit):
@@ -200,8 +201,10 @@ def p_words(rule, of, value, limit):
     return {
         "grade": f"{a}–{b} eğimi %{100 * value:.3f}, en çok %{100 * limit:.3f}.",
         "leastGrade": f"{a}–{b} eğimi %{100 * value:.3f}, en az %{100 * limit:.3f}.",
-        "crestK": f"{a} tepe kurbunun K'si {value:.3f}, en az {fmt(limit)}.",
-        "sagK": f"{a} çukur kurbunun K'si {value:.3f}, en az {fmt(limit)}.",
+        "crestK": f"{a} tepe kurbunun K'si {value:.3f} m/%, en az {fmt(limit)} m/%.",
+        "sagK": f"{a} çukur kurbunun K'si {value:.3f} m/%, en az {fmt(limit)} m/%.",
+        "crestRadius": f"{a} tepe kurbunun yarıçapı {value:.3f} m, en az {fmt(limit)} m.",
+        "sagRadius": f"{a} çukur kurbunun yarıçapı {value:.3f} m, en az {fmt(limit)} m.",
         "curve": f"{a} düşey kurbu {value:.3f} m, en az {fmt(limit)} m.",
         "gradeLength": f"{a} ile {b} kurpları arasındaki düz eğim {value:.3f} m, en az {fmt(limit)} m.",
     }[rule]
@@ -240,6 +243,11 @@ def p_answer(inp):
         key = "leastCrestK" if r["crest"] else "leastSagK"
         if r["k"] is not None and key in inp and r["k"] < inp[key]:
             add("crestK" if r["crest"] else "sagK", [r["pvi"]], frm, to, r["k"], inp[key])
+        # Docs/adr/0961: the radius H as the standard writes it.
+        h = pcmd.curve_radius(next(p for p in pvis if p["id"] == r["pvi"]), r["gIn"], r["gOut"])
+        hkey = "leastCrestRadius" if r["crest"] else "leastSagRadius"
+        if h is not None and hkey in inp and h < inp[hkey]:
+            add("crestRadius" if r["crest"] else "sagRadius", [r["pvi"]], frm, to, h, inp[hkey])
         if "leastCurve" in inp and to - frm < inp["leastCurve"]:
             add("curve", [r["pvi"]], frm, to, to - frm, inp["leastCurve"])
     if "leastGradeLength" in inp:
@@ -337,6 +345,12 @@ def profile_cases():
     q("Eğim en az", {"profile": "b-1", "leastGrade": 0.02})
     q("Tepe ve çukur K", {"profile": "b-1", "leastCrestK": 15.0, "leastSagK": 25.0})
     q("K tutar", {"profile": "b-1", "leastCrestK": 5.0, "leastSagK": 10.0})
+    # Docs/adr/0961: the same rule as a radius H = 100·K (RAA's Kuppen- and Wannenhalbmesser).
+    q("Tepe ve çukur yarıçapı", {"profile": "b-1", "leastCrestRadius": 1500.0, "leastSagRadius": 2500.0})
+    q("Yarıçap ve K birlikte", {"profile": "b-1", "leastCrestK": 15.0, "leastCrestRadius": 1500.0})
+    q("Asimetrik kurbun keskin kolu", {"profile": "b-4", "leastSagRadius": 3000.0})
+    q("Daire kurbun yarıçapı", {"profile": "b-2", "leastCrestRadius": 5000.0})
+    q("Yarıçap tutar", {"profile": "b-1", "leastCrestRadius": 100.0, "leastSagRadius": 100.0})
     q("Düşey kurp boyu", {"profile": "b-1", "leastCurve": 100.0})
     q("Kurplar arası eğim", {"profile": "b-1", "leastGradeLength": 120.0})
     q("Hepsi birden", {"profile": "Proje kotu", "mostGrade": 0.035, "leastGrade": 0.02, "leastCrestK": 15.0,
@@ -352,6 +366,7 @@ def profile_cases():
     q("Kural yok", {"profile": "b-1"})
     q("Sıfır eğim sınırı", {"profile": "b-1", "mostGrade": 0.0})
     q("Eksi K", {"profile": "b-1", "leastCrestK": -1.0})
+    q("Sıfır yarıçap", {"profile": "b-1", "leastSagRadius": 0.0})
     q("Sıfır kurp boyu", {"profile": "b-1", "leastCurve": 0.0})
     q("Olmayan boykesit", {"profile": "yok", "mostGrade": 0.05})
     q("Ad büyük küçük harf", {"profile": "PROJE KOTU", "mostGrade": 0.05})

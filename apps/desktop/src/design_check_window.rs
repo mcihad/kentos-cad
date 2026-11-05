@@ -45,13 +45,17 @@ pub(crate) const ALIGNMENT_FIELDS: [&str; 7] = [
     "En çok yarıçap oranı",
 ];
 /// The profile's rules, in order; grades in percent.
-pub(crate) const PROFILE_FIELDS: [&str; 6] = [
+/// The profile's rules; K in metres per percent, the radius H in metres (docs/adr/0961): the standard's own unit is
+/// typed, whichever it writes.
+pub(crate) const PROFILE_FIELDS: [&str; 8] = [
     "En dik eğim (%)",
     "En yatık eğim (%)",
-    "Tepe K en az",
-    "Çukur K en az",
+    "Tepe K en az (m/%)",
+    "Çukur K en az (m/%)",
     "En kısa düşey kurp (m)",
     "Kurplar arası eğim (m)",
+    "Tepe yarıçapı en az (m)",
+    "Çukur yarıçapı en az (m)",
 ];
 
 /// What was read last.
@@ -69,7 +73,7 @@ pub struct Window {
     pub(crate) profile: Option<String>,
     pub(crate) kinks: bool,
     pub(crate) alignment_fields: [String; 7],
-    pub(crate) profile_fields: [String; 6],
+    pub(crate) profile_fields: [String; 8],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     pub(crate) list: Listed,
@@ -154,6 +158,8 @@ impl Window {
             least_grade: percent(1)?,
             least_crest_k: f(2)?,
             least_sag_k: f(3)?,
+            least_crest_radius: f(6)?,
+            least_sag_radius: f(7)?,
             least_curve: f(4)?,
             least_grade_length: f(5)?,
         })
@@ -248,6 +254,7 @@ impl App {
             for (k, name) in PROFILE_FIELDS.iter().enumerate() {
                 form = form.field(*name, kentos_ui::widget::text_field("yok", &w.profile_fields[k]).on_input(move |t| msg(Event::ProfileField(k, t))));
             }
+            form = form.help("K, eğimin %1 değiştiği yatay boydur (m/%). Yarıçap H bir parabolde 100·K'dir (asimetrikte keskin kolun), dairede kendi yarıçapı. Standart hangisini veriyorsa onu yazın.");
         } else {
             let list: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
                 m.road_alignments().iter().filter(|a| a.offset_of.is_none()).map(|a| (a.id.clone(), a.name.clone())).collect()

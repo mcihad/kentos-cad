@@ -182,6 +182,12 @@ pub struct ProfileCurveRow {
     /// K = length / |A|, metres per percent.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/%")))]
     pub k: f64,
+    /// Its least radius H as the standards that write a radius take it (docs/adr/0961): a parabola's 1/|z''|
+    /// (100·K when symmetric; an asymmetric one's sharper half), a circle's own; absent where the grade does not change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub curve_radius: Option<f64>,
     /// A crest (the grade falls) or a sag.
     pub crest: bool,
     /// Its highest (crest) or lowest (sag) point when it falls inside: station and elevation.

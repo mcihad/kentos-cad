@@ -29,6 +29,11 @@ a: number,
  */
 k: number, 
 /**
+ * Its least radius H as the standards that write a radius take it (docs/adr/0961): a parabola's 1/|z''|
+ * (100·K when symmetric; an asymmetric one's sharper half), a circle's own; absent where the grade does not change.
+ */
+curveRadius?: number, 
+/**
  * A crest (the grade falls) or a sag.
  */
 crest: boolean, 

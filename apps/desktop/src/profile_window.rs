@@ -498,8 +498,12 @@ fn status(r: &Row, stale: bool, ground: &Ground) -> (String, bool) {
         return (format!("PVI aksın dışında: aksın km'si 0 ile {} m arası.", comma(ground.length, 3)), true);
     }
     let mut words = format!("{} PVI · {} kurp", r.pvis.len(), v.curves.len());
+    // K in its unit and the radius H beside it (docs/adr/0961): a standard writes the one or the other.
     if let Some(k) = v.curves.iter().filter_map(|c| c.k).min_by(f64::total_cmp) {
-        words.push_str(&format!(" · en küçük K {}", comma(k, 1)));
+        words.push_str(&format!(" · en küçük K {} m/%", comma(k, 1)));
+    }
+    if let Some(h) = v.curves.iter().filter_map(|c| c.h).min_by(f64::total_cmp) {
+        words.push_str(&format!(" · en küçük yarıçap {} m", comma(h, 0)));
     }
     if stale {
         words.push_str(" · aks değişti: PVI'ları denetleyip aksa yeniden bağlayın");

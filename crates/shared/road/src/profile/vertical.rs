@@ -78,6 +78,10 @@ pub struct CurveReport {
     pub a: f64,
     /// L/|A|, metres per percent; none for a curve whose grades do not change.
     pub k: Option<f64>,
+    /// Its least radius as the standards that write a radius take it (docs/adr/0961; RAA's Kuppen- and
+    /// Wannenhalbmesser): a parabola's 1/|z''| (L/|g_out − g_in| = 100·K when symmetric, the sharper half's when not), a
+    /// circle's own; none for a curve whose grades do not change.
+    pub h: Option<f64>,
     /// A crest (the grade falls) or a sag.
     pub crest: bool,
     /// Its highest (crest) or lowest (sag) point, when it falls inside the curve.
@@ -216,6 +220,15 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
             end: [e, end_z],
             a: a_pct,
             k: (a_pct != 0.0).then(|| (e - b) / a_pct.abs()),
+            h: pieces
+                .iter()
+                .filter_map(|pc| match *pc {
+                    Piece::Parabola { r, .. } if r != 0.0 => Some(1.0 / r.abs()),
+                    Piece::Circle { radius, .. } => Some(radius),
+                    _ => None,
+                })
+                .reduce(f64::min)
+                .filter(|_| a_pct != 0.0),
             crest,
             extreme,
         };

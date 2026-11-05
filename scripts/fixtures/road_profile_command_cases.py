@@ -137,6 +137,23 @@ def solve(d):
     return vref.solve(to_vref(d["pvis"]))
 
 
+def curve_radius(p, g_in, g_out):
+    """Docs/adr/0961: the vertical curve's least radius H. A parabola z = g·t + Δg·t²/(2L) has z'' = Δg/L: H = L/|Δg|.
+    An asymmetric one's halves meet at the PVI with the grade (g_in·l1 + g_out·l2)/L, so z'' is Δg·l2/(l1·L) on the
+    first and Δg·l1/(l2·L) on the second: H = L/|Δg|·min(l1/l2, l2/l1). A circle's is its radius."""
+    dg = abs(g_out - g_in)
+    if dg == 0:
+        return None
+    if p.get("radius"):
+        return float(p["radius"])
+    if p.get("length"):
+        return p["length"] / dg
+    if not (p.get("lengthIn") and p.get("lengthOut")):
+        return None  # a kink without a curve
+    l1, l2 = p["lengthIn"], p["lengthOut"]
+    return (l1 + l2) / dg * min(l1 / l2, l2 / l1)
+
+
 def report(d):
     b = ALIGNED[d["alignment"]]
     pvis = d["pvis"]
@@ -148,6 +165,9 @@ def report(d):
         kind = "circle" if p.get("radius") else ("parabola" if p.get("length") else "asymmetric")
         c = {"pvi": r["pvi"], "kind": kind, "gIn": r["gIn"], "gOut": r["gOut"], "start": r["start"], "end": r["end"],
              "length": r["end"][0] - r["start"][0], "a": r["a"], "k": r["k"], "crest": r["crest"]}
+        h = curve_radius(p, r["gIn"], r["gOut"])
+        if h is not None:
+            c["curveRadius"] = h
         if kind == "circle":
             c["radius"] = p["radius"]
         if r["extreme"] is not None:

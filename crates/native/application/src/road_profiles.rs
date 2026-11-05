@@ -218,6 +218,7 @@ pub(crate) fn report(doc: &Document, def: &ProfileDef, built: &Built) -> Profile
                 },
                 a: c.a,
                 k: c.k.unwrap_or(0.0),
+                curve_radius: c.h,
                 crest: c.crest,
                 extreme: c.extreme,
             })
