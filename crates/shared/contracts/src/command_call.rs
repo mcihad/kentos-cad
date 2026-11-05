@@ -271,6 +271,10 @@ pub struct CommandSummary {
     #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
     pub dimension_sets: NodeChanges,
+    /// Associative array identities added, changed and removed (docs/adr/1003 §1). Absent when none.
+    #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
+    pub arrays: NodeChanges,
     /// The project's parts that changed; `undo.outside` identifies those not restored by undo.
     pub project: Vec<ProjectPart>,
     pub undo: UndoInfo,
@@ -496,6 +500,10 @@ pub struct CallRecord {
     #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
     pub dimension_sets: NodeChanges,
+    /// Associative array identities, mapped by a replay as objects are (docs/adr/1003 §1).
+    #[serde(default, skip_serializing_if = "NodeChanges::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<NodeChanges>", optional))]
+    pub arrays: NodeChanges,
     /// Whether an object list was cut at [`JOURNAL_IDS`].
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]

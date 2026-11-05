@@ -215,6 +215,7 @@ fn bare(kind: CallKind, label: &str, base: u64, revision: u64) -> CallRecord {
         changed: Vec::new(),
         removed: Vec::new(),
         dimension_sets: Default::default(),
+        arrays: Default::default(),
         truncated: false,
         relax_constraints: false,
         warnings: Vec::new(),
@@ -286,6 +287,17 @@ impl Document {
                             .collect(),
                     };
                     row.parts.push(ProjectPart::DimensionSets);
+                }
+                // Associative arrays made, changed and removed (docs/adr/1003 §1): a replay maps them.
+                if last.ops.iter().any(|op| {
+                    matches!(op, Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. })
+                }) {
+                    let report = crate::step::report_of(&last.ops);
+                    row.arrays = kentos_contracts::NodeChanges {
+                        added: report.arrays.added.iter().map(|id| id.to_text()).collect(),
+                        changed: report.arrays.changed.iter().map(|id| id.to_text()).collect(),
+                        removed: report.arrays.removed.iter().map(|id| id.to_text()).collect(),
+                    };
                 }
                 row.truncated = truncated;
                 row.step = step;

@@ -252,6 +252,7 @@ impl App {
                     changed: Vec::new(),
                     removed: Vec::new(),
                     dimension_sets: Default::default(),
+                    arrays: Default::default(),
                     truncated: false,
                     warnings: Vec::new(),
                     parts: Vec::new(),

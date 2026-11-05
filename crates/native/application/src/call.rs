@@ -403,6 +403,11 @@ fn row_of(
                 .map(|id| id.to_text())
                 .collect(),
         },
+        arrays: NodeChanges {
+            added: report.arrays.added.iter().map(|id| id.to_text()).collect(),
+            changed: report.arrays.changed.iter().map(|id| id.to_text()).collect(),
+            removed: report.arrays.removed.iter().map(|id| id.to_text()).collect(),
+        },
         truncated,
         warnings: warnings.to_vec(),
         parts: report.parts.clone(),
@@ -632,6 +637,11 @@ fn summarize(
             .map(|id| id.to_text())
             .collect(),
     };
+    summary.arrays = NodeChanges {
+            added: report.arrays.added.iter().map(|id| id.to_text()).collect(),
+            changed: report.arrays.changed.iter().map(|id| id.to_text()).collect(),
+            removed: report.arrays.removed.iter().map(|id| id.to_text()).collect(),
+        };
     summary.project = report.parts.clone();
     let scale_reads_dimensions = parts.plot_scale != doc.settings().plot_scale
         && (parts.had_dimension_sets || !doc.dimension_sets().is_empty());

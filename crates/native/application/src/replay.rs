@@ -153,6 +153,10 @@ fn run_row(
             {
                 mapped.insert(old.clone(), new.clone());
             }
+            // An associative array the row made: a later `cad.arrays.edit` names the replay's (docs/adr/1003 §1).
+            for (old, new) in row.arrays.added.iter().zip(&summary.arrays.added) {
+                mapped.insert(old.clone(), new.clone());
+            }
             let mut differences = Vec::new();
             for (what, then, now) in [
                 ("yapılan", row.created.len(), summary.added.len()),
@@ -179,6 +183,9 @@ fn run_row(
                     row.dimension_sets.removed.len(),
                     summary.dimension_sets.removed.len(),
                 ),
+                ("yapılan ilişkili dizi", row.arrays.added.len(), summary.arrays.added.len()),
+                ("değişen ilişkili dizi", row.arrays.changed.len(), summary.arrays.changed.len()),
+                ("silinen ilişkili dizi", row.arrays.removed.len(), summary.arrays.removed.len()),
             ] {
                 if then != now {
                     differences.push(format!("{what} {then} yerine {now}"));

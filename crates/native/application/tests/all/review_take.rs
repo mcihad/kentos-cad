@@ -307,3 +307,48 @@ fn installing_needs_a_readable_bound_standard() {
     assert_eq!(refused(&mut doc), "invalid_standard");
     assert_eq!(doc.revision(), revision);
 }
+
+/// docs/adr/1003 §1: a journal that makes an associative array and edits it replays on another drawing: the row
+/// that made it records the array's id, the replay maps it to the one it made, and the edit lands on that array.
+#[test]
+fn a_replayed_journal_maps_an_associative_arrays_id() {
+    use kentos_native_application::registry;
+    use kentos_native_application::replay::{journal_of, replay};
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.arrays.edit.json")).unwrap();
+    let setup = kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).unwrap();
+    let mut source = Document::from_snapshot(setup.clone()).unwrap();
+    let mut target = Document::from_snapshot(setup).unwrap();
+    let circle = source.uid(Slot(1)).unwrap().to_string();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
+        let answer =
+            registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input).expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer
+    };
+    let made = run(
+        &mut source,
+        "cad.entities.array",
+        serde_json::json!({"uids": [circle], "layout": {"kind": "grid", "rows": 2, "cols": 3, "dx": 5, "dy": 4}, "associative": true}),
+    );
+    let array = made["output"]["array"].as_str().expect("an array id").to_owned();
+    run(
+        &mut source,
+        "cad.arrays.edit",
+        serde_json::json!({"array": array, "edit": {"kind": "layout", "layout": {"kind": "grid", "rows": 3, "cols": 4, "dx": 5, "dy": 4}}}),
+    );
+    let journal = journal_of(&source);
+    let row = journal.calls.iter().find(|r| r.command.as_deref() == Some("cad.entities.array")).unwrap();
+    assert_eq!(row.arrays.added, vec![array.clone()]);
+    let encoded = serde_json::to_value(&journal).unwrap();
+    let decoded: kentos_commands::ReplayJournal = serde_json::from_value(encoded).unwrap();
+    let report = replay(&mut target, None, &decoded);
+    assert_eq!((report.failed, report.differs), (0, 0), "{report:?}");
+    let mapped = report.mapped.get(&array).expect("the array's id is mapped").clone();
+    assert_ne!(mapped, array, "the replay made an array of its own");
+    let arrays = target.arrays();
+    assert_eq!(arrays.len(), 1);
+    assert_eq!(arrays[0].id.to_string(), mapped);
+    assert_eq!(arrays[0].items.len(), 12, "the edit to 3×4 landed on the replay's array");
+    assert_eq!(target.len(), source.len());
+}

@@ -2501,7 +2501,7 @@ yeni özellik açık/kapalı karşılaştırılsın. Yakın ve uzak görünümde
 milimetrik ayrıntı, yazı, ölçü ve desen yerleşimini gerçek GPU'da görüntüle.
 UI iş parçacığı süresiyle toplam GPU/kare süresi ayrı raporlansın.
 
-### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [ ]
+### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].
 **Dayanak:** AutoCAD 2027'de bağlamsal AI/MCP ve proje kaynaklarına
@@ -2541,6 +2541,12 @@ erişim ürün yönü olarak görülüyor; KentOS sözleşmesi aşağıda tanım
 ilişkili ölçü/tarama ekle, parametre değiştir ve pafta çıkar. Kaynak
 geometri, bağlar, retler ve kalıcı sonuç eşdeğer olsun. İptal, tekrar
 gönderim, yanlış belge/revizyon ve script çökmesinde yarım iş kalmasın.
+
+**Günlükte dizi kimliği (5 Kasım 2026, [ADR 1003](../docs/adr/1003-journal-replay-maps-associative-arrays.md)):**
+Komut satırı ve özeti ilişkili dizi kimliklerini (`arrays`) ayrıca taşır; yeniden oynatma kurulan dizinin kimliğini
+kendi yaptığına eşler ve sonraki `cad.arrays.edit` doğru diziye uygulanır (JSON'a yazılıp okunan günlükle test).
+ADR 0873'ün bu maddeye bıraktığı açık kapandı. Maddenin GUI/Python/MCP eşdeğerlik kabulü, eklenti ve AI sağlayıcı
+kapsamı açık; madde `[ ]` → başladı.
 
 ## Teslim sırası ve ortak kabul
 
