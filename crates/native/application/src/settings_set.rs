@@ -153,7 +153,7 @@ fn registered(srid: u32) -> bool {
     srid == 0 || codes.contains(&srid)
 }
 
-fn check_input(input: &SettingsSet) -> Result<(), Stop> {
+fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
     let given = input.name.is_some()
         || input.project_type.is_some()
         || input.cad_work.is_some()
@@ -250,7 +250,22 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
         if let Some(why) = kentos_commands::project_standards_problem(documents) {
             return Err(fail(codes::INVALID_STANDARD, why, "standardDocs"));
         }
+        // An ordered subset preserves existing bytes; it only removes documents.
+        // This permits recovery from multiple unsupported packages without
+        // accepting any new or modified rule.
+        let existing = &doc.settings().standard_docs;
+        let mut remaining = documents.iter();
+        let mut next = remaining.next();
+        for original in existing {
+            if next.is_some_and(|document| document.text == original.text) {
+                next = remaining.next();
+            }
+        }
+        let removal_only = documents.len() < existing.len() && next.is_none();
         for (index, document) in documents.iter().enumerate() {
+            if removal_only {
+                continue;
+            }
             match kentos_commands::parse_standard_document(document.text.as_bytes()) {
                 Ok((_, Some(_))) => {}
                 Ok((_, None)) => return Err(fail(codes::INVALID_STANDARD,
@@ -450,7 +465,7 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
 }
 
 fn check(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings, Stop> {
-    check_input(input)?;
+    check_input(doc, input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     next_settings(doc, input)
 }

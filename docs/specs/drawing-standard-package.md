@@ -33,6 +33,9 @@ checking and applying are separate actions, and applying is revision-checked.
 `cad.settings.set` accepts `standardDocs`, an ordered list of objects with a
 `text` field containing the complete versioned JSON document. It validates
 all documents before replacing the list; an empty list removes the bindings.
+For recovery, it also accepts a shorter ordered subset of the existing exact
+document texts. This permits removing unsupported embedded documents one at a
+time without admitting new, modified or reordered unsupported documents.
 Use `expectedRevision` to protect the edit from intervening changes. The same
 field is available through the generated Python SDK and MCP command contract.
 Association does not apply a standard. The standard-check window selects one

@@ -1867,10 +1867,12 @@ Bağlı standartlar pencereden sıralanabilir ve açık onayla projeden
 ile sıralama engellenir. Otomatik testler ve gerçek arayüzde sıralama,
 çıkarma iptali, onay ve kaydedilen dosyanın bağımsız okunması doğrulandı.
 Okunamayan bağlı standart uygulanmaz, uygunluk raporu yerine uyarı gösterilir
-ve diğer bağlı belgeler geçerliyse açık onayla çıkarılabilir. Bu kurtarma
+ve açık onayla çıkarılabilir. Bu kurtarma
 akışı otomatik test ve gerçek arayüzde denendi; çizimin kaydedilen kopyasında
 diğer standart, katman ve nesne bağımsız okuyucuyla doğrulandı. Birden çok
-okunamayan belgenin tek tek çıkarılması henüz desteklenmez.
+okunamayan belge de tek tek çıkarılabilir: mevcut sıralı belgelerin yalnız
+değiştirilmemiş alt kümesine izin verilir. İki belgeyle gerçek arayüz ve
+kaydedilen çizim, komutta ekleme ve sıralama reddi otomatik testle doğrulandı.
 Standart, katman ve yazı/ölçü stili tanımlarındaki bilinmeyen alanlar doğrudan
 komut girdisinde de reddedilir; arayüzde olduğu gibi Python/MCP çağrısı da
 tanınmayan bir kuralı atlayıp uygunluk sonucu üretemez. Komut sözleşmesi ve

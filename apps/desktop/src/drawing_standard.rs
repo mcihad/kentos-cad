@@ -1114,11 +1114,15 @@ mod tests {
         crate::files_testing::make_cad(&mut app);
         let document = &mut app.document.as_mut().unwrap().model;
         let mut settings = document.settings().clone();
-        settings.standard_docs = vec![ProjectStandardDocument {
+        let invalid = ProjectStandardDocument {
             text: serde_json::json!({"format":"kentos.drawing-standard", "version":1,
                 "id":"bad", "revision":"1", "standard":{"unsupported_rule":true}})
             .to_string(),
-        }];
+        };
+        let invalid_second = ProjectStandardDocument {
+            text: invalid.text.replace("\"bad\"", "\"bad-second\""),
+        };
+        settings.standard_docs = vec![invalid, invalid_second.clone()];
         document.set_settings(settings);
         app.open_drawing_standard();
         let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
@@ -1132,9 +1136,21 @@ mod tests {
         let _ = app.drawing_standard_event(Event::RemoveAsk);
         let _ = app.drawing_standard_event(Event::RemoveConfirm);
         let after = app.document.as_ref().unwrap().model.to_snapshot_v2();
-        assert!(after.settings.standard_docs.is_empty());
+        assert_eq!(after.settings.standard_docs[0].text, invalid_second.text);
         assert_eq!(after.entities, before.entities);
         assert_eq!(after.layers, before.layers);
+        assert!(app.drawing_standard.as_ref().unwrap().load_error.is_some());
+        let _ = app.drawing_standard_event(Event::RemoveAsk);
+        let _ = app.drawing_standard_event(Event::RemoveConfirm);
+        assert!(
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .settings()
+                .standard_docs
+                .is_empty()
+        );
     }
 
     #[test]

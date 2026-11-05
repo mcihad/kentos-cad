@@ -42,6 +42,50 @@ fn unknown_standard_rules_are_refused_by_command_registry_without_mutation() {
 }
 
 #[test]
+fn removing_unsupported_standards_preserves_only_existing_bytes_and_order() {
+    use kentos_commands::{CallOp, ProjectStandardDocument};
+    use kentos_native_application::registry;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
+    let item = |id: &str| ProjectStandardDocument {
+        text: json!({"format":"kentos.drawing-standard", "version":1,
+        "id":id, "revision":"1", "standard":{"unsupportedRule":true}})
+        .to_string(),
+    };
+    let (a, b, c) = (item("a"), item("b"), item("c"));
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![a.clone(), b.clone(), c.clone()];
+    doc.set_settings(settings);
+    let before = doc.to_snapshot_v2();
+    for documents in [vec![c.clone(), a.clone()], vec![a.clone(), item("new")]] {
+        let result = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.settings.set",
+            CallOp::Execute,
+            json!({"standardDocs":documents}),
+        )
+        .unwrap();
+        assert_eq!(result["status"], "failed", "{result}");
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+    let result = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.settings.set",
+        CallOp::Execute,
+        json!({"standardDocs":[a,c]}),
+    )
+    .unwrap();
+    assert_eq!(result["status"], "completed", "{result}");
+    assert_eq!(doc.settings().standard_docs.len(), 2);
+}
+
+#[test]
 fn project_standard_associations_are_validated_and_revision_checked() {
     use kentos_commands::{
         CallOp, STANDARD_PACKAGE_FORMAT, STANDARD_PACKAGE_VERSION, StandardPackage,

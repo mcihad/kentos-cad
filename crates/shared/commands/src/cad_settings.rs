@@ -64,6 +64,8 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
 /// - `standardDocs`: the entire ordered list of versioned drawing-standard
 ///   documents retained by the project; an empty list removes all bindings.
+///   An ordered, byte-identical subset may remove unsupported existing
+///   documents for recovery; new or changed documents are validated.
 ///   This changes the association only and does not apply the standards.
 ///
 /// Settings are an edit of the project, no undo step (docs/adr/0049).
