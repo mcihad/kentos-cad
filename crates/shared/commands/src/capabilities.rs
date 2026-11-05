@@ -1896,6 +1896,12 @@ const ENTRIES: &[Entry] = &[
         warnings: &["corridor_flat", "corridor_stale", "corridor_unsolved", "corridor_folded"],
         targets: none,
     },
+    Entry {
+        id: "road.corridors.daylights",
+        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_daylight_check"]],
+        warnings: &["corridor_daylight_crossings", "corridor_daylight_sensitive", "corridor_stale", "corridor_unsolved", "corridor_surface_gone"],
+        targets: none,
+    },
     // KentOS Yol's earthwork volumes (plan/road.md Y8, docs/adr/0906).
     Entry {
         id: "road.volumes.edit",

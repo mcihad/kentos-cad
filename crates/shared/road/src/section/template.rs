@@ -212,6 +212,117 @@ fn side(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> SideSect
     }
 }
 
+/// How a side's slope meets the terrain (docs/adr/0951, ROAD-COR-10): what [`build`]'s `Open` leaves together, apart.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Daylight {
+    /// It meets it at `offset` (outward, m): the slope line crosses the terrain `crossings` times on the swath (the
+    /// first is the daylight); the next crossing lies `next` m further out (none: no other); the daylight moves
+    /// `sensitivity` m outward per metre the terrain there is higher or lower, 1/|m − g| for the slope's and the
+    /// terrain's gradients there.
+    Hit { offset: f64, crossings: u32, next: Option<f64>, sensitivity: f64, cut: bool },
+    /// No terrain at the hinge.
+    Hinge,
+    /// The terrain stops at `at` (outward, m) before the slope meets it: a hole or the surface's edge on the swath.
+    Gap { at: f64 },
+    /// The swath ends at `end` (outward, m) before the slope meets the terrain: the section is too short.
+    Swath { end: f64 },
+}
+
+/// Each side's daylight, left then right, for a template built at `axis` on `ground`: the slope from the hinge (past a
+/// cut's ditch) run outward along the swath, its crossings with the terrain counted (a sign change between two
+/// places, or a place on the line), stopped where the terrain does.
+pub fn daylights(template: &Template, axis: f64, ground: &[GroundPoint]) -> [Daylight; 2] {
+    [diagnose(&template.left, axis, ground, false), diagnose(&template.right, axis, ground, true)]
+}
+
+fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Daylight {
+    let t = outward(ground, right);
+    let (mut u, mut z) = (0.0, axis);
+    for c in &side.components {
+        let (w, s) = c.parts();
+        u += w;
+        z += w * s / 100.0;
+    }
+    let Some(g) = height(&t, u) else { return Daylight::Hinge };
+    let cut = g > z;
+    let (u0, z0, m) = if cut {
+        let (mut bu, mut bz) = (u, z);
+        if let Some(d) = side.ditch {
+            bu += d.depth * d.fore;
+            bz -= d.depth;
+            bu += d.bottom;
+        }
+        (bu, bz, 1.0 / side.cut)
+    } else {
+        (u, z, -1.0 / side.fill)
+    };
+    let line = |x: f64| z0 + m * (x - u0);
+    // The terrain's places from u0 outward while it lasts: (outward, f = line − terrain, the terrain's gradient after).
+    let mut places: Vec<(f64, f64)> = Vec::new();
+    let mut stop: Option<f64> = None;
+    let last = t.last().map_or(u0, |p| p.0);
+    match height(&t, u0) {
+        Some(g0) => places.push((u0, line(u0) - g0)),
+        // A slope starting at the swath's end (within a micrometre: a cut's ditch pushed it to 6 m on a 6 m swath whose
+        // terrain ended at 5.999999999999998) has no swath left, not a hole.
+        None if last - u0 <= 1e-6 => return Daylight::Swath { end: u0 },
+        None => return Daylight::Gap { at: u0 },
+    }
+    for w in t.windows(2) {
+        let ((_, _, _), (ub, zb, gap)) = (w[0], w[1]);
+        if ub <= u0 {
+            continue;
+        }
+        if gap || w[0].1.is_none() && w[0].0 >= u0 {
+            stop = Some(places.last().map_or(u0, |p| p.0));
+            break;
+        }
+        let Some(zb) = zb else {
+            stop = Some(places.last().map_or(u0, |p| p.0));
+            break;
+        };
+        places.push((ub, line(ub) - zb));
+    }
+    // The crossings: a place on the line, or a sign change inside a stretch.
+    let mut hits: Vec<(f64, f64)> = Vec::new();
+    for (i, &(x, f)) in places.iter().enumerate() {
+        if f == 0.0 {
+            let grad = places.get(i + 1).or(i.checked_sub(1).and_then(|k| places.get(k))).map_or(0.0, |q| {
+                let (xa, fa, xb, fb) = if q.0 > x { (x, f, q.0, q.1) } else { (q.0, q.1, x, f) };
+                // f's slope is the line's less the terrain's.
+                (fb - fa) / (xb - xa)
+            });
+            hits.push((x, grad));
+        }
+        if let Some(&(xb, fb)) = places.get(i + 1)
+            && f != 0.0
+            && fb != 0.0
+            && (f < 0.0) != (fb < 0.0)
+        {
+            hits.push((x + (xb - x) * f / (f - fb), (fb - f) / (xb - x)));
+        }
+    }
+    // A break within a micrometre of the swath's last place is its end: the surface's section can end in a sliver
+    // off it (5e-15 m seen on a 6 m swath), which is no hole in the terrain.
+    if stop.is_some_and(|at| last - at <= 1e-6) {
+        stop = None;
+    }
+    match hits.first() {
+        Some(&(at, df)) => Daylight::Hit {
+            offset: at,
+            crossings: hits.len() as u32,
+            next: hits.get(1).map(|h| h.0 - at),
+            // f′ = m − g: one metre of terrain height moves the zero by 1/|f′|.
+            sensitivity: if df != 0.0 { 1.0 / df.abs() } else { f64::INFINITY },
+            cut,
+        },
+        None => match stop {
+            Some(at) => Daylight::Gap { at },
+            None => Daylight::Swath { end: places.last().map_or(u0, |p| p.0) },
+        },
+    }
+}
+
 /// The cut and fill areas between the design line (offsets in order) and the terrain.
 fn areas(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64) {
     let (cut, fill, _, _) = areas_moments(design, ground);

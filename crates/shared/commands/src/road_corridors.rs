@@ -490,3 +490,134 @@ pub struct CorridorsWatered {
     pub zeros: Vec<CrossfallZero>,
     pub lows: Vec<PlatformLow>,
 }
+
+pub const ROAD_CORRIDORS_DAYLIGHTS: &str = "road.corridors.daylights";
+pub const ROAD_CORRIDORS_DAYLIGHTS_VERSION: u32 = 1;
+
+/// Input of `road.corridors.daylights` v1 (plan/road.md Y45, docs/adr/0951; ROAD-COR-10): how each section's slopes
+/// meet the terrain as the corridor is built now — the daylight with the slope's crossings of the terrain on the swath
+/// and how far the daylight moves per metre of terrain height (1/|m − g|), or why it has none: no terrain at the
+/// hinge, the terrain stopping before the slope meets it, the swath ending first. With `sensitive` (m per m, above 0),
+/// the daylights moving more than that are warned of.
+///
+/// Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_daylight_check` (`sensitive` not above 0), and the
+/// corridor's own (`invalid_corridor`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorsDaylights {
+    pub corridor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub sensitive: Option<f64>,
+}
+
+/// A side's daylight (docs/adr/0951): `hit`, `hinge`, `gap` or `swath`; for a hit its offset (the section's sign, left
+/// negative), whether in a cut, the slope's crossings with the terrain, the next one's distance further out and the
+/// sensitivity (m per m of terrain height; none where the slope lies along the terrain); for a gap where the terrain
+/// stops, for a swath where it ends (offsets).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DaylightSide {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub offset: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cut: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub crossings: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub next: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub sensitivity: Option<f64>,
+}
+
+/// A section's daylights: its station, km and region, left and right.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DaylightStation {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub km_text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub region: u32,
+    pub left: DaylightSide,
+    pub right: DaylightSide,
+}
+
+/// How many sides end each way (docs/adr/0951), the hits crossing the terrain more than once, those over the
+/// sensitivity asked, and the sections not built.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DaylightCounts {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub hit: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub hinge: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub gap: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub swath: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub multiple: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub sensitive: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub unbuilt: u32,
+}
+
+/// Output of `road.corridors.daylights` v1 (docs/adr/0951): the corridor, the threshold asked, each built section's
+/// daylights in station order, the counts, and the most sensitive daylight (station, side, m per m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorDaylights {
+    pub corridor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub sensitive: Option<f64>,
+    pub stations: Vec<DaylightStation>,
+    pub counts: DaylightCounts,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub worst: Option<DaylightWorst>,
+}
+
+/// The most sensitive daylight: its station, km, side (`left` or `right`) and sensitivity (m per m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DaylightWorst {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub km_text: String,
+    pub side: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub sensitivity: f64,
+}

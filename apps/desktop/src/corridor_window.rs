@@ -54,6 +54,9 @@ const REBIND: &str = "Aksa yeniden bağla";
 const ADD: &str = "Bölge ekle";
 const REMOVE_ROW: &str = "Bölgeyi sil";
 const DRAW: &str = "Şevli plan çiz";
+/// The picture's two views and the daylight check's threshold (docs/adr/0951).
+pub(crate) const VIEWS: [&str; 2] = ["Plan", "Şev uçları"];
+pub(crate) const SENSITIVE: &str = "Duyarlılık sınırı (m/m)";
 
 fn trimmed(v: f64) -> String {
     let s = format!("{v:.6}");
@@ -200,6 +203,10 @@ pub struct Window {
     pub(crate) preview: Preview,
     layer: Option<String>,
     tick: String,
+    /// The daylights shown in place of the plan (docs/adr/0951), the threshold written and the daylights read.
+    pub(crate) daylight: bool,
+    pub(crate) sensitive: String,
+    pub(crate) daylights: Option<Result<(kentos_commands::CorridorDaylights, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -226,6 +233,9 @@ pub enum Event {
     RemoveRow,
     DrawLayer(String),
     Tick(String),
+    /// The picture's view: the plan or the daylights.
+    Daylight(bool),
+    Sensitive(String),
     Draw,
     Save,
     Cancel,
@@ -295,6 +305,14 @@ impl App {
                 Err(e) => Preview { why: Some(e), ..Preview::default() },
                 Ok((report, built, warnings)) => Preview { report: Some(report), triangles: built.triangles, warnings, why: None },
             },
+        };
+        // The daylights while shown: the corridor as typed is built once more.
+        w.daylights = match (w.daylight, r.def()) {
+            (true, Ok(def)) => Some(match number(&w.sensitive) {
+                Err(()) => Err(format!("{SENSITIVE} bir sayı olmalı.")),
+                Ok(t) => kentos_native_application::road_corridors_daylights::preview_of(&doc.model, &def, t),
+            }),
+            _ => None,
         };
     }
 
@@ -436,6 +454,8 @@ impl App {
             }
             Event::DrawLayer(l) => w.layer = Some(l),
             Event::Tick(t) => w.tick = t,
+            Event::Daylight(on) => w.daylight = on,
+            Event::Sensitive(t) => w.sensitive = t,
             Event::Cancel => {
                 self.corridor_window = None;
                 self.dialog = None;
@@ -744,7 +764,44 @@ impl App {
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom),
         );
-        col = col.push_grow(crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview }).width(Fill).height(Fill), "Koridor"), typography::scaled(190.0));
+        // The picture: the corridor in plan, or its daylights along the stations (docs/adr/0951).
+        let on_view = Select::new(VIEWS.map(Choice::new), Some(usize::from(w.daylight)), |i| msg(Event::Daylight(i == 1)));
+        let mut views = row![words::field("Görünüş", container(on_view).width(140), None)].spacing(10).align_y(iced::alignment::Vertical::Bottom);
+        if w.daylight {
+            views = views.push(words::field(
+                SENSITIVE,
+                kentos_ui::widget::text_field("yok", &w.sensitive).on_input(|t| msg(Event::Sensitive(t))).width(120),
+                None,
+            ));
+            views = views.push(
+                label::caption("Şev ucu, arazinin her metre kot hatasıyla 1/|m − g| metre kayar; sınır projenindir.").style(muted),
+            );
+        }
+        col = col.push(views);
+        let read = w.daylights.as_ref().and_then(|d| d.as_ref().ok()).filter(|_| w.daylight);
+        col = match read {
+            Some((d, _)) => col.push_grow(
+                crate::picture::picture(iced::widget::canvas(Daylights { read: d }).width(Fill).height(Fill), "Şev uçları"),
+                typography::scaled(190.0),
+            ),
+            None => col.push_grow(
+                crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview }).width(Fill).height(Fill), "Koridor"),
+                typography::scaled(190.0),
+            ),
+        };
+        if w.daylight {
+            match &w.daylights {
+                Some(Err(e)) => col = col.push(label::caption(e.clone()).style(danger)),
+                Some(Ok((d, warnings))) => {
+                    col = col.push(label::caption(daylight_words(d)));
+                    for wn in warnings.iter().filter(|x| x.code.starts_with("corridor_daylight")) {
+                        col = col.push(label::caption(wn.message.clone()).style(warn));
+                    }
+                    col = col.push(daylight_table(d));
+                }
+                None => {}
+            }
+        }
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
             (None, Some(rep)) => {
@@ -830,6 +887,8 @@ impl App {
             Control::Fill("Kurp (m)", text) => Some(msg(Event::Field(3, text.to_owned()))),
             Control::Fill("Sapma (m)", text) => Some(msg(Event::Field(4, text.to_owned()))),
             Control::Fill("Tarama (m)", text) => Some(msg(Event::Tick(text.to_owned()))),
+            Control::Fill(SENSITIVE, text) => Some(msg(Event::Sensitive(text.to_owned()))),
+            Control::Pick("Görünüş", words) => Some(msg(Event::Daylight(words == VIEWS[1]))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -959,4 +1018,179 @@ fn sampling_words(sm: &kentos_commands::CorridorSampling) -> String {
         m(sm.before.height),
         m(sm.after.height),
     )
+}
+
+/// The daylights in a sentence (docs/adr/0951): how the sides end, the multiple crossings, the most sensitive.
+fn daylight_words(d: &kentos_commands::CorridorDaylights) -> String {
+    let c = &d.counts;
+    let mut out = format!(
+        "{} yan şevle araziye varıyor; {} yanda menteşede arazi yok, {} yanda arazi şevden önce bitiyor, {} yanda şerit yetmiyor",
+        c.hit, c.hinge, c.gap, c.swath
+    );
+    if c.unbuilt > 0 {
+        out += &format!(", {} kesit kurulmadı", c.unbuilt);
+    }
+    out += &format!(". {} yanda şev araziyi birden çok kez kesiyor.", c.multiple);
+    if let Some(w) = &d.worst {
+        let side = if w.side == "left" { "sol" } else { "sağ" };
+        out += &format!(" En duyarlı şev ucu km {} {side}: {} m/m.", w.km_text, comma(w.sensitivity, 2));
+    }
+    out
+}
+
+/// The sides worth a look: not met, crossing more than once, or over the threshold.
+fn daylight_table(d: &kentos_commands::CorridorDaylights) -> Element<'_, Message> {
+    let mut rows: Vec<Vec<String>> = Vec::new();
+    for st in &d.stations {
+        for (word, s) in [("Sol", &st.left), ("Sağ", &st.right)] {
+            let over = d.sensitive.zip(s.sensitivity).is_some_and(|(t, v)| v > t);
+            let crossing = s.crossings.is_some_and(|n| n > 1);
+            if s.kind == "hit" && !over && !crossing {
+                continue;
+            }
+            let kind = match s.kind.as_str() {
+                "hit" if crossing && over => "Çok kesişme, duyarlı".to_owned(),
+                "hit" if crossing => "Çok kesişme".to_owned(),
+                "hit" => "Duyarlı".to_owned(),
+                "hinge" => "Menteşede arazi yok".to_owned(),
+                "gap" => "Arazi önce bitiyor".to_owned(),
+                _ => "Şerit yetmiyor".to_owned(),
+            };
+            let num = |v: Option<f64>| v.map_or_else(String::new, |x| comma(x, 2));
+            rows.push(vec![
+                st.km_text.clone(),
+                word.to_owned(),
+                kind,
+                num(s.offset),
+                s.crossings.map_or_else(String::new, |n| n.to_string()),
+                num(s.next),
+                num(s.sensitivity),
+            ]);
+        }
+    }
+    use road_dialog::{col, num};
+    road_dialog::sheet(
+        vec![
+            col("Km", 96.0),
+            col("Yan", 50.0),
+            col("Durum", 170.0),
+            num("Şev ucu (m)", 92.0),
+            num("Kesişme", 70.0),
+            num("Sonraki (m)", 86.0),
+            num("Duyarlılık (m/m)", 112.0),
+        ],
+        rows,
+        "Bütün şevler araziye bir kez, sınırın altında varıyor",
+        typography::scaled(170.0),
+    )
+}
+
+/// The daylights along the stations (docs/adr/0951): each side's sensitivity (m per m) above, the threshold dashed;
+/// under it each side's band, a mark a section, coloured by how it ends.
+struct Daylights<'a> {
+    read: &'a kentos_commands::CorridorDaylights,
+}
+
+impl canvas::Program<Message> for Daylights<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        let t = Tokens::of(theme);
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let d = self.read;
+        let small = Pixels(typography::caption());
+        let text = |frame: &mut canvas::Frame, words: String, at: Point, color: Color, right: bool| {
+            frame.fill_text(Text {
+                content: words,
+                position: at,
+                color,
+                size: small,
+                font: typography::ui(),
+                align_x: if right { iced::alignment::Horizontal::Right.into() } else { iced::alignment::Horizontal::Left.into() },
+                ..Text::default()
+            });
+        };
+        if d.stations.is_empty() {
+            text(&mut frame, "Kurulan kesit yok.".into(), Point::new(16.0, 20.0), t.muted, false);
+            return vec![frame.into_geometry()];
+        }
+        let (s0, s1) = (d.stations[0].station, d.stations[d.stations.len() - 1].station.max(d.stations[0].station + 1.0));
+        let (left, right_pad, top) = (64.0_f32, 12.0_f32, 20.0_f32);
+        let w = bounds.width - left - right_pad;
+        let bands = 2.0 * 16.0 + 6.0;
+        let plot = (bounds.height - top - bands - 34.0).max(40.0);
+        let x = |s: f64| left + ((s - s0) / (s1 - s0)) as f32 * w;
+        let most = d
+            .stations
+            .iter()
+            .flat_map(|st| [st.left.sensitivity, st.right.sensitivity])
+            .flatten()
+            .fold(d.sensitive.unwrap_or(0.0) * 1.25, f64::max)
+            .max(1.0);
+        let y = |v: f64| top + plot * (1.0 - (v / most).min(1.0) as f32);
+        // The sensitivity's grid.
+        let step = crate::picture::step(most / 3.0);
+        let mut v = 0.0;
+        while v <= most + 1e-9 {
+            frame.stroke(&Path::line(Point::new(left, y(v)), Point::new(left + w, y(v))), Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0));
+            text(&mut frame, comma(v, if step < 1.0 { 1 } else { 0 }), Point::new(left - 6.0, y(v) - 7.0), t.muted, true);
+            v += step;
+        }
+        text(&mut frame, "Duyarlılık (m/m) — sol mavi, sağ yeşil".into(), Point::new(left, 2.0), t.muted, false);
+        if let Some(th) = d.sensitive {
+            let dashed = Stroke { line_dash: canvas::LineDash { segments: &[6.0, 4.0], offset: 0 }, ..Stroke::default().with_color(t.danger).with_width(1.3) };
+            frame.stroke(&Path::line(Point::new(left, y(th)), Point::new(left + w, y(th))), dashed);
+            text(&mut frame, format!("sınır {}", comma(th, 1)), Point::new(left + w - 4.0, y(th) - 15.0), t.danger, true);
+        }
+        let green = Color::from_rgb8(0x16, 0xa3, 0x4a);
+        for (k, color) in [(0usize, t.accent), (1, green)] {
+            let mut path = canvas::path::Builder::new();
+            let mut open = false;
+            for st in &d.stations {
+                let side = if k == 0 { &st.left } else { &st.right };
+                match side.sensitivity {
+                    Some(v) => {
+                        let p = Point::new(x(st.station), y(v));
+                        if open { path.line_to(p) } else { path.move_to(p) }
+                        open = true;
+                    }
+                    None => open = false,
+                }
+            }
+            frame.stroke(&path.build(), Stroke::default().with_color(color).with_width(1.6));
+        }
+        // The bands: a mark a section, by how the side ends.
+        let orange = Color::from_rgb8(0xea, 0x58, 0x0c);
+        let band_top = top + plot + 10.0;
+        for (k, word) in [(0usize, "Sol"), (1, "Sağ")] {
+            let yb = band_top + k as f32 * 22.0;
+            text(&mut frame, word.into(), Point::new(left - 6.0, yb), t.muted, true);
+            for (i, st) in d.stations.iter().enumerate() {
+                let side = if k == 0 { &st.left } else { &st.right };
+                let over = d.sensitive.zip(side.sensitivity).is_some_and(|(th, v)| v > th);
+                let color = match side.kind.as_str() {
+                    "hit" if side.crossings.is_some_and(|n| n > 1) => t.warning,
+                    "hit" if over => t.danger,
+                    "hit" => Color { a: 0.55, ..green },
+                    "gap" => orange,
+                    "swath" => t.muted,
+                    _ => t.faint,
+                };
+                let next = d.stations.get(i + 1).map_or(st.station + (s1 - s0) * 0.005, |n| n.station);
+                let (a, b) = (x(st.station), x(next).max(x(st.station) + 2.0));
+                frame.fill_rectangle(Point::new(a, yb), iced::Size::new((b - a - 1.0).max(1.5), 16.0), color);
+            }
+        }
+        // The legend and the stations' ends.
+        let base = band_top + 2.0 * 22.0 + 2.0;
+        let mut lx = left;
+        for (word, color) in [("varıyor", Color { a: 0.55, ..green }), ("çok kesişme", t.warning), ("duyarlı", t.danger), ("arazi bitiyor", orange), ("şerit yetmiyor", t.muted), ("menteşede yok", t.faint)] {
+            frame.fill_rectangle(Point::new(lx, base + 4.0), iced::Size::new(10.0, 10.0), color);
+            text(&mut frame, word.into(), Point::new(lx + 14.0, base), t.text, false);
+            lx += 16.0 + 7.0 * word.chars().count() as f32 + 12.0;
+        }
+        text(&mut frame, d.stations[0].km_text.clone(), Point::new(left, band_top - 15.0 + 0.0 * plot), t.muted, false);
+        text(&mut frame, d.stations[d.stations.len() - 1].km_text.clone(), Point::new(left + w, band_top - 15.0), t.muted, true);
+        vec![frame.into_geometry()]
+    }
 }

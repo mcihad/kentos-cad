@@ -716,6 +716,12 @@ codes! {
     UNKNOWN_CORRIDOR = "unknown_corridor", Failed, false, "Bu kimlikte ya da adda koridor yok.";
     /// A platform water check asked that is not right: a least slope not above 0 (docs/adr/0923 §2).
     INVALID_PLATFORM_WATER = "invalid_platform_water", Failed, false, "Platform suyu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A daylight check asked that is not right: its sensitivity not above 0 (docs/adr/0951).
+    INVALID_DAYLIGHT_CHECK = "invalid_daylight_check", Failed, false, "Şev ucu denetimi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: a slope crosses the terrain more than once on the swath; the daylight is the first (docs/adr/0951).
+    CORRIDOR_DAYLIGHT_CROSSINGS = "corridor_daylight_crossings", Warning, false, "Şev araziyi birden çok kez kesiyor; şev ucu ilk kesişmedir, ötesinde arazi yeniden şevin altına iniyor.";
+    /// A warning: a daylight moves more than asked per metre of terrain height (docs/adr/0951).
+    CORRIDOR_DAYLIGHT_SENSITIVE = "corridor_daylight_sensitive", Warning, false, "Şev ucu arazinin kot hatasına çok duyarlı: şev araziye neredeyse paralel.";
     /// A warning: somewhere the platform is flatter than the least slope asked; water stands there (docs/adr/0923 §2).
     CORRIDOR_FLAT = "corridor_flat", Warning, false, "Platformun bir yeri istenen en küçük eğimden yatık; su orada durur.";
     /// A corridor's definition, its regions or its sampling (docs/adr/0905 §1–§2).

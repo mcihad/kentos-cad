@@ -20920,6 +20920,41 @@ class ConstructionsCreate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CorridorDaylights(_Model):
+    """Output of `road.corridors.daylights` v1 (docs/adr/0951): the corridor, the threshold asked, each built section's
+    daylights in station order, the counts, and the most sensitive daylight (station, side, m per m).
+    Attributes:
+        sensitive: Unit: 1.
+    """
+    corridor: str
+    stations: list[DaylightStation]
+    counts: DaylightCounts
+    sensitive: float | None | Unset = UNSET
+    worst: DaylightWorst | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["stations"] = [e0.to_json() for e0 in self.stations]
+        out["counts"] = self.counts.to_json()
+        if self.sensitive is not UNSET:
+            out["sensitive"] = None if self.sensitive is None else float(self.sensitive)
+        if self.worst is not UNSET:
+            out["worst"] = None if self.worst is None else self.worst.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorDaylights:
+        return cls(
+            corridor=data["corridor"],
+            stations=[DaylightStation.from_json(e0) for e0 in data["stations"]],
+            counts=DaylightCounts.from_json(data["counts"]),
+            sensitive=UNSET if "sensitive" not in data else None if data["sensitive"] is None else float(data["sensitive"]),
+            worst=UNSET if "worst" not in data else None if data["worst"] is None else DaylightWorst.from_json(data["worst"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CorridorDef(_Model):
     """A corridor (docs/adr/0905): on an alignment of its own PIs (its revision held), its profile's elevations, the
     surface its slopes meet, an optional superelevation schedule, the swath searched on each side (m), how often it
@@ -21426,6 +21461,37 @@ class CorridorStretch(_Model):
             to=float(data["to"]),
             from_text=data["fromText"],
             to_text=data["toText"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorsDaylights(_Model):
+    """Input of `road.corridors.daylights` v1 (plan/road.md Y45, docs/adr/0951; ROAD-COR-10): how each section's slopes
+    meet the terrain as the corridor is built now — the daylight with the slope's crossings of the terrain on the swath
+    and how far the daylight moves per metre of terrain height (1/|m − g|), or why it has none: no terrain at the
+    hinge, the terrain stopping before the slope meets it, the swath ending first. With `sensitive` (m per m, above 0),
+    the daylights moving more than that are warned of.
+
+    Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_daylight_check` (`sensitive` not above 0), and the
+    corridor's own (`invalid_corridor`).
+    Attributes:
+        sensitive: Unit: 1.
+    """
+    corridor: str
+    sensitive: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        if self.sensitive is not UNSET:
+            out["sensitive"] = None if self.sensitive is None else float(self.sensitive)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorsDaylights:
+        return cls(
+            corridor=data["corridor"],
+            sensitive=UNSET if "sensitive" not in data else None if data["sensitive"] is None else float(data["sensitive"]),
         )
 
 
@@ -23747,6 +23813,160 @@ class DatumTransform(_Model):
             name=data["name"],
             grid=UNSET if "grid" not in data else None if data["grid"] is None else GridChoice.from_json(data["grid"]),
             helmert=UNSET if "helmert" not in data else None if data["helmert"] is None else Helmert.from_json(data["helmert"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DaylightCounts(_Model):
+    """How many sides end each way (docs/adr/0951), the hits crossing the terrain more than once, those over the
+    sensitivity asked, and the sections not built.
+    Attributes:
+        hit: Unit: count.
+        hinge: Unit: count.
+        gap: Unit: count.
+        swath: Unit: count.
+        multiple: Unit: count.
+        sensitive: Unit: count.
+        unbuilt: Unit: count.
+    """
+    hit: int
+    hinge: int
+    gap: int
+    swath: int
+    multiple: int
+    sensitive: int
+    unbuilt: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["hit"] = self.hit
+        out["hinge"] = self.hinge
+        out["gap"] = self.gap
+        out["swath"] = self.swath
+        out["multiple"] = self.multiple
+        out["sensitive"] = self.sensitive
+        out["unbuilt"] = self.unbuilt
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DaylightCounts:
+        return cls(
+            hit=data["hit"],
+            hinge=data["hinge"],
+            gap=data["gap"],
+            swath=data["swath"],
+            multiple=data["multiple"],
+            sensitive=data["sensitive"],
+            unbuilt=data["unbuilt"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DaylightSide(_Model):
+    """A side's daylight (docs/adr/0951): `hit`, `hinge`, `gap` or `swath`; for a hit its offset (the section's sign, left
+    negative), whether in a cut, the slope's crossings with the terrain, the next one's distance further out and the
+    sensitivity (m per m of terrain height; none where the slope lies along the terrain); for a gap where the terrain
+    stops, for a swath where it ends (offsets).
+    Attributes:
+        crossings: Unit: count.
+        next: Unit: m.
+        offset: Unit: m.
+        sensitivity: Unit: 1.
+    """
+    kind: str
+    crossings: int | None | Unset = UNSET
+    cut: bool | None | Unset = UNSET
+    next: float | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    sensitivity: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        if self.crossings is not UNSET:
+            out["crossings"] = self.crossings
+        if self.cut is not UNSET:
+            out["cut"] = self.cut
+        if self.next is not UNSET:
+            out["next"] = None if self.next is None else float(self.next)
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.sensitivity is not UNSET:
+            out["sensitivity"] = None if self.sensitivity is None else float(self.sensitivity)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DaylightSide:
+        return cls(
+            kind=data["kind"],
+            crossings=data.get("crossings", UNSET),
+            cut=data.get("cut", UNSET),
+            next=UNSET if "next" not in data else None if data["next"] is None else float(data["next"]),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            sensitivity=UNSET if "sensitivity" not in data else None if data["sensitivity"] is None else float(data["sensitivity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DaylightStation(_Model):
+    """A section's daylights: its station, km and region, left and right.
+    Attributes:
+        station: Unit: m.
+        region: Unit: index.
+    """
+    station: float
+    km_text: str
+    region: int
+    left: DaylightSide
+    right: DaylightSide
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["kmText"] = self.km_text
+        out["region"] = self.region
+        out["left"] = self.left.to_json()
+        out["right"] = self.right.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DaylightStation:
+        return cls(
+            station=float(data["station"]),
+            km_text=data["kmText"],
+            region=data["region"],
+            left=DaylightSide.from_json(data["left"]),
+            right=DaylightSide.from_json(data["right"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DaylightWorst(_Model):
+    """The most sensitive daylight: its station, km, side (`left` or `right`) and sensitivity (m per m).
+    Attributes:
+        station: Unit: m.
+        sensitivity: Unit: 1.
+    """
+    station: float
+    km_text: str
+    side: str
+    sensitivity: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["kmText"] = self.km_text
+        out["side"] = self.side
+        out["sensitivity"] = float(self.sensitivity)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DaylightWorst:
+        return cls(
+            station=float(data["station"]),
+            km_text=data["kmText"],
+            side=data["side"],
+            sensitivity=float(data["sensitivity"]),
         )
 
 
@@ -109903,6 +110123,7 @@ __all__ = [
     "CornerHatchOrigin",
     "CornerPick",
     "CornersRectangleFrame",
+    "CorridorDaylights",
     "CorridorDef",
     "CorridorFeature",
     "CorridorLeft",
@@ -109914,6 +110135,7 @@ __all__ = [
     "CorridorStation",
     "CorridorStray",
     "CorridorStretch",
+    "CorridorsDaylights",
     "CorridorsDraw",
     "CorridorsDrawn",
     "CorridorsEdit",
@@ -110002,6 +110224,10 @@ __all__ = [
     "DatasetsEditPlan",
     "DatasetsEdited",
     "DatumTransform",
+    "DaylightCounts",
+    "DaylightSide",
+    "DaylightStation",
+    "DaylightWorst",
     "DeclaredCrs",
     "DeclaredVertical",
     "DecurveCurveEdit",

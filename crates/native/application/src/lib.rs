@@ -283,6 +283,7 @@ pub mod road_alignments_check;
 pub mod road_profiles_check;
 pub mod road_profiles_lengths;
 pub mod road_corridors;
+pub mod road_corridors_daylights;
 pub mod road_corridors_water;
 pub(crate) mod road_drawings;
 pub(crate) mod road_project;
@@ -1310,6 +1311,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_CORRIDORS_EDIT, kentos_commands::ROAD_CORRIDORS_EDIT_VERSION),
     (kentos_commands::ROAD_CORRIDORS_QUERY, kentos_commands::ROAD_CORRIDORS_QUERY_VERSION),
     (kentos_commands::ROAD_CORRIDORS_WATER, kentos_commands::ROAD_CORRIDORS_WATER_VERSION),
+    (kentos_commands::ROAD_CORRIDORS_DAYLIGHTS, kentos_commands::ROAD_CORRIDORS_DAYLIGHTS_VERSION),
     (kentos_commands::ROAD_CORRIDORS_DRAW, kentos_commands::ROAD_CORRIDORS_DRAW_VERSION),
     (kentos_commands::ROAD_VOLUMES_EDIT, kentos_commands::ROAD_VOLUMES_EDIT_VERSION),
     (kentos_commands::ROAD_VOLUMES_QUERY, kentos_commands::ROAD_VOLUMES_QUERY_VERSION),

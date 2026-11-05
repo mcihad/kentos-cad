@@ -254,3 +254,98 @@ fn screens_sampling() {
     }
     sizes::forget(crate::corridor_window::TITLE);
 }
+
+/// The templates' cut and fill slopes made `h`/1 through `road.templates.edit`: a slope this gentle meets the terrain
+/// far out at a shallow angle (docs/adr/0951).
+fn gentle(app: &mut App, h: f64) {
+    let templates = model(app).road_templates().to_vec();
+    for t in templates {
+        let soft = |s: &kentos_commands::TemplateSideDef| kentos_commands::TemplateSideDef { cut: h, fill: h, ..s.clone() };
+        let edit = kentos_commands::TemplatesEdit {
+            operation: kentos_commands::RoadEditOperation::Set,
+            template: Some(t.id.clone()),
+            name: None,
+            left: Some(soft(&t.left)),
+            right: t.right.as_ref().map(soft),
+            mirror: false,
+            pavement: None,
+            remove_pavement: false,
+            expected_revision: None,
+        };
+        let r = kentos_native_application::road_templates_edit::execute(&mut kentos_native_application::ExecutionContext::new(model(app)), edit);
+        assert!(matches!(r, kentos_commands::CommandResult::Completed { .. }), "{r:?}");
+    }
+}
+
+/// Şev uçları reads the corridor as typed as `road.corridors.daylights` does: the shared case “Yatık şevler 12/1”.
+#[test]
+fn the_daylights_read_the_shared_case() {
+    let mut app = app();
+    gentle(&mut app, 12.0);
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(0));
+    assert!(app.corridor_window.as_ref().unwrap().daylights.is_none(), "not read until shown");
+    send(&mut app, W::Field(0, "60".into()));
+    send(&mut app, W::Field(1, "60".into()));
+    send(&mut app, W::Daylight(true));
+    send(&mut app, W::Sensitive("10".into()));
+    let (d, warnings) = app.corridor_window.as_ref().unwrap().daylights.clone().expect("shown").expect("reads");
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.corridors.daylights.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Yatık şevler 12/1: uzakta, yatık açıyla").expect("the case");
+    let want = &case["steps"][0]["result"]["output"];
+    let counts = serde_json::to_value(&d.counts).expect("serialises");
+    assert_eq!(counts, want["counts"], "the counts are the command's");
+    assert!((d.worst.as_ref().unwrap().sensitivity - want["worst"]["sensitivity"].as_f64().unwrap()).abs() < 1e-6);
+    assert!(warnings.iter().any(|w| w.code == "corridor_daylight_crossings"));
+    send(&mut app, W::Sensitive("sıfır".into()));
+    let why = match app.corridor_window.as_ref().unwrap().daylights.clone() {
+        Some(Err(why)) => why,
+        other => panic!("a threshold that is no number: {other:?}"),
+    };
+    assert!(why.contains("Duyarlılık"), "{why}");
+}
+
+/// The daylights in Koridor, light and dark: the main corridor on 12/1 slopes and a 60 m swath, its sensitivity, its
+/// bands and the sides worth a look; `.run/gui-evidence/yol-y45/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib corridor_window_tests::screens_daylights -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_daylights() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y45");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        for (h, file) in [(12.0, "yatik"), (0.0, "ortak")] {
+            let mut app = app();
+            if h > 0.0 {
+                gentle(&mut app, h);
+            }
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("corridor.editor"));
+            send(&mut app, W::Choose(0));
+            send(&mut app, W::Field(0, "60".into()));
+            send(&mut app, W::Field(1, "60".into()));
+            send(&mut app, W::Daylight(true));
+            send(&mut app, W::Sensitive(if h > 0.0 { "10" } else { "1,5" }.into()));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("y45-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

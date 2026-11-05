@@ -2690,9 +2690,10 @@
       "via": [
         "road.corridors.edit",
         "road.corridors.query",
-        "road.corridors.draw"
+        "road.corridors.draw",
+        "road.corridors.daylights"
       ],
-      "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905)."
+      "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905); Şev uçları görünümü road.corridors.daylights ile her kesitin şev ucunu, kesişmelerini ve duyarlılığını okur (Y45, ADR 0951)."
     },
     "corridor.new": {
       "level": "semantic",

@@ -1,0 +1,773 @@
+{
+ "cases": [
+  {
+   "name": "Düz arazide iki yan dolgu",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": -10.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 10.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 98.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 8.245,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.0
+    },
+    {
+     "kind": "hit",
+     "offset": 8.245,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.0
+    }
+   ]
+  },
+  {
+   "name": "Yükselen arazide hendekli yarma",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.6,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.6,
+      "bottom": 0.5
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 104.0,
+     "gap": false
+    },
+    {
+     "offset": -5.0,
+     "z": 101.5,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 101.0,
+     "gap": false
+    },
+    {
+     "offset": 5.0,
+     "z": 101.5,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 108.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 10.0862,
+     "crossings": 1,
+     "cut": true,
+     "sensitivity": 1.68
+    },
+    {
+     "kind": "hit",
+     "offset": 11.29480198019802,
+     "crossings": 1,
+     "cut": true,
+     "sensitivity": 2.0792079207920793
+    }
+   ]
+  },
+  {
+   "name": "Tümsek: şev araziyi üç kez keser",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 95.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 6.0,
+     "z": 98.5,
+     "gap": false
+    },
+    {
+     "offset": 9.0,
+     "z": 97.0,
+     "gap": false
+    },
+    {
+     "offset": 12.0,
+     "z": 96.0,
+     "gap": false
+    },
+    {
+     "offset": 14.0,
+     "z": 97.6,
+     "gap": false
+    },
+    {
+     "offset": 16.0,
+     "z": 94.0,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 90.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 9.7,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.3529411764705883
+    },
+    {
+     "kind": "hit",
+     "offset": 12.09423076923077,
+     "crossings": 3,
+     "cut": false,
+     "sensitivity": 0.7692307692307709,
+     "next": 3.8115384615384613
+    }
+   ]
+  },
+  {
+   "name": "Teğete yakın: arazi şevle neredeyse paralel",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 96.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 99.6,
+     "gap": false
+    },
+    {
+     "offset": 4.5,
+     "z": 99.6,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 82.56,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 6.152439024390255,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.4390243902439015
+    },
+    {
+     "kind": "hit",
+     "offset": 18.12500000000013,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 49.99999999999944
+    }
+   ]
+  },
+  {
+   "name": "Menteşede arazi yok",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": null,
+     "gap": false
+    },
+    {
+     "offset": -3.0,
+     "z": null,
+     "gap": false
+    },
+    {
+     "offset": -2.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 98.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hinge"
+    },
+    {
+     "kind": "hit",
+     "offset": 8.245,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.0
+    }
+   ]
+  },
+  {
+   "name": "Şev araziye varmadan boşluğa giriyor",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 6.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 7.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 9.0,
+     "z": 98.0,
+     "gap": true
+    },
+    {
+     "offset": 40.0,
+     "z": 98.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 8.245,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.0
+    },
+    {
+     "kind": "gap",
+     "at": 7.0
+    }
+   ]
+  },
+  {
+   "name": "Kesit kısa: şerit bitiyor",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -8.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 6.0,
+     "z": 98.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "swath",
+     "end": 8.0
+    },
+    {
+     "kind": "swath",
+     "end": 6.0
+    }
+   ]
+  },
+  {
+   "name": "Arazi köşesi şeve değip ayrılıyor",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 4.0,
+       "slope": -3.125
+      },
+      {
+       "width": 1.0,
+       "slope": -12.5
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 4.0,
+       "slope": -3.125
+      },
+      {
+       "width": 1.0,
+       "slope": -12.5
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 5.0,
+     "z": 98.0,
+     "gap": false
+    },
+    {
+     "offset": 7.0,
+     "z": 98.75,
+     "gap": false
+    },
+    {
+     "offset": 9.0,
+     "z": 97.0,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 85.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 8.5,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.0
+    },
+    {
+     "kind": "hit",
+     "offset": 7.0,
+     "crossings": 2,
+     "cut": false,
+     "sensitivity": 2.6666666666666665,
+     "next": 8.642857142857142
+    }
+   ]
+  },
+  {
+   "name": "Sol yarma, sağ dolgu",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.6,
+      "bottom": 0.5
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 106.0,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 100.0,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 94.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 9.408064516129032,
+     "crossings": 1,
+     "cut": true,
+     "sensitivity": 1.935483870967742
+    },
+    {
+     "kind": "hit",
+     "offset": 6.064285714285714,
+     "crossings": 1,
+     "cut": false,
+     "sensitivity": 2.857142857142857
+    }
+   ]
+  },
+  {
+   "name": "Dar yarma şevi 1/1",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.0,
+     "fill": 2.0
+    },
+    "right": {
+     "components": [
+      {
+       "width": 3.5,
+       "slope": -2.5
+      },
+      {
+       "width": 1.0,
+       "slope": -4.0
+      }
+     ],
+     "cut": 1.5,
+     "fill": 2.0
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40.0,
+     "z": 104.0,
+     "gap": false
+    },
+    {
+     "offset": -5.0,
+     "z": 101.5,
+     "gap": false
+    },
+    {
+     "offset": 0.0,
+     "z": 101.0,
+     "gap": false
+    },
+    {
+     "offset": 5.0,
+     "z": 101.5,
+     "gap": false
+    },
+    {
+     "offset": 40.0,
+     "z": 108.0,
+     "gap": false
+    }
+   ],
+   "expected": [
+    {
+     "kind": "hit",
+     "offset": 6.2142307692307694,
+     "crossings": 1,
+     "cut": true,
+     "sensitivity": 1.0769230769230769
+    },
+    {
+     "kind": "hit",
+     "offset": 7.690841584158416,
+     "crossings": 1,
+     "cut": true,
+     "sensitivity": 2.0792079207920793
+    }
+   ]
+  }
+ ]
+}

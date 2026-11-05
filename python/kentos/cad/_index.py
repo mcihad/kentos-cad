@@ -344,6 +344,7 @@ COMMANDS: dict[str, Any] = {
     "road.alignments.import": road.alignments.import_,
     "road.alignments.label": road.alignments.label,
     "road.alignments.query": road.alignments.query,
+    "road.corridors.daylights": road.corridors.daylights,
     "road.corridors.draw": road.corridors.draw,
     "road.corridors.edit": road.corridors.edit,
     "road.corridors.query": road.corridors.query,

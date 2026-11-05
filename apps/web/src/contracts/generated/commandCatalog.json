@@ -40534,6 +40534,158 @@
       ]
     },
     {
+      "id": "road.corridors.daylights",
+      "version": 1,
+      "title": "Şev uçları",
+      "summary": "Koridorun her kesitinde iki yanın şevinin araziye nasıl vardığını verir: şev ucu, şevin şerit boyunca araziyi kaç kez kestiği, bir sonraki kesişmenin uzaklığı ve şev ucunun arazinin her metre kot hatasıyla kaç metre kaydığı (1/|m − g|); ya da neden şev ucu olmadığı: menteşede arazi yok, şev araziye varmadan arazi bitiyor, şerit bitiyor. sensitive ile daha duyarlı şev uçları uyarılır. Yalnız okur. Uyarılar: corridor_daylight_crossings, corridor_daylight_sensitive ve koridorun uyarıları. Retler: not_a_road_project, unknown_corridor, invalid_daylight_check.",
+      "aliases": [
+        "sevuclari"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.corridors.daylights` v1 (plan/road.md Y45, docs/adr/0951; ROAD-COR-10): how each section's slopes\nmeet the terrain as the corridor is built now — the daylight with the slope's crossings of the terrain on the swath\nand how far the daylight moves per metre of terrain height (1/|m − g|), or why it has none: no terrain at the\nhinge, the terrain stopping before the slope meets it, the swath ending first. With `sensitive` (m per m, above 0),\nthe daylights moving more than that are warned of.\n\nRefusals: `not_a_road_project`, `unknown_corridor`, `invalid_daylight_check` (`sensitive` not above 0), and the\ncorridor's own (`invalid_corridor`).",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "sensitive": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          }
+        },
+        "required": [
+          "corridor"
+        ],
+        "title": "CorridorsDaylights",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.daylights` v1 (docs/adr/0951): the corridor, the threshold asked, each built section's\ndaylights in station order, the counts, and the most sensitive daylight (station, side, m per m).",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/$defs/DaylightCounts"
+          },
+          "sensitive": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/$defs/DaylightStation"
+            },
+            "type": "array"
+          },
+          "worst": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DaylightWorst"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "corridor",
+          "stations",
+          "counts"
+        ],
+        "title": "CorridorDaylights",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.daylights` v1 (docs/adr/0951): the corridor, the threshold asked, each built section's\ndaylights in station order, the counts, and the most sensitive daylight (station, side, m per m).",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/$defs/DaylightCounts"
+          },
+          "sensitive": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/$defs/DaylightStation"
+            },
+            "type": "array"
+          },
+          "worst": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DaylightWorst"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "corridor",
+          "stations",
+          "counts"
+        ],
+        "title": "CorridorDaylights",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "invalid_daylight_check"
+        ],
+        "warnings": [
+          "corridor_daylight_crossings",
+          "corridor_daylight_sensitive",
+          "corridor_stale",
+          "corridor_unsolved",
+          "corridor_surface_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridor, 10 m/m'den duyarlılar uyarılsın",
+          "input": {
+            "corridor": "c-1",
+            "sensitive": 10.0
+          }
+        }
+      ]
+    },
+    {
       "id": "road.corridors.draw",
       "version": 1,
       "title": "Şevli plan çiz",
@@ -87767,6 +87919,24 @@
       "meaning": "Platform suyu sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "invalid_daylight_check",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Şev ucu denetimi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "corridor_daylight_crossings",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Şev araziyi birden çok kez kesiyor; şev ucu ilk kesişmedir, ötesinde arazi yeniden şevin altına iniyor."
+    },
+    {
+      "code": "corridor_daylight_sensitive",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Şev ucu arazinin kot hatasına çok duyarlı: şev araziye neredeyse paralel."
+    },
+    {
       "code": "corridor_flat",
       "kind": "warning",
       "retryable": false,
@@ -108890,6 +109060,175 @@
         "from",
         "to",
         "name"
+      ],
+      "type": "object"
+    },
+    "DaylightCounts": {
+      "description": "How many sides end each way (docs/adr/0951), the hits crossing the terrain more than once, those over the\nsensitivity asked, and the sections not built.",
+      "properties": {
+        "gap": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "hinge": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "hit": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "multiple": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "sensitive": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "swath": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "unbuilt": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "hit",
+        "hinge",
+        "gap",
+        "swath",
+        "multiple",
+        "sensitive",
+        "unbuilt"
+      ],
+      "type": "object"
+    },
+    "DaylightSide": {
+      "description": "A side's daylight (docs/adr/0951): `hit`, `hinge`, `gap` or `swath`; for a hit its offset (the section's sign, left\nnegative), whether in a cut, the slope's crossings with the terrain, the next one's distance further out and the\nsensitivity (m per m of terrain height; none where the slope lies along the terrain); for a gap where the terrain\nstops, for a swath where it ends (offsets).",
+      "properties": {
+        "crossings": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "cut": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "next": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "offset": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "sensitivity": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
+    "DaylightStation": {
+      "description": "A section's daylights: its station, km and region, left and right.",
+      "properties": {
+        "kmText": {
+          "type": "string"
+        },
+        "left": {
+          "$ref": "#/$defs/DaylightSide"
+        },
+        "region": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "right": {
+          "$ref": "#/$defs/DaylightSide"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "kmText",
+        "region",
+        "left",
+        "right"
+      ],
+      "type": "object"
+    },
+    "DaylightWorst": {
+      "description": "The most sensitive daylight: its station, km, side (`left` or `right`) and sensitivity (m per m).",
+      "properties": {
+        "kmText": {
+          "type": "string"
+        },
+        "sensitivity": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "side": {
+          "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "station",
+        "kmText",
+        "side",
+        "sensitivity"
       ],
       "type": "object"
     },

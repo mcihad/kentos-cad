@@ -7486,6 +7486,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_DAYLIGHTS.into(),
+            version: crate::ROAD_CORRIDORS_DAYLIGHTS_VERSION,
+            title: "Şev uçları".into(),
+            summary: "Koridorun her kesitinde iki yanın şevinin araziye nasıl vardığını verir: şev ucu, şevin şerit boyunca araziyi kaç kez kestiği, bir sonraki kesişmenin uzaklığı ve şev ucunun arazinin her metre kot hatasıyla kaç metre kaydığı (1/|m − g|); ya da neden şev ucu olmadığı: menteşede arazi yok, şev araziye varmadan arazi bitiyor, şerit bitiyor. sensitive ile daha duyarlı şev uçları uyarılır. Yalnız okur. \
+                      Uyarılar: corridor_daylight_crossings, corridor_daylight_sensitive ve koridorun uyarıları. Retler: not_a_road_project, unknown_corridor, invalid_daylight_check."
+                .into(),
+            aliases: vec!["sevuclari".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsDaylights>(),
+            output: schema::<crate::CorridorDaylights>(),
+            plan: Some(schema::<crate::CorridorDaylights>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridor, 10 m/m'den duyarlılar uyarılsın".into(),
+                input: json!({ "corridor": "c-1", "sensitive": 10.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_DRAW.into(),
             version: crate::ROAD_CORRIDORS_DRAW_VERSION,
             title: "Şevli plan çiz".into(),
@@ -14780,6 +14805,9 @@ mod tests {
                     crate::ROAD_CORRIDORS_WATER => {
                         serde_json::from_value::<crate::CorridorsWater>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CORRIDORS_DAYLIGHTS => {
+                        serde_json::from_value::<crate::CorridorsDaylights>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_EDIT => {
                         serde_json::from_value::<crate::VolumesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15642,6 +15670,9 @@ mod tests {
                         }
                         crate::ROAD_CORRIDORS_WATER => {
                             serde_json::from_value::<crate::CorridorsWatered>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_DAYLIGHTS => {
+                            serde_json::from_value::<crate::CorridorDaylights>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_VOLUMES_EDIT => {
                             serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
