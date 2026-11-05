@@ -2090,6 +2090,17 @@ penceresinde tablonun görünümü, seçimi ve canlı yenileme düğmesi doğrul
 ekran görüntüleri repo dışında tutuldu. Genel çıkarım tarifi, iç içe blok
 kapsamı, anahtarlı dış eşleme ve çok sayfalı çıktı kabulü açık kalır.
 
+**Bağlı tablonun satır kayması koruması (5 Kasım 2026):** Dış dosyadan gelen
+bir hücre elle düzeltilmişse ve eski kaynak satırının değişmeyen verileri
+yeni dosyada başka bir sırada bulunuyorsa, satır indeksine göre yenileme artık
+düzeltmeyi yanlış kaleme taşımaz. Uyarı verir; tablo, kaynak özeti ve Undo
+geçmişi olduğu gibi kalır. Aynı satırdaki fiyatın değişmesi yanlış kayma
+sayılmaz. Komut sınamasında `A/11, B/10` ile `B/10, A/10` dosya sırası;
+gerçek CAD penceresinde yenileme uyarısı, çizimin değişmemesi ve komut
+geçmişindeki "Çizimde değişiklik yok" kaydı doğrulandı. Bu yalnız
+belirlenebilen satır kaymalarını korur; kalıcı satır anahtarıyla eşleme ve
+uyuşmazlık çözümü hâlâ açık kabul işidir.
+
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [ ]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].

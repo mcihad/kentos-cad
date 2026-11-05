@@ -610,6 +610,48 @@ fn with_overrides(
     (out, kept, replaced)
 }
 
+/// Without an explicit row key, a hand edit belongs to a position only. If the old row is
+/// identifiable from its unedited cells at a different position, applying it at the old position
+/// would silently attach that edit to another item. Leave the linked table untouched instead.
+fn moved_hand_edit(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>]) -> bool {
+    let first = usize::from(t.header);
+    for (r, was) in copy.iter().enumerate().skip(first) {
+        let Some(own) = t.cells.get(r) else { continue };
+        let changed = was.iter().enumerate().any(|(c, value)| {
+            own.get(c).is_some_and(|cell| cell != value)
+                && t.formula_at(r, c).is_none()
+                && t.field_at(r, c).is_none()
+        });
+        if !changed {
+            continue;
+        }
+        let stable: Vec<(usize, &str)> = was
+            .iter()
+            .enumerate()
+            .filter(|(c, value)| !value.is_empty() && own.get(*c) == Some(value))
+            .map(|(c, value)| (c, value.as_str()))
+            .collect();
+        if stable.is_empty() {
+            continue;
+        }
+        let matches = |row: &[String]| {
+            stable
+                .iter()
+                .all(|(c, value)| row.get(*c).is_some_and(|v| v == value))
+        };
+        if fresh.get(r).is_some_and(|row| !matches(row))
+            && fresh
+                .iter()
+                .enumerate()
+                .skip(first)
+                .any(|(i, row)| i != r && matches(row))
+        {
+            return true;
+        }
+    }
+    false
+}
+
 struct Checked {
     changed: Vec<(Slot, Uuid, TableEntity)>,
     report: Vec<TableReport>,
@@ -705,17 +747,28 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                         None
                                     }
                                     Ok((fresh, aligns)) => {
-                                        let (cells, k, r) = with_overrides(&t, copy.as_ref(), &fresh, *overrides);
-                                        (kept, replaced) = (k, r);
-                                        refreshed(doc, &t, &cells, &aligns).map(|mut n| {
-                                            let mut s = source.clone();
-                                            if let TableSource::File { digest, copy, .. } = &mut s {
-                                                *digest = Some(d);
-                                                *copy = Some(fresh);
-                                            }
-                                            n.source = Some(s);
-                                            n
-                                        })
+                                        if *overrides == SourceOverrides::Keep
+                                            && copy.as_ref().is_some_and(|old| moved_hand_edit(&t, old, &fresh))
+                                        {
+                                            status = TableRefresh::Unreadable;
+                                            warnings.push(warning(
+                                                codes::SOURCE_UNREADABLE,
+                                                format!("“{path}” dosyasında elle düzeltilmiş bir satır başka sıraya taşındı. Satır anahtarı tanımlı olmadığı için düzeltme başka kaleme aktarılmadı; tablo olduğu gibi kaldı."),
+                                            ));
+                                            None
+                                        } else {
+                                            let (cells, k, r) = with_overrides(&t, copy.as_ref(), &fresh, *overrides);
+                                            (kept, replaced) = (k, r);
+                                            refreshed(doc, &t, &cells, &aligns).map(|mut n| {
+                                                let mut s = source.clone();
+                                                if let TableSource::File { digest, copy, .. } = &mut s {
+                                                    *digest = Some(d);
+                                                    *copy = Some(fresh);
+                                                }
+                                                n.source = Some(s);
+                                                n
+                                            })
+                                        }
                                     }
                                 }
                             }
@@ -893,5 +946,73 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: TablesEdit) -> CommandRes
             revision: doc.revision().to_string(),
         },
         warnings: c.warnings,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_commands::DocumentSnapshotV2;
+    use serde_json::json;
+
+    #[test]
+    fn a_moved_hand_edit_does_not_attach_to_the_other_file_row() {
+        let path = std::env::temp_dir().join(format!(
+            "kentos-table-row-move-{}.csv",
+            std::process::id()
+        ));
+        let original = b"ID,Price\nA,10\nB,10\n";
+        let changed = b"ID,Price\nB,10\nA,10\n";
+        let (copy, _) = sheet_rows(original, None, true).unwrap();
+        let mut cells = copy.clone();
+        cells[1][1] = "11".to_owned();
+        std::fs::write(&path, changed).unwrap();
+        let raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+        let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+        let table: TableEntity = serde_json::from_value(json!({
+            "id":0,"layerId":"duvar","attrs":{},"p":{"x":0,"y":-2},
+            "rotation":0,"height":0.1,"rows":[0.3,0.3,0.3],"columns":[1.0,1.0],
+            "cells":cells,"header":true,
+            "source":{"kind":"file","name":"rows.csv","path":path.to_string_lossy(),
+                      "digest":digest_of(original),"copy":copy}
+        }))
+        .unwrap();
+        let slot = doc.add(Entity::Table(table)).unwrap();
+        let uid = doc.uid(slot).unwrap().to_string();
+        let before = doc.to_snapshot_v2();
+        let history = doc.undo_labels();
+        let request = TablesEdit {
+            operation: TablesOperation::Refresh { uids: vec![uid], base: None },
+            expected_revision: None,
+        };
+        let result = execute(&mut ExecutionContext::new(&mut doc), request);
+        let CommandResult::Completed { output, warnings } = result else {
+            panic!("refresh must report an ambiguous row: {result:?}");
+        };
+        assert_eq!(output.report[0].status, TableRefresh::Unreadable);
+        assert!(warnings.iter().any(|w| w.message.contains("anahtarı")), "{warnings:?}");
+        assert!(output.changed.is_empty());
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert_eq!(doc.undo_labels(), history);
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn changed_value_at_the_same_row_is_not_a_row_move() {
+        let copy = vec![vec!["ID".into(), "Price".into()], vec!["A".into(), "10".into()]];
+        let mut own = copy.clone();
+        own[1][1] = "11".into();
+        let table: TableEntity = serde_json::from_value(json!({
+            "id":0,"layerId":"duvar","attrs":{},"p":{"x":0,"y":0},
+            "rotation":0,"height":0.1,"rows":[0.3,0.3],"columns":[1.0,1.0],
+            "cells":own,"header":true
+        }))
+        .unwrap();
+        let fresh = vec![copy[0].clone(), vec!["A".into(), "12".into()]];
+        assert!(!moved_hand_edit(&table, &copy, &fresh));
     }
 }

@@ -281,4 +281,32 @@ mod qa {
         crate::document::write(&doc.to_snapshot_v2(), &path).unwrap();
         println!("{}", path.display());
     }
+
+    #[test]
+    #[ignore = "writes a temporary linked CAD table and CSV for real window QA"]
+    fn moved_file_row_fixture() {
+        let raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+        let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        let csv = std::env::temp_dir().join("kentos-cad-adv13-row-move.csv");
+        std::fs::write(&csv, "ID,Price\nB,10\nA,10\n").unwrap();
+        let table: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind":"table","id":0,"layerId":"duvar","attrs":{},
+            "p":{"x":0,"y":-2},"rotation":0,"height":0.13,
+            "rows":[0.32,0.32,0.32],"columns":[2.0,2.0],
+            "cells":[["ID","Price"],["A","11"],["B","10"]],
+            "header":true,
+            "source":{"kind":"file","name":"rows.csv","path":csv.to_string_lossy(),
+                "digest":"0000000000000000000000000000000000000000000000000000000000000000",
+                "copy":[["ID","Price"],["A","10"],["B","10"]]}
+        }))
+        .unwrap();
+        doc.add(table).unwrap();
+        let path = std::env::temp_dir().join("kentos-cad-adv13-row-move.kcad");
+        crate::document::write(&doc.to_snapshot_v2(), &path).unwrap();
+        println!("{}", path.display());
+    }
 }
