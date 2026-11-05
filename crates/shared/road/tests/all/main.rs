@@ -8,6 +8,7 @@ mod cloud_ground;
 mod corridor;
 mod culvert_closure;
 mod daylight;
+mod protected;
 mod culvert_hydraulics;
 mod curve_volumes;
 mod cutout;

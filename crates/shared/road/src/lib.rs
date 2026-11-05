@@ -47,6 +47,7 @@ pub mod haul_plan;
 pub mod junction;
 pub mod platform_water;
 pub mod profile;
+pub mod protected;
 pub mod route;
 pub mod section;
 pub mod sources;

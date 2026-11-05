@@ -55,7 +55,9 @@ const ADD: &str = "Bölge ekle";
 const REMOVE_ROW: &str = "Bölgeyi sil";
 const DRAW: &str = "Şevli plan çiz";
 /// The picture's two views and the daylight check's threshold (docs/adr/0951).
-pub(crate) const VIEWS: [&str; 2] = ["Plan", "Şev uçları"];
+pub(crate) const VIEWS: [&str; 3] = ["Plan", "Şev uçları", "Korunan alanlar"];
+/// The protected areas' layer (docs/adr/0952).
+pub(crate) const PROTECTED_LAYER: &str = "Korunan alan katmanı";
 pub(crate) const SENSITIVE: &str = "Duyarlılık sınırı (m/m)";
 
 fn trimmed(v: f64) -> String {
@@ -207,6 +209,10 @@ pub struct Window {
     pub(crate) daylight: bool,
     pub(crate) sensitive: String,
     pub(crate) daylights: Option<Result<(kentos_commands::CorridorDaylights, Vec<CommandWarning>), String>>,
+    /// The protected areas shown over the plan (docs/adr/0952): the layer and the footprint read against it.
+    pub(crate) protecting: bool,
+    pub(crate) protected_layer: Option<String>,
+    pub(crate) protected: Option<Result<(kentos_commands::CorridorProtected, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -236,6 +242,9 @@ pub enum Event {
     /// The picture's view: the plan or the daylights.
     Daylight(bool),
     Sensitive(String),
+    /// The protected areas' view and layer.
+    Protected(bool),
+    ProtectedLayer(String),
     Draw,
     Save,
     Cancel,
@@ -305,6 +314,16 @@ impl App {
                 Err(e) => Preview { why: Some(e), ..Preview::default() },
                 Ok((report, built, warnings)) => Preview { report: Some(report), triangles: built.triangles, warnings, why: None },
             },
+        };
+        // The protected areas while shown: the corridor as saved against the layer's areas.
+        w.protected = match (w.protecting, &w.protected_layer, w.kept.iter().find(|k| k.id == r.id)) {
+            (true, Some(layer), Some(_)) => Some(kentos_native_application::road_corridors_protected::preview(
+                &doc.model,
+                &kentos_commands::CorridorsProtected { corridor: r.id.clone(), layers: vec![layer.clone()] },
+            )),
+            (true, None, _) => Some(Err("Korunan alanların katmanını seçin.".into())),
+            (true, _, None) => Some(Err("Korunan alanlar kaydedilmiş koridorla okunur; önce koridoru kaydedin.".into())),
+            _ => None,
         };
         // The daylights while shown: the corridor as typed is built once more.
         w.daylights = match (w.daylight, r.def()) {
@@ -454,7 +473,16 @@ impl App {
             }
             Event::DrawLayer(l) => w.layer = Some(l),
             Event::Tick(t) => w.tick = t,
-            Event::Daylight(on) => w.daylight = on,
+            // The plan (false) or the daylights (true): either way not the protected areas.
+            Event::Daylight(on) => {
+                w.daylight = on;
+                w.protecting = false;
+            }
+            Event::Protected(on) => {
+                w.protecting = on;
+                w.daylight &= !on;
+            }
+            Event::ProtectedLayer(l) => w.protected_layer = Some(l),
             Event::Sensitive(t) => w.sensitive = t,
             Event::Cancel => {
                 self.corridor_window = None;
@@ -765,7 +793,11 @@ impl App {
             .align_y(iced::alignment::Vertical::Bottom),
         );
         // The picture: the corridor in plan, or its daylights along the stations (docs/adr/0951).
-        let on_view = Select::new(VIEWS.map(Choice::new), Some(usize::from(w.daylight)), |i| msg(Event::Daylight(i == 1)));
+        let shown_view = if w.protecting { 2 } else { usize::from(w.daylight) };
+        let on_view = Select::new(VIEWS.map(Choice::new), Some(shown_view), |i| match i {
+            2 => msg(Event::Protected(true)),
+            i => msg(Event::Daylight(i == 1)),
+        });
         let mut views = row![words::field("Görünüş", container(on_view).width(140), None)].spacing(10).align_y(iced::alignment::Vertical::Bottom);
         if w.daylight {
             views = views.push(words::field(
@@ -777,18 +809,41 @@ impl App {
                 label::caption("Şev ucu, arazinin her metre kot hatasıyla 1/|m − g| metre kayar; sınır projenindir.").style(muted),
             );
         }
+        if w.protecting {
+            let layers = self.relation_layers();
+            let ids: Vec<String> = layers.iter().map(|l| l.0.clone()).collect();
+            let on_layer = Select::new(
+                layers.iter().map(|l| Choice::new(l.1.clone())),
+                w.protected_layer.as_ref().and_then(|l| ids.iter().position(|i| i == l)),
+                move |i| msg(Event::ProtectedLayer(ids[i].clone())),
+            )
+            .placeholder("Katman");
+            views = views.push(words::field(PROTECTED_LAYER, container(on_layer).width(200), None));
+            views = views.push(label::caption("Katmandaki alan nesneleri (bina parseli, sit alanı, dere yatağı) koridorun izine karşı.").style(muted));
+        }
         col = col.push(views);
         let read = w.daylights.as_ref().and_then(|d| d.as_ref().ok()).filter(|_| w.daylight);
+        let zones = w.protected.as_ref().and_then(|d| d.as_ref().ok()).filter(|_| w.protecting).map(|(z, _)| z);
         col = match read {
             Some((d, _)) => col.push_grow(
                 crate::picture::picture(iced::widget::canvas(Daylights { read: d }).width(Fill).height(Fill), "Şev uçları"),
                 typography::scaled(190.0),
             ),
             None => col.push_grow(
-                crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview }).width(Fill).height(Fill), "Koridor"),
+                crate::picture::picture(iced::widget::canvas(Plan { preview: &w.preview, zones }).width(Fill).height(Fill), "Koridor"),
                 typography::scaled(190.0),
             ),
         };
+        if w.protecting {
+            match &w.protected {
+                Some(Err(e)) => col = col.push(label::caption(e.clone()).style(danger)),
+                Some(Ok((z, _))) => {
+                    col = col.push(label::caption(protected_words(z)));
+                    col = col.push(protected_table(z));
+                }
+                None => {}
+            }
+        }
         if w.daylight {
             match &w.daylights {
                 Some(Err(e)) => col = col.push(label::caption(e.clone()).style(danger)),
@@ -888,7 +943,12 @@ impl App {
             Control::Fill("Sapma (m)", text) => Some(msg(Event::Field(4, text.to_owned()))),
             Control::Fill("Tarama (m)", text) => Some(msg(Event::Tick(text.to_owned()))),
             Control::Fill(SENSITIVE, text) => Some(msg(Event::Sensitive(text.to_owned()))),
+            Control::Pick("Görünüş", words) if words == VIEWS[2] => Some(msg(Event::Protected(true))),
             Control::Pick("Görünüş", words) => Some(msg(Event::Daylight(words == VIEWS[1]))),
+            Control::Pick(PROTECTED_LAYER, words) => {
+                let id = self.relation_layers().into_iter().find(|l| l.1 == words).map(|l| l.0).ok_or_else(|| format!("“{words}” diye bir katman yok"))?;
+                Some(msg(Event::ProtectedLayer(id)))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -897,6 +957,8 @@ impl App {
 /// The corridor in plan: its top surface, its feature lines and the stretches not solved, fitted to the canvas.
 struct Plan<'a> {
     preview: &'a Preview,
+    /// The protected areas over the plan (docs/adr/0952): covered ones in red, the others in grey.
+    zones: Option<&'a kentos_commands::CorridorProtected>,
 }
 
 impl canvas::Program<Message> for Plan<'_> {
@@ -916,7 +978,8 @@ impl canvas::Program<Message> for Plan<'_> {
             });
             return vec![frame.into_geometry()];
         };
-        let all = rep.features.iter().flat_map(|f| f.points.iter().map(|p| [p[1], p[2]]));
+        let rings = self.zones.into_iter().flat_map(|z| z.areas.iter().flat_map(|a| a.rings.iter().flatten().copied()));
+        let all = rep.features.iter().flat_map(|f| f.points.iter().map(|p| [p[1], p[2]])).chain(rings);
         let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
         for p in all {
             x0 = x0.min(p[0]);
@@ -983,6 +1046,35 @@ impl canvas::Program<Message> for Plan<'_> {
             let (color, width) = if refined.contains(key) { (REFINED, 1.2) } else { (Color { a: 0.35, ..t.muted }, 0.6) };
             let line = Path::line(at(far.1[0], far.1[1]), at(far.2[0], far.2[1]));
             frame.stroke(&line, Stroke::default().with_color(color).with_width(width));
+        }
+        // The protected areas over the footprint: covered ones red, the others grey; each named by its object's id.
+        for a in self.zones.iter().flat_map(|z| z.areas.iter()) {
+            let hit = a.covered > 1e-6 || a.sections > 0;
+            let color = if hit { t.danger } else { t.muted };
+            for (k, ring) in a.rings.iter().enumerate() {
+                let path = Path::new(|b| {
+                    for (i, p) in ring.iter().enumerate() {
+                        let q = at(p[0], p[1]);
+                        if i == 0 { b.move_to(q) } else { b.line_to(q) }
+                    }
+                    b.close();
+                });
+                if k == 0 {
+                    frame.fill(&path, Color { a: if hit { 0.22 } else { 0.10 }, ..color });
+                }
+                frame.stroke(&path, Stroke::default().with_color(color).with_width(if k == 0 { 1.6 } else { 1.0 }));
+            }
+            let n = a.rings[0].len().max(1) as f64;
+            let c = a.rings[0].iter().fold([0.0, 0.0], |s, p| [s[0] + p[0] / n, s[1] + p[1] / n]);
+            frame.fill_text(Text {
+                content: format!("#{}", a.entity),
+                position: at(c[0], c[1]),
+                color,
+                size: Pixels(typography::caption()),
+                font: typography::ui(),
+                align_x: iced::alignment::Horizontal::Center.into(),
+                ..Text::default()
+            });
         }
         // The stretches not solved, over the axis.
         let orange = Color::from_rgb8(0xea, 0x58, 0x0c);
@@ -1193,4 +1285,55 @@ impl canvas::Program<Message> for Daylights<'_> {
         text(&mut frame, d.stations[d.stations.len() - 1].km_text.clone(), Point::new(left + w, band_top - 15.0), t.muted, true);
         vec![frame.into_geometry()]
     }
+}
+
+/// The protected areas in a sentence (docs/adr/0952).
+fn protected_words(z: &kentos_commands::CorridorProtected) -> String {
+    let hit = z.areas.iter().filter(|a| a.covered > 1e-6 || a.sections > 0).count();
+    format!(
+        "{} alandan {}'ine iz giriyor: {} m² (izin {} m²'sinin %{}'i).",
+        z.areas.len(),
+        hit,
+        comma(z.covered, 1),
+        comma(z.footprint, 0),
+        comma(if z.footprint > 0.0 { 100.0 * z.covered / z.footprint } else { 0.0 }, 1)
+    )
+}
+
+/// Each protected area against the footprint.
+fn protected_table(z: &kentos_commands::CorridorProtected) -> Element<'_, Message> {
+    use road_dialog::{col, num};
+    let rows: Vec<Vec<String>> = z
+        .areas
+        .iter()
+        .map(|a| {
+            vec![
+                format!("#{}{}", a.entity, if a.part > 0 { format!(" · {}", a.part + 1) } else { String::new() }),
+                comma(a.size, 1),
+                comma(a.covered, 1),
+                format!("%{}", comma(100.0 * a.share, 1)),
+                a.sections.to_string(),
+                match (&a.from_text, &a.to_text) {
+                    (Some(f), Some(t)) if f != t => format!("{f} – {t}"),
+                    (Some(f), _) => f.clone(),
+                    _ => "—".into(),
+                },
+                comma(a.reach, 2),
+            ]
+        })
+        .collect();
+    road_dialog::sheet(
+        vec![
+            col("Alan", 80.0),
+            num("Büyüklük (m²)", 104.0),
+            num("Giren (m²)", 92.0),
+            num("Pay", 64.0),
+            num("Kesit", 56.0),
+            col("Km", 200.0),
+            num("En uzun giriş (m)", 120.0),
+        ],
+        rows,
+        "Katmanda alan nesnesi yok",
+        typography::scaled(150.0),
+    )
 }

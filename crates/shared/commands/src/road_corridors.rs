@@ -621,3 +621,86 @@ pub struct DaylightWorst {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub sensitivity: f64,
 }
+
+pub const ROAD_CORRIDORS_PROTECTED: &str = "road.corridors.protected";
+pub const ROAD_CORRIDORS_PROTECTED_VERSION: u32 = 1;
+
+/// Input of `road.corridors.protected` v1 (plan/road.md Y46, docs/adr/0952; ROAD-GRADE-06): a corridor's footprint as
+/// built now against the protected areas — the area objects on `layers` (1 to 20 layer ids), each part with its holes:
+/// how much of each the top surface covers, the sections whose footprint (slope end to slope end) reaches into it and
+/// the longest reach.
+///
+/// Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_protected_check` (no layer or over 20, a layer not in
+/// the drawing).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorsProtected {
+    pub corridor: String,
+    pub layers: Vec<String>,
+}
+
+/// A protected area against the footprint (docs/adr/0952): the area object's id, its part and layer, its size, how
+/// much the top surface covers (m²) and its share; the sections reaching into it, their first and last station, and
+/// the longest reach (a section's footprint inside the area, m) with where.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProtectedArea {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub entity: u64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub part: u32,
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub size: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub covered: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub share: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub sections: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub from_text: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub to_text: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub reach: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub reach_at: Option<f64>,
+    /// The area's outer ring and holes in plan, for a picture.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub rings: Vec<Vec<[f64; 2]>>,
+}
+
+/// Output of `road.corridors.protected` v1 (docs/adr/0952): the corridor, its footprint's area (m², the top surface's
+/// triangles in plan), the areas checked (every one, covered or not), the area covered in all.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorridorProtected {
+    pub corridor: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub footprint: f64,
+    pub areas: Vec<ProtectedArea>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub covered: f64,
+}

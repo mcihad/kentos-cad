@@ -40686,6 +40686,139 @@
       ]
     },
     {
+      "id": "road.corridors.protected",
+      "version": 1,
+      "title": "Korunan alanlar",
+      "summary": "Koridorun izini (üst yüzeyin plandaki üçgenleri, şev uçlarına kadar) layers katmanlarındaki alan nesneleriyle (bina parseli, sit alanı, dere yatağı; parçaları ve delikleriyle) karşılaştırır: her alanın ne kadarını kapladığı (m² ve pay), izi alana giren kesitler ve km aralığı, bir kesitin alana giren en uzun boyu. Yalnız okur. Uyarılar: corridor_protected ve koridorun uyarıları. Retler: not_a_road_project, unknown_corridor, invalid_protected_check.",
+      "aliases": [
+        "korunanalan"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.corridors.protected` v1 (plan/road.md Y46, docs/adr/0952; ROAD-GRADE-06): a corridor's footprint as\nbuilt now against the protected areas — the area objects on `layers` (1 to 20 layer ids), each part with its holes:\nhow much of each the top surface covers, the sections whose footprint (slope end to slope end) reaches into it and\nthe longest reach.\n\nRefusals: `not_a_road_project`, `unknown_corridor`, `invalid_protected_check` (no layer or over 20, a layer not in\nthe drawing).",
+        "properties": {
+          "corridor": {
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "corridor",
+          "layers"
+        ],
+        "title": "CorridorsProtected",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.protected` v1 (docs/adr/0952): the corridor, its footprint's area (m², the top surface's\ntriangles in plan), the areas checked (every one, covered or not), the area covered in all.",
+        "properties": {
+          "areas": {
+            "items": {
+              "$ref": "#/$defs/ProtectedArea"
+            },
+            "type": "array"
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "footprint": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "corridor",
+          "footprint",
+          "areas",
+          "covered"
+        ],
+        "title": "CorridorProtected",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.corridors.protected` v1 (docs/adr/0952): the corridor, its footprint's area (m², the top surface's\ntriangles in plan), the areas checked (every one, covered or not), the area covered in all.",
+        "properties": {
+          "areas": {
+            "items": {
+              "$ref": "#/$defs/ProtectedArea"
+            },
+            "type": "array"
+          },
+          "corridor": {
+            "type": "string"
+          },
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "footprint": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          }
+        },
+        "required": [
+          "corridor",
+          "footprint",
+          "areas",
+          "covered"
+        ],
+        "title": "CorridorProtected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "unknown_corridor",
+          "invalid_protected_check"
+        ],
+        "warnings": [
+          "corridor_protected",
+          "corridor_stale",
+          "corridor_unsolved",
+          "corridor_gap",
+          "corridor_surface_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ana koridor ve korunan alanlar katmanı",
+          "input": {
+            "corridor": "c-1",
+            "layers": [
+              "korunan"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "road.corridors.draw",
       "version": 1,
       "title": "Şevli plan çiz",
@@ -87917,6 +88050,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Platform suyu sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "invalid_protected_check",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Korunan alan denetimi sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "corridor_protected",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Koridorun izi korunan bir alana giriyor; alan, km'ler ve en uzun giriş iletide."
     },
     {
       "code": "invalid_daylight_check",
@@ -152599,6 +152744,117 @@
         "elevation",
         "was",
         "held"
+      ],
+      "type": "object"
+    },
+    "ProtectedArea": {
+      "description": "A protected area against the footprint (docs/adr/0952): the area object's id, its part and layer, its size, how\nmuch the top surface covers (m²) and its share; the sections reaching into it, their first and last station, and\nthe longest reach (a section's footprint inside the area, m) with where.",
+      "properties": {
+        "covered": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "entity": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "from": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "fromText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "type": "string"
+        },
+        "part": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "reach": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "reachAt": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "rings": {
+          "description": "The area's outer ring and holes in plan, for a picture.",
+          "items": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "sections": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "share": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "size": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "to": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "toText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "entity",
+        "part",
+        "layer",
+        "size",
+        "covered",
+        "share",
+        "sections",
+        "reach",
+        "rings"
       ],
       "type": "object"
     },

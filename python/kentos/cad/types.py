@@ -21173,6 +21173,37 @@ class CorridorListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CorridorProtected(_Model):
+    """Output of `road.corridors.protected` v1 (docs/adr/0952): the corridor, its footprint's area (m², the top surface's
+    triangles in plan), the areas checked (every one, covered or not), the area covered in all.
+    Attributes:
+        footprint: Unit: area.
+        covered: Unit: area.
+    """
+    corridor: str
+    footprint: float
+    areas: list[ProtectedArea]
+    covered: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["footprint"] = float(self.footprint)
+        out["areas"] = [e0.to_json() for e0 in self.areas]
+        out["covered"] = float(self.covered)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorProtected:
+        return cls(
+            corridor=data["corridor"],
+            footprint=float(data["footprint"]),
+            areas=[ProtectedArea.from_json(e0) for e0 in data["areas"]],
+            covered=float(data["covered"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CorridorRefineDef(_Model):
     """How a corridor's sampling is checked (docs/adr/0939 §2): the plan distance and the height a section between two
     stations may stray from their straight join (m; absent: not checked), and the least step an interval is halved to
@@ -21685,6 +21716,33 @@ class CorridorsEdit(_Model):
             surface=data.get("surface", UNSET),
             tangent=UNSET if "tangent" not in data else None if data["tangent"] is None else float(data["tangent"]),
             vertical_sag=UNSET if "verticalSag" not in data else None if data["verticalSag"] is None else float(data["verticalSag"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorridorsProtected(_Model):
+    """Input of `road.corridors.protected` v1 (plan/road.md Y46, docs/adr/0952; ROAD-GRADE-06): a corridor's footprint as
+    built now against the protected areas — the area objects on `layers` (1 to 20 layer ids), each part with its holes:
+    how much of each the top surface covers, the sections whose footprint (slope end to slope end) reaches into it and
+    the longest reach.
+
+    Refusals: `not_a_road_project`, `unknown_corridor`, `invalid_protected_check` (no layer or over 20, a layer not in
+    the drawing).
+    """
+    corridor: str
+    layers: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor
+        out["layers"] = list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorridorsProtected:
+        return cls(
+            corridor=data["corridor"],
+            layers=list(data["layers"]),
         )
 
 
@@ -64206,6 +64264,82 @@ class ProposedPvi(_Model):
             elevation=float(data["elevation"]),
             was=float(data["was"]),
             held=data["held"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProtectedArea(_Model):
+    """A protected area against the footprint (docs/adr/0952): the area object's id, its part and layer, its size, how
+    much the top surface covers (m²) and its share; the sections reaching into it, their first and last station, and
+    the longest reach (a section's footprint inside the area, m) with where.
+    Attributes:
+        entity: Unit: id.
+        part: Unit: index.
+        size: Unit: area.
+        covered: Unit: area.
+        share: Unit: 1.
+        sections: Unit: count.
+        reach: Unit: m.
+        rings: The area's outer ring and holes in plan, for a picture. Unit: length.
+        from_: Unit: m.
+        reach_at: Unit: m.
+        to: Unit: m.
+    """
+    entity: int
+    part: int
+    layer: str
+    size: float
+    covered: float
+    share: float
+    sections: int
+    reach: float
+    rings: list[list[list[float]]]
+    from_: float | None | Unset = UNSET
+    from_text: str | None | Unset = UNSET
+    reach_at: float | None | Unset = UNSET
+    to: float | None | Unset = UNSET
+    to_text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entity"] = self.entity
+        out["part"] = self.part
+        out["layer"] = self.layer
+        out["size"] = float(self.size)
+        out["covered"] = float(self.covered)
+        out["share"] = float(self.share)
+        out["sections"] = self.sections
+        out["reach"] = float(self.reach)
+        out["rings"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.rings]
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.from_text is not UNSET:
+            out["fromText"] = self.from_text
+        if self.reach_at is not UNSET:
+            out["reachAt"] = None if self.reach_at is None else float(self.reach_at)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        if self.to_text is not UNSET:
+            out["toText"] = self.to_text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProtectedArea:
+        return cls(
+            entity=data["entity"],
+            part=data["part"],
+            layer=data["layer"],
+            size=float(data["size"]),
+            covered=float(data["covered"]),
+            share=float(data["share"]),
+            sections=data["sections"],
+            reach=float(data["reach"]),
+            rings=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["rings"]],
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            from_text=data.get("fromText", UNSET),
+            reach_at=UNSET if "reachAt" not in data else None if data["reachAt"] is None else float(data["reachAt"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+            to_text=data.get("toText", UNSET),
         )
 
 
@@ -110128,6 +110262,7 @@ __all__ = [
     "CorridorFeature",
     "CorridorLeft",
     "CorridorListed",
+    "CorridorProtected",
     "CorridorRefineDef",
     "CorridorRegionDef",
     "CorridorReport",
@@ -110139,6 +110274,7 @@ __all__ = [
     "CorridorsDraw",
     "CorridorsDrawn",
     "CorridorsEdit",
+    "CorridorsProtected",
     "CorridorsQueried",
     "CorridorsQuery",
     "CorridorsWater",
@@ -111980,6 +112116,7 @@ __all__ = [
     "PropertiesSelectRegion",
     "ProposedGrade",
     "ProposedPvi",
+    "ProtectedArea",
     "PublishFormsOp",
     "PublishSheets",
     "PushOpeningsOperation",

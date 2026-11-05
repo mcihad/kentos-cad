@@ -349,3 +349,81 @@ fn screens_daylights() {
         }
     }
 }
+
+/// The drawing of `road.corridors.protected`'s cases: the corridors and five protected areas on two layers.
+fn protected_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.corridors.protected.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Korunan alanlar reads the saved corridor as `road.corridors.protected` does: the shared case “Ana koridor ve
+/// korunan alanlar”.
+#[test]
+fn the_protected_areas_read_the_shared_case() {
+    let mut app = protected_app();
+    let _ = app.update(Message::Run("corridor.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Protected(true));
+    let why = match app.corridor_window.as_ref().unwrap().protected.clone() {
+        Some(Err(why)) => why,
+        other => panic!("no layer yet: {other:?}"),
+    };
+    assert!(why.contains("katman"), "{why}");
+    send(&mut app, W::ProtectedLayer("korunan".into()));
+    let (z, warnings) = app.corridor_window.as_ref().unwrap().protected.clone().expect("shown").expect("reads");
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.corridors.protected.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Ana koridor ve korunan alanlar").expect("the case");
+    let want = case["steps"][0]["result"]["output"]["areas"].as_array().unwrap().clone();
+    assert_eq!(z.areas.len(), want.len());
+    for (a, w) in z.areas.iter().zip(&want) {
+        assert!((a.covered - w["covered"].as_f64().unwrap()).abs() < 1e-6, "#{} covered", a.entity);
+        assert!((a.reach - w["reach"].as_f64().unwrap()).abs() < 1e-6, "#{} reach", a.entity);
+    }
+    assert!(warnings.iter().any(|w| w.code == "corridor_protected"));
+    // Back to the plan: nothing read.
+    send(&mut app, W::Daylight(false));
+    assert!(app.corridor_window.as_ref().unwrap().protected.is_none());
+}
+
+/// The protected areas in Koridor, light and dark: the main corridor's footprint over five areas, the covered ones red;
+/// `.run/gui-evidence/yol-y46/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib corridor_window_tests::screens_protected -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_protected() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y46");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = protected_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("corridor.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Protected(true));
+        send(&mut app, W::ProtectedLayer("korunan".into()));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y46-korunan-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

@@ -716,6 +716,10 @@ codes! {
     UNKNOWN_CORRIDOR = "unknown_corridor", Failed, false, "Bu kimlikte ya da adda koridor yok.";
     /// A platform water check asked that is not right: a least slope not above 0 (docs/adr/0923 §2).
     INVALID_PLATFORM_WATER = "invalid_platform_water", Failed, false, "Platform suyu sorusu geçerli değil; ileti nedenini söyler.";
+    /// A protected areas check asked that is not right: its layers (docs/adr/0952).
+    INVALID_PROTECTED_CHECK = "invalid_protected_check", Failed, false, "Korunan alan denetimi sorusu geçerli değil; ileti nedenini söyler.";
+    /// A warning: the corridor's footprint covers a protected area (docs/adr/0952).
+    CORRIDOR_PROTECTED = "corridor_protected", Warning, false, "Koridorun izi korunan bir alana giriyor; alan, km'ler ve en uzun giriş iletide.";
     /// A daylight check asked that is not right: its sensitivity not above 0 (docs/adr/0951).
     INVALID_DAYLIGHT_CHECK = "invalid_daylight_check", Failed, false, "Şev ucu denetimi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a slope crosses the terrain more than once on the swath; the daylight is the first (docs/adr/0951).

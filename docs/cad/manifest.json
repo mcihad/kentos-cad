@@ -1755,12 +1755,13 @@
     "road.corridors.edit",
     "road.corridors.query",
     "road.corridors.draw",
-    "road.corridors.daylights"
+    "road.corridors.daylights",
+    "road.corridors.protected"
    ],
    "operation": null,
-   "python": "Connection: road.corridors.edit, Connection: road.corridors.query, Connection: road.corridors.draw, Connection: road.corridors.daylights",
-   "mcp": "road.corridors.edit, road.corridors.query, road.corridors.draw, road.corridors.daylights",
-   "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905); Şev uçları görünümü road.corridors.daylights ile her kesitin şev ucunu, kesişmelerini ve duyarlılığını okur (Y45, ADR 0951).",
+   "python": "Connection: road.corridors.edit, Connection: road.corridors.query, Connection: road.corridors.draw, Connection: road.corridors.daylights, Connection: road.corridors.protected",
+   "mcp": "road.corridors.edit, road.corridors.query, road.corridors.draw, road.corridors.daylights, road.corridors.protected",
+   "note": "Koridor penceresi koridoru yazdıkça çekirdekle kurar ve planda gösterir; Kaydet ve Aksa yeniden bağla road.corridors.edit ile, Şevli plan çiz road.corridors.draw ile yazar (plan/road.md Y7, ADR 0905); Şev uçları görünümü road.corridors.daylights ile her kesitin şev ucunu, kesişmelerini ve duyarlılığını okur (Y45, ADR 0951); Korunan alanlar görünümü road.corridors.protected ile izin seçilen katmanın alanlarına girişini okur (Y46, ADR 0952).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

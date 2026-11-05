@@ -7511,6 +7511,30 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::ROAD_CORRIDORS_PROTECTED.into(),
+            version: crate::ROAD_CORRIDORS_PROTECTED_VERSION,
+            title: "Korunan alanlar".into(),
+            summary: "Koridorun izini (üst yüzeyin plandaki üçgenleri, şev uçlarına kadar) layers katmanlarındaki alan nesneleriyle (bina parseli, sit alanı, dere yatağı; parçaları ve delikleriyle) karşılaştırır: her alanın ne kadarını kapladığı (m² ve pay), izi alana giren kesitler ve km aralığı, bir kesitin alana giren en uzun boyu. Yalnız okur. Uyarılar: corridor_protected ve koridorun uyarıları. Retler: not_a_road_project, unknown_corridor, invalid_protected_check."
+                .into(),
+            aliases: vec!["korunanalan".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CorridorsProtected>(),
+            output: schema::<crate::CorridorProtected>(),
+            plan: Some(schema::<crate::CorridorProtected>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ana koridor ve korunan alanlar katmanı".into(),
+                input: json!({ "corridor": "c-1", "layers": ["korunan"] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_CORRIDORS_DRAW.into(),
             version: crate::ROAD_CORRIDORS_DRAW_VERSION,
             title: "Şevli plan çiz".into(),
@@ -14808,6 +14832,9 @@ mod tests {
                     crate::ROAD_CORRIDORS_DAYLIGHTS => {
                         serde_json::from_value::<crate::CorridorsDaylights>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_CORRIDORS_PROTECTED => {
+                        serde_json::from_value::<crate::CorridorsProtected>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_VOLUMES_EDIT => {
                         serde_json::from_value::<crate::VolumesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -15673,6 +15700,9 @@ mod tests {
                         }
                         crate::ROAD_CORRIDORS_DAYLIGHTS => {
                             serde_json::from_value::<crate::CorridorDaylights>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_CORRIDORS_PROTECTED => {
+                            serde_json::from_value::<crate::CorridorProtected>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_VOLUMES_EDIT => {
                             serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())

@@ -334,7 +334,7 @@ OpenRoads'un kamuya açık yetenek listesi birden çok spiral türü ve yatay/d�
 - [ ] **ROAD-GRADE-03:** Cut/fill bench ve slope transitions bölgesel hedef/surface karşılaşma koşullarıyla üret.
 - [ ] **ROAD-GRADE-04:** Platform/road surface merge için overlap ownership ve seam/breakline policy iste; ilk surface sessiz kazanmasın.
 - [ ] **ROAD-GRADE-05:** Water drainage basin, low point, ponding ve slope-direction görselleştirmesi verified terrain sürümünden gelsin.
-- [ ] **ROAD-GRADE-06:** Boundary/hole ve protected/no-earthwork bölgeleri terrain/quantity clip'e birlikte yansısın.
+- [~] **ROAD-GRADE-06:** Boundary/hole ve protected/no-earthwork bölgeleri terrain/quantity clip'e birlikte yansısın. *(Y46, ADR 0952: korunan alanlar deliklerle, izin örtüşmesi ve kesit girişi; hacmin kırpılması açık.)*
 - [ ] **ROAD-GRADE-07:** 3D grading edit aynı exact source constraint ile plan/profil/section görünüşünü yenilesin.
 - [ ] **ROAD-GRADE-08:** Optimization objective cut/fill/cost/land-use kısıtlarını ve bound'ları açık alsın; öneri ayrı alternative draft olsun.
 - [ ] **ROAD-GRADE-09:** Aykırı solution, bounds ihlali ve optimizer convergence state kullanıcıya görünsün; minimum bulundu diye global optimum iddia etme.
@@ -636,6 +636,7 @@ Yukarıdaki fazlar hedef kapsamdır. Uygulama, 3B sahne beklenmeden, her biri ku
 | Y43 | Kübaj defteri | ROAD-VOL-16, 18 | Toplamın km dilimine, bölgeye ve malzemeye göre dökümü (gruplar toplamı tam verir), en büyük aralıklar ve nedeni (boy mu kesit mi), yol boyunca yoğunlaşma (Gini, yarısını taşıyan boy), yuvarlama farkı (ADR 0949) |
 | Y44 | Onaylı kübajın geçmişi | ROAD-VOL-17 | Onaylar numaralı; yeniden onay ve kaldırma eski onayı günü ve nedeniyle geçmişe yazar, geçmiş değişmez ve silinmez (KCAD şema 171); her onay öncekine, bugün son onaya göre fark; Kübaj → Onay geçmişi (ADR 0950) |
 | Y45 | Şev uçlarının teşhisi | ROAD-COR-10 | Her yanın şev ucu, şevin araziyi kaç kez kestiği, duyarlılığı 1/|m − g|; buluşmazsa nedeni ayrı (menteşede arazi yok, arazi önce bitiyor, şerit yetmiyor); Koridor → Şev uçları (ADR 0951) |
+| Y46 | Korunan alanlar | ROAD-GRADE-06 | Koridorun izinin (üst yüzeyin üçgenleri) korunan alanlarla örtüşmesi, deliklerle; izi alana giren kesitler, km aralığı, en uzun giriş; Koridor → Korunan alanlar (ADR 0952) |
 
 **Y1'in aşamaları** (araştırma 2 Kasım 2026: OpenRoads'un iş akışı sekmeleri Home, Terrain, Geometry, Site, Corridors, Model Detailing, Drawing Production soldan sağa iş sırasıyla dizilir, [Bentley şerit yardımı](https://docs.bentley.com/LiveContent/web/OpenRoads%20Designer-v2024.0.2/Help/en/topics/1296840/GUID-40CF9525-AB56-47BF-AF51-63D75333BB61.html), [CTDOT giriş](https://portal.ct.gov/dot/engineering-applications/ctdot-connect-dde-ebook-volume-003---openroads-designer-roadway-modeling/section-1---introduction); Netpro editörleri tek pencereden ve proje ekranından yönetir):
 
@@ -742,6 +743,8 @@ Proje ağacı (ROAD-MOD-04) ve bölünmüş plan–boykesit–enkesit görünü�
 **Y44'ün durumu** ([ADR 0950](../docs/adr/0950-road-volume-approval-history.md); dayanak hakediş pratiği: her hakedişin metrajı donar, sonraki farkıyla okunur): onay numarası, bitişi (gün, kaldırıldı mı, neden) ve kübajın onay geçmişi (KCAD şema 171, bağımsız okuyucu da); geçmişi olan kübaj silinmez; `road.volumes.history` 20 durum, `road.volumes.approve` 24 durum, Rust ve Python aynı. Koridor 20 m'ye sıklaşınca ikinci onay birinciden kazıda +96,0 m³, 41 aralık farklı. Kübaj penceresinde Onay notu ve Onay geçmişi (iki şeritli resim, tablo).
 
 **Y45'in durumu** ([ADR 0951](../docs/adr/0951-road-daylight-diagnosis.md)): `daylights` çekirdeği (10 durum, bağımsız başvuru şev ışınını her arazi parçasıyla ayrı keser), `road.corridors.daylights` (23 durum, Rust ve Python aynı), Koridor penceresinde Görünüş: Şev uçları. Ortak koridor 12/1 şevlerle ve 60 m şeritle: 5 yanda çok kesişme, 4 yanda arazi önce bitiyor, 7 yanda şerit yetmiyor; en duyarlı şev ucu 46,32 m/m. Şerit ucundaki 5e-15 m'lik kıl payı boşluk sayılıyordu; 1 µm içinde şerit sonu.
+
+**Y46'nın durumu** ([ADR 0952](../docs/adr/0952-road-protected-areas.md)): `protected` çekirdeği (Sutherland–Hodgman örtüşme, parçanın içindeki boy; 5 alan × 8 üçgen ve 8 parça GEOS'un bindirmesiyle aynı), `road.corridors.protected` (22 durum, Rust ve Python aynı), Koridor penceresinde Görünüş: Korunan alanlar. Ana koridorun izi beş alanın dördüne 1393,1 m² giriyor; sık kesitlerde L alanına en uzun giriş 3,51'den 30,78 m'ye çıkıyor (seyrek kesit girişi atlıyor, kaplanan alan atlamıyor).
 
 Her maddenin kabulünde CLAUDE.md §9.2 geçerlidir: anlamsal komut, ortak durumlar (KentOS kodu olmadan yazılmış bağımsız başvuru), Python (`kentos.road`) ve MCP, manifest; aracın yazması kayıtta komutun adıyla; dar ve geniş pencerede, iki temada gerçek masaüstü görüntüleri (repo dışında `.run/gui-evidence/`).
 
