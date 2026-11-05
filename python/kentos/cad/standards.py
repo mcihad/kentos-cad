@@ -218,10 +218,12 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
     katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), çizimin öbür
     katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi
     tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan
-    stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. Her bulgu
-    türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve
-    cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı
-    cevabı verir.
+    stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. resources
+    verilirse çizgi tipi ve tarama deseninin eksik/farklı tanımları ile yayımlanmış blok
+    referansının eksik veya farklı kimlik/sürümü de raporlanır; bunlar otomatik
+    düzeltilmez. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe
+    iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi
+    değiştirmez; plan aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.standards.check"
@@ -252,9 +254,11 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad
         örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı
         tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi
-        görünüşlü nesnelerin sayıları. Her bulgu türü, konusu, katmanı, beklenen ve bulunan
-        değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir.
-        Çizimi değiştirmez; plan aynı cevabı verir.
+        görünüşlü nesnelerin sayıları. resources verilirse çizgi tipi ve tarama deseninin
+        eksik/farklı tanımları ile yayımlanmış blok referansının eksik veya farklı
+        kimlik/sürümü de raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu,
+        katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın
+        düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.
 
         Args:
             doc: The drawing it works on.
@@ -347,9 +351,9 @@ check = _StandardsCheck()
 class _StandardsConflicts(LocalCommand[StandardsConflicts, StandardsConflictsReport, StandardsConflictsReport]):
     """``cad.standards.conflicts`` v1. Bağlı standartlardaki farklı tanımları göster:
     Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili
-    tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini
-    gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge
-    varsa raporu reddeder.
+    ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarını ilk tanımla
+    karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları
+    birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.
     """
     __slots__ = ()
     id = "cad.standards.conflicts"
@@ -369,9 +373,10 @@ class _StandardsConflicts(LocalCommand[StandardsConflicts, StandardsConflictsRep
         expected: Expected | None = None,
     ) -> StandardsConflictsReport:
         """Bağlı standartlardaki farklı tanımları göster: Projeye bağlı standartlarda genel
-        kuralları ve aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla
-        karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları
-        birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.
+        kuralları ve aynı adlı katman, yazı ve ölçü stili ile sürüm 2 çizgi tipi, tarama ve
+        yayımlanmış blok referanslarını ilk tanımla karşılaştırır. Farklı alanları ve iki
+        kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez.
+        Okunamayan bağlı belge varsa raporu reddeder.
 
         Args:
             doc: The drawing it works on.
@@ -433,10 +438,11 @@ conflicts = _StandardsConflicts()
 class _StandardsResolve(LocalCommand[StandardsResolve, StandardsResolved, StandardsResolved]):
     """``cad.standards.resolve`` v1. Proje standartlarını birleştir: Projeye bağlı
     standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk
-    kaynaktan, her adlandırılmış tanım ilk bulunduğu kaynaktan alınır. Kaynak sırası ve
-    belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu
-    cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik
-    standart reddedilir.
+    kaynaktan, katman ve stil tanımları ile sürüm 2 çizgi tipi, tarama ve yayımlanmış
+    blok referanslarının her adı ilk bulunduğu kaynaktan alınır. Tanımların kaynağı,
+    kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey
+    uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın.
+    Geçersiz veya eksik standart reddedilir.
     """
     __slots__ = ()
     id = "cad.standards.resolve"
@@ -456,10 +462,11 @@ class _StandardsResolve(LocalCommand[StandardsResolve, StandardsResolved, Standa
         expected: Expected | None = None,
     ) -> StandardsResolved:
         """Proje standartlarını birleştir: Projeye bağlı standartları değiştirmeden birleşik
-        bir standart hazırlar. Genel kurallar ilk kaynaktan, her adlandırılmış tanım ilk
-        bulunduğu kaynaktan alınır. Kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu
-        çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile
-        ayrı kullanın. Geçersiz veya eksik standart reddedilir.
+        bir standart hazırlar. Genel kurallar ilk kaynaktan, katman ve stil tanımları ile
+        sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarının her adı ilk bulunduğu
+        kaynaktan alınır. Tanımların kaynağı, kaynak sırası ve belge revizyonu sonuçla
+        döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya
+        cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.
 
         Args:
             doc: The drawing it works on.

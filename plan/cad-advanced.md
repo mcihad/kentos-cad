@@ -1934,7 +1934,19 @@ tanımlar ile Undo otomatik sınandı. Gerçek standart penceresinde iki eksik
 kaynak bulgusu, kısa liste metni, seçilen satırın ayrıntılı tanımı ve pasif
 Uygula düğmesi doğrulandı (`/tmp/kentos-cad-adv12-resource-check.png`, repo
 dışında). Kaynakların güvenli eşleme/kurma akışı hâlâ açıktır.
-Blok, pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
+Sürüm 2 paketi yayımlanmış kitaplık bloklarının adını, aile/tip kimliğini ve
+yayın numarasını da `resources.blocks` içinde taşıyabilir; geometri pakete
+kopyalanmaz. Bağlı standartlar ilk kaynak önceliğiyle bu referansları çözer,
+aynı adlı fakat farklı yayınları iki kaynağıyla bildirir. Denetim eksik bloğu
+veya farklı yayın kimliği/sürümünü salt okunur bulguya çevirir; blok tanımı ve
+yerleştirmeler değiştirilmez. Paket doğrulaması, komut/Python/MCP sözleşmesi,
+eşit/eksik/farklı ve çakışan kaynak senaryoları otomatik sınandı. Gerçek CAD
+penceresinde eksik kitaplık bloğu ve pasif Uygula görüldü; uzun kimlik metninin
+taşması aynı testte saptanıp okunur, satıra sığan ayrıntıyla düzeltildi
+(`/tmp/kentos-cad-adv12-block-detail-after.png`, repo dışında). Yayın meta
+verisinin eşitliği geometri eşitliğinin kanıtı değildir; blokların güvenli
+eşlenmesi ve içerik denetimi hâlâ açıktır.
+Pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
 tam görünüş kökeni ile kabul senaryosu hâlâ açıktır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]

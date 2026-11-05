@@ -118,6 +118,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
             .collect(),
         line_types: Default::default(),
         hatch_patterns: Default::default(),
+        blocks: Default::default(),
     };
     let mut layers: BTreeSet<_> = result
         .layers
@@ -136,6 +137,7 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
         .collect();
     let mut line_types = BTreeSet::new();
     let mut hatch_patterns = BTreeSet::new();
+    let mut blocks = BTreeSet::new();
     for package in &packages {
         let Some(source) = &package.resources else {
             continue;
@@ -154,6 +156,12 @@ fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved> {
                     .hatch_patterns
                     .insert(item.name.clone(), origin(package));
                 resources.hatch_patterns.push(item.clone());
+            }
+        }
+        for item in &source.blocks {
+            if blocks.insert(kentos_commands::blocks::name_key(&item.name)) {
+                provenance.blocks.insert(item.name.clone(), origin(package));
+                resources.blocks.push(item.clone());
             }
         }
     }
@@ -282,6 +290,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
     let mut line_types: BTreeMap<String, (&String, &kentos_commands::LineTypeDef)> =
         BTreeMap::new();
     let mut hatch_patterns: BTreeMap<String, (&String, &kentos_commands::HatchPatternDef)> =
+        BTreeMap::new();
+    let mut blocks: BTreeMap<String, (&String, &kentos_commands::StandardBlockReference)> =
         BTreeMap::new();
     let mut conflicts = Vec::new();
     for package in &packages {
@@ -446,6 +456,29 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     }
                 } else {
                     hatch_patterns.insert(key, (&package.id, item));
+                }
+            }
+            for item in &resources.blocks {
+                let key = kentos_commands::blocks::name_key(&item.name);
+                if let Some((first_id, first)) = blocks.get(&key) {
+                    let first_value =
+                        serde_json::to_value(first).expect("validated block reference");
+                    let later_value =
+                        serde_json::to_value(item).expect("validated block reference");
+                    let fields = resource_differences(&first_value, &later_value);
+                    if !fields.is_empty() {
+                        conflicts.push(StandardConflict {
+                            kind: "blockReference".into(),
+                            name: item.name.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    blocks.insert(key, (&package.id, item));
                 }
             }
         }
@@ -1187,6 +1220,9 @@ fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Re
             "resources.hatchPatterns",
         ));
     }
+    if let Some(problem) = kentos_commands::standard_blocks_problem(&resources.blocks) {
+        return Err(fail(codes::INVALID_STANDARD, problem, "resources.blocks"));
+    }
     Ok(())
 }
 
@@ -1269,6 +1305,51 @@ fn resource_issues(
             subject: expected.name.clone(),
             layer: None,
             expected: Some(resource_geometry(expected).to_string()),
+            found: found_value,
+            objects: 0,
+            fixable: false,
+            message,
+        });
+    }
+    for expected in &resources.blocks {
+        let found = doc.blocks().iter().find(|item| {
+            kentos_commands::blocks::name_key(&item.name)
+                == kentos_commands::blocks::name_key(&expected.name)
+        });
+        let expected_value = resource_geometry(expected);
+        let (kind, message, found_value) = match found {
+            None => (
+                StandardIssueKind::MissingBlockReference,
+                format!(
+                    "“{}” yayımlanmış bloğu çizimde yok; kitaplıktan açıkça yükleyin.",
+                    expected.name
+                ),
+                None,
+            ),
+            Some(found) => {
+                let publication = found
+                    .card
+                    .as_ref()
+                    .and_then(|card| card.publication.as_ref());
+                let actual = serde_json::json!({"publication": publication});
+                if actual == expected_value {
+                    continue;
+                }
+                (
+                    StandardIssueKind::BlockPublication,
+                    format!(
+                        "“{}” bloğunun yayın kimliği veya sürümü ofis standardından farklı; eşlemeyi inceleyin.",
+                        expected.name
+                    ),
+                    Some(actual.to_string()),
+                )
+            }
+        };
+        issues.push(StandardIssue {
+            kind,
+            subject: expected.name.clone(),
+            layer: None,
+            expected: Some(expected_value.to_string()),
             found: found_value,
             objects: 0,
             fixable: false,

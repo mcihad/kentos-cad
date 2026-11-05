@@ -13,6 +13,25 @@ import kcad  # The independent KCAD reader.
 
 
 class ProjectStandardDocuments(unittest.TestCase):
+    def test_published_block_reference_check_is_available_through_python(self):
+        fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
+        document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())
+        publication = {
+            "familyId": "22222222-3333-4444-8555-666666666666",
+            "typeId": "33333333-4444-4555-8666-777777777777",
+            "typeName": "Standart tek kanat", "release": 2,
+        }
+        resources = cad.StandardResources(blocks=[cad.StandardBlockReference.from_json({
+            "name": "Ofis kapısı", "publication": publication,
+        })])
+        standard = cad.DrawingStandard.from_json({"name": "Ofis", "layers": []})
+        before = document.to_bytes()
+        report = cad.standards.check(document, standard=standard, resources=resources)
+        self.assertTrue(any(issue.kind == cad.StandardIssueKind.MISSING_BLOCK_REFERENCE
+                            and issue.subject == "Ofis kapısı" and not issue.fixable
+                            for issue in report.issues))
+        self.assertEqual(document.to_bytes(), before)
+
     def test_conflicts_are_available_in_python_without_changing_the_drawing(self):
         fixture = json.loads((ROOT / "fixtures/commands/v1/cad.blocks.find.json").read_text())
         document = cad.Document.from_bytes(json.dumps(fixture["setup"]).encode())

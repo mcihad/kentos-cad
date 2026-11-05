@@ -74,6 +74,7 @@ pub struct StandardProvenance {
     pub dimension_styles: std::collections::BTreeMap<String, StandardOrigin>,
     pub line_types: std::collections::BTreeMap<String, StandardOrigin>,
     pub hatch_patterns: std::collections::BTreeMap<String, StandardOrigin>,
+    pub blocks: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
@@ -244,6 +245,49 @@ pub struct StandardResources {
         ts(optional, as = "Option<Vec<crate::HatchPatternDef>>")
     )]
     pub hatch_patterns: Vec<crate::HatchPatternDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<StandardBlockReference>>")
+    )]
+    pub blocks: Vec<StandardBlockReference>,
+}
+
+/// A named block library release required by an office standard. The
+/// publication identifies a reusable type; geometry stays in its library.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardBlockReference {
+    pub name: String,
+    pub publication: crate::BlockPublication,
+}
+
+pub fn standard_blocks_problem(blocks: &[StandardBlockReference]) -> Option<String> {
+    let mut names = std::collections::BTreeSet::new();
+    for block in blocks {
+        if block.name.trim().is_empty()
+            || block.name.trim() != block.name
+            || block.name.chars().count() > 128
+            || block.name.chars().any(char::is_control)
+        {
+            return Some("Blok adı 1–128 karakter olmalı ve kenar boşluğu içermemeli".into());
+        }
+        if !names.insert(crate::blocks::name_key(&block.name)) {
+            return Some(format!("“{}” blok adı yineleniyor", block.name));
+        }
+        let card = crate::BlockCard {
+            publication: Some(block.publication.clone()),
+            version: 1,
+            ..Default::default()
+        };
+        if let Some(problem) = crate::blocks::card_problem(&card) {
+            return Some(format!("“{}” blok yayını geçersiz: {problem}", block.name));
+        }
+    }
+    None
 }
 
 /// A portable, versioned envelope for a drawing standard. Version 1 carries
@@ -309,6 +353,9 @@ pub fn parse_standard_document(
                 }
                 if let Some(problem) = crate::hatch_patterns_problem(&resources.hatch_patterns) {
                     return Err(format!("Tarama kaynağı geçersiz: {problem}."));
+                }
+                if let Some(problem) = standard_blocks_problem(&resources.blocks) {
+                    return Err(format!("Blok kaynağı geçersiz: {problem}."));
                 }
             }
             _ => {}
@@ -413,8 +460,28 @@ fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String> {
         }
         Ok(())
     }
-    keys(resources, "resources", &["lineTypes", "hatchPatterns"])?;
+    keys(
+        resources,
+        "resources",
+        &["lineTypes", "hatchPatterns", "blocks"],
+    )?;
     let root = object(resources, "resources")?;
+    if let Some(value) = root.get("blocks") {
+        let blocks = value
+            .as_array()
+            .ok_or("resources.blocks bir dizi olmalı.")?;
+        for (i, block) in blocks.iter().enumerate() {
+            let path = format!("resources.blocks[{i}]");
+            keys(block, &path, &["name", "publication"])?;
+            if let Some(publication) = object(block, &path)?.get("publication") {
+                keys(
+                    publication,
+                    &format!("{path}.publication"),
+                    &["familyId", "typeId", "typeName", "release"],
+                )?;
+            }
+        }
+    }
     for (section, fields) in [
         (
             "lineTypes",
@@ -643,6 +710,8 @@ pub enum StandardIssueKind {
     LineTypeDefinition,
     MissingHatchPatternDefinition,
     HatchPatternDefinition,
+    MissingBlockReference,
+    BlockPublication,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.
@@ -867,6 +936,7 @@ mod tests {
             resources: Some(StandardResources {
                 line_types: vec![line],
                 hatch_patterns: vec![hatch],
+                blocks: vec![],
             }),
         };
         let mut value = serde_json::to_value(&package).unwrap();
@@ -891,6 +961,50 @@ mod tests {
         value["version"] = 2.into();
         value.as_object_mut().unwrap().remove("resources");
         assert!(parse_standard_document(&serde_json::to_vec(&value).unwrap()).is_err());
+    }
+
+    #[test]
+    fn version_two_block_references_validate_publication_and_names() {
+        let block: StandardBlockReference = serde_json::from_value(serde_json::json!({
+            "name":"A-KAPI",
+            "publication": {
+                "familyId":"22222222-3333-4444-8555-666666666666",
+                "typeId":"33333333-4444-4555-8666-777777777777",
+                "typeName":"Standart tek kanat", "release":2
+            }
+        }))
+        .unwrap();
+        let package = StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: "office-a".into(),
+            revision: "2".into(),
+            standard: built_in_standard("mimari-ofis").unwrap(),
+            resources: Some(StandardResources {
+                blocks: vec![block],
+                ..Default::default()
+            }),
+        };
+        let mut value = serde_json::to_value(package).unwrap();
+        let parse =
+            |v: &serde_json::Value| parse_standard_document(&serde_json::to_vec(v).unwrap());
+        assert!(parse(&value).is_ok());
+        value["resources"]["blocks"][0]["publication"]["unsupported"] = true.into();
+        assert!(parse(&value).is_err());
+        value["resources"]["blocks"][0]["publication"]
+            .as_object_mut()
+            .unwrap()
+            .remove("unsupported");
+        value["resources"]["blocks"][0]["publication"]["release"] = 0.into();
+        assert!(parse(&value).unwrap_err().contains("yayın"));
+        value["resources"]["blocks"][0]["publication"]["release"] = 2.into();
+        let duplicate = value["resources"]["blocks"][0].clone();
+        value["resources"]["blocks"]
+            .as_array_mut()
+            .unwrap()
+            .push(duplicate);
+        value["resources"]["blocks"][1]["name"] = "a-kapı".into();
+        assert!(parse(&value).unwrap_err().contains("yineleniyor"));
     }
 
     #[test]

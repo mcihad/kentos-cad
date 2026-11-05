@@ -3043,6 +3043,7 @@ __all__ = [
     "StakeoutSendFormatName",
     "StakeoutSent",
     "Stamps",
+    "StandardBlockReference",
     "StandardConflict",
     "StandardDimensionStyle",
     "StandardIssue",

@@ -29,12 +29,14 @@ The file is limited to 1 MiB by the desktop file picker.
 Version 1 contains drawing-standard rules only. It does not package styles,
 blocks, hatch definitions, templates, palette items or viewport overrides.
 
-## Version 2: named line and hatch definitions
+## Version 2: named resources and block library references
 
 Version 2 keeps the same `format`, `id`, `revision` and `standard` fields and
-requires a `resources` object. Its supported fields are `lineTypes` and
-`hatchPatterns`, each an array of the corresponding KentOS project definition
-contract. An empty resources object is valid. For example:
+requires a `resources` object. Its supported fields are `lineTypes`,
+`hatchPatterns` and `blocks`. The first two hold the corresponding KentOS
+project definitions. `blocks` holds a block name and its existing library
+`publication` metadata (`familyId`, `typeId`, `typeName`, `release`), without
+embedding geometry. An empty resources object is valid. For example:
 
 ```json
 {
@@ -45,14 +47,17 @@ contract. An empty resources object is valid. For example:
   "standard": { "name": "Office", "layers": [] },
   "resources": {
     "lineTypes": [{ "name": "OFFICE-DASH", "elements": [{ "length": 2 }, { "length": -1 }] }],
-    "hatchPatterns": [{ "name": "OFFICE-HATCH", "lines": [{ "angle": 45, "origin": [0, 0], "offset": [0, 2] }] }]
+    "hatchPatterns": [{ "name": "OFFICE-HATCH", "lines": [{ "angle": 45, "origin": [0, 0], "offset": [0, 2] }] }],
+    "blocks": [{ "name": "OFFICE-DOOR", "publication": { "familyId": "22222222-3333-4444-8555-666666666666", "typeId": "33333333-4444-4555-8666-777777777777", "typeName": "Standard door", "release": 2 } }]
   }
 }
 ```
 
 Unknown resource fields, including nested definition and pattern fields, are
 rejected. Definition validity and duplicate names are checked using the same
-rules as project line types and hatch patterns. Version 1 rejects `resources`;
+rules as project line types, hatch patterns and published block cards. Block
+names use the drawing's Turkish case folding, must be unique, and the
+publication identifiers and release must be valid. Version 1 rejects `resources`;
 version 2 without `resources` and unsupported later versions are rejected.
 The project keeps the original JSON text, including the order and content of
 both versions. Attaching it through `cad.settings.set` remains revision checked
@@ -60,8 +65,9 @@ and does not replace, install, purge or rename a drawing resource.
 
 `cad.standards.resolve` returns the first definition of each resource name in
 binding order under `resources`, with its source document and revision in
-`provenance.lineTypes` or `provenance.hatchPatterns`. Resource names use the
-project resource tables' case insensitive comparison. The standard's drawing
+`provenance.lineTypes`, `provenance.hatchPatterns` or `provenance.blocks`.
+Line and hatch names use the project resource tables' case insensitive
+comparison; block names use the block table's Turkish case folding. The standard's drawing
 rules still resolve as before. `cad.standards.conflicts` reports differing
 fields and both values when two bound packages define the same resource name
 with different content; a case difference in the name alone is not a content
@@ -71,6 +77,11 @@ registry, Python SDK and MCP contract.
 `cad.standards.check` may receive the resolved or a single package's
 `resources` alongside its `standard`. It reports missing named line/hatch
 definitions and different geometric content as separate, non-fixable issues.
+Published block references are checked against the drawing's block table:
+missing block names and mismatched publication metadata are separate,
+non-fixable issues. The block check compares the publication family, type,
+display name and release, without treating equal metadata as proof of equal
+geometry. An unpublished local block does not satisfy a published reference.
 Names are compared case insensitively; source path and description do not
 change geometric equality. The command and the desktop standard window
 perform this check without installing or replacing a definition. The full
@@ -80,9 +91,16 @@ window uses short row labels and shows the values after selecting a finding.
 Version 2 currently transports and checks definitions for explicit
 mapping work. It does not apply them to the drawing. In particular, named
 patterns in layers and objects, SHX shape files referenced by a line type,
-blocks, text/leader/table styles, sheet templates, palette recipes and
+block geometry, text/leader/table styles, sheet templates, palette recipes and
 viewport overrides are not yet packaged or reconciled. An office standard
 must not be marked fully applied on the basis of these resource queries.
+
+The block reference is a KentOS extension: AutoCAD's [CHECKSTANDARDS](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-Core/files/GUID-F47E5F56-88BE-4FC2-A0D6-D35E8DFAC7A6.htm)
+describes layer, dimension, line type and text style checks, while its
+[block library guidance](https://help.autodesk.com/cloudhelp/2025/ENU/AutoCAD-Core/files/GUID-9C9FF3BC-7275-44E8-93D4-00A2F50BC96D.htm)
+uses drawing files as reusable sources. Automatic block replacement would
+change every insertion, as the [block editor documentation](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-MAC-Core/files/GUID-BBD754F5-D51F-4692-8194-49E5B130CE68.htm)
+explains; the standards check therefore leaves geometry untouched.
 The desktop file selection is temporary until the user explicitly chooses
 “Projeye bağla”. Loading or associating a document does not apply its rules:
 checking and applying are separate actions, and applying is revision-checked.

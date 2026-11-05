@@ -6444,6 +6444,8 @@ class StandardIssueKind(_StrEnum):
     - ``lineTypeDefinition``
     - ``missingHatchPatternDefinition``
     - ``hatchPatternDefinition``
+    - ``missingBlockReference``
+    - ``blockPublication``
     - ``missingLayer``: A standard layer the drawing lacks.
     - ``layerName``: A layer whose name the standard does not have nor allow.
     - ``projectFont``: The project's drawing font is not one of the standard's.
@@ -6465,6 +6467,8 @@ class StandardIssueKind(_StrEnum):
     LINE_TYPE_DEFINITION = "lineTypeDefinition"
     MISSING_HATCH_PATTERN_DEFINITION = "missingHatchPatternDefinition"
     HATCH_PATTERN_DEFINITION = "hatchPatternDefinition"
+    MISSING_BLOCK_REFERENCE = "missingBlockReference"
+    BLOCK_PUBLICATION = "blockPublication"
     MISSING_LAYER = "missingLayer"
     LAYER_NAME = "layerName"
     PROJECT_FONT = "projectFont"
@@ -6476,7 +6480,7 @@ class StandardIssueKind(_StrEnum):
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
@@ -75563,6 +75567,28 @@ class StakeoutSent(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardBlockReference(_Model):
+    """A named block library release required by an office standard. The
+    publication identifies a reusable type; geometry stays in its library.
+    """
+    name: str
+    publication: BlockPublication
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["publication"] = self.publication.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardBlockReference:
+        return cls(
+            name=data["name"],
+            publication=BlockPublication.from_json(data["publication"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StandardConflict(_Model):
     """A later document differs from the first on named definitions or global rules."""
     kind: str
@@ -75748,6 +75774,7 @@ class StandardProvenance(_Model):
     dimension_styles: dict[str, StandardOrigin]
     line_types: dict[str, StandardOrigin]
     hatch_patterns: dict[str, StandardOrigin]
+    blocks: dict[str, StandardOrigin]
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75757,6 +75784,7 @@ class StandardProvenance(_Model):
         out["dimensionStyles"] = {k0: e0.to_json() for k0, e0 in self.dimension_styles.items()}
         out["lineTypes"] = {k0: e0.to_json() for k0, e0 in self.line_types.items()}
         out["hatchPatterns"] = {k0: e0.to_json() for k0, e0 in self.hatch_patterns.items()}
+        out["blocks"] = {k0: e0.to_json() for k0, e0 in self.blocks.items()}
         return out
 
     @classmethod
@@ -75768,6 +75796,7 @@ class StandardProvenance(_Model):
             dimension_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyles"].items()},
             line_types={k0: StandardOrigin.from_json(e0) for k0, e0 in data["lineTypes"].items()},
             hatch_patterns={k0: StandardOrigin.from_json(e0) for k0, e0 in data["hatchPatterns"].items()},
+            blocks={k0: StandardOrigin.from_json(e0) for k0, e0 in data["blocks"].items()},
         )
 
 
@@ -75776,11 +75805,14 @@ class StandardResources(_Model):
     """Portable resource definitions carried by a version 2 office standard.
     Association alone never overwrites the project's definitions.
     """
+    blocks: list[StandardBlockReference] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.blocks is not UNSET:
+            out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.hatch_patterns is not UNSET:
             out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
         if self.line_types is not UNSET:
@@ -75790,6 +75822,7 @@ class StandardResources(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> StandardResources:
         return cls(
+            blocks=[StandardBlockReference.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
         )
@@ -108697,6 +108730,7 @@ __all__ = [
     "StakeoutSendFormat",
     "StakeoutSendFormatName",
     "StakeoutSent",
+    "StandardBlockReference",
     "StandardConflict",
     "StandardDimensionStyle",
     "StandardIssue",

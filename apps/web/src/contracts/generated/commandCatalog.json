@@ -57427,7 +57427,7 @@
       "id": "cad.standards.resolve",
       "version": 1,
       "title": "Proje standartlarını birleştir",
-      "summary": "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, her adlandırılmış tanım ilk bulunduğu kaynaktan alınır. Kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.",
+      "summary": "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, katman ve stil tanımları ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarının her adı ilk bulunduğu kaynaktan alınır. Tanımların kaynağı, kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -57532,7 +57532,7 @@
       "id": "cad.standards.conflicts",
       "version": 1,
       "title": "Bağlı standartlardaki farklı tanımları göster",
-      "summary": "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.",
+      "summary": "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -57610,7 +57610,7 @@
       "id": "cad.standards.check",
       "version": 1,
       "title": "Standardı denetle",
-      "summary": "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. resources verilirse çizgi tipi ve tarama deseninin eksik/farklı tanımları ile yayımlanmış blok referansının eksik veya farklı kimlik/sürümü de raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "checkstandards"
       ],
@@ -159756,6 +159756,23 @@
       ],
       "type": "string"
     },
+    "StandardBlockReference": {
+      "additionalProperties": false,
+      "description": "A named block library release required by an office standard. The\npublication identifies a reusable type; geometry stays in its library.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "publication": {
+          "$ref": "#/$defs/BlockPublication"
+        }
+      },
+      "required": [
+        "name",
+        "publication"
+      ],
+      "type": "object"
+    },
     "StandardConflict": {
       "description": "A later document differs from the first on named definitions or global rules.",
       "properties": {
@@ -159887,7 +159904,9 @@
             "missingLineTypeDefinition",
             "lineTypeDefinition",
             "missingHatchPatternDefinition",
-            "hatchPatternDefinition"
+            "hatchPatternDefinition",
+            "missingBlockReference",
+            "blockPublication"
           ],
           "type": "string"
         },
@@ -160001,6 +160020,12 @@
     "StandardProvenance": {
       "description": "Provenance of the global rules and each effective named definition.",
       "properties": {
+        "blocks": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "type": "object"
+        },
         "dimensionStyles": {
           "additionalProperties": {
             "$ref": "#/$defs/StandardOrigin"
@@ -160041,7 +160066,8 @@
         "textStyles",
         "dimensionStyles",
         "lineTypes",
-        "hatchPatterns"
+        "hatchPatterns",
+        "blocks"
       ],
       "type": "object"
     },
@@ -160049,6 +160075,12 @@
       "additionalProperties": false,
       "description": "Portable resource definitions carried by a version 2 office standard.\nAssociation alone never overwrites the project's definitions.",
       "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/StandardBlockReference"
+          },
+          "type": "array"
+        },
         "hatchPatterns": {
           "items": {
             "$ref": "#/$defs/HatchPatternDef"

@@ -229,6 +229,7 @@ fn version_two_resource_definitions_resolve_by_order_and_report_content_conflict
             resources: Some(StandardResources {
                 line_types: vec![line],
                 hatch_patterns: vec![hatch],
+                blocks: vec![],
             }),
         })
         .unwrap(),
@@ -344,6 +345,7 @@ fn named_resources_are_checked_without_installing_or_replacing_drawing_definitio
     let resources = StandardResources {
         line_types: vec![line],
         hatch_patterns: vec![hatch],
+        blocks: vec![],
     };
     let input = json!({"standard":kentos_commands::built_in_standard("mimari-ofis").unwrap(), "resources":resources});
     let kinds = |doc: &mut Document| {
@@ -398,6 +400,127 @@ fn named_resources_are_checked_without_installing_or_replacing_drawing_definitio
     settings.hatch_patterns[0].description = "yerel açıklama".into();
     doc.set_settings(settings);
     assert!(kinds(&mut doc).is_empty());
+}
+
+#[test]
+fn published_block_references_resolve_conflict_and_check_without_replacing_geometry() {
+    use kentos_commands::{
+        CallOp, DocumentSnapshotV2, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,
+        STANDARD_PACKAGE_RESOURCES_VERSION, StandardBlockReference, StandardPackage,
+        StandardResources,
+    };
+    use kentos_native_application::registry;
+
+    let snapshot: DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/block-publication.json"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let block_name = doc.blocks()[0].name.clone();
+    let publication = doc.blocks()[0]
+        .card
+        .as_ref()
+        .unwrap()
+        .publication
+        .clone()
+        .unwrap();
+    let reference = StandardBlockReference {
+        name: block_name.clone(),
+        publication: publication.clone(),
+    };
+    let standard = kentos_commands::built_in_standard("mimari-ofis").unwrap();
+    let resources = |reference: StandardBlockReference| StandardResources {
+        blocks: vec![reference],
+        ..Default::default()
+    };
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let run_check = |doc: &mut Document, reference: StandardBlockReference| {
+        registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.standards.check",
+            CallOp::Execute,
+            json!({"standard":standard,"resources":resources(reference)}),
+        )
+        .unwrap()
+    };
+    let equal = run_check(&mut doc, reference.clone());
+    assert!(
+        !equal["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["kind"].as_str().unwrap().contains("Block"))
+    );
+    let mut wrong = reference.clone();
+    wrong.publication.release += 1;
+    let mismatch = run_check(&mut doc, wrong.clone());
+    assert!(
+        mismatch["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["kind"] == "blockPublication" && i["fixable"] == false)
+    );
+    let mut missing = reference.clone();
+    missing.name = "Ofis Kapısı".into();
+    let missing_report = run_check(&mut doc, missing);
+    assert!(
+        missing_report["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["kind"] == "missingBlockReference" && i["fixable"] == false)
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+
+    let package = |id: &str, reference| ProjectStandardDocument {
+        text: serde_json::to_string(&StandardPackage {
+            format: STANDARD_PACKAGE_FORMAT.into(),
+            version: STANDARD_PACKAGE_RESOURCES_VERSION,
+            id: id.into(),
+            revision: "1".into(),
+            standard: standard.clone(),
+            resources: Some(resources(reference)),
+        })
+        .unwrap(),
+    };
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![package("ofis-a", reference), package("ofis-b", wrong)];
+    doc.set_settings(settings);
+    let bound = doc.to_snapshot_v2();
+    let resolved = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.resolve",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert_eq!(
+        resolved["output"]["resources"]["blocks"][0]["publication"]["release"],
+        publication.release
+    );
+    assert_eq!(
+        resolved["output"]["provenance"]["blocks"][&block_name]["id"],
+        "ofis-a"
+    );
+    let conflicts = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.conflicts",
+        CallOp::Execute,
+        json!({}),
+    )
+    .unwrap();
+    assert!(
+        conflicts["output"]["conflicts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["kind"] == "blockReference" && c["fields"] == json!(["publication"]))
+    );
+    assert_eq!(doc.to_snapshot_v2(), bound);
+    assert_eq!(doc.undo_labels(), undo);
 }
 
 #[test]

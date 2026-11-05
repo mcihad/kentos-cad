@@ -10079,7 +10079,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_STANDARDS_RESOLVE.into(),
             version: crate::CAD_STANDARDS_RESOLVE_VERSION,
             title: "Proje standartlarını birleştir".into(),
-            summary: "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, her adlandırılmış tanım ilk bulunduğu kaynaktan alınır. Kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.".into(),
+            summary: "Projeye bağlı standartları değiştirmeden birleşik bir standart hazırlar. Genel kurallar ilk kaynaktan, katman ve stil tanımları ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarının her adı ilk bulunduğu kaynaktan alınır. Tanımların kaynağı, kaynak sırası ve belge revizyonu sonuçla döner. Bu sorgu çizime hiçbir şey uygulamaz; sonucu cad.standards.check veya cad.standards.apply ile ayrı kullanın. Geçersiz veya eksik standart reddedilir.".into(),
             aliases: vec![], effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
             requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::None,
             cost: CommandCost::Instant, input: schema::<crate::StandardsResolve>(),
@@ -10090,7 +10090,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_STANDARDS_CONFLICTS.into(),
             version: crate::CAD_STANDARDS_CONFLICTS_VERSION,
             title: "Bağlı standartlardaki farklı tanımları göster".into(),
-            summary: "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili tanımlarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.".into(),
+            summary: "Projeye bağlı standartlarda genel kuralları ve aynı adlı katman, yazı ve ölçü stili ile sürüm 2 çizgi tipi, tarama ve yayımlanmış blok referanslarını ilk tanımla karşılaştırır. Farklı alanları ve iki kaynağın kimliğini gösterir. Standartları birleştirmez ve çizimi değiştirmez. Okunamayan bağlı belge varsa raporu reddeder.".into(),
             aliases: vec![], effect: CommandEffect::Query, hosts: vec![CommandHost::Desktop], headless: true,
             requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::None,
             cost: CommandCost::Instant, input: schema::<crate::StandardsConflicts>(),
@@ -10105,7 +10105,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad örüntüleriyle; \
                       öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), \
                       çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. \
-                      Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir."
+                      resources verilirse çizgi tipi ve tarama deseninin eksik/farklı tanımları ile yayımlanmış blok referansının eksik veya farklı kimlik/sürümü de raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["checkstandards".into()],
             effect: CommandEffect::Query,

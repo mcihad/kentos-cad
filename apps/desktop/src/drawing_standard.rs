@@ -169,6 +169,8 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::LineTypeDefinition => "Çizgi tipi tanımı",
         K::MissingHatchPatternDefinition => "Eksik tarama tanımı",
         K::HatchPatternDefinition => "Tarama tanımı",
+        K::MissingBlockReference => "Eksik kitaplık bloğu",
+        K::BlockPublication => "Blok yayını",
         K::ObjectLineType => "Nesne çizgi tipi",
         K::OwnLook => "Nesne görünüşü",
     }
@@ -192,6 +194,7 @@ fn conflict_field(field: &str) -> &'static str {
         "unit" => "Birim",
         "description" => "Açıklama",
         "source" => "Kaynak dosya",
+        "publication" => "Yayın kimliği/sürüm",
         "byLayer" => "Katmana göre görünüş",
         _ => "Özellik",
     }
@@ -848,6 +851,8 @@ impl App {
                     | StandardIssueKind::LineTypeDefinition => Some(&p.line_types),
                     StandardIssueKind::MissingHatchPatternDefinition
                     | StandardIssueKind::HatchPatternDefinition => Some(&p.hatch_patterns),
+                    StandardIssueKind::MissingBlockReference
+                    | StandardIssueKind::BlockPublication => Some(&p.blocks),
                     _ => None,
                 });
                 let resource = matches!(
@@ -856,12 +861,20 @@ impl App {
                         | StandardIssueKind::LineTypeDefinition
                         | StandardIssueKind::MissingHatchPatternDefinition
                         | StandardIssueKind::HatchPatternDefinition
+                        | StandardIssueKind::MissingBlockReference
+                        | StandardIssueKind::BlockPublication
                 );
                 if let Some(origin) = definitions.and_then(|entries| {
                     entries
                         .iter()
                         .find(|(name, _)| {
-                            if resource {
+                            if resource
+                                && !matches!(
+                                    issue.kind,
+                                    StandardIssueKind::MissingBlockReference
+                                        | StandardIssueKind::BlockPublication
+                                )
+                            {
                                 name.trim().to_lowercase() == issue.subject.trim().to_lowercase()
                             } else {
                                 kentos_commands::fold_name(name.trim())
@@ -875,18 +888,38 @@ impl App {
                         origin.id, origin.revision
                     ));
                 }
+                let block = matches!(
+                    issue.kind,
+                    StandardIssueKind::MissingBlockReference | StandardIssueKind::BlockPublication
+                );
                 if matches!(
                     issue.kind,
                     StandardIssueKind::MissingLineTypeDefinition
                         | StandardIssueKind::LineTypeDefinition
                         | StandardIssueKind::MissingHatchPatternDefinition
                         | StandardIssueKind::HatchPatternDefinition
+                        | StandardIssueKind::MissingBlockReference
+                        | StandardIssueKind::BlockPublication
                 ) {
                     if let Some(found) = &issue.found {
-                        detail.push_str(&format!(" Çizimdeki tanım: {found}."));
+                        if block {
+                            detail.push_str(&format!(
+                                " Çizimdeki yayın: {}.",
+                                block_publication_words(found)
+                            ));
+                        } else {
+                            detail.push_str(&format!(" Çizimdeki tanım: {found}."));
+                        }
                     }
                     if let Some(expected) = &issue.expected {
-                        detail.push_str(&format!(" Standart tanımı: {expected}."));
+                        if block {
+                            detail.push_str(&format!(
+                                " Beklenen yayın: {}.",
+                                block_publication_words(expected)
+                            ));
+                        } else {
+                            detail.push_str(&format!(" Standart tanımı: {expected}."));
+                        }
                     }
                 }
                 detail
@@ -1126,7 +1159,7 @@ impl App {
                         let item = &conflicts[i];
                         let kind = match item.kind.as_str() {
                             "layer" => "Katman", "textStyle" => "Yazı stili", "dimensionStyle" => "Ölçü stili", "rules" => "Genel kural",
-                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", _ => "Tanım",
+                            "lineTypeDefinition" => "Çizgi tipi tanımı", "hatchPatternDefinition" => "Tarama tanımı", "blockReference" => "Blok yayını", _ => "Tanım",
                         };
                         let fields = item.fields.iter().map(|field| conflict_field(field)).collect::<Vec<_>>().join(", ");
                         let line = format!("{kind} · {}: {} ↔ {} · {fields}", item.name, item.first_id, item.later_id);
@@ -1210,14 +1243,38 @@ fn report_words(r: &StandardsReport) -> String {
     }
 }
 
+fn block_publication_words(raw: &str) -> String {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(raw) else {
+        return "yayın okunamadı".into();
+    };
+    let publication = &value["publication"];
+    if publication.is_null() {
+        return "yayın kimliği yok".into();
+    }
+    let text = |key| publication[key].as_str().unwrap_or("?");
+    let release = publication["release"]
+        .as_u64()
+        .map_or("?".into(), |n| n.to_string());
+    format!(
+        "{} · sürüm {} · aile: {} · tip: {}",
+        text("typeName"),
+        release,
+        text("familyId"),
+        text("typeId")
+    )
+}
+
 /// A finding's change in a few words: what the drawing has and what the standard asks, or how many objects.
 fn change_words(issue: &StandardIssue) -> String {
     match issue.kind {
         StandardIssueKind::MissingLineTypeDefinition
-        | StandardIssueKind::MissingHatchPatternDefinition => {
+        | StandardIssueKind::MissingHatchPatternDefinition
+        | StandardIssueKind::MissingBlockReference => {
             return "yok → standartta tanımlı".into();
         }
-        StandardIssueKind::LineTypeDefinition | StandardIssueKind::HatchPatternDefinition => {
+        StandardIssueKind::LineTypeDefinition
+        | StandardIssueKind::HatchPatternDefinition
+        | StandardIssueKind::BlockPublication => {
             return "tanım farklı → standart tanımı".into();
         }
         _ => {}
