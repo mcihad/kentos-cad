@@ -264,6 +264,36 @@ fn revisions(name: &str) -> std::path::PathBuf {
         .join(name)
 }
 
+#[test]
+fn revision_follows_block_definition_edits_without_insert_slot_changes() {
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../fixtures/kcad/v2/dynamic-blocks.json"
+    ))
+    .expect("block fixture");
+    let mut now = Document::from_v2(snapshot, None).expect("drawing");
+    let baseline = Document::of_model(now.model.clone());
+    let mut revision = crate::split_revision::Revision::new(
+        "baseline".to_owned(),
+        baseline,
+        Source::Drawing,
+    );
+    revision.mark(&now);
+    assert_eq!(revision.counts.same, 3);
+    let mark = now.model.change_mark();
+    let mut block = now.model.blocks()[0].as_ref().clone();
+    if let kentos_commands::Entity::Line(line) = &mut block.entities[0] {
+        line.b.y += 0.3;
+    } else {
+        panic!("expected a line in the block");
+    }
+    assert!(now.model.update_block(block).expect("valid definition"));
+    assert!(matches!(now.model.changes_since(mark), kentos_domain::Changes::Slots(slots) if slots.is_empty()));
+    revision.mark(&now);
+    assert_eq!(revision.counts.changed, 3, "all placed inserts inherit the visible edit");
+    assert_eq!(revision.marked.ids().len(), 3);
+    assert_eq!(revision.counts, revision.whole(&now).0);
+}
+
 /// A drawing file, and a downloaded revision, in the other view (docs/adr/0576 §3): the same counts the shared cases
 /// of `cad.drawing.compare` give; the downloaded file is read and removed, and the catalog goes.
 #[test]

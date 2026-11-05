@@ -2253,7 +2253,7 @@ doğru olmayan dosyayı almadı. Doğru dosya ikinci arama klasörüne
 konunca `Yüklü · arama yolundan bulundu` durumu görüntülendi. İki
 durumun ekran görüntüleri repo dışında tutuldu.
 
-### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [ ]
+### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C24], [C22], [C25].
 **Dayanak:** AutoCAD Trace yorumları ana çizimden ayırır; DWG Compare
@@ -2283,6 +2283,19 @@ belgesi bütün türlerin aynı düzeyde desteklenmediğini açıklar. [R09], [R
 yalnız viewport ve gerçek geometri değişmiş örnekleri karşılaştır.
 Kimliği farklı dış sürümde belirsiz eşlemeyi göster. Nota bağlı kaynak
 değişsin; inceleme durumu ve seçilmiş farkı alma/Undo doğru çalışsın.
+
+**Uygulama durumu (2026-11-05):** Blok tanımı değiştiğinde yerleştirme
+UUID'si ve konumu aynı kalsa da `cad.drawing.compare` artık etkilenen bütün
+yerleştirmeleri `blockDefinition` farkıyla bildiriyor. İç içe blok tanımları
+da parmak izine katılıyor. Masaüstü bölünmüş revizyon görünümü, tanım
+değişikliklerinde yalnız nesne slotlarını izlemek yerine tam karşılaştırma
+yapıyor; küçük blok örneğindeki üç yerleştirme için hem komut hem canlı
+izleyici regresyonu geçti. Güncel masaüstü derlemesinde değişmiş çizim
+ile temel KCAD dosyası bölünmüş görünümde açıldı; `0 eklendi · 0 silindi ·
+3 değişti` sayacı ve sahnedeki fark vurgusu gerçek ekran görüntüsüyle
+doğrulandı. Görüntü repo dışında tutuldu. Stil/ölçü/viewport semantiği, farklı UUID
+eşleme adayları, inceleme notları ve seçilmiş fark alma hâlâ açık; bu madde
+tamamlandı olarak işaretlenmedi.
 
 ### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [ ]
 

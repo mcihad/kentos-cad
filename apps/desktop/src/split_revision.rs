@@ -51,6 +51,8 @@ pub(crate) struct Revision {
     pub counts: Counts,
     /// The open drawing (its session and generation) the marks were made for.
     for_doc: Option<(u64, u64)>,
+    /// Definition edits can change every insert without touching its entity slot.
+    for_blocks: Option<String>,
     /// What differs, by lasting id: objects not here are the same (or in neither state).
     kinds: HashMap<Uuid, Kind>,
     /// The open drawing's ids by slot, as the marks last saw them: a removed object's id is gone from the drawing.
@@ -92,6 +94,7 @@ impl Revision {
             chosen_for: None,
             counts: Counts::default(),
             for_doc: None,
+            for_blocks: None,
             kinds: HashMap::new(),
             now_uids: HashMap::new(),
             at: None,
@@ -110,7 +113,10 @@ impl Revision {
             .for_doc
             .is_some_and(|(session, _)| session == now.session);
         self.for_doc = Some(key);
-        let touched = match (same_drawing, self.at) {
+        let blocks = block_catalog_fingerprint(&now.model);
+        let blocks_changed = self.for_blocks.as_ref().is_some_and(|old| old != &blocks);
+        self.for_blocks = Some(blocks);
+        let touched = match (same_drawing && !blocks_changed, self.at) {
             (true, Some(at)) => match now.model.changes_since(at) {
                 Changes::Slots(slots) if slots.len() <= MOST_FOLLOWED => Some(slots.to_vec()),
                 _ => None,
@@ -254,6 +260,19 @@ impl Revision {
         };
         *n = n.saturating_add_signed(by);
     }
+}
+
+/// Block operations do not journal all insert slots. A changed definition requires a whole compare so both
+/// direct and nested inserts are marked, including when their own UUID and placement are unchanged.
+fn block_catalog_fingerprint(doc: &kentos_domain::Document) -> String {
+    let mut bytes = Vec::new();
+    for block in doc.blocks() {
+        if let Ok(encoded) = serde_json::to_vec(block.as_ref()) {
+            bytes.extend_from_slice(&(encoded.len() as u64).to_le_bytes());
+            bytes.extend_from_slice(&encoded);
+        }
+    }
+    kentos_commands::encoding::sha256_hex(&bytes)
 }
 
 impl Revision {

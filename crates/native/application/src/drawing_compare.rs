@@ -6,11 +6,13 @@
 //! removed. The geometry is the same within the tolerance; the attributes and the layer are equal or not.
 //! [`diff`] is the rule the desktop's second view highlights with.
 
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
-    COMPARE_LIMIT, COMPARE_TOLERANCE, ChangedObject, CommandResult, CompareAgainst, DrawingCompare,
-    DrawingCompared, MAX_COMPARE_LIMIT, MAX_COMPARE_TOLERANCE,
+    BlockId, Entity, COMPARE_LIMIT, COMPARE_TOLERANCE, ChangedObject, CommandResult, CompareAgainst,
+    DrawingCompare, DrawingCompared, MAX_COMPARE_LIMIT, MAX_COMPARE_TOLERANCE,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::compare::{Attrs, Matching, Member, Settings, Status, compare};
@@ -23,6 +25,7 @@ use crate::file_import_block::read_drawing;
 /// The attribute names the pairing and the layer are carried by: no user attribute has a NUL in its name.
 const UID: &str = "\0uid";
 const LAYER: &str = "\0layer";
+const DEFINITION: &str = "\0blockDefinition";
 
 /// One object in both states that differs.
 #[derive(Clone, Debug, PartialEq)]
@@ -46,7 +49,44 @@ pub struct Diff {
     pub removed: Vec<Slot>,
 }
 
-fn member(uid: kentos_domain::Uuid, e: &kentos_commands::Entity) -> Member {
+/// A placed block's visible definition, including definitions it places. Cached so many copies of one door do not
+/// serialize the same definition repeatedly. A cycle is marked rather than recursed forever on damaged input.
+fn definition_fingerprint(
+    doc: &Document,
+    id: BlockId,
+    cache: &mut HashMap<BlockId, String>,
+    visiting: &mut HashSet<BlockId>,
+) -> String {
+    if let Some(done) = cache.get(&id) {
+        return done.clone();
+    }
+    if !visiting.insert(id) {
+        return format!("cycle:{}", id.to_text());
+    }
+    let result = if let Some(def) = doc.block(id) {
+        let mut bytes = serde_json::to_vec(def).unwrap_or_default();
+        for entity in &def.entities {
+            if let Entity::Insert(insert) = entity {
+                let child = definition_fingerprint(doc, insert.block, cache, visiting);
+                bytes.extend_from_slice(&(child.len() as u64).to_le_bytes());
+                bytes.extend_from_slice(child.as_bytes());
+            }
+        }
+        sha256_hex(&bytes)
+    } else {
+        format!("missing:{}", id.to_text())
+    };
+    visiting.remove(&id);
+    cache.insert(id, result.clone());
+    result
+}
+
+fn member(
+    doc: &Document,
+    uid: kentos_domain::Uuid,
+    e: &Entity,
+    cache: &mut HashMap<BlockId, String>,
+) -> Member {
     let base = e.base();
     let mut attrs: Vec<(String, String)> = base
         .attrs
@@ -55,6 +95,12 @@ fn member(uid: kentos_domain::Uuid, e: &kentos_commands::Entity) -> Member {
         .collect();
     attrs.push((UID.to_owned(), uid.to_string()));
     attrs.push((LAYER.to_owned(), base.layer_id.clone()));
+    if let Entity::Insert(insert) = e {
+        attrs.push((
+            DEFINITION.to_owned(),
+            definition_fingerprint(doc, insert.block, cache, &mut HashSet::new()),
+        ));
+    }
     Member {
         shape: crate::geometry::shape(e),
         attrs: Attrs(attrs),
@@ -64,8 +110,9 @@ fn member(uid: kentos_domain::Uuid, e: &kentos_commands::Entity) -> Member {
 fn members(doc: &Document) -> (Vec<Member>, Vec<Slot>) {
     let mut out = Vec::new();
     let mut slots = Vec::new();
+    let mut definitions = HashMap::new();
     for (uid, e) in doc.entities_with_uids() {
-        out.push(member(uid, e));
+        out.push(member(doc, uid, e, &mut definitions));
         slots.push(Slot(e.base().id));
     }
     (out, slots)
@@ -91,8 +138,18 @@ pub fn differs(
     new_slot: Slot,
     tolerance: f64,
 ) -> Option<bool> {
-    let a = member(old.uid(old_slot)?, old.get(old_slot)?);
-    let b = member(new.uid(new_slot)?, new.get(new_slot)?);
+    let a = member(
+        old,
+        old.uid(old_slot)?,
+        old.get(old_slot)?,
+        &mut HashMap::new(),
+    );
+    let b = member(
+        new,
+        new.uid(new_slot)?,
+        new.get(new_slot)?,
+        &mut HashMap::new(),
+    );
     let rows = compare(&[a], &[b], &settings(tolerance));
     Some(!matches!(
         rows.first().map(|r| r.status),
@@ -117,6 +174,8 @@ pub fn diff(old: &Document, new: &Document, tolerance: f64) -> Diff {
                     .map(|f| {
                         if f == LAYER {
                             "layer".to_owned()
+                        } else if f == DEFINITION {
+                            "blockDefinition".to_owned()
                         } else {
                             f.clone()
                         }
@@ -318,4 +377,42 @@ pub fn execute(
     input: DrawingCompare,
 ) -> CommandResult<DrawingCompared> {
     plan(cx, &input)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_commands::DocumentSnapshotV2;
+    use serde_json::{Value, json};
+
+    #[test]
+    fn unchanged_inserts_show_a_changed_block_definition() {
+        let old: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
+        let mut revised = old.clone();
+        revised["blocks"][0]["entities"][0]["b"]["y"] = json!(1.2);
+        let before = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(old).unwrap(),
+        )
+        .unwrap();
+        let after = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(revised).unwrap(),
+        )
+        .unwrap();
+        let delta = diff(&before, &after, COMPARE_TOLERANCE);
+        assert_eq!(delta.added.len(), 0);
+        assert_eq!(delta.removed.len(), 0);
+        assert_eq!(delta.changed.len(), 3, "each visible insert must be marked");
+        assert!(delta
+            .changed
+            .iter()
+            .all(|c| c.fields.contains(&"blockDefinition".to_owned())));
+        let slot = delta.changed[0].old;
+        assert_eq!(
+            differs(&before, slot, &after, delta.changed[0].new, COMPARE_TOLERANCE),
+            Some(true)
+        );
+    }
 }
