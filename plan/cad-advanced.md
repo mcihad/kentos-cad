@@ -2018,6 +2018,15 @@ komut sınamasında doğrulandı; küçük farklar çizim kaynaklarını değiş
 Gerçek uygulamada `0,5` ve `0,5000000005` tanımlarıyla yalnız katman adı
 bulguları göründü; yanlış çizgi tipi tanımı bulgusu çıkmadı. Ekran görüntüsü
 repo dışında tutuldu.
+Yazı, ölçü ve kılavuz stilinin farklı yerel tanımlarında doğrudan nesne ile
+blok parçası kullanım sayısı ayrı gösterilir; yazı stili ayrıca aynı adı
+kullanan çizgi tipi tanımlarını sayar. Bir çizgi tipindeki tekrar eden yazı
+elemanları tek tanım olarak sayılır. Yerel stil kimliğiyle sayım ve salt okunur
+denetim komut sınamasından geçti. Gerçek çizimde Yol adı için bir doğrudan
+yazı ve bir blok parçası, Mimari için bir doğrudan ölçü görüldü; iki seçimin
+ayrıntısı ve pasif Uygula düğmesi ekran görüntüleriyle doğrulandı (repo dışında).
+Bu etki bilgisi stil eşleme veya değiştirme işlemi değildir; 12. madde `[~]`
+kalır.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

@@ -154,6 +154,12 @@ Complete text and dimension styles are likewise checked by name and all
 serialized appearance fields. These findings are non-fixable and do not rewrite
 existing annotations or style tables. The short rules may also report their
 own, narrower name/font/height findings.
+For a differing local text, dimension or leader style, the finding reports
+direct entity uses and uses inside block definitions by the local style ID.
+Text styles also report how many named line-type definitions contain text
+elements using that style name; multiple elements in one line type count once.
+The `objects` field contains direct entity uses only. These counts explain
+potential impact and do not authorize replacing a style or changing its users.
 
 Version 2 currently transports and checks definitions for explicit
 mapping work. It does not apply them to the drawing. In particular, named

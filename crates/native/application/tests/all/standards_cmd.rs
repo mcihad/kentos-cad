@@ -612,6 +612,114 @@ fn named_resource_findings_report_direct_and_nested_uses_without_editing() {
 }
 
 #[test]
+fn annotation_style_findings_count_local_id_uses_without_changing_the_drawing() {
+    use kentos_commands::{CallOp, DocumentSnapshotV2, StandardResources};
+    use kentos_native_application::registry;
+
+    let snapshot: DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/styles.json")).unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let mut settings = doc.settings().clone();
+    settings.line_types = vec![
+        serde_json::from_value(json!({
+            "name":"STIL-YAZI", "elements":[
+            {"length":1}, {"length":0,"text":{"text":"A","style":"Yol adı"}},
+            {"length":0,"text":{"text":"B","style":"Yol adı"}},
+                {"length":-1}
+            ]
+        }))
+        .unwrap(),
+    ];
+    doc.set_settings(settings);
+    let mut text_styles = doc.settings().text_styles.clone();
+    let mut dimension_styles = doc.settings().dimension_styles.clone();
+    text_styles[1].width_factor = Some(0.75);
+    dimension_styles[0].height += 0.5;
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let checked = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.check",
+        CallOp::Execute,
+        json!({
+            "standard": kentos_commands::built_in_standard("mimari-ofis").unwrap(),
+            "resources": StandardResources {
+                text_style_definitions: text_styles,
+                dimension_style_definitions: dimension_styles,
+                ..Default::default()
+            }
+        }),
+    )
+    .unwrap();
+    let issues = checked["output"]["issues"].as_array().unwrap();
+    assert!(issues.iter().any(|issue| {
+        issue["kind"] == "textStyleDefinition"
+            && issue["subject"] == "Yol adı"
+            && issue["objects"] == 1
+            && issue["message"]
+                .as_str()
+                .unwrap()
+                .contains("1 doğrudan yazıda, 1 blok parçasında ve 1 çizgi tipi tanımında")
+    }));
+    assert!(issues.iter().any(|issue| {
+        issue["kind"] == "dimensionStyleDefinition"
+            && issue["subject"] == "Mimari"
+            && issue["objects"] == 1
+            && issue["message"]
+                .as_str()
+                .unwrap()
+                .contains("1 doğrudan ölçüde ve 0 blok parçasında")
+    }));
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+
+    let mut raw: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/leaders.json")).unwrap();
+    raw["settings"]["leaderStyles"] = json!([{
+        "id":"local-leader", "name":"A-NOT", "height":2.5,
+        "arrow":"open", "arrowSize":1.5
+    }]);
+    raw["entities"][0]["leaderStyle"] = json!("local-leader");
+    let block_leader = raw["blocks"][0]["entities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|item| item["kind"] == "leader")
+        .unwrap();
+    raw["blocks"][0]["entities"][block_leader]["leaderStyle"] = json!("local-leader");
+    let snapshot: DocumentSnapshotV2 = serde_json::from_value(raw).unwrap();
+    let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let mut office_leader = doc.settings().leader_styles[0].clone();
+    office_leader.height += 0.5;
+    let before = doc.to_snapshot_v2();
+    let undo = doc.undo_labels();
+    let checked = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.standards.check",
+        CallOp::Execute,
+        json!({
+            "standard": kentos_commands::built_in_standard("mimari-ofis").unwrap(),
+            "resources": StandardResources {
+                leader_styles: vec![office_leader], ..Default::default()
+            }
+        }),
+    )
+    .unwrap();
+    let issues = checked["output"]["issues"].as_array().unwrap();
+    assert!(issues.iter().any(|issue| {
+        issue["kind"] == "leaderStyleDefinition"
+            && issue["subject"] == "A-NOT"
+            && issue["objects"] == 1
+            && issue["message"]
+                .as_str()
+                .unwrap()
+                .contains("1 doğrudan kılavuzda ve 1 blok parçasında")
+    }));
+    assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.undo_labels(), undo);
+}
+
+#[test]
 fn published_block_references_resolve_conflict_and_check_without_replacing_geometry() {
     use kentos_commands::{
         CallOp, DocumentSnapshotV2, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,

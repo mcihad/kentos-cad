@@ -1523,6 +1523,59 @@ fn resource_issues(
             }
         }
     }
+    // Named annotation styles are linked by their local IDs, not by the
+    // office package's IDs. Count references once for all requested styles.
+    let mut text_uses = std::collections::BTreeMap::<String, [usize; 2]>::new();
+    let mut dimension_uses = std::collections::BTreeMap::<String, [usize; 2]>::new();
+    let mut leader_uses = std::collections::BTreeMap::<String, [usize; 2]>::new();
+    let mut line_type_style_uses = std::collections::BTreeMap::<String, usize>::new();
+    if !resources.text_style_definitions.is_empty()
+        || !resources.dimension_style_definitions.is_empty()
+        || !resources.leader_styles.is_empty()
+    {
+        let mut record_style = |entity: &kentos_commands::Entity, direct: bool| {
+            let index = if direct { 0 } else { 1 };
+            match entity {
+                kentos_commands::Entity::Text(text) => {
+                    if let Some(id) = &text.face.text_style {
+                        text_uses.entry(id.clone()).or_default()[index] += 1;
+                    }
+                }
+                kentos_commands::Entity::Dimension(dimension) => {
+                    if let Some(id) = &dimension.look.dim_style {
+                        dimension_uses.entry(id.clone()).or_default()[index] += 1;
+                    }
+                }
+                kentos_commands::Entity::Leader(leader) => {
+                    if let Some(id) = &leader.leader_style {
+                        leader_uses.entry(id.clone()).or_default()[index] += 1;
+                    }
+                }
+                _ => {}
+            }
+        };
+        for entity in doc.entities() {
+            record_style(entity, true);
+        }
+        for block in doc.blocks() {
+            for entity in &block.entities {
+                record_style(entity, false);
+            }
+        }
+        if !resources.text_style_definitions.is_empty() {
+            for line_type in &doc.settings().line_types {
+                let mut names = std::collections::BTreeSet::new();
+                for element in &line_type.elements {
+                    if let Some(text) = &element.text {
+                        names.insert(text.style.to_ascii_lowercase());
+                    }
+                }
+                for name in names {
+                    *line_type_style_uses.entry(name).or_default() += 1;
+                }
+            }
+        }
+    }
     fn unit_name(unit: kentos_commands::BlockUnits) -> &'static str {
         use kentos_commands::BlockUnits as U;
         match unit {
@@ -1717,6 +1770,17 @@ fn resource_issues(
                 item.name.trim().to_lowercase() == expected.name.trim().to_lowercase()
             });
         let expected_value = resource_geometry(expected);
+        let [direct, block_parts] = found
+            .and_then(|item| leader_uses.get(&item.id))
+            .copied()
+            .unwrap_or_default();
+        let impact = if found.is_some() {
+            format!(
+                " Bu yerel stil {direct} doğrudan kılavuzda ve {block_parts} blok parçasında kullanılıyor."
+            )
+        } else {
+            String::new()
+        };
         let (kind, message, found_value) = match found {
             None => (
                 StandardIssueKind::MissingLeaderStyleDefinition,
@@ -1733,8 +1797,8 @@ fn resource_issues(
                 (
                     StandardIssueKind::LeaderStyleDefinition,
                     format!(
-                        "“{}” kılavuz stilinin görünüşü ofis standardından farklı; değişimi açıkça inceleyin.",
-                        expected.name
+                        "“{}” kılavuz stilinin görünüşü ofis standardından farklı; değişimi açıkça inceleyin.{impact}",
+                        expected.name,
                     ),
                     Some(resource_geometry(found).to_string()),
                 )
@@ -1747,7 +1811,7 @@ fn resource_issues(
             layer: None,
             expected: Some(expected_value.to_string()),
             found: found_value,
-            objects: 0,
+            objects: count(direct),
             fixable: false,
             message,
         });
@@ -1758,6 +1822,21 @@ fn resource_issues(
                 item.name.trim().to_lowercase() == expected.name.trim().to_lowercase()
             });
         let expected_value = resource_appearance(expected);
+        let [direct, block_parts] = found
+            .and_then(|item| text_uses.get(&item.id))
+            .copied()
+            .unwrap_or_default();
+        let line_types = found
+            .and_then(|item| line_type_style_uses.get(&item.name.to_ascii_lowercase()))
+            .copied()
+            .unwrap_or_default();
+        let impact = if found.is_some() {
+            format!(
+                " Bu yerel stil {direct} doğrudan yazıda, {block_parts} blok parçasında ve {line_types} çizgi tipi tanımında kullanılıyor."
+            )
+        } else {
+            String::new()
+        };
         let (kind, message, found_value) = match found {
             None => (
                 StandardIssueKind::MissingTextStyleDefinition,
@@ -1773,7 +1852,7 @@ fn resource_issues(
                 (
                     StandardIssueKind::TextStyleDefinition,
                     format!(
-                        "“{}” yazı stilinin tam tanımı ofis standardından farklı; değişimi açıkça inceleyin.",
+                        "“{}” yazı stilinin tam tanımı ofis standardından farklı; değişimi açıkça inceleyin.{impact}",
                         expected.name
                     ),
                     Some(resource_appearance(found).to_string()),
@@ -1787,7 +1866,7 @@ fn resource_issues(
             layer: None,
             expected: Some(expected_value.to_string()),
             found: found_value,
-            objects: 0,
+            objects: count(direct),
             fixable: false,
             message,
         });
@@ -1798,6 +1877,17 @@ fn resource_issues(
                 item.name.trim().to_lowercase() == expected.name.trim().to_lowercase()
             });
         let expected_value = resource_appearance(expected);
+        let [direct, block_parts] = found
+            .and_then(|item| dimension_uses.get(&item.id))
+            .copied()
+            .unwrap_or_default();
+        let impact = if found.is_some() {
+            format!(
+                " Bu yerel stil {direct} doğrudan ölçüde ve {block_parts} blok parçasında kullanılıyor."
+            )
+        } else {
+            String::new()
+        };
         let (kind, message, found_value) = match found {
             None => (
                 StandardIssueKind::MissingDimensionStyleDefinition,
@@ -1813,7 +1903,7 @@ fn resource_issues(
                 (
                     StandardIssueKind::DimensionStyleDefinition,
                     format!(
-                        "“{}” ölçü stilinin tam tanımı ofis standardından farklı; değişimi açıkça inceleyin.",
+                        "“{}” ölçü stilinin tam tanımı ofis standardından farklı; değişimi açıkça inceleyin.{impact}",
                         expected.name
                     ),
                     Some(resource_appearance(found).to_string()),
@@ -1827,7 +1917,7 @@ fn resource_issues(
             layer: None,
             expected: Some(expected_value.to_string()),
             found: found_value,
-            objects: 0,
+            objects: count(direct),
             fixable: false,
             message,
         });
