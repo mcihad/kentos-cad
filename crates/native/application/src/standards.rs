@@ -1458,6 +1458,63 @@ fn resource_issues(
     doc: &Document,
     resources: &kentos_commands::StandardResources,
 ) -> Result<Vec<StandardIssue>, Stop> {
+    // Scan uses once. A standard may carry many named definitions; scanning a
+    // large drawing for each definition would make a read-only check expensive.
+    // A hatch keeps its own pattern geometry, so its name is a reference hint,
+    // not a promise that replacing the project definition changes that hatch.
+    let mut line_uses = std::collections::BTreeMap::<String, [usize; 3]>::new();
+    let mut hatch_uses = std::collections::BTreeMap::<String, [usize; 2]>::new();
+    let line_names: std::collections::BTreeSet<_> = resources
+        .line_types
+        .iter()
+        .map(|item| item.name.trim().to_lowercase())
+        .collect();
+    let hatch_names: std::collections::BTreeSet<_> = resources
+        .hatch_patterns
+        .iter()
+        .map(|item| item.name.trim().to_lowercase())
+        .collect();
+    if !line_names.is_empty() || !hatch_names.is_empty() {
+        if !line_names.is_empty() {
+            let mut layer_leaves = Vec::new();
+            leaves(doc.layers().nodes(), &mut layer_leaves);
+            for layer in layer_leaves {
+                if let Some(name) = layer.style.line_pattern.as_deref() {
+                    let key = name.trim().to_lowercase();
+                    if line_names.contains(&key) {
+                        line_uses.entry(key).or_default()[0] += 1;
+                    }
+                }
+            }
+        }
+        let mut record_entity = |entity: &kentos_commands::Entity, direct: bool| {
+            if !line_names.is_empty()
+                && let Some(name) = entity.base().look.line_pattern.as_deref()
+            {
+                let key = name.trim().to_lowercase();
+                if line_names.contains(&key) {
+                    line_uses.entry(key).or_default()[if direct { 1 } else { 2 }] += 1;
+                }
+            }
+            if !hatch_names.is_empty()
+                && let kentos_commands::Entity::Hatch(hatch) = entity
+                && let Some(name) = hatch.pattern.name.as_deref()
+            {
+                let key = name.trim().to_lowercase();
+                if hatch_names.contains(&key) {
+                    hatch_uses.entry(key).or_default()[if direct { 0 } else { 1 }] += 1;
+                }
+            }
+        };
+        for entity in doc.entities() {
+            record_entity(entity, true);
+        }
+        for block in doc.blocks() {
+            for entity in &block.entities {
+                record_entity(entity, false);
+            }
+        }
+    }
     fn unit_name(unit: kentos_commands::BlockUnits) -> &'static str {
         use kentos_commands::BlockUnits as U;
         match unit {
@@ -1479,6 +1536,13 @@ fn resource_issues(
     }
     let mut issues = Vec::new();
     for expected in &resources.line_types {
+        let [layers, objects, block_parts] = line_uses
+            .get(&expected.name.trim().to_lowercase())
+            .copied()
+            .unwrap_or_default();
+        let impact = format!(
+            " Bu ad {layers} katmanda, {objects} doğrudan nesnede ve {block_parts} blok parçasında kullanılıyor."
+        );
         let found = doc
             .settings()
             .line_types
@@ -1488,16 +1552,16 @@ fn resource_issues(
             None => (
                 StandardIssueKind::MissingLineTypeDefinition,
                 format!(
-                    "“{}” çizgi tipi çizimde yok; kaynağı inceleyip açıkça yükleyin.",
-                    expected.name
+                    "“{}” çizgi tipi çizimde yok; kaynağı inceleyip açıkça yükleyin.{impact}",
+                    expected.name,
                 ),
                 None,
             ),
             Some(found) if resource_geometry(expected) != resource_geometry(found) => (
                 StandardIssueKind::LineTypeDefinition,
                 format!(
-                    "“{}” çizgi tipinin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.",
-                    expected.name
+                    "“{}” çizgi tipinin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.{impact}",
+                    expected.name,
                 ),
                 Some(resource_geometry(found).to_string()),
             ),
@@ -1509,12 +1573,19 @@ fn resource_issues(
             layer: None,
             expected: Some(resource_geometry(expected).to_string()),
             found: found_value,
-            objects: 0,
+            objects: count(objects),
             fixable: false,
             message,
         });
     }
     for expected in &resources.hatch_patterns {
+        let [objects, block_parts] = hatch_uses
+            .get(&expected.name.trim().to_lowercase())
+            .copied()
+            .unwrap_or_default();
+        let impact = format!(
+            " Bu ad {objects} doğrudan taramada ve {block_parts} blok parçasında geçiyor; taramalar kendi desen geometrilerini saklar."
+        );
         let found = doc
             .settings()
             .hatch_patterns
@@ -1524,16 +1595,16 @@ fn resource_issues(
             None => (
                 StandardIssueKind::MissingHatchPatternDefinition,
                 format!(
-                    "“{}” tarama deseni çizimde yok; kaynağı inceleyip açıkça yükleyin.",
-                    expected.name
+                    "“{}” tarama deseni çizimde yok; kaynağı inceleyip açıkça yükleyin.{impact}",
+                    expected.name,
                 ),
                 None,
             ),
             Some(found) if resource_geometry(expected) != resource_geometry(found) => (
                 StandardIssueKind::HatchPatternDefinition,
                 format!(
-                    "“{}” tarama deseninin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.",
-                    expected.name
+                    "“{}” tarama deseninin içeriği ofis standardından farklı; eşlemeyi veya değişimi açıkça inceleyin.{impact}",
+                    expected.name,
                 ),
                 Some(resource_geometry(found).to_string()),
             ),
@@ -1545,7 +1616,7 @@ fn resource_issues(
             layer: None,
             expected: Some(resource_geometry(expected).to_string()),
             found: found_value,
-            objects: 0,
+            objects: count(objects),
             fixable: false,
             message,
         });
@@ -1586,7 +1657,10 @@ fn resource_issues(
             });
             continue;
         };
-        let publication = found.card.as_ref().and_then(|card| card.publication.as_ref());
+        let publication = found
+            .card
+            .as_ref()
+            .and_then(|card| card.publication.as_ref());
         let actual_publication = serde_json::json!({"publication": publication});
         if actual_publication != expected_publication {
             issues.push(StandardIssue {

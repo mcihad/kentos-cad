@@ -1997,6 +1997,15 @@ aynı kaynak alanı denetimini çalıştırır; bilinmeyen yazı/ölçü stili a
 Python/MCP yolunda sessizce kaybolmaz. Üç komut aşamasında çizimin ve Undo
 geçmişinin değişmediği otomatik sınandı. Eski KCAD çizimlerindeki toleranslı
 stil okuma korunur; bu değişiklik arayüz davranışını değiştirmez.
+Çizgi tipi ve tarama kaynağı bulgularında kaynak adının katman, doğrudan nesne
+ve blok tanımı içindeki kullanım sayıları ayrı gösterilir. Tarama nesnesi desen
+geometrisini kendi içinde sakladığı için ad eşleşmesi yalnız inceleme ipucudur;
+otomatik kaynak değiştirme yetkisi vermez. Kapsam tek çizim taramasıyla
+hesaplanır, `objects` yalnız doğrudan kullanım sayısını taşır. Katman, nesne ve
+blok parçası içeren komut sınamaları çizim ile Undo geçmişinin değişmediğini
+doğruladı. Gerçek uygulamada GAZ çizgi tipinin farklı tanımı seçildiğinde
+1 katman, 0 doğrudan nesne ve 0 blok parçası açıklaması ile pasif Uygula
+düğmesi ekran görüntüsünde doğrulandı; görüntü repo dışında tutuldu.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [ ]
 

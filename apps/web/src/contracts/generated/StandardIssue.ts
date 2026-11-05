@@ -22,9 +22,10 @@ expected?: string,
  */
 found?: string,
 /**
- * The objects it is about (ObjectLineType, OwnLook), or direct placements
- * of a mismatched published block (BlockPublication or BlockUnit).
- * Nested references are described separately in that finding's message.
+ * Direct objects this finding is about (ObjectLineType, OwnLook, named
+ * line type or hatch definition), or direct placements of a mismatched
+ * published block (BlockPublication or BlockUnit). Layer and nested-block
+ * uses are described separately in the finding's message.
  */
 objects?: number,
 /**

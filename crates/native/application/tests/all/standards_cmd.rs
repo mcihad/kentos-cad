@@ -64,7 +64,11 @@ fn unknown_resource_style_fields_are_refused_before_normalization_or_execution()
         });
         let normalized = registry::normalize("cad.standards.check", input.clone()).unwrap_err();
         assert_eq!(normalized.code, "invalid_input");
-        assert!(normalized.message.contains(unknown), "{}", normalized.message);
+        assert!(
+            normalized.message.contains(unknown),
+            "{}",
+            normalized.message
+        );
         for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
             let error = registry::run(
                 &mut ExecutionContext::new(&mut doc),
@@ -449,6 +453,111 @@ fn named_resources_are_checked_without_installing_or_replacing_drawing_definitio
 }
 
 #[test]
+fn named_resource_findings_report_direct_and_nested_uses_without_editing() {
+    use kentos_commands::{CallOp, DocumentSnapshotV2, StandardResources};
+    use kentos_native_application::registry;
+
+    let pattern_snapshot: DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/patterns.json"
+    ))
+    .unwrap();
+    let mut pattern_doc = Document::from_snapshot_v2(pattern_snapshot).unwrap();
+    let mut line_types = pattern_doc.settings().line_types.clone();
+    for item in &mut line_types {
+        item.elements[0].length += 0.01;
+    }
+    let before = pattern_doc.to_snapshot_v2();
+    let undo = pattern_doc.undo_labels();
+    let checked = registry::run(
+        &mut ExecutionContext::new(&mut pattern_doc),
+        "cad.standards.check",
+        CallOp::Execute,
+        json!({
+            "standard": kentos_commands::built_in_standard("mimari-ofis").unwrap(),
+            "resources": StandardResources { line_types, ..Default::default() }
+        }),
+    )
+    .unwrap();
+    let issues = checked["output"]["issues"].as_array().unwrap();
+    for (name, count, detail) in [
+        (
+            "GAZ",
+            0,
+            "1 katmanda, 0 doğrudan nesnede ve 0 blok parçasında",
+        ),
+        (
+            "KESIK-İNCE",
+            1,
+            "0 katmanda, 1 doğrudan nesnede ve 0 blok parçasında",
+        ),
+        (
+            "SINIR",
+            0,
+            "0 katmanda, 0 doğrudan nesnede ve 1 blok parçasında",
+        ),
+    ] {
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue["kind"] == "lineTypeDefinition"
+                    && issue["subject"] == name
+                    && issue["objects"].as_u64().unwrap_or(0) == count
+                    && issue["message"].as_str().unwrap().contains(detail)
+                    && issue["fixable"] == false),
+            "{name}: {issues:?}"
+        );
+    }
+    assert_eq!(pattern_doc.to_snapshot_v2(), before);
+    assert_eq!(pattern_doc.undo_labels(), undo);
+
+    let hatch_snapshot: DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/hatches.json")).unwrap();
+    let mut hatch_doc = Document::from_snapshot_v2(hatch_snapshot).unwrap();
+    let resources = StandardResources {
+        hatch_patterns: vec![
+            serde_json::from_value(
+                json!({"name":"ANSI31", "lines":[{"angle":45,"origin":[0,0],"offset":[0,2]}]}),
+            )
+            .unwrap(),
+            serde_json::from_value(
+                json!({"name":"NET", "lines":[{"angle":45,"origin":[0,0],"offset":[0,2]}]}),
+            )
+            .unwrap(),
+        ],
+        ..Default::default()
+    };
+    let before = hatch_doc.to_snapshot_v2();
+    let undo = hatch_doc.undo_labels();
+    let checked = registry::run(
+        &mut ExecutionContext::new(&mut hatch_doc),
+        "cad.standards.check",
+        CallOp::Execute,
+        json!({
+            "standard": kentos_commands::built_in_standard("mimari-ofis").unwrap(),
+            "resources": resources
+        }),
+    )
+    .unwrap();
+    let issues = checked["output"]["issues"].as_array().unwrap();
+    for (name, count, detail) in [
+        ("ANSI31", 1, "1 doğrudan taramada ve 0 blok parçasında"),
+        ("NET", 0, "0 doğrudan taramada ve 1 blok parçasında"),
+    ] {
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue["kind"] == "missingHatchPatternDefinition"
+                    && issue["subject"] == name
+                    && issue["objects"].as_u64().unwrap_or(0) == count
+                    && issue["message"].as_str().unwrap().contains(detail)
+                    && issue["fixable"] == false)
+        );
+    }
+    assert_eq!(hatch_doc.to_snapshot_v2(), before);
+    assert_eq!(hatch_doc.undo_labels(), undo);
+}
+
+#[test]
 fn published_block_references_resolve_conflict_and_check_without_replacing_geometry() {
     use kentos_commands::{
         CallOp, DocumentSnapshotV2, ProjectStandardDocument, STANDARD_PACKAGE_FORMAT,
@@ -510,7 +619,10 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
             .any(|i| i["kind"] == "blockPublication"
                 && i["fixable"] == false
                 && i["objects"] == 3
-                && i["message"].as_str().unwrap().contains("3 doğrudan yerleştirme"))
+                && i["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains("3 doğrudan yerleştirme"))
     );
     let mut missing = reference.clone();
     missing.name = "Ofis Kapısı".into();
@@ -525,28 +637,34 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
     let mut unit_only = reference.clone();
     unit_only.units = Some(kentos_commands::BlockUnits::Mm);
     let wrong_unit = run_check(&mut doc, unit_only.clone());
-    assert!(wrong_unit["output"]["issues"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|i| i["kind"] == "blockUnit"
-            && i["expected"] == "mm"
-            && i["found"] == "m"
-            && i["objects"] == 3
-            && i["fixable"] == false));
-    assert!(!wrong_unit["output"]["issues"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|i| i["kind"] == "blockPublication"));
+    assert!(
+        wrong_unit["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["kind"] == "blockUnit"
+                && i["expected"] == "mm"
+                && i["found"] == "m"
+                && i["objects"] == 3
+                && i["fixable"] == false)
+    );
+    assert!(
+        !wrong_unit["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["kind"] == "blockPublication")
+    );
     let mut correct_unit = reference.clone();
     correct_unit.units = Some(kentos_commands::BlockUnits::M);
     let equal_unit = run_check(&mut doc, correct_unit);
-    assert!(!equal_unit["output"]["issues"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|i| i["kind"] == "blockUnit"));
+    assert!(
+        !equal_unit["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["kind"] == "blockUnit")
+    );
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);
 
@@ -598,11 +716,13 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
             .iter()
             .any(|c| c["kind"] == "blockReference" && c["fields"] == json!(["publication"]))
     );
-    assert!(conflicts["output"]["conflicts"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|c| c["kind"] == "blockReference" && c["fields"] == json!(["units"])));
+    assert!(
+        conflicts["output"]["conflicts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["kind"] == "blockReference" && c["fields"] == json!(["units"]))
+    );
     assert_eq!(doc.to_snapshot_v2(), bound);
     assert_eq!(doc.undo_labels(), undo);
 }

@@ -915,9 +915,10 @@ pub struct StandardIssue {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub found: Option<String>,
-    /// The objects it is about (ObjectLineType, OwnLook), or direct placements
-    /// of a mismatched published block (BlockPublication or BlockUnit).
-    /// Nested references are described separately in that finding's message.
+    /// Direct objects this finding is about (ObjectLineType, OwnLook, named
+    /// line type or hatch definition), or direct placements of a mismatched
+    /// published block (BlockPublication or BlockUnit). Layer and nested-block
+    /// uses are described separately in the finding's message.
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -1176,7 +1177,10 @@ mod tests {
         );
         value["resources"]["blocks"][0]["units"] = "mile".into();
         assert!(parse(&value).is_err());
-        value["resources"]["blocks"][0].as_object_mut().unwrap().remove("units");
+        value["resources"]["blocks"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("units");
         value["resources"]["blocks"][0]["publication"]["unsupported"] = true.into();
         assert!(parse(&value).is_err());
         value["resources"]["blocks"][0]["publication"]

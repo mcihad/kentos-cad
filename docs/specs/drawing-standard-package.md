@@ -110,6 +110,13 @@ silently equated to an explicit value.
 `cad.standards.check` may receive the resolved or a single package's
 `resources` alongside its `standard`. It reports missing named line/hatch
 definitions and different geometric content as separate, non-fixable issues.
+For each missing or different named line type, the finding states how many
+layers, direct objects and block-definition parts name it. For a hatch
+pattern, it reports direct hatches and block-definition parts with that name.
+`objects` holds only the direct object count; zero is omitted from JSON.
+The scan visits each drawing entity once for all package resources. Hatch
+entities keep their own pattern geometry: a matching name is an impact hint,
+not proof that replacing the project definition updates those hatches.
 Published block references are checked against the drawing's block table:
 missing block names and mismatched publication metadata are separate,
 non-fixable issues. The block check compares the publication family, type,

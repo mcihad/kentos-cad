@@ -75678,9 +75678,10 @@ class StandardIssue(_Model):
         expected: What the standard asks for.
         found: What the drawing has.
         layer: The layer's id, when it is about one of the drawing's layers.
-        objects: The objects it is about (ObjectLineType, OwnLook), or direct placements
-            of a mismatched published block (BlockPublication or BlockUnit).
-            Nested references are described separately in that finding's message. Unit: count.
+        objects: Direct objects this finding is about (ObjectLineType, OwnLook, named
+            line type or hatch definition), or direct placements of a mismatched
+            published block (BlockPublication or BlockUnit). Layer and nested-block
+            uses are described separately in the finding's message. Unit: count.
     """
     kind: StandardIssueKind | StandardIssueKindName
     subject: str
