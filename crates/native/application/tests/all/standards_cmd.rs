@@ -506,7 +506,10 @@ fn published_block_references_resolve_conflict_and_check_without_replacing_geome
             .as_array()
             .unwrap()
             .iter()
-            .any(|i| i["kind"] == "blockPublication" && i["fixable"] == false)
+            .any(|i| i["kind"] == "blockPublication"
+                && i["fixable"] == false
+                && i["objects"] == 3
+                && i["message"].as_str().unwrap().contains("3 doğrudan yerleştirme"))
     );
     let mut missing = reference.clone();
     missing.name = "Ofis Kapısı".into();

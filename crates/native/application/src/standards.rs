@@ -1544,13 +1544,27 @@ fn resource_issues(
             kentos_commands::blocks::name_key(&item.name)
                 == kentos_commands::blocks::name_key(&expected.name)
         });
+        // Direct placements and references inside other block definitions are
+        // distinct: replacing a definition can affect both. Never infer that
+        // matching publication metadata proves its geometry is identical.
+        let direct_placements = found.map_or(0, |block| doc.block_uses(block.id));
+        let nested_references = found.map_or(0, |block| {
+            doc.blocks()
+                .iter()
+                .flat_map(|definition| &definition.entities)
+                .filter(|part| matches!(part, kentos_commands::Entity::Insert(insert) if insert.block == block.id))
+                .count()
+        });
+        let impact = format!(
+            " Çizimde {direct_placements} doğrudan yerleştirme ve blok tanımlarında {nested_references} iç başvuru var."
+        );
         let expected_value = resource_geometry(expected);
         let (kind, message, found_value) = match found {
             None => (
                 StandardIssueKind::MissingBlockReference,
                 format!(
-                    "“{}” yayımlanmış bloğu çizimde yok; kitaplıktan açıkça yükleyin.",
-                    expected.name
+                    "“{}” yayımlanmış bloğu çizimde yok; kitaplıktan açıkça yükleyin.{impact}",
+                    expected.name,
                 ),
                 None,
             ),
@@ -1566,8 +1580,8 @@ fn resource_issues(
                 (
                     StandardIssueKind::BlockPublication,
                     format!(
-                        "“{}” bloğunun yayın kimliği veya sürümü ofis standardından farklı; eşlemeyi inceleyin.",
-                        expected.name
+                        "“{}” bloğunun yayın kimliği veya sürümü ofis standardından farklı; eşlemeyi inceleyin.{impact}",
+                        expected.name,
                     ),
                     Some(actual.to_string()),
                 )
@@ -1579,7 +1593,7 @@ fn resource_issues(
             layer: None,
             expected: Some(expected_value.to_string()),
             found: found_value,
-            objects: 0,
+            objects: count(direct_placements),
             fixable: false,
             message,
         });

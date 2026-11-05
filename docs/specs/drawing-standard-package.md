@@ -113,6 +113,10 @@ missing block names and mismatched publication metadata are separate,
 non-fixable issues. The block check compares the publication family, type,
 display name and release, without treating equal metadata as proof of equal
 geometry. An unpublished local block does not satisfy a published reference.
+For a publication mismatch, the finding reports direct placements in its
+`objects` count and states separately how many references occur inside block
+definitions. These counts are an impact hint; they do not authorize replacing
+the definition or prove that equal publication metadata means equal geometry.
 Names are compared case insensitively; source path and description do not
 change geometric equality. The command and the desktop standard window
 perform this check without installing or replacing a definition. The full

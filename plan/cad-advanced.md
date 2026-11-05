@@ -1946,6 +1946,11 @@ taşması aynı testte saptanıp okunur, satıra sığan ayrıntıyla düzeltild
 (`/tmp/kentos-cad-adv12-block-detail-after.png`, repo dışında). Yayın meta
 verisinin eşitliği geometri eşitliğinin kanıtı değildir; blokların güvenli
 eşlenmesi ve içerik denetimi hâlâ açıktır.
+Blok yayın uyuşmazlığının açıklaması artık doğrudan yerleştirme ile blok
+tanımındaki iç başvuru sayılarını ayrı verir; `objects` alanı doğrudan
+yerleştirmeyi taşır. Üç yerleştirmeli komut sınaması ve tek yerleştirmeli gerçek
+CAD penceresinde seçili bulgunun tam metni doğrulandı. Bu yalnız salt okunur
+etki bilgisidir; blok tanımını veya yerleştirmeleri değiştirmez.
 Pafta/araç paleti ve diğer stil kaynakları, kullanıcı eşlemesi ve
 tam görünüş kökeni ile kabul senaryosu hâlâ açıktır.
 Sürüm 2 paketine `sheetTemplates` altında onaylı pafta şablonu kimliği ve
