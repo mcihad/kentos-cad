@@ -518,11 +518,18 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
     }
     // The objects.
     let mut by_type = [0usize; 4];
+    let mut named_types = std::collections::BTreeMap::<String, (String, usize)>::new();
     let mut own = 0usize;
     for e in doc.entities() {
         let b = e.base();
         if let Some(t) = b.look.line_type {
             by_type[LineType::ALL.iter().position(|x| *x == t).unwrap_or(0)] += 1;
+        }
+        if let Some(pattern) = b.look.line_pattern.as_deref() {
+            let entry = named_types
+                .entry(fold_name(pattern))
+                .or_insert_with(|| (pattern.to_owned(), 0));
+            entry.1 += 1;
         }
         if b.color.is_some()
             || b.line_weight.is_some()
@@ -533,6 +540,21 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
         }
     }
     if !standard.line_types.is_empty() {
+        for (_, (name, objects)) in named_types {
+            issue(
+                StandardIssueKind::ObjectLineType,
+                &name,
+                None,
+                Some(types_text(&standard.line_types)),
+                Some(name.clone()),
+                objects,
+                false,
+                format!(
+                    "{objects} nesnenin kendi özel çizgi tipi “{name}”; standart yalnız {} yerleşik çizgi tiplerini tanımlar. Eşleme bilinmediği için çizgi tipini elle seçin.",
+                    types_text(&standard.line_types)
+                ),
+            );
+        }
         for (i, t) in LineType::ALL.into_iter().enumerate() {
             if by_type[i] > 0 && !standard.line_types.contains(&t) {
                 issue(

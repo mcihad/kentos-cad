@@ -1808,6 +1808,10 @@ Standartta açıkça tanımlanmayan fakat adlandırma kuralına uyan ek katmanla
 nesneye ait bulgular gerçek arayüzde doğrulandı. Bu, paket kapsamının tamamı
 değildir.
 
+Nesnenin adlandırılmış özel çizgi tipi, nesneye özel görünüşe izin veren
+standartlarda da ayrı raporlanır; izin listesi boşsa bu denetim yapılmaz.
+Komut sınamaları ve gerçek penceredeki P_TEXT bulgusu doğrulandı.
+
 Elle müdahale gerektiren bulgular standart penceresinde ilk sırada gösterilir;
 satır seçimi rapordaki asıl bulguya bağlı kalır. Gerçek arayüzde ayrıntılar
 ve otomatik düzeltmeden sonra kalan iki bulgu doğrulandı; görüntü repo dışındadır.

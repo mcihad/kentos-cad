@@ -150,6 +150,34 @@ fn named_entity_and_allowed_layer_patterns_are_not_mistaken_for_bylayer() {
             .iter()
             .any(|i| i.kind == kentos_commands::StandardIssueKind::OwnLook && i.objects == 1)
     );
+    let named = findings
+        .iter()
+        .find(|i| {
+            i.kind == kentos_commands::StandardIssueKind::ObjectLineType
+                && i.found.as_deref() == Some("WATER")
+        })
+        .unwrap();
+    assert_eq!(named.objects, 1);
+    assert!(!named.fixable);
+    let mut allow_own = standard.clone();
+    allow_own.by_layer = false;
+    let findings = standards::issues(&doc, &allow_own);
+    assert!(findings.iter().any(
+        |i| i.kind == kentos_commands::StandardIssueKind::ObjectLineType
+            && i.found.as_deref() == Some("WATER")
+            && i.objects == 1
+    ));
+    assert!(
+        !findings
+            .iter()
+            .any(|i| i.kind == kentos_commands::StandardIssueKind::OwnLook)
+    );
+    allow_own.line_types.clear();
+    assert!(
+        !standards::issues(&doc, &allow_own)
+            .iter()
+            .any(|i| i.kind == kentos_commands::StandardIssueKind::ObjectLineType)
+    );
     assert_eq!(doc.to_snapshot_v2(), before);
 }
 
