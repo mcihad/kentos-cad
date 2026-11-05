@@ -116,7 +116,8 @@ def default_rows(**over):
 def answer(rows):
     n = lambda a: sum(1 for r in rows if r["action"] == a and r["status"] != "same")
     return {"rows": rows, "added": n("add"), "replaced": n("replace"), "renamed": n("renameIncoming"),
-            "kept": sum(1 for r in rows if r["action"] == "keepLocal"), "revision": "$current"}
+            "kept": sum(1 for r in rows if r["action"] == "keepLocal"),
+            "unavailable": sum(1 for r in rows if r["status"] == "unavailable"), "revision": "$current"}
 
 
 def done(output):

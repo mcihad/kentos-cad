@@ -1,0 +1,308 @@
+{
+ "format": "kentos.blocks",
+ "version": 2,
+ "blocks": [
+  {
+   "id": "0192f5b1-0000-7000-8000-000000000001",
+   "name": "Ofis kapı 90 · yayın 1",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.9
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.9,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.9,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.0
+     }
+    }
+   ],
+   "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca.",
+   "units": "m",
+   "card": {
+    "publication": {
+     "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+     "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+     "typeName": "Tek kanatlı kapı 90",
+     "release": 1
+    },
+    "category": "Mimari/Kapılar",
+    "tags": [
+     "kapı",
+     "tek kanat",
+     "ofis"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b1-0000-7000-8000-000000000002",
+   "name": "Ofis kapı 90 · yayın 2",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.9
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.9,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.9,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": -0.05
+     },
+     "b": {
+      "x": 0.9,
+      "y": -0.05
+     }
+    }
+   ],
+   "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+   "units": "m",
+   "card": {
+    "publication": {
+     "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+     "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+     "typeName": "Tek kanatlı kapı 90",
+     "release": 2
+    },
+    "category": "Mimari/Kapılar",
+    "tags": [
+     "kapı",
+     "tek kanat",
+     "ofis"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b1-0000-7000-8000-000000000003",
+   "name": "Ofis kuzey oku",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "circle",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.5
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.6
+      },
+      {
+       "x": -0.15,
+       "y": -0.3
+      },
+      {
+       "x": 0.0,
+       "y": -0.15
+      },
+      {
+       "x": 0.15,
+       "y": -0.3
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Kuzey oku; taban noktası dairenin merkezi.",
+   "units": "m",
+   "card": {
+    "publication": {
+     "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+     "typeId": "0192f5b1-0000-7000-8000-0000000e0002",
+     "typeName": "Kuzey oku",
+     "release": 1
+    },
+    "category": "İşaretler/Yön",
+    "tags": [
+     "kuzey",
+     "ok",
+     "ofis"
+    ],
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b1-0000-7000-8000-000000000004",
+   "name": "Ofis kot işareti",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": -0.15,
+       "y": 0.25
+      },
+      {
+       "x": 0.15,
+       "y": 0.25
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": -0.15,
+      "y": 0.25
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.25
+     }
+    }
+   ],
+   "description": "Kot işareti; taban noktası üçgenin ucu.",
+   "units": "m",
+   "card": {
+    "publication": {
+     "familyId": "0192f5b1-0000-7000-8000-0000000f0002",
+     "typeId": "0192f5b1-0000-7000-8000-0000000e0003",
+     "typeName": "Kot işareti",
+     "release": 1
+    },
+    "category": "İşaretler/Kot",
+    "tags": [
+     "kot",
+     "ofis"
+    ],
+    "version": 1
+   }
+  }
+ ]
+}

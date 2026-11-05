@@ -927,6 +927,28 @@ fn space_length(e: &Entity, f: &Format) -> Option<Row> {
     Some(Row::figure(label, f.length_bare(length)).unit(f.length_unit_label()))
 }
 
+/// The “Bu değer nereden geliyor?” rows (docs/adr/1100 §5): each part's value and the level it comes from, then
+/// quiet lines for the levels under it (layer, standard, block), the viewports that draw it otherwise and the reach
+/// of each reset, read before anything is reset.
+fn origin_rows(parts: &[kentos_native_application::appearance_origin::Explained]) -> Vec<Row> {
+    let mut rows = Vec::new();
+    for p in parts {
+        rows.push(Row::text(p.label, format!("{} · {}", p.value, p.origin.label())));
+        for link in p.chain.iter().filter(|l| !l.wins && l.value != "—") {
+            rows.push(Row::note(&format!("{}: {} · {}", link.origin.label(), link.value, link.note)));
+        }
+        for v in &p.viewports {
+            let mut row = Row::note(&format!("Pencerede başka: {v}"));
+            row.warn = true;
+            rows.push(row);
+        }
+        for r in &p.resets {
+            rows.push(Row::note(&format!("Sıfırla → {} · {} ({})", r.after, r.scope, r.count)));
+        }
+    }
+    rows
+}
+
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
 fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     let base = e.base();
@@ -2638,6 +2660,15 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 id: "modelAppearance".into(),
                 title: "Temel model görünüşü".into(),
                 rows: appearance,
+            });
+        }
+        // Where each value comes from, the standard's word on it and what a reset reaches (docs/adr/1100 §5).
+        let explained = kentos_native_application::appearance_origin::explain(&doc.model, slot);
+        if !explained.is_empty() {
+            sections.push(Section {
+                id: "valueOrigin".into(),
+                title: "Bu değer nereden geliyor?".into(),
+                rows: origin_rows(&explained),
             });
         }
     }

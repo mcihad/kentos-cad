@@ -7,6 +7,10 @@
 //! names it follows) or `renameIncoming` (the standard's added under a new name). Nothing is removed or purged. One
 //! undo step “Standart kaynaklarını kur”; the plan is the same answer, written nowhere. The shared cases are
 //! `fixtures/commands/v1/cad.standards.install.json` (`scripts/fixtures/standards_install_cases.py`).
+//!
+//! Block library references and approved sheet template revisions (docs/adr/1100) are rows of the same table,
+//! resolved against the libraries KentOS reads (`standards_install_library`, `standard_libraries`); their cases are
+//! `cad.standards.install.library.json` (`scripts/fixtures/standards_install_library_cases.py`).
 
 use std::collections::BTreeSet;
 
@@ -14,13 +18,15 @@ use kentos_commands::{
     CommandResult, StandardInstallAction as Action, StandardInstallRow, StandardOrigin, StandardResourceKind as Kind,
     StandardsInstall, StandardsInstalled, StandardsResolved, STANDARDS_INSTALL_STEP,
 };
-use kentos_domain::Document;
+use kentos_domain::{Document, Uuid};
 use serde_json::Value;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
+use crate::standard_libraries::Libraries;
 use crate::standards::{resolve_project, style_differences};
+use crate::standards_install_library::{self as library, Incoming as LibraryIncoming};
 
 fn fail(code: &str, message: String, path: String) -> Stop {
     Stop::failed(error(code, message, Some(path)))
@@ -37,6 +43,8 @@ fn kind_words(k: Kind) -> &'static str {
         Kind::TextStyle => "yazı stili",
         Kind::DimensionStyle => "ölçü stili",
         Kind::LeaderStyle => "kılavuz stili",
+        Kind::Block => "blok",
+        Kind::SheetTemplate => "pafta şablonu",
     }
 }
 
@@ -125,11 +133,16 @@ fn local_names(doc: &Document, kind: Kind) -> BTreeSet<String> {
         Kind::TextStyle => s.text_styles.iter().map(|t| key(&t.name)).collect(),
         Kind::DimensionStyle => s.dimension_styles.iter().map(|t| key(&t.name)).collect(),
         Kind::LeaderStyle => s.leader_styles.iter().map(|t| key(&t.name)).collect(),
+        Kind::Block => doc.blocks().iter().map(|b| key(&b.name)).collect(),
+        Kind::SheetTemplate => s.approved_sheet_templates.iter().map(|t| key(&t.template_id)).collect(),
     }
 }
 
+/// Every row with what a block or template row installs (style rows install from the resolved standard).
+type Rows = Vec<(StandardInstallRow, Option<LibraryIncoming>)>;
+
 /// The rows, every choice checked; why not.
-fn rows(doc: &Document, input: &StandardsInstall) -> Result<(StandardsResolved, Vec<StandardInstallRow>), Stop> {
+fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Result<(StandardsResolved, Rows), Stop> {
     let resolved = match resolve_project(doc) {
         CommandResult::Completed { output, .. } => output,
         CommandResult::Failed { error } => return Err(Stop::failed(error)),
@@ -137,7 +150,7 @@ fn rows(doc: &Document, input: &StandardsInstall) -> Result<(StandardsResolved, 
         _ => return Err(Stop::Cancelled),
     };
     let found = incoming(doc, &resolved);
-    let mut rows: Vec<StandardInstallRow> = found
+    let mut rows: Rows = found
         .iter()
         .map(|i| {
             let (status, fields) = match &i.local {
@@ -147,22 +160,28 @@ fn rows(doc: &Document, input: &StandardsInstall) -> Result<(StandardsResolved, 
                     if fields.is_empty() { ("same", fields) } else { ("differs", fields) }
                 }
             };
-            StandardInstallRow {
+            let row = StandardInstallRow {
                 kind: i.kind,
                 name: i.name.clone(),
                 status: status.to_owned(),
                 action: if status == "missing" { Action::Add } else { Action::KeepLocal },
                 new_name: None,
                 fields,
+                library: None,
+                uses: 0,
                 source: i.source.clone(),
-            }
+            };
+            (row, None)
         })
         .collect();
+    rows.extend(library::rows(doc, &resolved, libraries));
     let mut chosen = BTreeSet::new();
     let mut taken: Vec<(Kind, String)> = Vec::new();
+    let library_names: Vec<(Kind, String)> =
+        rows.iter().filter(|(r, _)| matches!(r.kind, Kind::Block | Kind::SheetTemplate)).map(|(r, _)| (r.kind, r.name.clone())).collect();
     for (n, c) in input.choices.iter().enumerate() {
         let at = format!("choices[{n}]");
-        let Some(row) = rows.iter_mut().find(|r| r.kind == c.kind && key(&r.name) == key(&c.name)) else {
+        let Some((row, _)) = rows.iter_mut().find(|(r, _)| r.kind == c.kind && key(&r.name) == key(&c.name)) else {
             return Err(fail(
                 codes::STANDARD_RESOURCE_NOT_FOUND,
                 format!(
@@ -180,9 +199,16 @@ fn rows(doc: &Document, input: &StandardsInstall) -> Result<(StandardsResolved, 
                 at,
             ));
         }
+        if let Some(why) = library::refused_action(doc, row, c.action) {
+            return Err(fail(
+                codes::INVALID_INSTALL_CHOICE,
+                format!("“{}” {} {why}.", c.name, kind_words(c.kind)),
+                format!("{at}.action"),
+            ));
+        }
         let allowed = match row.status.as_str() {
             "missing" => matches!(c.action, Action::Add | Action::KeepLocal),
-            "same" => matches!(c.action, Action::KeepLocal),
+            "same" | "unavailable" => matches!(c.action, Action::KeepLocal),
             _ => matches!(c.action, Action::Replace | Action::KeepLocal | Action::RenameIncoming),
         };
         if !allowed {
@@ -200,8 +226,10 @@ fn rows(doc: &Document, input: &StandardsInstall) -> Result<(StandardsResolved, 
         match (c.action, &c.new_name) {
             (Action::RenameIncoming, Some(new)) if !checks::is_blank(new) && new.trim() == new => {
                 let clash = local_names(doc, c.kind).contains(&key(new))
+                    || (c.kind == Kind::Block && doc.block_named(new).is_some())
                     || taken.iter().any(|(k, t)| *k == c.kind && key(t) == key(new))
-                    || rows_with_name(&found, c.kind, new);
+                    || rows_with_name(&found, c.kind, new)
+                    || library_rows_with_name(&library_names, c.kind, new);
                 if clash {
                     return Err(fail(
                         codes::DUPLICATE_NAME,
@@ -238,16 +266,33 @@ fn rows_with_name(found: &[Incoming], kind: Kind, name: &str) -> bool {
     found.iter().any(|i| i.kind == kind && key(&i.name) == key(name))
 }
 
-fn counted(rows: Vec<StandardInstallRow>, revision: String) -> StandardsInstalled {
+fn library_rows_with_name(names: &[(Kind, String)], kind: Kind, name: &str) -> bool {
+    names.iter().any(|(k, n)| *k == kind && key(n) == key(name))
+}
+
+fn counted(rows: Rows, revision: String) -> StandardsInstalled {
+    let rows: Vec<StandardInstallRow> = rows.into_iter().map(|(r, _)| r).collect();
     let n = |a: Action| rows.iter().filter(|r| r.action == a && r.status != "same").count() as u32;
     StandardsInstalled {
         added: n(Action::Add),
         replaced: n(Action::Replace),
         renamed: n(Action::RenameIncoming),
         kept: rows.iter().filter(|r| r.action == Action::KeepLocal).count() as u32,
+        unavailable: rows.iter().filter(|r| r.status == "unavailable").count() as u32,
         rows,
         revision,
     }
+}
+
+fn fresh() -> kentos_commands::BlockId {
+    kentos_commands::BlockId(*Uuid::now_v7().as_bytes())
+}
+
+/// The rows and the blocks they would write, every refusal checked.
+fn checked(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Result<(StandardsResolved, Rows, library::BlockWrite), Stop> {
+    let (resolved, rows) = rows(doc, input, libraries)?;
+    let blocks = library::plan_blocks(doc, &rows, fresh)?;
+    Ok((resolved, rows, blocks))
 }
 
 /// A local id `id` does not clash with: `id`, else `id-2`, `id-3` …
@@ -262,7 +307,7 @@ fn fresh_id(taken: &[&str], id: &str) -> String {
 fn styles<T: Clone>(
     table: &[T],
     incoming: &[T],
-    rows: &[StandardInstallRow],
+    rows: &[&StandardInstallRow],
     kind: Kind,
     name: impl Fn(&T) -> &str,
     id: impl Fn(&T) -> &str,
@@ -293,7 +338,14 @@ fn styles<T: Clone>(
     out
 }
 
-fn write_rows(doc: &mut Document, resolved: &StandardsResolved, rows: &[StandardInstallRow]) {
+fn write_rows(
+    doc: &mut Document,
+    resolved: &StandardsResolved,
+    all: &Rows,
+    blocks: library::BlockWrite,
+) -> Result<(), String> {
+    let rows: Vec<&StandardInstallRow> = all.iter().map(|(r, _)| r).collect();
+    let rows = rows.as_slice();
     let r = &resolved.resources;
     let s = doc.settings().clone();
     // Line types and hatch patterns have no id: the name is the reference.
@@ -355,20 +407,30 @@ fn write_rows(doc: &mut Document, resolved: &StandardsResolved, rows: &[Standard
             ..t.clone()
         },
     );
+    let approved = library::approved_after(doc, all);
     doc.name_step(STANDARDS_INSTALL_STEP);
-    doc.with_style_tables(STANDARDS_INSTALL_STEP, |doc| {
-        let mut next = doc.settings().clone();
-        next.text_styles = text;
-        next.dimension_styles = dimension;
-        next.leader_styles = leader;
-        doc.set_settings(next);
-    });
-    doc.set_pattern_tables(line_types, hatch_patterns, STANDARDS_INSTALL_STEP);
+    doc.transact(STANDARDS_INSTALL_STEP, |doc| {
+        doc.with_style_tables(STANDARDS_INSTALL_STEP, |doc| {
+            let mut next = doc.settings().clone();
+            next.text_styles = text;
+            next.dimension_styles = dimension;
+            next.leader_styles = leader;
+            doc.set_settings(next);
+        });
+        doc.set_pattern_tables(line_types, hatch_patterns, STANDARDS_INSTALL_STEP);
+        doc.set_approved_sheet_templates(approved, STANDARDS_INSTALL_STEP);
+        library::write_blocks(doc, blocks)
+    })
 }
 
 /// Checks the choices, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &StandardsInstall) -> CommandResult<()> {
-    match rows(cx.doc, input) {
+    validate_with(cx, input, &Libraries::builtin())
+}
+
+/// [`validate`] reading the references from `libraries`.
+pub fn validate_with(cx: &ExecutionContext<'_>, input: &StandardsInstall, libraries: &Libraries) -> CommandResult<()> {
+    match checked(cx.doc, input, libraries) {
         Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -376,8 +438,17 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &StandardsInstall) -> CommandR
 
 /// Every resource and what the install would do with it; the drawing stays.
 pub fn plan(cx: &ExecutionContext<'_>, input: &StandardsInstall) -> CommandResult<StandardsInstalled> {
-    match rows(cx.doc, input) {
-        Ok((_, rows)) => {
+    plan_with(cx, input, &Libraries::builtin())
+}
+
+/// [`plan`] reading the references from `libraries`.
+pub fn plan_with(
+    cx: &ExecutionContext<'_>,
+    input: &StandardsInstall,
+    libraries: &Libraries,
+) -> CommandResult<StandardsInstalled> {
+    match checked(cx.doc, input, libraries) {
+        Ok((_, rows, _)) => {
             CommandResult::Completed { output: counted(rows, cx.doc.revision().to_string()), warnings: Vec::new() }
         }
         Err(stop) => stop.into(),
@@ -386,17 +457,28 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &StandardsInstall) -> CommandResul
 
 /// Installs as one undo step “Standart kaynaklarını kur”.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: StandardsInstall) -> CommandResult<StandardsInstalled> {
+    execute_with(cx, input, &Libraries::builtin())
+}
+
+/// [`execute`] reading the references from `libraries` (a host's project or office library in front of KentOS's).
+pub fn execute_with(
+    cx: &mut ExecutionContext<'_>,
+    input: StandardsInstall,
+    libraries: &Libraries,
+) -> CommandResult<StandardsInstalled> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_STANDARDS_INSTALL,
         kentos_commands::CAD_STANDARDS_INSTALL_VERSION,
         input,
         |cx, input| {
-            let (resolved, rows) = match rows(cx.doc, &input) {
+            let (resolved, rows, blocks) = match checked(cx.doc, &input, libraries) {
                 Ok(done) => done,
                 Err(stop) => return stop.into(),
             };
-            write_rows(cx.doc, &resolved, &rows);
+            if let Err(message) = write_rows(cx.doc, &resolved, &rows, blocks) {
+                return Stop::failed(error(codes::BLOCK_REFUSED, message, Some("choices".into()))).into();
+            }
             CommandResult::Completed {
                 output: counted(rows, cx.doc.revision().to_string()),
                 warnings: Vec::new(),

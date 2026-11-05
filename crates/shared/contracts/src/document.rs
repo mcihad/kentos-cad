@@ -467,6 +467,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectStandardDocument>>", optional))]
     pub standard_docs: Vec<crate::ProjectStandardDocument>,
+    /// The sheet template revisions the bound office standards approved, as `cad.standards.install` recorded them
+    /// (docs/adr/1100 §3): which revision new sheets are made from; existing sheets keep their own origin.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ApprovedSheetTemplate>>", optional))]
+    pub approved_sheet_templates: Vec<crate::ApprovedSheetTemplate>,
     /// Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
     /// plotted or measured. Numbered; their stamps say which state of an object each was written for.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

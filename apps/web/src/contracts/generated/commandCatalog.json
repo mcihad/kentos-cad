@@ -63719,7 +63719,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the\nchoices. Refusals, in order: `no_standard`, `invalid_standard`, `standard_resource_not_found`,\n`invalid_install_choice`, `duplicate_name`, `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the\nchoices; a block reference is read from the first block library that holds its publication, a sheet template\nrevision is recorded as approved (docs/adr/1100). Refusals, in order: `no_standard`, `invalid_standard`,\n`standard_resource_not_found`, `invalid_install_choice`, `duplicate_name`, `invalid_revision`,\n`revision_conflict`, `block_refused`.",
         "properties": {
           "choices": {
             "items": {
@@ -63776,6 +63776,13 @@
               "$ref": "#/$defs/StandardInstallRow"
             },
             "type": "array"
+          },
+          "unavailable": {
+            "description": "The references no readable library holds (each also counted in `kept`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           }
         },
         "required": [
@@ -63784,6 +63791,7 @@
           "replaced",
           "renamed",
           "kept",
+          "unavailable",
           "revision"
         ],
         "title": "StandardsInstalled",
@@ -63827,6 +63835,13 @@
               "$ref": "#/$defs/StandardInstallRow"
             },
             "type": "array"
+          },
+          "unavailable": {
+            "description": "The references no readable library holds (each also counted in `kept`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           }
         },
         "required": [
@@ -63835,6 +63850,7 @@
           "replaced",
           "renamed",
           "kept",
+          "unavailable",
           "revision"
         ],
         "title": "StandardsInstalled",
@@ -63848,7 +63864,8 @@
           "invalid_install_choice",
           "duplicate_name",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "block_refused"
         ]
       },
       "examples": [
@@ -101062,6 +101079,36 @@
       },
       "required": [
         "scale"
+      ],
+      "type": "object"
+    },
+    "ApprovedSheetTemplate": {
+      "additionalProperties": false,
+      "description": "A sheet template revision a bound office standard approved, recorded in the drawing by\n`cad.standards.install` (docs/adr/1100 §3): the project's own note of which template new sheets\nare made from. Recording it changes no sheet; a sheet keeps the origin it was made from.",
+      "properties": {
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "standard": {
+          "description": "The standard that approved it and its office revision.",
+          "type": "string"
+        },
+        "standardRevision": {
+          "type": "string"
+        },
+        "templateId": {
+          "description": "The template's id (`sys:cad-mimari`, a user's or an office's).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "templateId",
+        "revision",
+        "standard",
+        "standardRevision"
       ],
       "type": "object"
     },
@@ -158296,6 +158343,13 @@
           ],
           "description": "The project's annotation heights on paper (docs/adr/0205 §1); absent:\nevery kind's default."
         },
+        "approvedSheetTemplates": {
+          "description": "The sheet template revisions the bound office standards approved, as `cad.standards.install` recorded them\n(docs/adr/1100 §3): which revision new sheets are made from; existing sheets keep their own origin.",
+          "items": {
+            "$ref": "#/$defs/ApprovedSheetTemplate"
+          },
+          "type": "array"
+        },
         "arch": {
           "anyOf": [
             {
@@ -172421,7 +172475,7 @@
           "$ref": "#/$defs/StandardInstallAction"
         },
         "fields": {
-          "description": "The differing appearance fields (`differs` only).",
+          "description": "The differing appearance fields (`differs`); for `unavailable`, what the nearest library entry differs in\n(`release`, `units`, `revision`), none when no library has the type or template at all.",
           "items": {
             "type": "string"
           },
@@ -172429,6 +172483,13 @@
         },
         "kind": {
           "$ref": "#/$defs/StandardResourceKind"
+        },
+        "library": {
+          "description": "Blocks and sheet templates: the library the definition is read from (`kentos-ofis`, `sistem`).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "name": {
           "type": "string"
@@ -172444,8 +172505,15 @@
           "description": "The standard the resource comes from and its office revision."
         },
         "status": {
-          "description": "`missing`, `same` or `differs`, against the drawing's resource of that name.",
+          "description": "`missing`, `same` or `differs`, against the drawing's resource of that name; `unavailable` when no library\nKentOS reads holds the block publication or template revision the standard names (kept, reported).",
           "type": "string"
+        },
+        "uses": {
+          "description": "Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet\ntemplates: the sheets made from that template, which are never changed.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
         }
       },
       "required": [
@@ -172731,13 +172799,15 @@
       "type": "object"
     },
     "StandardResourceKind": {
-      "description": "A kind of named resource a bound office standard carries (docs/adr/1002 §1).",
+      "description": "A kind of named resource a bound office standard carries (docs/adr/1002 §1); a block is a library publication's\nreference and a sheet template an approved template revision (docs/adr/1100 §2–§3).",
       "enum": [
         "lineType",
         "hatchPattern",
         "textStyle",
         "dimensionStyle",
-        "leaderStyle"
+        "leaderStyle",
+        "block",
+        "sheetTemplate"
       ],
       "type": "string"
     },

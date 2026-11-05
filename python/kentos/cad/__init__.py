@@ -179,6 +179,7 @@ __all__ = [
     "ApplyComboOptionsOperation",
     "ApplyPageSetupPaperOp",
     "ApplyTemplatePaperOp",
+    "ApprovedSheetTemplate",
     "ArcConstructedCurve",
     "ArcContinueCurveConstruction",
     "ArcCreate",

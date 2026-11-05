@@ -359,6 +359,8 @@ def settings(s):
                 # Schema 131 (docs/adr/0735): the profiles and mappings the project carries, as their JSON.
                 "profileFiles": (opaque, False),
                 "standardDocs": (opaque, False),
+                # Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, as their JSON.
+                "approvedSheetTemplates": (opaque, False),
                 # Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
                 "reviewNotes": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
@@ -2401,6 +2403,9 @@ def document(d):
     if d["settings"].get("reviewNotes"):
         # Review notes bound to objects, a sheet or a view (docs/adr/1000 §2).
         schema = max(schema, 180)
+    if d["settings"].get("approvedSheetTemplates"):
+        # The sheet template revisions an office standard approved (docs/adr/1100 §3).
+        schema = max(schema, 183)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3346,7 +3351,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-183.kcad"] = container(root(cmap(parts), version=uint(183)))
+    files["schema-version-184.kcad"] = container(root(cmap(parts), version=uint(184)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5626,6 +5631,20 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 183 (docs/adr/1100 §3): two approved sheet template revisions, each with the standard that approved it;
+    # schema 182 refuses the field, a repeated template id (case aside) and a revision 0 are bad values.
+    approved = load("approved-sheet-templates.json")
+    approved_data = document(approved)
+    assert approved_data.count(b"\x67version\x18\xb7") == 1, "approved sheet templates are schema 183"
+    out["approved-sheet-templates.kcad"] = container(approved_data)
+    out["broken/approved-sheet-templates-in-schema-182.kcad"] = container(
+        approved_data.replace(b"\x67version\x18\xb7", b"\x67version\x18\xb6"))
+    again = copy.deepcopy(approved)
+    again["settings"]["approvedSheetTemplates"][1]["templateId"] = "SYS:CAD-MIMARI"
+    out["broken/approved-sheet-templates-duplicate.kcad"] = container(document(again))
+    zero = copy.deepcopy(approved)
+    zero["settings"]["approvedSheetTemplates"][0]["revision"] = 0
+    out["broken/approved-sheet-templates-revision.kcad"] = container(document(zero))
     # Schema 165: ordered, portable standard documents. Schema 164 must refuse the new field.
     standard_docs = load("standard-docs.json")
     standard_data = document(standard_docs)

@@ -123,12 +123,39 @@ fn install(app: &mut App) {
     let _ = app.update(Message::StandardInstall(I::Pick(K::TextStyle, "A-NOT".into(), Choice(A::Replace))));
 }
 
+/// docs/adr/1100 §6: the library cases' drawing (two office standards naming blocks of `kentos-ofis` and sheet
+/// templates, a KAPI of the door's first release placed three times, sheets made from an older template revision)
+/// with Standart kaynaklarını kur open: KAPI to be replaced by the second release, the mimari template's approved
+/// revision to be replaced, the references no library holds shown as warnings.
+fn install_library(app: &mut App) {
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.standards.install.library.json"
+    ))
+    .expect("the cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::make_cad(app);
+    let _ = app.update(Message::StandardInstall(crate::standard_install::Event::Open));
+    use crate::standard_install::{Choice, Event as I};
+    use kentos_commands::{StandardInstallAction as A, StandardResourceKind as K};
+    let _ = app.update(Message::StandardInstall(I::Pick(K::Block, "KAPI".into(), Choice(A::Replace))));
+    let _ = app.update(Message::StandardInstall(I::Pick(K::SheetTemplate, "sys:cad-mimari".into(), Choice(A::Replace))));
+}
+
 pub(crate) fn install_scenes() -> Vec<Scene> {
     vec![
         ("standart-kaynak-kur", install),
         ("standart-kaynak-kuruldu", |app| {
             install(app);
             let _ = app.update(Message::StandardInstall(crate::standard_install::Event::Install));
+        }),
+        ("standart-kitaplik-kur", install_library),
+        ("standart-kitaplik-kuruldu", |app| {
+            install_library(app);
+            let _ = app.update(Message::StandardInstall(crate::standard_install::Event::Install));
+            let _ = app.update(Message::DialogClosed);
         }),
     ]
 }
@@ -207,5 +234,57 @@ pub(crate) fn health_scenes() -> Vec<Scene> {
             let task = app.update(Message::CadInspection(crate::cad_inspection::Event::Repair));
             crate::files_testing::drive(app, task);
         }),
+    ]
+}
+
+/// docs/adr/1100 §5: a wall layer the bound office standard defines, a line with its own colour beside a plain one,
+/// two sheet viewports drawing the layer otherwise (one magenta, one 0.7 mm): Öznitelikler's “Bu değer nereden
+/// geliyor?” for the selected line.
+fn value_origin(app: &mut App, slot: u32) {
+    let package = serde_json::json!({"format": "kentos.drawing-standard", "version": 2, "id": "ofis-b",
+        "revision": "2026.2", "standard": {"name": "Ofis B", "layers": [{"name": "A-DUVAR", "color": "#0000ff",
+            "lineType": "continuous", "lineWeight": 0.5}]}, "resources": {}});
+    let style = serde_json::json!({"color": "#0000ff", "lineType": "continuous", "lineWeight": 0.5});
+    let sheet = |id: &str, over: serde_json::Value| serde_json::json!({"id": id, "name": id.to_uppercase(),
+        "page": {"paper": "a3", "orientation": "landscape", "size": {"width": 420000, "height": 297000},
+                 "margins": {"top": 10000, "right": 10000, "bottom": 10000, "left": 20000}},
+        "items": [{"id": format!("{id}-plan"), "name": "Plan",
+                   "frame": {"left": 30000, "top": 20000, "width": 300000, "height": 200000},
+                   "kind": {"type": "map", "view": {"type": "fixed", "scale": 50}, "layerOverrides": [over]}}]});
+    let snapshot = serde_json::json!({
+        "format": "kentos.document", "version": 2, "name": "Değerin kökeni",
+        "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
+            "plotScale": 50.0, "workspace": "cad", "standardDocs": [{"text": package.to_string()}]},
+        "origin": {"x": 0.0, "y": 0.0},
+        "layers": [{"id": "duvar", "name": "A-DUVAR", "type": "layer", "visible": true, "locked": false,
+                    "expanded": true, "style": style, "children": []}],
+        "activeLayer": "duvar",
+        "entities": [
+            {"kind": "line", "id": 1, "layerId": "duvar", "attrs": {}, "color": "#00ff00",
+             "a": {"x": 0.0, "y": 0.0}, "b": {"x": 8.0, "y": 0.0}},
+            {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0.0, "y": 3.0}, "b": {"x": 8.0, "y": 3.0}},
+            {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "color": "#00ff00",
+             "a": {"x": 0.0, "y": 6.0}, "b": {"x": 8.0, "y": 6.0}}],
+        "uids": ["0192f5a1-4444-7000-8000-000000000001", "0192f5a1-4444-7000-8000-000000000002",
+                 "0192f5a1-4444-7000-8000-000000000003"],
+        "styles": {"items": [], "categories": []},
+        "sheets": {"book": {"schema": "kentos.sheet/1", "sheets": [
+            sheet("a-101", serde_json::json!({"layer": "duvar", "color": "#ff00ff"})),
+            sheet("a-102", serde_json::json!({"layer": "duvar", "lineWeight": 700}))], "masters": [], "assets": []},
+            "pictures": []}
+    });
+    let doc = Document::from_v2(serde_json::from_value(snapshot).expect("the drawing"), None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::make_cad(app);
+    crate::elevation_scenes::select(app, &[kentos_domain::Slot(slot)]);
+    crate::elevation_scenes::panel_room(app);
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("geometry")));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("modelAppearance")));
+}
+
+pub(crate) fn origin_scenes() -> Vec<Scene> {
+    vec![
+        ("deger-kokeni-katman", |app| value_origin(app, 2)),
+        ("deger-kokeni-nesne", |app| value_origin(app, 1)),
     ]
 }

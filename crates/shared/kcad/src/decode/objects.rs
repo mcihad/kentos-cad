@@ -358,6 +358,8 @@ pub(super) struct Features {
     pub(super) volume_grid: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
+    /// Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
+    pub(super) approved_sheet_templates: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
     /// Schema 137 (docs/adr/0770): constraints naming a wall's line or a jamb.
@@ -619,6 +621,7 @@ impl Features {
             slope_transitions: schema >= crate::SCHEMA_WITH_SLOPE_TRANSITIONS,
             volume_grid: schema >= crate::SCHEMA_WITH_VOLUME_GRID,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
+            approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             arc_edge_bonds: schema >= crate::SCHEMA_WITH_ARC_EDGE_BONDS,

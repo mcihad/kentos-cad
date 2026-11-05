@@ -1357,7 +1357,8 @@ pub const CAD_STANDARDS_INSTALL_VERSION: u32 = 1;
 /// The undo step's name.
 pub const STANDARDS_INSTALL_STEP: &str = "Standart kaynaklarını kur";
 
-/// A kind of named resource a bound office standard carries (docs/adr/1002 §1).
+/// A kind of named resource a bound office standard carries (docs/adr/1002 §1); a block is a library publication's
+/// reference and a sheet template an approved template revision (docs/adr/1100 §2–§3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1369,6 +1370,8 @@ pub enum StandardResourceKind {
     TextStyle,
     DimensionStyle,
     LeaderStyle,
+    Block,
+    SheetTemplate,
 }
 
 /// What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and
@@ -1404,8 +1407,10 @@ pub struct StandardInstallChoice {
 }
 
 /// Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the
-/// choices. Refusals, in order: `no_standard`, `invalid_standard`, `standard_resource_not_found`,
-/// `invalid_install_choice`, `duplicate_name`, `invalid_revision`, `revision_conflict`.
+/// choices; a block reference is read from the first block library that holds its publication, a sheet template
+/// revision is recorded as approved (docs/adr/1100). Refusals, in order: `no_standard`, `invalid_standard`,
+/// `standard_resource_not_found`, `invalid_install_choice`, `duplicate_name`, `invalid_revision`,
+/// `revision_conflict`, `block_refused`.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1430,16 +1435,28 @@ pub struct StandardsInstall {
 pub struct StandardInstallRow {
     pub kind: StandardResourceKind,
     pub name: String,
-    /// `missing`, `same` or `differs`, against the drawing's resource of that name.
+    /// `missing`, `same` or `differs`, against the drawing's resource of that name; `unavailable` when no library
+    /// KentOS reads holds the block publication or template revision the standard names (kept, reported).
     pub status: String,
     pub action: StandardInstallAction,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub new_name: Option<String>,
-    /// The differing appearance fields (`differs` only).
+    /// The differing appearance fields (`differs`); for `unavailable`, what the nearest library entry differs in
+    /// (`release`, `units`, `revision`), none when no library has the type or template at all.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub fields: Vec<String>,
+    /// Blocks and sheet templates: the library the definition is read from (`kentos-ofis`, `sistem`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub library: Option<String>,
+    /// Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet
+    /// templates: the sheets made from that template, which are never changed.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub uses: u32,
     /// The standard the resource comes from and its office revision.
     pub source: StandardOrigin,
 }
@@ -1461,6 +1478,10 @@ pub struct StandardsInstalled {
     pub renamed: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub kept: u32,
+    /// The references no readable library holds (each also counted in `kept`).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub unavailable: u32,
     #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]
     pub revision: String,
 }
+

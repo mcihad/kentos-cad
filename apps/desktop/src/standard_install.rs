@@ -1,7 +1,11 @@
 //! Standart kaynaklarını kur (docs/adr/1002 §5): the bound office standards' line types, hatch patterns and text,
 //! dimension and leader styles in the kit's data table, each with its state against the drawing and the actions its
 //! state allows. The table is `cad.standards.install`'s plan for the choices made; Kur runs the command (one undo
-//! step). A differing resource is kept unless the user picks Değiştir or Yeni adla.
+//! step). A differing resource is kept unless the user picks Değiştir or Yeni adla. Blocks come from the libraries
+//! KentOS reads by their publication and sheet templates are recorded as the approved revision (docs/adr/1100 §6):
+//! the Kitaplık column names where each was found, a reference no library holds is a warning row (Kitaplıkta yok,
+//! with what the nearest entry differs in) and Kullanım says how many inserts follow a replaced block or how many
+//! sheets were made from a template (they are never changed).
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -47,6 +51,8 @@ fn kind_words(k: Kind) -> &'static str {
         Kind::TextStyle => "Yazı stili",
         Kind::DimensionStyle => "Ölçü stili",
         Kind::LeaderStyle => "Kılavuz stili",
+        Kind::Block => "Blok",
+        Kind::SheetTemplate => "Pafta şablonu",
     }
 }
 
@@ -54,15 +60,26 @@ fn status_words(s: &str) -> &'static str {
     match s {
         "missing" => "Çizimde yok",
         "same" => "Aynı",
+        "unavailable" => "Kitaplıkta yok",
         _ => "Farklı",
     }
 }
 
-fn allowed(status: &str) -> &'static [Action] {
-    match status {
-        "missing" => &[Action::Add, Action::KeepLocal],
-        "same" => &[Action::KeepLocal],
+fn allowed(kind: Kind, status: &str) -> &'static [Action] {
+    match (kind, status) {
+        (_, "missing") => &[Action::Add, Action::KeepLocal],
+        (_, "same" | "unavailable") => &[Action::KeepLocal],
+        (Kind::SheetTemplate, _) => &[Action::KeepLocal, Action::Replace],
         _ => &[Action::KeepLocal, Action::Replace, Action::RenameIncoming],
+    }
+}
+
+/// How many use the row's resource, as the Kullanım column says it.
+fn uses_words(kind: Kind, uses: u32) -> String {
+    match (kind, uses) {
+        (_, 0) => "—".into(),
+        (Kind::SheetTemplate, n) => format!("{n} pafta"),
+        (_, n) => format!("{n} yerleştirme"),
     }
 }
 
@@ -151,8 +168,16 @@ impl App {
                     self.say(
                         Level::Success,
                         format!(
-                            "Standart kaynakları kuruldu: {} eklendi, {} değiştirildi, {} yeni adla eklendi; {} çizimdeki olarak kaldı. Geri almak için Geri al.",
-                            done.added, done.replaced, done.renamed, done.kept
+                            "Standart kaynakları kuruldu: {} eklendi, {} değiştirildi, {} yeni adla eklendi; {} çizimdeki olarak kaldı{}. Geri almak için Geri al.",
+                            done.added,
+                            done.replaced,
+                            done.renamed,
+                            done.kept,
+                            if done.unavailable > 0 {
+                                format!(", {} başvuru hiçbir kitaplıkta bulunamadı", done.unavailable)
+                            } else {
+                                String::new()
+                            }
                         ),
                     );
                     self.standard_install = Some(Window::default());
@@ -168,7 +193,7 @@ impl App {
         };
         let plan = self.install_plan();
         let mut body = column![label::body(
-            "Bağlı ofis standartlarındaki kaynaklar çizimdekilerle karşılaştırıldı. Eksik olan eklenir; aynı adlı farklı kaynak siz seçmedikçe değişmez. Değiştir çizimdeki adı ve kimliği korur, onu kullanan nesneler izler. Hiçbir kaynak silinmez."
+            "Bağlı ofis standartlarındaki kaynaklar çizimdekilerle karşılaştırıldı. Eksik olan eklenir; aynı adlı farklı kaynak siz seçmedikçe değişmez. Değiştir çizimdeki adı ve kimliği korur, onu kullanan nesneler ve yerleştirmeler izler. Bloklar okunabilen kitaplıklardan yayın kimliğiyle alınır; pafta şablonu onaylı sürüm olarak kaydedilir, var olan paftalar değişmez. Hiçbir kaynak silinmez."
         )]
         .spacing(10);
         let mut changes = 0;
@@ -177,50 +202,60 @@ impl App {
             Ok(p) => {
                 changes = p.added + p.replaced + p.renamed;
                 body = body.push(label::caption(format!(
-                    "{} eklenecek · {} değiştirilecek · {} yeni adla · {} korunacak",
-                    p.added, p.replaced, p.renamed, p.kept
+                    "{} eklenecek · {} değiştirilecek · {} yeni adla · {} korunacak{}",
+                    p.added,
+                    p.replaced,
+                    p.renamed,
+                    p.kept,
+                    if p.unavailable > 0 { format!(" · {} kitaplıkta yok", p.unavailable) } else { String::new() }
                 )));
                 let columns = [
                     table::Column::new("Tür").width(96.0),
                     table::Column::new("Ad").width(120.0),
-                    table::Column::new("Durum").width(88.0),
-                    table::Column::new("İşlem").width(250.0),
-                    table::Column::new("Kaynak").width(110.0),
+                    table::Column::new("Durum").width(128.0),
+                    table::Column::new("İşlem").width(216.0),
+                    table::Column::new("Kitaplık").width(88.0),
+                    table::Column::new("Kullanım").width(96.0),
+                    table::Column::new("Kaynak").width(124.0),
                 ];
                 let rows: Vec<table::Row<'_, Message>> = p
                     .rows
                     .iter()
                     .map(|r| {
                         let (kind, name) = (r.kind, r.name.clone());
-                        let choices = allowed(&r.status).iter().map(|a| Choice(*a));
+                        let choices = allowed(r.kind, &r.status).iter().map(|a| Choice(*a));
                         let action: Element<'_, Message> = if r.status == "same" {
                             label::caption("Değişiklik yok").into()
+                        } else if r.status == "unavailable" {
+                            label::caption("Kurulamaz; çizimdeki kalır").into()
                         } else {
                             Segmented::new(choices, Choice(r.action), move |c| msg(Event::Pick(kind, name.clone(), c)))
                                 .compact()
                                 .into()
                         };
-                        let status = if r.status == "differs" && !r.fields.is_empty() {
+                        let status = if matches!(r.status.as_str(), "differs" | "unavailable") && !r.fields.is_empty() {
                             format!("{} ({})", status_words(&r.status), r.fields.join(", "))
                         } else {
                             status_words(&r.status).to_owned()
                         };
-                        let cells: [Element<'_, Message>; 5] = [
+                        let cells: [Element<'_, Message>; 7] = [
                             label::caption(kind_words(r.kind)).into(),
                             label::caption(r.name.clone()).into(),
-                            if r.status == "differs" {
+                            if matches!(r.status.as_str(), "differs" | "unavailable") {
                                 label::caption(status).style(style::text::warning).into()
                             } else {
                                 label::caption(status).into()
                             },
                             action,
+                            label::caption(r.library.clone().unwrap_or_else(|| "—".into())).into(),
+                            label::caption(uses_words(r.kind, r.uses)).into(),
                             label::caption(format!("{} · {}", r.source.id, r.source.revision)).into(),
                         ];
                         table::Row::new(cells)
                     })
                     .collect();
                 body = body.push(
-                    container(Table::new(columns).extend(rows).min_width(664.0).height(250.0))
+                    container(Table::new(columns).extend(rows).min_width(868.0).height(280.0))
                         .width(Fill)
                         .style(style::container::field_box),
                 );
@@ -246,7 +281,7 @@ impl App {
             .scroll(body)
             .action(words::secondary("Kapat", Some(Message::DialogClosed)))
             .action(words::primary("Kur", (plan.is_ok() && changes > 0).then(|| msg(Event::Install))))
-            .width(720.0)
+            .width(920.0)
             .modal(Message::DialogClosed)
     }
 }

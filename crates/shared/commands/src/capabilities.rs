@@ -5287,6 +5287,7 @@ const ENTRIES: &[Entry] = &[
             "duplicate_name",
             "invalid_revision",
             "revision_conflict",
+            "block_refused",
         ]],
         warnings: &[],
         targets: none,

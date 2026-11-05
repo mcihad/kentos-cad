@@ -18,11 +18,12 @@ use crate::blocks_define::{block_rules, name};
 use crate::checks::{self, Stop, error};
 use crate::codes;
 
-/// The block libraries KentOS gives (docs/adr/0318 §4), by name: its own drawings, free to give out.
-pub const BUILTIN_LIBRARIES: &[(&str, &str)] = &[(
-    "kentos-temel",
-    include_str!("../../../../catalog/v1/blocks/kentos-temel.kblok"),
-)];
+/// The block libraries KentOS gives (docs/adr/0318 §4), by name: its own drawings, free to give out. `kentos-ofis`
+/// carries publication identities an office standard's block references resolve against (docs/adr/1100 §2).
+pub const BUILTIN_LIBRARIES: &[(&str, &str)] = &[
+    ("kentos-temel", include_str!("../../../../catalog/v1/blocks/kentos-temel.kblok")),
+    ("kentos-ofis", include_str!("../../../../catalog/v1/blocks/kentos-ofis.kblok")),
+];
 
 /// The undo steps' names.
 pub const DUPLICATE: &str = "Blok kopyala";

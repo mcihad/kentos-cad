@@ -799,6 +799,9 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.states"
             | "cad.layers.translate"
             | "cad.standards.apply"
+            // Its replace writes a library block, a line type or a style over the drawing's of that name
+            // (docs/adr/1002 §2, 1100 §2).
+            | "cad.standards.install"
             | "cad.linetypes.edit"
             // Its remove and replace take a project pattern away (docs/adr/0331 §1).
             | "cad.hatchpatterns.edit"

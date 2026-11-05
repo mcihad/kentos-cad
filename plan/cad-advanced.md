@@ -2073,6 +2073,23 @@ geri alma işlemi). Çizim standardı penceresinde **Kaynakları kur…**. Bağ�
 geçti; gerçek pencerede önce/sonra görüntülendi. Blok/pafta şablonu kurulumu, tablo stili, ofis paleti yayını, tam
 görünüş kökeni ve iki profilli kabul senaryosu açık; madde `[~]`.
 
+**Blok kitaplığı, onaylı pafta şablonu, değerin kökeni ve iki ofis profili (6 Kasım 2026, [ADR 1100](../docs/adr/1100-office-standard-blocks-templates-and-value-origin.md)):**
+`cad.standards.install` artık standardın blok başvurularını yayın kimliğiyle (aile, tip, yayın, isteğe bağlı birim)
+okunabilen kitaplıklardan çözer (bugün `kentos-temel` ve yayın kimlikli yeni `kentos-ofis`; proje/bulut kitaplığı
+`Libraries::with_blocks` ile önüne takılır) ve diğer kaynaklarla aynı eksik/aynı/farklı durumu ve
+ekle/koru/değiştir/yeni adla seçimini verir. Değiştir çizimdeki ad ve kimliği korur, model ve tanım içindeki
+yerleştirmeler kimlikle izler; hiçbir tanım silinmez. Hiçbir kitaplığın tutmadığı başvuru `unavailable` bulgusudur
+(yakın girdinin farkı: `release`, `units`), sessizce atlanmaz. Onaylı pafta şablonu sürümü çizime kaydedilir
+(`approvedSheetTemplates`, KCAD şema 183, dalda geçici numara); var olan paftalar değişmez, satır kaç paftanın o
+şablondan yapıldığını söyler. Kurulum tek Undo adımıdır. Öznitelikler panelinde **Bu değer nereden geliyor?** renk,
+çizgi tipi, kalınlık ve yazı stilinin nesne/katman/blok/görünüm penceresi kökenini, bağlı standardın aynı ya da farklı
+tanımını ve sıfırlamanın kapsamını (bu nesne, katmandaki kendi değerli nesneler, bütün pencereler) yazmadan gösterir.
+Bağımsız başvurudan 24 ortak durum ilk koşuda geçti; iki ofis profili kabul testi (aynı adlı farklı blok ve çizgi
+tipi, önizleme = sonuç, nesne rengi ve iki pencerenin farklı geçersiz kılması korunur, tek Undo, yeni ve yeniden
+açılmış projede aynı sonuç) ile MCP testi geçti; gerçek pencereler görüntülendi (repo dışında). Yayımlanan ofis araç
+paleti bu dilimde yok: paket alanı, komut kaydına bağlı araç tarifi ve bağlılık kararı gerekir (ADR 1100 §4); tablo
+stili, blok içi parça ile plot profilinin görünüş kökeni de açık olduğundan madde `[~]` kalır.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [~]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

@@ -730,7 +730,11 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                     report.undo_parts.push(ProjectPart::Sheets);
                 }
             }
-            Op::TemplateSettings { .. } | Op::ReviewNotes { .. } | Op::PatternTables { .. } | Op::StyleTables(_) => {
+            Op::TemplateSettings { .. }
+            | Op::ReviewNotes { .. }
+            | Op::PatternTables { .. }
+            | Op::ApprovedSheetTemplates { .. }
+            | Op::StyleTables(_) => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);
                 }

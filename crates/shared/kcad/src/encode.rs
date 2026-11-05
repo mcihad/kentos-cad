@@ -516,6 +516,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.profile_files.is_empty())
             + usize::from(!s.standard_docs.is_empty())
             + usize::from(!s.review_notes.is_empty())
+            + usize::from(!s.approved_sheet_templates.is_empty())
             + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
@@ -951,6 +952,18 @@ impl<'d> Encoder<'d> {
                     ));
                 }
                 e.crs_definition(d)
+            })?;
+        }
+        // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, as their JSON (the longest key, last).
+        if !s.approved_sheet_templates.is_empty() {
+            self.key("approvedSheetTemplates");
+            self.at(Seg::Name("approvedSheetTemplates"), |e| {
+                if let Some(problem) = kentos_contracts::approved_sheet_templates_problem(&s.approved_sheet_templates) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.approved_sheet_templates)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         self.close();
@@ -2135,6 +2148,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
+    if !doc.settings.approved_sheet_templates.is_empty() {
+        return crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES;
+    }
     // Schema 182 (docs/adr/1030): a table's parts, a cell of several lines or a data extraction table.
     let extracted = |e: &Entity| {
         matches!(e, Entity::Table(t)

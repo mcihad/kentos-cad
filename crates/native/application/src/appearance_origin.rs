@@ -1,0 +1,419 @@
+//! “Bu değer nereden geliyor?” (docs/adr/1100 §5; plan/cad-advanced.md CAD-ADV-12): for one drawn object, where its
+//! colour, line type, line weight and text style come from — the object's own value, its layer, the block that draws
+//! it (BYBLOCK parts), a sheet viewport's layer override — and whether the bound office standard defines that layer or
+//! style the same way. Each part also says what resetting its override would give and to how many objects or
+//! viewports the reset reaches, so the scope is seen before anything is written. Read only: the resets themselves are
+//! the existing commands (the object's look by `cad.entities.edit`, a viewport's overrides by the sheet's viewport
+//! edit). The resolution is `kentos_contracts::resolve_look`'s and the sheet's own `map_layers`, the renderer's rule.
+
+use kentos_commands::{CommandResult, Entity, LayerNode, LayerStyle, StandardsResolved};
+use kentos_domain::{Document, Slot};
+use serde::Serialize;
+
+/// The level a value comes from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Origin {
+    /// The object's own value (an override of its layer's).
+    Object,
+    /// Its layer's (ByLayer).
+    Layer,
+    /// The insert's, for a block's part drawn ByBlock.
+    Block,
+    /// A sheet viewport's layer override, in that viewport only.
+    Viewport,
+    /// The bound office standard's definition of the layer or style.
+    Standard,
+    /// Nothing says it: the drawing's default.
+    Default,
+}
+
+impl Origin {
+    pub fn label(self) -> &'static str {
+        match self {
+            Origin::Object => "Nesne",
+            Origin::Layer => "Katman",
+            Origin::Block => "Blok",
+            Origin::Viewport => "Görünüm penceresi",
+            Origin::Standard => "Standart",
+            Origin::Default => "Varsayılan",
+        }
+    }
+}
+
+/// One level of a value's chain: where, what it says there and a note (the layer's name, the standard's revision).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Link {
+    pub origin: Origin,
+    pub value: String,
+    pub note: String,
+    /// The level whose value is drawn in the model.
+    pub wins: bool,
+}
+
+/// What a reset would give and how far it reaches.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Reset {
+    pub scope: String,
+    /// The value afterwards.
+    pub after: String,
+    /// How many objects (or viewports) the reset changes.
+    pub count: u32,
+}
+
+/// One part of the look explained.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Explained {
+    /// `color`, `lineType`, `lineWeight`, `textStyle`.
+    pub part: &'static str,
+    /// Its Turkish name.
+    pub label: &'static str,
+    /// The value the model draws.
+    pub value: String,
+    pub origin: Origin,
+    pub chain: Vec<Link>,
+    /// The viewports that draw it otherwise: `Pafta · pencere: değer`.
+    pub viewports: Vec<String>,
+    pub resets: Vec<Reset>,
+}
+
+fn weight(w: f64) -> String {
+    format!("{} mm", (w * 1000.0).round() / 1000.0)
+}
+
+fn line_type(style: &LayerStyle) -> String {
+    style
+        .line_pattern
+        .clone()
+        .unwrap_or_else(|| style.line_type.label().to_owned())
+}
+
+/// The sheet viewports (map items) whose layer list or overrides draw `layer` otherwise: each its place's words and
+/// the layer style it draws with there.
+fn viewport_styles(doc: &Document, node: &LayerNode) -> Vec<(String, LayerStyle)> {
+    let mut out = Vec::new();
+    let Some(sheets) = doc.sheets() else {
+        return out;
+    };
+    let Ok((book, _)) = kentos_sheet::project::read_project_sheets(sheets) else {
+        return out;
+    };
+    for sheet in &book.sheets {
+        for item in &sheet.items {
+            let kentos_sheet::kinds::ItemKind::Map(map) = &item.kind else {
+                continue;
+            };
+            let drawn = kentos_sheet::layers::map_layers(
+                doc.layers().nodes(),
+                &doc.settings().layer_states,
+                &map.layers,
+                &map.layer_overrides,
+            );
+            if let Some(n) = drawn.iter().find(|n| n.id == node.id)
+                && n.style != node.style
+            {
+                out.push((format!("{} · {}", sheet.name, item.name), n.style.clone()));
+            }
+        }
+    }
+    out
+}
+
+/// The standard's definition of the layer, with its source; none when no bound standard names it.
+fn standard_layer<'a>(
+    r: Option<&'a StandardsResolved>,
+    name: &str,
+) -> Option<(&'a kentos_commands::StandardLayer, String)> {
+    let r = r?;
+    let key = kentos_commands::fold_name(name.trim());
+    let layer = r
+        .standard
+        .layers
+        .iter()
+        .find(|l| kentos_commands::fold_name(l.name.trim()) == key)?;
+    let origin = r
+        .provenance
+        .layers
+        .get(&layer.name)
+        .unwrap_or(&r.provenance.rules);
+    Some((layer, format!("{} {}", origin.id, origin.revision)))
+}
+
+struct Part<'a> {
+    part: &'static str,
+    label: &'static str,
+    own: Option<String>,
+    layer: String,
+    viewport: &'a dyn Fn(&LayerStyle) -> String,
+    standard: Option<String>,
+    /// The objects on the layer with their own value.
+    owners: u32,
+}
+
+fn explain_part(
+    p: Part<'_>,
+    node: &LayerNode,
+    std_note: Option<&str>,
+    vps: &[(String, LayerStyle)],
+    is_insert_part: bool,
+) -> Explained {
+    let origin = if p.own.is_some() {
+        Origin::Object
+    } else {
+        Origin::Layer
+    };
+    let value = p.own.clone().unwrap_or_else(|| p.layer.clone());
+    let mut chain = vec![
+        Link {
+            origin: Origin::Object,
+            value: p.own.clone().unwrap_or_else(|| "—".into()),
+            note: if p.own.is_some() {
+                "nesnenin kendi değeri".into()
+            } else {
+                "katmana göre".into()
+            },
+            wins: origin == Origin::Object,
+        },
+        Link {
+            origin: Origin::Layer,
+            value: p.layer.clone(),
+            note: node.name.clone(),
+            wins: origin == Origin::Layer,
+        },
+    ];
+    if let (Some(s), Some(note)) = (&p.standard, std_note) {
+        let agrees = *s == p.layer;
+        chain.push(Link {
+            origin: Origin::Standard,
+            value: s.clone(),
+            note: format!(
+                "{note} · {}",
+                if agrees {
+                    "aynı"
+                } else {
+                    "farklı; Standardı uygula düzeltir"
+                }
+            ),
+            wins: false,
+        });
+    }
+    if is_insert_part {
+        chain.push(Link {
+            origin: Origin::Block,
+            value: value.clone(),
+            note: "ByBlock parçalar bunu alır".into(),
+            wins: false,
+        });
+    }
+    let viewports: Vec<String> = vps
+        .iter()
+        .filter_map(|(at, style)| {
+            let there = (p.viewport)(style);
+            (p.own.is_none() && there != p.layer).then(|| format!("{at}: {there}"))
+        })
+        .collect();
+    let mut resets = Vec::new();
+    if p.own.is_some() {
+        resets.push(Reset {
+            scope: "bu nesne".into(),
+            after: p.layer.clone(),
+            count: 1,
+        });
+        if p.owners > 1 {
+            resets.push(Reset {
+                scope: "katmanda kendi değerli nesneler".into(),
+                after: p.layer.clone(),
+                count: p.owners,
+            });
+        }
+    }
+    if !viewports.is_empty() {
+        resets.push(Reset {
+            scope: "bütün pencereler".into(),
+            after: p.layer.clone(),
+            count: u32::try_from(viewports.len()).unwrap_or(u32::MAX),
+        });
+    }
+    Explained {
+        part: p.part,
+        label: p.label,
+        value,
+        origin,
+        chain,
+        viewports,
+        resets,
+    }
+}
+
+/// The object's colour, line type, line weight and (for a text) text style explained; none for a slot without an
+/// object or whose layer is gone.
+pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
+    let Some(e) = doc.get(slot) else {
+        return Vec::new();
+    };
+    let base = e.base();
+    let Some(node) = doc.layers().get(&base.layer_id) else {
+        return Vec::new();
+    };
+    let resolved = match crate::standards::resolve_project(doc) {
+        CommandResult::Completed { output, .. } => Some(output),
+        _ => None,
+    };
+    let standard = standard_layer(resolved.as_ref(), &node.name);
+    let note = standard.as_ref().map(|(_, n)| n.as_str());
+    let vps = viewport_styles(doc, node);
+    let on_layer = |has: &dyn Fn(&Entity) -> bool| {
+        let n = doc
+            .entities()
+            .filter(|x| x.base().layer_id == base.layer_id && has(x))
+            .count();
+        u32::try_from(n).unwrap_or(u32::MAX)
+    };
+    let insert = matches!(e, Entity::Insert(_));
+    let mut out = vec![explain_part(
+        Part {
+            part: "color",
+            label: "Renk",
+            own: base.color.clone(),
+            layer: node.style.color.clone(),
+            viewport: &|s: &LayerStyle| s.color.clone(),
+            standard: standard.as_ref().map(|(l, _)| l.color.clone()),
+            owners: on_layer(&|x: &Entity| x.base().color.is_some()),
+        },
+        node,
+        note,
+        &vps,
+        insert,
+    )];
+    if e.draws_lines() || insert {
+        let own_type = base
+            .look
+            .line_pattern
+            .clone()
+            .or_else(|| base.look.line_type.map(|t| t.label().to_owned()));
+        out.push(explain_part(
+            Part {
+                part: "lineType",
+                label: "Çizgi tipi",
+                own: own_type,
+                layer: line_type(&node.style),
+                viewport: &line_type,
+                standard: standard
+                    .as_ref()
+                    .map(|(l, _)| l.line_type.label().to_owned()),
+                owners: on_layer(&|x: &Entity| {
+                    x.base().look.line_type.is_some() || x.base().look.line_pattern.is_some()
+                }),
+            },
+            node,
+            note,
+            &vps,
+            insert,
+        ));
+        out.push(explain_part(
+            Part {
+                part: "lineWeight",
+                label: "Kalınlık",
+                own: base.line_weight.map(weight),
+                layer: weight(node.style.line_weight),
+                viewport: &|s: &LayerStyle| weight(s.line_weight),
+                standard: standard.as_ref().map(|(l, _)| weight(l.line_weight)),
+                owners: on_layer(&|x: &Entity| x.base().line_weight.is_some()),
+            },
+            node,
+            note,
+            &vps,
+            insert,
+        ));
+    }
+    if let Entity::Text(t) = e {
+        out.push(text_style(doc, &t.face, resolved.as_ref()));
+    }
+    out
+}
+
+fn text_style(
+    doc: &Document,
+    face: &kentos_commands::TextFace,
+    r: Option<&StandardsResolved>,
+) -> Explained {
+    let styles = &doc.settings().text_styles;
+    let style = face
+        .text_style
+        .as_deref()
+        .and_then(|id| styles.iter().find(|s| s.id == id));
+    let name = style.map_or_else(
+        || kentos_commands::STANDARD_STYLE.to_owned(),
+        |s| s.name.clone(),
+    );
+    let origin = if style.is_some() {
+        Origin::Object
+    } else {
+        Origin::Default
+    };
+    let mut chain = vec![Link {
+        origin,
+        value: name.clone(),
+        note: if style.is_some() {
+            "nesnenin seçtiği stil".into()
+        } else {
+            "stil seçilmemiş: Standart".into()
+        },
+        wins: true,
+    }];
+    if let (Some(style), Some(r)) = (style, r) {
+        let key = style.name.trim().to_lowercase();
+        if let Some(def) = r
+            .resources
+            .text_style_definitions
+            .iter()
+            .find(|d| d.name.trim().to_lowercase() == key)
+        {
+            let fields = crate::standards::style_differences(
+                &crate::standards::resource_appearance(style),
+                &crate::standards::resource_appearance(def),
+            );
+            let o = r
+                .provenance
+                .text_style_definitions
+                .get(&def.name)
+                .unwrap_or(&r.provenance.rules);
+            chain.push(Link {
+                origin: Origin::Standard,
+                value: def.name.clone(),
+                note: if fields.is_empty() {
+                    format!("{} {} · aynı", o.id, o.revision)
+                } else {
+                    format!("{} {} · farklı: {}", o.id, o.revision, fields.join(", "))
+                },
+                wins: false,
+            });
+        }
+    }
+    let mut resets = Vec::new();
+    if !face.overrides.is_empty() {
+        chain.push(Link {
+            origin: Origin::Object,
+            value: face.overrides.join(", "),
+            note: "stilden elle ayrılan alanlar".into(),
+            wins: true,
+        });
+        resets.push(Reset {
+            scope: "bu yazının elle ayrılan alanları".into(),
+            after: name.clone(),
+            count: 1,
+        });
+    }
+    Explained {
+        part: "textStyle",
+        label: "Yazı stili",
+        value: name,
+        origin,
+        chain,
+        viewports: Vec::new(),
+        resets,
+    }
+}
