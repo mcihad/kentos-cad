@@ -418,6 +418,9 @@ impl App {
                 if f.code.starts_with("t_junction_") {
                     return self.repair_junction(&f);
                 }
+                if f.code == "angle_deviation" || f.code == "block_definition_duplicate" {
+                    return self.repair_other(&f);
+                }
                 if f.group == InspectionGroup::Hatches {
                     self.memory.hatch_edit_mode = 2;
                     self.memory.hatch_assoc = true;
@@ -553,6 +556,8 @@ impl App {
                     button(label::body("Kaynağa git")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
                         .on_press_maybe((current && finding.group == InspectionGroup::Annotations && finding.uids.len() > 1).then(|| msg(Event::Sources))),
                     button(label::body(if finding.code.starts_with("t_junction_") { "Ucu kenara getir" }
+                        else if finding.code == "angle_deviation" { "Eksene döndür" }
+                        else if finding.code == "block_definition_duplicate" { "Tek tanımda birleştir" }
                         else if finding.group == InspectionGroup::Health { "Elle inceleyin" }
                         else if finding.group == InspectionGroup::Hatches { "Taramayı düzenle…" }
                         else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" }
@@ -563,7 +568,7 @@ impl App {
                         else if finding.code.starts_with("text_font_") { "Yazı stilini inceleyin" }
                         else if finding.code == "text_layout_unsupported" { "Yazı biçimini inceleyin" }
                         else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
-                        (current && (finding.code.starts_with("t_junction_") || (finding.group != InspectionGroup::Health && finding.group != InspectionGroup::Boundaries)) && finding.code != "dimension_override"
+                        (current && (finding.code.starts_with("t_junction_") || matches!(finding.code.as_str(), "angle_deviation" | "block_definition_duplicate") || (finding.group != InspectionGroup::Health && finding.group != InspectionGroup::Boundaries)) && finding.code != "dimension_override"
                             && !finding.code.starts_with("block_") && !finding.code.starts_with("table_field_source_") && finding.code != "table_field_unverified"
                             && !finding.code.starts_with("text_font_") && !matches!(finding.code.as_str(),"text_field_unverified"|"text_layout_unsupported"))
                             .then(|| msg(Event::Repair))
@@ -724,6 +729,9 @@ impl App {
                 end: if at_start { kentos_commands::LineEnd::Start } else { kentos_commands::LineEnd::End },
                 target: target.clone(),
             }],
+            angles: Vec::new(),
+            blocks: Vec::new(),
+            max_angle: None,
             max_gap: Some(self.cad_inspection.gap.max(f.distance.unwrap_or(0.0) * (1.0 + 1e-9))),
             expected_revision: Some(doc.model.revision().to_string()),
         };
@@ -737,6 +745,59 @@ impl App {
                 kentos_interaction::Level::Success,
                 format!("Çizginin ucu {} kaydırılarak kenara getirildi. Geri almak için Geri al.", f.length(done.max_moved)),
             );
+            return self.cad_inspection_event(Event::Run);
+        }
+        Task::none()
+    }
+
+    /// Onar's other fixes (docs/adr/1012): an edge off its axis turned onto it about its start, its length kept; the
+    /// definitions of one content merged into the first of them. The command refuses what it may not change and the
+    /// refusal is said.
+    fn repair_other(&mut self, f: &kentos_commands::InspectionFinding) -> Task<Message> {
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let mut input = kentos_commands::DrawingRepair {
+            fixes: Vec::new(),
+            angles: Vec::new(),
+            blocks: Vec::new(),
+            max_angle: None,
+            max_gap: None,
+            expected_revision: Some(doc.model.revision().to_string()),
+        };
+        if f.code == "angle_deviation" {
+            let Some(uid) = f.uids.first() else {
+                return Task::none();
+            };
+            input.angles.push(kentos_commands::AngleFix { uid: uid.clone(), pivot: kentos_commands::LineEnd::Start });
+        } else {
+            // The finding names its definitions in its words; the group is found again from the drawing.
+            let Some(names) = kentos_native_application::drawing_inspect::duplicate_blocks(&doc.model)
+                .into_iter()
+                .find(|names| f.message == format!("Aynı içerikli blok tanımları: {}.", names.join(", ")))
+            else {
+                return Task::none();
+            };
+            input.blocks.push(kentos_commands::BlockMerge { keep: names[0].clone(), merge: names[1..].to_vec() });
+        }
+        let result = kentos_native_application::drawing_repair::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        if let Some(done) = self.answered(result) {
+            let words = if let Some(s) = done.straightened.first() {
+                format!("Kenar {:.4}° döndürülerek eksene getirildi; ucu {} kaydı. Geri almak için Geri al.", s.deviation, self.format().length(s.moved))
+            } else if let Some(m) = done.merged.first() {
+                format!(
+                    "{} tanımı “{}” tanımında birleşti; {} yerleştirme ona bağlandı. Geri almak için Geri al.",
+                    m.merged.len(),
+                    m.keep,
+                    m.inserts
+                )
+            } else {
+                "Onarıldı.".to_owned()
+            };
+            self.say(kentos_interaction::Level::Success, words);
             return self.cad_inspection_event(Event::Run);
         }
         Task::none()

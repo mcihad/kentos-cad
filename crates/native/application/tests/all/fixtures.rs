@@ -509,6 +509,7 @@ impl Input for kentos_commands::DrawingRepair {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "maxGap" => self.max_gap.as_mut(),
+            "maxAngle" => self.max_angle.as_mut(),
             _ => None,
         }
     }

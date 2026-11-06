@@ -7368,7 +7368,7 @@
       "id": "cad.drawing.repair",
       "version": 1,
       "title": "Çizimi onar",
-      "summary": "İncelenmiş T birleşimi bulgularını (cad.drawing.inspect, checks: health) düzeltir: çizginin ucunu kendi doğrultusunda hedefin en yakın doğru kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar. Tek geri alma adımı “Onar”; her ucun kayması ve çizginin önceki/sonraki boyu raporlanır. Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured): ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi reddeder. Retler: invalid_input, invalid_uid, invalid_gap, invalid_revision, revision_conflict, entity_not_found, repair_unsupported, layer_locked, repair_refused_measured, repair_target_missing.",
+      "summary": "İncelenmiş sağlık bulgularını (cad.drawing.inspect, checks: health) bu sırayla düzeltir: T birleşiminde çizginin ucunu kendi doğrultusunda hedefin en yakın doğru kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar (fixes); eksenden en çok maxAngle (derece, varsayılan 0,5) sapan çizgiyi pivot ucu çevresinde en yakın eksene, boyunu koruyarak döndürür (angles); aynı içerikli blok tanımlarını tutulan tanımda birleştirir: çizimdeki ve öbür tanımların içindeki yerleştirmeleri ona bağlar, birleşenleri siler (blocks). Tek geri alma adımı “Onar”; kaymalar, sapmalar, bağlanan yerleştirmeler ve uygulanan tarif (sıra, eşikler, değişen nesne ve silinen tanım sayısı) raporlanır. Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured): ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi reddeder. İçeriği farklı tanımlar birleşmez (repair_blocks_differ); dış başvuru ve ilişkili dizinin bloğu birleşmez (repair_unsupported). Retler: invalid_input, invalid_uid, invalid_gap, invalid_angle_tolerance, invalid_revision, revision_conflict, entity_not_found, unknown_block, repair_unsupported, layer_locked, repair_refused_measured, repair_target_missing, repair_angle_too_large, repair_blocks_differ.",
       "aliases": [
         "onar"
       ],
@@ -7386,8 +7386,22 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.drawing.repair` v1. Refusals, in order: `invalid_input`, `invalid_uid`, `invalid_gap`,\n`invalid_revision`, `revision_conflict`, `entity_not_found`, `repair_unsupported`, `layer_locked`,\n`repair_refused_measured`, `repair_target_missing`.",
+        "description": "Input of `cad.drawing.repair` v1. Refusals, in order: `invalid_input`, `invalid_uid`, `invalid_gap`,\n`invalid_angle_tolerance`, `invalid_revision`, `revision_conflict`, `entity_not_found`, `unknown_block`,\n`repair_unsupported`, `layer_locked`, `repair_refused_measured`, `repair_target_missing`,\n`repair_angle_too_large`, `repair_blocks_differ`. Fixes are applied in that order: junctions, angles, blocks.",
         "properties": {
+          "angles": {
+            "description": "Angle fixes, a line once.",
+            "items": {
+              "$ref": "#/$defs/AngleFix"
+            },
+            "type": "array"
+          },
+          "blocks": {
+            "description": "Block definition merges, a definition once.",
+            "items": {
+              "$ref": "#/$defs/BlockMerge"
+            },
+            "type": "array"
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -7396,11 +7410,20 @@
             ]
           },
           "fixes": {
-            "description": "1 to 1000 fixes, a line end once.",
+            "description": "T-junction fixes, a line end once. With `angles` and `blocks`, 1 to 1000 fixes in all.",
             "items": {
               "$ref": "#/$defs/JunctionFix"
             },
             "type": "array"
+          },
+          "maxAngle": {
+            "description": "The most a line may be turned, degrees, above 0 and at most 10; absent: 0.5 (the health check's).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "deg"
           },
           "maxGap": {
             "description": "The most an end may move, metres, above 0 and at most 1000; absent: 0.01.",
@@ -7412,9 +7435,6 @@
             "x-unit": "length"
           }
         },
-        "required": [
-          "fixes"
-        ],
         "title": "DrawingRepair",
         "type": "object"
       },
@@ -7434,13 +7454,29 @@
             "type": "number",
             "x-unit": "length"
           },
+          "merged": {
+            "items": {
+              "$ref": "#/$defs/BlocksMerged"
+            },
+            "type": "array"
+          },
+          "recipe": {
+            "$ref": "#/$defs/RepairRecipe"
+          },
           "revision": {
             "description": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "straightened": {
+            "items": {
+              "$ref": "#/$defs/EdgeStraightened"
+            },
+            "type": "array"
           }
         },
         "required": [
           "fixed",
+          "recipe",
           "maxMoved",
           "revision"
         ],
@@ -7463,13 +7499,29 @@
             "type": "number",
             "x-unit": "length"
           },
+          "merged": {
+            "items": {
+              "$ref": "#/$defs/BlocksMerged"
+            },
+            "type": "array"
+          },
+          "recipe": {
+            "$ref": "#/$defs/RepairRecipe"
+          },
           "revision": {
             "description": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "straightened": {
+            "items": {
+              "$ref": "#/$defs/EdgeStraightened"
+            },
+            "type": "array"
           }
         },
         "required": [
           "fixed",
+          "recipe",
           "maxMoved",
           "revision"
         ],
@@ -7481,13 +7533,17 @@
           "invalid_input",
           "invalid_uid",
           "invalid_gap",
+          "invalid_angle_tolerance",
           "invalid_revision",
           "revision_conflict",
           "entity_not_found",
+          "unknown_block",
           "repair_unsupported",
           "layer_locked",
           "repair_refused_measured",
-          "repair_target_missing"
+          "repair_target_missing",
+          "repair_angle_too_large",
+          "repair_blocks_differ"
         ]
       },
       "examples": [
@@ -90581,6 +90637,18 @@
       "meaning": "Nesne bir kısıtın ya da ilişkili ölçünün kaynağı; ölçülmüş geometri onarımla taşınmaz."
     },
     {
+      "code": "repair_angle_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kenar eksenden eşikten çok sapıyor; bilerek eğik olabilir, onarım döndürmez."
+    },
+    {
+      "code": "repair_blocks_differ",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Birleştirilecek blok tanımlarının içeriği aynı değil; biri öbürünün yerine geçemez."
+    },
+    {
       "code": "standard_resource_not_found",
       "kind": "failed",
       "retryable": false,
@@ -100631,6 +100699,23 @@
       ],
       "type": "object"
     },
+    "AngleFix": {
+      "additionalProperties": false,
+      "description": "One angle fix (docs/adr/1012): the line `uid` turned about its `pivot` end onto the nearest of the horizontal and\nvertical, its length kept.",
+      "properties": {
+        "pivot": {
+          "$ref": "#/$defs/LineEnd"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "pivot"
+      ],
+      "type": "object"
+    },
     "AngleUnit": {
       "enum": [
         "grad",
@@ -105120,6 +105205,28 @@
       ],
       "type": "object"
     },
+    "BlockMerge": {
+      "additionalProperties": false,
+      "description": "One merge of block definitions of one content (docs/adr/1012): the inserts of `merge`'s definitions, in the\ndrawing and in other definitions, take `keep`'s, and the definitions left without inserts go.",
+      "properties": {
+        "keep": {
+          "description": "The definition kept, by name.",
+          "type": "string"
+        },
+        "merge": {
+          "description": "The definitions merged into it, by name: 1 to 100.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "keep",
+        "merge"
+      ],
+      "type": "object"
+    },
     "BlockParameter": {
       "description": "A parameter (docs/adr/0318 §1). Its points are the definition's coordinates.",
       "oneOf": [
@@ -105479,6 +105586,33 @@
           "type": "string"
         }
       ]
+    },
+    "BlocksMerged": {
+      "description": "What one block merge did.",
+      "properties": {
+        "inserts": {
+          "description": "Inserts that took `keep`'s definition: in the drawing and inside other definitions.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "keep": {
+          "type": "string"
+        },
+        "merged": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "keep",
+        "merged",
+        "inserts"
+      ],
+      "type": "object"
     },
     "BoundChange": {
       "description": "A bound's change: kept when absent, cleared when null.",
@@ -118668,6 +118802,36 @@
       "required": [
         "uid",
         "near"
+      ],
+      "type": "object"
+    },
+    "EdgeStraightened": {
+      "description": "What one angle fix did.",
+      "properties": {
+        "deviation": {
+          "description": "How far it was off its axis, degrees.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "moved": {
+          "description": "How far its other end moved, metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "pivot": {
+          "$ref": "#/$defs/LineEnd"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "pivot",
+        "deviation",
+        "moved"
       ],
       "type": "object"
     },
@@ -162382,6 +162546,121 @@
         "to"
       ],
       "type": "object"
+    },
+    "RepairRecipe": {
+      "description": "The recipe applied (docs/adr/1012): its steps in order, its thresholds and its reach. The journal keeps the input;\nthis says what the defaults made of it, so the same repair can be read back and run again.",
+      "properties": {
+        "definitionsRemoved": {
+          "description": "Definitions removed by a merge.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "maxAngle": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "maxGap": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "objects": {
+          "description": "Objects changed (lines moved or turned, inserts relinked).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/RepairStep"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "steps",
+        "maxGap",
+        "maxAngle",
+        "objects",
+        "definitionsRemoved"
+      ],
+      "type": "object"
+    },
+    "RepairStep": {
+      "description": "One step of the recipe applied, in its order.",
+      "oneOf": [
+        {
+          "properties": {
+            "end": {
+              "$ref": "#/$defs/LineEnd"
+            },
+            "kind": {
+              "const": "junction",
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            },
+            "uid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "uid",
+            "end",
+            "target"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "angle",
+              "type": "string"
+            },
+            "pivot": {
+              "$ref": "#/$defs/LineEnd"
+            },
+            "uid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "uid",
+            "pivot"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "keep": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "blocks",
+              "type": "string"
+            },
+            "merge": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "keep",
+            "merge"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "RepeatDimensionMap": {
       "properties": {

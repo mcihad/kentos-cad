@@ -11,8 +11,10 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    AngleFix,
     AuditPurge,
     AuditPurgeName,
+    BlockMerge,
     CompareAgainst,
     DrawingAudit,
     DrawingAudited,
@@ -518,15 +520,23 @@ inspect = _DrawingInspect()
 
 
 class _DrawingRepair(LocalCommand[DrawingRepair, DrawingRepaired, DrawingRepaired]):
-    """``cad.drawing.repair`` v1. Çizimi onar: İncelenmiş T birleşimi bulgularını
-    (cad.drawing.inspect, checks: health) düzeltir: çizginin ucunu kendi doğrultusunda
-    hedefin en yakın doğru kenarının içine getirir, en çok maxGap (metre, varsayılan
-    0,01) kadar. Tek geri alma adımı “Onar”; her ucun kayması ve çizginin önceki/sonraki
-    boyu raporlanır. Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz
-    (repair_refused_measured): ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli
-    katman bütün işlemi reddeder. Retler: invalid_input, invalid_uid, invalid_gap,
-    invalid_revision, revision_conflict, entity_not_found, repair_unsupported,
-    layer_locked, repair_refused_measured, repair_target_missing.
+    """``cad.drawing.repair`` v1. Çizimi onar: İncelenmiş sağlık bulgularını
+    (cad.drawing.inspect, checks: health) bu sırayla düzeltir: T birleşiminde çizginin
+    ucunu kendi doğrultusunda hedefin en yakın doğru kenarının içine getirir, en çok
+    maxGap (metre, varsayılan 0,01) kadar (fixes); eksenden en çok maxAngle (derece,
+    varsayılan 0,5) sapan çizgiyi pivot ucu çevresinde en yakın eksene, boyunu koruyarak
+    döndürür (angles); aynı içerikli blok tanımlarını tutulan tanımda birleştirir:
+    çizimdeki ve öbür tanımların içindeki yerleştirmeleri ona bağlar, birleşenleri siler
+    (blocks). Tek geri alma adımı “Onar”; kaymalar, sapmalar, bağlanan yerleştirmeler ve
+    uygulanan tarif (sıra, eşikler, değişen nesne ve silinen tanım sayısı) raporlanır.
+    Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured):
+    ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi
+    reddeder. İçeriği farklı tanımlar birleşmez (repair_blocks_differ); dış başvuru ve
+    ilişkili dizinin bloğu birleşmez (repair_unsupported). Retler: invalid_input,
+    invalid_uid, invalid_gap, invalid_angle_tolerance, invalid_revision,
+    revision_conflict, entity_not_found, unknown_block, repair_unsupported,
+    layer_locked, repair_refused_measured, repair_target_missing,
+    repair_angle_too_large, repair_blocks_differ.
     """
     __slots__ = ()
     id = "cad.drawing.repair"
@@ -542,26 +552,39 @@ class _DrawingRepair(LocalCommand[DrawingRepair, DrawingRepaired, DrawingRepaire
         doc: Document,
         /,
         *,
-        fixes: Sequence[JunctionFix],
+        angles: Sequence[AngleFix] | Unset = UNSET,
+        blocks: Sequence[BlockMerge] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fixes: Sequence[JunctionFix] | Unset = UNSET,
+        max_angle: float | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DrawingRepaired:
-        """Çizimi onar: İncelenmiş T birleşimi bulgularını (cad.drawing.inspect, checks:
-        health) düzeltir: çizginin ucunu kendi doğrultusunda hedefin en yakın doğru
-        kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar. Tek geri alma
-        adımı “Onar”; her ucun kayması ve çizginin önceki/sonraki boyu raporlanır. Bir
-        kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured):
-        ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi
-        reddeder. Retler: invalid_input, invalid_uid, invalid_gap, invalid_revision,
-        revision_conflict, entity_not_found, repair_unsupported, layer_locked,
-        repair_refused_measured, repair_target_missing.
+        """Çizimi onar: İncelenmiş sağlık bulgularını (cad.drawing.inspect, checks: health) bu
+        sırayla düzeltir: T birleşiminde çizginin ucunu kendi doğrultusunda hedefin en yakın
+        doğru kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar (fixes);
+        eksenden en çok maxAngle (derece, varsayılan 0,5) sapan çizgiyi pivot ucu çevresinde
+        en yakın eksene, boyunu koruyarak döndürür (angles); aynı içerikli blok tanımlarını
+        tutulan tanımda birleştirir: çizimdeki ve öbür tanımların içindeki yerleştirmeleri
+        ona bağlar, birleşenleri siler (blocks). Tek geri alma adımı “Onar”; kaymalar,
+        sapmalar, bağlanan yerleştirmeler ve uygulanan tarif (sıra, eşikler, değişen nesne
+        ve silinen tanım sayısı) raporlanır. Bir kısıtın ya da ilişkili ölçünün okuduğu
+        çizgi taşınmaz (repair_refused_measured): ölçülmüş geometri genel bir onarımla
+        düzeltilmez. Kilitli katman bütün işlemi reddeder. İçeriği farklı tanımlar birleşmez
+        (repair_blocks_differ); dış başvuru ve ilişkili dizinin bloğu birleşmez
+        (repair_unsupported). Retler: invalid_input, invalid_uid, invalid_gap,
+        invalid_angle_tolerance, invalid_revision, revision_conflict, entity_not_found,
+        unknown_block, repair_unsupported, layer_locked, repair_refused_measured,
+        repair_target_missing, repair_angle_too_large, repair_blocks_differ.
 
         Args:
             doc: The drawing it works on.
-            fixes: 1 to 1000 fixes, a line end once.
+            angles: Angle fixes, a line once.
+            blocks: Block definition merges, a definition once.
             expected_revision:
+            fixes: T-junction fixes, a line end once. With `angles` and `blocks`, 1 to 1000 fixes in all.
+            max_angle: The most a line may be turned, degrees, above 0 and at most 10; absent: 0.5 (the health check's). Unit: deg.
             max_gap: The most an end may move, metres, above 0 and at most 1000; absent: 0.01. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -576,8 +599,11 @@ class _DrawingRepair(LocalCommand[DrawingRepair, DrawingRepaired, DrawingRepaire
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, DrawingRepair(
-            fixes=list(fixes),
+            angles=_opt(angles, lambda x: list(x)),
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
+            fixes=_opt(fixes, lambda x: list(x)),
+            max_angle=max_angle,
             max_gap=max_gap,
         ), request_id=request_id, expected=expected)
 
@@ -586,16 +612,22 @@ class _DrawingRepair(LocalCommand[DrawingRepair, DrawingRepaired, DrawingRepaire
         doc: Document,
         /,
         *,
-        fixes: Sequence[JunctionFix],
+        angles: Sequence[AngleFix] | Unset = UNSET,
+        blocks: Sequence[BlockMerge] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fixes: Sequence[JunctionFix] | Unset = UNSET,
+        max_angle: float | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
     ) -> DrawingRepaired:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, DrawingRepair(
-            fixes=list(fixes),
+            angles=_opt(angles, lambda x: list(x)),
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
+            fixes=_opt(fixes, lambda x: list(x)),
+            max_angle=max_angle,
             max_gap=max_gap,
         ))
 
@@ -604,16 +636,22 @@ class _DrawingRepair(LocalCommand[DrawingRepair, DrawingRepaired, DrawingRepaire
         doc: Document,
         /,
         *,
-        fixes: Sequence[JunctionFix],
+        angles: Sequence[AngleFix] | Unset = UNSET,
+        blocks: Sequence[BlockMerge] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fixes: Sequence[JunctionFix] | Unset = UNSET,
+        max_angle: float | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, DrawingRepair(
-            fixes=list(fixes),
+            angles=_opt(angles, lambda x: list(x)),
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
+            fixes=_opt(fixes, lambda x: list(x)),
+            max_angle=max_angle,
             max_gap=max_gap,
         ))
 
@@ -622,8 +660,11 @@ class _DrawingRepair(LocalCommand[DrawingRepair, DrawingRepaired, DrawingRepaire
         doc: Document,
         /,
         *,
-        fixes: Sequence[JunctionFix],
+        angles: Sequence[AngleFix] | Unset = UNSET,
+        blocks: Sequence[BlockMerge] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        fixes: Sequence[JunctionFix] | Unset = UNSET,
+        max_angle: float | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -635,8 +676,11 @@ class _DrawingRepair(LocalCommand[DrawingRepair, DrawingRepaired, DrawingRepaire
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, DrawingRepair(
-            fixes=list(fixes),
+            angles=_opt(angles, lambda x: list(x)),
+            blocks=_opt(blocks, lambda x: list(x)),
             expected_revision=expected_revision,
+            fixes=_opt(fixes, lambda x: list(x)),
+            max_angle=max_angle,
             max_gap=max_gap,
         ), op=op, request_id=request_id, expected=expected)
 

@@ -102,6 +102,30 @@
       }
      }
     ]
+   },
+   {
+    "id": "0192f5b0-6000-7000-8000-0000000000b3",
+    "name": "Pencere",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 2,
+       "y": 0
+      }
+     }
+    ]
    }
   ],
   "entities": [
@@ -291,7 +315,21 @@
         }
        ],
        "maxMoved": 0.004,
-       "revision": "$current"
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "junction",
+          "uid": "$uidOf:2",
+          "end": "start",
+          "target": "$uidOf:1"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 1,
+        "definitionsRemoved": 0
+       }
       },
       "warnings": []
      },
@@ -346,7 +384,21 @@
         }
        ],
        "maxMoved": 0.006,
-       "revision": "$current"
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "junction",
+          "uid": "$uidOf:3",
+          "end": "start",
+          "target": "$uidOf:1"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 1,
+        "definitionsRemoved": 0
+       }
       },
       "warnings": []
      },
@@ -413,7 +465,27 @@
         }
        ],
        "maxMoved": 0.006,
-       "revision": "$current"
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "junction",
+          "uid": "$uidOf:2",
+          "end": "start",
+          "target": "$uidOf:1"
+         },
+         {
+          "kind": "junction",
+          "uid": "$uidOf:3",
+          "end": "start",
+          "target": "$uidOf:1"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 2,
+        "definitionsRemoved": 0
+       }
       },
       "warnings": []
      },
@@ -518,7 +590,21 @@
         }
        ],
        "maxMoved": 0.004,
-       "revision": "$current"
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "junction",
+          "uid": "$uidOf:2",
+          "end": "start",
+          "target": "$uidOf:1"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 1,
+        "definitionsRemoved": 0
+       }
       },
       "warnings": []
      },
@@ -612,7 +698,21 @@
         }
        ],
        "maxMoved": 0.004,
-       "revision": "$current"
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "junction",
+          "uid": "$uidOf:2",
+          "end": "start",
+          "target": "$uidOf:1"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 1,
+        "definitionsRemoved": 0
+       }
       },
       "warnings": []
      },
@@ -1206,6 +1306,837 @@
        "code": "layer_locked",
        "message": "“Kilitli” katmanı kilitli; çizgi onarılamaz, hiçbir şey yazılmadı. Kilidi Katmanlar panelinden açın.",
        "path": "fixes[1].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğik D başlangıcı çevresinde yataya: boyu korunur; tek geri alma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fixed": [],
+       "maxMoved": 0.0,
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "angle",
+          "uid": "$uidOf:4",
+          "pivot": "start"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 1,
+        "definitionsRemoved": 0
+       },
+       "straightened": [
+        {
+         "uid": "$uidOf:4",
+         "pivot": "start",
+         "deviation": 0.3819662047290258,
+         "moved": 0.020000111108333433
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 3.0
+        },
+        "b": {
+         "x": 3.0000666659259423,
+         "y": 3.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Onar",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 3.0
+        },
+        "b": {
+         "x": 3.0,
+         "y": 3.02
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğik D bitişi çevresinde yataya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "end"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fixed": [],
+       "maxMoved": 0.0,
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "angle",
+          "uid": "$uidOf:4",
+          "pivot": "end"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 1,
+        "definitionsRemoved": 0
+       },
+       "straightened": [
+        {
+         "uid": "$uidOf:4",
+         "pivot": "end",
+         "deviation": 0.3819662047290119,
+         "moved": 0.020000111108333433
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": -6.66659259422886e-05,
+         "y": 3.02
+        },
+        "b": {
+         "x": 3.0,
+         "y": 3.02
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Önce uç, sonra açı: tarif sırası ve iki nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       }
+      ],
+      "fixes": [
+       {
+        "uid": "$uidOf:2",
+        "end": "start",
+        "target": "$uidOf:1"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fixed": [
+        {
+         "uid": "$uidOf:2",
+         "end": "start",
+         "moved": 0.004,
+         "lengthBefore": 4.996,
+         "lengthAfter": 5.0
+        }
+       ],
+       "maxMoved": 0.004,
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "junction",
+          "uid": "$uidOf:2",
+          "end": "start",
+          "target": "$uidOf:1"
+         },
+         {
+          "kind": "angle",
+          "uid": "$uidOf:4",
+          "pivot": "start"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 2,
+        "definitionsRemoved": 0
+       },
+       "straightened": [
+        {
+         "uid": "$uidOf:4",
+         "pivot": "start",
+         "deviation": 0.3819662047290258,
+         "moved": 0.020000111108333433
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 5.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 5.0,
+         "y": 5.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 3.0
+        },
+        "b": {
+         "x": 3.0000666659259423,
+         "y": 3.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 1°: D döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       }
+      ],
+      "maxAngle": 1.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fixed": [],
+       "maxMoved": 0.0,
+       "revision": "$current",
+       "recipe": {
+        "steps": [
+         {
+          "kind": "angle",
+          "uid": "$uidOf:4",
+          "pivot": "start"
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 1.0,
+        "objects": 1,
+        "definitionsRemoved": 0
+       },
+       "straightened": [
+        {
+         "uid": "$uidOf:4",
+         "pivot": "start",
+         "deviation": 0.3819662047290258,
+         "moved": 0.020000111108333433
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 3.0
+        },
+        "b": {
+         "x": 3.0000666659259423,
+         "y": 3.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 0,1°: D 0,38° sapıyor, döndürülmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       }
+      ],
+      "maxAngle": 0.1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "repair_angle_too_large",
+       "message": "Çizgi eksenden 0.3820° sapıyor; eşik 0.1°. Bilerek eğikse bırakın, değilse eşiği büyütün ya da Döndür'le düzeltin.",
+       "path": "angles[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 0: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       }
+      ],
+      "maxAngle": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle_tolerance",
+       "message": "Açı eşiği 0'dan büyük, en çok 10 derece olmalı.",
+       "path": "maxAngle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği 20°: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       }
+      ],
+      "maxAngle": 20
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle_tolerance",
+       "message": "Açı eşiği 0'dan büyük, en çok 10 derece olmalı.",
+       "path": "maxAngle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı eşiği NaN: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       }
+      ],
+      "maxAngle": 0.5
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_angle_tolerance",
+       "message": "Açı eşiği 0'dan büyük, en çok 10 derece olmalı.",
+       "path": "maxAngle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "nonFinite": {
+      "maxAngle": "NaN"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı çizgi iki kez döndürülmez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:4",
+        "pivot": "start"
+       },
+       {
+        "uid": "$uidOf:4",
+        "pivot": "end"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“$uidOf:4” çizgisi iki kez döndürülemez.",
+       "path": "angles[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta döndürülmez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:9",
+        "pivot": "start"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "repair_unsupported",
+       "message": "Onarım yalnız çizgi ucunu taşır; bu nesne çizgi değil.",
+       "path": "angles[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli E döndürülmez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "angles": [
+       {
+        "uid": "$uidOf:5",
+        "pivot": "start"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; çizgi onarılamaz, hiçbir şey yazılmadı. Kilidi Katmanlar panelinden açın.",
+       "path": "angles[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapı-kopya Kapı'da birleşir: yerleştirmesi Kapı'ya bağlanır, kopya tanım gider",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "cizim",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "insert",
+         "block": "0192f5b0-6000-7000-8000-0000000000b2",
+         "p": {
+          "x": 30.0,
+          "y": 30.0
+         },
+         "scale": 1,
+         "rotation": 0
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "captureUid",
+     "id": 13,
+     "as": "kapi"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "blocks": [
+       {
+        "keep": "Kapı",
+        "merge": [
+         "Kapı-kopya"
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fixed": [],
+       "maxMoved": 0.0,
+       "revision": "$current",
+       "merged": [
+        {
+         "keep": "Kapı",
+         "merged": [
+          "Kapı-kopya"
+         ],
+         "inserts": 1
+        }
+       ],
+       "recipe": {
+        "steps": [
+         {
+          "kind": "blocks",
+          "keep": "Kapı",
+          "merge": [
+           "Kapı-kopya"
+          ]
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 1,
+        "definitionsRemoved": 1
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "13": {
+        "kind": "insert",
+        "id": 13,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "0192f5b0-6000-7000-8000-0000000000b1",
+        "p": {
+         "x": 30.0,
+         "y": 30.0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "blocks": [
+       {
+        "keep": "Kapı",
+        "merge": [
+         "Kapı-kopya"
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_block",
+       "message": "“Kapı-kopya” adlı blok tanımı çizimde yok; denetimi yenileyin.",
+       "path": "blocks[0].merge[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Birleştirmenin planı yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "blocks": [
+       {
+        "keep": "Kapı",
+        "merge": [
+         "Kapı-kopya"
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fixed": [],
+       "maxMoved": 0.0,
+       "revision": "$current",
+       "merged": [
+        {
+         "keep": "Kapı",
+         "merged": [
+          "Kapı-kopya"
+         ],
+         "inserts": 0
+        }
+       ],
+       "recipe": {
+        "steps": [
+         {
+          "kind": "blocks",
+          "keep": "Kapı",
+          "merge": [
+           "Kapı-kopya"
+          ]
+         }
+        ],
+        "maxGap": 0.01,
+        "maxAngle": 0.5,
+        "objects": 0,
+        "definitionsRemoved": 1
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "İçeriği farklı Pencere birleşmez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "blocks": [
+       {
+        "keep": "Kapı",
+        "merge": [
+         "Pencere"
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "repair_blocks_differ",
+       "message": "“Pencere” ile “Kapı” tanımlarının içeriği aynı değil; biri öbürünün yerine geçemez.",
+       "path": "blocks[0].merge[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan tanım tutulamaz: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "blocks": [
+       {
+        "keep": "Yok",
+        "merge": [
+         "Kapı-kopya"
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_block",
+       "message": "“Yok” adlı blok tanımı çizimde yok; denetimi yenileyin.",
+       "path": "blocks[0].keep"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı tanım iki kez: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "blocks": [
+       {
+        "keep": "Kapı",
+        "merge": [
+         "Kapı"
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“Kapı” tanımı iki kez verildi; bir tanım bir birleştirmede bir kez yer alır.",
+       "path": "blocks[0].merge[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş birleştirme: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "blocks": [
+       {
+        "keep": "Kapı",
+        "merge": []
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bir birleştirme 1 ile 100 tanım alır; 0 verildi.",
+       "path": "blocks[0].merge"
       }
      },
      "expect": {

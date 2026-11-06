@@ -234,7 +234,34 @@ pub(crate) fn health_scenes() -> Vec<Scene> {
             let task = app.update(Message::CadInspection(crate::cad_inspection::Event::Repair));
             crate::files_testing::drive(app, task);
         }),
+        // docs/adr/1012: the 0.38° edge chosen (Eksene döndür), then turned; the two definitions of one content merged.
+        ("saglik-eksen", |app| choose(app, "angle_deviation")),
+        ("saglik-eksen-onarildi", |app| repaired(app, "angle_deviation")),
+        ("saglik-birlestir", |app| choose(app, "block_definition_duplicate")),
+        ("saglik-birlestirildi", |app| repaired(app, "block_definition_duplicate")),
     ]
+}
+
+/// The health scene with the first finding of `code` chosen.
+fn choose(app: &mut App, code: &str) {
+    health(app);
+    let at = app
+        .cad_inspection
+        .result()
+        .and_then(|r| r.findings.iter().position(|f| f.code == code))
+        .expect("the finding");
+    let _ = app.update(Message::CadInspection(crate::cad_inspection::Event::Show(at)));
+}
+
+/// [`choose`], then Onar on it: the check runs again and says the finding is gone.
+fn repaired(app: &mut App, code: &str) {
+    choose(app, code);
+    let task = app.update(Message::CadInspection(crate::cad_inspection::Event::Repair));
+    crate::files_testing::drive(app, task);
+    assert!(
+        app.cad_inspection.result().is_some_and(|r| !r.findings.iter().any(|f| f.code == code)),
+        "{code} is repaired"
+    );
 }
 
 /// docs/adr/1100 §5: a wall layer the bound office standard defines, a line with its own colour beside a plain one,

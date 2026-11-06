@@ -70,6 +70,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   TS türleri üretildi; WASM bağlayıcısı yok.
 - CAD-ADV-18 / ADR 1009: açılışta sağlık denetimi yalnız masaüstü ayarıdır (`appearance.openHealthCheck`); web'de
   aynı denetim Worker'da, süre bütçesiyle eklenecekse ayarın konağına web yazılır.
+- CAD-ADV-18 / ADR 1012: CAD denetiminin Eksene döndür ve Tek tanımda birleştir düğmeleri `cad.drawing.repair`'ın `angles`/`blocks` alanlarına bağlanmalı; TS türleri üretildi.
 - CAD-ADV-17 / ADR 1010: içe alma raporunun `decisions` bölümü (Okuma kararları, konu başlıklarıyla); TS türleri üretildi.
 - CAD-ADV-17 / ADR 1061: 2B düzleme indir penceresi; dışa aktarmanın `replaceSource` seçeneği. TS türleri üretildi.
 - CAD-ADV-11/12 / ADR 1001–1002: `.kcad` şema 181 uzun desen codec'i ve web çizicisinin 12'den uzun deseni; Standart

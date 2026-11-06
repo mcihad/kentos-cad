@@ -2556,6 +2556,12 @@ ve en çok 2 saniye aranır; süre dolarsa sonuç kısmi olduğunu söyler. Ayn�
 sonuç kullanılır. Sonuç CAD denetimi sekmesine, tek satır Komut geçmişine gider. Ayrı bellek sınırı, oturumlar arası
 önbellek, onarım tarifi kaydı, ayrı kurtarma kopyası ve kısmi okuma açık; madde `[~]`.
 
+**Onar'da açı ve blok, tarif kaydı (6 Kasım 2026, [ADR 1012](../docs/adr/1012-repair-angles-merge-blocks-and-the-recipe.md)):**
+`cad.drawing.repair` eksenden en çok `maxAngle` sapan çizgiyi pivot ucu çevresinde boyunu koruyarak eksene döndürür
+ve aynı içerikli blok tanımlarını birleştirir (yerleştirmeler tutulan tanıma bağlanır, kopyalar silinir); cevap
+uygulanan tarifi sırası, eşikleri ve kapsamıyla verir. CAD denetiminde **Eksene döndür** ve **Tek tanımda birleştir**.
+41 bağımsız vaka ilk koşuda geçti. Açık: ayrı kurtarma kopyası, kısmi okuma, çoklu çizgi kenarı; madde `[~]`.
+
 ### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [~]
 
 **Öncelik:** P0; diğer maddeler boyunca uygulanır. **Kod:** [C05], [C13], [C31].
@@ -2665,6 +2671,9 @@ senaryosu ve protokol testlerinde); eklenti ve AI sağlayıcı kabulü açık; m
 Aynı senaryo Python ve MCP'de ilişkili taramayı (alanı her adımda w × h), yarıda çöken betiği (Python'da grup
 istisnayla geri alınır; MCP'de aynı adımlar tek değişiklik kümesi olarak reddedilir), bakılmadan durdurulan işi ve 1:50
 detay paftasını da oynatır; ilk koşuda iki konak aynı sonucu verdi. Açık: eklenti ve AI sağlayıcı kabulü.
+Bağımlılık (6 Kasım 2026, kodla doğrulandı): `.kek` paket biçimi, eklenti katkı kaydı ve uv ortamı henüz yok;
+[plan/python.md](python.md) PY-KEK-01–17'nin hepsi açık. Kullanıcının seçtiği AI sağlayıcısı da TODOS.md §15'in işi.
+Bu iki madde orada teslim edilmeden CAD-ADV-20'nin eklenti/AI satırı kanıtlanamaz; madde `[~]` kalır.
 
 ## Teslim sırası ve ortak kabul
 

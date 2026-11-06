@@ -1695,9 +1695,9 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_DRAWING_REPAIR.into(),
             version: crate::CAD_DRAWING_REPAIR_VERSION,
             title: "Çizimi onar".into(),
-            summary: "İncelenmiş T birleşimi bulgularını (cad.drawing.inspect, checks: health) düzeltir: çizginin ucunu kendi doğrultusunda hedefin en yakın doğru kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar. Tek geri alma adımı “Onar”; her ucun kayması ve çizginin önceki/sonraki boyu raporlanır. \
-                      Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured): ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi reddeder. \
-                      Retler: invalid_input, invalid_uid, invalid_gap, invalid_revision, revision_conflict, entity_not_found, repair_unsupported, layer_locked, repair_refused_measured, repair_target_missing."
+            summary: "İncelenmiş sağlık bulgularını (cad.drawing.inspect, checks: health) bu sırayla düzeltir: T birleşiminde çizginin ucunu kendi doğrultusunda hedefin en yakın doğru kenarının içine getirir, en çok maxGap (metre, varsayılan 0,01) kadar (fixes); eksenden en çok maxAngle (derece, varsayılan 0,5) sapan çizgiyi pivot ucu çevresinde en yakın eksene, boyunu koruyarak döndürür (angles); aynı içerikli blok tanımlarını tutulan tanımda birleştirir: çizimdeki ve öbür tanımların içindeki yerleştirmeleri ona bağlar, birleşenleri siler (blocks). Tek geri alma adımı “Onar”; kaymalar, sapmalar, bağlanan yerleştirmeler ve uygulanan tarif (sıra, eşikler, değişen nesne ve silinen tanım sayısı) raporlanır. \
+                      Bir kısıtın ya da ilişkili ölçünün okuduğu çizgi taşınmaz (repair_refused_measured): ölçülmüş geometri genel bir onarımla düzeltilmez. Kilitli katman bütün işlemi reddeder. İçeriği farklı tanımlar birleşmez (repair_blocks_differ); dış başvuru ve ilişkili dizinin bloğu birleşmez (repair_unsupported). \
+                      Retler: invalid_input, invalid_uid, invalid_gap, invalid_angle_tolerance, invalid_revision, revision_conflict, entity_not_found, unknown_block, repair_unsupported, layer_locked, repair_refused_measured, repair_target_missing, repair_angle_too_large, repair_blocks_differ."
                 .into(),
             aliases: vec!["onar".into()],
             effect: CommandEffect::Document,

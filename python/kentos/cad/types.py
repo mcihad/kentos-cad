@@ -10545,6 +10545,28 @@ class RelationsOp(_Union):
         return _variant(_RELATIONS_OP, "RelationsOp", "kind", data).from_json(data)
 
 
+class RepairStep(_Union):
+    """One step of the recipe applied, in its order.
+
+    One of:
+
+    - :class:`JunctionRepairStep` (``kind: junction``)
+    - :class:`AngleRepairStep` (``kind: angle``)
+    - :class:`BlocksRepairStep` (``kind: blocks``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RepairStep:
+        return _variant(_REPAIR_STEP, "RepairStep", "kind", data).from_json(data)
+
+
 class RevcloudFrame(_Union):
     """What a revision cloud goes round (AutoCAD REVCLOUD's Rectangular, Polygonal and Object).
 
@@ -13881,6 +13903,28 @@ class AlternativeReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AngleFix(_Model):
+    """One angle fix (docs/adr/1012): the line `uid` turned about its `pivot` end onto the nearest of the horizontal and
+    vertical, its length kept.
+    """
+    uid: str
+    pivot: LineEnd | LineEndName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["pivot"] = _enum_out(self.pivot)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleFix:
+        return cls(
+            uid=data["uid"],
+            pivot=_enum_in(LineEnd, data["pivot"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AnnotationHeights(_Model):
     """The project's annotation heights on paper, mm (docs/adr/0205 §1): a
     height not given is its kind's default.
@@ -16997,6 +17041,31 @@ class BlockMatch(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BlockMerge(_Model):
+    """One merge of block definitions of one content (docs/adr/1012): the inserts of `merge`'s definitions, in the
+    drawing and in other definitions, take `keep`'s, and the definitions left without inserts go.
+    Attributes:
+        keep: The definition kept, by name.
+        merge: The definitions merged into it, by name: 1 to 100.
+    """
+    keep: str
+    merge: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["keep"] = self.keep
+        out["merge"] = list(self.merge)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockMerge:
+        return cls(
+            keep=data["keep"],
+            merge=list(data["merge"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BlockParameterGroup(_Model):
     """A property-panel heading and the exact parameter names it contains, in display order."""
     name: str
@@ -17959,6 +18028,32 @@ class BlocksInsertPlan(_Model):
             insert=Entity.from_json(data["insert"]),
             unit_factor=float(data["unitFactor"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksMerged(_Model):
+    """What one block merge did.
+    Attributes:
+        inserts: Inserts that took `keep`'s definition: in the drawing and inside other definitions. Unit: count.
+    """
+    keep: str
+    merged: list[str]
+    inserts: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["keep"] = self.keep
+        out["merged"] = list(self.merged)
+        out["inserts"] = self.inserts
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksMerged:
+        return cls(
+            keep=data["keep"],
+            merged=list(data["merged"]),
+            inserts=data["inserts"],
         )
 
 
@@ -28402,21 +28497,35 @@ class DrawingProjectChange(_Model):
 @dataclass(kw_only=True, slots=True)
 class DrawingRepair(_Model):
     """Input of `cad.drawing.repair` v1. Refusals, in order: `invalid_input`, `invalid_uid`, `invalid_gap`,
-    `invalid_revision`, `revision_conflict`, `entity_not_found`, `repair_unsupported`, `layer_locked`,
-    `repair_refused_measured`, `repair_target_missing`.
+    `invalid_angle_tolerance`, `invalid_revision`, `revision_conflict`, `entity_not_found`, `unknown_block`,
+    `repair_unsupported`, `layer_locked`, `repair_refused_measured`, `repair_target_missing`,
+    `repair_angle_too_large`, `repair_blocks_differ`. Fixes are applied in that order: junctions, angles, blocks.
     Attributes:
-        fixes: 1 to 1000 fixes, a line end once.
+        angles: Angle fixes, a line once.
+        blocks: Block definition merges, a definition once.
+        fixes: T-junction fixes, a line end once. With `angles` and `blocks`, 1 to 1000 fixes in all.
+        max_angle: The most a line may be turned, degrees, above 0 and at most 10; absent: 0.5 (the health check's). Unit: deg.
         max_gap: The most an end may move, metres, above 0 and at most 1000; absent: 0.01. Unit: length.
     """
-    fixes: list[JunctionFix]
+    angles: list[AngleFix] | Unset = UNSET
+    blocks: list[BlockMerge] | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    fixes: list[JunctionFix] | Unset = UNSET
+    max_angle: float | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
-        out["fixes"] = [e0.to_json() for e0 in self.fixes]
+        if self.angles is not UNSET:
+            out["angles"] = [e0.to_json() for e0 in self.angles]
+        if self.blocks is not UNSET:
+            out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.fixes is not UNSET:
+            out["fixes"] = [e0.to_json() for e0 in self.fixes]
+        if self.max_angle is not UNSET:
+            out["maxAngle"] = None if self.max_angle is None else float(self.max_angle)
         if self.max_gap is not UNSET:
             out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
         return out
@@ -28424,8 +28533,11 @@ class DrawingRepair(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> DrawingRepair:
         return cls(
-            fixes=[JunctionFix.from_json(e0) for e0 in data["fixes"]],
+            angles=[AngleFix.from_json(e0) for e0 in data["angles"]] if "angles" in data else UNSET,
+            blocks=[BlockMerge.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             expected_revision=data.get("expectedRevision", UNSET),
+            fixes=[JunctionFix.from_json(e0) for e0 in data["fixes"]] if "fixes" in data else UNSET,
+            max_angle=UNSET if "maxAngle" not in data else None if data["maxAngle"] is None else float(data["maxAngle"]),
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
         )
 
@@ -28438,22 +28550,33 @@ class DrawingRepaired(_Model):
         revision: ^(0|[1-9][0-9]*)$
     """
     fixed: list[JunctionFixed]
+    recipe: RepairRecipe
     max_moved: float
     revision: str
+    merged: list[BlocksMerged] | Unset = UNSET
+    straightened: list[EdgeStraightened] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["fixed"] = [e0.to_json() for e0 in self.fixed]
+        out["recipe"] = self.recipe.to_json()
         out["maxMoved"] = float(self.max_moved)
         out["revision"] = self.revision
+        if self.merged is not UNSET:
+            out["merged"] = [e0.to_json() for e0 in self.merged]
+        if self.straightened is not UNSET:
+            out["straightened"] = [e0.to_json() for e0 in self.straightened]
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> DrawingRepaired:
         return cls(
             fixed=[JunctionFixed.from_json(e0) for e0 in data["fixed"]],
+            recipe=RepairRecipe.from_json(data["recipe"]),
             max_moved=float(data["maxMoved"]),
             revision=data["revision"],
+            merged=[BlocksMerged.from_json(e0) for e0 in data["merged"]] if "merged" in data else UNSET,
+            straightened=[EdgeStraightened.from_json(e0) for e0 in data["straightened"]] if "straightened" in data else UNSET,
         )
 
 
@@ -28801,6 +28924,36 @@ class EdgeNear(_Model):
         return cls(
             uid=data["uid"],
             near=Vec2.from_json(data["near"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EdgeStraightened(_Model):
+    """What one angle fix did.
+    Attributes:
+        deviation: How far it was off its axis, degrees. Unit: deg.
+        moved: How far its other end moved, metres. Unit: length.
+    """
+    uid: str
+    pivot: LineEnd | LineEndName
+    deviation: float
+    moved: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["pivot"] = _enum_out(self.pivot)
+        out["deviation"] = float(self.deviation)
+        out["moved"] = float(self.moved)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EdgeStraightened:
+        return cls(
+            uid=data["uid"],
+            pivot=_enum_in(LineEnd, data["pivot"]),
+            deviation=float(data["deviation"]),
+            moved=float(data["moved"]),
         )
 
 
@@ -70743,6 +70896,42 @@ class RenamedColumn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RepairRecipe(_Model):
+    """The recipe applied (docs/adr/1012): its steps in order, its thresholds and its reach. The journal keeps the input;
+    this says what the defaults made of it, so the same repair can be read back and run again.
+    Attributes:
+        max_gap: Unit: length.
+        max_angle: Unit: deg.
+        objects: Objects changed (lines moved or turned, inserts relinked). Unit: count.
+        definitions_removed: Definitions removed by a merge. Unit: count.
+    """
+    steps: list[RepairStep]
+    max_gap: float
+    max_angle: float
+    objects: int
+    definitions_removed: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        out["maxGap"] = float(self.max_gap)
+        out["maxAngle"] = float(self.max_angle)
+        out["objects"] = self.objects
+        out["definitionsRemoved"] = self.definitions_removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RepairRecipe:
+        return cls(
+            steps=[RepairStep.from_json(e0) for e0 in data["steps"]],
+            max_gap=float(data["maxGap"]),
+            max_angle=float(data["maxAngle"]),
+            objects=data["objects"],
+            definitions_removed=data["definitionsRemoved"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RepeatDimensionMap(_Model):
     """
     Attributes:
@@ -109936,6 +110125,69 @@ class RemoveRelationsOp(RelationsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class JunctionRepairStep(RepairStep):
+    TAG_VALUE: ClassVar[str] = "junction"
+    uid: str
+    end: LineEnd | LineEndName
+    target: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "junction"}
+        out["uid"] = self.uid
+        out["end"] = _enum_out(self.end)
+        out["target"] = self.target
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionRepairStep:
+        return cls(
+            uid=data["uid"],
+            end=_enum_in(LineEnd, data["end"]),
+            target=data["target"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AngleRepairStep(RepairStep):
+    TAG_VALUE: ClassVar[str] = "angle"
+    uid: str
+    pivot: LineEnd | LineEndName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "angle"}
+        out["uid"] = self.uid
+        out["pivot"] = _enum_out(self.pivot)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleRepairStep:
+        return cls(
+            uid=data["uid"],
+            pivot=_enum_in(LineEnd, data["pivot"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksRepairStep(RepairStep):
+    TAG_VALUE: ClassVar[str] = "blocks"
+    keep: str
+    merge: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "blocks"}
+        out["keep"] = self.keep
+        out["merge"] = list(self.merge)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksRepairStep:
+        return cls(
+            keep=data["keep"],
+            merge=list(data["merge"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RectangleRevcloudFrame(RevcloudFrame):
     """Two opposite corners of a rectangle whose sides run east and north.
     Attributes:
@@ -114879,6 +115131,9 @@ _REGULAR_FRAME: dict[str, type[RegularFrame]] = {"inscribed": InscribedRegularFr
 _RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "update": UpdateRelationsOp, "remove": RemoveRelationsOp}
 
 
+_REPAIR_STEP: dict[str, type[RepairStep]] = {"junction": JunctionRepairStep, "angle": AngleRepairStep, "blocks": BlocksRepairStep}
+
+
 _REVCLOUD_FRAME: dict[str, type[RevcloudFrame]] = {"rectangle": RectangleRevcloudFrame, "polygon": PolygonRevcloudFrame, "object": ObjectRevcloudFrame}
 
 
@@ -115091,7 +115346,9 @@ __all__ = [
     "AngleBlockParameter",
     "AngleConstraintRule",
     "AngleDimensionMeasure",
+    "AngleFix",
     "AngleNorthDirection",
+    "AngleRepairStep",
     "AngleUnit",
     "AngleUnitName",
     "AngleVertexDimensionMeasure",
@@ -115286,6 +115543,7 @@ __all__ = [
     "BlockFileModeName",
     "BlockInserted",
     "BlockMatch",
+    "BlockMerge",
     "BlockParameter",
     "BlockParameterGroup",
     "BlockPublication",
@@ -115311,12 +115569,14 @@ __all__ = [
     "BlocksInsert",
     "BlocksInsertPlan",
     "BlocksLeaderEdit",
+    "BlocksMerged",
     "BlocksParameters",
     "BlocksParametersOut",
     "BlocksProxied",
     "BlocksProxy",
     "BlocksQueried",
     "BlocksQuery",
+    "BlocksRepairStep",
     "BlocksReplace",
     "BlocksReplaced",
     "BlocksTableSource",
@@ -115833,6 +116093,7 @@ __all__ = [
     "EdgeRectangleFrame",
     "EdgeRegularFrame",
     "EdgeShiftShapeWork",
+    "EdgeStraightened",
     "EditFeatureChange",
     "EditOperation",
     "EditOperationName",
@@ -116420,6 +116681,7 @@ __all__ = [
     "JunctionListed",
     "JunctionOverlapAt",
     "JunctionPlace",
+    "JunctionRepairStep",
     "JunctionReport",
     "JunctionReturn",
     "JunctionRole",
@@ -117652,6 +117914,8 @@ __all__ = [
     "RenumberArchOperation",
     "RenumberOpeningsOperation",
     "ReorderPaperOp",
+    "RepairRecipe",
+    "RepairStep",
     "RepathXrefsOperation",
     "RepeatDimensionMap",
     "RepeatMemberMap",

@@ -16,6 +16,10 @@ its start.
 
 Repair (ADR 1005 §2): a line's end moved along the line onto the nearest such meeting within `maxGap`; measured
 (constraint or associative dimension) or locked geometry refused; all or nothing; one undo step “Onar”.
+ADR 1012: a line turned about its pivot end onto the nearest axis (its other end at pivot + length × the axis'
+unit vector), when off by at most `maxAngle` degrees (default 0.5); block definitions of one content merged into the
+kept one (their inserts relinked, the merged definitions gone). Junctions first, then angles, then blocks; the
+answer's recipe lists the steps in that order with the thresholds, the objects changed and the definitions removed.
 """
 
 import json
@@ -30,6 +34,7 @@ OUT = ROOT / "fixtures/commands/v1"
 STYLE = {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}
 BLOCK_A = "0192f5b0-6000-7000-8000-0000000000b1"
 BLOCK_B = "0192f5b0-6000-7000-8000-0000000000b2"
+BLOCK_C = "0192f5b0-6000-7000-8000-0000000000b3"
 GHOST = "0192f5b0-6000-7000-8000-000000000999"
 
 
@@ -60,7 +65,10 @@ def setup():
     entities += [{"kind": "point", "id": i, "layerId": "cizim", "attrs": {}, "p": v(p)} for i, p in POINTS.items()]
     part = {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 1, "y": 0}}
     blocks = [{"id": BLOCK_A, "name": "Kapı", "base": {"x": 0, "y": 0}, "entities": [part]},
-              {"id": BLOCK_B, "name": "Kapı-kopya", "base": {"x": 0, "y": 0}, "entities": [dict(part, id=7)]}]
+              {"id": BLOCK_B, "name": "Kapı-kopya", "base": {"x": 0, "y": 0}, "entities": [dict(part, id=7)]},
+              # Another content: a longer part.
+              {"id": BLOCK_C, "name": "Pencere", "base": {"x": 0, "y": 0},
+               "entities": [dict(part, id=1, b={"x": 2, "y": 0})]}]
     return {"format": "kentos.document", "version": 1, "name": "Çizim sağlığı",
             "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                          "plotScale": 100, "workspace": "cad", "drawingUnit": "m"},
@@ -240,7 +248,23 @@ def repaired(fixes, gap=0.01):
             lines[slot][0] = x
         fixed.append({"uid": uid(slot), "end": which, "moved": dist(end, x), "lengthBefore": before,
                       "lengthAfter": dist(*lines[slot])})
-    return {"fixed": fixed, "maxMoved": max(f["moved"] for f in fixed), "revision": "$current"}, lines
+    steps = [{"kind": "junction", "uid": uid(s), "end": w, "target": uid(t)} for s, w, t in fixes]
+    return {"fixed": fixed, "maxMoved": max(f["moved"] for f in fixed), "revision": "$current",
+            "recipe": {"steps": steps, "maxGap": gap, "maxAngle": 0.5, "objects": len({f[0] for f in fixes}),
+                       "definitionsRemoved": 0}}, lines
+
+
+def turned(slot, pivot, lines):
+    """Line `slot` turned about its `pivot` end onto the nearest axis: (new ends, deviation degrees, moved)."""
+    a, b = lines[slot]
+    p, q = (a, b) if pivot == "start" else (b, a)
+    length = dist(p, q)
+    angle = math.atan2(q[1] - p[1], q[0] - p[0])
+    k = round(angle / (math.pi / 2))
+    unit = [(1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0)][k % 4]
+    to = (p[0] + length * unit[0], p[1] + length * unit[1])
+    ends = [p, to] if pivot == "start" else [to, p]
+    return ends, abs(angle - k * math.pi / 2) * 180 / math.pi, dist(q, to)
 
 
 def entity(slot, a, b):
@@ -328,6 +352,84 @@ def repair_cases():
         "expectedRevision")])
     case("Biri kilitli: hiçbiri onarılmaz", [refused({"fixes": [fix(2, "start", 1), fix(5, "start", 6)]}, "layer_locked",
         "“Kilitli” katmanı kilitli; çizgi onarılamaz, hiçbir şey yazılmadı. Kilidi Katmanlar panelinden açın.", "fixes[1].uid")])
+
+    # ── ADR 1012: angles and blocks ──
+    def angled(angles, fixes=(), max_angle=None):
+        answer, lines = repaired(list(fixes)) if fixes else ({"fixed": [], "maxMoved": 0.0, "revision": "$current",
+            "recipe": {"steps": [], "maxGap": 0.01, "maxAngle": 0.5, "objects": 0, "definitionsRemoved": 0}},
+            {i: [a, b] for i, (_, a, b) in LINES.items()})
+        straightened = []
+        for slot, pivot in angles:
+            ends, dev, moved = turned(slot, pivot, lines)
+            lines[slot] = ends
+            straightened.append({"uid": uid(slot), "pivot": pivot, "deviation": dev, "moved": moved})
+            answer["recipe"]["steps"].append({"kind": "angle", "uid": uid(slot), "pivot": pivot})
+        answer["straightened"] = straightened
+        if max_angle is not None:
+            answer["recipe"]["maxAngle"] = max_angle
+        answer["recipe"]["objects"] = len({f[0] for f in fixes} | {s for s, _ in angles})
+        input_ = {"angles": [{"uid": uid(s), "pivot": p} for s, p in angles]}
+        if fixes:
+            input_["fixes"] = [fix(*f) for f in fixes]
+        if max_angle is not None:
+            input_["maxAngle"] = max_angle
+        touched = {f[0] for f in fixes} | {s for s, _ in angles}
+        return {"op": "execute", "input": input_, "result": {"status": "completed", "output": answer, "warnings": []},
+                "within": 1e-9, "expect": {"revision": "changed", "canUndo": True,
+                                           "entities": {str(s): entity(s, *lines[s]) for s in touched}}}
+
+    case("Eğik D başlangıcı çevresinde yataya: boyu korunur; tek geri alma", [angled([(4, "start")]),
+        {"op": "undo", "returns": "Onar", "expect": {"entities": {"4": entity(4, *LINES[4][1:])}}}])
+    case("Eğik D bitişi çevresinde yataya", [angled([(4, "end")])])
+    case("Önce uç, sonra açı: tarif sırası ve iki nesne", [angled([(4, "start")], fixes=[(2, "start", 1)])])
+    case("Açı eşiği 1°: D döner", [angled([(4, "start")], max_angle=1.0)])
+    dev = turned(4, "start", {i: [a, b] for i, (_, a, b) in LINES.items()})[1]
+    case("Açı eşiği 0,1°: D 0,38° sapıyor, döndürülmez", [refused({"angles": [{"uid": uid(4), "pivot": "start"}], "maxAngle": 0.1},
+        "repair_angle_too_large", f"Çizgi eksenden {dev:.4f}° sapıyor; eşik 0.1°. Bilerek eğikse bırakın, değilse eşiği büyütün ya da Döndür'le düzeltin.",
+        "angles[0].uid")])
+    tol_words = "Açı eşiği 0'dan büyük, en çok 10 derece olmalı."
+    case("Açı eşiği 0: ret", [refused({"angles": [{"uid": uid(4), "pivot": "start"}], "maxAngle": 0}, "invalid_angle_tolerance", tol_words, "maxAngle")])
+    case("Açı eşiği 20°: ret", [refused({"angles": [{"uid": uid(4), "pivot": "start"}], "maxAngle": 20}, "invalid_angle_tolerance", tol_words, "maxAngle")])
+    nan_angle = refused({"angles": [{"uid": uid(4), "pivot": "start"}], "maxAngle": 0.5}, "invalid_angle_tolerance", tol_words, "maxAngle")
+    nan_angle["nonFinite"] = {"maxAngle": "NaN"}
+    case("Açı eşiği NaN: ret", [nan_angle])
+    case("Aynı çizgi iki kez döndürülmez: ret", [refused({"angles": [{"uid": uid(4), "pivot": "start"}, {"uid": uid(4), "pivot": "end"}]},
+        "invalid_input", "“$uidOf:4” çizgisi iki kez döndürülemez.", "angles[1]")])
+    case("Nokta döndürülmez: ret", [refused({"angles": [{"uid": uid(9), "pivot": "start"}]}, "repair_unsupported",
+        "Onarım yalnız çizgi ucunu taşır; bu nesne çizgi değil.", "angles[0].uid")])
+    case("Kilitli E döndürülmez: ret", [refused({"angles": [{"uid": uid(5), "pivot": "start"}]}, "layer_locked",
+        "“Kilitli” katmanı kilitli; çizgi onarılamaz, hiçbir şey yazılmadı. Kilidi Katmanlar panelinden açın.", "angles[0].uid")])
+
+    insert = {"op": "execute", "command": "cad.entities.create",
+              "input": {"layerId": "cizim", "objects": [{"geometry": {"kind": "insert", "block": BLOCK_B, "p": v((30.0, 30.0)),
+                                                                     "scale": 1, "rotation": 0}}]},
+              "result": "$any", "expect": {"revision": "changed"}}
+    merged = {"fixed": [], "maxMoved": 0.0, "revision": "$current",
+              "merged": [{"keep": "Kapı", "merged": ["Kapı-kopya"], "inserts": 1}],
+              "recipe": {"steps": [{"kind": "blocks", "keep": "Kapı", "merge": ["Kapı-kopya"]}], "maxGap": 0.01,
+                         "maxAngle": 0.5, "objects": 1, "definitionsRemoved": 1}}
+    gone_block = "“Kapı-kopya” adlı blok tanımı çizimde yok; denetimi yenileyin."
+    case("Kapı-kopya Kapı'da birleşir: yerleştirmesi Kapı'ya bağlanır, kopya tanım gider", [insert,
+        {"op": "captureUid", "id": 13, "as": "kapi"},
+        {"op": "execute", "input": {"blocks": [{"keep": "Kapı", "merge": ["Kapı-kopya"]}]},
+         "result": {"status": "completed", "output": merged, "warnings": []},
+         "expect": {"revision": "changed", "canUndo": True,
+                    "entities": {"13": {"kind": "insert", "id": 13, "layerId": "cizim", "attrs": {}, "block": BLOCK_A,
+                                        "p": v((30.0, 30.0)), "scale": 1, "rotation": 0}}}},
+        refused({"blocks": [{"keep": "Kapı", "merge": ["Kapı-kopya"]}]}, "unknown_block", gone_block, "blocks[0].merge[0]")
+        | {"expect": {"revision": "same", "canUndo": True}}])
+    plan_merged = dict(merged, merged=[{"keep": "Kapı", "merged": ["Kapı-kopya"], "inserts": 0}],
+                       recipe=dict(merged["recipe"], objects=0))
+    case("Birleştirmenin planı yazmaz", [{"op": "plan", "input": {"blocks": [{"keep": "Kapı", "merge": ["Kapı-kopya"]}]},
+        "result": {"status": "completed", "output": plan_merged, "warnings": []}, "expect": {"revision": "same", "canUndo": False}}])
+    case("İçeriği farklı Pencere birleşmez: ret", [refused({"blocks": [{"keep": "Kapı", "merge": ["Pencere"]}]}, "repair_blocks_differ",
+        "“Pencere” ile “Kapı” tanımlarının içeriği aynı değil; biri öbürünün yerine geçemez.", "blocks[0].merge[0]")])
+    case("Olmayan tanım tutulamaz: ret", [refused({"blocks": [{"keep": "Yok", "merge": ["Kapı-kopya"]}]}, "unknown_block",
+        "“Yok” adlı blok tanımı çizimde yok; denetimi yenileyin.", "blocks[0].keep")])
+    case("Aynı tanım iki kez: ret", [refused({"blocks": [{"keep": "Kapı", "merge": ["Kapı"]}]}, "invalid_input",
+        "“Kapı” tanımı iki kez verildi; bir tanım bir birleştirmede bir kez yer alır.", "blocks[0].merge[0]")])
+    case("Boş birleştirme: ret", [refused({"blocks": [{"keep": "Kapı", "merge": []}]}, "invalid_input",
+        "Bir birleştirme 1 ile 100 tanım alır; 0 verildi.", "blocks[0].merge")])
     return out
 
 

@@ -13,7 +13,8 @@ use kentos_domain::{Document, Uuid};
 use std::collections::BTreeSet;
 
 mod boundaries;
-mod health;
+pub(crate) mod health;
+pub use health::duplicate_blocks;
 pub mod annotations;
 mod texts;
 const WORK_MAX: u64 = 2_000_000;

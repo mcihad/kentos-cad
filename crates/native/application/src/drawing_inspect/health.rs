@@ -98,6 +98,34 @@ fn free(end: Vec2, me: usize, all: &[&Straight]) -> bool {
     !all.iter().enumerate().any(|(i, s)| i != me && (len(s.a, end) <= NEAR || len(s.b, end) <= NEAR))
 }
 
+/// What makes two block definitions one content (docs/adr/1005 §1): their parts without their ids, base and
+/// attributes. Onar merges only definitions of one key (docs/adr/1012).
+pub(crate) fn content_key(b: &kentos_commands::BlockDefinition) -> String {
+    let mut parts: Vec<serde_json::Value> = b
+        .entities
+        .iter()
+        .map(|e| {
+            let mut v = serde_json::to_value(e).unwrap_or_default();
+            if let Some(o) = v.as_object_mut() {
+                o.remove("id");
+            }
+            v
+        })
+        .collect();
+    parts.sort_by_key(|v| v.to_string());
+    serde_json::json!({ "base": b.base, "entities": parts, "attributes": b.attributes }).to_string()
+}
+
+/// The groups of block definitions of one content, by name, in the drawing's order (the health check's
+/// `block_definition_duplicate` findings, docs/adr/1005 §1): the first of a group is the one Onar keeps.
+pub fn duplicate_blocks(doc: &Document) -> Vec<Vec<String>> {
+    let mut seen: std::collections::BTreeMap<String, Vec<String>> = std::collections::BTreeMap::new();
+    for b in doc.blocks().iter().filter(|b| b.xref.is_none()) {
+        seen.entry(content_key(b)).or_default().push(b.name.clone());
+    }
+    seen.into_values().filter(|n| n.len() > 1).collect()
+}
+
 pub(super) fn inspect(
     doc: &Document,
     h: &Health,
@@ -239,20 +267,7 @@ pub(super) fn inspect(
         if b.xref.is_some() {
             continue;
         }
-        let mut parts: Vec<serde_json::Value> = b
-            .entities
-            .iter()
-            .map(|e| {
-                let mut v = serde_json::to_value(e).unwrap_or_default();
-                if let Some(o) = v.as_object_mut() {
-                    o.remove("id");
-                }
-                v
-            })
-            .collect();
-        parts.sort_by_key(|v| v.to_string());
-        let key = serde_json::json!({ "base": b.base, "entities": parts, "attributes": b.attributes }).to_string();
-        seen.entry(key).or_default().push(b.name.clone());
+        seen.entry(content_key(b)).or_default().push(b.name.clone());
     }
     for names in seen.into_values().filter(|n| n.len() > 1) {
         push(
