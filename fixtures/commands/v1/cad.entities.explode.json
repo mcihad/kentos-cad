@@ -290,6 +290,20 @@
     "scale": 3,
     "yScale": 0.5,
     "rotation": 0
+   },
+   {
+    "kind": "insert",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e03",
+    "p": {
+     "x": 120,
+     "y": 0
+    },
+    "scale": 1,
+    "yScale": 2,
+    "rotation": 0
    }
   ],
   "styles": {
@@ -401,6 +415,42 @@
       ]
      }
     ]
+   },
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e03",
+    "name": "Kapalı eğri",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 2,
+        "y": 0
+       },
+       {
+        "x": 2,
+        "y": 2
+       }
+      ],
+      "bulges": [
+       1,
+       0,
+       0
+      ],
+      "closed": true
+     }
+    ]
    }
   ]
  },
@@ -426,8 +476,8 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "$uidOf:13",
+        "$uidOf:14"
        ],
        "removed": [
         "$uid:o1"
@@ -448,10 +498,11 @@
        10,
        11,
        12,
-       13
+       13,
+       14
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -465,9 +516,9 @@
          "x": 10,
          "y": 0
         },
-        "id": 12
+        "id": 13
        },
-       "13": {
+       "14": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -481,7 +532,7 @@
          "x": 10,
          "y": 5
         },
-        "id": 13
+        "id": 14
        }
       },
       "revision": "changed",
@@ -503,7 +554,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "entities": {
        "1": {
@@ -554,14 +606,14 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
         "$uidOf:13",
         "$uidOf:14",
         "$uidOf:15",
         "$uidOf:16",
         "$uidOf:17",
         "$uidOf:18",
-        "$uidOf:19"
+        "$uidOf:19",
+        "$uidOf:20"
        ],
        "removed": [
         "$uid:o2"
@@ -588,10 +640,11 @@
        16,
        17,
        18,
-       19
+       19,
+       20
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -602,20 +655,6 @@
         "b": {
          "x": 30,
          "y": 0
-        },
-        "id": 12
-       },
-       "13": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 30,
-         "y": 0
-        },
-        "b": {
-         "x": 30,
-         "y": 10
         },
         "id": 13
        },
@@ -625,15 +664,29 @@
         "attrs": {},
         "a": {
          "x": 30,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 10
+        },
+        "id": 14
+       },
+       "15": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
          "y": 10
         },
         "b": {
          "x": 20,
          "y": 10
         },
-        "id": 14
+        "id": 15
        },
-       "15": {
+       "16": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -645,9 +698,9 @@
          "x": 20,
          "y": 0
         },
-        "id": 15
+        "id": 16
        },
-       "16": {
+       "17": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -658,20 +711,6 @@
         "b": {
          "x": 24,
          "y": 2
-        },
-        "id": 16
-       },
-       "17": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 24,
-         "y": 2
-        },
-        "b": {
-         "x": 24,
-         "y": 4
         },
         "id": 17
        },
@@ -681,15 +720,29 @@
         "attrs": {},
         "a": {
          "x": 24,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 4
+        },
+        "id": 18
+       },
+       "19": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
          "y": 4
         },
         "b": {
          "x": 22,
          "y": 4
         },
-        "id": 18
+        "id": 19
        },
-       "19": {
+       "20": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -701,7 +754,7 @@
          "x": 22,
          "y": 2
         },
-        "id": 19
+        "id": 20
        }
       },
       "revision": "changed",
@@ -731,9 +784,9 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
         "$uidOf:13",
-        "$uidOf:14"
+        "$uidOf:14",
+        "$uidOf:15"
        ],
        "removed": [
         "$uid:o8"
@@ -755,10 +808,11 @@
        11,
        12,
        13,
-       14
+       14,
+       15
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -769,20 +823,6 @@
         "b": {
          "x": 75,
          "y": 0
-        },
-        "id": 12
-       },
-       "13": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 75,
-         "y": 0
-        },
-        "b": {
-         "x": 75,
-         "y": 5
         },
         "id": 13
        },
@@ -792,13 +832,27 @@
         "attrs": {},
         "a": {
          "x": 75,
+         "y": 0
+        },
+        "b": {
+         "x": 75,
+         "y": 5
+        },
+        "id": 14
+       },
+       "15": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 75,
          "y": 5
         },
         "b": {
          "x": 70,
          "y": 0
         },
-        "id": 14
+        "id": 15
        }
       },
       "revision": "changed",
@@ -828,8 +882,8 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "$uidOf:13",
+        "$uidOf:14"
        ],
        "removed": [
         "$uid:o7"
@@ -850,36 +904,37 @@
        10,
        11,
        12,
-       13
+       13,
+       14
       ],
       "entities": {
-       "12": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 0,
-         "y": 40
-        },
-        "b": {
-         "x": 5,
-         "y": 40
-        },
-        "id": 12
-       },
        "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
         "a": {
          "x": 0,
+         "y": 40
+        },
+        "b": {
+         "x": 5,
+         "y": 40
+        },
+        "id": 13
+       },
+       "14": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0,
          "y": 45
         },
         "b": {
          "x": 5,
          "y": 45
         },
-        "id": 13
+        "id": 14
        }
       },
       "revision": "changed",
@@ -909,8 +964,8 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "$uidOf:13",
+        "$uidOf:14"
        ],
        "removed": [
         "$uid:o6"
@@ -931,10 +986,11 @@
        10,
        11,
        12,
-       13
+       13,
+       14
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -947,9 +1003,9 @@
          "x": 62,
          "y": 0
         },
-        "id": 12
+        "id": 13
        },
-       "13": {
+       "14": {
         "kind": "circle",
         "layerId": "agac",
         "attrs": {},
@@ -960,7 +1016,7 @@
          "y": 2
         },
         "r": 1,
-        "id": 13
+        "id": 14
        }
       },
       "revision": "changed",
@@ -982,7 +1038,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "entities": {
        "6": {
@@ -1031,7 +1088,6 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
         "$uidOf:13",
         "$uidOf:14",
         "$uidOf:15",
@@ -1040,7 +1096,8 @@
         "$uidOf:18",
         "$uidOf:19",
         "$uidOf:20",
-        "$uidOf:21"
+        "$uidOf:21",
+        "$uidOf:22"
        ],
        "removed": [
         "$uid:o1",
@@ -1069,10 +1126,11 @@
        18,
        19,
        20,
-       21
+       21,
+       22
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1086,9 +1144,9 @@
          "x": 10,
          "y": 0
         },
-        "id": 12
+        "id": 13
        },
-       "13": {
+       "14": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1102,9 +1160,9 @@
          "x": 10,
          "y": 5
         },
-        "id": 13
+        "id": 14
        },
-       "14": {
+       "15": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1115,20 +1173,6 @@
         "b": {
          "x": 30,
          "y": 0
-        },
-        "id": 14
-       },
-       "15": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 30,
-         "y": 0
-        },
-        "b": {
-         "x": 30,
-         "y": 10
         },
         "id": 15
        },
@@ -1138,15 +1182,29 @@
         "attrs": {},
         "a": {
          "x": 30,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 10
+        },
+        "id": 16
+       },
+       "17": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
          "y": 10
         },
         "b": {
          "x": 20,
          "y": 10
         },
-        "id": 16
+        "id": 17
        },
-       "17": {
+       "18": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1158,9 +1216,9 @@
          "x": 20,
          "y": 0
         },
-        "id": 17
+        "id": 18
        },
-       "18": {
+       "19": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1171,20 +1229,6 @@
         "b": {
          "x": 24,
          "y": 2
-        },
-        "id": 18
-       },
-       "19": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 24,
-         "y": 2
-        },
-        "b": {
-         "x": 24,
-         "y": 4
         },
         "id": 19
        },
@@ -1194,15 +1238,29 @@
         "attrs": {},
         "a": {
          "x": 24,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 4
+        },
+        "id": 20
+       },
+       "21": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
          "y": 4
         },
         "b": {
          "x": 22,
          "y": 4
         },
-        "id": 20
+        "id": 21
        },
-       "21": {
+       "22": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1214,7 +1272,73 @@
          "x": 22,
          "y": 2
         },
-        "id": 21
+        "id": 22
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eşit olmayan ölçekli bloğun kapalı yaylı yolu köşelerle yazılır ve söylenir",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 12,
+     "as": "o12"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "curves_approximated",
+        "path": "uids",
+        "message": "1 kapalı, genişlikli ya da kotlu yaylı yol eşit olmayan ölçek altında eliptik yaylarına 0,1 mm içinde köşelerle yazıldı; yayları kesin değil."
+       }
+      ],
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:13"
+       ],
+       "removed": [
+        "$uid:o12"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       13
+      ],
+      "entities": {
+       "13": {
+        "kind": "polyline",
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": "$any",
+        "closed": true,
+        "id": 13
        }
       },
       "revision": "changed",
@@ -1250,8 +1374,8 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "$uidOf:13",
+        "$uidOf:14"
        ],
        "removed": [
         "$uid:o11"
@@ -1272,10 +1396,11 @@
        9,
        10,
        12,
-       13
+       13,
+       14
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "nurbs",
         "layerId": "cizim",
         "attrs": {},
@@ -1331,9 +1456,9 @@
          1,
          1
         ],
-        "id": 12
+        "id": 13
        },
-       "13": {
+       "14": {
         "kind": "polyline",
         "layerId": "cizim",
         "attrs": {},
@@ -1365,7 +1490,7 @@
           0
          ]
         ],
-        "id": 13
+        "id": 14
        }
       },
       "revision": "changed",
@@ -1388,7 +1513,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "entities": {
        "11": {
@@ -1432,8 +1558,8 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "$uidOf:13",
+        "$uidOf:14"
        ],
        "removed": [
         "$uid:o1"
@@ -1454,10 +1580,11 @@
        10,
        11,
        12,
-       13
+       13,
+       14
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1471,9 +1598,9 @@
          "x": 10,
          "y": 0
         },
-        "id": 12
+        "id": 13
        },
-       "13": {
+       "14": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1487,7 +1614,7 @@
          "x": 10,
          "y": 5
         },
-        "id": 13
+        "id": 14
        }
       },
       "revision": "changed",
@@ -1523,10 +1650,10 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
         "$uidOf:13",
         "$uidOf:14",
-        "$uidOf:15"
+        "$uidOf:15",
+        "$uidOf:16"
        ],
        "removed": [
         "$uid:o10"
@@ -1549,26 +1676,10 @@
        12,
        13,
        14,
-       15
+       15,
+       16
       ],
       "entities": {
-       "12": {
-        "kind": "polyline",
-        "layerId": "cizim",
-        "attrs": {},
-        "color": "#404040",
-        "pts": [
-         {
-          "x": 90,
-          "y": 0.1
-         },
-         {
-          "x": 94,
-          "y": 0.1
-         }
-        ],
-        "id": 12
-       },
        "13": {
         "kind": "polyline",
         "layerId": "cizim",
@@ -1577,6 +1688,23 @@
         "pts": [
          {
           "x": 90,
+          "y": 0.1
+         },
+         {
+          "x": 94,
+          "y": 0.1
+         }
+        ],
+        "id": 13
+       },
+       "14": {
+        "kind": "polyline",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#404040",
+        "pts": [
+         {
+          "x": 90,
           "y": -0.1
          },
          {
@@ -1584,21 +1712,6 @@
           "y": -0.1
          }
         ],
-        "id": 13
-       },
-       "14": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "color": "#404040",
-        "a": {
-         "x": 90,
-         "y": 0.1
-        },
-        "b": {
-         "x": 90,
-         "y": -0.1
-        },
         "id": 14
        },
        "15": {
@@ -1607,6 +1720,21 @@
         "attrs": {},
         "color": "#404040",
         "a": {
+         "x": 90,
+         "y": 0.1
+        },
+        "b": {
+         "x": 90,
+         "y": -0.1
+        },
+        "id": 15
+       },
+       "16": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "color": "#404040",
+        "a": {
          "x": 94,
          "y": 0.1
         },
@@ -1614,7 +1742,7 @@
          "x": 94,
          "y": -0.1
         },
-        "id": 15
+        "id": 16
        }
       },
       "revision": "changed",
@@ -1636,7 +1764,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "entities": {
        "10": {
@@ -1691,8 +1820,8 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "$uidOf:13",
+        "$uidOf:14"
        ],
        "removed": [
         "$uid:o1"
@@ -1713,10 +1842,11 @@
        10,
        11,
        12,
-       13
+       13,
+       14
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1730,9 +1860,9 @@
          "x": 10,
          "y": 0
         },
-        "id": 12
+        "id": 13
        },
-       "13": {
+       "14": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1746,7 +1876,7 @@
          "x": 10,
          "y": 5
         },
-        "id": 13
+        "id": 14
        }
       },
       "revision": "changed",
@@ -1783,8 +1913,8 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
-        "$uidOf:13"
+        "$uidOf:13",
+        "$uidOf:14"
        ],
        "removed": [
         "$uid:o1"
@@ -1805,10 +1935,11 @@
        10,
        11,
        12,
-       13
+       13,
+       14
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1822,9 +1953,9 @@
          "x": 10,
          "y": 0
         },
-        "id": 12
+        "id": 13
        },
-       "13": {
+       "14": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1838,7 +1969,7 @@
          "x": 10,
          "y": 5
         },
-        "id": 13
+        "id": 14
        }
       },
       "revision": "changed",
@@ -1881,14 +2012,14 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:12",
         "$uidOf:13",
         "$uidOf:14",
         "$uidOf:15",
         "$uidOf:16",
         "$uidOf:17",
         "$uidOf:18",
-        "$uidOf:19"
+        "$uidOf:19",
+        "$uidOf:20"
        ],
        "removed": [
         "$uid:o2"
@@ -1915,10 +2046,11 @@
        16,
        17,
        18,
-       19
+       19,
+       20
       ],
       "entities": {
-       "12": {
+       "13": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1929,20 +2061,6 @@
         "b": {
          "x": 30,
          "y": 0
-        },
-        "id": 12
-       },
-       "13": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 30,
-         "y": 0
-        },
-        "b": {
-         "x": 30,
-         "y": 10
         },
         "id": 13
        },
@@ -1952,15 +2070,29 @@
         "attrs": {},
         "a": {
          "x": 30,
+         "y": 0
+        },
+        "b": {
+         "x": 30,
+         "y": 10
+        },
+        "id": 14
+       },
+       "15": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 30,
          "y": 10
         },
         "b": {
          "x": 20,
          "y": 10
         },
-        "id": 14
+        "id": 15
        },
-       "15": {
+       "16": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1972,9 +2104,9 @@
          "x": 20,
          "y": 0
         },
-        "id": 15
+        "id": 16
        },
-       "16": {
+       "17": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -1985,20 +2117,6 @@
         "b": {
          "x": 24,
          "y": 2
-        },
-        "id": 16
-       },
-       "17": {
-        "kind": "line",
-        "layerId": "cizim",
-        "attrs": {},
-        "a": {
-         "x": 24,
-         "y": 2
-        },
-        "b": {
-         "x": 24,
-         "y": 4
         },
         "id": 17
        },
@@ -2008,15 +2126,29 @@
         "attrs": {},
         "a": {
          "x": 24,
+         "y": 2
+        },
+        "b": {
+         "x": 24,
+         "y": 4
+        },
+        "id": 18
+       },
+       "19": {
+        "kind": "line",
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 24,
          "y": 4
         },
         "b": {
          "x": 22,
          "y": 4
         },
-        "id": 18
+        "id": 19
        },
-       "19": {
+       "20": {
         "kind": "line",
         "layerId": "cizim",
         "attrs": {},
@@ -2028,7 +2160,7 @@
          "x": 22,
          "y": 2
         },
-        "id": 19
+        "id": 20
        }
       },
       "revision": "changed",
@@ -2067,7 +2199,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2105,7 +2238,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2144,7 +2278,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2182,7 +2317,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2218,7 +2354,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2256,7 +2393,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2294,7 +2432,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2333,7 +2472,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same",
       "canUndo": false
@@ -2538,7 +2678,8 @@
        8,
        9,
        10,
-       11
+       11,
+       12
       ],
       "revision": "same"
      }
@@ -2585,23 +2726,18 @@
         },
         "items": [
          {
-          "uid": "$uidOf:12"
-         },
-         {
           "uid": "$uidOf:13"
          },
          {
           "uid": "$uidOf:14"
+         },
+         {
+          "uid": "$uidOf:15"
          }
         ]
        }
       ]
      }
-    },
-    {
-     "op": "captureUid",
-     "id": 12,
-     "as": "o12"
     },
     {
      "op": "captureUid",
@@ -2614,10 +2750,15 @@
      "as": "o14"
     },
     {
+     "op": "captureUid",
+     "id": 15,
+     "as": "o15"
+    },
+    {
      "op": "execute",
      "input": {
       "uids": [
-       "$uidOf:13"
+       "$uidOf:14"
       ]
      },
      "result": {
@@ -2626,14 +2767,14 @@
       "output": {
        "changed": [],
        "created": [
-        "$uidOf:15",
         "$uidOf:16",
-        "$uidOf:17"
+        "$uidOf:17",
+        "$uidOf:18"
        ],
        "removed": [
+        "$uid:o14",
         "$uid:o13",
-        "$uid:o12",
-        "$uid:o14"
+        "$uid:o15"
        ],
        "revision": "$current"
       }
@@ -2650,14 +2791,15 @@
        9,
        10,
        11,
-       15,
+       12,
        16,
-       17
+       17,
+       18
       ],
       "entities": {
-       "15": {
+       "16": {
         "kind": "circle",
-        "id": 15,
+        "id": 16,
         "layerId": "cizim",
         "attrs": {},
         "c": {
@@ -2666,9 +2808,9 @@
         },
         "r": 1
        },
-       "16": {
+       "17": {
         "kind": "circle",
-        "id": 16,
+        "id": 17,
         "layerId": "cizim",
         "attrs": {},
         "c": {
@@ -2677,9 +2819,9 @@
         },
         "r": 1
        },
-       "17": {
+       "18": {
         "kind": "circle",
-        "id": 17,
+        "id": 18,
         "layerId": "cizim",
         "attrs": {},
         "c": {
@@ -2715,13 +2857,13 @@
         },
         "items": [
          {
-          "uid": "$uidOf:12"
-         },
-         {
           "uid": "$uidOf:13"
          },
          {
           "uid": "$uidOf:14"
+         },
+         {
+          "uid": "$uidOf:15"
          }
         ]
        }
@@ -2770,23 +2912,18 @@
         },
         "items": [
          {
-          "uid": "$uidOf:12"
-         },
-         {
           "uid": "$uidOf:13"
          },
          {
           "uid": "$uidOf:14"
+         },
+         {
+          "uid": "$uidOf:15"
          }
         ]
        }
       ]
      }
-    },
-    {
-     "op": "captureUid",
-     "id": 12,
-     "as": "o12"
     },
     {
      "op": "captureUid",
@@ -2799,11 +2936,16 @@
      "as": "o14"
     },
     {
+     "op": "captureUid",
+     "id": 15,
+     "as": "o15"
+    },
+    {
      "op": "execute",
      "input": {
       "uids": [
-       "$uidOf:14",
-       "$uidOf:12"
+       "$uidOf:15",
+       "$uidOf:13"
       ]
      },
      "result": {
@@ -2813,9 +2955,9 @@
        "changed": [],
        "created": "$any",
        "removed": [
-        "$uid:o14",
-        "$uid:o12",
-        "$uid:o13"
+        "$uid:o15",
+        "$uid:o13",
+        "$uid:o14"
        ],
        "revision": "$current"
       }
@@ -2832,9 +2974,10 @@
        9,
        10,
        11,
-       15,
+       12,
        16,
-       17
+       17,
+       18
       ],
       "arrays": []
      }
@@ -2881,23 +3024,18 @@
         },
         "items": [
          {
-          "uid": "$uidOf:12"
-         },
-         {
           "uid": "$uidOf:13"
          },
          {
           "uid": "$uidOf:14"
+         },
+         {
+          "uid": "$uidOf:15"
          }
         ]
        }
       ]
      }
-    },
-    {
-     "op": "captureUid",
-     "id": 12,
-     "as": "o12"
     },
     {
      "op": "captureUid",
@@ -2911,6 +3049,11 @@
     },
     {
      "op": "captureUid",
+     "id": 15,
+     "as": "o15"
+    },
+    {
+     "op": "captureUid",
      "id": 1,
      "as": "o1"
     },
@@ -2919,7 +3062,7 @@
      "input": {
       "uids": [
        "$uidOf:1",
-       "$uidOf:12"
+       "$uidOf:13"
       ]
      },
      "result": {
@@ -2930,9 +3073,9 @@
        "created": "$any",
        "removed": [
         "$uid:o1",
-        "$uid:o12",
         "$uid:o13",
-        "$uid:o14"
+        "$uid:o14",
+        "$uid:o15"
        ],
        "revision": "$current"
       }

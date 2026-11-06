@@ -5839,7 +5839,8 @@
         "warnings": [
           "layer_locked",
           "not_explodable",
-          "semantics_lost"
+          "semantics_lost",
+          "curves_approximated"
         ]
       },
       "examples": [

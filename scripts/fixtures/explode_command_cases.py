@@ -78,10 +78,14 @@ WALL = {"kind": "wall", **base(10, color="#404040"), "pts": [p(90, 0), p(94, 0)]
 CURVED = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e02"
 # An insert of “Eğri yol” three times as wide and half as high (docs/adr/1008).
 WARPED = {"kind": "insert", **base(11), "block": CURVED, "p": p(100, 0), "scale": 3, "yScale": 0.5, "rotation": 0}
-ENTITIES = [OPEN, AREA, LINE, CIRCLE, LOCKED_PATH, INSERT, PARTS, CLOSED, POINT, WALL, WARPED]
+CLOSED_CURVE = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e03"
+# An insert of “Kapalı eğri” (a closed path with an arc) twice as high: no exact form, drawn as vertices, said.
+WARPED_CLOSED = {"kind": "insert", **base(12), "block": CLOSED_CURVE, "p": p(120, 0), "scale": 1, "yScale": 2,
+                 "rotation": 0}
+ENTITIES = [OPEN, AREA, LINE, CIRCLE, LOCKED_PATH, INSERT, PARTS, CLOSED, POINT, WALL, WARPED, WARPED_CLOSED]
 BY_ID = {e["id"]: e for e in ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
-NEXT = 12
+NEXT = 13
 LOST = "düz çizgiler ve taramalar oldu: stili, bileşenleri, katı, yüksekliği ve birleşimleri artık taşınmıyor; komşu duvarlar onlarla birleşmez."
 DEFINITION = {"id": BLOCK, "name": "Rögar", "base": p(0, 0), "entities": [
     {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": p(0, 0), "b": p(1, 0)},
@@ -98,6 +102,12 @@ CURVED_DEFINITION = {"id": CURVED, "name": "Eğri yol", "base": p(0, 0), "entiti
 ]}
 
 
+CLOSED_DEFINITION = {"id": CLOSED_CURVE, "name": "Kapalı eğri", "base": p(0, 0), "entities": [
+    {"kind": "polyline", "id": 1, "layerId": "", "attrs": {}, "pts": [p(0, 0), p(2, 0), p(2, 2)], "bulges": [1, 0, 0],
+     "closed": True},
+]}
+
+
 def setup():
     return {
         "format": "kentos.document", "version": 1, "name": "Patlat",
@@ -108,7 +118,7 @@ def setup():
         "activeLayer": "cizim",
         "entities": copy.deepcopy(ENTITIES),
         "styles": {"items": [], "categories": []},
-        "blocks": [copy.deepcopy(DEFINITION), copy.deepcopy(CURVED_DEFINITION)],
+        "blocks": [copy.deepcopy(DEFINITION), copy.deepcopy(CURVED_DEFINITION), copy.deepcopy(CLOSED_DEFINITION)],
     }
 
 
@@ -146,6 +156,9 @@ def pieces(e):
                 {"kind": "line", **look(e), "a": left[0], "b": right[0]}, {"kind": "line", **look(e), "a": left[1], "b": right[1]}]
     elif kind == "insert" and e["block"] == CURVED:
         return warped_pieces(e)
+    elif kind == "insert" and e["block"] == CLOSED_CURVE:
+        # Its vertices are the core's sampling within 0.1 mm, not computed here: the piece is a polyline, its points any.
+        return [{"kind": "polyline", "layerId": e["layerId"], "attrs": {}, "pts": "$any", "closed": True}]
     elif kind == "insert":
         out = []
         s, at = e["scale"], e["p"]
@@ -247,6 +260,9 @@ def cases():
         written("Bloğun yerleştirmesi tanımın nesnelerine açılır: ölçekli, katmanı ya da yerleştirmeninki, rengi ya da yerleştirmeninki",
                 [6], undo=True),
         written("İki nesne birlikte, verildikleri sırayla: silme ve parçaları", [1, 2]),
+        written("Eşit olmayan ölçekli bloğun kapalı yaylı yolu köşelerle yazılır ve söylenir", [12], warnings=[{
+            "code": "curves_approximated", "path": "uids", "message":
+            "1 kapalı, genişlikli ya da kotlu yaylı yol eşit olmayan ölçek altında eliptik yaylarına 0,1 mm içinde köşelerle yazıldı; yayları kesin değil."}]),
         written("Eşit olmayan ölçekli bloğun yaylı yolu kesin NURBS, genişlikli düz yolu kenarına dik ölçülen genişlikler olur; geri alınır",
                 [11], undo=True, within=1e-12, warnings=[{"code": "semantics_lost", "path": "uids", "message":
                     f"{sum(1 for d in CURVED_DEFINITION['entities'] if any(d.get('bulges', [])))} yaylı çoklu çizgi eşit olmayan ölçek altında kesin NURBS oldu: eğrisi aynı, ama köşe düzenlemesi yerine NURBS düzenlemesi (denetim noktaları) kullanılır."}]),

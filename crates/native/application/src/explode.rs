@@ -199,6 +199,7 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
     let mut walls_made_plain = 0;
     let mut openings_made_plain = 0;
     let mut arcs_as_nurbs = 0;
+    let mut arcs_sampled = 0;
     for (at, slot, e, uid) in open {
         if let Entity::Insert(i) = e
             && crate::blocks::contains_space_separator(doc, i.block)
@@ -257,9 +258,10 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
         let insert = matches!(e, Entity::Insert(_));
         let cut = match (e, blocks) {
             (Entity::Insert(_), Some(blocks)) => {
-                let (cut, n) = blocks.explode_counted(&core_entity(e));
+                let (cut, n, sampled) = blocks.explode_counted(&core_entity(e));
                 if matches!(cut, Cut::Pieces(_)) {
                     arcs_as_nurbs += n;
+                    arcs_sampled += sampled;
                 }
                 cut
             }
@@ -320,6 +322,17 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
             code: codes::SEMANTICS_LOST.into(),
             message: format!(
                 "{arcs_as_nurbs} yaylı çoklu çizgi eşit olmayan ölçek altında kesin NURBS oldu: eğrisi aynı, ama köşe düzenlemesi yerine NURBS düzenlemesi (denetim noktaları) kullanılır."
+            ),
+            path: Some("uids".into()),
+        });
+    }
+    if arcs_sampled > 0 {
+        // A closed, wide or tilted path with arcs under unequal factors has no exact form here (docs/adr/1008): drawn as
+        // vertices within 0.1 mm of its elliptic arcs, said.
+        warnings.push(CommandWarning {
+            code: codes::CURVES_APPROXIMATED.into(),
+            message: format!(
+                "{arcs_sampled} kapalı, genişlikli ya da kotlu yaylı yol eşit olmayan ölçek altında eliptik yaylarına 0,1 mm içinde köşelerle yazıldı; yayları kesin değil."
             ),
             path: Some("uids".into()),
         });

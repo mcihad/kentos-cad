@@ -985,7 +985,7 @@ const ENTRIES: &[Entry] = &[
             &["invalid_density", "not_explodable", "slots_exhausted"],
             REVISION,
         ],
-        warnings: &["layer_locked", "not_explodable", "semantics_lost"],
+        warnings: &["layer_locked", "not_explodable", "semantics_lost", "curves_approximated"],
         targets: || {
             vec![target(
                 None,

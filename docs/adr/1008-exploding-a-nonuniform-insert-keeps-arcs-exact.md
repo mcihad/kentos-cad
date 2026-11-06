@@ -46,5 +46,7 @@ kopyalanıyordu.
 - Çoklu çizginin köşe düzenlemesi yerine NURBS düzenlemesi gelir. Ek (6 Kasım 2026): Patlat bunu
   `semantics_lost` uyarısıyla sayarak söyler (“N yaylı çoklu çizgi eşit olmayan ölçek altında kesin NURBS oldu …”);
   sayı `Blocks::explode_counted`'dan gelir, ortak vaka uyarıyı bekler.
-- Kapalı yaylı yol, genişlikli yaylı yol ve kotlu yaylı yol hâlâ örneklenir.
+- Kapalı yaylı yol, genişlikli yaylı yol ve kotlu yaylı yol hâlâ örneklenir (eliptik yaylara 0,1 mm içinde köşeler);
+  ek (6 Kasım 2026): Patlat bunu sayarak `curves_approximated` uyarısıyla söyler, sessiz değildir
+  (`Blocks::explode_counted`'in üçüncü sayısı; ortak vakası “Kapalı eğri” bloğuyla).
 - AutoCAD ile karşılaştırma yapılmadı (CAD-IO-20).

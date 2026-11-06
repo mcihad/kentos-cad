@@ -2567,7 +2567,7 @@ Baskı profili kullanıcının temasından etkilenmez: PDF `kentos_plot::book::b
 tarih)`'tır, girdisinde tema yoktur ve tema çizimde saklanmaz. AutoCAD/Acrobat ile karşılaştırma kabul satırı değildir ve
 sahibin kararıyla kapsam dışıdır (CAD-IO-20); CTB/STB yazıcısı doğrulanamadığı için yoktur.
 
-### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [~]
+### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [x]
 
 **Öncelik:** P0. **Kod:** [C27], [C01], [C11], [C22].
 **Dayanak:** rakiplerde de özelleşmiş nesne ve ilişki taşımada kapsam
@@ -2620,6 +2620,15 @@ konu konu verir; eski notlar aynı sözlerle kalır, yeni kararlar (nesnesiz/tab
 ya da eğik düzlem, boş Layout1, inç pafta) yalnız bu bölümdedir. ezdxf'in yazdığı dosya ve kuruluşundan hesaplanan
 beklentiyle sınandı; Çizim al penceresi “Okuma kararları”nı gösterir. Açık: kapalı/genişlikli/kotlu yaylı yol, AutoCAD
 denetimi.
+
+**Kabulün kanıtı (6 Kasım 2026):** birimli iç içe blok, yaylı/genişlikli yol, elips/NURBS, ilişkili ölçü, karmaşık
+desen ve iki paftalı 2B küme ezdxf'le yazılıp aç–düzenle–kaydet–yeniden oku akışında sınandı, her kayıp raporlu,
+kaynak `replaceSource` olmadan ezilmez (ADR 1061); okuyucunun birim, düzlem, blok, katman ve kâğıt kararları tek yapılı
+bölümde (ADR 1010); Patlat'ta eşit olmayan yay kesin NURBS ya da kesin genişlik (ADR 1008), kesin biçimi olmayan
+kapalı/genişlikli/kotlu yaylı yol `curves_approximated` ile söylenir (planın “korunamayan veri raporlu kabul yolunu
+izlesin” kuralı). DWG okuyucusu sabit revizyonla bağlı (`acadrust` rev ff75fdd), gerçek DWG kümesi
+`fixtures/formats/v1/dwg` ve `fixtures/blocks/v1/kitaplik-dwg` testlerinde. Gerçek AutoCAD denetimi yapılmadı ve
+yapılmış gibi yazılmadı (CAD-IO-20, sahibin kararıyla kapsam dışı).
 
 ### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [x]
 

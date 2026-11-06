@@ -743,15 +743,16 @@ impl Blocks {
         self.explode_counted(insert).0
     }
 
-    /// [`Self::explode`], and how many of its paths with arcs became NURBS under unequal factors (docs/adr/1008):
-    /// Patlat says so, their vertex editing being NURBS editing now.
-    pub fn explode_counted(&self, insert: &Entity) -> (Cut, usize) {
-        let mut arcs_as_nurbs = 0;
-        let cut = self.explode_with_count(insert, &mut arcs_as_nurbs);
-        (cut, arcs_as_nurbs)
+    /// [`Self::explode`], and how many of its paths with arcs became NURBS under unequal factors (docs/adr/1008),
+    /// and how many could not and were drawn as vertices within 0.1 mm (a closed, wide or tilted one): Patlat says
+    /// both.
+    pub fn explode_counted(&self, insert: &Entity) -> (Cut, usize, usize) {
+        let (mut arcs_as_nurbs, mut arcs_sampled) = (0, 0);
+        let cut = self.explode_with_count(insert, &mut arcs_as_nurbs, &mut arcs_sampled);
+        (cut, arcs_as_nurbs, arcs_sampled)
     }
 
-    fn explode_with_count(&self, insert: &Entity, arcs_as_nurbs: &mut usize) -> Cut {
+    fn explode_with_count(&self, insert: &Entity, arcs_as_nurbs: &mut usize, arcs_sampled: &mut usize) -> Cut {
         let Some((flat, m, similar)) = self.placed(&insert.shape) else {
             return Cut::Error("Yerleştirilen blok çizimde tanımlı değil; patlatılamadı.".into());
         };
@@ -799,7 +800,15 @@ impl Blocks {
                         }
                         exact
                     }
-                    None => place_in(&e.shape, &m, similar, self.font),
+                    None => {
+                        let arcs = |b: &Option<Vec<f64>>| b.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0));
+                        if !similar
+                            && matches!(&e.shape, Shape::Polyline { bulges, .. } | Shape::Polygon { bulges, .. } if arcs(bulges))
+                        {
+                            *arcs_sampled += 1;
+                        }
+                        place_in(&e.shape, &m, similar, self.font)
+                    }
                 }
             } else {
                 match insert_through(&e.shape, &m) {
