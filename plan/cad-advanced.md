@@ -1847,7 +1847,7 @@ Aynı çizim 1:50 ve 1:20 görünüm pencerelerinde vektör PDF'te çizim sıras
 kalınlıklı saç telini, yarı saydam mürekkebi ve aynı kâğıt tiresini korur; CPU baskı resmi maskeyi aynı sırayla
 uygular. Dört ekran temasında pafta takımının PDF'i bayt bayt aynı, çizim değişmez. Üç test ve PDF resmi.
 
-### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
+### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [x]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
 **Dayanak:** AutoCAD adlandırılmış kaynak denetimi ve proje araç
@@ -2265,6 +2265,18 @@ Maddeler:
   Değiştir yerel ad ve kimliği korur, Yeni adla yeni ad ister; kullanılan tanım temizlenmez (ADR 1002, 1100, 1126 §5).
 
 Gerekçeli istisna dışında bütün satırlar kanıtlı; o satır açık olduğu için madde `[~]` kalır.
+
+**Gerekçeli istisna (6 Kasım 2026, [ADR 1129](../docs/adr/1129-accepted-standards-findings.md)):** *“Geçerli istisna
+gerekçeyle saklanabilsin”* artık kanıtlı. `cad.standards.exceptions` bir denetim bulgusunu (tür, konu, katman)
+standardın kaynağına ve revizyonuna bağlı, kabul anındaki değerleriyle, zorunlu gerekçe ve isteğe bağlı kim/ne
+zamanla kabul eder ya da kabulü geri alır; kabuller projededir (`.kcad` şema 190, geçici numara). `cad.standards.check`
+kabul edilen bulguyu gizlemez: `accepted` olarak listeler ve ayrı sayar; paketin revizyonu ya da çizimdeki değer
+değişince `lapsed` der. Çizim standardı penceresinde Gerekçe, Gerekçeyle kabul et ve Kabulü geri al. Kanıt:
+`office_profiles.rs` `an_accepted_finding_survives_a_reopen_and_lapses_on_the_next_revision` (kabul, kaydedip açınca
+kalır, sonraki revizyonda düşer) ve `opening_a_project_bound_to_another_office_does_not_apply_it` (açılış
+uygulamaz); bağımsız başvurudan 53 ortak vaka (`cad.standards.exceptions` 32, `cad.standards.check.exceptions` 21);
+şema 190 örnekleri bağımsız okuyucuyla. Bu ve yukarıdaki satırlarla maddenin bütün kabul satırları ve maddeleri
+kanıtlıdır; madde `[x]`. Sınır: Uygula kabul edilmiş bulguyu ayırt etmez (ADR 1129 §7).
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 

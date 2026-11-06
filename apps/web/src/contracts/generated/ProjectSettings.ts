@@ -34,6 +34,7 @@ import type { RoadSettings } from "./RoadSettings";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SourceBase } from "./SourceBase";
 import type { SourceLink } from "./SourceLink";
+import type { StandardException } from "./StandardException";
 import type { SurveySettings } from "./SurveySettings";
 import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
@@ -250,6 +251,11 @@ approvedSheetTemplates?: Array<ApprovedSheetTemplate>,
  * The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
  */
 tableStyles?: Array<TableStyleDef>, 
+/**
+ * The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to
+ * the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
+ */
+standardExceptions?: Array<StandardException>, 
 /**
  * Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
  * plotted or measured. Numbered; their stamps say which state of an object each was written for.

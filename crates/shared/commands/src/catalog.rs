@@ -10895,6 +10895,37 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Standart bulgusunu gerekçeyle kabul et (docs/adr/1129), held together by
+        // fixtures/commands/v1/cad.standards.exceptions.json.
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_EXCEPTIONS.into(),
+            version: crate::CAD_STANDARDS_EXCEPTIONS_VERSION,
+            title: "Standart bulgusunu kabul et".into(),
+            summary: "cad.standards.check'in bulgularını gerekçesiyle kabul eder (operation accept) ya da kabulü geri alır (withdraw). Bulgu bugünkü denetimdeki türü, konusu ve katmanıyla anılır; standart denetimdeki gibi verilir (name ya da standard, resources) ve origin bağlı paketin kimliği ve revizyonudur (yoksa standardın adı). \
+                      Kabul standardın kaynağını, revizyonunu ve bulgunun o anki beklenen ve bulunan değerini saklar; revizyon ya da çizimdeki değer değişince denetim bulguyu lapsed (yeniden değerlendirilecek) verir, kabul edilenleri accepted olarak listede tutar ve ayrı sayar. \
+                      Gerekçe zorunludur (en çok 500 karakter); by ve at (kim, ne zaman) verilirse kaydedilir. Kabuller proje ayarıdır (standardExceptions): çizimi kirli yapar, geri alma adımı değildir. Eski projeyi açmak standardı uygulamaz. \
+                      Retler: invalid_input, reason_required, standard_not_found, no_standard, invalid_standard, invalid_revision, revision_conflict, finding_not_found."
+                .into(),
+            aliases: vec!["standartistisna".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StandardsExceptions>(),
+            output: schema::<crate::StandardsExceptionsEdited>(),
+            plan: Some(schema::<crate::StandardsExceptionsEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "A-DUVAR'ın rengini müşteri isteğiyle kabul et".into(),
+                input: json!({ "operation": "accept", "name": "mimari-ofis",
+                    "findings": [{ "kind": "layerColor", "subject": "A-DUVAR", "layer": "duvar" }],
+                    "reason": "Müşteri duvarların kırmızı basılmasını istedi" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_STANDARDS_CONFLICTS.into(),
             version: crate::CAD_STANDARDS_CONFLICTS_VERSION,
@@ -15659,6 +15690,9 @@ mod tests {
                     }
                     crate::CAD_STANDARDS_INSTALL => {
                         serde_json::from_value::<crate::StandardsInstall>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_EXCEPTIONS => {
+                        serde_json::from_value::<crate::StandardsExceptions>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_DRAWING_REPAIR => {
                         serde_json::from_value::<crate::DrawingRepair>(e.input.clone()).map(|_| ())

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `187`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-188.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `190`; 188 ve 189 başka dallarda); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-191.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -831,6 +831,14 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `unknown_field`, satır sonlu hücreyi `bad_value` ile reddeder. Örnek `table-extraction.kcad`; eski şemada
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
+
+**Şema 190** (ADR 1129; CAD-ADV-12, dalda geçici numara): ayarların `standardExceptions`'ı (sözleşmenin
+`StandardException` listesinin JSON'u: bulgunun türü `kind`, konusu `subject`, katmanı `layer`, standardın kaynağı
+`standard` ve `revision`'ı, kabul anındaki `expected`/`found`, gerekçe `reason` (boşluktan ibaret değil, en çok 500
+karakter), isteğe bağlı `by` ve `at`; boş liste yazılmaz, aynı tür, konu ve katman aynı standart için bir kez,
+bilinmeyen alan `unknown_field`). Yazıcı 190'ı yalnız kabul edilmiş bulgu varken seçer; 187 ve öncesi alanı
+`unknown_field` sayar (`broken/standard-exceptions-in-schema-187.kcad`). Örnek `standard-exceptions.json/.kcad`; bozuklar
+`broken/standard-exceptions-{unknown-field,reason,duplicate}.kcad`.
 
 **Şema 187** (ADR 1025; CAD-ADV-11): kılavuz stilinin `textStyle`'ı (notun yazıldığı proje yazı stili, adıyla; ad
 kuralı şema 186'nınki). Yazıcı 187'yi yalnız bir kılavuz stili `textStyle` taşıyınca seçer; 186 ve öncesi alanı

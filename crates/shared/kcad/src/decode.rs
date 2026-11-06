@@ -771,6 +771,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut review_notes = Vec::new();
     let mut approved_sheet_templates = Vec::new();
     let mut table_styles = Vec::new();
+    let mut standard_exceptions = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
@@ -1143,6 +1144,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 table_styles = list;
             }
             // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, read whole and checked.
+            // Schema 190 (docs/adr/1129): the accepted standards findings, read whole and checked.
+            "standardExceptions" if has.standard_exceptions => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::StandardException> = serde_json::from_value(value).map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                    r.fail_at(code, at, &format!("kabul edilmiş standart bulguları okunamadı: {words}"))
+                })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş kabul edilmiş bulgu listesi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::standard_exceptions_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                standard_exceptions = list;
+            }
             "approvedSheetTemplates" if has.approved_sheet_templates => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -1795,6 +1813,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         standard_docs,
         approved_sheet_templates,
         table_styles,
+        standard_exceptions,
         review_notes,
         lineage,
         map_srid,

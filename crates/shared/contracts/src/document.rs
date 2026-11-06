@@ -476,6 +476,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TableStyleDef>>", optional))]
     pub table_styles: Vec<crate::TableStyleDef>,
+    /// The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to
+    /// the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::StandardException>>", optional))]
+    pub standard_exceptions: Vec<crate::StandardException>,
     /// Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
     /// plotted or measured. Numbered; their stamps say which state of an object each was written for.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

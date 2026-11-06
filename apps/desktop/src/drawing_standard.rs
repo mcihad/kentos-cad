@@ -9,7 +9,7 @@ use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DrawingStandard, ProjectStandardDocument, SettingsSet, StandardIssue,
-    StandardIssueKind, StandardProvenance, StandardResources, StandardsApplied, StandardsApply,
+    StandardIssueKind, StandardIssueState, StandardProvenance, StandardResources, StandardsApplied, StandardsApply,
     StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
     StandardsResolve, built_in_standard, built_in_standards, parse_standard_document,
 };
@@ -33,6 +33,8 @@ const RESTYLE: &str = "Katmanların görünüşünü düzelt";
 const RENAME: &str = "Eski katmanları birleştir";
 const STYLES: &str = "Yazı tipi ve stiller";
 const ROW: f32 = 26.0;
+const ACCEPT: &str = "Gerekçeyle kabul et";
+const WITHDRAW: &str = "Kabulü geri al";
 
 #[derive(Debug, Clone)]
 pub struct Window {
@@ -57,6 +59,8 @@ pub struct Window {
     chosen_conflict: Option<usize>,
     /// The finding pressed: its whole message shown under the table.
     chosen: Option<usize>,
+    /// Gerekçe as typed, for Gerekçeyle kabul et (docs/adr/1129).
+    reason: String,
 }
 
 #[derive(Debug, Clone)]
@@ -78,6 +82,10 @@ pub enum Event {
     /// A finding's row pressed: its layer chosen in Katmanlar.
     Pick(usize),
     PickConflict(usize),
+    /// Gerekçe typed; Gerekçeyle kabul et and Kabulü geri al on the chosen finding (docs/adr/1129).
+    Reason(String),
+    Accept,
+    Withdraw,
     Apply,
     Close,
 }
@@ -91,6 +99,9 @@ pub struct SelectedStandard {
     document: Option<String>,
     bound_id: Option<String>,
     provenance: Option<StandardProvenance>,
+    /// The source accepted findings are bound to (docs/adr/1129): a package's id and revision, the combined
+    /// standard's rules' origin; none: the standard's name.
+    origin: Option<kentos_commands::StandardOrigin>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -133,6 +144,7 @@ fn selected_project(document: &ProjectStandardDocument) -> Result<SelectedStanda
         standard,
         resources: package.resources,
         document: Some(document.text.clone()),
+        origin: Some(kentos_commands::StandardOrigin { id: package.id.clone(), revision: package.revision.clone() }),
         bound_id: Some(package.id),
         provenance: None,
     })
@@ -297,6 +309,7 @@ impl App {
             conflicts: Err(String::new()),
             chosen_conflict: None,
             chosen: None,
+            reason: String::new(),
         });
         self.dialog = Some(Dialog::DrawingStandard);
         self.refresh_standard();
@@ -343,6 +356,7 @@ impl App {
                     .custom
                     .as_ref()
                     .and_then(|selected| selected.resources.clone()),
+                origin: w.custom.as_ref().and_then(|selected| selected.origin.clone()),
             },
         ) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -434,6 +448,10 @@ impl App {
                             ),
                             None => file.file_name(),
                         };
+                        let origin = package.as_ref().map(|p| kentos_commands::StandardOrigin {
+                            id: p.id.clone(),
+                            revision: p.revision.clone(),
+                        });
                         let document = if package.is_some() {
                             Some(String::from_utf8(bytes).map_err(|e| e.to_string())?)
                         } else {
@@ -448,6 +466,7 @@ impl App {
                             document,
                             bound_id: None,
                             provenance: None,
+                            origin,
                         }))
                     },
                     |result| msg(Event::Loaded(result)),
@@ -536,6 +555,7 @@ impl App {
                             resources: Some(output.resources),
                             document: None,
                             bound_id: None,
+                            origin: Some(output.provenance.rules.clone()),
                             provenance: Some(output.provenance),
                         });
                         w.resolved_snapshot = Some(snapshot);
@@ -579,6 +599,14 @@ impl App {
                 }
                 return Task::none();
             }
+            Event::Reason(text) => {
+                w.reason = text;
+                return Task::none();
+            }
+            Event::Accept | Event::Withdraw => {
+                self.standard_exception(matches!(event, Event::Accept));
+                return Task::none();
+            }
             Event::PickConflict(i) => {
                 w.chosen_conflict = w
                     .conflicts
@@ -602,6 +630,52 @@ impl App {
     }
 
     /// Associates the selected versioned file without applying its rules.
+    /// Gerekçeyle kabul et / Kabulü geri al (docs/adr/1129): the chosen finding through `cad.standards.exceptions`,
+    /// against the standard the window checks with (its package's id and revision); who is the computer's user, when now.
+    fn standard_exception(&mut self, accept: bool) {
+        let Some(w) = &self.drawing_standard else { return };
+        let Some(issue) = w.chosen.and_then(|i| w.report.as_ref().ok()?.issues.get(i).cloned()) else { return };
+        let input = kentos_commands::StandardsExceptions {
+            operation: if accept {
+                kentos_commands::StandardExceptionOperation::Accept
+            } else {
+                kentos_commands::StandardExceptionOperation::Withdraw
+            },
+            findings: vec![kentos_commands::StandardFindingKey {
+                kind: issue.kind,
+                subject: issue.subject.clone(),
+                layer: issue.layer.clone(),
+            }],
+            name: w.custom.is_none().then(|| w.standard.clone()),
+            standard: w.custom.as_ref().map(|selected| selected.standard.clone()),
+            resources: w.custom.as_ref().and_then(|selected| selected.resources.clone()),
+            origin: w.custom.as_ref().and_then(|selected| selected.origin.clone()),
+            reason: accept.then(|| w.reason.trim().to_owned()),
+            by: accept.then(|| std::env::var("USER").ok().filter(|u| !u.trim().is_empty())).flatten(),
+            at: accept.then(|| crate::settings::rfc3339(std::time::SystemTime::now())),
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        match kentos_native_application::standards_exceptions::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { .. } => {
+                let said = if accept {
+                    format!("“{}” bulgusu gerekçesiyle kabul edildi; denetimde kabul edilmiş olarak kalır.", issue.subject)
+                } else {
+                    format!("“{}” bulgusunun kabulü geri alındı; bulgu yeniden açık.", issue.subject)
+                };
+                self.say(kentos_interaction::Level::Success, said);
+                if let Some(w) = self.drawing_standard.as_mut() {
+                    w.reason.clear();
+                }
+                self.refresh_standard();
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                self.warn(error.message);
+            }
+            _ => {}
+        }
+    }
+
     fn attach_standard(&mut self) {
         let Some(window) = self.drawing_standard.as_ref() else {
             return;
@@ -978,15 +1052,28 @@ impl App {
                         }
                     }
                 }
+                match (issue.state, &issue.reason) {
+                    (StandardIssueState::Accepted, Some(r)) => detail.push_str(&format!(" Kabul edildi: {r}")),
+                    (StandardIssueState::Lapsed, Some(r)) => detail.push_str(&format!(
+                        " Kabul düştü (standardın revizyonu ya da çizimdeki değer değişti), yeniden değerlendirin. Gerekçesi: {r}"
+                    )),
+                    _ => {}
+                }
                 detail
             });
+        // The chosen finding's acceptance (docs/adr/1129): a reason to accept it with, or its acceptance taken back.
+        let chosen_state = chosen
+            .and_then(|i| issues.iter().find(|(original, _)| *original == i))
+            .map(|(_, issue)| issue.state);
         let count = issues.len();
         let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
             let (original, issue) = &issues[i];
-            let mark: Element<'_, Message> = if issue.fixable {
-                icon(Icon::Check).size(12.0).tone(Tone::Success).into()
-            } else {
-                icon(Icon::Warning).size(12.0).tone(Tone::Muted).into()
+            let mark: Element<'_, Message> = match issue.state {
+                // Accepted with a reason (docs/adr/1129): kept on purpose; lapsed: to be looked at again.
+                StandardIssueState::Accepted => icon(Icon::Info).size(12.0).tone(Tone::Muted).into(),
+                StandardIssueState::Lapsed => icon(Icon::Warning).size(12.0).tone(Tone::Warning).into(),
+                StandardIssueState::Open if issue.fixable => icon(Icon::Check).size(12.0).tone(Tone::Success).into(),
+                StandardIssueState::Open => icon(Icon::Warning).size(12.0).tone(Tone::Muted).into(),
             };
             let cell = |t: String| {
                 Elided::new(t)
@@ -1000,7 +1087,11 @@ impl App {
             let face = row![
                 container(label::caption(kind_words(issue.kind))).width(typography::scaled(120.0)),
                 cell(issue.subject.clone()),
-                cell(change_words(issue)),
+                cell(match issue.state {
+                    StandardIssueState::Accepted => format!("Kabul edildi · {}", change_words(issue)),
+                    StandardIssueState::Lapsed => format!("Kabul düştü · {}", change_words(issue)),
+                    StandardIssueState::Open => change_words(issue),
+                }),
                 container(mark)
                     .width(typography::scaled(24.0))
                     .align_x(Center),
@@ -1250,6 +1341,25 @@ impl App {
                     )
                     .width(Fill),
             )
+            .push(match chosen_state {
+                None => Element::from(label::caption("Bir bulgu seçince gerekçesiyle kabul edebilir ya da kabulünü geri alabilirsiniz.")),
+                Some(state) => row![
+                    container(
+                        kentos_ui::widget::text_field("Gerekçe: neden standarttan ayrılıyor", &w.reason)
+                            .on_input(|t| msg(Event::Reason(t)))
+                    )
+                    .width(Fill),
+                    words::secondary(
+                        ACCEPT,
+                        (!w.reason.trim().is_empty() && state != StandardIssueState::Accepted)
+                            .then(|| msg(Event::Accept))
+                    ),
+                    words::secondary(WITHDRAW, (!state.is_open()).then(|| msg(Event::Withdraw))),
+                ]
+                .spacing(8)
+                .align_y(Center)
+                .into(),
+            })
             .push(words::field("Düzeltme", parts, None))
             .push(words::summary(preview));
         if let Some(error) = &w.load_error
@@ -1297,6 +1407,9 @@ impl App {
             Control::Press(STYLES) => Some(msg(Event::Styles(!w.styles))),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(CLOSE) => Some(msg(Event::Close)),
+            Control::Press(ACCEPT) => Some(msg(Event::Accept)),
+            Control::Press(WITHDRAW) => Some(msg(Event::Withdraw)),
+            Control::Fill("Gerekçe", t) => Some(msg(Event::Reason(t.to_owned()))),
             other => return Err(format!("“{STANDARD_TITLE}” penceresinde {other} yok")),
         })
     }
@@ -1304,6 +1417,16 @@ impl App {
 
 /// The report in a sentence.
 fn report_words(r: &StandardsReport) -> String {
+    let accepted = match (r.accepted, r.lapsed) {
+        (0, 0) => String::new(),
+        (a, 0) => format!(" {a} bulgu gerekçesiyle kabul edilmiş."),
+        (0, l) => format!(" {l} kabul düşmüş: yeniden değerlendirin."),
+        (a, l) => format!(" {a} bulgu kabul edilmiş, {l} kabul düşmüş."),
+    };
+    report_count(r) + &accepted
+}
+
+fn report_count(r: &StandardsReport) -> String {
     let n = r.issues.len();
     match r.fixable as usize {
         0 => format!("{n} bulgu; hiçbiri Uygula ile düzelmez, elle düzeltin."),
@@ -1655,6 +1778,7 @@ mod tests {
             document: Some(text.clone()),
             bound_id: None,
             provenance: None,
+            origin: None,
         }))));
         let _ = app.drawing_standard_event(Event::Attach);
         let after = app.document.as_ref().unwrap().model.to_snapshot_v2();
@@ -1669,6 +1793,7 @@ mod tests {
             document: Some(text),
             bound_id: None,
             provenance: None,
+            origin: None,
         }))));
         let _ = app.drawing_standard_event(Event::Attach);
         assert_eq!(

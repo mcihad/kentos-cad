@@ -511,6 +511,11 @@ impl Input for kentos_commands::StandardsInstall {
         None
     }
 }
+impl Input for kentos_commands::StandardsExceptions {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
 impl Input for kentos_commands::DrawingRepair {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -5041,6 +5046,10 @@ fn run_op(
         kentos_commands::CAD_STANDARDS_INSTALL => {
             use kentos_native_application::standards_install;
             run!(standards_install, kentos_commands::StandardsInstall)
+        }
+        kentos_commands::CAD_STANDARDS_EXCEPTIONS => {
+            use kentos_native_application::standards_exceptions;
+            run!(standards_exceptions, kentos_commands::StandardsExceptions)
         }
         kentos_commands::CAD_REVIEW_NOTES_EDIT => {
             run!(review_notes, kentos_commands::ReviewNotesEdit)

@@ -6864,6 +6864,20 @@ StakeoutSendFormatName = Literal["landxml", "gsi16", "gsi8", "gts7", "jobxml", "
 """The names of :class:`StakeoutSendFormat`, for a plain string."""
 
 
+class StandardExceptionOperation(_StrEnum):
+    """What `cad.standards.exceptions` does.
+
+    - ``accept``: The findings are kept on purpose, with `reason`.
+    - ``withdraw``: Their acceptance is taken away: they are open again.
+    """
+    ACCEPT = "accept"
+    WITHDRAW = "withdraw"
+
+
+StandardExceptionOperationName = Literal["accept", "withdraw"]
+"""The names of :class:`StandardExceptionOperation`, for a plain string."""
+
+
 class StandardInstallAction(_StrEnum):
     """What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and
     local id kept, so what names it follows), the drawing's kept, or the standard's added under another name.
@@ -6950,6 +6964,22 @@ class StandardIssueKind(_StrEnum):
 
 StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "blockUnit", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "missingTableStyleDefinition", "tableStyleDefinition", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
+
+
+class StandardIssueState(_StrEnum):
+    """Whether a finding is the project's to look at (docs/adr/1129 §2).
+
+    - ``open``: Not accepted (the field is then absent).
+    - ``accepted``: Accepted with a reason, against this standard's revision and with what the drawing has now.
+    - ``lapsed``: Accepted once, but the standard's revision or what the drawing has changed since: to be looked at again.
+    """
+    OPEN = "open"
+    ACCEPTED = "accepted"
+    LAPSED = "lapsed"
+
+
+StandardIssueStateName = Literal["open", "accepted", "lapsed"]
+"""The names of :class:`StandardIssueState`, for a plain string."""
 
 
 class StandardResourceKind(_StrEnum):
@@ -67709,6 +67739,8 @@ class ProjectSettings(_Model):
         sources: The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
         standard_docs: Ordered portable drawing standards retained with the project. Earlier
             entries take precedence; choosing a standard does not apply it.
+        standard_exceptions: The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to
+            the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         table_styles: The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
@@ -67769,6 +67801,7 @@ class ProjectSettings(_Model):
     source_bases: list[SourceBase] | Unset = UNSET
     sources: list[SourceLink] | Unset = UNSET
     standard_docs: list[ProjectStandardDocument] | Unset = UNSET
+    standard_exceptions: list[StandardException] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     table_styles: list[TableStyleDef] | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
@@ -67864,6 +67897,8 @@ class ProjectSettings(_Model):
             out["sources"] = [e0.to_json() for e0 in self.sources]
         if self.standard_docs is not UNSET:
             out["standardDocs"] = [e0.to_json() for e0 in self.standard_docs]
+        if self.standard_exceptions is not UNSET:
+            out["standardExceptions"] = [e0.to_json() for e0 in self.standard_exceptions]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.table_styles is not UNSET:
@@ -67933,6 +67968,7 @@ class ProjectSettings(_Model):
             source_bases=[SourceBase.from_json(e0) for e0 in data["sourceBases"]] if "sourceBases" in data else UNSET,
             sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
             standard_docs=[ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]] if "standardDocs" in data else UNSET,
+            standard_exceptions=[StandardException.from_json(e0) for e0 in data["standardExceptions"]] if "standardExceptions" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             table_styles=[TableStyleDef.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
@@ -82951,6 +82987,91 @@ class StandardDimensionStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardException(_Model):
+    """An accepted standards finding.
+    Attributes:
+        kind: The finding's kind, as `cad.standards.check` names it (`layerColor`, `tableStyleDefinition` …).
+        subject: What it is about: a layer's, a style's, a line type's or a block's name.
+        standard: The standard it was found against: the source's id (a package's `id`, else the standard's name) …
+        reason: Why it is kept (not empty, at most `MAX_STANDARD_EXCEPTION_REASON` characters).
+        at: When, as the caller wrote it (ISO 8601).
+        by: Who accepted it, when the caller says.
+        expected: What the standard asked for and what the drawing had when it was accepted.
+        layer: The drawing's layer it is about, by id, when it is one.
+        revision: … and its revision (empty for a standard without one).
+    """
+    kind: str
+    subject: str
+    standard: str
+    reason: str
+    at: str | None | Unset = UNSET
+    by: str | None | Unset = UNSET
+    expected: str | None | Unset = UNSET
+    found: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    revision: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["subject"] = self.subject
+        out["standard"] = self.standard
+        out["reason"] = self.reason
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.expected is not UNSET:
+            out["expected"] = self.expected
+        if self.found is not UNSET:
+            out["found"] = self.found
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardException:
+        return cls(
+            kind=data["kind"],
+            subject=data["subject"],
+            standard=data["standard"],
+            reason=data["reason"],
+            at=data.get("at", UNSET),
+            by=data.get("by", UNSET),
+            expected=data.get("expected", UNSET),
+            found=data.get("found", UNSET),
+            layer=data.get("layer", UNSET),
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardFindingKey(_Model):
+    """A finding as `cad.standards.check` names it."""
+    kind: StandardIssueKind | StandardIssueKindName
+    subject: str
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["subject"] = self.subject
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardFindingKey:
+        return cls(
+            kind=_enum_in(StandardIssueKind, data["kind"]),
+            subject=data["subject"],
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StandardInstallChoice(_Model):
     """The user's choice for one resource; a resource without one takes its default (add a missing one, keep a
     differing or equal one).
@@ -83052,6 +83173,8 @@ class StandardIssue(_Model):
             line type or hatch definition), or direct placements of a mismatched
             published block (BlockPublication or BlockUnit). Layer and nested-block
             uses are described separately in the finding's message. Unit: count.
+        reason: The accepted finding's reason, when it is accepted or lapsed.
+        state: Accepted or lapsed (docs/adr/1129 §2); absent: open.
     """
     kind: StandardIssueKind | StandardIssueKindName
     subject: str
@@ -83061,6 +83184,8 @@ class StandardIssue(_Model):
     found: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     objects: int | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    state: StandardIssueState | StandardIssueStateName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83076,6 +83201,10 @@ class StandardIssue(_Model):
             out["layer"] = self.layer
         if self.objects is not UNSET:
             out["objects"] = self.objects
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.state is not UNSET:
+            out["state"] = _enum_out(self.state)
         return out
 
     @classmethod
@@ -83089,6 +83218,8 @@ class StandardIssue(_Model):
             found=data.get("found", UNSET),
             layer=data.get("layer", UNSET),
             objects=data.get("objects", UNSET),
+            reason=data.get("reason", UNSET),
+            state=_enum_in(StandardIssueState, data["state"]) if "state" in data else UNSET,
         )
 
 
@@ -83437,11 +83568,14 @@ class StandardsCheck(_Model):
     """`cad.standards.check` v1: what the drawing breaks of a standard. It writes nothing.
     Attributes:
         name: A built-in standard by its id (`mimari-ofis`); or
+        origin: The standard's source, which accepted findings are bound to (docs/adr/1129): a bound package's id and revision,
+            or `cad.standards.resolve`'s `provenance.rules`. Absent: the standard's name, no revision.
         resources: Optional named definitions from a version 2 standard package. Checking
             them never imports or replaces a drawing resource.
         standard: the standard itself.
     """
     name: str | None | Unset = UNSET
+    origin: StandardOrigin | None | Unset = UNSET
     resources: StandardResources | None | Unset = UNSET
     standard: DrawingStandard | None | Unset = UNSET
 
@@ -83449,6 +83583,8 @@ class StandardsCheck(_Model):
         out: dict[str, Any] = {}
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else self.origin.to_json()
         if self.resources is not UNSET:
             out["resources"] = None if self.resources is None else self.resources.to_json()
         if self.standard is not UNSET:
@@ -83459,6 +83595,7 @@ class StandardsCheck(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsCheck:
         return cls(
             name=data.get("name", UNSET),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else StandardOrigin.from_json(data["origin"]),
             resources=UNSET if "resources" not in data else None if data["resources"] is None else StandardResources.from_json(data["resources"]),
             standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
         )
@@ -83495,6 +83632,105 @@ class StandardsConflictsReport(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsConflictsReport:
         return cls(
             conflicts=[StandardConflict.from_json(e0) for e0 in data["conflicts"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsExceptions(_Model):
+    """Input of `cad.standards.exceptions` v1.
+
+    - `accept`: each finding, as today's check against the standard gives it, is accepted with `reason` (and `by` and
+      `at` when given); a lapsed one is accepted again, on the standard's revision and the drawing as they are now; one
+      accepted with the same reason, by and at is left;
+    - `withdraw`: each finding's acceptance against the standard's source is taken away (the finding itself may be gone).
+
+    Refusals (`CommandError.code`), in this order: `invalid_input` (no finding, one twice, `reason`, `by` or `at`
+    with `withdraw`, a reason over 500 characters, an empty `by` or `at`); `reason_required` (`accept` without a reason
+    or with one only of white space); the standard's (`standard_not_found`, `invalid_standard`, as the check's);
+    `invalid_revision`, `revision_conflict` (status `conflict`); `finding_not_found` (`findings[i]`: today's check has no
+    such finding, or `withdraw`: none such is accepted against the source).
+    Attributes:
+        findings: The findings, at least one.
+        by: `accept`: who accepts them and when (ISO 8601), recorded as given.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        name: The standard, as `cad.standards.check` takes it: a built-in one by its id, or the standard itself.
+        origin: The standard's source (a bound package's id and revision); absent: the standard's name, no revision.
+        reason: `accept`: why the findings are kept (not empty, at most 500 characters).
+    """
+    operation: StandardExceptionOperation | StandardExceptionOperationName
+    findings: list[StandardFindingKey]
+    at: str | None | Unset = UNSET
+    by: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    origin: StandardOrigin | None | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    resources: StandardResources | None | Unset = UNSET
+    standard: DrawingStandard | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else self.origin.to_json()
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.resources is not UNSET:
+            out["resources"] = None if self.resources is None else self.resources.to_json()
+        if self.standard is not UNSET:
+            out["standard"] = None if self.standard is None else self.standard.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsExceptions:
+        return cls(
+            operation=_enum_in(StandardExceptionOperation, data["operation"]),
+            findings=[StandardFindingKey.from_json(e0) for e0 in data["findings"]],
+            at=data.get("at", UNSET),
+            by=data.get("by", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else StandardOrigin.from_json(data["origin"]),
+            reason=data.get("reason", UNSET),
+            resources=UNSET if "resources" not in data else None if data["resources"] is None else StandardResources.from_json(data["resources"]),
+            standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsExceptionsEdited(_Model):
+    """Output of `cad.standards.exceptions` v1, and what plan says it would do.
+    Attributes:
+        changed: The findings whose acceptance changed. Unit: count.
+        exceptions: The project's accepted findings afterwards, against every source. Unit: count.
+        revision: The document's revision afterwards (plan: the one it was made against), as decimal text.
+    """
+    changed: int
+    exceptions: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["exceptions"] = self.exceptions
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsExceptionsEdited:
+        return cls(
+            changed=data["changed"],
+            exceptions=data["exceptions"],
             revision=data["revision"],
         )
 
@@ -83621,11 +83857,15 @@ class StandardsReport(_Model):
         issues: In the order: the standard's layers, the drawing's other layers, the
             fonts and styles, the objects.
         fixable: How many of them `cad.standards.apply` fixes. Unit: count.
+        accepted: How many are accepted, and how many lapsed (docs/adr/1129 §2): still listed, counted apart. Unit: count.
+        lapsed: Unit: count.
     """
     standard: str
     issues: list[StandardIssue]
     fixable: int
     revision: str
+    accepted: int | Unset = UNSET
+    lapsed: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83633,6 +83873,10 @@ class StandardsReport(_Model):
         out["issues"] = [e0.to_json() for e0 in self.issues]
         out["fixable"] = self.fixable
         out["revision"] = self.revision
+        if self.accepted is not UNSET:
+            out["accepted"] = self.accepted
+        if self.lapsed is not UNSET:
+            out["lapsed"] = self.lapsed
         return out
 
     @classmethod
@@ -83642,6 +83886,8 @@ class StandardsReport(_Model):
             issues=[StandardIssue.from_json(e0) for e0 in data["issues"]],
             fixable=data["fixable"],
             revision=data["revision"],
+            accepted=data.get("accepted", UNSET),
+            lapsed=data.get("lapsed", UNSET),
         )
 
 
@@ -119667,6 +119913,10 @@ __all__ = [
     "StandardBlockReference",
     "StandardConflict",
     "StandardDimensionStyle",
+    "StandardException",
+    "StandardExceptionOperation",
+    "StandardExceptionOperationName",
+    "StandardFindingKey",
     "StandardInstallAction",
     "StandardInstallActionName",
     "StandardInstallChoice",
@@ -119674,6 +119924,8 @@ __all__ = [
     "StandardIssue",
     "StandardIssueKind",
     "StandardIssueKindName",
+    "StandardIssueState",
+    "StandardIssueStateName",
     "StandardLayer",
     "StandardOrigin",
     "StandardProvenance",
@@ -119687,6 +119939,8 @@ __all__ = [
     "StandardsCheck",
     "StandardsConflicts",
     "StandardsConflictsReport",
+    "StandardsExceptions",
+    "StandardsExceptionsEdited",
     "StandardsInstall",
     "StandardsInstalled",
     "StandardsPalettes",

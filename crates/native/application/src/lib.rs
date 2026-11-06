@@ -448,6 +448,7 @@ mod library_symbols;
 pub mod north;
 pub mod review_notes;
 pub mod standards_install;
+pub mod standards_exceptions;
 pub mod standards_palettes;
 mod standards_install_library;
 pub mod standard_libraries;
@@ -1681,6 +1682,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_STANDARDS_INSTALL,
         kentos_commands::CAD_STANDARDS_INSTALL_VERSION,
+    ),
+    // Kabul edilmiş standart bulguları ([`standards_exceptions`], docs/adr/1129).
+    (
+        kentos_commands::CAD_STANDARDS_EXCEPTIONS,
+        kentos_commands::CAD_STANDARDS_EXCEPTIONS_VERSION,
     ),
     (
         kentos_commands::CAD_STANDARDS_RESOLVE,

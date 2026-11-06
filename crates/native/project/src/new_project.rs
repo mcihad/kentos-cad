@@ -90,6 +90,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         standard_docs: Vec::new(),
         approved_sheet_templates: Vec::new(),
         table_styles: Vec::new(),
+        standard_exceptions: Vec::new(),
         review_notes: Vec::new(),
         heights: None,
         coordinate_epoch: None,

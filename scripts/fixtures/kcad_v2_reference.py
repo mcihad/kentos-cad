@@ -361,6 +361,8 @@ def settings(s):
                 "standardDocs": (opaque, False),
                 # Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, as their JSON.
                 "approvedSheetTemplates": (opaque, False),
+                # Schema 190 (docs/adr/1129): the accepted standards findings, as their JSON.
+                "standardExceptions": (opaque, False),
                 # Schema 185 (docs/adr/1126 §2): the table styles, as their JSON.
                 "tableStyles": (opaque, False),
                 # Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
@@ -2431,6 +2433,9 @@ def document(d):
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
+    if d["settings"].get("standardExceptions"):
+        # Standards findings the project accepts with a reason (docs/adr/1129).
+        schema = max(schema, 190)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3376,7 +3381,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-188.kcad"] = container(root(cmap(parts), version=uint(188)))
+    files["schema-version-191.kcad"] = container(root(cmap(parts), version=uint(191)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5714,6 +5719,23 @@ def build():
         broken_styles = copy.deepcopy(tabled)
         change(broken_styles)
         out[f"broken/table-styles-{name}.kcad"] = container(document(broken_styles))
+    # Schema 190 (docs/adr/1129): two accepted standards findings (a layer's colour against a package's revision, who and
+    # when given; a text style's height against a built-in standard); schema 187 refuses the field, an unknown field,
+    # a reason of white space and the same finding against the same standard twice are refused.
+    accepted = load("standard-exceptions.json")
+    accepted_data = document(accepted)
+    assert accepted_data.count(b"\x67version\x18\xbe") == 1, "accepted findings are schema 190"
+    out["standard-exceptions.kcad"] = container(accepted_data)
+    out["broken/standard-exceptions-in-schema-187.kcad"] = container(
+        accepted_data.replace(b"\x67version\x18\xbe", b"\x67version\x18\xbb"))
+    for name, change in (
+            ("unknown-field", lambda t: t["settings"]["standardExceptions"][0].update({"note": "?"})),
+            ("reason", lambda t: t["settings"]["standardExceptions"][1].update({"reason": "  "})),
+            ("duplicate", lambda t: t["settings"]["standardExceptions"][1].update(
+                {"kind": "layerColor", "subject": "A-DUVAR", "layer": "0", "standard": "ofis-a"}))):
+        broken_accepted = copy.deepcopy(accepted)
+        change(broken_accepted)
+        out[f"broken/standard-exceptions-{name}.kcad"] = container(document(broken_accepted))
     # Schema 183 (docs/adr/1100 §3): two approved sheet template revisions, each with the standard that approved it;
     # schema 182 refuses the field, a repeated template id (case aside) and a revision 0 are bad values.
     approved = load("approved-sheet-templates.json")

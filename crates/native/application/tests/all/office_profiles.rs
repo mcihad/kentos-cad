@@ -390,6 +390,51 @@ fn opening_a_project_bound_to_another_office_does_not_apply_it() {
     assert!(!reopened.can_undo());
 }
 
+/// CAD-ADV-12: “Geçerli istisna gerekçeyle saklanabilsin” (docs/adr/1129). After the first office, A-DUVAR is given
+/// another colour by hand; the finding is accepted with its reason against the office's package; saved and opened,
+/// the check says it is accepted (listed, counted apart); the same office's next revision makes it lapse.
+#[test]
+fn an_accepted_finding_survives_a_reopen_and_lapses_on_the_next_revision() {
+    use kentos_commands::CallOp::Execute;
+    let mut doc = fresh();
+    profile(&mut doc, &office_a(), json!([]));
+    let mut snapshot = serde_json::to_value(doc.to_snapshot_v2()).unwrap();
+    for layer in snapshot["layers"].as_array_mut().unwrap() {
+        if layer["id"] == DUVAR {
+            layer["style"]["color"] = json!("#00aa00");
+        }
+    }
+    let mut doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
+    let check = |doc: &mut Document| {
+        let resolved = run(doc, "cad.standards.resolve", Execute, json!({}));
+        let input = json!({"standard": resolved["standard"], "origin": resolved["provenance"]["rules"]});
+        (run(doc, "cad.standards.check", Execute, input), resolved)
+    };
+    let (before, resolved) = check(&mut doc);
+    let finding = |report: &Value| {
+        report["issues"].as_array().unwrap().iter().find(|i| i["kind"] == "layerColor" && i["layer"] == DUVAR).cloned()
+    };
+    assert_eq!(finding(&before).unwrap()["found"], "#00aa00");
+    let accepted = run(&mut doc, "cad.standards.exceptions", Execute, json!({"operation": "accept",
+        "standard": resolved["standard"], "origin": resolved["provenance"]["rules"],
+        "findings": [{"kind": "layerColor", "subject": "A-DUVAR", "layer": DUVAR}],
+        "reason": "Bu projede duvarlar yeşil basılır.", "by": "ayse"}));
+    assert_eq!((accepted["changed"].as_u64(), accepted["exceptions"].as_u64()), (Some(1), Some(1)));
+    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).expect("writes");
+    let mut reopened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("reads")).expect("opens");
+    let (after, _) = check(&mut reopened);
+    let f = finding(&after).expect("still listed");
+    assert_eq!((f["state"].as_str(), f["reason"].as_str()), (Some("accepted"), Some("Bu projede duvarlar yeşil basılır.")));
+    assert_eq!(after["accepted"], 1);
+    assert_eq!(after["issues"].as_array().unwrap().len(), before["issues"].as_array().unwrap().len(), "not hidden");
+    // The same office's next revision: the acceptance lapses, its reason still said.
+    let next = office("ofis-a", "2026.3", "#ff0000", 0.35, [2.0, -1.0], 2.5, 1, 2.0);
+    run(&mut reopened, "cad.settings.set", Execute, json!({"standardDocs": [{"text": next}]}));
+    let (lapsed, _) = check(&mut reopened);
+    assert_eq!(finding(&lapsed).unwrap()["state"], "lapsed");
+    assert_eq!(lapsed["lapsed"], 1);
+}
+
 #[test]
 fn a_library_block_that_breaks_the_block_rules_is_refused() {
     use kentos_native_application::standard_libraries::{BlockLibrary, Libraries};
