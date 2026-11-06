@@ -173,6 +173,11 @@ pub struct PanelState {
 }
 
 impl PanelState {
+    /// The search's text.
+    pub(crate) fn query(&self) -> &str {
+        &self.query
+    }
+
     pub(crate) fn open_personal(&mut self, folder: &Path) -> Option<String> {
         let (personal, problem) = Personal::open(folder);
         self.personal = personal;
@@ -208,8 +213,12 @@ pub enum Event {
     Copy(String, Source),
     Remove(String),
     Favorite(String),
-    /// An office palette's tool pressed, by its key (docs/adr/1014).
+    /// An office palette's tool pressed, by its key (docs/adr/1014); a user's own by `kendi:<i>`.
     Tool(String),
+    /// ★ on an office tool (docs/adr/1016).
+    ToolFavorite(String),
+    /// Son komutu araç yap (docs/adr/1016).
+    ToolFromLast,
 }
 
 fn msg(event: Event) -> Message {
@@ -396,6 +405,8 @@ impl App {
             Event::Copy(id, to) => self.copy_template(&id, to),
             Event::Remove(id) => self.ask_remove_template(&id),
             Event::Tool(key) => return self.run_palette_tool(&key),
+            Event::ToolFavorite(key) => self.toggle_tool_favorite(&key),
+            Event::ToolFromLast => self.tool_from_last_call(),
             Event::Favorite(id) => {
                 if let Some(key) = self.personal_template_key(&id) {
                     if let Err(error) = self.templates_panel.personal.toggle(&key) {

@@ -894,6 +894,10 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
                 if let Some(problem) = app.templates_panel.open_personal(&dir) {
                     app.warn(problem);
                 }
+                // The user's tool palette (arac-paleti.json, docs/adr/1016).
+                if let Some(problem) = app.open_personal_tools(&dir) {
+                    app.warn(problem);
+                }
                 // Each window's size (pencereler.json, docs/adr/0746).
                 app.dialog_sizes = dialog_sizes::Keeper::open(&dir);
                 app.layout = layout::Keeper::open_for(&dir, program);

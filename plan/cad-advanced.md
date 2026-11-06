@@ -2125,6 +2125,12 @@ kaynağı, blok içi parçanın kökeni, masaüstünden proje/bulut kitaplığı
 nereden geliyor?” renk ve kalınlıkta, paftanın baskı profilinin (CTB/STB dahil) nesnenin katmanına verdiği kalemle
 basılan değeri **Baskıda** satırıyla söyler (PDF'in kuralıyla); model değişmez.
 
+**Kişisel araç paleti (6 Kasım 2026, [ADR 1016](../docs/adr/1016-personal-tool-palette-favourites-and-own-tools.md)):**
+Ofis araçları ☆ ile anahtar ve tarif özetiyle favori olur; yeni revizyonda değişen favori çalışmaz ve söyler, yeniden
+seçilince yeni tarifi tutar. “Son komutu araç yap” günlüğün son komutunu kendi araç yapar; arama hepsini süzer.
+Kişisel palet ayar klasöründedir, çizime karışmaz. Açık: tablo stili kaynağı (KentOS tablosunun stil modeli yok), blok
+içi tek parçanın kökeni, masaüstünden proje/bulut kitaplığı seçimi.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].
