@@ -365,3 +365,30 @@ fn a_library_block_that_breaks_the_block_rules_is_refused() {
     assert_eq!(doc.revision(), revision);
     assert!(doc.block_named("KAPI").is_none());
 }
+
+/// docs/adr/1015: “Bu değer nereden geliyor?” says what a sheet prints an object's colour and line weight as when the
+/// sheet's plot profile gives its layer a pen: siyah.ctb's pen 1 is black, 0.50 mm (the reference's table), given to
+/// Duvar and applied to sheet a-101. The model's own red and 0.25 mm are not changed.
+#[test]
+fn the_value_origin_says_what_the_sheets_plot_profile_prints() {
+    let cases: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.plotstyles.import.json"))
+        .expect("the cases");
+    let mut doc = Document::from_snapshot_v2(serde_json::from_value(cases["setup"].clone()).expect("a v2 snapshot"))
+        .expect("opens");
+    let made = run(&mut doc, "cad.line.create", kentos_commands::CallOp::Execute, json!({
+        "layerId": DUVAR, "a": {"x": 0, "y": 0}, "b": {"x": 4, "y": 0}}));
+    let uid = made["created"][0].as_str().or_else(|| made["uid"].as_str()).expect("the line").to_owned();
+    let slot = doc.slot_of(kentos_domain::Uuid::parse_str(&uid).unwrap()).expect("its slot");
+    let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1/plotstyles");
+    let before = kentos_native_application::appearance_origin::explain(&doc, slot);
+    assert!(before.iter().all(|p| p.printed.is_empty()), "no profile yet");
+    run(&mut doc, "cad.plotstyles.import", kentos_commands::CallOp::Execute, json!({
+        "path": "siyah.ctb", "base": base.display().to_string(),
+        "assignments": [{"target": {"type": "modelLayer", "id": DUVAR}, "key": {"type": "aci", "index": 1}}],
+        "sheets": ["a-101"]}));
+    let explained = kentos_native_application::appearance_origin::explain(&doc, slot);
+    let part = |name: &str| explained.iter().find(|p| p.part == name).expect(name);
+    assert!(part("color").printed.iter().any(|l| l.ends_with("“siyah” profili: #000000")), "{:?}", part("color").printed);
+    assert!(part("lineWeight").printed.iter().any(|l| l.ends_with("“siyah” profili: 0.5 mm")), "{:?}", part("lineWeight").printed);
+    let _ = Slot(0);
+}

@@ -312,6 +312,23 @@ fn value_origin(app: &mut App, slot: u32) {
 pub(crate) fn origin_scenes() -> Vec<Scene> {
     vec![
         ("deger-kokeni-katman", |app| value_origin(app, 2)),
+        // docs/adr/1015: siyah.ctb's pen 1 given to the layer and applied to sheet a-101: Baskıda says black, 0.50 mm.
+        ("deger-kokeni-baski", |app| {
+            value_origin(app, 2);
+            let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/commands/v1/plotstyles");
+            let doc = app.document.as_mut().expect("a drawing");
+            let answer = kentos_native_application::registry::run(
+                &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+                "cad.plotstyles.import",
+                kentos_commands::CallOp::Execute,
+                serde_json::json!({"path": "siyah.ctb", "base": base.display().to_string(),
+                    "assignments": [{"target": {"type": "modelLayer", "id": "duvar"}, "key": {"type": "aci", "index": 1}}],
+                    "sheets": ["a-101"]}),
+            )
+            .expect("runs");
+            assert_eq!(answer["status"], "completed", "{answer}");
+            crate::elevation_scenes::select(app, &[kentos_domain::Slot(2)]);
+        }),
         ("deger-kokeni-nesne", |app| value_origin(app, 1)),
     ]
 }

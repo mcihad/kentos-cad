@@ -2121,6 +2121,10 @@ girdi); palet çizime kurulmaz, bağlı paketten okunur. `cad.standards.palettes
 hazır aracı tek adımda çalıştırır. 23 bağımsız vaka geçti. Açık: ofis aracını kişisel favoriye alma, tablo stili
 kaynağı, blok içi parçanın kökeni, masaüstünden proje/bulut kitaplığı seçimi.
 
+**Baskıdaki mürekkep (6 Kasım 2026, [ADR 1015](../docs/adr/1015-value-origin-says-the-printed-ink.md)):** “Bu değer
+nereden geliyor?” renk ve kalınlıkta, paftanın baskı profilinin (CTB/STB dahil) nesnenin katmanına verdiği kalemle
+basılan değeri **Baskıda** satırıyla söyler (PDF'in kuralıyla); model değişmez.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

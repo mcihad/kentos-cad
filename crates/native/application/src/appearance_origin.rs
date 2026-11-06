@@ -77,6 +77,9 @@ pub struct Explained {
     pub chain: Vec<Link>,
     /// The viewports that draw it otherwise: `Pafta · pencere: değer`.
     pub viewports: Vec<String>,
+    /// What the sheets print it as, where a sheet's plot profile gives the object's layer a pen or style
+    /// (docs/adr/1015): `Pafta · profil: değer`. Plot ink is derived: the model's value is not changed.
+    pub printed: Vec<String>,
     pub resets: Vec<Reset>,
 }
 
@@ -254,12 +257,53 @@ fn explain_part(
         origin,
         chain,
         viewports,
+        printed: Vec::new(),
         resets,
     }
 }
 
 /// The object's colour, line type, line weight and (for a text) text style explained; none for a slot without an
 /// object or whose layer is gone.
+/// What each sheet with a plot profile prints `value` (the model's colour or line weight) of an object on `layer` as,
+/// where the profile gives that layer a style or has a default one and the ink differs (docs/adr/1015). The profile's
+/// own rule: `plot_profile::apply`, the PDF's.
+fn printed(doc: &Document, layer: &str, part: &str, value: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let Some(sheets) = doc.sheets() else {
+        return out;
+    };
+    let Ok((book, _)) = kentos_sheet::project::read_project_sheets(sheets) else {
+        return out;
+    };
+    for sheet in &book.sheets {
+        let Ok(Some(profile)) = kentos_sheet::plot_profile::for_sheet(&book, &sheet.id) else {
+            continue;
+        };
+        let resolved = kentos_sheet::plot_profile::apply::Resolved::new(profile);
+        let Some(style) = resolved.model(layer) else {
+            continue;
+        };
+        let ink = match part {
+            "color" if value.starts_with('#') => kentos_sheet::plot_profile::apply::color(value, style),
+            // A theme token (`fg`, `ink`): the pen's own colour when the profile fixes one; not resolved here.
+            "color" => match &style.color {
+                kentos_sheet::plot_profile::PlotColor::Black => "#000000".to_owned(),
+                kentos_sheet::plot_profile::PlotColor::Color { value } => value.clone(),
+                kentos_sheet::plot_profile::PlotColor::Grayscale => format!("{value} gri tonda"),
+                kentos_sheet::plot_profile::PlotColor::Object => continue,
+            },
+            _ => match style.line_weight {
+                Some(um) => weight(f64::from(um) / 1000.0),
+                None => continue,
+            },
+        };
+        if ink != value {
+            out.push(format!("{} · “{}” profili: {ink}", sheet.name, profile.name));
+        }
+    }
+    out
+}
+
 pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
     let Some(e) = doc.get(slot) else {
         return Vec::new();
@@ -339,6 +383,9 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
             insert,
         ));
     }
+    for part in out.iter_mut().filter(|p| matches!(p.part, "color" | "lineWeight")) {
+        part.printed = printed(doc, &base.layer_id, part.part, &part.value);
+    }
     if let Entity::Text(t) = e {
         out.push(text_style(doc, &t.face, resolved.as_ref()));
     }
@@ -389,6 +436,7 @@ fn xref_layers(doc: &Document, x: &kentos_commands::XrefSource) -> Option<Explai
             note: "kaynağınkinden ayrıldıysa yeniden yüklemede kalır".into(),
             wins: false,
         }],
+        printed: Vec::new(),
         viewports: overrides
             .iter()
             .map(|o| {
@@ -484,6 +532,7 @@ fn text_style(
         origin,
         chain,
         viewports: Vec::new(),
+        printed: Vec::new(),
         resets,
     }
 }

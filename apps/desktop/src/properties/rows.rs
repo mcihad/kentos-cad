@@ -942,6 +942,9 @@ fn origin_rows(parts: &[kentos_native_application::appearance_origin::Explained]
             row.warn = true;
             rows.push(row);
         }
+        for v in &p.printed {
+            rows.push(Row::note(&format!("Baskıda: {v}")));
+        }
         for r in &p.resets {
             rows.push(Row::note(&format!("Sıfırla → {} · {} ({})", r.after, r.scope, r.count)));
         }
