@@ -623,6 +623,13 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         &length,
         unit.per_metre(),
         &ltypes,
+        &|name: &str| {
+            input
+                .text_styles
+                .iter()
+                .find(|t| t.name.eq_ignore_ascii_case(name))
+                .and_then(|t| style_handles.0.get(&t.id).copied())
+        },
     );
     template::block_record_table(&mut tables, &records, &papers);
     tables.str(0, "ENDSEC");

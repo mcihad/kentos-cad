@@ -30,6 +30,9 @@ bir yazı tipi ailesine çevriliyor, SHX stil projenin yazı tipiyle değiştiri
   `dimension-text-style.kcad`, üç bozuk örnek (şema 185'te, boş ad, boşluklu ad); şemadan yeni örneği 187 oldu.
 - Standart paketi: `dimensionStyleDefinitions` `textStyle`'ı, `textStyleDefinitions` ADR 1120'nin `bigFontFile`'ını
   kabul eder (önce Big Font'lu ofis yazı stili paketi reddediliyordu).
+- DXF dışa aktarma: ölçü stilinin DIMSTYLE kaydı, adını andığı yazı stilinin STYLE kaydını DIMTXSTY (340) olarak yazar
+  (`formats` `dimension_text_style::the_writer_names_a_dimension_styles_text_style_as_dimtxsty`, dosyanın grupları
+  testte KentOS okuyucusu olmadan okunur).
 - Masaüstü Ölçü stilleri penceresinde **Yazı stili** seçimi (“Yok (yazı tipi)” ve çizimin yazı stilleri).
 
 ## 3. Kanıt
@@ -50,4 +53,4 @@ bir yazı tipi ailesine çevriliyor, SHX stil projenin yazı tipiyle değiştiri
 
 Ölçü stili penceresinin önizlemesi değeri hâlâ yazı tipiyle gösterir. Kılavuz notu ve tablo hücresi SHX ile
 çizilmez. Ölçünün kendi görünüşü (`DimensionLook`) yazı stili taşımaz; stilin değeri geçerlidir. DXF'e yazarken
-DIMTXSTY'nin KentOS yazı stiline bağlanması bu dilimde yok (okuma var). Web codec'i şema 186'yı bilmez (TODOS §0.2).
+Web codec'i şema 186'yı bilmez (TODOS §0.2).

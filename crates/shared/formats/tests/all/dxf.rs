@@ -2424,6 +2424,8 @@ fn another_programs_styles_come_in_as_the_projects() {
                 unit: Some(DrawingUnit::Cm),
                 prefix: Some("L=".into()),
                 font: Some(DrawingFont::Arimo),
+                // Its DIMTXSTY, by the style's name (docs/adr/1023).
+                text_style: Some("ADA".into()),
                 ..plain("dxf-dim-1", "KADASTRO", 6.0)
             },
             DimensionStyleDef {

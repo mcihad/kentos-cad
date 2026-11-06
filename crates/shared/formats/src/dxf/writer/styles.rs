@@ -426,6 +426,7 @@ pub fn dimstyle_table(
     length: &dyn Fn(f64) -> f64,
     per_metre: f64,
     ltypes: &[(LineType, u64)],
+    text_style: &dyn Fn(&str) -> Option<u64>,
 ) {
     super::template::dimstyle_head(out, 1 + styles.len());
     super::template::dimstyle_standard(out);
@@ -435,13 +436,12 @@ pub fn dimstyle_table(
         };
         let h = handles.take();
         let json = serde_json::to_string(s).unwrap_or_default();
-        super::template::dimstyle_record(
-            out,
-            h,
-            name,
-            &dimension_vars(s, length, per_metre, ltypes),
-            Some(&json),
-        );
+        let mut vars = dimension_vars(s, length, per_metre, ltypes);
+        // Its value's text style (DIMTXSTY, docs/adr/1023): the STYLE record of the project's style it names.
+        if let Some(handle) = s.text_style.as_deref().and_then(text_style) {
+            vars.push((340, format!("{handle:X}")));
+        }
+        super::template::dimstyle_record(out, h, name, &vars, Some(&json));
     }
     out.str(0, "ENDTAB");
 }

@@ -28,3 +28,35 @@ fn a_dimension_styles_text_style_comes_with_it_and_is_kept_without_a_text() {
     want_dims.sort();
     assert_eq!(dims, want_dims, "OFIS writes its value in A-OLCU, DUZ (Standard) in the project's typeface");
 }
+
+/// The writer gives the dimension style its text style's STYLE record as DIMTXSTY (group 340), so another program
+/// writes the value in it: read here from the file's groups, not by KentOS's reader.
+#[test]
+fn the_writer_names_a_dimension_styles_text_style_as_dimtxsty() {
+    let input = kentos_formats::dxf::input_from_json(
+        &serde_json::json!({"entities": [], "layers": [], "scale": 100., "lengthDecimals": 3, "grads": false,
+            "textStyles": [{"id": "t1", "name": "A-OLCU", "font": "barlow", "fontFile": "romans.shx"}],
+            "dimensionStyles": [{"id": "d1", "name": "OFIS", "height": 2.5, "textStyle": "a-olcu"},
+                                {"id": "d2", "name": "DUZ", "height": 2.0}]})
+        .to_string(),
+    )
+    .expect("writer input");
+    let (bytes, _) = kentos_formats::dxf::write(&input);
+    let text = String::from_utf8(bytes).expect("an ASCII DXF");
+    let lines: Vec<&str> = text.lines().map(str::trim).collect();
+    let pairs: Vec<(&str, &str)> = lines.chunks(2).filter(|c| c.len() == 2).map(|c| (c[0], c[1])).collect();
+    // Each record: its groups from its 0 to the next.
+    let records: Vec<&[(&str, &str)]> = {
+        let starts: Vec<usize> = pairs.iter().enumerate().filter(|(_, p)| p.0 == "0").map(|(i, _)| i).collect();
+        starts.iter().zip(starts.iter().skip(1).chain(std::iter::once(&pairs.len())))
+            .map(|(a, b)| &pairs[*a..*b]).collect()
+    };
+    let group = |r: &[(&str, &str)], code: &str| r.iter().find(|p| p.0 == code).map(|p| p.1.to_owned());
+    let style = records.iter().find(|r| r[0].1 == "STYLE" && group(r, "2").as_deref() == Some("A-OLCU"))
+        .expect("the STYLE record");
+    let handle = group(style, "5").expect("its handle");
+    let dim = |name: &str| *records.iter().find(|r| r[0].1 == "DIMSTYLE" && group(r, "2").as_deref() == Some(name))
+        .unwrap_or_else(|| panic!("the {name} DIMSTYLE"));
+    assert_eq!(group(dim("OFIS"), "340"), Some(handle), "OFIS's DIMTXSTY is A-OLCU's record (name case aside)");
+    assert_eq!(group(dim("DUZ"), "340"), None, "DUZ names none");
+}
