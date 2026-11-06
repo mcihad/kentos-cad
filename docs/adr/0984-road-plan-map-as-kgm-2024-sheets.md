@@ -130,5 +130,5 @@ haritanın kenarından taşıyor, son satırları kırpılıyordu.
 - **Birden çok dever çizelgeli aks** (ADR 0983).
 - **Kutunun PI'ya bağ çizgisi:** 2024 örneğinde yok, biz de çizmiyoruz. Kalabalık paftada hangi kutunun hangi kurba
   ait olduğu adla okunur.
-- **Proje uçlarının kotu.**
+- ~~**Proje uçlarının kotu.**~~ Y81, ADR 0987: boykesitte, 2024 örneği gibi.
 - **El Kitabı 2022**'nin Lr/Lt tablosu okunamadı.

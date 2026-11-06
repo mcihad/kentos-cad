@@ -413,6 +413,35 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             Some(RED),
         ));
     }
+    // The project's ends on the design line (docs/adr/0987; KGM 2019 şartname s. 5: "Proje başı ve sonunda kot ve
+    // koordinat değerleri yazılacaktır"; the June 2024 sample sheets: a red leader from the line's end to PROJE BAŞI,
+    // KM : 0+000.00 and KOT = 964.670). The leader runs 12 mm away from the frame's nearer edge; the words read down.
+    if let (Some(&first), Some(&last)) = (c.pvis.first(), c.pvis.last()) {
+        let pitch = 1.6 * h;
+        for (words, (s, z), start) in [("PROJE BAŞI", first, true), ("PROJE SONU", last, false)] {
+            if s < s0 - 1e-9 || s > s1 + 1e-9 {
+                continue;
+            }
+            let p = [x(s), y(z)];
+            let down = p[1] > 0.5 * (y0 + y1);
+            // Slanted 6 mm into the frame, off its edge, as the 2024 sheets draw it.
+            let inward = if start { 6.0 * mm } else { -6.0 * mm };
+            let end = [p[0] + inward, if down { p[1] - 12.0 * mm } else { p[1] + 12.0 * mm }];
+            out.push(line(p, end, Some(RED), Some(0.25)));
+            let (dx, align) = if start { (0.5 * h, TextAlign::MiddleLeft) } else { (-0.5 * h, TextAlign::MiddleRight) };
+            let lines = [words.to_owned(), format!("KM : {}", km_text(c.built.alignment.km(s), 2)), format!("KOT = {z:.3}")];
+            for (i, l) in lines.into_iter().enumerate() {
+                // Down: from the leader's end downward; up: the last line at the leader's end.
+                let k = if down { -(i as f64) } else { (2 - i) as f64 };
+                let mut words = text([end[0] + dx, end[1] + k * pitch], l, h, align, if i == 0 { Some(RED) } else { None });
+                // Masked: the grid's lines and the ground line ran through them (Y81's first picture).
+                if let EntityGeometry::Text { mask, .. } = &mut words.geometry {
+                    *mask = true;
+                }
+                out.push(words);
+            }
+        }
+    }
     if c.bands == ProfileBands::Kgm {
         kgm_bands(&mut out, c, columns, at, h, names);
         return out;

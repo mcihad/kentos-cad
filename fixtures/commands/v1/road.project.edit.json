@@ -25758,7 +25758,7 @@
          "state": "current",
          "parent": 3,
          "command": "road.profiles.draw",
-         "objects": 112
+         "objects": 120
         },
         {
          "kind": "profile",

@@ -268,6 +268,18 @@ fn screens_design_speed() {
     });
 }
 
+/// The profile's ends (docs/adr/0987): PROJE BAŞI and PROJE SONU with their km and elevation on the design line;
+/// `.run/gui-evidence/yol-y81/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_profile_ends -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_profile_ends() {
+    shoot_kgm_sheet("yol-y81", "y81", "2026-11-06");
+}
+
 /// KGM's A1 plan–profile sheet of the sample at 1:2000 with its schedule, light and dark, and its PDF, into
 /// `.run/gui-evidence/<folder>/<prefix>-pafta-*`.
 fn shoot_kgm_sheet(folder: &str, prefix: &str, date: &str) {

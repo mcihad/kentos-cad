@@ -765,6 +765,8 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, 
     else:
         n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(shown_curves) + 10
              + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(grades))
+    # Docs/adr/0987: each end of the design line in the view, its leader and three words (PROJE BAŞI/SONU, KM, KOT).
+    n += 4 * sum(1 for e in (pvis[0], pvis[-1]) if s0 - 1e-9 <= e["station"] <= s1 + 1e-9)
     out = {"profile": d["id"], "frame": [list(at_), [at_[0] + (s1 - s0), at_[1] + (top - base) * ex]],
            "datum": base, "top": top, "exaggeration": ex, "grid": float(grid), "columns": cols}
     return out, n, lo
