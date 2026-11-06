@@ -505,3 +505,66 @@ fn screens_benches() {
     }
     kentos_ui::widget::sizable::sizes::forget(crate::section_window::TITLE);
 }
+
+/// Yer left empty (docs/adr/0997): the sections, drawn and laid on sheets, go under everything drawn; nothing written
+/// reaches into the drawing's box (the km over the first row's frames included).
+#[test]
+fn an_empty_place_puts_the_sections_under_the_drawing() {
+    for sheets in [false, true] {
+        let mut app = app(true);
+        let _ = app.update(Message::Run("section.editor"));
+        assert!(app.section_window.as_ref().is_some_and(|w| w.place.is_empty()), "Yer starts empty");
+        send(&mut app, W::Choose(Chosen::Set(0)));
+        send(&mut app, W::DrawLayer("0".into()));
+        let before_ids: std::collections::HashSet<u32> = model(&mut app).entities().map(|e| e.base().id).collect();
+        let doc = &app.document.as_ref().expect("doc").model;
+        app.spatial.sync(doc);
+        let before = app.spatial.extent().expect("a drawing");
+        if sheets {
+            send(&mut app, W::SheetScale("500".into()));
+            send(&mut app, W::Sheets);
+        } else {
+            send(&mut app, W::Draw);
+        }
+        let doc = &app.document.as_ref().expect("doc").model;
+        let new: Vec<f64> = doc.entities().filter(|e| !before_ids.contains(&e.base().id)).map(|e| f64::from(e.base().id)).collect();
+        assert!(!new.is_empty(), "the sections are drawn (sheets: {sheets})");
+        app.spatial.sync(doc);
+        let drawn = app.spatial.store().extent(Some(&new)).expect("their box");
+        assert!(drawn.max_y < before.min_y, "sheets {sheets}: the sections ({}) stay under the drawing ({})", drawn.max_y, before.min_y);
+    }
+}
+
+/// Y91's picture (docs/adr/0997): the sections drawn with Yer left empty, the model after; `.run/gui-evidence/yol-y91/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib section_window_tests::screens_place_under -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_place_under() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y91");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = app(true);
+    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    send(&mut app, W::DrawLayer("0".into()));
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("y91-pencere.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+    send(&mut app, W::Draw);
+    send(&mut app, W::Cancel);
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("y91-model.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+}
