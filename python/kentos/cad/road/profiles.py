@@ -441,6 +441,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
@@ -482,6 +483,9 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             bands: The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
                 Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
                 Geometri, Düşey Geometri and Dever.
+            corridor: The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
+                profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
+                SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
             datum: Unit: elevation.
             every: Unit: m.
             exaggeration: Unit: 1.
@@ -508,6 +512,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
@@ -527,6 +532,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
@@ -544,6 +550,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
@@ -563,6 +570,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
@@ -580,6 +588,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
@@ -599,6 +608,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
@@ -621,6 +631,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,

@@ -26,7 +26,11 @@ bands?: ProfileBands,
 /**
  * With `bands: kgm`, the superelevation schedule the views' Dever band draws (its id or name).
  */
-superelevation?: string, scale?: number, overlap?: number, source?: SheetTemplateSource, 
+superelevation?: string, 
+/**
+ * With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
+ */
+corridor?: string, scale?: number, overlap?: number, source?: SheetTemplateSource, 
 /**
  * The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
  */

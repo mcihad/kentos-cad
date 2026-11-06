@@ -53,6 +53,8 @@ pub struct Window {
     /// The profile views' bands: KGM's 2019 order when set, and the schedule its Dever band draws (docs/adr/0980).
     pub(crate) kgm: bool,
     pub(crate) dever: Option<String>,
+    /// The corridor whose slopes and platform KGM's rows over the views say (docs/adr/0989).
+    pub(crate) corridor: Option<String>,
     pub(crate) preview: Preview,
 }
 
@@ -68,6 +70,8 @@ pub enum Event {
     Kgm(bool),
     /// The schedule KGM's Dever band draws (its id); none: no schedule.
     Dever(Option<String>),
+    /// The corridor KGM's slope and platform rows read (its id); none: no rows (docs/adr/0989).
+    Corridor(Option<String>),
     Make,
     Close,
 }
@@ -114,6 +118,7 @@ impl Window {
             exaggeration: number(&self.fields[2])?,
             bands: (self.profile.is_some() && self.kgm).then_some(kentos_commands::ProfileBands::Kgm),
             superelevation: if self.profile.is_some() && self.kgm { self.dever.clone() } else { None },
+            corridor: if self.profile.is_some() && self.kgm { self.corridor.clone() } else { None },
             scale,
             overlap: number(&self.fields[3])?,
             source: None,
@@ -149,6 +154,7 @@ impl App {
             fields: ["0; -500".into(), "1000".into(), "5".into(), String::new(), String::new(), String::new()],
             kgm: false,
             dever: None,
+            corridor: None,
             preview: Preview::default(),
         }));
         self.dialog = Some(Dialog::RoadSheets);
@@ -180,12 +186,14 @@ impl App {
             Event::Alignment(id) => {
                 w.profile = None;
                 w.dever = None;
+                w.corridor = None;
                 w.alignment = Some(id);
             }
             Event::Profile(p) => w.profile = p,
             Event::Layer(l) => w.layer = Some(l),
             Event::Kgm(on) => w.kgm = on,
             Event::Dever(id) => w.dever = id,
+            Event::Corridor(id) => w.corridor = id,
             Event::Field(k, t) => w.fields[k.min(5)] = t,
             Event::Make => return self.make_road_sheets(),
             Event::Close => {
@@ -311,6 +319,27 @@ impl App {
                     move |i| msg(Event::Dever(ids[i].clone())),
                 );
                 second = second.push(words::field("Dever bandı", container(dever).width(170), None));
+                // Docs/adr/0989: the corridor KGM's slope and platform rows read.
+                let corridors: Vec<(String, String)> = self
+                    .document
+                    .as_ref()
+                    .map(|d| {
+                        d.model
+                            .road_corridors()
+                            .iter()
+                            .filter(|c| Some(&c.alignment) == w.alignment.as_ref())
+                            .map(|c| (c.id.clone(), c.name.clone()))
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let chosen = w.corridor.as_ref().and_then(|id| corridors.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None).chain(corridors.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let corridor = Select::new(
+                    std::iter::once("Satır yok".to_owned()).chain(corridors.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    Some(chosen),
+                    move |i| msg(Event::Corridor(ids[i].clone())),
+                );
+                second = second.push(words::field("Şev ve platform", container(corridor).width(170), None));
             }
             body = body.push(second.align_y(iced::alignment::Vertical::Bottom));
         }

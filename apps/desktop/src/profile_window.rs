@@ -935,6 +935,8 @@ impl App {
             to: None,
             bands: w.kgm.then_some(kentos_commands::ProfileBands::Kgm),
             superelevation: if w.kgm { w.dever.clone() } else { None },
+            // Docs/adr/0989: the rows are chosen in Yol paftaları; this window has no corridor choice yet.
+            corridor: None,
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else {

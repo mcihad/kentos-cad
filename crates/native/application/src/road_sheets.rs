@@ -193,6 +193,8 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         road_profiles_draw::bands_depth(doc, 2.5)
     };
     let gap = 0.4 * depth;
+    // Docs/adr/0989: KGM's slope and platform rows stand over each view's frame.
+    let rise = if input.corridor.is_some() { road_profiles_draw::corridor_rows_height(doc, 2.5) } else { 0.0 };
     let mut frames = Vec::new();
     let mut laid = Vec::new();
     let mut objects = Vec::new();
@@ -232,12 +234,13 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                     to: Some(vb),
                     bands: input.bands,
                     superelevation: input.superelevation.clone(),
+                    corridor: input.corridor.clone(),
                     expected_revision: None,
                 };
                 let (_, sized, _) = road_profiles_draw::view(doc, &asked)?;
                 let h = sized.frame[1][1] - sized.frame[0][1];
                 // The first view's lower left is `at`; each next one's top is a gap under the bands before it.
-                let y = next_y.map_or(at[1], |n| n - h);
+                let y = next_y.map_or(at[1], |n| n - h - rise);
                 asked.at = [at[0], y];
                 let (made, drawn, said) = road_profiles_draw::view(doc, &asked)?;
                 for w in said {
@@ -247,8 +250,8 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                 }
                 objects.extend(made);
                 next_y = Some(y - depth - gap);
-                profile_center = Some(GroundPoint { x: at[0] + 0.5 * (vb - va), y: y + 0.5 * (h - depth) });
-                if profile_height.is_some_and(|ph| h + depth > ph + 1e-6) {
+                profile_center = Some(GroundPoint { x: at[0] + 0.5 * (vb - va), y: y + 0.5 * (h + rise - depth) });
+                if profile_height.is_some_and(|ph| h + rise + depth > ph + 1e-6) {
                     off = true;
                 }
                 view = Some(drawn.frame);

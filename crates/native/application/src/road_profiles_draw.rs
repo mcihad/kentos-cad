@@ -57,6 +57,8 @@ struct Checked {
     bands: ProfileBands,
     /// The Dever band's schedule (docs/adr/0980): its name, break points and normal slopes.
     dever: Option<(String, kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    /// KGM's slope and platform rows above the frame (docs/adr/0989).
+    corridor: Option<[Vec<crate::road_corridor_bands::Cell>; 6]>,
 }
 
 /// The profile's range, its first and last PVI's stations.
@@ -210,6 +212,28 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
             Some((sdef.name.clone(), schedule, crate::road_superelevations::normal(sdef)))
         }
     };
+    // KGM's slope and platform rows above the frame (docs/adr/0989).
+    let corridor = match (&input.corridor, bands) {
+        (None, _) => None,
+        (Some(_), ProfileBands::Kentos) => {
+            return Err(fail(
+                codes::INVALID_LABEL,
+                "Şev ve platform satırları yalnız KGM bantlarıyla (bands: kgm) çizilir.".into(),
+                "corridor",
+            ));
+        }
+        (Some(name), ProfileBands::Kgm) => {
+            let (_, cdef) = crate::road_corridors::find(doc.road_corridors(), name, "corridor")?;
+            if cdef.alignment != def.alignment {
+                return Err(fail(
+                    codes::INVALID_LABEL,
+                    format!("“{}” koridoru boykesitin aksında değil.", cdef.name),
+                    "corridor",
+                ));
+            }
+            Some(crate::road_corridor_bands::rows(doc, cdef, s0, s1)?)
+        }
+    };
     Ok(Checked {
         id: def.id.clone(),
         built,
@@ -225,6 +249,7 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         warnings: layer_warnings,
         bands,
         dever,
+        corridor,
     })
 }
 
@@ -442,6 +467,27 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             }
         }
     }
+    // KGM's slope and platform rows right above the frame (docs/adr/0989): the names' column, a line over each row,
+    // each run of a value its words in the middle and a line where it changes.
+    if let Some(rows) = &c.corridor {
+        let n = rows.len() as f64;
+        out.push(line([x0 - names, y1], [x0 - names, y1 + n * row], None, Some(0.25)));
+        out.push(line([x0, y1], [x0, y1 + n * row], None, Some(0.25)));
+        for (k, cells) in rows.iter().enumerate() {
+            let (bottom, top) = (y1 + row * (n - 1.0 - k as f64), y1 + row * (n - k as f64));
+            out.push(line([x0 - names, top], [x1, top], None, Some(0.18)));
+            let mid = 0.5 * (bottom + top);
+            out.push(text([x0 - names + 0.5 * h, mid], crate::road_corridor_bands::ROWS[k].to_owned(), h, TextAlign::MiddleLeft, None));
+            for (i, cell) in cells.iter().enumerate() {
+                if !cell.text.is_empty() {
+                    out.push(text([x(0.5 * (cell.from + cell.to)), mid], cell.text.clone(), h, TextAlign::MiddleCenter, None));
+                }
+                if i + 1 < cells.len() {
+                    out.push(line([x(cell.to), bottom], [x(cell.to), top], None, Some(0.18)));
+                }
+            }
+        }
+    }
     if c.bands == ProfileBands::Kgm {
         kgm_bands(&mut out, c, columns, at, h, names);
         return out;
@@ -545,6 +591,12 @@ pub(crate) fn view(
         revision: doc.revision().to_string(),
     };
     Ok((objects, drawn, c.warnings))
+}
+
+/// How tall KGM's slope and platform rows over a view are (docs/adr/0989), in drawing units, with texts `height` paper
+/// millimetres high.
+pub(crate) fn corridor_rows_height(doc: &kentos_domain::Document, height: f64) -> f64 {
+    crate::road_corridor_bands::ROWS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
 }
 
 /// How deep the bands under a view are, in drawing units, with texts `height` paper millimetres high.

@@ -39828,6 +39828,13 @@
             ],
             "description": "The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,\nEğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay\nGeometri, Düşey Geometri and Dever."
           },
+          "corridor": {
+            "description": "The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the\nprofile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,\nSAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "datum": {
             "format": "double",
             "type": [
@@ -40056,6 +40063,9 @@
           "unknown_road_profile",
           "invalid_label",
           "unknown_superelevation",
+          "unknown_corridor",
+          "invalid_road_corridor",
+          "no_terrain",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -56007,6 +56017,13 @@
             ],
             "description": "The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order."
           },
+          "corridor": {
+            "description": "With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "exaggeration": {
             "format": "double",
             "type": [
@@ -56263,6 +56280,10 @@
           "invalid_options",
           "not_fixed_map",
           "bad_drawing_info",
+          "unknown_corridor",
+          "invalid_label",
+          "invalid_road_corridor",
+          "no_terrain",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",

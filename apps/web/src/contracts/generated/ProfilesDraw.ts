@@ -30,4 +30,10 @@ bands?: ProfileBands,
  * The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
  * absent: the band says none was given.
  */
-superelevation?: string, expectedRevision?: string, };
+superelevation?: string, 
+/**
+ * The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
+ * profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
+ * SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
+ */
+corridor?: string, expectedRevision?: string, };

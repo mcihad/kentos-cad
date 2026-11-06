@@ -416,6 +416,12 @@ pub struct ProfilesDraw {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
+    /// The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
+    /// profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
+    /// SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub corridor: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

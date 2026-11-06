@@ -290,6 +290,7 @@ pub mod road_profiles_propose;
 pub mod road_alignments_check;
 pub mod road_profiles_check;
 pub mod road_profiles_lengths;
+pub mod road_corridor_bands;
 pub mod road_corridors;
 pub mod road_corridors_daylights;
 pub mod road_corridors_preflight;

@@ -65608,6 +65608,9 @@ class ProfilesDraw(_Model):
         bands: The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
             Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
             Geometri, Düşey Geometri and Dever.
+        corridor: The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
+            profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
+            SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
         datum: Unit: elevation.
         every: Unit: m.
         exaggeration: Unit: 1.
@@ -65621,6 +65624,7 @@ class ProfilesDraw(_Model):
     layer_id: str
     at: list[float]
     bands: ProfileBands | ProfileBandsName | None | Unset = UNSET
+    corridor: str | None | Unset = UNSET
     datum: float | None | Unset = UNSET
     every: float | None | Unset = UNSET
     exaggeration: float | None | Unset = UNSET
@@ -65637,6 +65641,8 @@ class ProfilesDraw(_Model):
         out["at"] = [float(e0) for e0 in self.at]
         if self.bands is not UNSET:
             out["bands"] = None if self.bands is None else _enum_out(self.bands)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
         if self.datum is not UNSET:
             out["datum"] = None if self.datum is None else float(self.datum)
         if self.every is not UNSET:
@@ -65662,6 +65668,7 @@ class ProfilesDraw(_Model):
             layer_id=data["layerId"],
             at=[float(e0) for e0 in data["at"]],
             bands=UNSET if "bands" not in data else None if data["bands"] is None else _enum_in(ProfileBands, data["bands"]),
+            corridor=data.get("corridor", UNSET),
             datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
             every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
             exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
@@ -74432,6 +74439,7 @@ class RoadSheetsPlan(_Model):
     Attributes:
         at: Unit: length.
         bands: The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order.
+        corridor: With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
         exaggeration: Unit: 1.
         from_: Unit: m.
         options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
@@ -74443,6 +74451,7 @@ class RoadSheetsPlan(_Model):
     alignment: str
     at: list[float] | None | Unset = UNSET
     bands: ProfileBands | ProfileBandsName | None | Unset = UNSET
+    corridor: str | None | Unset = UNSET
     exaggeration: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     first: str | None | Unset = UNSET
@@ -74464,6 +74473,8 @@ class RoadSheetsPlan(_Model):
             out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
         if self.bands is not UNSET:
             out["bands"] = None if self.bands is None else _enum_out(self.bands)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
         if self.exaggeration is not UNSET:
             out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
         if self.expected_revision is not UNSET:
@@ -74497,6 +74508,7 @@ class RoadSheetsPlan(_Model):
             alignment=data["alignment"],
             at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
             bands=UNSET if "bands" not in data else None if data["bands"] is None else _enum_in(ProfileBands, data["bands"]),
+            corridor=data.get("corridor", UNSET),
             exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
             expected_revision=data.get("expectedRevision", UNSET),
             first=data.get("first", UNSET),

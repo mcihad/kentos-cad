@@ -888,6 +888,14 @@ def draw_cases():
        setup_=two, supers=[DEVER, side_dever])
     no("Geçersiz beklenen sürüm", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "41"}, CONFLICT)
+    # Docs/adr/0989: KGM's slope and platform rows over the frame, on the corridor cases' drawing (imported here, not
+    # at the top: that module imports this one).
+    import road_corridor_band_cases as bands
+    corridor_setup, extra = bands.cases()
+    for c in extra:
+        c.pop("rows", None)
+        c.setdefault("setup", corridor_setup)
+    cases.extend(extra)
     return file("road.profiles.draw", "Boykesit çiz", base_setup, cases)
 
 

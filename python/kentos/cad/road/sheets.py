@@ -62,6 +62,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -104,6 +105,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             alignment:
             at: Unit: length.
             bands: The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order.
+            corridor: With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
             exaggeration: Unit: 1.
             expected_revision:
             first:
@@ -133,6 +135,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
             bands=bands,
+            corridor=corridor,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,
@@ -156,6 +159,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -177,6 +181,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
             bands=bands,
+            corridor=corridor,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,
@@ -200,6 +205,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -221,6 +227,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
             bands=bands,
+            corridor=corridor,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,
@@ -244,6 +251,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -270,6 +278,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
             bands=bands,
+            corridor=corridor,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,

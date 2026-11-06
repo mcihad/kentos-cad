@@ -1740,6 +1740,7 @@ const ENTRIES: &[Entry] = &[
         id: "road.profiles.draw",
         refusals: &[
             &["road_drawings_full", "not_a_road_project", "unknown_road_profile", "invalid_label", "unknown_superelevation"],
+            &["unknown_corridor", "invalid_road_corridor", "no_terrain"],
             LAYER,
             REVISION,
         ],
@@ -2480,6 +2481,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["not_a_road_project", "unknown_alignment", "unknown_road_profile", "invalid_road_sheets", "unknown_template"],
             &["invalid_options", "not_fixed_map", "bad_drawing_info"],
+            &["unknown_corridor", "invalid_label", "invalid_road_corridor", "no_terrain"],
             LAYER,
             REVISION,
         ],
