@@ -832,6 +832,12 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
 
+**Şema 184** (ADR 1120 §4; CAD-ADV-11, dalda geçici numara): yazı stilinin `bigFontFile`'ı (aşağıda) ve
+`styles.items`'ta AutoCAD-86 unifont 1.0 ya da bigfont 1.0 imzalı gömülü SHX kaynağı. Yazıcı 184'ü yalnız bunlardan
+biri varken seçer; 183 ve öncesi alanı `unknown_field`, font kaynağını `bad_value` ile reddeder. Tanımı gömülmesine
+izin vermeyen (tür bit 1) unifont her şemada `bad_value`'dur (`broken/shx-fonts-not-embeddable.kcad`). Örnek
+`shx-fonts.json/.kcad`.
+
 **Şema 183** (ADR 1100 §3; CAD-ADV-12, dalda geçici numara), ayarlara `approvedSheetTemplates`'i ekler: bağlı ofis
 standartlarının onayladığı pafta şablonu sürümleri, sözleşmenin `ApprovedSheetTemplate` listesinin JSON'u
 (`templateId` 1–128 bayt, kenar boşluksuz, denetim karakteri yok, büyük-küçük harf ayrımsız tekil; `revision` en az
@@ -1046,7 +1052,7 @@ Düğüm bir haritadır, anahtarları `node` < `plot` < `style` < `frozen` < `lo
 
 Şema 21'de (ADR 0183). İki dizi; boş dizi yazılmaz (alan yazılmaz). Her öğe bir haritadır; `false` bayrak ve olmayan değer yazılmaz. Liste bütün olarak denetlenir (`bad_value`): kimlik boş olamaz ve listede bir kez geçer (`broken/style-table-id-empty.kcad`); ad uçlarında boşluksuz, boş değil, en çok 64 harf, satır sonu ve denetim karakteri olmadan ve büyük küçük harf ayırmadan listede bir kezdir (`broken/style-table-name-padded.kcad`, `broken/style-table-name-twice.kcad`); “Standart” (stilsiz yazı ve ölçü) ayrılmıştır (`broken/style-table-standart.kcad`). Stilin kimliği nesnelerin `textStyle`'ı ve `dimStyle`'ıdır; adı değişebilir.
 
-**Yazı stili**, anahtarları kodlanmış sırasıyla `id` < `bold` < `font` < `name` < `height` < `italic` < `oblique` < `fontFile` < `widthFactor`:
+**Yazı stili**, anahtarları kodlanmış sırasıyla `id` < `bold` < `font` < `name` < `height` < `italic` < `oblique` < `fontFile` < `bigFontFile` < `widthFactor`:
 
 | Anahtar | Tür | Zorunlu | Değerler |
 |---|---|---|---|
@@ -1057,6 +1063,7 @@ Düğüm bir haritadır, anahtarları `node` < `plot` < `style` < `frozen` < `lo
 | `height` | float | | kâğıtta mm: sıfırdan büyük, en çok 1000 (`broken/style-table-height-zero.kcad`); yokluğu yüksekliği aracın bırakır |
 | `widthFactor` | float | | 0'dan büyük, en çok 100, 1 değil |
 | `fontFile` | metin | | DXF'ten gelen yazı tipi dosyası (boş değil); DXF'e aynen yazılır |
+| `bigFontFile` | metin | | şema 184 (ADR 1120 §4): STYLE grup 4'ün Big Font'u; boş değil, en çok 255 bayt, denetim karakteri yok, `.shx` ile biter (`broken/shx-fonts-big-font-not-shx.kcad`); 183 ve öncesi `unknown_field` (`broken/shx-fonts-in-schema-183.kcad`). |
 
 **Ölçü stili**, anahtarları kodlanmış sırasıyla `id` < `font` < `name` < `unit` < `arrow` < `height` < `prefix` < `suffix` < `textGap` < `decimals` < `extColor` < `arrowSize` < `extBeyond` < `extOffset` < `extWeight` < `textColor` < `textPlace` < `dimLineType` < `extLineType` < `dimLineColor` < `dimLineWeight` (çizgilerinki şema 30'da):
 

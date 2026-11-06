@@ -1777,6 +1777,30 @@ denetimde hata verir ve teslimi engeller; ön denetim, vektör, raster ve PDF ki
 geometrik durumla test edildi, çokgen sınaması kapatılınca test kırmızı verdi. Yığın kutusu sınaması tutucudur;
 parça düzeyinde kesin kırpma açık.
 
+**SHX unifont/Big Font, noktalı bant, eğride analitik tire (6 Kasım 2026, [ADR 1120](../docs/adr/1120-shx-unifont-and-big-font-linetype-text.md),
+[ADR 1121](../docs/adr/1121-dots-on-a-wide-polyline.md), [ADR 1122](../docs/adr/1122-dash-phase-along-the-source-curve.md),
+[ADR 1123](../docs/adr/1123-frozen-ellipse-outline-order.md)):**
+
+- SHX okuyucusu AutoCAD-86 unifont 1.0 (iki baytlık alt şekil, tanım kaydı, gömme türü) ve bigfont 1.0'ı (kaçış
+  aralıkları, konumlu dizin) okur; genişletilmiş Big Font'un `7,0` ilkeli açıkça reddedilir. Yazı stilinin fontu
+  `.shx` olan çizgi tipi yazısı projeye gömülü kaynaktan çizilir, Big Font karakteri `\M+cXXXX` ile; eksik font,
+  karakter ya da Big Font `linetype_unsupported`'tır. `TextStyleDef.bigFontFile` DXF STYLE grup 4'tür, `.kcad`
+  şema 184 (geçici numara); gömülmesine izin vermeyen unifont kaynak olamaz, kullanılan font silinemez. Test fontları
+  ve bağımsız okuyucu `scripts/fixtures/shx_font_reference.py`; Rust yolları bağımsız okuyucuyla bit bit aynı;
+  22 yeni ortak yazı stili durumu; katalog, Python SDK'sı ve Python testi güncel.
+- Geniş çoklu çizgide nokta artık bandın kesitidir (genişlik boyunda, çizgi kalınlığıyla); sıfır genişliğe düşen
+  nokta açık ret. AutoCAD'in davranışı belgelenmemiş; bu KentOS kararıdır.
+- CAD çizgi tipinin tiresi yay, daire, elips, yaylı yol ve NURBS'te kaynak eğrinin yay uzunluğuyla kesilir
+  (`View::cad_phase`: masaüstü model/pafta ekranı ve çıktı; web ve dondurulmuş yanıtlar değişmez). Kesim noktası
+  eğrinin kendi noktasıdır; 1:1/1:20/1:100 vektör çıktısında tire başları bağımsız ölçüyle 1e-6 mm içinde; GPU,
+  CPU ve PDF resimlerinde tire başı fazı birikmiyor (yayılım ≈1 px). NURBS işaretleri de gerçek yay uzunluğuyla.
+- `main`'de kırmızı olan iki style-core dondurulmuş testinin nedeni 31c296103'teki elips toplama sırasıydı; çizilen
+  kontur dondurulmuş sırayla, çözücü kendi doğru yuvarlanmış uç noktasıyla (ADR 1123). Beklenenler yenilenmedi.
+- Açık: PDF'de sıfır uzunluklu tire (nokta) `butt` uçla görünmüyor (düz çizgide de, önceden vardı); çizgi tipi
+  dışındaki SHX yazıları; DXF/DWG aktarımında SHX yazı fontlarının dosya yanına yazılması; Unicode → Big Font kod
+  sayfası; AutoCAD `A` hizalaması/PLINEGEN=0; 2M nokta sınırının ötesi; parça düzeyinde kesin kırpma; genel
+  performans kabulü. Madde `[~]`.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

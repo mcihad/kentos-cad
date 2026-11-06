@@ -71,6 +71,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-ADV-17 / ADR 1061: 2B düzleme indir penceresi; dışa aktarmanın `replaceSource` seçeneği. TS türleri üretildi.
 - CAD-ADV-11/12 / ADR 1001–1002: `.kcad` şema 181 uzun desen codec'i ve web çizicisinin 12'den uzun deseni; Standart
   kaynaklarını kur penceresi `cad.standards.install`'a bağlanmalı.
+- CAD-ADV-11 / ADR 1120–1123: `.kcad` şema 184 (`textStyles[].bigFontFile`, SHX unifont/Big Font kaynakları) web
+  codec'ine ve yazı stili penceresine; WASM yeniden derlemesi (`shx` okuyucusu unifont/bigfont, çizgi tipi
+  yazısının SHX yolu `cap: 1`). Web'in stil yapısı `View::cad_phase`'i açmıyor: eğride CAD tiresi web'de hâlâ
+  kiriş toplamıyla ölçülür; açılınca `fixtures/style/v1/batches.json` web kaydı yenilenmeli (masaüstü ile aynı
+  parçalar). Noktalı geniş bandın kesitleri ve `drawn_point` (ADR 1123) çekirdekte; TS türleri üretilmedi.
 - CAD-ADV-14 / ADR 1060: Dış başvurular penceresinin inceleme, aday ve önizleme kartı; `resetLayers`; subref'in
   `piece_gone` kuralının web oynatıcısı (`fixtures/subref/v1`) ve WASM yeniden derlemesi (TS türleri üretildi).
 - CAD-ADV-15 / ADR 1000: `.kcad` şema 180 `settings.reviewNotes`, `cad.review.notes.edit/list` ve
