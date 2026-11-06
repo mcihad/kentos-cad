@@ -284,6 +284,8 @@ pub(super) struct Features {
     pub(super) dimension_text_styles: bool,
     /// Schema 187 (docs/adr/1025): a leader style's text style.
     pub(super) leader_text_styles: bool,
+    /// Schema 188 (docs/adr/1200 §2): a map project's work structure.
+    pub(super) map_work: bool,
     /// Schema 190 (docs/adr/1129): the accepted standards findings.
     pub(super) standard_exceptions: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
@@ -589,6 +591,7 @@ impl Features {
             table_styles: schema >= crate::SCHEMA_WITH_TABLE_STYLES,
             dimension_text_styles: schema >= crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES,
             leader_text_styles: schema >= crate::SCHEMA_WITH_LEADER_TEXT_STYLES,
+            map_work: schema >= crate::SCHEMA_WITH_MAP_WORK,
             standard_exceptions: schema >= crate::SCHEMA_WITH_STANDARD_EXCEPTIONS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,

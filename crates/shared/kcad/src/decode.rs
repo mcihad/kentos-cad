@@ -788,6 +788,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         (None, None, None, None);
     let mut cad_work = None;
     let mut road = None;
+    let mut map_work = None;
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1032,6 +1033,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             // Schema 102 (docs/adr/0622 §5): Otomatik seçim.
             "autoSelect" if has.layer_geometry => auto_select = Some(r.bool()?),
             // Schema 98 (docs/adr/0583 §3): the map's system.
+            // Schema 188 (docs/adr/1200 §2): a map project's work structure, read whole and checked.
+            "mapWork" if has.map_work => {
+                let (v, at): (kentos_contracts::MapWork, usize) = objects::json_part(r, "harita işi")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş harita işi yazılmaz"));
+                }
+                if let Some((field, words)) = v.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
+                }
+                map_work = Some(v);
+            }
             "mapSrid" if has.source_crs => {
                 let at = r.position();
                 let v = r.uint(u64::from(u32::MAX))?;
@@ -1766,8 +1778,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     if road.is_some() && cad_work != Some(CadWork::Road) {
         return Err(relation("road", "yol ayarları yalnız yol projesinin olur (cadWork road)", r));
     }
+    // A map's work structure is a map project's (docs/adr/1200 §2).
+    if map_work.is_some() && cad_work != Some(CadWork::Map) {
+        return Err(relation("mapWork", "harita işi yalnız harita projesinin olur (cadWork map)", r));
+    }
     Ok(ProjectSettings {
         road,
+        map_work,
         source_bases,
         heights,
         coordinate_epoch,

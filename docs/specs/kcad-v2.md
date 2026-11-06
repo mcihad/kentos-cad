@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `190`; 188 ve 189 başka dallarda); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-191.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `190`; 189 başka dalda); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-191.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -836,9 +836,20 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `StandardException` listesinin JSON'u: bulgunun türü `kind`, konusu `subject`, katmanı `layer`, standardın kaynağı
 `standard` ve `revision`'ı, kabul anındaki `expected`/`found`, gerekçe `reason` (boşluktan ibaret değil, en çok 500
 karakter), isteğe bağlı `by` ve `at`; boş liste yazılmaz, aynı tür, konu ve katman aynı standart için bir kez,
-bilinmeyen alan `unknown_field`). Yazıcı 190'ı yalnız kabul edilmiş bulgu varken seçer; 187 ve öncesi alanı
-`unknown_field` sayar (`broken/standard-exceptions-in-schema-187.kcad`). Örnek `standard-exceptions.json/.kcad`; bozuklar
+bilinmeyen alan `unknown_field`). Yazıcı 190'ı yalnız kabul edilmiş bulgu varken seçer; 188 ve öncesi alanı
+`unknown_field` sayar (`broken/standard-exceptions-in-schema-188.kcad`). Örnek `standard-exceptions.json/.kcad`; bozuklar
 `broken/standard-exceptions-{unknown-field,reason,duplicate}.kcad`.
+
+**Şema 188** (ADR 1200 §2; MAP-01): ayarların `mapWork`'ü, harita projesinin iş yapısı
+(sözleşmenin `MapWork`'ünün JSON'u; 7 harfli anahtarlar arasında `mapSrid`'den sonra). `items`: kimlik `is-N` (baştaki
+sıfırsız, tek), `kind` (`campaign`, `reference`, `working`, `design`, `check`, `delivery`), 1–200 karakterlik kenarı
+boşluksuz `name`, `draft` değilse `status` (`review`, `approved`), varsa `layers` (bir katman tek öğede), varsa `file`
+(`path` boş olmayan, `revision` 64 küçük onaltılık haneli SHA-256); `derivations`: kimlik `tr-N`, dosyası olan bir
+öğe `source`, SHA-256 `revision`, 1–200 karakterlik `operation`, 1–1 000 000 küçük harfli UUID `uids` (bir nesne tek
+kayıtta). Boş yapı, `draft` durumu ve boş liste yazılmaz; yalnız `cadWork: map` projesinin olur; kurala uymayan
+`bad_value`. Yazıcı 188'i yalnız `mapWork` varken seçer; 187 ve öncesi alanı `unknown_field` sayar
+(`broken/map-work-in-schema-187.kcad`). Örnek `map-work.json/.kcad`; bozuklar
+`broken/map-work-{not-map,shared-layer,no-file-source,object-twice,draft-written}.kcad`.
 
 **Şema 187** (ADR 1025; CAD-ADV-11): kılavuz stilinin `textStyle`'ı (notun yazıldığı proje yazı stili, adıyla; ad
 kuralı şema 186'nınki). Yazıcı 187'yi yalnız bir kılavuz stili `textStyle` taşıyınca seçer; 186 ve öncesi alanı

@@ -189,6 +189,37 @@ pub(super) fn table_findings(
     table: &kentos_commands::TableEntity,
 ) -> Vec<InspectionFinding> {
     let mut out = Vec::new();
+    // Its words in its face's SHX text style (docs/adr/1026), as a text's (ADR 1125): the first cell the font cannot
+    // draw is said; a font the project does not embed is a named substitute.
+    let drawn = kentos_commands::styled(table, doc.settings());
+    let first_cell = drawn.cells.iter().enumerate().flat_map(|(r, row)| row.iter().enumerate().map(move |(c, w)| (r, c, w)))
+        .find(|(_, _, w)| !w.trim().is_empty());
+    if let Some((_, _, w)) = first_cell
+        && let Some(t) = crate::shx_text::words_in(doc.settings(), &drawn.face, table.p, 0.0, table.height, w)
+        && let Some(style) = crate::shx_text::style_of(doc.settings(), &t)
+    {
+        match crate::shx_text::Fonts::of(style, doc.styles()) {
+            Ok(fonts) => {
+                let bad = drawn.cells.iter().enumerate().flat_map(|(r, row)| row.iter().enumerate().map(move |(c, w)| (r, c, w)))
+                    .filter(|(_, _, w)| !w.trim().is_empty())
+                    .find_map(|(r, c, w)| w.lines().find_map(|line| {
+                        let mut one = t.clone();
+                        line.clone_into(&mut one.text);
+                        crate::shx_text::lay_out(&fonts, &one).err().map(|why| (r, c, why))
+                    }));
+                if let Some((r, c, why)) = bad {
+                    out.push(finding(uid, &[], "text_shx_unsupported", InspectionSeverity::Error, vec![table.p],
+                        format!("Tablonun {}. satır {}. sütun hücresi “{}” yazı stilinin gömülü SHX fontuyla çizilemiyor: {why} Ekranda yerine yazı tipiyle çizilir; çıktı teslim edilmez.",
+                            r + 1, c + 1, style.name),
+                        "Eksik karakteri düzeltin, karakteri içeren SHX kaynağını ekleyin ya da tablonun yazı stilini değiştirin; yazı sessizce başka fonta çevrilmez."));
+                }
+            }
+            Err(why) => out.push(finding(uid, &[], "text_font_substituted", InspectionSeverity::Warning, vec![table.p],
+                format!("Özgün font: {} · Çizilen font: {}. Tablonun SHX fontu çizilemiyor: {why}",
+                    style.font_file.as_deref().unwrap_or_default(), style.font.label()),
+                "SHX kaynağını Çizgi tipleri › SHX ekle… ya da cad.library.edit ile projeye ekleyin; tablo o zaman özgün fontla çizilir.")),
+        }
+    }
     if table.fields.len() > SOURCE_LIMIT {
         out.push(finding(uid, &[], "table_field_unverified", InspectionSeverity::Error,
             vec![table.p], "Tablonun alan sayısı 512 hücrelik denetim sınırını aşıyor; saklanan değerlerin güncelliği doğrulanamadı.".into(),

@@ -132,6 +132,8 @@ pub(crate) enum PropertyRows {
     /// A polyline's Mahal ayırıcı (docs/adr/0679): a building's, KentOS Mimari's (one that is a separator shows
     /// it everywhere, to be turned off).
     Separators,
+    /// Kaynağı: where the selected object comes from in the map's work (docs/adr/1200 §4): a map's.
+    MapWork,
 }
 
 /// What one module's program shows.
@@ -237,6 +239,7 @@ const MAP: Surfaces = Surfaces {
         Panel::Blocks,
         Panel::Templates,
         Panel::Sources,
+        Panel::MapWork,
         Panel::Properties,
     ],
     cells: &[Cell::MapCrs, Cell::SecondCrs, Cell::Topology, Cell::Overlap],
@@ -269,6 +272,7 @@ const MAP: Surfaces = Surfaces {
         PropertyRows::Crs,
         PropertyRows::Services,
         PropertyRows::Mask,
+        PropertyRows::MapWork,
     ],
     parcels: true,
     sheet: ProjectType::ZoningPlan,

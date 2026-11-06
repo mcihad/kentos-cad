@@ -54415,6 +54415,368 @@
       ]
     },
     {
+      "id": "map.work.query",
+      "version": 1,
+      "title": "Harita işini sorgula",
+      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (ölçüm kampanyası, referans kaynak, çalışma verisi, tasarım, denetim sonucu, teslim paketi) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (kampanya ya da referans katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. Retler: not_a_map_project, invalid_uid, entity_not_found.",
+      "aliases": [
+        "haritaisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).\n`uid` also says where that object comes from.\n\nRefusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "MapWorkQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.query` v1: the items in the project's order, the derivations in theirs, the object asked about,\nhow many derivations are out of date, how many rows have a problem (an item not up to date, a derivation missing\nobjects), whether it was deep, and the revision read.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          },
+          "derivations": {
+            "items": {
+              "$ref": "#/$defs/WorkDerivationRow"
+            },
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/WorkRow"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WorkObjectSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problems": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "items",
+          "derivations",
+          "stale",
+          "problems",
+          "deep",
+          "revision"
+        ],
+        "title": "MapWorkTree",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.query` v1: the items in the project's order, the derivations in theirs, the object asked about,\nhow many derivations are out of date, how many rows have a problem (an item not up to date, a derivation missing\nobjects), whether it was deep, and the revision read.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          },
+          "derivations": {
+            "items": {
+              "$ref": "#/$defs/WorkDerivationRow"
+            },
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/WorkRow"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WorkObjectSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problems": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "items",
+          "derivations",
+          "stale",
+          "problems",
+          "deep",
+          "revision"
+        ],
+        "title": "MapWorkTree",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_map_project",
+          "invalid_uid",
+          "entity_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dosyaları okuyarak, bir noktanın kaynağıyla",
+          "input": {
+            "deep": true,
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        }
+      ]
+    },
+    {
+      "id": "map.work.edit",
+      "version": 1,
+      "title": "Harita işini düzenle",
+      "summary": "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, approval_stale, layer_locked, work_full.",
+      "aliases": [
+        "haritaisiduzenle"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh\nor derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an\nobject another derivation names), `approval_stale`, `layer_locked` (a raster or an image to relink on a locked\nlayer), `work_full`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/MapWorkOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "MapWorkEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken\naway with an item, how many derivations are out of date after, and the drawing's revision.",
+        "properties": {
+          "derivation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "item": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "released": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "relinked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "stale",
+          "revision"
+        ],
+        "title": "MapWorkEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken\naway with an item, how many derivations are out of date after, and the drawing's revision.",
+        "properties": {
+          "derivation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "item": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "released": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "relinked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "stale",
+          "revision"
+        ],
+        "title": "MapWorkEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "not_a_map_project",
+          "unknown_work_item",
+          "unknown_derivation",
+          "invalid_work_text",
+          "layer_not_found",
+          "layer_in_work_item",
+          "nothing_to_set",
+          "invalid_file_path",
+          "file_not_found",
+          "work_item_no_file",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "already_derived",
+          "approval_stale",
+          "layer_locked",
+          "work_full"
+        ],
+        "warnings": [
+          "source_content_changed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "GNSS kampanyası, dosyasıyla",
+          "input": {
+            "operation": {
+              "file": "/veri/kampanya.nmea",
+              "kind": "campaign",
+              "layers": [
+                "gnss"
+              ],
+              "name": "GNSS 2026-10",
+              "op": "add"
+            }
+          }
+        },
+        {
+          "title": "Taşınan ortofotoyu yeniden bağla",
+          "input": {
+            "operation": {
+              "file": "/arsiv/ortofoto.tif",
+              "item": "is-2",
+              "op": "relink"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -92724,6 +93086,66 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu komut yalnız yol projesinde (KentOS Yol, cadWork road) çalışır."
+    },
+    {
+      "code": "not_a_map_project",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işi yalnız harita projesinde (KentOS Harita, cadWork map) olur."
+    },
+    {
+      "code": "unknown_work_item",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işinde bu kimlikte öğe yok."
+    },
+    {
+      "code": "unknown_derivation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işinde bu kimlikte türetme kaydı yok."
+    },
+    {
+      "code": "invalid_work_text",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğenin adı ya da üretim işlemi boşlukla başlamayan ve bitmeyen 1–200 karakter olmalı."
+    },
+    {
+      "code": "layer_in_work_item",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman harita işinin başka bir öğesinde ya da iki kez verilmiş; bir katman tek öğenin olur."
+    },
+    {
+      "code": "work_item_no_file",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğenin dosyası yok: yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da türetmenin kaynağı olur."
+    },
+    {
+      "code": "already_derived",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne başka bir türetme kaydında; önce o kaydı silin."
+    },
+    {
+      "code": "approval_stale",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın."
+    },
+    {
+      "code": "work_full",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur."
+    },
+    {
+      "code": "source_content_changed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil."
     },
     {
       "code": "invalid_terrain",
@@ -137628,6 +138050,212 @@
       ],
       "type": "object"
     },
+    "MapWork": {
+      "additionalProperties": false,
+      "description": "A map project's work structure.",
+      "properties": {
+        "derivations": {
+          "items": {
+            "$ref": "#/$defs/WorkDerivation"
+          },
+          "type": "array"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/WorkItem"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "MapWorkOperation": {
+      "description": "What `map.work.edit` does.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A new item `is-N`: its kind, name, layers (each in no other item) and, for a file the project rests on, the\nfile (an absolute path; its SHA-256 is its revision).",
+          "properties": {
+            "file": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "$ref": "#/$defs/WorkKind"
+            },
+            "layers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "name": {
+              "type": "string"
+            },
+            "op": {
+              "const": "add",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An item's name, status or layers. Approving an item that holds out-of-date derived objects is refused; the\nstatus is the office's record, never an institution's approval.",
+          "properties": {
+            "item": {
+              "type": "string"
+            },
+            "layers": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "set",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WorkStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "item"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An item taken out, with the derivations made from it (their objects stay, the user's own drawing).",
+          "properties": {
+            "item": {
+              "type": "string"
+            },
+            "op": {
+              "const": "remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "item"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that\nshowed the old file, in one step; the new file's content is the item's revision (other content than before:\nwarning `source_content_changed`, its derivations out of date).",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "item": {
+              "type": "string"
+            },
+            "op": {
+              "const": "relink",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "item",
+            "file"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The item's file as it is now accepted as its revision; its derivations made from before are out of date.",
+          "properties": {
+            "item": {
+              "type": "string"
+            },
+            "op": {
+              "const": "refresh",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "item"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Objects recorded as made from `source` (an item with a file) by `operation`, at its revision now.",
+          "properties": {
+            "op": {
+              "const": "derive",
+              "type": "string"
+            },
+            "operation": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "op",
+            "source",
+            "uids",
+            "operation"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A derivation's record taken away; its objects stay, the user's own drawing.",
+          "properties": {
+            "derivation": {
+              "type": "string"
+            },
+            "op": {
+              "const": "forget",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "derivation"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "MaplibreData": {
       "description": "A GeoJSON file `file.export.maplibre` wrote (or with `plan` would write) beside the style.",
       "properties": {
@@ -160426,6 +161054,17 @@
             "null"
           ],
           "x-unit": "epsg"
+        },
+        "mapWork": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MapWork"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were\nderived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188)."
         },
         "namedUcs": {
           "description": "The project's named UCSs, in the order they were kept.",
@@ -188034,6 +188673,378 @@
         "frame"
       ],
       "type": "object"
+    },
+    "WorkDerivation": {
+      "additionalProperties": false,
+      "description": "Objects made from an item: the item, its revision then, the operation that made them and the objects.",
+      "properties": {
+        "id": {
+          "description": "`tr-N`.",
+          "type": "string"
+        },
+        "operation": {
+          "description": "What made them: a command's id or a step's name, 1–200 characters.",
+          "type": "string"
+        },
+        "revision": {
+          "description": "The item's revision when they were made (64 lower-case hex digits).",
+          "type": "string"
+        },
+        "source": {
+          "description": "The item they came from: one with a file.",
+          "type": "string"
+        },
+        "uids": {
+          "description": "The objects, each in one derivation at most.",
+          "items": {
+            "$ref": "#/$defs/EntityId"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "revision",
+        "operation",
+        "uids"
+      ],
+      "type": "object"
+    },
+    "WorkDerivationRow": {
+      "description": "A derivation as it stands: its id, source item, operation, the source's revision it was made from, how many of its\nobjects the drawing holds of how many, its state and why.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "recorded": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/WorkState"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "operation",
+        "revision",
+        "objects",
+        "recorded",
+        "state"
+      ],
+      "type": "object"
+    },
+    "WorkFile": {
+      "additionalProperties": false,
+      "description": "The file an item is: where it is and the content the project last accepted.",
+      "properties": {
+        "path": {
+          "description": "An absolute path.",
+          "type": "string"
+        },
+        "revision": {
+          "description": "The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "WorkFileRow": {
+      "description": "An item's file: where, the revision the project accepted, how it stands.",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/WorkFileState"
+        }
+      },
+      "required": [
+        "path",
+        "revision",
+        "state"
+      ],
+      "type": "object"
+    },
+    "WorkFileState": {
+      "description": "How an item's file stands: there (looked for only), the same content as its revision, other content, not there.",
+      "enum": [
+        "found",
+        "current",
+        "changed",
+        "missing"
+      ],
+      "type": "string"
+    },
+    "WorkItem": {
+      "additionalProperties": false,
+      "description": "An item of the map's work.",
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "`is-N`.",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/WorkKind"
+        },
+        "layers": {
+          "description": "Layer or group ids; a layer is in one item at most.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "1–200 characters, no space at either end.",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/WorkStatus"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    },
+    "WorkKind": {
+      "description": "What an item is in the map's work.",
+      "oneOf": [
+        {
+          "const": "campaign",
+          "description": "A survey campaign: GNSS, total station or scan data gathered in the field.",
+          "type": "string"
+        },
+        {
+          "const": "reference",
+          "description": "A reference source taken as it is: an orthophoto, a CAD reference, a base map.",
+          "type": "string"
+        },
+        {
+          "const": "working",
+          "description": "The working data drawn and edited in the project.",
+          "type": "string"
+        },
+        {
+          "const": "design",
+          "description": "A design: a surface, a plan, an infrastructure layout.",
+          "type": "string"
+        },
+        {
+          "const": "check",
+          "description": "The results of a check (topology, quality, preflight).",
+          "type": "string"
+        },
+        {
+          "const": "delivery",
+          "description": "A delivery package.",
+          "type": "string"
+        }
+      ]
+    },
+    "WorkObjectRole": {
+      "description": "What an object is in the map's work.",
+      "oneOf": [
+        {
+          "const": "source",
+          "description": "Source data: on a campaign's or a reference's layer, not derived.",
+          "type": "string"
+        },
+        {
+          "const": "derived",
+          "description": "Made from a source item: a derivation names it.",
+          "type": "string"
+        },
+        {
+          "const": "free",
+          "description": "The user's own drawing.",
+          "type": "string"
+        }
+      ]
+    },
+    "WorkObjectSource": {
+      "description": "Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the\nitem it came from, the revision it was made from, the operation and whether it is up to date; a source object's\nsource is its own item and its revision that item's.",
+      "properties": {
+        "current": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "derivation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "item": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "$ref": "#/$defs/WorkObjectRole"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "role"
+      ],
+      "type": "object"
+    },
+    "WorkRow": {
+      "description": "An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state\nand why in sentences.",
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkFileRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/WorkKind"
+        },
+        "layers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "state": {
+          "$ref": "#/$defs/WorkState"
+        },
+        "status": {
+          "$ref": "#/$defs/WorkStatus"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "status",
+        "objects",
+        "state"
+      ],
+      "type": "object"
+    },
+    "WorkState": {
+      "description": "How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it\n(deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A\nderivation: up to date, out of date (its source moved on), some of its objects gone.",
+      "enum": [
+        "current",
+        "missing",
+        "changed",
+        "incomplete",
+        "stale"
+      ],
+      "type": "string"
+    },
+    "WorkStatus": {
+      "description": "Where an item's work stands, as the office records it.",
+      "oneOf": [
+        {
+          "const": "draft",
+          "description": "Taslak.",
+          "type": "string"
+        },
+        {
+          "const": "review",
+          "description": "Denetlenecek: handed over to be checked.",
+          "type": "string"
+        },
+        {
+          "const": "approved",
+          "description": "Onaylı teslim revizyonu: the office approved it for delivery; not an institution's approval.",
+          "type": "string"
+        }
+      ]
     },
     "WorkflowStep": {
       "additionalProperties": false,

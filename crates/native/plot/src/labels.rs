@@ -649,6 +649,18 @@ pub fn labels_in_view(
                         .or(entity.base().color.as_deref())
                         .or(Some(&layer.style.color)),
                 );
+                // In its face's SHX text style (docs/adr/1026), as a text is.
+                if let Some(w) = kentos_native_application::shx_text::words_in(
+                    doc.settings(),
+                    &t.face,
+                    kentos_contracts::Vec2 { x: at.x, y: at.y },
+                    *rotation,
+                    ground_height,
+                    &l.text,
+                ) && let Some(Ok(p)) = shx_of(&w).as_deref()
+                {
+                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), false);
+                }
             }
             (
                 LabelSpot::Placed {

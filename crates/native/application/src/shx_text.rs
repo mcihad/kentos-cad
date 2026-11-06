@@ -258,6 +258,27 @@ pub fn leader_note(
     Some(t)
 }
 
+/// Words written in `face` from their left baseline at `at` (a table cell's line, docs/adr/1026) as a text for
+/// [`place_cached`] when the face's style is an SHX one (and the face sets no font of its own); none otherwise.
+pub fn words_in(
+    settings: &ProjectSettings,
+    face: &kentos_commands::TextFace,
+    at: kentos_commands::Vec2,
+    rotation: f64,
+    height: f64,
+    words: &str,
+) -> Option<TextEntity> {
+    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+        {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": at.x, "y": at.y}, "text": words,
+         "height": height, "rotation": rotation}))
+    else {
+        return None;
+    };
+    t.face = face.clone();
+    style_of(settings, &t)?;
+    Some(t)
+}
+
 /// The most texts [`place_cached`] keeps per thread before it starts again.
 const CACHED: usize = 4096;
 

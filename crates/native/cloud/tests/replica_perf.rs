@@ -100,6 +100,7 @@ fn opened(n: usize) -> Opened {
         heights: None,
         coordinate_epoch: None,
         road: None,
+        map_work: None,
         named_ucs: Vec::new(),
         named_views: Vec::new(),
         view_templates: Vec::new(),

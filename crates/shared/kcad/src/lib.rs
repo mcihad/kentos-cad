@@ -810,6 +810,8 @@ pub const SCHEMA_WITH_TABLE_STYLES: u32 = 185;
 pub const SCHEMA_WITH_DIMENSION_TEXT_STYLES: u32 = 186;
 /// Schema 187 (docs/adr/1025): the text style a leader style writes its note in (`textStyle`, by name).
 pub const SCHEMA_WITH_LEADER_TEXT_STYLES: u32 = 187;
+/// Schema 188 (docs/adr/1200 §2): a map project's work structure (`settings.mapWork`).
+pub const SCHEMA_WITH_MAP_WORK: u32 = 188;
 /// Schema 190 (docs/adr/1129): the standards findings the project accepts with a reason
 /// (`settings.standardExceptions`). Temporary number on the CAD-ADV-12 branch: renumbered on merge.
 pub const SCHEMA_WITH_STANDARD_EXCEPTIONS: u32 = 190;
@@ -817,7 +819,7 @@ pub const SCHEMA_WITH_STANDARD_EXCEPTIONS: u32 = 190;
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 186] = [
+pub const SCHEMAS: [u32; 187] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1003,6 +1005,7 @@ pub const SCHEMAS: [u32; 186] = [
     SCHEMA_WITH_TABLE_STYLES,
     SCHEMA_WITH_DIMENSION_TEXT_STYLES,
     SCHEMA_WITH_LEADER_TEXT_STYLES,
+    SCHEMA_WITH_MAP_WORK,
     SCHEMA_WITH_STANDARD_EXCEPTIONS,
 ];
 

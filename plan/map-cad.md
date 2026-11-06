@@ -164,6 +164,22 @@ eklendiğinde her nesnenin kaynağı bulunabilsin. Kaynak taşınınca tek yerde
 yeniden bağlansın; güncel olmayan türevler gösterilsin. Kaydet–aç ve salt
 okunur kullanıcı aynı ilişkiyi korusun; mevcut Mimari/GIS yüzeyleri değişmesin.
 
+**6 Kasım 2026 — MAP-01.1 (dal `map-01-is-yapisi`, [ADR 1200](../docs/adr/1200-map-work-structure-and-provenance.md)).**
+Kanıtlanan alt maddeler: (1) iş yapısı — `settings.mapWork` (`.kcad` şema 188): altı türde öğe
+(kampanya, referans, çalışma, tasarım, denetim, teslim), katmanları ve varsa dosyası (SHA-256 revizyonu); masaüstünde
+yalnız Harita'da Harita işi paneli, Katmanlar/Kaynaklar/İşlemler yerinde. (2) Kaynak / türetilmiş / bağımsız çizim —
+anlam katman profilinde, ilişki türetme kaydında (nesne, kaynak öğe, revizyon, işlem), yeni nesne türü yok; Öznitelikler'in
+Kaynağı bölümü kimliği, kaynak revizyonunu, işlemi ve güncelliği birlikte gösterir. (5) Durum taslak / denetlenecek /
+onaylı teslim revizyonu: ofisin kaydı, kurum onayı değil; güncel olmayan türevi taşıyan öğe onaylanmaz. Kabulden
+kanıtlananlar: aynı projede GNSS kampanyası, ortofoto, CAD altlığı ve tasarım yüzeyi; her nesnenin kaynağı bulunur;
+kaynağın yeni yeri tek komutla (öğe ve onu gösteren raster/resim tek geri alma adımında) bağlanır; içeriği değişen
+kaynağın türevleri “Güncel değil”; kaydet–aç ve salt okunur okuma aynı ilişkiyi verir; Mimari, GIS ve Yol'da panel
+ve satırlar yok. `map.work.query` 22, `map.work.edit` 40 ortak durum (bağımsız `scripts/fixtures/map_work_cases.py`).
+**Açık:** içe aktarma ve çizim komutlarının türetme kaydını kendiliğinden yazması (bugün `derive` açık komutla), dış
+başvuru ve bağlı kaynağın öğeyle aynı yerden yeniden bağlanması, dosyasız öğe revizyonu ve teslim damgası, seçime göre
+bağlamsal araçlar (alt madde 3), tipli katman kuralları (alt madde 4), göreli yollar, gerçek kullanıcı projesinde GUI
+kabulü. Madde `[ ]` kalır.
+
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 
 **Öncelik:** P0. **Kod dayanağı:** [K04]–[K08], [K09].

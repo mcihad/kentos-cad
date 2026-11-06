@@ -2363,6 +2363,40 @@ const ENTRIES: &[Entry] = &[
         warnings: &["drawings_rebuilt", "drawing_edited", "drawing_not_rebuilt"],
         targets: none,
     },
+    // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
+    Entry {
+        id: "map.work.query",
+        refusals: &[&["not_a_map_project", "invalid_uid", "entity_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "map.work.edit",
+        refusals: &[
+            REVISION,
+            &[
+                "not_a_map_project",
+                "unknown_work_item",
+                "unknown_derivation",
+                "invalid_work_text",
+                "layer_not_found",
+                "layer_in_work_item",
+                "nothing_to_set",
+                "invalid_file_path",
+                "file_not_found",
+                "work_item_no_file",
+                "no_entities",
+                "invalid_uid",
+                "entity_not_found",
+                "already_derived",
+                "approval_stale",
+                "layer_locked",
+                "work_full",
+            ],
+        ],
+        warnings: &["source_content_changed"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

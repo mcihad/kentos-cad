@@ -62,6 +62,9 @@ fn drawing(app: &mut App) {
     // words are its letters), one turned.
     o.dimension("shx", None, [[0.0, -60.0], [20.0, -60.0]], None, -4.0, json!({"dimStyle": SHX_DIM, "text": "SUS-U"}));
     o.dimension("shx", None, [[30.0, -60.0], [44.0, -52.0]], None, -3.0, json!({"dimStyle": SHX_DIM, "text": "Ş\\M+18140U"}));
+    // docs/adr/1026: a table in the SHX face.
+    o.push("shx", json!({"kind": "table", "p": crate::tools_scenes::xy([60.0, -40.0]), "rotation": 0.0, "height": 1.5,
+        "rows": [2.5, 2.5], "columns": [6.0, 6.0], "cells": [["SU", "US"], ["S-U", "SUS"]], "textStyle": SHX}));
     // docs/adr/1025: a leader whose style writes its note in the SHX style.
     o.push("shx", json!({"kind": "leader", "pts": [crate::tools_scenes::xy([52.0, -62.0]), crate::tools_scenes::xy([56.0, -56.0])],
         "text": "SUS-U", "height": 2.5, "rotation": 0.0, "leaderStyle": SHX_LEADER}));
@@ -123,7 +126,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         }),
         ("shx-olcu-cizim", |app| {
             drawing(app);
-            fit(app, [-3.0, -68.0, 72.0, -48.0]);
+            fit(app, [-3.0, -68.0, 76.0, -36.0]);
         }),
         ("shx-kilavuz-penceresi", |app| {
             drawing(app);
