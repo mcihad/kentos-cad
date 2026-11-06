@@ -308,6 +308,35 @@ fn installing_needs_a_readable_bound_standard() {
     assert_eq!(doc.revision(), revision);
 }
 
+/// docs/adr/1014: the palettes of a bound package that does not read (put in the drawing past cad.settings.set's
+/// check, as an old file would) are refused as `invalid_standard`; no bound standard is no palette.
+#[test]
+fn palettes_need_a_readable_bound_standard() {
+    use kentos_commands::{ProjectStandardDocument, StandardsPalettes};
+    let mut doc = drawing();
+    let read = |doc: &mut Document| {
+        kentos_native_application::standards_palettes::execute(&mut ExecutionContext::new(doc), StandardsPalettes {})
+    };
+    match read(&mut doc) {
+        CommandResult::Completed { output, .. } => assert!(output.palettes.is_empty()),
+        other => panic!("no standard, no palette: {other:?}"),
+    }
+    let mut settings = doc.settings().clone();
+    settings.standard_docs = vec![ProjectStandardDocument {
+        text: serde_json::json!({"format": "kentos.drawing-standard", "version": 2, "id": "bozuk", "revision": "1",
+            "standard": {"name": "Bozuk", "layers": []},
+            "resources": {"toolPalettes": [{"id": "p", "name": "P", "tools": []}]}})
+        .to_string(),
+    }];
+    doc.set_settings(settings);
+    let revision = doc.revision();
+    match read(&mut doc) {
+        CommandResult::Failed { error } => assert_eq!(error.code, "invalid_standard"),
+        other => panic!("refused: {other:?}"),
+    }
+    assert_eq!(doc.revision(), revision);
+}
+
 /// docs/adr/1003 §1: a journal that makes an associative array and edits it replays on another drawing: the row
 /// that made it records the array's id, the replay maps it to the one it made, and the edit lands on that array.
 #[test]

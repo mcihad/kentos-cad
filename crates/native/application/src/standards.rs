@@ -123,6 +123,7 @@ pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved
         leader_styles: Default::default(),
         text_style_definitions: Default::default(),
         dimension_style_definitions: Default::default(),
+        tool_palettes: Default::default(),
     };
     let mut layers: BTreeSet<_> = result
         .layers
@@ -146,6 +147,7 @@ pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved
     let mut leader_styles = BTreeSet::new();
     let mut text_style_definitions = BTreeSet::new();
     let mut dimension_style_definitions = BTreeSet::new();
+    let mut tool_palettes = BTreeSet::new();
     for package in &packages {
         let Some(source) = &package.resources else {
             continue;
@@ -202,6 +204,13 @@ pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved
                     .dimension_style_definitions
                     .insert(item.name.clone(), origin(package));
                 resources.dimension_style_definitions.push(item.clone());
+            }
+        }
+        // Office tool palettes (docs/adr/1014): an id once, the first standard's.
+        for item in &source.tool_palettes {
+            if tool_palettes.insert(item.id.to_lowercase()) {
+                provenance.tool_palettes.insert(item.id.clone(), origin(package));
+                resources.tool_palettes.push(item.clone());
             }
         }
     }

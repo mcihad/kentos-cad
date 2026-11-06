@@ -10842,6 +10842,29 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::StandardsResolved>(), plan: Some(schema::<crate::StandardsResolved>()),
             capabilities: None, examples: vec![CommandExample { title: "Bağlı standartları birleştir".into(), input: json!({}), output: None }],
         },
+        // Ofis araç paletleri (docs/adr/1014), held together by fixtures/commands/v1/cad.standards.palettes.json.
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_PALETTES.into(),
+            version: crate::CAD_STANDARDS_PALETTES_VERSION,
+            title: "Ofis araç paletleri".into(),
+            summary: "Projeye bağlı standartların yayımladığı araç paletlerini okur (sürüm 2 paketin resources.toolPalettes'i). Palet çizime kurulmaz, paketinden okunur; aynı palet kimliği bir kez, ilk standardınkidir. \
+                      Her araç bir katalog komutu, sürümü ve tam girdisidir: cevap aracın kişisel favori anahtarını (standart:<paket>:<palet>:<araç>), tarifin özetini (komut, sürüm ve girdinin kanonik JSON'unun SHA-256'sı; özet değişince favori başka araca kaymaz) ve komutun bu çizimde girdiyi kabul edip etmediğini (ready; komutun kendi validate'i, çizimin kopyasında, hiçbir şey yazmadan) verir; etmiyorsa nedenini komutun koduyla ve sözüyle (problem). \
+                      Bağlı standart yoksa paletler boştur. Ret: invalid_standard."
+                .into(),
+            aliases: vec!["paletler".into(), "toolpalettes".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StandardsPalettes>(),
+            output: schema::<crate::StandardsPalettesRead>(),
+            plan: Some(schema::<crate::StandardsPalettesRead>()),
+            capabilities: None,
+            examples: vec![CommandExample { title: "Ofisin araç paletleri".into(), input: json!({}), output: None }],
+        },
         // Standart kaynaklarını kur (docs/adr/1002), held together by fixtures/commands/v1/cad.standards.install.json.
         CommandDescriptor {
             id: crate::CAD_STANDARDS_INSTALL.into(),
@@ -15580,6 +15603,9 @@ mod tests {
                     crate::CAD_LAYERS_TRANSLATE => {
                         serde_json::from_value::<crate::LayersTranslate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_PALETTES => {
+                        serde_json::from_value::<crate::StandardsPalettes>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_STANDARDS_RESOLVE => {
                         serde_json::from_value::<crate::StandardsResolve>(e.input.clone()).map(|_| ())

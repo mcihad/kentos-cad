@@ -8,13 +8,24 @@ import type { StandardResourceKind } from "./StandardResourceKind";
  */
 export type StandardInstallRow = { kind: StandardResourceKind, name: string, 
 /**
- * `missing`, `same` or `differs`, against the drawing's resource of that name.
+ * `missing`, `same` or `differs`, against the drawing's resource of that name; `unavailable` when no library
+ * KentOS reads holds the block publication or template revision the standard names (kept, reported).
  */
 status: string, action: StandardInstallAction, newName?: string, 
 /**
- * The differing appearance fields (`differs` only).
+ * The differing appearance fields (`differs`); for `unavailable`, what the nearest library entry differs in
+ * (`release`, `units`, `revision`), none when no library has the type or template at all.
  */
 fields?: Array<string>, 
+/**
+ * Blocks and sheet templates: the library the definition is read from (`kentos-ofis`, `sistem`).
+ */
+library?: string, 
+/**
+ * Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet
+ * templates: the sheets made from that template, which are never changed.
+ */
+uses?: number, 
 /**
  * The standard the resource comes from and its office revision.
  */

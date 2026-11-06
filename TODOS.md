@@ -70,6 +70,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   TS türleri üretildi; WASM bağlayıcısı yok.
 - CAD-ADV-18 / ADR 1009: açılışta sağlık denetimi yalnız masaüstü ayarıdır (`appearance.openHealthCheck`); web'de
   aynı denetim Worker'da, süre bütçesiyle eklenecekse ayarın konağına web yazılır.
+- CAD-ADV-12 / ADR 1014: Şablonlar panelinde Ofis paletleri bölümü `cad.standards.palettes`'e bağlanmalı; TS türleri üretildi.
 - CAD-ADV-18 / ADR 1013: `kentos_kcad::salvage` WASM'a bağlanmalı, web'de Dosya › Kurtar `file.recover`'ın aynı sonucunu göstermeli; TS türleri üretildi.
 - CAD-ADV-18 / ADR 1012: CAD denetiminin Eksene döndür ve Tek tanımda birleştir düğmeleri `cad.drawing.repair`'ın `angles`/`blocks` alanlarına bağlanmalı; TS türleri üretildi.
 - CAD-ADV-17 / ADR 1010: içe alma raporunun `decisions` bölümü (Okuma kararları, konu başlıklarıyla); TS türleri üretildi.

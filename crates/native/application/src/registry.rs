@@ -85,6 +85,7 @@ use crate::drawing_repair;
 use crate::drawing_take;
 use crate::review_notes;
 use crate::review_notes::list_cmd as review_notes_list;
+use crate::standards_palettes;
 use crate::standards::{apply as standards_apply, check as standards_check, conflicts as standards_conflicts, resolve as standards_resolve};
 use crate::time_query;
 use crate::{sensors_ingest, sensors_latest};
@@ -812,6 +813,7 @@ macro_rules! by_command {
             kentos_commands::CAD_STANDARDS_CONFLICTS => $then!(standards_conflicts, kentos_commands::StandardsConflicts),
             kentos_commands::CAD_STANDARDS_INSTALL => $then!(standards_install, kentos_commands::StandardsInstall),
             kentos_commands::CAD_STANDARDS_RESOLVE => $then!(standards_resolve, kentos_commands::StandardsResolve),
+            kentos_commands::CAD_STANDARDS_PALETTES => $then!(standards_palettes, kentos_commands::StandardsPalettes),
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_commands::CAD_PROFILES_APPLY => {
                 $then!(profiles_apply, kentos_commands::ProfilesApply)

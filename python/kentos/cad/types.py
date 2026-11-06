@@ -57048,6 +57048,169 @@ class PagedSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaletteState(_Model):
+    """One palette, from the package that gives it.
+    Attributes:
+        standard: The package's id and revision.
+    """
+    id: str
+    name: str
+    standard: str
+    revision: str
+    tools: list[PaletteToolState]
+    description: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["standard"] = self.standard
+        out["revision"] = self.revision
+        out["tools"] = [e0.to_json() for e0 in self.tools]
+        if self.description is not UNSET:
+            out["description"] = self.description
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaletteState:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            standard=data["standard"],
+            revision=data["revision"],
+            tools=[PaletteToolState.from_json(e0) for e0 in data["tools"]],
+            description=data.get("description", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaletteTool(_Model):
+    """One tool of a palette: a catalog command run with this input (the tool recipe, docs/adr/1014 §2).
+    Attributes:
+        id: 1–128 bytes, unique in its palette regardless of case.
+        command: The catalog command and its version.
+        command_version: Unit: version.
+        input: The command's whole input: an object, at most 64 KiB as JSON.
+    """
+    id: str
+    title: str
+    command: str
+    command_version: int
+    input: Any
+    category: str | None | Unset = UNSET
+    description: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["title"] = self.title
+        out["command"] = self.command
+        out["commandVersion"] = self.command_version
+        out["input"] = self.input
+        if self.category is not UNSET:
+            out["category"] = self.category
+        if self.description is not UNSET:
+            out["description"] = self.description
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaletteTool:
+        return cls(
+            id=data["id"],
+            title=data["title"],
+            command=data["command"],
+            command_version=data["commandVersion"],
+            input=data["input"],
+            category=data.get("category", UNSET),
+            description=data.get("description", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaletteToolProblem(_Model):
+    """Why a palette tool does not run here."""
+    code: str
+    message: str
+    path: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["message"] = self.message
+        if self.path is not UNSET:
+            out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaletteToolProblem:
+        return cls(
+            code=data["code"],
+            message=data["message"],
+            path=data.get("path", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaletteToolState(_Model):
+    """A palette tool as this drawing sees it.
+    Attributes:
+        key: `standart:<package id>:<palette id>:<tool id>`: what a personal favourite keeps.
+        digest: SHA-256 of the command, its version and its input as canonical JSON: a favourite whose digest changed points to
+            a changed tool and is not run in its place.
+        id: 1–128 bytes, unique in its palette regardless of case.
+        command: The catalog command and its version.
+        command_version: Unit: version.
+        input: The command's whole input: an object, at most 64 KiB as JSON.
+        ready: The command checked its input against this drawing (`validate`) and would run.
+    """
+    key: str
+    digest: str
+    id: str
+    title: str
+    command: str
+    command_version: int
+    input: Any
+    ready: bool
+    category: str | None | Unset = UNSET
+    description: str | None | Unset = UNSET
+    problem: PaletteToolProblem | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["digest"] = self.digest
+        out["id"] = self.id
+        out["title"] = self.title
+        out["command"] = self.command
+        out["commandVersion"] = self.command_version
+        out["input"] = self.input
+        out["ready"] = self.ready
+        if self.category is not UNSET:
+            out["category"] = self.category
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.problem is not UNSET:
+            out["problem"] = None if self.problem is None else self.problem.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaletteToolState:
+        return cls(
+            key=data["key"],
+            digest=data["digest"],
+            id=data["id"],
+            title=data["title"],
+            command=data["command"],
+            command_version=data["commandVersion"],
+            input=data["input"],
+            ready=data["ready"],
+            category=data.get("category", UNSET),
+            description=data.get("description", UNSET),
+            problem=UNSET if "problem" not in data else None if data["problem"] is None else PaletteToolProblem.from_json(data["problem"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperAppliedPageSetup(_Model):
     """Applying a reusable setup captures its options; editing/removing the preset cannot silently change issued sheets."""
     settings: PaperPlotSettings
@@ -82410,7 +82573,10 @@ class StandardOrigin(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class StandardProvenance(_Model):
-    """Provenance of the global rules and each effective named definition."""
+    """Provenance of the global rules and each effective named definition.
+    Attributes:
+        tool_palettes: Office tool palettes by id (docs/adr/1014).
+    """
     rules: StandardOrigin
     layers: dict[str, StandardOrigin]
     text_styles: dict[str, StandardOrigin]
@@ -82422,6 +82588,7 @@ class StandardProvenance(_Model):
     leader_styles: dict[str, StandardOrigin]
     text_style_definitions: dict[str, StandardOrigin]
     dimension_style_definitions: dict[str, StandardOrigin]
+    tool_palettes: dict[str, StandardOrigin] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82436,6 +82603,8 @@ class StandardProvenance(_Model):
         out["leaderStyles"] = {k0: e0.to_json() for k0, e0 in self.leader_styles.items()}
         out["textStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.text_style_definitions.items()}
         out["dimensionStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.dimension_style_definitions.items()}
+        if self.tool_palettes is not UNSET:
+            out["toolPalettes"] = {k0: e0.to_json() for k0, e0 in self.tool_palettes.items()}
         return out
 
     @classmethod
@@ -82452,6 +82621,7 @@ class StandardProvenance(_Model):
             leader_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["leaderStyles"].items()},
             text_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["textStyleDefinitions"].items()},
             dimension_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyleDefinitions"].items()},
+            tool_palettes={k0: StandardOrigin.from_json(e0) for k0, e0 in data["toolPalettes"].items()} if "toolPalettes" in data else UNSET,
         )
 
 
@@ -82459,6 +82629,9 @@ class StandardProvenance(_Model):
 class StandardResources(_Model):
     """Portable resource definitions carried by a version 2 office standard.
     Association alone never overwrites the project's definitions.
+    Attributes:
+        tool_palettes: Published office tool palettes (docs/adr/1014): each tool a catalog command with its input. Read from the
+            package where it is bound; never installed in the drawing.
     """
     blocks: list[StandardBlockReference] | Unset = UNSET
     dimension_style_definitions: list[DimensionStyleDef] | Unset = UNSET
@@ -82467,6 +82640,7 @@ class StandardResources(_Model):
     line_types: list[LineTypeDef] | Unset = UNSET
     sheet_templates: list[StandardSheetTemplateReference] | Unset = UNSET
     text_style_definitions: list[TextStyleDef] | Unset = UNSET
+    tool_palettes: list[ToolPalette] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82484,6 +82658,8 @@ class StandardResources(_Model):
             out["sheetTemplates"] = [e0.to_json() for e0 in self.sheet_templates]
         if self.text_style_definitions is not UNSET:
             out["textStyleDefinitions"] = [e0.to_json() for e0 in self.text_style_definitions]
+        if self.tool_palettes is not UNSET:
+            out["toolPalettes"] = [e0.to_json() for e0 in self.tool_palettes]
         return out
 
     @classmethod
@@ -82496,6 +82672,7 @@ class StandardResources(_Model):
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             sheet_templates=[StandardSheetTemplateReference.from_json(e0) for e0 in data["sheetTemplates"]] if "sheetTemplates" in data else UNSET,
             text_style_definitions=[TextStyleDef.from_json(e0) for e0 in data["textStyleDefinitions"]] if "textStyleDefinitions" in data else UNSET,
+            tool_palettes=[ToolPalette.from_json(e0) for e0 in data["toolPalettes"]] if "toolPalettes" in data else UNSET,
         )
 
 
@@ -82791,6 +82968,40 @@ class StandardsInstalled(_Model):
             kept=data["kept"],
             unavailable=data["unavailable"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsPalettes(_Model):
+    """Input of `cad.standards.palettes` v1 (docs/adr/1014): the bound standards' office tool palettes, read only.
+    Refusal: `invalid_standard` (a bound package does not read).
+    """
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsPalettes:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsPalettesRead(_Model):
+    """Output of `cad.standards.palettes` v1: the palettes in the standards' order, a palette id once (the first
+    standard's).
+    """
+    palettes: list[PaletteState]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["palettes"] = [e0.to_json() for e0 in self.palettes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsPalettesRead:
+        return cls(
+            palettes=[PaletteState.from_json(e0) for e0 in data["palettes"]],
         )
 
 
@@ -90305,6 +90516,37 @@ class ToolNote(_Model):
         return cls(
             level=data["level"],
             text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToolPalette(_Model):
+    """An office tool palette (docs/adr/1014).
+    Attributes:
+        id: 1–128 bytes, no surrounding spaces, unique in the package regardless of case.
+        tools: 1 to 200 tools.
+    """
+    id: str
+    name: str
+    tools: list[PaletteTool]
+    description: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["tools"] = [e0.to_json() for e0 in self.tools]
+        if self.description is not UNSET:
+            out["description"] = self.description
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToolPalette:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            tools=[PaletteTool.from_json(e0) for e0 in data["tools"]],
+            description=data.get("description", UNSET),
         )
 
 
@@ -117515,6 +117757,10 @@ __all__ = [
     "PackagedKindName",
     "PagedRecord",
     "PagedSource",
+    "PaletteState",
+    "PaletteTool",
+    "PaletteToolProblem",
+    "PaletteToolState",
     "PaperAlignEdge",
     "PaperAlignEdgeName",
     "PaperAlignTo",
@@ -118675,6 +118921,8 @@ __all__ = [
     "StandardsConflictsReport",
     "StandardsInstall",
     "StandardsInstalled",
+    "StandardsPalettes",
+    "StandardsPalettesRead",
     "StandardsReport",
     "StandardsResolve",
     "StandardsResolved",
@@ -118951,6 +119199,7 @@ __all__ = [
     "ToleranceKind",
     "ToleranceKindName",
     "ToolNote",
+    "ToolPalette",
     "ToolParameter",
     "TopologyCheck",
     "TopologyChecked",

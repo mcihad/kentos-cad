@@ -16,6 +16,10 @@ checks?: Array<InspectionGroup>,
  */
 maxGap?: number, 
 /**
+ * Health: the largest deviation from a horizontal or vertical line to report, degrees, 0 to 10; default 0.5.
+ */
+maxAngle?: number, 
+/**
  * Maximum findings, 1..1000; default 200. Work/geometry/result caps return explicit partial results.
  */
 limit?: number, includeHidden?: boolean, expectedRevision?: string, };

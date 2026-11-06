@@ -3,7 +3,9 @@ import type { StandardInstallChoice } from "./StandardInstallChoice";
 
 /**
  * Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the
- * choices. Refusals, in order: `no_standard`, `invalid_standard`, `standard_resource_not_found`,
- * `invalid_install_choice`, `duplicate_name`, `invalid_revision`, `revision_conflict`.
+ * choices; a block reference is read from the first block library that holds its publication, a sheet template
+ * revision is recorded as approved (docs/adr/1100). Refusals, in order: `no_standard`, `invalid_standard`,
+ * `standard_resource_not_found`, `invalid_install_choice`, `duplicate_name`, `invalid_revision`,
+ * `revision_conflict`, `block_refused`.
  */
 export type StandardsInstall = { choices?: Array<StandardInstallChoice>, expectedRevision?: string, };

@@ -8,4 +8,8 @@ export type StandardsInstalled = {
 /**
  * Every resource of the bound standards, by kind then by the standards' order.
  */
-rows: Array<StandardInstallRow>, added: number, replaced: number, renamed: number, kept: number, revision: string, };
+rows: Array<StandardInstallRow>, added: number, replaced: number, renamed: number, kept: number, 
+/**
+ * The references no readable library holds (each also counted in `kept`).
+ */
+unavailable: number, revision: string, };

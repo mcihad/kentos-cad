@@ -5282,6 +5282,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.standards.palettes",
+        refusals: &[&["invalid_standard"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.standards.install",
         refusals: &[&[
             "no_standard",

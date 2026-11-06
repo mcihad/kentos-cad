@@ -2090,6 +2090,13 @@ açılmış projede aynı sonuç) ile MCP testi geçti; gerçek pencereler gör�
 paleti bu dilimde yok: paket alanı, komut kaydına bağlı araç tarifi ve bağlılık kararı gerekir (ADR 1100 §4); tablo
 stili, blok içi parça ile plot profilinin görünüş kökeni de açık olduğundan madde `[~]` kalır.
 
+**Ofis araç paleti (6 Kasım 2026, [ADR 1014](../docs/adr/1014-office-tool-palettes-published-with-the-standard.md)):**
+Sürüm 2 standart paketi `resources.toolPalettes` ile komut kaydına bağlı araç tarifleri yayımlar (komut, sürüm, tam
+girdi); palet çizime kurulmaz, bağlı paketten okunur. `cad.standards.palettes` her aracın favori anahtarını, tarif
+özetini ve bu çizimde çalışıp çalışmadığını komutun kendi denetimiyle verir; masaüstü Şablonlar'da **Ofis paletleri**
+hazır aracı tek adımda çalıştırır. 23 bağımsız vaka geçti. Açık: ofis aracını kişisel favoriye alma, tablo stili
+kaynağı, blok içi parçanın kökeni, masaüstünden proje/bulut kitaplığı seçimi.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [~]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

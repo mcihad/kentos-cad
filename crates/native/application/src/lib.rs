@@ -447,6 +447,7 @@ mod library_symbols;
 pub mod north;
 pub mod review_notes;
 pub mod standards_install;
+pub mod standards_palettes;
 mod standards_install_library;
 pub mod standard_libraries;
 pub mod appearance_origin;
@@ -1682,6 +1683,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_STANDARDS_RESOLVE,
         kentos_commands::CAD_STANDARDS_RESOLVE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_STANDARDS_PALETTES,
+        kentos_commands::CAD_STANDARDS_PALETTES_VERSION,
     ),
     (
         kentos_commands::CAD_STANDARDS_APPLY,

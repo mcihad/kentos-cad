@@ -1,0 +1,1416 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.standards.palettes",
+ "commandVersion": 1,
+ "title": "Ofis araç paletleri",
+ "note": "ADR 1014. Bağımsız başvuru scripts/fixtures/standards_palettes_cases.py: kurallar ADR'den elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Ofis paletleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "duvar",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Bağlı standart yok: palet yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki araçlı palet: ikisi de hazır, anahtar ve özetle",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"mimari\", \"name\": \"Mimari\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}], \"description\": \"Ofisin mimari araçları\"}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "mimari",
+         "name": "Mimari",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:mimari:duvar-cizgisi",
+           "digest": "e68aec93e4fff3615dd5275fcd7f1b75f14a262ee360f79ee4055da391c5cf8b",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 5,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          },
+          {
+           "key": "standart:ofis-a:mimari:nirengi",
+           "digest": "274444d4ddf3d4d711a20858ad6bbd4ef3b68c7a1f07f65f40b7e6fe3d979abb",
+           "id": "nirengi",
+           "title": "Nirengi noktası",
+           "command": "cad.point.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "p": {
+             "x": 1,
+             "y": 1
+            }
+           },
+           "description": "Röper noktası",
+           "ready": true
+          }
+         ],
+         "description": "Ofisin mimari araçları"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"mimari\", \"name\": \"Mimari\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}], \"description\": \"Ofisin mimari araçları\"}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "mimari",
+         "name": "Mimari",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:mimari:duvar-cizgisi",
+           "digest": "e68aec93e4fff3615dd5275fcd7f1b75f14a262ee360f79ee4055da391c5cf8b",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 5,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          },
+          {
+           "key": "standart:ofis-a:mimari:nirengi",
+           "digest": "274444d4ddf3d4d711a20858ad6bbd4ef3b68c7a1f07f65f40b7e6fe3d979abb",
+           "id": "nirengi",
+           "title": "Nirengi noktası",
+           "command": "cad.point.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "p": {
+             "x": 1,
+             "y": 1
+            }
+           },
+           "description": "Röper noktası",
+           "ready": true
+          }
+         ],
+         "description": "Ofisin mimari araçları"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama yazmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"mimari\", \"name\": \"Mimari\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}], \"description\": \"Ofisin mimari araçları\"}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Girdisi bu çizimde olmayan katmanı adlandıran araç hazır değil: komutun kodu",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"eksik\", \"name\": \"Eksikler\", \"tools\": [{\"id\": \"eksik-katman\", \"title\": \"Eksik katmana çizgi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"yok\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 1, \"y\": 0}}}]}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "eksik",
+         "name": "Eksikler",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:eksik:eksik-katman",
+           "digest": "69d6355e346b6b9dffafe6770187ccfb6148dcd37da10aaea0a266744a197174",
+           "id": "eksik-katman",
+           "title": "Eksik katmana çizgi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "yok",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 1,
+             "y": 0
+            }
+           },
+           "ready": false,
+           "problem": {
+            "code": "layer_not_found",
+            "message": "$any",
+            "path": "input.layerId"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bu konakta çalışmayan komut: unknown_command",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"bil\", \"name\": \"Bilinmeyen\", \"tools\": [{\"id\": \"bilinmeyen\", \"title\": \"Bilinmeyen komut\", \"command\": \"cad.unknown.thing\", \"commandVersion\": 1, \"input\": {}}]}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "bil",
+         "name": "Bilinmeyen",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:bil:bilinmeyen",
+           "digest": "d2daad5e19d5407dd1253f250b7fe93777838b9b883270ffbf5861131b03a225",
+           "id": "bilinmeyen",
+           "title": "Bilinmeyen komut",
+           "command": "cad.unknown.thing",
+           "commandVersion": 1,
+           "input": {},
+           "ready": false,
+           "problem": {
+            "code": "unknown_command",
+            "message": "$any",
+            "path": "command"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka sürümün aracı: unknown_command, sürümün yeri",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"eski\", \"name\": \"Eski\", \"tools\": [{\"id\": \"eski-surum\", \"title\": \"Eski sürüm\", \"command\": \"cad.line.create\", \"commandVersion\": 9, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 1, \"y\": 0}}}]}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "eski",
+         "name": "Eski",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:eski:eski-surum",
+           "digest": "b4bfa0ada82922472a2e5e02bf4cd1e4e1f267b04cd337c172939674a009c29b",
+           "id": "eski-surum",
+           "title": "Eski sürüm",
+           "command": "cad.line.create",
+           "commandVersion": 9,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 1,
+             "y": 0
+            }
+           },
+           "ready": false,
+           "problem": {
+            "code": "unknown_command",
+            "message": "$any",
+            "path": "commandVersion"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Komutun okumadığı girdi: invalid_input",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"bozuk\", \"name\": \"Bozuk\", \"tools\": [{\"id\": \"bozuk-girdi\", \"title\": \"Okunmayan girdi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": \"sıfır\"}}]}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "bozuk",
+         "name": "Bozuk",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:bozuk:bozuk-girdi",
+           "digest": "4bf3fd99c9f51ab5e8f7dda432c51f5a81b25c0fabd4126b5f47202fd778a564",
+           "id": "bozuk-girdi",
+           "title": "Okunmayan girdi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": "sıfır"
+           },
+           "ready": false,
+           "problem": {
+            "code": "invalid_input",
+            "message": "$any",
+            "path": "input"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Karışık palet: araçlar kendi sırasıyla, her biri kendi durumuyla",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"karma\", \"name\": \"Karma\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"eksik-katman\", \"title\": \"Eksik katmana çizgi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"yok\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 1, \"y\": 0}}}, {\"id\": \"bilinmeyen\", \"title\": \"Bilinmeyen komut\", \"command\": \"cad.unknown.thing\", \"commandVersion\": 1, \"input\": {}}]}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "karma",
+         "name": "Karma",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:karma:duvar-cizgisi",
+           "digest": "e68aec93e4fff3615dd5275fcd7f1b75f14a262ee360f79ee4055da391c5cf8b",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 5,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          },
+          {
+           "key": "standart:ofis-a:karma:eksik-katman",
+           "digest": "69d6355e346b6b9dffafe6770187ccfb6148dcd37da10aaea0a266744a197174",
+           "id": "eksik-katman",
+           "title": "Eksik katmana çizgi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "yok",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 1,
+             "y": 0
+            }
+           },
+           "ready": false,
+           "problem": {
+            "code": "layer_not_found",
+            "message": "$any",
+            "path": "input.layerId"
+           }
+          },
+          {
+           "key": "standart:ofis-a:karma:bilinmeyen",
+           "digest": "d2daad5e19d5407dd1253f250b7fe93777838b9b883270ffbf5861131b03a225",
+           "id": "bilinmeyen",
+           "title": "Bilinmeyen komut",
+           "command": "cad.unknown.thing",
+           "commandVersion": 1,
+           "input": {},
+           "ready": false,
+           "problem": {
+            "code": "unknown_command",
+            "message": "$any",
+            "path": "command"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki standart: aynı kimlikli palet ilkinin, öbürü ikincinin",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"mimari\", \"name\": \"Mimari\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}], \"description\": \"Ofisin mimari araçları\"}]}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"MIMARI\", \"name\": \"B'nin mimarisi\", \"tools\": [{\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}]}, {\"id\": \"yol\", \"name\": \"Yol\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}]}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "mimari",
+         "name": "Mimari",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:mimari:duvar-cizgisi",
+           "digest": "e68aec93e4fff3615dd5275fcd7f1b75f14a262ee360f79ee4055da391c5cf8b",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 5,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          },
+          {
+           "key": "standart:ofis-a:mimari:nirengi",
+           "digest": "274444d4ddf3d4d711a20858ad6bbd4ef3b68c7a1f07f65f40b7e6fe3d979abb",
+           "id": "nirengi",
+           "title": "Nirengi noktası",
+           "command": "cad.point.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "p": {
+             "x": 1,
+             "y": 1
+            }
+           },
+           "description": "Röper noktası",
+           "ready": true
+          }
+         ],
+         "description": "Ofisin mimari araçları"
+        },
+        {
+         "id": "yol",
+         "name": "Yol",
+         "standard": "ofis-b",
+         "revision": "2026.3",
+         "tools": [
+          {
+           "key": "standart:ofis-b:yol:duvar-cizgisi",
+           "digest": "e68aec93e4fff3615dd5275fcd7f1b75f14a262ee360f79ee4055da391c5cf8b",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 5,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıra değişince öncelik de değişir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"MIMARI\", \"name\": \"B'nin mimarisi\", \"tools\": [{\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}]}, {\"id\": \"yol\", \"name\": \"Yol\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}]}]}}"
+       },
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"mimari\", \"name\": \"Mimari\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}], \"description\": \"Ofisin mimari araçları\"}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "MIMARI",
+         "name": "B'nin mimarisi",
+         "standard": "ofis-b",
+         "revision": "2026.3",
+         "tools": [
+          {
+           "key": "standart:ofis-b:MIMARI:nirengi",
+           "digest": "274444d4ddf3d4d711a20858ad6bbd4ef3b68c7a1f07f65f40b7e6fe3d979abb",
+           "id": "nirengi",
+           "title": "Nirengi noktası",
+           "command": "cad.point.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "p": {
+             "x": 1,
+             "y": 1
+            }
+           },
+           "description": "Röper noktası",
+           "ready": true
+          }
+         ]
+        },
+        {
+         "id": "yol",
+         "name": "Yol",
+         "standard": "ofis-b",
+         "revision": "2026.3",
+         "tools": [
+          {
+           "key": "standart:ofis-b:yol:duvar-cizgisi",
+           "digest": "e68aec93e4fff3615dd5275fcd7f1b75f14a262ee360f79ee4055da391c5cf8b",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 5,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni revizyonda araç değişince anahtar aynı, özeti başka",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.2\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"mimari\", \"name\": \"Mimari\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 6, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}], \"description\": \"Ofisin mimari araçları\"}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "mimari",
+         "name": "Mimari",
+         "standard": "ofis-a",
+         "revision": "2026.2",
+         "tools": [
+          {
+           "key": "standart:ofis-a:mimari:duvar-cizgisi",
+           "digest": "04d35d58b538306b62a1a7398adb1beed09e2f5a4e4706dfffe2a399d7bc7738",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 6,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          },
+          {
+           "key": "standart:ofis-a:mimari:nirengi",
+           "digest": "274444d4ddf3d4d711a20858ad6bbd4ef3b68c7a1f07f65f40b7e6fe3d979abb",
+           "id": "nirengi",
+           "title": "Nirengi noktası",
+           "command": "cad.point.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "p": {
+             "x": 1,
+             "y": 1
+            }
+           },
+           "description": "Röper noktası",
+           "ready": true
+          }
+         ],
+         "description": "Ofisin mimari araçları"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okuma çizimi değiştirmez: hazır araç yürütülmez",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"mimari\", \"name\": \"Mimari\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}], \"description\": \"Ofisin mimari araçları\"}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "mimari",
+         "name": "Mimari",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:mimari:duvar-cizgisi",
+           "digest": "e68aec93e4fff3615dd5275fcd7f1b75f14a262ee360f79ee4055da391c5cf8b",
+           "id": "duvar-cizgisi",
+           "title": "Duvar çizgisi",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 5,
+             "y": 0
+            }
+           },
+           "category": "Mimari",
+           "ready": true
+          },
+          {
+           "key": "standart:ofis-a:mimari:nirengi",
+           "digest": "274444d4ddf3d4d711a20858ad6bbd4ef3b68c7a1f07f65f40b7e6fe3d979abb",
+           "id": "nirengi",
+           "title": "Nirengi noktası",
+           "command": "cad.point.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "duvar",
+            "p": {
+             "x": 1,
+             "y": 1
+            }
+           },
+           "description": "Röper noktası",
+           "ready": true
+          }
+         ],
+         "description": "Ofisin mimari araçları"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.drawing.inspect",
+     "input": {
+      "checks": [
+       "health"
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmana çizen araç hazır değil",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"kp\", \"name\": \"Kilitli\", \"tools\": [{\"id\": \"kilitliye\", \"title\": \"Kilitli katmana\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"kilitli\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 1, \"y\": 0}}}]}]}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": [
+        {
+         "id": "kp",
+         "name": "Kilitli",
+         "standard": "ofis-a",
+         "revision": "2026.1",
+         "tools": [
+          {
+           "key": "standart:ofis-a:kp:kilitliye",
+           "digest": "ce2414656e7f823a207c1ee3a0e849c706b76c11fdbc4605418f7777358b4d32",
+           "id": "kilitliye",
+           "title": "Kilitli katmana",
+           "command": "cad.line.create",
+           "commandVersion": 1,
+           "input": {
+            "layerId": "kilitli",
+            "a": {
+             "x": 0,
+             "y": 0
+            },
+            "b": {
+             "x": 1,
+             "y": 0
+            }
+           },
+           "ready": false,
+           "problem": {
+            "code": "layer_locked",
+            "message": "$any",
+            "path": "input.layerId"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Paletsiz sürüm 2 paket: palet yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"bos\", \"revision\": \"1\", \"standard\": {\"name\": \"Boş\", \"layers\": []}, \"resources\": {}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürüm 1 paket: palet yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 1, \"id\": \"eski\", \"revision\": \"1\", \"standard\": {\"name\": \"Eski\", \"layers\": []}}"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Araçsız palet: geçersiz standart",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"bos\", \"name\": \"Boş\", \"tools\": []}]}}"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı palet kimliği iki kez: geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"p\", \"name\": \"P\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}]}, {\"id\": \"P\", \"name\": \"P2\", \"tools\": [{\"id\": \"nirengi\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}]}]}}"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı araç kimliği iki kez: geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"p\", \"name\": \"P\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}, {\"id\": \"DUVAR-CIZGISI\", \"title\": \"Nirengi noktası\", \"command\": \"cad.point.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"p\": {\"x\": 1, \"y\": 1}}, \"description\": \"Röper noktası\"}]}]}}"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürümü sıfır araç: geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"p\", \"name\": \"P\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 0, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}]}]}}"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Girdisi nesne olmayan araç: geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"p\", \"name\": \"P\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": [1, 2], \"category\": \"Mimari\"}]}]}}"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenar boşluklu palet kimliği: geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \" p\", \"name\": \"P\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\"}]}]}}"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bilinmeyen araç alanı: geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "standardDocs": [
+       {
+        "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"toolPalettes\": [{\"id\": \"p\", \"name\": \"P\", \"tools\": [{\"id\": \"duvar-cizgisi\", \"title\": \"Duvar çizgisi\", \"command\": \"cad.line.create\", \"commandVersion\": 1, \"input\": {\"layerId\": \"duvar\", \"a\": {\"x\": 0, \"y\": 0}, \"b\": {\"x\": 5, \"y\": 0}}, \"category\": \"Mimari\", \"icon\": \"x\"}]}]}}"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "palettes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

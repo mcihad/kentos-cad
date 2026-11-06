@@ -1041,6 +1041,8 @@ pub struct App {
     /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
     /// in this session, the newest first (templates.rs).
     pub(crate) templates_panel: crate::templates_panel::PanelState,
+    /// The bound standards' tool palettes (docs/adr/1014).
+    pub(crate) office_palettes: crate::office_palettes::OfficePalettes,
     /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
     pub(crate) sources: crate::sources::SourcesPanel,
     /// The connection window while it is open (db_connections.rs, docs/adr/0623).
@@ -1653,6 +1655,7 @@ impl App {
             navigator: crate::navigator::PanelState::default(),
             road_project: crate::road_project_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
+            office_palettes: Default::default(),
             sources: crate::sources::SourcesPanel::default(),
             db_editor: None,
             db_password: None,

@@ -6,9 +6,15 @@ import type { LineTypeDef } from "./LineTypeDef";
 import type { StandardBlockReference } from "./StandardBlockReference";
 import type { StandardSheetTemplateReference } from "./StandardSheetTemplateReference";
 import type { TextStyleDef } from "./TextStyleDef";
+import type { ToolPalette } from "./ToolPalette";
 
 /**
  * Portable resource definitions carried by a version 2 office standard.
  * Association alone never overwrites the project's definitions.
  */
-export type StandardResources = { lineTypes?: Array<LineTypeDef>, hatchPatterns?: Array<HatchPatternDef>, blocks?: Array<StandardBlockReference>, sheetTemplates?: Array<StandardSheetTemplateReference>, leaderStyles?: Array<LeaderStyleDef>, textStyleDefinitions?: Array<TextStyleDef>, dimensionStyleDefinitions?: Array<DimensionStyleDef>, };
+export type StandardResources = { lineTypes?: Array<LineTypeDef>, hatchPatterns?: Array<HatchPatternDef>, blocks?: Array<StandardBlockReference>, sheetTemplates?: Array<StandardSheetTemplateReference>, leaderStyles?: Array<LeaderStyleDef>, textStyleDefinitions?: Array<TextStyleDef>, dimensionStyleDefinitions?: Array<DimensionStyleDef>, 
+/**
+ * Published office tool palettes (docs/adr/1014): each tool a catalog command with its input. Read from the
+ * package where it is bound; never installed in the drawing.
+ */
+toolPalettes?: Array<ToolPalette>, };

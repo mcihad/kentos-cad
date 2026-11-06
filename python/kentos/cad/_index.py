@@ -255,6 +255,7 @@ COMMANDS: dict[str, Any] = {
     "cad.standards.check": standards.check,
     "cad.standards.conflicts": standards.conflicts,
     "cad.standards.install": standards.install,
+    "cad.standards.palettes": standards.palettes,
     "cad.standards.resolve": standards.resolve,
     "cad.styles.edit": styles.edit,
     "cad.styles.impact": styles.impact,

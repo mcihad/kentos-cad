@@ -79,6 +79,10 @@ pub struct StandardProvenance {
     pub leader_styles: std::collections::BTreeMap<String, StandardOrigin>,
     pub text_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
     pub dimension_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
+    /// Office tool palettes by id (docs/adr/1014).
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"))]
+    pub tool_palettes: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
@@ -276,7 +280,166 @@ pub struct StandardResources {
         ts(optional, as = "Option<Vec<crate::DimensionStyleDef>>")
     )]
     pub dimension_style_definitions: Vec<crate::DimensionStyleDef>,
+    /// Published office tool palettes (docs/adr/1014): each tool a catalog command with its input. Read from the
+    /// package where it is bound; never installed in the drawing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ToolPalette>>"))]
+    pub tool_palettes: Vec<ToolPalette>,
 }
+
+/// An office tool palette (docs/adr/1014).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ToolPalette {
+    /// 1–128 bytes, no surrounding spaces, unique in the package regardless of case.
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
+    /// 1 to 200 tools.
+    pub tools: Vec<PaletteTool>,
+}
+
+/// One tool of a palette: a catalog command run with this input (the tool recipe, docs/adr/1014 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PaletteTool {
+    /// 1–128 bytes, unique in its palette regardless of case.
+    pub id: String,
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub category: Option<String>,
+    /// The catalog command and its version.
+    pub command: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub command_version: u32,
+    /// The command's whole input: an object, at most 64 KiB as JSON.
+    pub input: serde_json::Value,
+}
+
+/// What is wrong with a package's tool palettes, if anything (docs/adr/1014 §2): the shape only; whether each tool's
+/// command runs here is `cad.standards.palettes`'s answer.
+pub fn tool_palettes_problem(palettes: &[ToolPalette]) -> Option<String> {
+    let good = |s: &str| !s.trim().is_empty() && s.trim() == s && s.len() <= 128;
+    if palettes.len() > 50 {
+        return Some("bir pakette en çok 50 araç paleti olur".into());
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    for p in palettes {
+        if !good(&p.id) || !good(&p.name) {
+            return Some("paletin kimliği ve adı 1–128 bayt olmalı ve kenar boşluğu içermemeli".into());
+        }
+        if !ids.insert(p.id.to_lowercase()) {
+            return Some(format!("“{}” palet kimliği yineleniyor", p.id));
+        }
+        if p.tools.is_empty() || p.tools.len() > 200 {
+            return Some(format!("“{}” paletinde 1 ile 200 araç olmalı", p.id));
+        }
+        let mut tools = std::collections::BTreeSet::new();
+        for t in &p.tools {
+            if !good(&t.id) || !good(&t.title) || !good(&t.command) {
+                return Some(format!("“{}” paletinin aracının kimliği, başlığı ve komutu 1–128 bayt olmalı", p.id));
+            }
+            if !tools.insert(t.id.to_lowercase()) {
+                return Some(format!("“{}” paletinde “{}” araç kimliği yineleniyor", p.id, t.id));
+            }
+            if t.command_version == 0 {
+                return Some(format!("“{}” aracının komut sürümü 1 ya da büyük olmalı", t.id));
+            }
+            if !t.input.is_object() || serde_json::to_string(&t.input).map_or(true, |s| s.len() > 65_536) {
+                return Some(format!("“{}” aracının girdisi en çok 64 KiB'lık bir nesne olmalı", t.id));
+            }
+        }
+    }
+    None
+}
+
+/// Input of `cad.standards.palettes` v1 (docs/adr/1014): the bound standards' office tool palettes, read only.
+/// Refusal: `invalid_standard` (a bound package does not read).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsPalettes {}
+
+/// Why a palette tool does not run here.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PaletteToolProblem {
+    pub code: String,
+    pub message: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<String>,
+}
+
+/// A palette tool as this drawing sees it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PaletteToolState {
+    /// `standart:<package id>:<palette id>:<tool id>`: what a personal favourite keeps.
+    pub key: String,
+    /// SHA-256 of the command, its version and its input as canonical JSON: a favourite whose digest changed points to
+    /// a changed tool and is not run in its place.
+    pub digest: String,
+    #[serde(flatten)]
+    pub tool: PaletteTool,
+    /// The command checked its input against this drawing (`validate`) and would run.
+    pub ready: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub problem: Option<PaletteToolProblem>,
+}
+
+/// One palette, from the package that gives it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PaletteState {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
+    /// The package's id and revision.
+    pub standard: String,
+    pub revision: String,
+    pub tools: Vec<PaletteToolState>,
+}
+
+/// Output of `cad.standards.palettes` v1: the palettes in the standards' order, a palette id once (the first
+/// standard's).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StandardsPalettesRead {
+    pub palettes: Vec<PaletteState>,
+}
+
+pub const CAD_STANDARDS_PALETTES: &str = "cad.standards.palettes";
+pub const CAD_STANDARDS_PALETTES_VERSION: u32 = 1;
 
 /// Approved sheet-template origin. It identifies a template revision, not a
 /// copy of its contents or permission to modify an existing sheet.
@@ -435,6 +598,9 @@ pub fn parse_standard_document(
                 {
                     return Err(format!("Ölçü stili kaynağı geçersiz: {problem}."));
                 }
+                if let Some(problem) = tool_palettes_problem(&resources.tool_palettes) {
+                    return Err(format!("Araç paleti geçersiz: {problem}."));
+                }
             }
             _ => {}
         }
@@ -549,6 +715,7 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
             "leaderStyles",
             "textStyleDefinitions",
             "dimensionStyleDefinitions",
+            "toolPalettes",
         ],
     )?;
     let root = object(resources, "resources")?;

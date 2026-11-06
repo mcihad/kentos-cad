@@ -81,6 +81,7 @@ use kentos_native_application::sources::{
     relate as sources_relate, sync as sources_sync,
 };
 use kentos_native_application::sources_query;
+use kentos_native_application::standards_palettes;
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check, conflicts as standards_conflicts, resolve as standards_resolve};
 use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
@@ -489,6 +490,11 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+impl Input for kentos_commands::StandardsPalettes {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
 }
 impl Input for kentos_commands::StandardsResolve {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -5683,6 +5689,7 @@ fn run_op(
         kentos_commands::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
         kentos_commands::CAD_STANDARDS_CONFLICTS => run!(standards_conflicts, kentos_commands::StandardsConflicts),
         kentos_commands::CAD_STANDARDS_RESOLVE => run!(standards_resolve, kentos_commands::StandardsResolve),
+        kentos_commands::CAD_STANDARDS_PALETTES => run!(standards_palettes, kentos_commands::StandardsPalettes),
         kentos_commands::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
         kentos_commands::CAD_PROFILES_APPLY => run!(profiles_apply, kentos_commands::ProfilesApply),
         kentos_commands::CAD_PROFILES_CHECK => run!(profiles_check, kentos_commands::ProfilesCheck),

@@ -208,6 +208,8 @@ pub enum Event {
     Copy(String, Source),
     Remove(String),
     Favorite(String),
+    /// An office palette's tool pressed, by its key (docs/adr/1014).
+    Tool(String),
 }
 
 fn msg(event: Event) -> Message {
@@ -351,6 +353,8 @@ impl App {
 
     /// `template.panel`: the dock shows the Şablonlar tab.
     pub(crate) fn show_templates_panel(&mut self) -> Task<Message> {
+        // The bound standards' palettes, read as the panel opens (docs/adr/1014).
+        self.read_office_palettes();
         if !self.right_panel_shown() {
             self.toggle_right_panel();
         }
@@ -391,6 +395,7 @@ impl App {
             Event::Edit(id) => return self.open_template_editor(Some(&id), None),
             Event::Copy(id, to) => self.copy_template(&id, to),
             Event::Remove(id) => self.ask_remove_template(&id),
+            Event::Tool(key) => return self.run_palette_tool(&key),
             Event::Favorite(id) => {
                 if let Some(key) = self.personal_template_key(&id) {
                     if let Err(error) = self.templates_panel.personal.toggle(&key) {
@@ -566,13 +571,11 @@ impl App {
             } else {
                 "Aramayla eşleşen şablon yok. Başka bir ad deneyin."
             };
-            return column![
-                search,
-                container(label::caption(words))
-                    .padding([8, 12])
-                    .width(Fill)
-            ]
-            .into();
+            let empty = container(label::caption(words)).padding([8, 12]).width(Fill);
+            return match self.office_palettes_view() {
+                Some(office) => column![search, office, empty].into(),
+                None => column![search, empty].into(),
+            };
         }
         let focused = self.templates_panel.focused.clone();
         let reveal = lines.iter().position(|l| match l {
@@ -608,7 +611,10 @@ impl App {
         )
         .reveal(reveal)
         .height(Fill);
-        column![search, list].into()
+        match self.office_palettes_view() {
+            Some(office) => column![search, office, list].into(),
+            None => column![search, list].into(),
+        }
     }
 
     /// A button beside the search: the command's icon, its title in the tip.

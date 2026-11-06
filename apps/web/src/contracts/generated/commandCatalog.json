@@ -63754,6 +63754,79 @@
       ]
     },
     {
+      "id": "cad.standards.palettes",
+      "version": 1,
+      "title": "Ofis araç paletleri",
+      "summary": "Projeye bağlı standartların yayımladığı araç paletlerini okur (sürüm 2 paketin resources.toolPalettes'i). Palet çizime kurulmaz, paketinden okunur; aynı palet kimliği bir kez, ilk standardınkidir. Her araç bir katalog komutu, sürümü ve tam girdisidir: cevap aracın kişisel favori anahtarını (standart:<paket>:<palet>:<araç>), tarifin özetini (komut, sürüm ve girdinin kanonik JSON'unun SHA-256'sı; özet değişince favori başka araca kaymaz) ve komutun bu çizimde girdiyi kabul edip etmediğini (ready; komutun kendi validate'i, çizimin kopyasında, hiçbir şey yazmadan) verir; etmiyorsa nedenini komutun koduyla ve sözüyle (problem). Bağlı standart yoksa paletler boştur. Ret: invalid_standard.",
+      "aliases": [
+        "paletler",
+        "toolpalettes"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.standards.palettes` v1 (docs/adr/1014): the bound standards' office tool palettes, read only.\nRefusal: `invalid_standard` (a bound package does not read).",
+        "title": "StandardsPalettes",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.standards.palettes` v1: the palettes in the standards' order, a palette id once (the first\nstandard's).",
+        "properties": {
+          "palettes": {
+            "items": {
+              "$ref": "#/$defs/PaletteState"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "palettes"
+        ],
+        "title": "StandardsPalettesRead",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.standards.palettes` v1: the palettes in the standards' order, a palette id once (the first\nstandard's).",
+        "properties": {
+          "palettes": {
+            "items": {
+              "$ref": "#/$defs/PaletteState"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "palettes"
+        ],
+        "title": "StandardsPalettesRead",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_standard"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ofisin araç paletleri",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.standards.install",
       "version": 1,
       "title": "Standart kaynaklarını kur",
@@ -146293,6 +146366,182 @@
       ],
       "type": "object"
     },
+    "PaletteState": {
+      "description": "One palette, from the package that gives it.",
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "standard": {
+          "description": "The package's id and revision.",
+          "type": "string"
+        },
+        "tools": {
+          "items": {
+            "$ref": "#/$defs/PaletteToolState"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "standard",
+        "revision",
+        "tools"
+      ],
+      "type": "object"
+    },
+    "PaletteTool": {
+      "additionalProperties": false,
+      "description": "One tool of a palette: a catalog command run with this input (the tool recipe, docs/adr/1014 §2).",
+      "properties": {
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "command": {
+          "description": "The catalog command and its version.",
+          "type": "string"
+        },
+        "commandVersion": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "1–128 bytes, unique in its palette regardless of case.",
+          "type": "string"
+        },
+        "input": {
+          "description": "The command's whole input: an object, at most 64 KiB as JSON."
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "command",
+        "commandVersion",
+        "input"
+      ],
+      "type": "object"
+    },
+    "PaletteToolProblem": {
+      "description": "Why a palette tool does not run here.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "type": "object"
+    },
+    "PaletteToolState": {
+      "description": "A palette tool as this drawing sees it.",
+      "properties": {
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "command": {
+          "description": "The catalog command and its version.",
+          "type": "string"
+        },
+        "commandVersion": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "digest": {
+          "description": "SHA-256 of the command, its version and its input as canonical JSON: a favourite whose digest changed points to\na changed tool and is not run in its place.",
+          "type": "string"
+        },
+        "id": {
+          "description": "1–128 bytes, unique in its palette regardless of case.",
+          "type": "string"
+        },
+        "input": {
+          "description": "The command's whole input: an object, at most 64 KiB as JSON."
+        },
+        "key": {
+          "description": "`standart:<package id>:<palette id>:<tool id>`: what a personal favourite keeps.",
+          "type": "string"
+        },
+        "problem": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteToolProblem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ready": {
+          "description": "The command checked its input against this drawing (`validate`) and would run.",
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "digest",
+        "id",
+        "title",
+        "command",
+        "commandVersion",
+        "input",
+        "ready"
+      ],
+      "type": "object"
+    },
     "PaperAlignEdge": {
       "oneOf": [
         {
@@ -173392,6 +173641,13 @@
             "$ref": "#/$defs/StandardOrigin"
           },
           "type": "object"
+        },
+        "toolPalettes": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "description": "Office tool palettes by id (docs/adr/1014).",
+          "type": "object"
         }
       },
       "required": [
@@ -173465,6 +173721,13 @@
         "textStyleDefinitions": {
           "items": {
             "$ref": "#/$defs/TextStyleDef"
+          },
+          "type": "array"
+        },
+        "toolPalettes": {
+          "description": "Published office tool palettes (docs/adr/1014): each tool a catalog command with its input. Read from the\npackage where it is bound; never installed in the drawing.",
+          "items": {
+            "$ref": "#/$defs/ToolPalette"
           },
           "type": "array"
         }
@@ -180719,6 +180982,38 @@
       "required": [
         "level",
         "text"
+      ],
+      "type": "object"
+    },
+    "ToolPalette": {
+      "additionalProperties": false,
+      "description": "An office tool palette (docs/adr/1014).",
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "1–128 bytes, no surrounding spaces, unique in the package regardless of case.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tools": {
+          "description": "1 to 200 tools.",
+          "items": {
+            "$ref": "#/$defs/PaletteTool"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "tools"
       ],
       "type": "object"
     },
