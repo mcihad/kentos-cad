@@ -1282,7 +1282,7 @@
    "python": "kentos.cad.entities.flatten",
    "mcp": "cad.entities.flatten",
    "note": "Seçimin kotları ve ölçüleri cad.entities.flatten ile; pencere komutun planını önizler, Uygula tek adım yazar (ADR 1061 §4).",
-   "scope": "none",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -4917,7 +4917,7 @@
    "python": "kentos.cad.leaders.edit",
    "mcp": "cad.leaders.edit",
    "note": "Seçili kılavuzun kimliği, seçilen kol sırası ve cad.snap.find'in tam alt nesne yolu bind işlemine verilir; kenet bulunmazsa yazılmaz.",
-   "scope": "none",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8040,7 +8040,7 @@
    "python": "kentos.cad.review.notes.edit, kentos.cad.review.notes.list",
    "mcp": "cad.review.notes.edit, cad.review.notes.list",
    "note": "Ekle, yanıtla, durum, yeniden bağla ve sil cad.review.notes.edit'e gider; tablo ve eskime cad.review.notes.list'in cevabıdır (ADR 1000 §6). Bölünmüş revizyondaki Farkları al cad.drawing.take'i çalıştırır.",
-   "scope": "none",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
