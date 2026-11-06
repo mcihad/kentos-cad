@@ -332,6 +332,70 @@ pub struct TerrainsCompared {
     pub adjusted: Option<TerrainAdjusted>,
 }
 
+pub const ROAD_TERRAINS_ZEROLINE: &str = "road.terrains.zeroline";
+pub const ROAD_TERRAINS_ZEROLINE_VERSION: u32 = 1;
+
+/// Input of `road.terrains.zeroline` v1 (docs/adr/1620; plan/map-cad.md MAP-15): the cut and fill boundary of
+/// `comparison` over `base` (each a surface's id or name) written as 3D polylines on a layer: where the difference
+/// `comparison − base` is zero, over the comparison's plan, each line at the base's height. One undo step “Sıfır
+/// hattı”.
+///
+/// Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`,
+/// `invalid_revision`, `revision_conflict`, `unknown_terrain`, `invalid_analysis` (the same surface twice),
+/// `terrain_unbuildable`, `no_zero_line` (the difference changes sign nowhere).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsZeroLine {
+    pub base: String,
+    pub comparison: String,
+    /// The layer the lines go on.
+    pub layer_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// A zero line as written: whether closed, its plan length, its places (x, y, the base's height).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainZeroLine {
+    pub closed: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub points: Vec<[f64; 3]>,
+}
+
+/// Output of `road.terrains.zeroline` v1, and its plan: the surfaces' ids, the lines (each starting at its smallest
+/// place, x then y, ordered by it), their plan length, the area where the two surfaces coincide (no line is drawn
+/// there), the objects written (a plan: none) and the revision after it (a plan: before).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainsZeroLined {
+    pub base: String,
+    pub comparison: String,
+    pub lines: Vec<TerrainZeroLine>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub coincident: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::REVISION_TEXT)))]
+    pub revision: String,
+}
+
 pub const ROAD_TERRAINS_QUALITY: &str = "road.terrains.quality";
 pub const ROAD_TERRAINS_QUALITY_VERSION: u32 = 1;
 

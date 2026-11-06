@@ -37473,6 +37473,181 @@
       ]
     },
     {
+      "id": "road.terrains.zeroline",
+      "version": 1,
+      "title": "Sıfır hattı",
+      "summary": "İki arazi yüzeyinin kazı-dolgu sınırını (base: taban, comparison: karşılaştırma; kimlik ya da ad) bir katmana (layerId) 3B çoklu çizgi olarak yazar: karşılaştırmanın planında farkın (karşılaştırma − taban) sıfır olduğu çizgiler, tabanın kotuyla. Örtüşmenin her parçasında fark doğrusaldır: sıfır kümesi kestiği kenarlar arasında bir parçadır (sıfırdaki köşe bir kez sayılır); parçalar uçlarından birleştirilir (10⁻⁹ m), üç ya da daha çok parçanın buluştuğu köşe çizgileri ayırır; komşularıyla doğrudaş köşe (10⁻¹² oranında) atılır. Her çizgi en küçük yerinden (x, sonra y) başlar ve buna göre sıralıdır. İki yüzeyin çakıştığı alan (coincident) çizilmez, söylenir. Harita ve Yol projelerinde. Tek geri alma adımı “Sıfır hattı”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, invalid_analysis, terrain_unbuildable, no_zero_line.",
+      "aliases": [
+        "sifirhatti",
+        "kazidolgusiniri",
+        "zeroline"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `road.terrains.zeroline` v1 (docs/adr/1620; plan/map-cad.md MAP-15): the cut and fill boundary of\n`comparison` over `base` (each a surface's id or name) written as 3D polylines on a layer: where the difference\n`comparison − base` is zero, over the comparison's plan, each line at the base's height. One undo step “Sıfır\nhattı”.\n\nRefusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`,\n`invalid_revision`, `revision_conflict`, `unknown_terrain`, `invalid_analysis` (the same surface twice),\n`terrain_unbuildable`, `no_zero_line` (the difference changes sign nowhere).",
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "The layer the lines go on.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "comparison",
+          "layerId"
+        ],
+        "title": "TerrainsZeroLine",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.zeroline` v1, and its plan: the surfaces' ids, the lines (each starting at its smallest\nplace, x then y, ordered by it), their plan length, the area where the two surfaces coincide (no line is drawn\nthere), the objects written (a plan: none) and the revision after it (a plan: before).",
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "coincident": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/$defs/TerrainZeroLine"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "base",
+          "comparison",
+          "lines",
+          "length",
+          "coincident",
+          "revision"
+        ],
+        "title": "TerrainsZeroLined",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.zeroline` v1, and its plan: the surfaces' ids, the lines (each starting at its smallest\nplace, x then y, ordered by it), their plan length, the area where the two surfaces coincide (no line is drawn\nthere), the objects written (a plan: none) and the revision after it (a plan: before).",
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "coincident": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/$defs/TerrainZeroLine"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "base",
+          "comparison",
+          "lines",
+          "length",
+          "coincident",
+          "revision"
+        ],
+        "title": "TerrainsZeroLined",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_terrain",
+          "invalid_analysis",
+          "terrain_unbuildable",
+          "no_zero_line"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Tasarım yüzeyinin mevcut zeminle sıfır hattı",
+          "input": {
+            "base": "Mevcut zemin",
+            "comparison": "Tasarım",
+            "layerId": "sifir-hatti"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.import.landxml",
       "version": 1,
       "title": "LandXML al",
@@ -96882,6 +97057,12 @@
       "meaning": "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok."
     },
     {
+      "code": "no_zero_line",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İki yüzeyin farkı hiçbir yerde işaret değiştirmiyor: sıfır hattı yok."
+    },
+    {
       "code": "landxml_no_surface",
       "kind": "failed",
       "retryable": false,
@@ -117360,6 +117541,11 @@
         {
           "const": "terrainContours",
           "description": "Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.",
+          "type": "string"
+        },
+        {
+          "const": "terrainZeroLine",
+          "description": "Sıfır hattı (docs/adr/1620): where two surfaces meet, the cut and fill boundary.",
           "type": "string"
         },
         {
@@ -189298,6 +189484,38 @@
         "cut",
         "fill",
         "net"
+      ],
+      "type": "object"
+    },
+    "TerrainZeroLine": {
+      "description": "A zero line as written: whether closed, its plan length, its places (x, y, the base's height).",
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "points": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "closed",
+        "length",
+        "points"
       ],
       "type": "object"
     },

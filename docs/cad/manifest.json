@@ -10102,12 +10102,13 @@
    "via": [
     "road.terrains.analysis",
     "road.terrains.compare",
-    "road.terrains.quality"
+    "road.terrains.quality",
+    "road.terrains.zeroline"
    ],
    "operation": null,
-   "python": "Connection: road.terrains.analysis, Connection: road.terrains.compare, Connection: road.terrains.quality",
-   "mcp": "road.terrains.analysis, road.terrains.compare, road.terrains.quality",
-   "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; hiçbir şey yazmaz (plan/road.md Y18.5, ADR 0916 §5).",
+   "python": "Connection: road.terrains.analysis, Connection: road.terrains.compare, Connection: road.terrains.quality, Connection: road.terrains.zeroline",
+   "mcp": "road.terrains.analysis, road.terrains.compare, road.terrains.quality, road.terrains.zeroline",
+   "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; Fark'ın Sıfır hattını çiz'i road.terrains.zeroline ile tek adımda yazar (plan/road.md Y18.5, ADR 0916 §5, ADR 1620).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

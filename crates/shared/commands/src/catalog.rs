@@ -7018,6 +7018,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Sıfır hattı (plan/map-cad.md MAP-15, docs/adr/1620).
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_ZEROLINE.into(),
+            version: crate::ROAD_TERRAINS_ZEROLINE_VERSION,
+            title: "Sıfır hattı".into(),
+            summary: "İki arazi yüzeyinin kazı-dolgu sınırını (base: taban, comparison: karşılaştırma; kimlik ya da ad) bir katmana (layerId) 3B çoklu çizgi olarak yazar: karşılaştırmanın planında farkın (karşılaştırma − taban) sıfır olduğu çizgiler, tabanın kotuyla. \
+                      Örtüşmenin her parçasında fark doğrusaldır: sıfır kümesi kestiği kenarlar arasında bir parçadır (sıfırdaki köşe bir kez sayılır); parçalar uçlarından birleştirilir (10⁻⁹ m), üç ya da daha çok parçanın buluştuğu köşe çizgileri ayırır; komşularıyla doğrudaş köşe (10⁻¹² oranında) atılır. Her çizgi en küçük yerinden (x, sonra y) başlar ve buna göre sıralıdır. İki yüzeyin çakıştığı alan (coincident) çizilmez, söylenir. \
+                      Harita ve Yol projelerinde. Tek geri alma adımı “Sıfır hattı”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, invalid_analysis, terrain_unbuildable, no_zero_line."
+                .into(),
+            aliases: vec!["sifirhatti".into(), "kazidolgusiniri".into(), "zeroline".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsZeroLine>(),
+            output: schema::<crate::TerrainsZeroLined>(),
+            plan: Some(schema::<crate::TerrainsZeroLined>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Tasarım yüzeyinin mevcut zeminle sıfır hattı".into(),
+                input: json!({ "base": "Mevcut zemin", "comparison": "Tasarım", "layerId": "sifir-hatti" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::FILE_IMPORT_LANDXML.into(),
             version: crate::FILE_IMPORT_LANDXML_VERSION,
@@ -15803,6 +15830,9 @@ mod tests {
                     crate::ROAD_TERRAINS_CONTOURS => {
                         serde_json::from_value::<crate::TerrainsContours>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_TERRAINS_ZEROLINE => {
+                        serde_json::from_value::<crate::TerrainsZeroLine>(e.input.clone()).map(|_| ())
+                    }
                     crate::FILE_IMPORT_LANDXML => {
                         serde_json::from_value::<crate::ImportLandxml>(e.input.clone()).map(|_| ())
                     }
@@ -16723,6 +16753,10 @@ mod tests {
                         }
                         crate::ROAD_TERRAINS_CONTOURS => {
                             serde_json::from_value::<crate::TerrainsContoured>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_ZEROLINE => {
+                            serde_json::from_value::<crate::TerrainsZeroLined>(output.clone())
                                 .map(|_| ())
                         }
                         crate::FILE_IMPORT_LANDXML => {

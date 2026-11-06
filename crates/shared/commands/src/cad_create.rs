@@ -113,6 +113,8 @@ pub enum CreateOperation {
     InteriorDimensions,
     /// Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
     TerrainContours,
+    /// Sıfır hattı (docs/adr/1620): where two surfaces meet, the cut and fill boundary.
+    TerrainZeroLine,
     /// LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     LandXml,
     /// `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.

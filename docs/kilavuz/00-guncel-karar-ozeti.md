@@ -38,6 +38,8 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Sıfır hattı (7 Kasım 2026; MAP-15, [ADR 1620](../../docs/adr/1620-cut-fill-zero-line.md)).** `road.terrains.zeroline`:
+  iki yüzeyin kazı-dolgu sınırı, 3B çoklu çizgi, tek adım; ret `no_zero_line`.
 - **Hacim yöntemi ve katsayılar (7 Kasım 2026; MAP-15, [ADR 1600](../../docs/adr/1600-surface-volume-method-and-factors.md)).**
   `road.terrains.compare`: `method` tin | grid (+`cell`), ızgarada `exact` TIN yanında; `cutFactor`/`fillFactor` →
   `adjusted`, geometrik hacim değişmez; katsayı kullanıcınındır.

@@ -484,6 +484,160 @@ pub fn difference(comparison: &[Triangle], base: &[Triangle], breaks: &[f64]) ->
     out
 }
 
+/// A zero line: its places in plan and whether it closes (docs/adr/1620).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ZeroLine {
+    pub points: Vec<[f64; 2]>,
+    pub closed: bool,
+}
+
+/// Where `comparison` meets `base` (docs/adr/1620): the lines where `d = z_comparison − z_base` is zero over the
+/// comparison's plan, each starting at its smallest place (x, then y; a closed one there, an open one at its smaller
+/// end) and ordered by it; and the plan area where the two coincide (d zero over a whole piece: no line is drawn
+/// there). On each piece of the overlay d is linear: its zero set is a segment between the edges it crosses (a corner
+/// at zero counts once); segments are joined at their ends (places equal to 10⁻⁹ m), a corner where three or more meet
+/// ends the lines through it; a vertex in line with its neighbours (within 10⁻¹² of the lengths) is dropped.
+pub fn zero_lines(comparison: &[Triangle], base: &[Triangle]) -> (Vec<ZeroLine>, f64) {
+    let mut ground = Ground::new(base);
+    let mut segments: Vec<[[f64; 2]; 2]> = Vec::new();
+    let mut coincident = 0.0;
+    ground.overlay(comparison, |with| {
+        if with.iter().all(|(_, d)| *d == 0.0) {
+            coincident += integral(with).0;
+            return;
+        }
+        let mut at: Vec<[f64; 2]> = Vec::new();
+        for k in 0..with.len() {
+            let ((p, dp), (q, dq)) = (with[k], with[(k + 1) % with.len()]);
+            if dp == 0.0 {
+                at.push(p);
+            }
+            if (dp < 0.0 && dq > 0.0) || (dp > 0.0 && dq < 0.0) {
+                let t = dp / (dp - dq);
+                at.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+            }
+        }
+        at.dedup();
+        if at.len() > 1 && at.first() == at.last() {
+            at.pop();
+        }
+        if at.len() == 2 {
+            segments.push([at[0], at[1]]);
+        }
+    });
+    (join(segments), coincident)
+}
+
+/// A place's key for joining: to 10⁻⁹ m.
+fn joint(p: [f64; 2]) -> (i64, i64) {
+    ((p[0] * 1e9).round() as i64, (p[1] * 1e9).round() as i64)
+}
+
+/// Segments joined into lines at their shared ends (each segment once, whichever side found it).
+fn join(segments: Vec<[[f64; 2]; 2]>) -> Vec<ZeroLine> {
+    use std::collections::{BTreeMap, BTreeSet};
+    let mut seen = BTreeSet::new();
+    let segments: Vec<[[f64; 2]; 2]> = segments
+        .into_iter()
+        .filter(|s| joint(s[0]) != joint(s[1]))
+        .filter(|s| {
+            let (a, b) = (joint(s[0]), joint(s[1]));
+            seen.insert(if a < b { (a, b) } else { (b, a) })
+        })
+        .collect();
+    let mut at: BTreeMap<(i64, i64), Vec<usize>> = BTreeMap::new();
+    for (i, s) in segments.iter().enumerate() {
+        at.entry(joint(s[0])).or_default().push(i);
+        at.entry(joint(s[1])).or_default().push(i);
+    }
+    let mut used = vec![false; segments.len()];
+    let mut lines = Vec::new();
+    // Open lines first, from their ends (a joint of one segment, or of three or more), then the loops.
+    let ends: Vec<(i64, i64)> = at.iter().filter(|(_, v)| v.len() != 2).map(|(k, _)| *k).collect();
+    let walk = |start: usize, from: [f64; 2], used: &mut Vec<bool>| {
+        let mut points = vec![from];
+        let mut here = from;
+        let mut next = Some(start);
+        while let Some(i) = next {
+            used[i] = true;
+            let s = segments[i];
+            let other = if joint(s[0]) == joint(here) { s[1] } else { s[0] };
+            points.push(other);
+            here = other;
+            let k = joint(here);
+            next = match at.get(&k) {
+                Some(v) if v.len() == 2 => v.iter().copied().find(|j| !used[*j]),
+                _ => None,
+            };
+        }
+        points
+    };
+    for e in &ends {
+        for &i in at.get(e).map(Vec::as_slice).unwrap_or(&[]) {
+            if used[i] {
+                continue;
+            }
+            let s = segments[i];
+            let from = if joint(s[0]) == *e { s[0] } else { s[1] };
+            let points = walk(i, from, &mut used);
+            lines.push(ZeroLine { points, closed: false });
+        }
+    }
+    for i in 0..segments.len() {
+        if !used[i] {
+            let mut points = walk(i, segments[i][0], &mut used);
+            points.pop();
+            lines.push(ZeroLine { points, closed: true });
+        }
+    }
+    for l in &mut lines {
+        straighten(l);
+        // Its smallest place first: an open line from its smaller end, a closed one turned to start there.
+        let less = |a: &[f64; 2], b: &[f64; 2]| (a[0], a[1]) < (b[0], b[1]);
+        if l.closed {
+            if let Some(k) = (0..l.points.len()).min_by(|&a, &b| {
+                (l.points[a][0], l.points[a][1]).partial_cmp(&(l.points[b][0], l.points[b][1])).unwrap_or(std::cmp::Ordering::Equal)
+            }) {
+                l.points.rotate_left(k);
+            }
+        } else if let (Some(first), Some(last)) = (l.points.first(), l.points.last())
+            && less(last, first)
+        {
+            l.points.reverse();
+        }
+    }
+    lines.sort_by(|a, b| {
+        let (p, q) = (a.points[0], b.points[0]);
+        (p[0], p[1]).partial_cmp(&(q[0], q[1])).unwrap_or(std::cmp::Ordering::Equal)
+    });
+    lines
+}
+
+/// Drops a vertex in line with its neighbours (the cross product within 10⁻¹² of the lengths' product).
+fn straighten(l: &mut ZeroLine) {
+    let n = l.points.len();
+    if n < 3 {
+        return;
+    }
+    let inline = |a: [f64; 2], b: [f64; 2], c: [f64; 2]| {
+        let (u, v) = ([b[0] - a[0], b[1] - a[1]], [c[0] - b[0], c[1] - b[1]]);
+        let cross = u[0] * v[1] - u[1] * v[0];
+        let dot = u[0] * v[0] + u[1] * v[1];
+        dot > 0.0 && cross.abs() <= 1e-12 * u[0].hypot(u[1]) * v[0].hypot(v[1])
+    };
+    let mut out: Vec<[f64; 2]> = Vec::with_capacity(n);
+    for (k, p) in l.points.iter().enumerate() {
+        let open_end = !l.closed && (k == 0 || k == n - 1);
+        let prev = if k == 0 { l.points[n - 1] } else { l.points[k - 1] };
+        let next = l.points[(k + 1) % n];
+        if !open_end && inline(*out.last().unwrap_or(&prev), *p, next) {
+            continue;
+        }
+        out.push(*p);
+    }
+    l.points = out;
+}
+
 /// The volumes between the design surface and the ground surface, each a set of triangles that do not overlap in plan
 /// (x, y, z each corner), over the design's plan.
 pub fn between_surfaces(design: &[Triangle], ground: &[Triangle]) -> Volumes {

@@ -1424,6 +1424,7 @@ class CreateOperation(_StrEnum):
     - ``quickDimensions``: Hızlı ölçü (docs/adr/0147 §7): the selection's edges measured at once.
     - ``interiorDimensions``: İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
     - ``terrainContours``: Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
+    - ``terrainZeroLine``: Sıfır hattı (docs/adr/1620): where two surfaces meet, the cut and fill boundary.
     - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
@@ -1477,6 +1478,7 @@ class CreateOperation(_StrEnum):
     QUICK_DIMENSIONS = "quickDimensions"
     INTERIOR_DIMENSIONS = "interiorDimensions"
     TERRAIN_CONTOURS = "terrainContours"
+    TERRAIN_ZERO_LINE = "terrainZeroLine"
     LAND_XML = "landXml"
     ALIGNMENT_LABELS = "alignmentLabels"
     PROFILE_DRAWING = "profileDrawing"
@@ -1494,7 +1496,7 @@ class CreateOperation(_StrEnum):
     SPARSE = "sparse"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -93137,6 +93139,33 @@ class TerrainVolumes(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainZeroLine(_Model):
+    """A zero line as written: whether closed, its plan length, its places (x, y, the base's height).
+    Attributes:
+        length: Unit: length.
+        points: Unit: length.
+    """
+    closed: bool
+    length: float
+    points: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["closed"] = self.closed
+        out["length"] = float(self.length)
+        out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainZeroLine:
+        return cls(
+            closed=data["closed"],
+            length=float(data["length"]),
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsAnalysed(_Model):
     """Output of `road.terrains.analysis` v1: the surface's plan and 3D area and what was asked.
     Attributes:
@@ -94336,6 +94365,85 @@ class TerrainsWritten(_Model):
             surfaces=[TerrainSurfaceDef.from_json(e0) for e0 in data["surfaces"]],
             revision=data["revision"],
             surface=UNSET if "surface" not in data else None if data["surface"] is None else TerrainReport.from_json(data["surface"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsZeroLine(_Model):
+    """Input of `road.terrains.zeroline` v1 (docs/adr/1620; plan/map-cad.md MAP-15): the cut and fill boundary of
+    `comparison` over `base` (each a surface's id or name) written as 3D polylines on a layer: where the difference
+    `comparison − base` is zero, over the comparison's plan, each line at the base's height. One undo step “Sıfır
+    hattı”.
+
+    Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`,
+    `invalid_revision`, `revision_conflict`, `unknown_terrain`, `invalid_analysis` (the same surface twice),
+    `terrain_unbuildable`, `no_zero_line` (the difference changes sign nowhere).
+    Attributes:
+        layer_id: The layer the lines go on.
+    """
+    base: str
+    comparison: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["comparison"] = self.comparison
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsZeroLine:
+        return cls(
+            base=data["base"],
+            comparison=data["comparison"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsZeroLined(_Model):
+    """Output of `road.terrains.zeroline` v1, and its plan: the surfaces' ids, the lines (each starting at its smallest
+    place, x then y, ordered by it), their plan length, the area where the two surfaces coincide (no line is drawn
+    there), the objects written (a plan: none) and the revision after it (a plan: before).
+    Attributes:
+        length: Unit: length.
+        coincident: Unit: area.
+    """
+    base: str
+    comparison: str
+    lines: list[TerrainZeroLine]
+    length: float
+    coincident: float
+    revision: str
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["comparison"] = self.comparison
+        out["lines"] = [e0.to_json() for e0 in self.lines]
+        out["length"] = float(self.length)
+        out["coincident"] = float(self.coincident)
+        out["revision"] = self.revision
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsZeroLined:
+        return cls(
+            base=data["base"],
+            comparison=data["comparison"],
+            lines=[TerrainZeroLine.from_json(e0) for e0 in data["lines"]],
+            length=float(data["length"]),
+            coincident=float(data["coincident"]),
+            revision=data["revision"],
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -125919,6 +126027,7 @@ __all__ = [
     "TerrainStateName",
     "TerrainSurfaceDef",
     "TerrainVolumes",
+    "TerrainZeroLine",
     "TerrainsAnalysed",
     "TerrainsAnalysis",
     "TerrainsCompare",
@@ -125945,6 +126054,8 @@ __all__ = [
     "TerrainsRepaired",
     "TerrainsSparseDraw",
     "TerrainsWritten",
+    "TerrainsZeroLine",
+    "TerrainsZeroLined",
     "TextAlign",
     "TextAlignName",
     "TextColumns",

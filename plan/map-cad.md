@@ -864,6 +864,12 @@ düzeltilmiş ve düzeltilmemiş hacim ayrı); KTŞ 2013'te hacim dönüşüm ka
 `cutFactor`/`fillFactor` ile ayrı `adjusted`; 15 bağımsız durum. Açık: kesit yöntemi, malzeme bölgesi, stok, sıfır
 hattının çizimi, tematik fark haritası.
 
+**7 Kasım 2026 — Sıfır hattı ([ADR 1620](../docs/adr/1620-cut-fill-zero-line.md)).** Kapsam: **Harita + Yol**.
+Araştırma: Civil 3D hacim yüzeyinin sıfır eğrisi, OpenSite'ın kazı/dolgu ayrımı. Kanıtlanan: `road.terrains.zeroline`
+iki yüzeyin farkının sıfır olduğu çizgileri tabanın kotuyla 3B çoklu çizgi yazar (tek adım “Sıfır hattı”), çakışan alanı
+söyler; 23 bağımsız durum; Fark'ta Sıfır hattını çiz. Açık: kazı/dolgu bölgelerinin alan olarak yazılması, canlı
+güncelleme.
+
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 
 **Öncelik:** P1 teknik envanter/tasarım; P2 uzman çözücüler. **Kod:** [K31], [K32], [K40].

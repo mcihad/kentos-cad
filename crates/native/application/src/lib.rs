@@ -403,6 +403,7 @@ pub mod road_superelevations_edit;
 pub mod road_superelevations_query;
 pub mod road_templates_edit;
 pub mod road_terrains_contours;
+pub mod road_terrains_zeroline;
 pub mod road_terrains_create;
 pub mod road_terrains_edit;
 pub mod road_terrains_query;
@@ -1264,6 +1265,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_TERRAINS_CONTOURS,
         kentos_commands::ROAD_TERRAINS_CONTOURS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_ZEROLINE,
+        kentos_commands::ROAD_TERRAINS_ZEROLINE_VERSION,
     ),
     (
         kentos_commands::FILE_IMPORT_LANDXML,

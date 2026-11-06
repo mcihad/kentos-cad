@@ -522,3 +522,85 @@ fn screens_volume_method() {
         println!("{}", file.display());
     }
 }
+
+/// `road.terrains.zeroline`'s drawing (the compare lattices and a mound on the plane).
+fn zero_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.zeroline.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// docs/adr/1620: Fark's Sıfır hattını çiz writes the mound's closed zero line over the plane in one undo step.
+#[test]
+fn fark_draws_the_zero_line_in_one_step() {
+    let mut app = zero_app();
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Compare));
+    send(&mut app, W::Surface("t-5".into()));
+    send(&mut app, W::Comparison("t-10".into()));
+    send(&mut app, W::Layer("sifir".into()));
+    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    send(&mut app, W::DrawZero);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert_eq!(doc.entities().count(), before + 1, "{}", crate::files_testing::last_said(&app));
+    let line = doc.entities().last().expect("the line");
+    assert_eq!(line.base().layer_id, "sifir");
+    assert!(matches!(line, kentos_commands::Entity::Polyline(p) if p.closed));
+    assert!(crate::files_testing::last_said(&app).contains("1 çizgi (1 kapalı)"));
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Sıfır hattı"));
+}
+
+/// Fark with the zero line drawn; `.run/gui-evidence/sifir-hatti-1620/`.
+#[test]
+#[ignore = "writes pictures"]
+fn screens_zero_line() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/sifir-hatti-1620");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = zero_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Compare));
+        send(&mut app, W::Surface("t-5".into()));
+        send(&mut app, W::Comparison("t-10".into()));
+        send(&mut app, W::Layer("sifir".into()));
+        send(&mut app, W::Preview);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-fark-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        send(&mut app, W::DrawZero);
+        send(&mut app, W::Close);
+        // The plane, the mound and the line: framed on them.
+        let slots: Vec<kentos_domain::Slot> = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .filter(|e| ["sifir", "tumsek"].contains(&e.base().layer_id.as_str()))
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect();
+        app.selection.set(slots);
+        let _ = app.update(Message::Run("view.zoomSelection"));
+        app.selection.clear();
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-sifir-hatti-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

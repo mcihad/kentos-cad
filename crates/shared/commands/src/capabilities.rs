@@ -1618,6 +1618,18 @@ const ENTRIES: &[Entry] = &[
         warnings: &["terrain_source_left"],
         targets: none,
     },
+    // Sıfır hattı (plan/map-cad.md MAP-15, docs/adr/1620).
+    Entry {
+        id: "road.terrains.zeroline",
+        refusals: &[
+            &["not_a_road_project"],
+            LAYER,
+            REVISION,
+            &["unknown_terrain", "invalid_analysis", "terrain_unbuildable", "no_zero_line"],
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
     Entry {
         id: "road.terrains.contours",
         refusals: &[

@@ -50,6 +50,8 @@ const APPLY: &str = "Onarımı uygula";
 const CLOSE: &str = "Kapat";
 const DRAW_LOW: &str = "Düşük güvenli alanları çiz";
 const DRAW_SPARSE: &str = "Seyrek alanları çiz";
+/// Fark's cut and fill boundary written on the layer chosen (docs/adr/1620).
+const DRAW_ZERO: &str = "Sıfır hattını çiz";
 /// The typed fields, in order.
 pub(crate) const FIELDS: [&str; 16] = [
     "Sınırlar",
@@ -126,6 +128,8 @@ pub enum Event {
     Boundary(Option<String>),
     Layer(String),
     DrawLow,
+    /// Fark: the cut and fill boundary written (`road.terrains.zeroline`).
+    DrawZero,
     DrawSparse,
     Field(usize, String),
     Preview,
@@ -339,6 +343,30 @@ impl App {
                 let result = road_terrains_coverage_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if let Some(out) = self.answered(result) {
                     self.say(Level::Success, format!("{} düşük güvenli alan çizildi ({:.1} m²).", out.areas, out.area));
+                }
+                return Task::none();
+            }
+            Event::DrawZero => {
+                let (Some(base), Some(comparison), Some(layer)) = (w.surface.clone(), w.comparison.clone(), w.layer.clone())
+                else {
+                    return Task::none();
+                };
+                let input = kentos_commands::TerrainsZeroLine { base, comparison, layer_id: layer, expected_revision: None };
+                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let result = kentos_native_application::road_terrains_zeroline::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    input,
+                );
+                if let Some(out) = self.answered(result) {
+                    let closed = out.lines.iter().filter(|l| l.closed).count();
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "Sıfır hattı çizildi: {} çizgi ({closed} kapalı), {:.2} m.",
+                            out.lines.len(),
+                            out.length
+                        ),
+                    );
                 }
                 return Task::none();
             }
@@ -729,6 +757,21 @@ impl App {
                 .push(container(on_layer).width(150))
                 .push(words::secondary(DRAW_LOW, can.then(|| msg(Event::DrawLow))));
         }
+        if w.mode == Mode::Compare {
+            let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+            let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
+            let on_layer = Select::new(
+                lnames.iter().map(|n| Choice::new(n.clone())),
+                w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+                move |i| msg(Event::Layer(lids[i].clone())),
+            )
+            .placeholder("Katman");
+            let can = w.layer.is_some() && w.comparison.is_some();
+            bottom = bottom
+                .push(label::caption("Katman").style(muted))
+                .push(container(on_layer).width(150))
+                .push(words::secondary(DRAW_ZERO, can.then(|| msg(Event::DrawZero))));
+        }
         if w.mode == Mode::Density {
             let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
             let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
@@ -771,6 +814,7 @@ impl App {
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(DRAW_LOW) => Some(msg(Event::DrawLow)),
             Control::Press(DRAW_SPARSE) => Some(msg(Event::DrawSparse)),
+            Control::Press(DRAW_ZERO) => Some(msg(Event::DrawZero)),
             Control::Fill(name, t) if !name.is_empty() && FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))
