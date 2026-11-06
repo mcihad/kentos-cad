@@ -15452,6 +15452,34 @@
    "tests": 0
   },
   {
+   "id": "view.pointCodes",
+   "kind": "command",
+   "title": "Nokta kodlarını göster",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "view.pointNames",
+   "kind": "command",
+   "title": "Nokta adlarını göster",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "view.previous",
    "kind": "command",
    "title": "Önceki görünüm",

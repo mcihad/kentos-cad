@@ -160,6 +160,7 @@ fn every_dedupe_finds_the_groups_and_writes_as_the_reference_does() {
                 Some("average") => Keep::Average,
                 _ => Keep::First,
             },
+            aside: c["aside"].as_str().map(str::to_owned),
         };
         let targets = slots(&c["targets"]);
         let plan = plan_dedupe(&doc, &targets, &op);
@@ -223,6 +224,7 @@ fn after_an_import_the_points_named_like_the_imported_ones_by_name() {
                         Some("average") => Keep::Average,
                         _ => Keep::First,
                     },
+                    aside: None,
                 };
                 let plan = plan_dedupe(&doc, &targets, &op);
                 let groups: Vec<Vec<u32>> = plan

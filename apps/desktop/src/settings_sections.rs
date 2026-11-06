@@ -161,6 +161,8 @@ impl Section {
                 "graphics.annotationSize",
                 "graphics.fills",
                 "graphics.areaEdges",
+                "graphics.pointNames",
+                "graphics.pointCodes",
                 "graphics.transparency",
                 "graphics.highlightColor",
                 "graphics.highlightWidth",
@@ -595,6 +597,8 @@ impl App {
             .help(Fields::help("graphics.annotationSize"));
         let form = f.switch_field(form, "graphics.fills", None);
         let form = f.switch_field(form, "graphics.areaEdges", None);
+        let form = f.switch_field(form, "graphics.pointNames", None);
+        let form = f.switch_field(form, "graphics.pointCodes", None);
         f.switch_field(form, "graphics.transparency", None)
             .field(
                 Fields::title("graphics.highlightColor"),

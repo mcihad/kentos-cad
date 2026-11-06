@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use kentos_commands::{
     CommandResult, EditOperation, EntitiesDelete, EntitiesEdit, EntitiesSetProperties, Entity,
-    EntityEdit, EntityGeometry, PointEntity, PropertiesOperation,
+    EntityEdit, EntityGeometry, LayerEditOperation, LayersEdit, PointEntity, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2;
@@ -20,7 +20,7 @@ use kentos_geometry_core::ops::point_editor::{
 use kentos_geometry_core::text::edit::increment;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::elevation::paths as elevated_paths;
-use kentos_native_application::{ExecutionContext, delete, edit, set};
+use kentos_native_application::{ExecutionContext, delete, edit, layers_edit, set};
 
 use super::edit::{FOLLOW_LOCKED, PREFIX, in_step, refusal, with_paths};
 
@@ -59,11 +59,14 @@ pub enum Op {
     Layer {
         layer: String,
     },
-    /// Aynı ad (`by_name`) or Aynı yer within `tolerance` (the window's text, metres).
+    /// Aynı ad (`by_name`) or Aynı yer within `tolerance` (the window's text, metres). `aside`: the name of the
+    /// layer the points left over go to instead of being deleted (made when the drawing has none of that name;
+    /// docs/adr/1540).
     Dedupe {
         by_name: bool,
         tolerance: String,
         keep: Keep,
+        aside: Option<String>,
     },
 }
 
@@ -427,6 +430,16 @@ pub struct DedupePlan {
     pub moves: Vec<Move>,
 }
 
+/// The layer the points left over go to (Ayıklananlar: Katmana taşı), its name trimmed; none: they are deleted.
+pub fn aside_name(op: &Op) -> Option<&str> {
+    match op {
+        Op::Dedupe {
+            aside: Some(name), ..
+        } => Some(js_trim(name)).filter(|n| !n.is_empty()),
+        _ => None,
+    }
+}
+
 /// The drawing's order of its objects.
 fn drawing_order(doc: &Document) -> HashMap<Slot, usize> {
     doc.entities()
@@ -443,6 +456,7 @@ pub fn plan_dedupe(doc: &Document, slots: &[Slot], op: &Op) -> DedupePlan {
         by_name,
         tolerance,
         keep,
+        ..
     } = op
     else {
         return DedupePlan::default();
@@ -501,19 +515,18 @@ pub fn plan_dedupe(doc: &Document, slots: &[Slot], op: &Op) -> DedupePlan {
         })
         .collect();
     let total: usize = groups.iter().map(Vec::len).sum();
+    let gone = match aside_name(op) {
+        Some(layer) => format!("{} nokta “{layer}” katmanına taşınacak", removed.len()),
+        None => format!("{} nokta silinecek", removed.len()),
+    };
     let summary = if groups.is_empty() {
         "Çift nokta yok.".to_owned()
     } else if moves.is_empty() {
-        format!(
-            "{} grupta {total} nokta; {} nokta silinecek.",
-            groups.len(),
-            removed.len()
-        )
+        format!("{} grupta {total} nokta; {gone}.", groups.len())
     } else {
         format!(
-            "{} grupta {total} nokta; {} nokta silinecek, {} nokta ortalamaya taşınacak.",
+            "{} grupta {total} nokta; {gone}, {} nokta ortalamaya taşınacak.",
             groups.len(),
-            removed.len(),
             moves.len()
         )
     };
@@ -572,9 +585,30 @@ fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outc
             step: None,
         };
     }
+    let aside = aside_name(op).map(str::to_owned);
+    let aside_layer = aside
+        .as_deref()
+        .and_then(|name| kentos_native_application::import_apply::layer_named(doc, name))
+        .map(|l| (l.id.clone(), l.name.clone()));
+    if let Some((id, name)) = &aside_layer
+        && doc.layers().is_locked(id)
+    {
+        return Outcome {
+            said: vec![format!(
+                "“{name}” katmanı kilitli; ayıklanan noktalar oraya taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman adı yazın."
+            )],
+            step: None,
+        };
+    }
     let step = Kind::Dedupe.step();
     let uid = |doc: &Document, s: Slot| doc.uid(s).map(|u| u.to_string()).unwrap_or_default();
     let removed: Vec<String> = plan.removed.iter().map(|&s| uid(doc, s)).collect();
+    // A new layer for the points set aside goes next to the first of them.
+    let beside = plan
+        .removed
+        .first()
+        .and_then(|&s| doc.get(s))
+        .map(|e| e.base().layer_id.clone());
     let refused = in_step(doc, step, |doc| {
         for m in &plan.moves {
             let mut changes = vec![EntityEdit::Update {
@@ -626,11 +660,31 @@ fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outc
                 return Some(e.message);
             }
         }
-        let input = EntitiesDelete {
-            uids: removed,
-            expected_revision: None,
+        let Some(name) = aside else {
+            let input = EntitiesDelete {
+                uids: removed,
+                expected_revision: None,
+            };
+            return refusal(delete::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message);
         };
-        refusal(delete::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
+        // Set aside, not deleted: to the layer of that name, made when there is none.
+        let layer = match &aside_layer {
+            Some((id, _)) => id.clone(),
+            None => {
+                let mut add = LayersEdit::new(LayerEditOperation::Add);
+                add.name = Some(name.clone());
+                add.parent = beside.clone();
+                match layers_edit::execute(&mut ExecutionContext::new(doc), add) {
+                    CommandResult::Completed { output, .. } => match output.layer {
+                        Some(id) => id,
+                        None => return Some(format!("{PREFIX}“{name}” katmanı açılamadı.")),
+                    },
+                    other => return refusal(other).map(|e| e.message),
+                }
+            }
+        };
+        let input = input(removed, None, Some(layer));
+        refusal(set::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
     });
     if let Some(refused) = refused {
         return Outcome {
@@ -639,12 +693,15 @@ fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outc
         };
     }
     let n = plan.groups.len();
-    let gone = plan.removed.len();
+    let gone = match aside_name(op) {
+        Some(layer) => format!("{} nokta “{layer}” katmanına taşındı", plan.removed.len()),
+        None => format!("{} nokta silindi", plan.removed.len()),
+    };
     let said = if plan.moves.is_empty() {
-        format!("{PREFIX}{n} grupta {gone} nokta silindi.")
+        format!("{PREFIX}{n} grupta {gone}.")
     } else {
         format!(
-            "{PREFIX}{n} grupta {gone} nokta silindi, {} nokta ortalamaya taşındı.",
+            "{PREFIX}{n} grupta {gone}, {} nokta ortalamaya taşındı.",
             plan.moves.len()
         )
     };

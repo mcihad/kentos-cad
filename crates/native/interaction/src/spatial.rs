@@ -108,6 +108,10 @@ pub struct Spatial {
     /// texts were made with.
     label_layers: String,
     label_keys: std::collections::HashMap<String, String>,
+    /// Nokta adları off (`graphics.pointNames` false) and Nokta kodları on (docs/adr/1540): what a point's label
+    /// says. Both default to the drawing's own labels (names, no codes).
+    hide_point_names: bool,
+    point_codes: bool,
     /// The main view's last labels (`label_at`): their records, stride and scale.
     kept: std::cell::RefCell<(Vec<f64>, usize, f64)>,
     /// Where the main view's labels went last (docs/adr/0533 §3): the next placing of a view that moved a little
@@ -656,6 +660,35 @@ impl Spatial {
         }
     }
 
+    /// An object's label texts as the label engine has them (Nokta adları and kodları included).
+    pub fn label_texts(&self, slot: Slot) -> Vec<String> {
+        self.store
+            .object_label_texts(f64::from(slot.0))
+            .into_iter()
+            .map(str::to_owned)
+            .collect()
+    }
+
+    /// Nokta adları and Nokta kodları as the labels were made: (names, codes).
+    pub fn point_texts(&self) -> (bool, bool) {
+        (!self.hide_point_names, self.point_codes)
+    }
+
+    /// Nokta adları and Nokta kodları (docs/adr/1540): what points' labels say; the layers' texts are made again
+    /// when it changes (with the drawing, when there is one).
+    pub fn set_point_texts(&mut self, doc: Option<&Document>, names: bool, codes: bool) {
+        if (self.hide_point_names, self.point_codes) == (!names, codes) {
+            return;
+        }
+        self.hide_point_names = !names;
+        self.point_codes = codes;
+        if let Some(doc) = doc
+            && self.revision.is_some()
+        {
+            self.sync_labels(doc, &[], false);
+        }
+    }
+
     /// The label engine's inputs (docs/adr/0212 §3.1): the layers' labelling
     /// when it changed; the texts of a layer whose texts' setting changed
     /// (its classes' texts, conditions and templates; its name, for
@@ -681,7 +714,13 @@ impl Spatial {
         let mut seen = std::collections::HashSet::new();
         for l in &leaves {
             seen.insert(l.id.clone());
-            let key = format!("{}|{}", texts_key(l), unit.factor());
+            let key = format!(
+                "{}|{}|{}{}",
+                texts_key(l),
+                unit.factor(),
+                self.hide_point_names,
+                self.point_codes
+            );
             if self.label_keys.get(&l.id) != Some(&key) {
                 if self.label_keys.contains_key(&l.id) && !all {
                     whole.push(l.id.clone());
@@ -720,7 +759,9 @@ impl Spatial {
             let texts = object_texts(&list, &t, &names, &|i| {
                 store.get(f64::from(list[i].base().id)).map(|it| &it.shape)
             });
+            let shown = !matches!(t, kentos_native_application::label_texts::LayerTexts::Off);
             for (e, (texts, z)) in list.iter().zip(texts) {
+                let texts = point_texts(e, texts, shown, !self.hide_point_names, self.point_codes);
                 self.store
                     .set_object_labels(f64::from(e.base().id), ObjectLabels { texts, z });
             }
@@ -2473,4 +2514,36 @@ mod attribute_tests {
         // A plain text of the block is itself.
         assert_eq!(shown_text("Rögar", None, &attrs), "Rögar");
     }
+}
+
+/// A point's label texts under Nokta adları and Nokta kodları (docs/adr/1540): as the layer's labelling makes them
+/// while names are on and codes off; else its name and/or its code (`Kod`), in the first text's class (the layer's
+/// first, or its kind's default), when the layer labels at all (`shown`). Other objects keep theirs.
+fn point_texts(
+    e: &Entity,
+    texts: Vec<(u16, String)>,
+    shown: bool,
+    names: bool,
+    codes: bool,
+) -> Vec<(u16, String)> {
+    let Entity::Point(p) = e else {
+        return texts;
+    };
+    if names && !codes {
+        return texts;
+    }
+    if !shown {
+        return Vec::new();
+    }
+    let trimmed = |s: Option<&String>| s.map(|s| s.trim().to_owned()).filter(|s| !s.is_empty());
+    let name = trimmed(p.base.label.as_ref()).filter(|_| names);
+    let code = trimmed(p.base.attrs.get("Kod")).filter(|_| codes);
+    let text = match (name, code) {
+        (Some(n), Some(c)) => format!("{n}  {c}"),
+        (Some(n), None) => n,
+        (None, Some(c)) => c,
+        (None, None) => return Vec::new(),
+    };
+    let class = texts.first().map_or(0, |(k, _)| *k);
+    vec![(class, text)]
 }

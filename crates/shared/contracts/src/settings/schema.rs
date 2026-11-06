@@ -666,6 +666,19 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Alan sınırları",
                 "Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür.",
             ),
+        // A point's name and its code beside it (docs/adr/1540): what Netcad's point display shows.
+        boolean("graphics.pointNames", true)
+            .hosts(&[Desktop])
+            .text(
+                "Nokta adları",
+                "Noktaların adları (nokta numaraları) yanlarında yazılır. Kapalıyken yazılmaz; çizim değişmez.",
+            ),
+        boolean("graphics.pointCodes", false)
+            .hosts(&[Desktop])
+            .text(
+                "Nokta kodları",
+                "Noktaların kodları (Kod özniteliği) yanlarında, varsa adlarından sonra yazılır. Çizim değişmez.",
+            ),
         boolean("graphics.transparency", true)
             .hosts(&[Web, Desktop])
             .text(

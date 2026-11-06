@@ -197,6 +197,8 @@
     "view.annotationSize.screen",
     "view.fills",
     "view.areaEdges",
+    "view.pointNames",
+    "view.pointCodes",
     "view.transparency",
     "tool.filletAll",
     "tool.chamferAll",

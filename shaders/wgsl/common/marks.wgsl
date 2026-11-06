@@ -14,9 +14,13 @@ fn sd_triangle(q: vec2<f32>, r: f32) -> f32 {
     return -length(p) * sign(p.y);
 }
 
-// Coverage (0..1) of mark `shape` (0 ring, 1 cross, 2 triangle) of diameter
+// Coverage (0..1) of mark `shape` (0 ring, 1 cross, 2 triangle, 3 dot) of diameter
 // `size` at `p`, both in device pixels; `dpi` scales the stroke.
 fn mark_coverage(p: vec2<f32>, size: f32, shape: u32, dpi: f32) -> f32 {
+    // A layer without a point symbol: a solid dot (docs/adr/1540).
+    if (shape == 3u) {
+        return 1.0 - smoothstep(-0.6, 0.6, length(p) - size * 0.5);
+    }
     let r = size * 0.5 - 1.2 * dpi;
     let stroke_width = 0.65 * dpi;
     var d: f32;

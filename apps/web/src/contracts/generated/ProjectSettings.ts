@@ -275,7 +275,8 @@ heights?: HeightReference,
 coordinateEpoch?: number, 
 /**
  * A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
- * project drawn for a road has them (`.kcad` schema 158).
+ * project drawn for a road has them (`.kcad` schema 158); a map project's terrain surfaces are kept here too,
+ * nothing else of a road (`.kcad` schema 195, docs/adr/1520).
  */
 road?: RoadSettings, 
 /**

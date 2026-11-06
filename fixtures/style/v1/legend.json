@@ -1317,14 +1317,14 @@
         "type": "marker",
         "layers": [
          {
+          "fill": "fg",
           "id": "p",
+          "shape": "circle",
+          "size": 4,
+          "stroke": null,
+          "strokeWidth": 0,
           "type": "shape",
-          "shape": "ring",
-          "size": 7,
-          "unit": "px",
-          "stroke": "fg",
-          "strokeWidth": 1.3,
-          "fill": null
+          "unit": "px"
          }
         ]
        }
@@ -2011,14 +2011,14 @@
         "type": "marker",
         "layers": [
          {
+          "fill": "fg",
           "id": "p",
+          "shape": "circle",
+          "size": 4,
+          "stroke": null,
+          "strokeWidth": 0,
           "type": "shape",
-          "shape": "ring",
-          "size": 7,
-          "unit": "px",
-          "stroke": "fg",
-          "strokeWidth": 1.3,
-          "fill": null
+          "unit": "px"
          }
         ]
        }

@@ -24,6 +24,9 @@ pub fn line_type_dash(line_type: LineType) -> Option<&'static [f64]> {
     }
 }
 
+/// The diameter of the dot a layer without a point symbol draws its points with, screen px (docs/adr/1540).
+pub const DOT_SIZE: f64 = 4.0;
+
 fn point_shape(symbol: PointSymbol) -> &'static str {
     match symbol {
         PointSymbol::Ring => "ring",
@@ -79,23 +82,37 @@ pub fn symbols_of_layer_style(
         fill_layers.push(json!({ "id": "f", "type": "simpleFill", "color": fill }));
     }
     fill_layers.push(line_layer("o", color, style.line_type, weight));
-    let (symbol, size) = style
-        .point
-        .as_ref()
-        .map_or((PointSymbol::Ring, 7.0), |p| (p.symbol, p.size));
-    let marker = json!({
-        "type": "marker",
-        "layers": [{
-            "id": "p",
-            "type": "shape",
-            "shape": point_shape(symbol),
-            "size": size,
-            "unit": "px",
-            "stroke": color,
-            "strokeWidth": 1.3,
-            "fill": null,
-        }],
-    });
+    // A layer without a point symbol draws a true point: a small solid dot in its colour (docs/adr/1540), not
+    // the ring with a dot it drew before; a symbol chosen for the layer (Kot noktaları' cross, Poligon noktaları'
+    // triangle) is drawn as its outline.
+    let marker = match style.point.as_ref() {
+        Some(p) => json!({
+            "type": "marker",
+            "layers": [{
+                "id": "p",
+                "type": "shape",
+                "shape": point_shape(p.symbol),
+                "size": p.size,
+                "unit": "px",
+                "stroke": color,
+                "strokeWidth": 1.3,
+                "fill": null,
+            }],
+        }),
+        None => json!({
+            "type": "marker",
+            "layers": [{
+                "id": "p",
+                "type": "shape",
+                "shape": "circle",
+                "size": DOT_SIZE,
+                "unit": "px",
+                "stroke": null,
+                "strokeWidth": 0,
+                "fill": color,
+            }],
+        }),
+    };
     json!({
         "line": line,
         "fill": { "type": "fill", "layers": fill_layers },

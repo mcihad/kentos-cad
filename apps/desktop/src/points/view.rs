@@ -395,7 +395,14 @@ impl App {
                         .on_double_click(msg(Event::Zoom(i)))
                         .into();
                 }
+                // Ad and Kod of the one selected point: a click edits them, as a selected name is renamed in a
+                // file list (docs/adr/1540); any edited cell takes a double click.
+                let alone = matches!(target, Target::Point(s)
+                    if selection.len() == 1 && selection.contains(s));
                 match col {
+                    Some(EditColumn::Name | EditColumn::Code) if alone => mouse_area(shown)
+                        .on_press(msg(Event::Edit(i, j)))
+                        .into(),
                     Some(_) => mouse_area(shown)
                         .on_double_click(msg(Event::Edit(i, j)))
                         .into(),

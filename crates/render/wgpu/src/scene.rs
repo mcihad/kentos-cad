@@ -58,6 +58,8 @@ use crate::{Bounds, Vec2};
 
 /// Diameter of a point mark when the layer's style names none (the web's), logical pixels.
 pub const DEFAULT_MARK_SIZE: f32 = 7.0;
+/// The diameter of a layer's dot when it has no point symbol (docs/adr/1540).
+pub const DOT_MARK_SIZE: f32 = 4.0;
 /// A solid hatch is its colour at this opacity (the web's).
 const SOLID_HATCH_ALPHA: f64 = 0.45;
 /// Tries at coarsening the curve tolerance (×4 each) to stay within the budget.
@@ -831,14 +833,21 @@ fn draw_layers<'a>(nodes: &'a [LayerNode], palette: &Palette) -> Vec<DrawLayer<'
                 node,
                 color: palette.resolve(&style.color).unwrap_or(palette.fg),
                 fill: style.fill.as_deref().and_then(|f| palette.resolve(f)),
-                mark_size: point
-                    .map(|p| p.size)
-                    .filter(|s| s.is_finite() && *s > 0.0)
-                    .map_or(DEFAULT_MARK_SIZE, |s| s.clamp(1.0, 256.0) as f32),
+                mark_size: match point {
+                    Some(p) => {
+                        if p.size.is_finite() && p.size > 0.0 {
+                            p.size.clamp(1.0, 256.0) as f32
+                        } else {
+                            DEFAULT_MARK_SIZE
+                        }
+                    }
+                    None => DOT_MARK_SIZE,
+                },
                 mark_shape: match point.map(|p| p.symbol) {
                     Some(PointSymbol::Cross) => marker_shape::CROSS,
                     Some(PointSymbol::Triangle) => marker_shape::TRIANGLE,
-                    Some(PointSymbol::Ring) | None => marker_shape::RING,
+                    Some(PointSymbol::Ring) => marker_shape::RING,
+                    None => marker_shape::DOT,
                 },
             }
         })

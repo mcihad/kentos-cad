@@ -556,6 +556,15 @@ impl Store {
 
     /// An object's labels' texts (docs/adr/0212 §3.1); empty forgets them.
     /// A put object loses its texts and pins: the host sends them again.
+    /// An object's label texts as they were set, in their order (none: it has none).
+    pub fn object_label_texts(&self, id: f64) -> Vec<&str> {
+        self.labelling
+            .objects
+            .get(&id.to_bits())
+            .map(|l| l.texts.iter().map(|(_, t)| t.as_str()).collect())
+            .unwrap_or_default()
+    }
+
     pub fn set_object_labels(&mut self, id: f64, labels: ObjectLabels) {
         if labels.texts.is_empty() && labels.z.is_nan() {
             self.labelling.objects.remove(&id.to_bits());

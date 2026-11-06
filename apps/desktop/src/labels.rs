@@ -282,6 +282,8 @@ fn build<'a>(
     sources_key(doc).hash(&mut key);
     // The time slider's window: its temporal layers' labels come and go (docs/adr/0210 §6).
     format!("{:?}", spatial.store().time_window()).hash(&mut key);
+    // Nokta adları and Nokta kodları: points' texts (docs/adr/1540).
+    spatial.point_texts().hash(&mut key);
     // The rows round a part that hold room for its labels (docs/adr/0578 §1): they arrive after the layer.
     spatial.store().ghost_count(None).hash(&mut key);
     // A twisted view lays its text out upright and turns it as a picture (docs/adr/0285 §2).

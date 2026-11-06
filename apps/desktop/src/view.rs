@@ -362,13 +362,13 @@ impl App {
             let room = size.width - crs_icon - named_crs - buttons - 8.0;
             let search = kentos_ui::widget::SearchBox::new(
                 query.clone(),
-                "Komut ara…",
+                "Menülerde ara…",
                 Message::RibbonSearch,
             )
             .id(crate::ribbon_search::SEARCH_INPUT)
             .results(found.clone())
             .empty(format!(
-                "“{}” ile eşleşen komut yok. Komut satırındaki takma adlar da aranır (ör. L, CIZGI).",
+                "“{}” menülerde yok. Komut satırındaki takma adlar da aranır (ör. L, CIZGI).",
                 query.trim()
             ))
             .on_run(Message::RibbonSearchRun)
@@ -378,8 +378,8 @@ impl App {
             let search = if roomy { search.hint("Alt+Q") } else { search };
             let search = kentos_ui::widget::tip(
                 search,
-                Tip::new("Komut ara").detail("Alt+Q").body(
-                    "Bir komutu adıyla ya da komut satırı takma adıyla (ör. L, CIZGI) bulun; Enter çalıştırır, Alt+Enter şeritteki yerini gösterir.",
+                Tip::new("Menülerde ara").detail("Alt+Q").body(
+                    "Menülerdeki bir işi adıyla ya da komut satırı takma adıyla (ör. L, CIZGI) bulun; her satır menüdeki yerini söyler. Enter çalıştırır, Alt+Enter menüdeki yerini gösterir.",
                 ),
                 iced::widget::tooltip::Position::Bottom,
             );

@@ -50,12 +50,21 @@ pub(crate) struct Window {
     keep: Keep,
     /// After İçe aktar: the file's points are last (Tutulan says whose is kept).
     imported: bool,
+    /// Ayıklananlar: Katmana taşı (else Sil), and the layer's name (docs/adr/1540).
+    aside: bool,
+    aside_name: String,
     layer: String,
     /// The command's refusal at the last Uygula.
     refused: Option<String>,
 }
 
 impl Window {
+    /// Ayıklananlar: Katmana taşı chosen.
+    #[cfg(test)]
+    pub(crate) fn aside_on(&self) -> bool {
+        self.aside
+    }
+
     fn op(&self) -> Op {
         match self.kind {
             Kind::Rename => Op::Rename {
@@ -72,6 +81,7 @@ impl Window {
                 by_name: self.by_name,
                 tolerance: self.text.clone(),
                 keep: self.keep,
+                aside: self.aside.then(|| self.aside_name.clone()),
             },
         }
     }
@@ -86,6 +96,9 @@ pub enum WindowEvent {
     /// Çift noktaları ayıkla: Aynı ad (true) or Aynı yer; the one kept.
     By(bool),
     Keep(Keep),
+    /// Ayıklananlar: Katmana taşı (true) or Sil; the layer's name.
+    Aside(bool),
+    AsideName(String),
     /// Çiftleri göster.
     ShowGroups,
     Apply,
@@ -119,6 +132,19 @@ impl fmt::Display for By {
         f.write_str(if self.0 { "Aynı ad" } else { "Aynı yer" })
     }
 }
+
+/// What happens to the points left over: Sil, or Katmana taşı (`true`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Aside(bool);
+
+impl fmt::Display for Aside {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(if self.0 { "Katmana taşı" } else { "Sil" })
+    }
+}
+
+/// The layer the points left over go to unless the user names another.
+pub const ASIDE_LAYER: &str = "Ayıklanan noktalar";
 
 /// İlki, Sonuncusu or Ortalaması.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -240,6 +266,8 @@ impl App {
             by_name: imported,
             keep: Keep::First,
             imported,
+            aside: self.points.aside,
+            aside_name: self.points.aside_name.clone(),
             layer,
             refused: None,
         });
@@ -264,6 +292,15 @@ impl App {
             WindowEvent::Layer(layer) => w.layer = layer,
             WindowEvent::By(by_name) => w.by_name = by_name,
             WindowEvent::Keep(keep) => w.keep = keep,
+            // Kept for the next time the window opens, as long as the app lives.
+            WindowEvent::Aside(on) => {
+                w.aside = on;
+                self.points.aside = on;
+            }
+            WindowEvent::AsideName(name) => {
+                self.points.aside_name.clone_from(&name);
+                w.aside_name = name;
+            }
             WindowEvent::Close => {
                 self.points.batch = None;
                 self.dialog = None;
@@ -495,6 +532,29 @@ impl App {
                         ),
                         Some(kept_hint.to_owned()),
                     ),
+                    row![
+                        words::field(
+                            "Ayıklananlar",
+                            Segmented::new([Aside(false), Aside(true)], Aside(w.aside), |a| {
+                                msg(WindowEvent::Aside(a.0))
+                            }),
+                            None
+                        ),
+                        container(words::field(
+                            "Katman",
+                            kentos_ui::widget::text_field(ASIDE_LAYER, &w.aside_name)
+                                .on_input_maybe(
+                                    w.aside.then_some(|t| msg(WindowEvent::AsideName(t)))
+                                )
+                                .on_submit(msg(WindowEvent::Apply)),
+                            Some(
+                                "Bu adda katman yoksa açılır; taşınan noktalar silinmez, denetlenebilir."
+                                    .to_owned()
+                            ),
+                        ))
+                        .width(Fill),
+                    ]
+                    .spacing(18),
                 ]
                 .spacing(12)
                 .into()

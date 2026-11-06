@@ -186,7 +186,10 @@ def groups_of(points, by, tol):
     return [g for g in groups if len(g) > 1]
 
 
-def run(objects, ids, by, tolerance, keep, fol):
+def run(objects, ids, by, tolerance, keep, fol, aside=None):
+    """`aside`: the name of the layer the points left over go to instead of being deleted (docs/adr/1540): an existing
+    layer of that name (case aside), or a new one (`layer-1`, the drawing's first counted id); blank: deleted."""
+    aside = trim(aside) if aside is not None else ""
     objs = copy.deepcopy(objects)
     order = {o["id"]: k for k, o in enumerate(objs)}
     by_id = {o["id"]: o for o in objs}
@@ -217,12 +220,19 @@ def run(objects, ids, by, tolerance, keep, fol):
             moves.append((kept, at, z))
         removed.extend(p for p in g if p is not kept)
     total = sum(len(g) for g in groups)
-    summary = f"{len(groups)} grupta {total} nokta; {len(removed)} nokta silinecek"
+    gone_plan = f"{len(removed)} nokta “{aside}” katmanına taşınacak" if aside else f"{len(removed)} nokta silinecek"
+    summary = f"{len(groups)} grupta {total} nokta; {gone_plan}"
     summary += f", {len(moves)} nokta ortalamaya taşınacak." if moves else "."
     changing = sorted([m[0] for m in moves] + removed, key=lambda o: order[o["id"]])
     for o in changing:
         if o["layerId"] in LOCKED:
             return objs, ids_of, summary, [f"“{LAYERS[o['layerId']]}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."], None
+    target = None
+    if aside:
+        named = [k for k, v in LAYERS.items() if v.casefold() == aside.casefold()]
+        target = named[0] if named else "layer-1"
+        if target in LOCKED:
+            return objs, ids_of, summary, [f"“{LAYERS[target]}” katmanı kilitli; ayıklanan noktalar oraya taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman adı yazın."], None
     for kept, at, z in moves:
         frm = dict(kept["p"])
         set_z = z != kept.get("z")
@@ -244,6 +254,13 @@ def run(objects, ids, by, tolerance, keep, fol):
             o.clear()
             o.update(f)
     gone = {o["id"] for o in removed}
+    if target:
+        for o in objs:
+            if o["id"] in gone:
+                o["layerId"] = target
+        said = f"{PREFIX}{len(groups)} grupta {len(removed)} nokta “{aside}” katmanına taşındı"
+        said += f", {len(moves)} nokta ortalamaya taşındı." if moves else "."
+        return objs, ids_of, summary, [said], STEP
     objs = [o for o in objs if o["id"] not in gone]
     said = f"{PREFIX}{len(groups)} grupta {len(removed)} nokta silindi"
     said += f", {len(moves)} nokta ortalamaya taşındı." if moves else "."
@@ -310,13 +327,28 @@ def cases():
         ("Tablodaki sıra çizim sırasına çevrilir", [3, 1], "name", "", "first", True),
         ("Çift nokta yok", [1, 2, 4], "place", "0.001", "first", True),
     ]
+    # Ayıklananlar: Katmana taşı (docs/adr/1540): the points left over go to a layer instead of being deleted.
+    asides = [
+        ("Ayıklananlar yeni katmana: silinmez, “Ayıklanan noktalar” açılır", ALL, "name", "", "first", True,
+         "Ayıklanan noktalar"),
+        ("Ayıklananlar yeni katmana, ortalaması: tutulan taşınır, ötekiler katmana", [1, 3, 2, 9], "name", "",
+         "average", True, " Çiftler "),
+        ("Ayıklananlar var olan katmana (büyük küçük harf ayrımı yok)", [1, 2, 4, 9], "name", "", "first", True,
+         "KOT"),
+        ("Ayıklananlar kilitli katmana taşınmaz", [1, 2, 4, 9], "name", "", "first", True, "Kilitli"),
+        ("Ayıklananlar katmanı boşsa silinir", [1, 2, 4, 9], "name", "", "first", True, "   "),
+        ("Ayıklananlar katmana, aynı yer 0.001 m", ALL, "place", "0.001", "first", True, "Ayıklanan noktalar"),
+    ]
     out = []
-    for name, ids, by, tol, keep, fol in rows:
-        after, groups, summary, said, step = run(objs, ids, by, tol, keep, fol)
-        out.append({
-            "name": name, "targets": ids, "by": by, "tolerance": tol, "keep": keep, "follow": fol,
-            "expected": {"groups": groups, "summary": summary, "said": said, "step": step, "objects": [view(o) for o in after]},
-        })
+    for name, ids, by, tol, keep, fol, *rest in rows + asides:
+        aside = rest[0] if rest else None
+        after, groups, summary, said, step = run(objs, ids, by, tol, keep, fol, aside)
+        case = {"name": name, "targets": ids, "by": by, "tolerance": tol, "keep": keep, "follow": fol}
+        if aside is not None:
+            case["aside"] = aside
+        case["expected"] = {"groups": groups, "summary": summary, "said": said, "step": step,
+                            "objects": [view(o) for o in after]}
+        out.append(case)
     return out
 
 

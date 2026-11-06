@@ -321,6 +321,8 @@ pub const PORTED: &[&str] = &[
     "view.annotationSize.screen",
     "view.fills",
     "view.areaEdges",
+    "view.pointNames",
+    "view.pointCodes",
     "view.transparency",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
@@ -854,6 +856,14 @@ pub const PORTED: &[&str] = &[
 /// Where the desktop does otherwise than the web, its own description: the
 /// web's would say otherwise (docs/adr/0053: the desktop reads a zipped
 /// Shapefile; docs/adr/0058: no search box in the ribbon yet, Esc cancels first).
+/// The desktop's own titles of commands the frozen web inventory names otherwise: the tab row's search looks
+/// through the menus (Menülerde ara), as Office's search box does, not through a list of commands.
+const DESKTOP_TITLES: &[(&str, &str)] = &[("view.commandSearch", "Menülerde ara")];
+
+/// The desktop's own icons of commands of the frozen web inventory: Nokta draws a solid dot, as a layer without a
+/// point symbol now draws its points (docs/adr/1540).
+const DESKTOP_ICONS: &[(&str, &str)] = &[("tool.point", "pointDot")];
+
 const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
     (
         "file.open",
@@ -1380,7 +1390,10 @@ impl Catalog {
             .into_iter()
             .map(|c| {
                 let id = leak(c.id);
-                let title = leak(c.title);
+                let title = DESKTOP_TITLES
+                    .iter()
+                    .find(|(desktop, _)| *desktop == id)
+                    .map_or_else(|| leak(c.title), |(_, t)| *t);
                 let standing = if PORTED.contains(&id) {
                     Standing::Ported
                 } else if c.status == "pending" {
@@ -1414,7 +1427,13 @@ impl Catalog {
                     } else {
                         leak_list(c.shortcuts_in_input)
                     },
-                    icon: icons::from_web(c.icon.as_deref()),
+                    icon: icons::from_web(
+                        DESKTOP_ICONS
+                            .iter()
+                            .find(|(desktop, _)| *desktop == id)
+                            .map(|(_, i)| *i)
+                            .or(c.icon.as_deref()),
+                    ),
                     standing,
                     pending_note,
                     category: leak(c.category.unwrap_or_default()),

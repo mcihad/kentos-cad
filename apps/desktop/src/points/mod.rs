@@ -44,6 +44,8 @@ mod batch_view;
 pub(crate) mod cell;
 pub mod edit;
 #[cfg(test)]
+mod display_tests;
+#[cfg(test)]
 mod tests;
 mod view;
 
@@ -295,6 +297,9 @@ pub(crate) struct PointsPanel {
     batch: Option<batch_view::Window>,
     /// Çiftleri göster: the groups the table shows instead of the query.
     groups: Option<Vec<Vec<Slot>>>,
+    /// Çift noktaları ayıkla's Ayıklananlar (Katmana taşı) and the layer's name, kept between its windows.
+    aside: bool,
+    aside_name: String,
     /// Bumped at every change of the query.
     version: u64,
     cache: RefCell<Option<(Key, Rows)>>,
@@ -315,6 +320,8 @@ impl Default for PointsPanel {
             draft: None,
             batch: None,
             groups: None,
+            aside: false,
+            aside_name: batch_view::ASIDE_LAYER.to_owned(),
             version: 0,
             cache: RefCell::default(),
         }

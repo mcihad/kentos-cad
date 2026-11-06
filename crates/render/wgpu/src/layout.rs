@@ -79,6 +79,8 @@ pub mod marker_shape {
     pub const RING: u32 = 0;
     pub const CROSS: u32 = 1;
     pub const TRIANGLE: u32 = 2;
+    /// A layer without a point symbol: a solid dot (docs/adr/1540).
+    pub const DOT: u32 = 3;
 }
 
 pub const FILL_ATTRIBUTES: [wgpu::VertexAttribute; 3] =

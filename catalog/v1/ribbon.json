@@ -225,12 +225,16 @@
         "size": "large"
        },
        {
+        "command": "tool.point",
+        "size": "large"
+       },
+       {
         "split": "circle",
         "size": "large"
        },
        {
         "split": "arc",
-        "size": "large"
+        "size": "small"
        },
        {
         "split": "rectangle",
@@ -238,10 +242,6 @@
        },
        {
         "command": "tool.polygon",
-        "size": "small"
-       },
-       {
-        "command": "tool.point",
         "size": "small"
        },
        {
@@ -2431,6 +2431,22 @@
         "size": "small"
        },
        {
+        "command": "view.pointNames",
+        "size": "small",
+        "works": [
+         "map",
+         "road"
+        ]
+       },
+       {
+        "command": "view.pointCodes",
+        "size": "small",
+        "works": [
+         "map",
+         "road"
+        ]
+       },
+       {
         "command": "view.transparency",
         "size": "small"
        }
@@ -3574,13 +3590,10 @@
        {
         "command": "parcels.check",
         "size": "small"
-       },
-       {
-        "command": "readjustment.distribute",
-        "size": "small"
        }
       ],
       "overflow": [
+       "readjustment.distribute",
        "chart.bar",
        "chart.pie",
        "chart.histogram",

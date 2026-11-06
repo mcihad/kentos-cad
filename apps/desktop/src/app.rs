@@ -3002,6 +3002,10 @@ impl App {
         self.hover_info = s.bool("drafting.hoverInfo");
         self.crosshair = crate::marks::CrosshairSize::parse(&s.text("appearance.crosshair"));
         self.viewport.grid_shown = s.bool("drafting.grid");
+        // Nokta adları and Nokta kodları: the label engine's texts of points (docs/adr/1540).
+        let (names, codes) = (s.bool("graphics.pointNames"), s.bool("graphics.pointCodes"));
+        self.spatial
+            .set_point_texts(self.document.as_ref().map(|d| &d.model), names, codes);
         self.apply_appearance();
     }
 
@@ -3420,6 +3424,8 @@ impl App {
             | "view.annotationSize.screen" => self.choose_annotation_size(id),
             "view.fills" => self.toggle_session("graphics.fills", "Dolgular ve taramalar"),
             "view.areaEdges" => self.toggle_session("graphics.areaEdges", "Alan sınırları"),
+            "view.pointNames" => self.toggle_session("graphics.pointNames", "Nokta adları"),
+            "view.pointCodes" => self.toggle_session("graphics.pointCodes", "Nokta kodları"),
             "view.transparency" => self.toggle_session("graphics.transparency", "Saydamlık"),
             // Sabit ve yerleşmeyen etiketler (docs/adr/0212 §4): the user's view, the drawing unchanged.
             "view.pinnedLabels" => {
@@ -4048,6 +4054,8 @@ impl App {
             ),
             "view.fills" => self.settings.bool("graphics.fills"),
             "view.areaEdges" => self.settings.bool("graphics.areaEdges"),
+            "view.pointNames" => self.settings.bool("graphics.pointNames"),
+            "view.pointCodes" => self.settings.bool("graphics.pointCodes"),
             "view.pinnedLabels" => self.settings.bool("graphics.pinnedLabels"),
             "view.unplacedLabels" => self.settings.bool("graphics.unplacedLabels"),
             "view.transparency" => self.settings.bool("graphics.transparency"),

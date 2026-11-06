@@ -369,6 +369,21 @@
       "apply": "live"
     },
     {
+      "key": "drafting.topologyStopOnLocked",
+      "type": "boolean",
+      "default": false,
+      "scope": "session",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Kilitli komşuda durdur",
+      "description": "Ortak köşe ya da kenar kilitli katmandaki bir nesneyle paylaşılıyorsa düzenleme yapılmaz ve nedeni söylenir; kapalıyken kilitli komşu yerinde kalır, ortak sınır ayrılır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.overlap",
       "type": "enum",
       "default": "allow",
@@ -1423,6 +1438,36 @@
       "group": "graphics",
       "title": "Alan sınırları",
       "description": "Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.pointNames",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Nokta adları",
+      "description": "Noktaların adları (nokta numaraları) yanlarında yazılır. Kapalıyken yazılmaz; çizim değişmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.pointCodes",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Nokta kodları",
+      "description": "Noktaların kodları (Kod özniteliği) yanlarında, varsa adlarından sonra yazılır. Çizim değişmez.",
       "sensitive": false,
       "apply": "live"
     },
