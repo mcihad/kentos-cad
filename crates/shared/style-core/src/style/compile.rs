@@ -81,6 +81,8 @@ pub struct Env<'a> {
     /// of drawn sizes (widths, dashes, marker and hatch sizes) become CSS px for the shader, so they stay
     /// the same while the view zooms; lengths that place geometry still follow `plot_scale` (the view's).
     pub screen: bool,
+    /// The build's `View::cad_phase` (docs/adr/1122): a CAD line type's dash along the source curve.
+    pub cad_phase: bool,
     /// The time slider's moment (ms since 1970) a raster following it shows (docs/adr/0243 §7): an
     /// instant window's moment, a ranged one's end (exclusive); none while the slider is closed.
     pub moment: Option<f64>,
@@ -499,7 +501,15 @@ pub(super) fn emit_line_layer_on(
                         sink.stroke(&style, &piece, false);
                     }
                 }
-                _ => sink.stroke(&style, &path, closed),
+                _ => {
+                    let analytic = env.cad_phase
+                        && route.is_some_and(|route| {
+                            super::cad_dash::emit(route, &path, closed, &style, sink)
+                        });
+                    if !analytic {
+                        sink.stroke(&style, &path, closed);
+                    }
+                }
             }
             if let Some(Ok(marks)) = marks {
                 for mark in marks { mark.paint(&style, l.base.unit, env, sink); }

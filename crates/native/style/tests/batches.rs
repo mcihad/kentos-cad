@@ -196,6 +196,8 @@ fn builds_the_web_s_batches() {
                 area_edges: view["areaEdges"] != false,
                 map: None,
                 walls: None,
+                // The web's recorded build: chord-measured dashes (docs/adr/1122).
+                cad_phase: false,
             },
             frame: None,
             reading_unit: ReadingUnit::METRE,

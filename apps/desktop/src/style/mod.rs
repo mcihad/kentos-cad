@@ -151,6 +151,8 @@ impl Styles {
                 map: None,
                 // A view of a split area puts its own walls in (docs/adr/0696's 29 October addendum).
                 walls: None,
+                // CAD line types along the source curve, as the sheet and the PDF (docs/adr/1122).
+                cad_phase: true,
             },
             view_colors: kentos_native_style::color::ViewColors {
                 mode: kentos_native_style::color::ColorMode::from_key(

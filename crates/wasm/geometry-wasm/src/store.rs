@@ -1287,6 +1287,7 @@ impl GeometryStore {
                 area_edges,
                 map: None,
                 walls: None,
+                cad_phase: false,
             },
             frame,
         )

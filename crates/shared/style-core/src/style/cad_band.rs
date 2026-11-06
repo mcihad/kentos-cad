@@ -1,6 +1,8 @@
 //! Dash a geometric-width CAD path before filling it. Split distances use
 //! analytic arc length; widths interpolate on the original edge, not on the
-//! tessellated outline. The source shape is never rewritten.
+//! tessellated outline. The source shape is never rewritten. A dot (a
+//! zero-length dash) is the band's cross-section there: a line across the
+//! width at the object's line weight (ADR 1121).
 use super::{
     compile::{Env, Values, dd_bool, emit_line_layer_on, stroke_style, to_world},
     model::{Layer, Symbol},
@@ -13,7 +15,7 @@ use kentos_geometry_core::{
         band,
         bulge::{BulgeArc, bulge_arc, bulge_at, bulge_of_sweep},
     },
-    jsmath::{cos, js_hypot, js_min, sin},
+    jsmath::{cos, js_hypot, js_min, js_sign, sin},
 };
 
 const MAX_PIECES: usize = 20_000;
@@ -35,6 +37,20 @@ struct Edge {
     width: [f64; 2],
 }
 impl Edge {
+    /// The unit tangent at `f`, in the path's direction.
+    fn tangent(self, f: f64) -> Vec2 {
+        match self.arc {
+            Some(a) => {
+                let angle = a.a0 + a.sweep * f.clamp(0., 1.);
+                let s = js_sign(a.sweep);
+                Vec2::new(-sin(angle) * s, cos(angle) * s)
+            }
+            None => Vec2::new(
+                (self.b.x - self.a.x) / self.length,
+                (self.b.y - self.a.y) / self.length,
+            ),
+        }
+    }
     fn point(self, f: f64) -> Vec2 {
         if f <= 0. {
             return self.a;
@@ -67,6 +83,9 @@ impl Edge {
     }
 }
 
+/// A dot's cross-section: the band's two edges at the dot (ADR 1121).
+type Dot = [Vec2; 2];
+
 fn split(
     pts: &[Vec2],
     bulges: Option<&[f64]>,
@@ -74,14 +93,11 @@ fn split(
     widths: &[[f64; 2]],
     dash: &[f64],
     phase: f64,
-) -> Result<Vec<Piece>, String> {
+) -> Result<(Vec<Piece>, Vec<Dot>), String> {
     let fail =
         || "Geniş çizginin desen karmaşıklığı sınırı aşıldı; eksik çıktı üretilmedi.".to_owned();
     if dash.is_empty() || dash.iter().any(|d| !d.is_finite() || *d < 0.) || !phase.is_finite() {
         return Err("Geniş çizginin deseni geçersiz.".into());
-    }
-    if dash.iter().step_by(2).any(|d| *d == 0.) {
-        return Err("Nokta öğeli geniş çizgi deseni henüz desteklenmiyor.".into());
     }
     let mut dash = dash.to_vec();
     if dash.len() % 2 == 1 {
@@ -124,6 +140,7 @@ fn split(
     {
         return Err(fail());
     }
+    let dots = dots(&edges, total, closed, &dash, (-phase).rem_euclid(period), period)?;
     let mut offset = (-phase).rem_euclid(period);
     let mut di = 0;
     while di + 1 < dash.len() && offset >= dash[di] {
@@ -186,6 +203,69 @@ fn split(
         let p = &mut out[0];
         p.pts.pop();
         p.closed = true;
+    }
+    Ok((out, dots))
+}
+
+/// Every zero-length ink element's place along the whole path, from the
+/// pattern alone (`offset` is the pattern's position at the path's start):
+/// a dot at a vertex takes the leaving edge's tangent and width, as a mark
+/// does; a closed path's seam has one dot, not two. The traversal bound of
+/// `split` already holds the count.
+fn dots(
+    edges: &[Edge],
+    total: f64,
+    closed: bool,
+    dash: &[f64],
+    offset: f64,
+    period: f64,
+) -> Result<Vec<Dot>, String> {
+    let mut starts = Vec::new();
+    let mut at = 0.;
+    for (i, d) in dash.iter().enumerate() {
+        if i % 2 == 0 && *d == 0. {
+            starts.push(at);
+        }
+        at += d;
+    }
+    if starts.is_empty() || edges.is_empty() {
+        return Ok(Vec::new());
+    }
+    // The open end's dot counts as a thin line's does; a ring's seam has one.
+    let slack = period * 1e-9;
+    let mut places = Vec::new();
+    for s in starts {
+        let first = (s - offset).rem_euclid(period);
+        for k in 0u32.. {
+            let t = first + period * f64::from(k);
+            if t >= total + if closed { -slack } else { slack } {
+                break;
+            }
+            places.push(t.min(total));
+        }
+    }
+    places.sort_by(f64::total_cmp);
+    let mut out = Vec::with_capacity(places.len());
+    let mut edge = 0;
+    let mut start = 0.;
+    for t in places {
+        while edge + 1 < edges.len() && start + edges[edge].length <= t {
+            start += edges[edge].length;
+            edge += 1;
+        }
+        let e = edges[edge];
+        let f = ((t - start) / e.length).clamp(0., 1.);
+        let w = e.width[0] + (e.width[1] - e.width[0]) * f;
+        if w <= 0. {
+            return Err(
+                "Nokta öğesi geniş çizginin sıfır genişlikli bir yerine düşüyor; kesit çizilemez, eksik çıktı üretilmedi."
+                    .into(),
+            );
+        }
+        let p = e.point(f);
+        let d = e.tangent(f);
+        let (nx, ny) = (-d.y * w * 0.5, d.x * w * 0.5);
+        out.push([Vec2::new(p.x + nx, p.y + ny), Vec2::new(p.x - nx, p.y - ny)]);
     }
     Ok(out)
 }
@@ -266,13 +346,16 @@ pub(super) fn compile(
         .map(|d| d.iter().map(|v| to_world(*v, l.base.unit, env)).collect())
         .unwrap_or_else(|| vec![1., 0.]);
     let generated = (|| {
-        let parts = if l.dash.as_ref().is_none_or(Vec::is_empty) {
-            vec![Piece {
-                pts: pts.clone(),
-                bulges: bulges.clone().unwrap_or_else(|| vec![0.; pts.len()]),
-                widths: widths.clone(),
-                closed: *closed,
-            }]
+        let (parts, dots) = if l.dash.as_ref().is_none_or(Vec::is_empty) {
+            (
+                vec![Piece {
+                    pts: pts.clone(),
+                    bulges: bulges.clone().unwrap_or_else(|| vec![0.; pts.len()]),
+                    widths: widths.clone(),
+                    closed: *closed,
+                }],
+                Vec::new(),
+            )
         } else {
             split(
                 pts,
@@ -284,7 +367,7 @@ pub(super) fn compile(
             )?
         };
         let mut bands = Vec::with_capacity(parts.len());
-        let mut cost = 0usize;
+        let mut cost = dots.len().saturating_mul(2);
         for p in parts {
             let b = band::band(&p.pts, Some(&p.bulges), p.closed, &p.widths);
             cost = cost.saturating_add(
@@ -299,10 +382,10 @@ pub(super) fn compile(
         if !sink.reserve_cad_points(cost) {
             return Err("Katmanın toplam geniş çizgi kontur sınırı aşıldı.".into());
         }
-        Ok(bands)
+        Ok((bands, dots))
     })();
     match generated {
-        Ok(bands) => {
+        Ok((bands, dots)) => {
             let paint = FillPaint::Solid {
                 color: style.color.clone(),
                 opacity: style.opacity,
@@ -318,6 +401,9 @@ pub(super) fn compile(
                 for p in b.thin {
                     sink.stroke(&thin, &p, false);
                 }
+            }
+            for d in dots {
+                sink.stroke(&thin, &d, false);
             }
         }
         Err(error) => {
@@ -361,7 +447,8 @@ mod tests {
             &[3., 1.],
             0.,
         )
-        .unwrap();
+        .unwrap()
+        .0;
         assert_eq!(got.len(), 2);
         assert_eq!(got[0].pts, vec![p(0., 0.), p(2., 0.), p(2., 1.)]);
         assert_eq!(got[0].widths, vec![[1., 3.], [3., 4.]]);
@@ -378,7 +465,8 @@ mod tests {
             &[std::f64::consts::FRAC_PI_2, 10.],
             0.,
         )
-        .unwrap();
+        .unwrap()
+        .0;
         assert_eq!(got.len(), 1);
         assert!((got[0].pts[1].x).abs() < 1e-12);
         assert!((got[0].pts[1].y - 1.).abs() < 1e-12);
@@ -395,7 +483,8 @@ mod tests {
             &[3., 1.],
             -1.,
         )
-        .unwrap();
+        .unwrap()
+        .0;
         assert_eq!(got.len(), 2);
         assert!(got.iter().any(|r| r.pts.windows(3).any(|p| p
             == [
@@ -411,7 +500,8 @@ mod tests {
             &[1., 0.],
             0.,
         )
-        .unwrap();
+        .unwrap()
+        .0;
         assert_eq!(got.len(), 1);
     }
     #[test]
@@ -427,8 +517,82 @@ mod tests {
             )
             .is_err()
         );
-        for d in [vec![0., 1.], vec![f64::NAN, 1.], vec![1., -1.]] {
+        for d in [vec![f64::NAN, 1.], vec![1., -1.]] {
             assert!(split(&[p(0., 0.), p(1., 0.)], None, false, &[[1., 1.]], &d, 0.).is_err());
         }
+    }
+    fn near(a: Vec2, b: Vec2) -> bool {
+        (a.x - b.x).abs() < 1e-12 && (a.y - b.y).abs() < 1e-12
+    }
+    /// ADR 1121: a dot is the band's cross-section, across the width at the dot.
+    #[test]
+    fn dots_are_cross_sections_with_phase_ends_and_the_open_end() {
+        let (pieces, dots) =
+            split(&[p(0., 0.), p(4., 0.)], None, false, &[[2., 2.]], &[0., 2.], 0.).unwrap();
+        assert!(pieces.is_empty());
+        assert_eq!(
+            dots,
+            vec![
+                [p(0., 1.), p(0., -1.)],
+                [p(2., 1.), p(2., -1.)],
+                [p(4., 1.), p(4., -1.)]
+            ]
+        );
+        // Phase 0.5: the pattern's dot lies 0.5 along the path, as a thin line's.
+        let (_, dots) =
+            split(&[p(0., 0.), p(4., 0.)], None, false, &[[2., 2.]], &[0., 2.], 0.5).unwrap();
+        assert_eq!(dots.iter().map(|d| d[0].x).collect::<Vec<_>>(), [0.5, 2.5]);
+        // A dash, a gap, a dot, a gap: the ink keeps its pieces beside the dots.
+        let (pieces, dots) =
+            split(&[p(0., 0.), p(10., 0.)], None, false, &[[1., 1.]], &[3., 1., 0., 1.], 0.).unwrap();
+        assert_eq!(pieces.len(), 2);
+        assert_eq!(pieces[1].pts, vec![p(5., 0.), p(8., 0.)]);
+        assert_eq!(dots.iter().map(|d| d[0].x).collect::<Vec<_>>(), [4., 9.]);
+    }
+    #[test]
+    fn a_dot_on_a_vertex_takes_the_leaving_edge_and_a_closed_seam_has_one() {
+        let square = [p(0., 0.), p(2., 0.), p(2., 2.), p(0., 2.)];
+        let (_, dots) = split(&square, None, true, &[[1., 1.]; 4], &[0., 2.], 0.).unwrap();
+        assert_eq!(dots.len(), 4, "8 long, dots at 0, 2, 4, 6");
+        // At (2, 0) the leaving edge runs north: the cut is east–west.
+        assert_eq!(dots[1], [p(1.5, 0.), p(2.5, 0.)]);
+        assert_eq!(dots[0], [p(0., 0.5), p(0., -0.5)]);
+    }
+    #[test]
+    fn a_dot_on_an_arc_uses_arc_length_and_the_tapered_width_there() {
+        let half = std::f64::consts::FRAC_PI_2;
+        let (_, dots) = split(
+            &[p(1., 0.), p(-1., 0.)],
+            Some(&[1.]),
+            false,
+            &[[2., 4.]],
+            &[0., half],
+            0.,
+        )
+        .unwrap();
+        assert_eq!(dots.len(), 3);
+        // Halfway along the arc: (0, 1), width 3, the cut along the radius.
+        assert!(near(dots[1][0], p(0., -0.5)), "{:?}", dots[1]);
+        assert!(near(dots[1][1], p(0., 2.5)), "{:?}", dots[1]);
+        // Clockwise the arc runs below, through (0, -1): the cut there, from the left edge.
+        let (_, cw) = split(
+            &[p(1., 0.), p(-1., 0.)],
+            Some(&[-1.]),
+            false,
+            &[[2., 4.]],
+            &[0., half],
+            0.,
+        )
+        .unwrap();
+        assert!(near(cw[1][0], p(0., -2.5)) && near(cw[1][1], p(0., 0.5)), "{:?}", cw[1]);
+    }
+    #[test]
+    fn a_dot_where_the_width_is_zero_is_refused_not_dropped() {
+        let refused = split(&[p(0., 0.), p(4., 0.)], None, false, &[[0., 2.]], &[0., 2.], 0.);
+        assert!(refused.unwrap_err().contains("sıfır genişlikli"));
+        // Phase 1: the first dot is at 1, width 0.5: drawn.
+        let (_, dots) =
+            split(&[p(0., 0.), p(4., 0.)], None, false, &[[0., 2.]], &[0., 2.], 1.).unwrap();
+        assert_eq!(dots[0], [p(1., 0.25), p(1., -0.25)]);
     }
 }

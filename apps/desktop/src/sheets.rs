@@ -334,7 +334,11 @@ impl SheetMaps {
             hairlines: false,
             hold_weights: false,
             origin,
-            view_build: Default::default(),
+            // CAD line types along the source curve, as the model and the PDF (docs/adr/1122).
+            view_build: kentos_native_style::View {
+                cad_phase: true,
+                ..Default::default()
+            },
             view_colors: Default::default(),
             reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
             phasing: std::sync::Arc::new({

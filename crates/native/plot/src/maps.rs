@@ -489,6 +489,8 @@ fn built_layers_profile_unchecked(
         view_build: kentos_native_style::View {
             plot_precision: true,
             map: src.map,
+            // CAD line types along the source curve, as the screen (docs/adr/1122).
+            cad_phase: true,
             ..Default::default()
         },
         view_colors: Default::default(),
