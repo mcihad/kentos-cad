@@ -64658,6 +64658,207 @@
       ]
     },
     {
+      "id": "cad.standards.exceptions",
+      "version": 1,
+      "title": "Standart bulgusunu kabul et",
+      "summary": "cad.standards.check'in bulgularını gerekçesiyle kabul eder (operation accept) ya da kabulü geri alır (withdraw). Bulgu bugünkü denetimdeki türü, konusu ve katmanıyla anılır; standart denetimdeki gibi verilir (name ya da standard, resources) ve origin bağlı paketin kimliği ve revizyonudur (yoksa standardın adı). Kabul standardın kaynağını, revizyonunu ve bulgunun o anki beklenen ve bulunan değerini saklar; revizyon ya da çizimdeki değer değişince denetim bulguyu lapsed (yeniden değerlendirilecek) verir, kabul edilenleri accepted olarak listede tutar ve ayrı sayar. Gerekçe zorunludur (en çok 500 karakter); by ve at (kim, ne zaman) verilirse kaydedilir. Kabuller proje ayarıdır (standardExceptions): çizimi kirli yapar, geri alma adımı değildir. Eski projeyi açmak standardı uygulamaz. Retler: invalid_input, reason_required, standard_not_found, no_standard, invalid_standard, invalid_revision, revision_conflict, finding_not_found.",
+      "aliases": [
+        "standartistisna"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.standards.exceptions` v1.\n\n- `accept`: each finding, as today's check against the standard gives it, is accepted with `reason` (and `by` and\n  `at` when given); a lapsed one is accepted again, on the standard's revision and the drawing as they are now; one\n  accepted with the same reason, by and at is left;\n- `withdraw`: each finding's acceptance against the standard's source is taken away (the finding itself may be gone).\n\nRefusals (`CommandError.code`), in this order: `invalid_input` (no finding, one twice, `reason`, `by` or `at`\nwith `withdraw`, a reason over 500 characters, an empty `by` or `at`); `reason_required` (`accept` without a reason\nor with one only of white space); the standard's (`standard_not_found`, `invalid_standard`, as the check's);\n`invalid_revision`, `revision_conflict` (status `conflict`); `finding_not_found` (`findings[i]`: today's check has no\nsuch finding, or `withdraw`: none such is accepted against the source).",
+        "properties": {
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "by": {
+            "description": "`accept`: who accepts them and when (ISO 8601), recorded as given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "findings": {
+            "description": "The findings, at least one.",
+            "items": {
+              "$ref": "#/$defs/StandardFindingKey"
+            },
+            "type": "array"
+          },
+          "name": {
+            "description": "The standard, as `cad.standards.check` takes it: a built-in one by its id, or the standard itself.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/StandardExceptionOperation"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StandardOrigin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The standard's source (a bound package's id and revision); absent: the standard's name, no revision."
+          },
+          "reason": {
+            "description": "`accept`: why the findings are kept (not empty, at most 500 characters).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StandardResources"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "standard": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingStandard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "operation",
+          "findings"
+        ],
+        "title": "StandardsExceptions",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.standards.exceptions` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The findings whose acceptance changed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "exceptions": {
+            "description": "The project's accepted findings afterwards, against every source.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "StandardsExceptionsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.standards.exceptions` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The findings whose acceptance changed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "exceptions": {
+            "description": "The project's accepted findings afterwards, against every source.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "StandardsExceptionsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "reason_required",
+          "standard_not_found",
+          "no_standard",
+          "invalid_standard",
+          "invalid_revision",
+          "revision_conflict",
+          "finding_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "A-DUVAR'ın rengini müşteri isteğiyle kabul et",
+          "input": {
+            "findings": [
+              {
+                "kind": "layerColor",
+                "layer": "duvar",
+                "subject": "A-DUVAR"
+              }
+            ],
+            "name": "mimari-ofis",
+            "operation": "accept",
+            "reason": "Müşteri duvarların kırmızı basılmasını istedi"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.standards.conflicts",
       "version": 1,
       "title": "Bağlı standartlardaki farklı tanımları göster",
@@ -64765,6 +64966,17 @@
               "null"
             ]
           },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StandardOrigin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The standard's source, which accepted findings are bound to (docs/adr/1129): a bound package's id and revision,\nor `cad.standards.resolve`'s `provenance.rules`. Absent: the standard's name, no revision."
+          },
           "resources": {
             "anyOf": [
               {
@@ -64795,6 +65007,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "`cad.standards.check`'s answer.",
         "properties": {
+          "accepted": {
+            "description": "How many are accepted, and how many lapsed (docs/adr/1129 §2): still listed, counted apart.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "fixable": {
             "description": "How many of them `cad.standards.apply` fixes.",
             "format": "uint32",
@@ -64808,6 +65027,12 @@
               "$ref": "#/$defs/StandardIssue"
             },
             "type": "array"
+          },
+          "lapsed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -64831,6 +65056,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "`cad.standards.check`'s answer.",
         "properties": {
+          "accepted": {
+            "description": "How many are accepted, and how many lapsed (docs/adr/1129 §2): still listed, counted apart.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "fixable": {
             "description": "How many of them `cad.standards.apply` fixes.",
             "format": "uint32",
@@ -64844,6 +65076,12 @@
               "$ref": "#/$defs/StandardIssue"
             },
             "type": "array"
+          },
+          "lapsed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -161300,6 +161538,13 @@
           },
           "type": "array"
         },
+        "standardExceptions": {
+          "description": "The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to\nthe finding, the standard's source and revision and what the drawing had; a change of either lapses it.",
+          "items": {
+            "$ref": "#/$defs/StandardException"
+          },
+          "type": "array"
+        },
         "survey": {
           "anyOf": [
             {
@@ -175276,6 +175521,111 @@
       ],
       "type": "object"
     },
+    "StandardException": {
+      "additionalProperties": false,
+      "description": "An accepted standards finding.",
+      "properties": {
+        "at": {
+          "description": "When, as the caller wrote it (ISO 8601).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "by": {
+          "description": "Who accepted it, when the caller says.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected": {
+          "description": "What the standard asked for and what the drawing had when it was accepted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "found": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The finding's kind, as `cad.standards.check` names it (`layerColor`, `tableStyleDefinition` …).",
+          "type": "string"
+        },
+        "layer": {
+          "description": "The drawing's layer it is about, by id, when it is one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "description": "Why it is kept (not empty, at most `MAX_STANDARD_EXCEPTION_REASON` characters).",
+          "type": "string"
+        },
+        "revision": {
+          "description": "… and its revision (empty for a standard without one).",
+          "type": "string"
+        },
+        "standard": {
+          "description": "The standard it was found against: the source's id (a package's `id`, else the standard's name) …",
+          "type": "string"
+        },
+        "subject": {
+          "description": "What it is about: a layer's, a style's, a line type's or a block's name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "subject",
+        "standard",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "StandardExceptionOperation": {
+      "description": "What `cad.standards.exceptions` does.",
+      "oneOf": [
+        {
+          "const": "accept",
+          "description": "The findings are kept on purpose, with `reason`.",
+          "type": "string"
+        },
+        {
+          "const": "withdraw",
+          "description": "Their acceptance is taken away: they are open again.",
+          "type": "string"
+        }
+      ]
+    },
+    "StandardFindingKey": {
+      "additionalProperties": false,
+      "description": "A finding as `cad.standards.check` names it.",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/StandardIssueKind"
+        },
+        "layer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "subject"
+      ],
+      "type": "object"
+    },
     "StandardInstallAction": {
       "description": "What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and\nlocal id kept, so what names it follows), the drawing's kept, or the standard's added under another name.",
       "enum": [
@@ -175414,6 +175764,17 @@
           "type": "integer",
           "x-unit": "count"
         },
+        "reason": {
+          "description": "The accepted finding's reason, when it is accepted or lapsed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/StandardIssueState",
+          "description": "Accepted or lapsed (docs/adr/1129 §2); absent: open."
+        },
         "subject": {
           "description": "What it is about: a layer's, a style's or a line type's name.",
           "type": "string"
@@ -175509,6 +175870,26 @@
         {
           "const": "ownLook",
           "description": "Objects with a look of their own when the standard has them take their layers'.",
+          "type": "string"
+        }
+      ]
+    },
+    "StandardIssueState": {
+      "description": "Whether a finding is the project's to look at (docs/adr/1129 §2).",
+      "oneOf": [
+        {
+          "const": "open",
+          "description": "Not accepted (the field is then absent).",
+          "type": "string"
+        },
+        {
+          "const": "accepted",
+          "description": "Accepted with a reason, against this standard's revision and with what the drawing has now.",
+          "type": "string"
+        },
+        {
+          "const": "lapsed",
+          "description": "Accepted once, but the standard's revision or what the drawing has changed since: to be looked at again.",
           "type": "string"
         }
       ]

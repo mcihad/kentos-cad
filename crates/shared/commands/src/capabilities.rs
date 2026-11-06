@@ -5339,6 +5339,21 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.standards.exceptions",
+        refusals: &[&[
+            "invalid_input",
+            "reason_required",
+            "standard_not_found",
+            "no_standard",
+            "invalid_standard",
+            "invalid_revision",
+            "revision_conflict",
+            "finding_not_found",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.standards.install",
         refusals: &[&[
             "invalid_file_path",

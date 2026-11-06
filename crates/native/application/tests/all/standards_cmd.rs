@@ -1656,6 +1656,7 @@ fn timing() {
             name: Some("mimari-ofis".into()),
             standard: None,
             resources: None,
+            origin: None,
         },
     ) else {
         panic!("not checked")

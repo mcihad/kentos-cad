@@ -81,6 +81,7 @@ use crate::sources::{
 };
 use crate::sources_query;
 use crate::standards_install;
+use crate::standards_exceptions;
 use crate::drawing_repair;
 use crate::drawing_take;
 use crate::review_notes;
@@ -821,6 +822,9 @@ macro_rules! by_command {
             kentos_commands::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
             kentos_commands::CAD_STANDARDS_CONFLICTS => $then!(standards_conflicts, kentos_commands::StandardsConflicts),
             kentos_commands::CAD_STANDARDS_INSTALL => $then!(standards_install, kentos_commands::StandardsInstall),
+            kentos_commands::CAD_STANDARDS_EXCEPTIONS => {
+                $then!(standards_exceptions, kentos_commands::StandardsExceptions)
+            }
             kentos_commands::CAD_STANDARDS_RESOLVE => $then!(standards_resolve, kentos_commands::StandardsResolve),
             kentos_commands::CAD_STANDARDS_PALETTES => $then!(standards_palettes, kentos_commands::StandardsPalettes),
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),

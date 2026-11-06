@@ -519,6 +519,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.review_notes.is_empty())
             + usize::from(!s.approved_sheet_templates.is_empty())
             + usize::from(!s.table_styles.is_empty())
+            + usize::from(!s.standard_exceptions.is_empty())
             + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
@@ -984,6 +985,18 @@ impl<'d> Encoder<'d> {
                     ));
                 }
                 e.crs_definition(d)
+            })?;
+        }
+        // Schema 190 (docs/adr/1129): the accepted standards findings, as their JSON (18 letters: before the longest).
+        if !s.standard_exceptions.is_empty() {
+            self.key("standardExceptions");
+            self.at(Seg::Name("standardExceptions"), |e| {
+                if let Some(problem) = kentos_contracts::standard_exceptions_problem(&s.standard_exceptions) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.standard_exceptions)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, as their JSON (the longest key, last).
@@ -2230,6 +2243,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 190 (docs/adr/1129): standards findings the project accepts.
+    if !doc.settings.standard_exceptions.is_empty() {
+        return crate::SCHEMA_WITH_STANDARD_EXCEPTIONS;
+    }
     // Schema 189 (docs/adr/1260): the topology quality profile, an exception's review fields.
     if doc.settings.topology.as_ref().is_some_and(|t| {
         t.profile.is_some()
