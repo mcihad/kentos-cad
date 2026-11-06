@@ -1844,6 +1844,10 @@ codes! {
     FINDING_NOT_FOUND = "finding_not_found", Failed, false, "Çizimin bugünkü denetiminde bu anahtarla bulgu ya da istisna yok; önce denetleyin (cad.topology.check, cad.arch.audit).";
     /// A fix the finding does not offer, that has no answer, or that would change a row outside a bound part (docs/adr/0589).
     FIX_UNAVAILABLE = "fix_unavailable", Failed, false, "Bu düzeltme bu bulguya uygulanamaz.";
+    /// A repair step naming a finding left on purpose (docs/adr/1260 §4).
+    REPAIR_REFUSED_EXCEPTION = "repair_refused_exception", Failed, false, "Bulgu istisna: bilerek bırakıldı; onarmadan önce istisnayı kaldırın.";
+    /// A repair that would move a source vertex past the quality profile's acceptance threshold (docs/adr/1260 §4).
+    REPAIR_BEYOND_ACCEPTANCE = "repair_beyond_acceptance", Failed, false, "Onarım bir kaynak köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı.";
     /// A topology check whose bound part's neighbours could not all be read (docs/adr/0589 §1).
     TOPOLOGY_INCOMPLETE = "topology_incomplete", Warning, false, "Bağlı parçanın komşuları tam okunamadı; denetim eksik, katman temiz sayılmaz.";
     /// An exception whose finding changed since it was marked: its objects' geometry (docs/adr/0589 §3), or its words

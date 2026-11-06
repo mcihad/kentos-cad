@@ -271,7 +271,8 @@ fn exceptions_are_kept_in_the_project_and_filtered() {
 fn the_words_are_the_webs() {
     assert_eq!(
         plan::COLUMNS,
-        ["Sıra", "Katman", "Kural", "Sorun", "Nesneler", "Ölçü"]
+        // Durum (docs/adr/1260 §1) is the desktop's ahead of the web (TODOS.md §0.2).
+        ["Sıra", "Katman", "Kural", "Sorun", "Durum", "Nesneler", "Ölçü"]
     );
     assert_eq!(plan::count_text(2, 2, 2), "2 bulgu (açık 2, istisna 2)");
     let b = kentos_geometry_core::geometry::Bounds {
@@ -461,6 +462,9 @@ fn screens() {
                 "parca-duzelt",
                 "eksik",
                 "suruyor",
+                "inceleme",
+                "tarif",
+                "profil",
             ] {
                 if only
                     .as_deref()
@@ -516,7 +520,22 @@ fn screens() {
                     doc.set_settings(settings);
                     let _ = app.update(Message::Run("topology.check"));
                 }
-                if name != "eksik" {
+                if name == "inceleme" {
+                    // The review (docs/adr/1260 §1): the overlap confirmed as an error with its reason, the gap left
+                    // on purpose with another; every finding shown with its state.
+                    ev(&mut app, Event::Press(0));
+                    ev(&mut app, Event::Reason("Sayısallaştırma hatası; ölçüyle düzeltilecek".into()));
+                    ev(&mut app, Event::Error);
+                    ev(&mut app, Event::Press(1));
+                    ev(&mut app, Event::Reason("Ortak duvar, tapuda kayıtlı".into()));
+                    ev(&mut app, Event::Exception(true));
+                    ev(&mut app, Event::Filter(Filter::All));
+                    ev(&mut app, Event::Press(0));
+                } else if name == "tarif" {
+                    // A recipe of two findings planned (docs/adr/1260 §4): what it would do over the table.
+                    app.topology.selected = vec![0, 1];
+                    ev(&mut app, Event::Recipe);
+                } else if name != "eksik" {
                     ev(
                         &mut app,
                         Event::Press(if matches!(name, "bulgular" | "dustu" | "parca" | "parca-duzelt") { 0 } else { 1 }),
@@ -530,8 +549,18 @@ fn screens() {
                         .center();
                     snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
                 }
-                if name == "kurallar" {
+                if name == "kurallar" || name == "profil" {
                     let _ = app.update(Message::Run("topology.rules"));
+                }
+                if name == "profil" {
+                    // The quality profile beside the tolerance (docs/adr/1260 §2).
+                    for e in [
+                        rules::Event::Profile("Kadastro güncelleme".into()),
+                        rules::Event::Precision("0.0001".into()),
+                        rules::Event::Acceptance("0.05".into()),
+                    ] {
+                        let _ = app.update(Message::TopologyRules(e));
+                    }
                 }
                 if name == "degisti" || name == "yeniden" {
                     // The road moved after the check (docs/adr/0524): the findings old, then checked again.
@@ -554,6 +583,63 @@ fn screens() {
             }
         }
     }
+}
+
+/// The review (docs/adr/1260 §1): Hata işaretle writes an error mark with Gerekçe's words; the row says its state and
+/// reason; a quality profile refuses a mark without a reason and writes nothing.
+#[test]
+fn a_finding_is_marked_as_an_error_with_its_reason() {
+    let mut app = checked();
+    ev(&mut app, Event::Press(0));
+    ev(&mut app, Event::Reason("Sayısallaştırma hatası".into()));
+    ev(&mut app, Event::Error);
+    let t = topology(&app);
+    assert_eq!(t.exceptions.len(), 1);
+    assert_eq!(t.exceptions[0].decision, Some(kentos_commands::TopologyDecision::Error));
+    assert_eq!(t.exceptions[0].reason.as_deref(), Some("Sayısallaştırma hatası"));
+    assert!(t.exceptions[0].rule_digest.is_some());
+    let c = app.topology_checked().expect("checked again");
+    let f = &c.findings[0];
+    assert!(!f.exception, "an error is still open");
+    assert_eq!(super::review::state_text(c, f), "Hata: Sayısallaştırma hatası");
+    // A profile asks for a reason.
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let mut settings = doc.settings().clone();
+    if let Some(t) = settings.topology.as_mut() {
+        t.profile = Some(kentos_commands::TopologyProfile {
+            name: "Kadastro güncelleme".into(),
+            edition: None,
+            precision: 0.0001,
+            acceptance: 0.05,
+        });
+    }
+    doc.set_settings(settings);
+    ev(&mut app, Event::Check);
+    ev(&mut app, Event::Press(1));
+    ev(&mut app, Event::Reason(String::new()));
+    ev(&mut app, Event::Exception(true));
+    assert_eq!(topology(&app).exceptions.len(), 1, "nothing written without a reason");
+}
+
+/// Tarifle onar (docs/adr/1260 §4): the chosen findings planned first, nothing written; Uygula writes the recipe as
+/// one undo step; Vazgeç drops a recipe and the drawing stays.
+#[test]
+fn a_recipe_is_planned_then_applied_in_one_step() {
+    let mut app = checked();
+    let revision = app.document.as_ref().expect("open").model.revision();
+    app.topology.selected = vec![0];
+    ev(&mut app, Event::Recipe);
+    let r = app.topology_recipe().expect("planned").clone();
+    assert_eq!(r.planned.recipe.len(), 1);
+    assert_eq!(app.document.as_ref().expect("open").model.revision(), revision, "a plan writes nothing");
+    assert!(app.topology_recipe_text(&r).starts_with("Onarım tarifi: 1 adım"));
+    ev(&mut app, Event::Drop);
+    assert!(app.topology_recipe().is_none());
+    ev(&mut app, Event::Recipe);
+    ev(&mut app, Event::Apply);
+    let doc = &mut app.document.as_mut().expect("open").model;
+    assert_ne!(doc.revision(), revision);
+    assert_eq!(doc.undo().as_deref(), Some("Topoloji düzelt"));
 }
 
 /// The road (#17) moved 0.4 m east through `cad.entities.transform`.

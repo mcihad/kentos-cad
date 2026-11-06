@@ -11,8 +11,9 @@ use std::collections::{BTreeMap, HashMap};
 
 use kentos_commands::{
     CommandResult, CommandWarning, SourceLink, TOPOLOGY_CHECK_LIMIT, TOPOLOGY_CHECK_LIMIT_MAX,
-    TopologyCheck, TopologyChecked, TopologyException, TopologyFinding, TopologyFixChange,
-    TopologyFixPreview, TopologyFixSource, TopologyGap, TopologySourceStamp, TopologyStamp, Vec2,
+    TopologyCheck, TopologyChecked, TopologyException, TopologyFinding, TopologyFindingState,
+    TopologyFixChange, TopologyFixPreview, TopologyFixSource, TopologyGap, TopologySourceStamp,
+    TopologyStamp, Vec2, rule_digest,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_bounds, entity_length};
@@ -38,15 +39,36 @@ pub struct Gathered {
     pub rules: Vec<kentos_commands::TopologyRule>,
     pub core_rules: Vec<Rule>,
     pub tolerance: f64,
-    /// The exceptions that hold, and those whose objects' geometry changed since they were marked.
+    /// The exceptions that hold, and the marks (exceptions and errors) whose objects' geometry or rule changed since
+    /// they were marked.
     pub exceptions: Vec<Exception>,
     pub lapsed: Vec<Exception>,
+    /// Every review mark of the project (docs/adr/1260 §1), with what it decided, why and whether it still holds.
+    pub reviews: Vec<Reviewed>,
     /// Rules whose layer or other layer the project does not have.
     pub missing: usize,
     /// How many of the objects are the drawing's.
     pub drawn: usize,
     pub incomplete: Vec<TopologyGap>,
     pub stamp: TopologyStamp,
+}
+
+/// A review mark as the check takes it (docs/adr/1260 §1).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Reviewed {
+    pub mark: Exception,
+    /// Confirmed as an error (else an exception).
+    pub error: bool,
+    pub reason: Option<String>,
+    /// Why it no longer holds: its objects' geometry or its rule changed; none while it holds.
+    pub lapse: Option<Lapse>,
+}
+
+/// Why a mark lapsed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Lapse {
+    Geometry,
+    Rule,
 }
 
 impl Gathered {
@@ -85,7 +107,8 @@ impl Gathered {
         self.lapsed.iter().any(|x| self.same(x, rule, f))
     }
 
-    /// Whether the exception `x` names `f`.
+    /// Whether the exception `x` names `f`: its rule, its objects in order and, unless it covers them anywhere, its
+    /// place.
     pub fn same(&self, x: &Exception, rule: &str, f: &Finding) -> bool {
         x.rule == rule
             && x.objects.len() == f.objects.len()
@@ -93,7 +116,31 @@ impl Gathered {
                 .iter()
                 .zip(&f.objects)
                 .all(|(u, &k)| self.uids.get(k).is_some_and(|v| v == u))
-            && (x.at.x - f.at.x).hypot(x.at.y - f.at.y) <= self.tolerance
+            && (x.anywhere || (x.at.x - f.at.x).hypot(x.at.y - f.at.y) <= self.tolerance)
+    }
+
+    /// The review mark that names `f`: one that holds first, else a lapsed one.
+    pub fn review(&self, f: &Finding) -> Option<&Reviewed> {
+        let rule = self.core_rules.get(f.rule).map_or("", |r| r.id.as_str());
+        let naming = |r: &&Reviewed| self.same(&r.mark, rule, f);
+        self.reviews
+            .iter()
+            .filter(naming)
+            .find(|r| r.lapse.is_none())
+            .or_else(|| self.reviews.iter().find(|r| naming(r)))
+    }
+
+    /// Where `f` is in its life cycle (docs/adr/1260 §1): an exception (the core marked it), a confirmed error, a mark
+    /// that lapsed, or not reviewed.
+    pub fn state(&self, f: &Finding) -> TopologyFindingState {
+        if f.exception {
+            return TopologyFindingState::Exception;
+        }
+        match self.review(f) {
+            Some(r) if r.lapse.is_none() && r.error => TopologyFindingState::Error,
+            Some(r) if r.lapse.is_some() => TopologyFindingState::Lapsed,
+            _ => TopologyFindingState::Open,
+        }
     }
 }
 
@@ -189,7 +236,13 @@ pub fn gather(doc: &Document, only: Option<&[String]>) -> Gathered {
             band,
         });
     }
-    // The exceptions: one bound to its objects' geometry holds while that geometry is the same.
+    // The marks: one bound to its objects' geometry holds while that geometry is the same, one bound to its rule's
+    // version while the rule is the same (docs/adr/1260 §1, §3).
+    let versions: HashMap<&str, String> = settings
+        .rules
+        .iter()
+        .map(|r| (r.id.as_str(), rule_digest(r)))
+        .collect();
     let place: HashMap<&str, usize> = g
         .uids
         .iter()
@@ -198,24 +251,37 @@ pub fn gather(doc: &Document, only: Option<&[String]>) -> Gathered {
         .collect();
     let mut exceptions = Vec::new();
     let mut lapsed = Vec::new();
+    let mut reviews = Vec::new();
     for x in &settings.exceptions {
-        let core = Exception {
-            rule: x.rule.clone(),
-            objects: x.objects.iter().map(|id| id.to_text()).collect(),
-            at: kentos_geometry_core::vec2::Vec2::new(x.at.x, x.at.y),
-        };
+        let core = mark_of(x);
         let now: Option<Vec<usize>> = core
             .objects
             .iter()
             .map(|u| place.get(u.as_str()).copied())
             .collect();
-        match (&x.digest, now) {
-            (Some(d), Some(objects)) if *d != g.digest(&objects) => lapsed.push(core),
-            _ => exceptions.push(core),
+        let lapse = match (&x.digest, now) {
+            (Some(d), Some(objects)) if *d != g.digest(&objects) => Some(Lapse::Geometry),
+            _ => x
+                .rule_digest
+                .as_ref()
+                .filter(|d| versions.get(x.rule.as_str()).is_some_and(|v| v != *d))
+                .map(|_| Lapse::Rule),
+        };
+        if lapse.is_some() {
+            lapsed.push(core.clone());
+        } else if x.is_exception() {
+            exceptions.push(core.clone());
         }
+        reviews.push(Reviewed {
+            mark: core,
+            error: !x.is_exception(),
+            reason: x.reason.clone(),
+            lapse,
+        });
     }
     g.exceptions = exceptions;
     g.lapsed = lapsed;
+    g.reviews = reviews;
     g.rules = rules;
     g.stamp = TopologyStamp {
         revision: doc.revision().to_string(),
@@ -225,7 +291,18 @@ pub fn gather(doc: &Document, only: Option<&[String]>) -> Gathered {
     g
 }
 
-/// The digest of the rules a check runs (`only`: those of these ids; none: all), the tolerance and the exceptions:
+/// A project's mark as the core takes it.
+pub fn mark_of(x: &TopologyException) -> Exception {
+    Exception {
+        rule: x.rule.clone(),
+        objects: x.objects.iter().map(|id| id.to_text()).collect(),
+        at: kentos_geometry_core::vec2::Vec2::new(x.at.x, x.at.y),
+        anywhere: x.anywhere(),
+    }
+}
+
+/// The digest of the rules a check runs (`only`: those of these ids; none: all), the tolerance, the exceptions and the
+/// quality profile:
 /// the stamp's `rules`, which another check with the same rules has too.
 pub fn rules_digest(doc: &Document, only: Option<&[String]>) -> String {
     let settings = doc.settings().topology.clone().unwrap_or_default();
@@ -234,11 +311,14 @@ pub fn rules_digest(doc: &Document, only: Option<&[String]>) -> String {
         .iter()
         .filter(|r| only.is_none_or(|ids| ids.contains(&r.id)))
         .collect();
-    let v = serde_json::json!({
+    let mut v = serde_json::json!({
         "rules": rules,
         "tolerance": settings.tolerance(),
         "exceptions": settings.exceptions,
     });
+    if let Some(p) = &settings.profile {
+        v["profile"] = serde_json::json!(p);
+    }
     sixteen(kentos_commands::canonical::canonical_json(&v).as_bytes())
 }
 
@@ -319,7 +399,7 @@ pub fn run_watched(g: &Gathered, watch: &dyn core::Watch) -> Option<Checked> {
 }
 
 /// A command's check watched by its job (docs/adr/0756): the job's stop, its progress in thousandths.
-struct JobWatch<'a, 'b>(&'a ExecutionContext<'b>);
+pub(crate) struct JobWatch<'a, 'b>(pub(crate) &'a ExecutionContext<'b>);
 
 impl core::Watch for JobWatch<'_, '_> {
     fn progress(&self, done: f64) {
@@ -362,7 +442,9 @@ pub fn finding_out(g: &Gathered, f: &Finding) -> TopologyFinding {
         measure_kind: f.measure_kind.map(|m| m.key().to_owned()),
         fixes: f.fixes.iter().map(|s| (*s).to_owned()).collect(),
         exception: f.exception,
-        lapsed: !f.exception && g.lapsed(f),
+        lapsed: g.state(f) == TopologyFindingState::Lapsed,
+        state: g.state(f),
+        reason: g.review(f).and_then(|r| r.reason.clone()),
     }
 }
 
@@ -500,6 +582,19 @@ fn check_in(
         found.findings.iter().map(|f| finding_out(&g, f)).collect();
     let exceptions = findings.iter().filter(|f| f.exception).count();
     let lapsed = findings.iter().filter(|f| f.lapsed).count();
+    let errors = findings
+        .iter()
+        .filter(|f| f.state == TopologyFindingState::Error)
+        .count();
+    // Of the lapsed, those whose objects' geometry is the same: their rule changed.
+    let by_rule = found
+        .findings
+        .iter()
+        .filter(|f| {
+            g.state(f) == TopologyFindingState::Lapsed
+                && g.review(f).is_some_and(|r| r.lapse == Some(Lapse::Rule))
+        })
+        .count();
     let total = findings.len();
     let neighbours = g.shapes.len() - g.drawn;
     let mut warnings: Vec<CommandWarning> = g
@@ -517,11 +612,21 @@ fn check_in(
             path: None,
         })
         .collect();
-    if lapsed > 0 {
+    if lapsed > by_rule {
         warnings.push(CommandWarning {
             code: codes::EXCEPTION_LAPSED.into(),
             message: format!(
-                "{lapsed} istisnanın nesnelerinin geometrisi istisna yapıldıktan sonra değişti; bulguları yeniden açık. Gözden geçirip yeniden istisna yapın ya da düzeltin."
+                "{} istisnanın nesnelerinin geometrisi istisna yapıldıktan sonra değişti; bulguları yeniden açık. Gözden geçirip yeniden istisna yapın ya da düzeltin.",
+                lapsed - by_rule
+            ),
+            path: None,
+        });
+    }
+    if by_rule > 0 {
+        warnings.push(CommandWarning {
+            code: codes::EXCEPTION_LAPSED.into(),
+            message: format!(
+                "{by_rule} işaretin kuralı işaretlendikten sonra değişti; bulguları yeniden değerlendirilmeli."
             ),
             path: None,
         });
@@ -533,6 +638,7 @@ fn check_in(
             open: count(total - exceptions),
             exceptions: count(exceptions),
             lapsed: count(lapsed),
+            errors: count(errors),
             rules: count(g.rules.len()),
             missing: count(g.missing),
             objects: count(g.drawn),
@@ -571,7 +677,8 @@ pub fn execute(
     plan(cx, &input)
 }
 
-/// The exception a finding is marked with: its rule, its objects, its place and its objects' geometry.
+/// The exception a finding is marked with: its rule, its objects, its place, its objects' geometry and its rule's
+/// version (docs/adr/1260 §3); no decision, reason or scope (the caller adds them).
 pub fn exception_of(g: &Gathered, f: &Finding) -> Option<TopologyException> {
     let rule = g.core_rules.get(f.rule)?.id.clone();
     let objects = f
@@ -591,6 +698,10 @@ pub fn exception_of(g: &Gathered, f: &Finding) -> Option<TopologyException> {
             y: f.at.y,
         },
         digest: Some(g.digest(&f.objects)),
+        decision: None,
+        reason: None,
+        rule_digest: g.rules.get(f.rule).map(rule_digest),
+        scope: None,
     })
 }
 

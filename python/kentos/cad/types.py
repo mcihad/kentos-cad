@@ -7421,18 +7421,52 @@ ToleranceKindName = Literal["symmetric", "deviation", "limits"]
 """The names of :class:`ToleranceKind`, for a plain string."""
 
 
+class TopologyDecision(_StrEnum):
+    """A review's decision on a finding (docs/adr/1260 §1).
+
+    - ``exception``: İstisna: left on purpose.
+    - ``error``: Hata: confirmed, to be put right.
+    """
+    EXCEPTION = "exception"
+    ERROR = "error"
+
+
+TopologyDecisionName = Literal["exception", "error"]
+"""The names of :class:`TopologyDecision`, for a plain string."""
+
+
 class TopologyExceptionOperation(_StrEnum):
     """What `cad.topology.exceptions` does to the findings it names.
 
     - ``mark``: İstisna yap: the finding left on purpose, bound to its objects' geometry as it is now (a lapsed exception is
-    - ``unmark``: İstisnayı kaldır.
+    - ``unmark``: İstisnayı ya da hata işaretini kaldır: the finding is not reviewed again.
+    - ``error``: Hata olarak işaretle (docs/adr/1260 §1): reviewed and confirmed, to be put right; bound like an exception.
     """
     MARK = "mark"
     UNMARK = "unmark"
+    ERROR = "error"
 
 
-TopologyExceptionOperationName = Literal["mark", "unmark"]
+TopologyExceptionOperationName = Literal["mark", "unmark", "error"]
 """The names of :class:`TopologyExceptionOperation`, for a plain string."""
+
+
+class TopologyFindingState(_StrEnum):
+    """A finding's place in its life cycle (docs/adr/1260 §1).
+
+    - ``open``: Değerlendirilmedi: no review names it.
+    - ``error``: Hata: reviewed and confirmed, to be put right.
+    - ``exception``: İstisna: reviewed and left on purpose.
+    - ``lapsed``: Yeniden değerlendir: a review named it, but its objects' geometry or its rule changed since.
+    """
+    OPEN = "open"
+    ERROR = "error"
+    EXCEPTION = "exception"
+    LAPSED = "lapsed"
+
+
+TopologyFindingStateName = Literal["open", "error", "exception", "lapsed"]
+"""The names of :class:`TopologyFindingState`, for a plain string."""
 
 
 class TopologyRuleKind(_StrEnum):
@@ -7469,6 +7503,20 @@ class TopologyRuleKind(_StrEnum):
 
 TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHaveSlivers", "mustNotHaveDuplicates", "mustNotHaveDangles", "mustNotHaveShortEdges", "mustNotHaveSmallAngles", "mustBeValid", "mustNotHaveMissingVertices", "mustNotOverlapWith", "mustBeCoveredBy", "boundaryMustBeCoveredBy", "mustBeOnEndOf"]
 """The names of :class:`TopologyRuleKind`, for a plain string."""
+
+
+class TopologyScope(_StrEnum):
+    """What an exception covers (docs/adr/1260 §1).
+
+    - ``finding``: The finding at its place (within the tolerance).
+    - ``objects``: Every finding of the rule between the same objects in the same order.
+    """
+    FINDING = "finding"
+    OBJECTS = "objects"
+
+
+TopologyScopeName = Literal["finding", "objects"]
+"""The names of :class:`TopologyScope`, for a plain string."""
 
 
 class TraverseShape(_StrEnum):
@@ -91663,6 +91711,7 @@ class TopologyChecked(_Model):
         rules: The rules checked, and those whose layer (or other layer) the project does not have. Unit: count.
         objects: The drawing's objects the rules looked at, and the rows read round bound parts. Unit: count.
         complete: Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.
+        errors: The findings confirmed as errors (docs/adr/1260 §1): of the open ones. Unit: count.
         lapsed: Unit: count.
         missing: Unit: count.
         neighbours: Unit: count.
@@ -91675,6 +91724,7 @@ class TopologyChecked(_Model):
     objects: int
     complete: bool
     stamp: TopologyStamp
+    errors: int | Unset = UNSET
     incomplete: list[TopologyGap] | Unset = UNSET
     lapsed: int | Unset = UNSET
     missing: int | Unset = UNSET
@@ -91691,6 +91741,8 @@ class TopologyChecked(_Model):
         out["objects"] = self.objects
         out["complete"] = self.complete
         out["stamp"] = self.stamp.to_json()
+        if self.errors is not UNSET:
+            out["errors"] = self.errors
         if self.incomplete is not UNSET:
             out["incomplete"] = [e0.to_json() for e0 in self.incomplete]
         if self.lapsed is not UNSET:
@@ -91714,6 +91766,7 @@ class TopologyChecked(_Model):
             objects=data["objects"],
             complete=data["complete"],
             stamp=TopologyStamp.from_json(data["stamp"]),
+            errors=data.get("errors", UNSET),
             incomplete=[TopologyGap.from_json(e0) for e0 in data["incomplete"]] if "incomplete" in data else UNSET,
             lapsed=data.get("lapsed", UNSET),
             missing=data.get("missing", UNSET),
@@ -91730,22 +91783,41 @@ class TopologyException(_Model):
         rule: The rule's id.
         objects: At least one.
         at: Unit: length.
+        decision: What the review decided (docs/adr/1260 §1): absent, an exception (left on purpose); `error`, a confirmed
+            error to be put right. Schema 189.
         digest: The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry
             changed since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while
             the rule, the objects and the place are the same.
+        reason: Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 189.
+        rule_digest: The rule's version when it was marked ([`rule_digest`]): the rule changed since, the mark lapses. Absent (marked
+            before schema 189): kept whatever the rule. Schema 189.
+        scope: What it covers: absent, the finding at its place; `objects`, every finding of the rule between these objects
+            in this order wherever it is. Schema 189.
     """
     rule: str
     objects: list[str]
     at: Vec2
+    decision: TopologyDecision | TopologyDecisionName | None | Unset = UNSET
     digest: str | None | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    rule_digest: str | None | Unset = UNSET
+    scope: TopologyScope | TopologyScopeName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["rule"] = self.rule
         out["objects"] = list(self.objects)
         out["at"] = _vec2_out(self.at)
+        if self.decision is not UNSET:
+            out["decision"] = None if self.decision is None else _enum_out(self.decision)
         if self.digest is not UNSET:
             out["digest"] = self.digest
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.rule_digest is not UNSET:
+            out["ruleDigest"] = self.rule_digest
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         return out
 
     @classmethod
@@ -91754,7 +91826,11 @@ class TopologyException(_Model):
             rule=data["rule"],
             objects=list(data["objects"]),
             at=Vec2.from_json(data["at"]),
+            decision=UNSET if "decision" not in data else None if data["decision"] is None else _enum_in(TopologyDecision, data["decision"]),
             digest=data.get("digest", UNSET),
+            reason=data.get("reason", UNSET),
+            rule_digest=data.get("ruleDigest", UNSET),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(TopologyScope, data["scope"]),
         )
 
 
@@ -91765,10 +91841,17 @@ class TopologyExceptions(_Model):
 
     Refusals, in this order: `invalid_input` (no key, or one twice), `finding_not_found` (`keys[i]`: no finding of the
     drawing as it is now has it). `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
+    Attributes:
+        reason: Why (docs/adr/1260 §1), for `mark` and `error`: kept on each mark; required when the project has a quality
+            profile. Not blank, at most 500 characters.
+        scope: What an exception covers (`mark` only): absent or `finding`, the finding at its place; `objects`, every finding of
+            its rule between the same objects.
     """
     operation: TopologyExceptionOperation | TopologyExceptionOperationName
     keys: list[str]
     expected_revision: str | None | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    scope: TopologyScope | TopologyScopeName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -91776,6 +91859,10 @@ class TopologyExceptions(_Model):
         out["keys"] = list(self.keys)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         return out
 
     @classmethod
@@ -91784,6 +91871,8 @@ class TopologyExceptions(_Model):
             operation=_enum_in(TopologyExceptionOperation, data["operation"]),
             keys=list(data["keys"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            reason=data.get("reason", UNSET),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(TopologyScope, data["scope"]),
         )
 
 
@@ -91826,10 +91915,12 @@ class TopologyFinding(_Model):
         at: Unit: length.
         fixes: The fixes it offers, by key.
         exception: Marked as left on purpose.
+        state: Where it is in its life cycle (docs/adr/1260 §1).
         lapsed: An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).
         measure: Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or
             radians. Unit: value.
         outside: Of those, the rows outside a bound layer's part (read from its source, not in the drawing).
+        reason: The reason its review gave (an exception's, an error mark's, a lapsed one's).
     """
     key: str
     rule: str
@@ -91839,10 +91930,12 @@ class TopologyFinding(_Model):
     at: Vec2
     fixes: list[str]
     exception: bool
+    state: TopologyFindingState | TopologyFindingStateName
     lapsed: bool | Unset = UNSET
     measure: float | None | Unset = UNSET
     measure_kind: str | None | Unset = UNSET
     outside: list[str] | Unset = UNSET
+    reason: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -91854,6 +91947,7 @@ class TopologyFinding(_Model):
         out["at"] = _vec2_out(self.at)
         out["fixes"] = list(self.fixes)
         out["exception"] = self.exception
+        out["state"] = _enum_out(self.state)
         if self.lapsed is not UNSET:
             out["lapsed"] = self.lapsed
         if self.measure is not UNSET:
@@ -91862,6 +91956,8 @@ class TopologyFinding(_Model):
             out["measureKind"] = self.measure_kind
         if self.outside is not UNSET:
             out["outside"] = list(self.outside)
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
         return out
 
     @classmethod
@@ -91875,10 +91971,12 @@ class TopologyFinding(_Model):
             at=Vec2.from_json(data["at"]),
             fixes=list(data["fixes"]),
             exception=data["exception"],
+            state=_enum_in(TopologyFindingState, data["state"]),
             lapsed=data.get("lapsed", UNSET),
             measure=UNSET if "measure" not in data else None if data["measure"] is None else float(data["measure"]),
             measure_kind=data.get("measureKind", UNSET),
             outside=list(data["outside"]) if "outside" in data else UNSET,
+            reason=data.get("reason", UNSET),
         )
 
 
@@ -92024,6 +92122,250 @@ class TopologyGap(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TopologyProfile(_Model):
+    """A quality profile (docs/adr/1260 §2): three lengths kept apart. The check's tolerance (`TopologySettings::tolerance`)
+    is the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (ArcGIS's
+    XY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a
+    vertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.
+    Attributes:
+        name: The profile's name: the institution's or the job's (“Kadastro güncelleme”), 1–200 characters.
+        precision: Metres, within [`TOPOLOGY_PRECISIONS`]; the tolerance is at least twice it. Unit: length.
+        acceptance: Metres, finite, at least the precision. Unit: length.
+        edition: The profile's own edition as its owner writes it (“2026/1”), at most 50 characters.
+    """
+    name: str
+    precision: float
+    acceptance: float
+    edition: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["precision"] = float(self.precision)
+        out["acceptance"] = float(self.acceptance)
+        if self.edition is not UNSET:
+            out["edition"] = self.edition
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyProfile:
+        return cls(
+            name=data["name"],
+            precision=float(data["precision"]),
+            acceptance=float(data["acceptance"]),
+            edition=data.get("edition", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepair(_Model):
+    """Input of `cad.topology.repair` v1: the recipe's steps, 1–1000, in the order they are applied; all or nothing, one
+    undo step “Topoloji düzelt”.
+
+    Refusals, in this order: `invalid_input` (no step, more than 1000), the revision (`invalid_revision`,
+    `revision_conflict`), then step by step: `finding_not_found` (`steps[i].key`: the drawing as the steps before left
+    it has no finding of that key), `repair_refused_exception` (`steps[i].key`: the finding is an exception, left on
+    purpose), `fix_unavailable` (`steps[i].fix`: the finding does not offer the fix, the fix has no answer, or it would
+    change a row outside a bound part), `layer_locked` (`steps[i]`: an object it changes is on a locked layer); last
+    `repair_beyond_acceptance` (`steps[i]`, the step that moved a source vertex farthest past the quality profile's
+    acceptance threshold). A job asked to stop answers `cancelled` and writes nothing.
+    """
+    steps: list[TopologyRepairStep]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepair:
+        return cls(
+            steps=[TopologyRepairStep.from_json(e0) for e0 in data["steps"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepairApplied(_Model):
+    """A step as applied: the finding it put right, its rule, its problem and its objects' persistent ids."""
+    key: str
+    fix: str
+    rule: str
+    problem: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["fix"] = self.fix
+        out["rule"] = self.rule
+        out["problem"] = self.problem
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepairApplied:
+        return cls(
+            key=data["key"],
+            fix=data["fix"],
+            rule=data["rule"],
+            problem=data["problem"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepairChange(_Model):
+    """An object the recipe changes: its measures before and after (an area's area, a line's length), `removed` when it
+    is deleted, how many of its source vertices stayed bit for bit and how many moved, the farthest and the total
+    distance they moved to the new geometry (metres), and the steps that changed it (0-based).
+    Attributes:
+        kept: Unit: count.
+        moved: Unit: count.
+        max_moved: Unit: length.
+        total_moved: Unit: length.
+        steps: Unit: index.
+        area_after: Unit: area.
+        area_before: Unit: area.
+        length_after: Unit: length.
+        length_before: Unit: length.
+    """
+    uid: str
+    layer: str
+    kept: int
+    moved: int
+    max_moved: float
+    total_moved: float
+    steps: list[int]
+    area_after: float | None | Unset = UNSET
+    area_before: float | None | Unset = UNSET
+    length_after: float | None | Unset = UNSET
+    length_before: float | None | Unset = UNSET
+    removed: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        out["kept"] = self.kept
+        out["moved"] = self.moved
+        out["maxMoved"] = float(self.max_moved)
+        out["totalMoved"] = float(self.total_moved)
+        out["steps"] = list(self.steps)
+        if self.area_after is not UNSET:
+            out["areaAfter"] = None if self.area_after is None else float(self.area_after)
+        if self.area_before is not UNSET:
+            out["areaBefore"] = None if self.area_before is None else float(self.area_before)
+        if self.length_after is not UNSET:
+            out["lengthAfter"] = None if self.length_after is None else float(self.length_after)
+        if self.length_before is not UNSET:
+            out["lengthBefore"] = None if self.length_before is None else float(self.length_before)
+        if self.removed is not UNSET:
+            out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepairChange:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            kept=data["kept"],
+            moved=data["moved"],
+            max_moved=float(data["maxMoved"]),
+            total_moved=float(data["totalMoved"]),
+            steps=list(data["steps"]),
+            area_after=UNSET if "areaAfter" not in data else None if data["areaAfter"] is None else float(data["areaAfter"]),
+            area_before=UNSET if "areaBefore" not in data else None if data["areaBefore"] is None else float(data["areaBefore"]),
+            length_after=UNSET if "lengthAfter" not in data else None if data["lengthAfter"] is None else float(data["lengthAfter"]),
+            length_before=UNSET if "lengthBefore" not in data else None if data["lengthBefore"] is None else float(data["lengthBefore"]),
+            removed=data.get("removed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepairStep(_Model):
+    """A step: the finding (its lasting key in the drawing as the steps before left it) and the fix (`subtractFirst`,
+    `removeVertex` …; one the finding offers).
+    """
+    key: str
+    fix: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["fix"] = self.fix
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepairStep:
+        return cls(
+            key=data["key"],
+            fix=data["fix"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepaired(_Model):
+    """Output of `cad.topology.repair` v1, and its plan: the recipe as applied, the objects it changes in the drawing's
+    order, the source vertices moved over them all (`moved`, `maxMoved`, `totalMoved`; `belowPrecision` of them by less
+    than the profile's storage precision, still moved and written as computed), the change of the areas' sum (square
+    metres; a deleted area's whole area), the open findings before and after (of every rule), and the revision after
+    (a plan: before).
+    Attributes:
+        moved: Unit: count.
+        max_moved: Unit: length.
+        total_moved: Unit: length.
+        area_change: Unit: area.
+        open_before: Unit: count.
+        open_after: Unit: count.
+        below_precision: Unit: count.
+    """
+    recipe: list[TopologyRepairApplied]
+    changes: list[TopologyRepairChange]
+    moved: int
+    max_moved: float
+    total_moved: float
+    area_change: float
+    open_before: int
+    open_after: int
+    revision: str
+    below_precision: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["recipe"] = [e0.to_json() for e0 in self.recipe]
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        out["moved"] = self.moved
+        out["maxMoved"] = float(self.max_moved)
+        out["totalMoved"] = float(self.total_moved)
+        out["areaChange"] = float(self.area_change)
+        out["openBefore"] = self.open_before
+        out["openAfter"] = self.open_after
+        out["revision"] = self.revision
+        if self.below_precision is not UNSET:
+            out["belowPrecision"] = self.below_precision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepaired:
+        return cls(
+            recipe=[TopologyRepairApplied.from_json(e0) for e0 in data["recipe"]],
+            changes=[TopologyRepairChange.from_json(e0) for e0 in data["changes"]],
+            moved=data["moved"],
+            max_moved=float(data["maxMoved"]),
+            total_moved=float(data["totalMoved"]),
+            area_change=float(data["areaChange"]),
+            open_before=data["openBefore"],
+            open_after=data["openAfter"],
+            revision=data["revision"],
+            below_precision=data.get("belowPrecision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TopologyRule(_Model):
     """A rule: its kind on a layer and, between layers, another layer.
     Attributes:
@@ -92067,10 +92409,13 @@ class TopologySettings(_Model):
     """The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
     Attributes:
         exceptions: Findings marked as left on purpose (docs/adr/0202 §3).
+        profile: The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 189): its name, the storage
+            precision of the coordinates and the acceptance threshold, apart from the check's tolerance above.
         rules: The rules, in the order they are checked and listed.
         tolerance: Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`]. Unit: length.
     """
     exceptions: list[TopologyException] | Unset = UNSET
+    profile: TopologyProfile | None | Unset = UNSET
     rules: list[TopologyRule] | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
@@ -92078,6 +92423,8 @@ class TopologySettings(_Model):
         out: dict[str, Any] = {}
         if self.exceptions is not UNSET:
             out["exceptions"] = [e0.to_json() for e0 in self.exceptions]
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
         if self.rules is not UNSET:
             out["rules"] = [e0.to_json() for e0 in self.rules]
         if self.tolerance is not UNSET:
@@ -92088,6 +92435,7 @@ class TopologySettings(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> TopologySettings:
         return cls(
             exceptions=[TopologyException.from_json(e0) for e0 in data["exceptions"]] if "exceptions" in data else UNSET,
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else TopologyProfile.from_json(data["profile"]),
             rules=[TopologyRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
@@ -120699,20 +121047,32 @@ __all__ = [
     "ToolParameter",
     "TopologyCheck",
     "TopologyChecked",
+    "TopologyDecision",
+    "TopologyDecisionName",
     "TopologyException",
     "TopologyExceptionOperation",
     "TopologyExceptionOperationName",
     "TopologyExceptions",
     "TopologyExceptionsEdited",
     "TopologyFinding",
+    "TopologyFindingState",
+    "TopologyFindingStateName",
     "TopologyFixAsk",
     "TopologyFixChange",
     "TopologyFixPreview",
     "TopologyFixSource",
     "TopologyGap",
+    "TopologyProfile",
+    "TopologyRepair",
+    "TopologyRepairApplied",
+    "TopologyRepairChange",
+    "TopologyRepairStep",
+    "TopologyRepaired",
     "TopologyRule",
     "TopologyRuleKind",
     "TopologyRuleKindName",
+    "TopologyScope",
+    "TopologyScopeName",
     "TopologySettings",
     "TopologySourceStamp",
     "TopologyStamp",

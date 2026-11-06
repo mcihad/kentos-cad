@@ -132,7 +132,7 @@ use crate::{
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
 use crate::{subnetworks, subnetworks_update};
-use crate::{topology_check, topology_exceptions};
+use crate::{topology_check, topology_exceptions, topology_repair};
 use kentos_commands::AddressesCheck;
 use kentos_commands::AddressesCompare;
 use kentos_commands::AddressesNormalize;
@@ -763,6 +763,9 @@ macro_rules! by_command {
             kentos_commands::CAD_TOPOLOGY_CHECK => $then!(topology_check, TopologyCheck),
             kentos_commands::CAD_TOPOLOGY_EXCEPTIONS => {
                 $then!(topology_exceptions, TopologyExceptions)
+            }
+            kentos_commands::CAD_TOPOLOGY_REPAIR => {
+                $then!(topology_repair, kentos_commands::TopologyRepair)
             }
             kentos_commands::CAD_ENTITIES_COPY => $then!(entities_copy, EntitiesCopy),
             kentos_commands::CAD_ENTITIES_PASTE => $then!(entities_paste, EntitiesPaste),

@@ -305,6 +305,8 @@ pub(super) struct Features {
     pub(super) layer_geometry: bool,
     /// Schema 99: a topology exception's geometry digest (docs/adr/0589).
     pub(super) exception_digests: bool,
+    /// Schema 189: the topology quality profile and an exception's review fields (docs/adr/1260).
+    pub(super) topology_reviews: bool,
     /// Schema 100: a georeference record's `crs` (docs/adr/0594 §1).
     pub(super) georef_crs: bool,
     /// Schema 90: a layer time's system time attributes (docs/adr/0537).
@@ -602,6 +604,7 @@ impl Features {
             source_crs: schema >= crate::SCHEMA_WITH_SOURCE_CRS,
             layer_geometry: schema >= crate::SCHEMA_WITH_LAYER_GEOMETRY,
             exception_digests: schema >= crate::SCHEMA_WITH_EXCEPTION_DIGESTS,
+            topology_reviews: schema >= crate::SCHEMA_WITH_TOPOLOGY_REVIEWS,
             georef_crs: schema >= crate::SCHEMA_WITH_GEOREF_CRS,
             recorded_time: schema >= crate::SCHEMA_WITH_RECORDED_TIME,
             source_bases: schema >= crate::SCHEMA_WITH_SOURCE_BASES,

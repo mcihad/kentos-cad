@@ -6,11 +6,15 @@
 //! project's unit, angles in its angle unit. The first problem is said under
 //! the table and Kaydet waits for it. Kaydet writes the project's setting
 //! (not an undo step, as the layer states).
+//!
+//! Beside the tolerance, the quality profile (docs/adr/1260 §2): its name, the storage precision and the institution's
+//! acceptance threshold, three lengths kept apart. A profile is kept while it has a name.
 
 use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    TOPOLOGY_TOLERANCE, TopologyRule, TopologyRuleKind, TopologySettings, TopologyValue,
+    TOPOLOGY_TOLERANCE, TopologyProfile, TopologyRule, TopologyRuleKind, TopologySettings,
+    TopologyValue,
 };
 use kentos_geometry_core::ops::topology_rules::Kind;
 use kentos_interaction::{Format, Level};
@@ -31,6 +35,10 @@ const SAVE: &str = "Kaydet";
 const CANCEL: &str = "Vazgeç";
 const ADD: &str = "Kural ekle";
 const REMOVE: &str = "Sil";
+const TOLERANCE: &str = "Tolerans";
+const PROFILE: &str = "Kalite profili";
+const PRECISION: &str = "Depolama hassasiyeti";
+const ACCEPTANCE: &str = "Kabul eşiği";
 
 /// The table's columns and their widths (logical pixels at the default size).
 const HEADS: [(&str, f32); 5] = [
@@ -151,11 +159,44 @@ pub fn rules_problem(
     None
 }
 
+/// The quality profile as typed (docs/adr/1260 §2): none without a name; what is wrong with it beside the
+/// tolerance `t` (metres).
+pub fn profile_of(
+    name: &str,
+    precision: &str,
+    acceptance: &str,
+    t: f64,
+    format: &Format,
+) -> Result<Option<TopologyProfile>, String> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Ok(None);
+    }
+    let length = |s: &str| decimal(s).map(|v| format.to_metres(v));
+    let (Some(precision), Some(acceptance)) = (length(precision), length(acceptance)) else {
+        return Err("Kalite profili: depolama hassasiyeti ve kabul eşiği birer uzunluk olmalı.".to_owned());
+    };
+    let p = TopologyProfile {
+        name: name.to_owned(),
+        edition: None,
+        precision,
+        acceptance,
+    };
+    match p.problem(t) {
+        Some(why) => Err(format!("Kalite profili: {why}.")),
+        None => Ok(Some(p)),
+    }
+}
+
 /// The window: the tolerance and the rows as typed, the settings it opened
 /// with, the chosen row and what it last said.
 #[derive(Debug, Clone)]
 pub struct Window {
     tolerance: String,
+    /// The quality profile's name, storage precision and acceptance threshold as typed.
+    profile: String,
+    precision: String,
+    acceptance: String,
     rows: Vec<RuleRow>,
     before: Option<TopologySettings>,
     chosen: Option<usize>,
@@ -165,6 +206,9 @@ pub struct Window {
 #[derive(Debug, Clone)]
 pub enum Event {
     Tolerance(String),
+    Profile(String),
+    Precision(String),
+    Acceptance(String),
     /// A row's layer, kind or other layer chosen (by its place in its list).
     Layer(usize, usize),
     Kind(usize, usize),
@@ -210,12 +254,34 @@ impl App {
             .into_iter()
             .filter(|x| rules.iter().any(|r| r.id == x.rule))
             .collect();
+        let profile = profile_of(&w.profile, &w.precision, &w.acceptance, t, &format)
+            .ok()
+            .flatten()
+            .map(|mut p| {
+                // The edition the file had stays: the window does not edit it.
+                p.edition = w
+                    .before
+                    .as_ref()
+                    .and_then(|b| b.profile.as_ref())
+                    .and_then(|b| b.edition.clone());
+                p
+            });
         TopologySettings {
             tolerance: ((t - TOPOLOGY_TOLERANCE).abs() > 1e-12).then_some(t),
             rules,
             exceptions,
+            profile,
         }
         .sanitized()
+    }
+
+    /// What is wrong with the profile as typed, beside the tolerance typed.
+    fn profile_problem(&self, w: &Window) -> Option<String> {
+        let format = self.format();
+        let t = decimal(&w.tolerance)
+            .map(|t| format.to_metres(t))
+            .unwrap_or(TOPOLOGY_TOLERANCE);
+        profile_of(&w.profile, &w.precision, &w.acceptance, t, &format).err()
     }
 
     fn rules_changed(&self, w: &Window) -> bool {
@@ -241,8 +307,16 @@ impl App {
             .as_ref()
             .map(|t| t.rules.iter().map(|r| row_of(r, &format)).collect())
             .unwrap_or_default();
+        let profile = before.as_ref().and_then(|t| t.profile.as_ref());
         self.topology_rules = Some(Window {
             tolerance,
+            profile: profile.map(|p| p.name.clone()).unwrap_or_default(),
+            precision: profile
+                .map(|p| shown(format.from_metres(p.precision)))
+                .unwrap_or_default(),
+            acceptance: profile
+                .map(|p| shown(format.from_metres(p.acceptance)))
+                .unwrap_or_default(),
             chosen: (!rows.is_empty()).then_some(0),
             rows,
             before,
@@ -265,6 +339,9 @@ impl App {
         w.said = None;
         match event {
             Event::Tolerance(t) => w.tolerance = t,
+            Event::Profile(t) => w.profile = t,
+            Event::Precision(t) => w.precision = t,
+            Event::Acceptance(t) => w.acceptance = t,
             Event::Layer(i, k) => {
                 if let (Some(r), Some((id, _))) = (w.rows.get_mut(i), layers.get(k)) {
                     r.layer = id.clone();
@@ -338,7 +415,9 @@ impl App {
         let format = self.format();
         let layers = self.rule_layers();
         let name = |id: &str| layers.iter().find(|(l, _)| l == id).map(|(_, p)| p.clone());
-        if let Some(p) = rules_problem(&w.tolerance, &w.rows, &format, name) {
+        if let Some(p) = rules_problem(&w.tolerance, &w.rows, &format, name)
+            .or_else(|| self.profile_problem(&w))
+        {
             if let Some(w) = self.topology_rules.as_mut() {
                 w.said = Some((Say::Error, p));
             }
@@ -466,7 +545,8 @@ impl App {
         .spacing(8)
         .align_y(Center);
         let name = |id: &str| layers.iter().find(|(l, _)| l == id).map(|(_, p)| p.clone());
-        let problem = rules_problem(&w.tolerance, &w.rows, &format, name);
+        let problem =
+            rules_problem(&w.tolerance, &w.rows, &format, name).or_else(|| self.profile_problem(w));
         let n = w.rows.len();
         let line = match (&w.said, &problem) {
             (Some((kind, words)), _) => words::text_line(*kind, words.clone()),
@@ -479,24 +559,42 @@ impl App {
                 format!("{n} kural; denetim alt panelin Topoloji sekmesinde."),
             ),
         };
-        let tolerance = Column::new()
-            .spacing(4)
-            .push(label::caption("Tolerans"))
-            .push(
+        // The tolerance and the quality profile (docs/adr/1260 §2): the lengths and the name on one line, kept apart.
+        let unit = format.length_unit_label();
+        let field = |caption: &'static str, value: &str, width: f32, on: fn(String) -> Event| {
+            let named = width > 150.0;
+            Column::new().spacing(4).push(label::caption(caption)).push(
                 row![
                     container(
-                        kentos_ui::widget::text_field("", &w.tolerance)
-                            .on_input(|t| msg(Event::Tolerance(t)))
-                            .align_x(iced::alignment::Horizontal::Right)
+                        kentos_ui::widget::text_field("", value)
+                            .on_input(move |t| msg(on(t)))
+                            .align_x(if named {
+                                iced::alignment::Horizontal::Left
+                            } else {
+                                iced::alignment::Horizontal::Right
+                            })
                     )
-                    .width(Length::Fixed(typography::scaled(110.0))),
-                    label::caption(format.length_unit_label()),
+                    .width(Length::Fixed(typography::scaled(width))),
                 ]
+                .extend((!named).then(|| label::caption(unit).into()))
                 .spacing(6)
                 .align_y(Center),
             )
+        };
+        let tolerance = Column::new()
+            .spacing(4)
+            .push(
+                row![
+                    field(TOLERANCE, &w.tolerance, 110.0, Event::Tolerance),
+                    field(PROFILE, &w.profile, 240.0, Event::Profile),
+                    field(PRECISION, &w.precision, 110.0, Event::Precision),
+                    field(ACCEPTANCE, &w.acceptance, 110.0, Event::Acceptance),
+                ]
+                .spacing(20)
+                .align_y(iced::alignment::Vertical::Bottom),
+            )
             .push(label::muted(
-                "Bu uzaklıktaki iki yer aynı yerdir; bundan dar çakışma ve boşluk sayılmaz.",
+                "Tolerans: bu uzaklıktaki iki yer aynı yerdir. Kalite profili: koordinatların saklandığı adım ve hiçbir onarımın kaynak köşeyi taşıyamayacağı uzaklık; profil varsa her işaret gerekçe ister.",
             ));
         let ready = problem.is_none() && self.rules_changed(w);
         Frame::new(RULES_TITLE)
@@ -524,7 +622,10 @@ impl App {
             return Err(format!("{RULES_TITLE} penceresi açık değil"));
         };
         Ok(match control {
-            Control::Fill("Tolerans", t) => Some(msg(Event::Tolerance(t.to_owned()))),
+            Control::Fill(TOLERANCE, t) => Some(msg(Event::Tolerance(t.to_owned()))),
+            Control::Fill(PROFILE, t) => Some(msg(Event::Profile(t.to_owned()))),
+            Control::Fill(PRECISION, t) => Some(msg(Event::Precision(t.to_owned()))),
+            Control::Fill(ACCEPTANCE, t) => Some(msg(Event::Acceptance(t.to_owned()))),
             Control::Fill("Değer", t) => {
                 let i = w.chosen.ok_or("seçili kural yok")?;
                 Some(msg(Event::Value(i, t.to_owned())))

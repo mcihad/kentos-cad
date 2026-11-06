@@ -1,18 +1,20 @@
-//! `cad.topology.exceptions` (docs/adr/0589 §3): findings marked as left on purpose, or the mark taken away. A finding
-//! is named by its lasting key as `cad.topology.check` gives it for the drawing as it is now; the exception keeps the
-//! finding's rule, objects and place and the digest of the objects' geometry, so it lapses once the geometry changes.
-//! The exceptions are the project's settings: writing them makes the drawing dirty and is no undo step.
+//! `cad.topology.exceptions` (docs/adr/0589 §3, 1260 §1): findings marked as left on purpose (`mark`), confirmed as
+//! errors to be put right (`error`), or the mark taken away (`unmark`). A finding is named by its lasting key as
+//! `cad.topology.check` gives it for the drawing as it is now; the mark keeps the finding's rule, objects and place, the
+//! digest of the objects' geometry and the rule's version, so it lapses once either changes; and the reviewer's reason
+//! (required when the project has a quality profile) and what an exception covers. The marks are the project's
+//! settings: writing them makes the drawing dirty and is no undo step.
 
 use kentos_commands::{
-    CommandResult, ProjectSettings, TopologyExceptionOperation, TopologyExceptions,
-    TopologyExceptionsEdited,
+    CommandResult, ProjectSettings, TopologyDecision, TopologyExceptionOperation,
+    TopologyExceptions, TopologyExceptionsEdited, TopologyScope, reason_problem,
 };
 use kentos_domain::Document;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::topology_check::{exception_of, gather, run};
+use crate::topology_check::{exception_of, gather, mark_of, run};
 
 /// The project's exceptions after the operation, and how many findings it changed.
 struct Checked {
@@ -37,6 +39,50 @@ fn check(doc: &Document, input: &TopologyExceptions) -> Result<Checked, Stop> {
             )));
         }
     }
+    let marking = input.operation != TopologyExceptionOperation::Unmark;
+    match &input.reason {
+        Some(_) if !marking => {
+            return Err(Stop::failed(error(
+                codes::INVALID_INPUT,
+                "Gerekçe yalnız işaretlerken (mark, error) yazılır; unmark gerekçe almaz.".into(),
+                Some("reason".into()),
+            )));
+        }
+        Some(r) => {
+            if let Some(why) = reason_problem(r) {
+                return Err(Stop::failed(error(
+                    codes::INVALID_INPUT,
+                    format!("İşaretin {why}; 1 ile 500 karakter arasında, boş olmayan bir gerekçe yazın."),
+                    Some("reason".into()),
+                )));
+            }
+        }
+        None => {}
+    }
+    if input.scope.is_some() && input.operation != TopologyExceptionOperation::Mark {
+        return Err(Stop::failed(error(
+            codes::INVALID_INPUT,
+            "Kapsam yalnız istisnanın (mark) alanıdır.".into(),
+            Some("scope".into()),
+        )));
+    }
+    if marking
+        && input.reason.is_none()
+        && let Some(p) = doc
+            .settings()
+            .topology
+            .as_ref()
+            .and_then(|t| t.profile.as_ref())
+    {
+        return Err(Stop::failed(error(
+            codes::REASON_REQUIRED,
+            format!(
+                "Projenin kalite profili (“{}”) her istisnanın ve hata işaretinin gerekçesini ister; reason'ı yazın.",
+                p.name
+            ),
+            Some("reason".into()),
+        )));
+    }
     let g = gather(doc, None);
     let found = run(&g);
     let mut chosen = Vec::with_capacity(input.keys.len());
@@ -56,30 +102,35 @@ fn check(doc: &Document, input: &TopologyExceptions) -> Result<Checked, Stop> {
     let settings = doc.settings().topology.clone().unwrap_or_default();
     let mut exceptions = settings.exceptions.clone();
     let mut changed = 0;
+    let anywhere = input.scope == Some(TopologyScope::Objects);
     for f in chosen {
         let rule = g.core_rules.get(f.rule).map_or("", |r| r.id.as_str());
-        let naming = |x: &kentos_commands::TopologyException| {
-            let core = kentos_geometry_core::ops::topology_rules::Exception {
-                rule: x.rule.clone(),
-                objects: x.objects.iter().map(|id| id.to_text()).collect(),
-                at: kentos_geometry_core::vec2::Vec2::new(x.at.x, x.at.y),
-            };
-            g.same(&core, rule, f)
-        };
+        let naming = |x: &kentos_commands::TopologyException| g.same(&mark_of(x), rule, f);
         match input.operation {
-            TopologyExceptionOperation::Mark => {
-                if f.exception {
+            TopologyExceptionOperation::Mark | TopologyExceptionOperation::Error => {
+                let error = input.operation == TopologyExceptionOperation::Error;
+                // The same decision, reason and cover holding already: nothing to write.
+                if g.review(f).is_some_and(|r| {
+                    r.lapse.is_none()
+                        && r.error == error
+                        && r.reason == input.reason
+                        && r.mark.anywhere == anywhere
+                }) || (!error && f.exception && input.reason.is_none() && !anywhere)
+                {
                     continue;
                 }
-                // A lapsed exception is marked again, on the geometry as it is now.
+                // A lapsed or another mark is replaced, on the geometry and the rule as they are now.
                 exceptions.retain(|x| !naming(x));
-                if let Some(x) = exception_of(&g, f) {
+                if let Some(mut x) = exception_of(&g, f) {
+                    x.decision = error.then_some(TopologyDecision::Error);
+                    x.reason = input.reason.clone();
+                    x.scope = anywhere.then_some(TopologyScope::Objects);
                     exceptions.push(x);
                     changed += 1;
                 }
             }
             TopologyExceptionOperation::Unmark => {
-                if !f.exception && !g.lapsed(f) {
+                if g.review(f).is_none() && !f.exception {
                     continue;
                 }
                 exceptions.retain(|x| !naming(x));
