@@ -13,8 +13,9 @@
 //! - each curve's main points (TO and TF; TS, SC, CS and ST with clothoids) as a line across the axis with the code,
 //!   the curve's name and the km to three decimals along it (`TF S1 0+412.118`);
 //! - each curve's PI as a dot named S1, S2 … and its curve data outside the curve: the turn (SAĞ, SOL), the
-//!   deflection A in grad to five decimals (KGM writes the deflection as A), R, T, L (the circular part), the
-//!   clothoids' lengths Lr, and the PI's Y (east) and X (north);
+//!   deflection A in grad to five decimals (KGM writes the deflection as A), R, the simple curve's T and L, the
+//!   superelevation's S, Lr, Lt, La and Gn from the alignment's schedule (docs/adr/0983), and the PI's Y (east) and X
+//!   (north);
 //! - the PI line, thin and dashed, and PROJE BAŞI and PROJE SONU with their km.
 //!
 //! Sizes are paper millimetres times the map's scale: texts 2.5 mm (the band texts of docs/adr/0980), ticks 3 mm.
@@ -198,6 +199,64 @@ fn n2(v: f64) -> String {
     format!("{v:.2}")
 }
 
+/// A length as KGM's PI data writes it: metres to three decimals (EK-10: `T=131.445`, `Lr=76.800-76.800`).
+fn n3(v: f64) -> String {
+    format!("{v:.3}")
+}
+
+/// The superelevation schedule a plan map reads a curve's S, Gn and Lr, Lt, La from: the alignment's only schedule,
+/// built, with its normal slopes. None without one, with more than one (the map cannot tell which the sheet means;
+/// docs/adr/0983 §Açık) or when it does not build.
+fn schedule_for(
+    doc: &Document,
+    alignment: &str,
+    b: &Built,
+) -> Option<(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)> {
+    let mut on = doc.road_superelevations().iter().filter(|d| d.alignment == alignment);
+    let def = on.next()?;
+    if on.next().is_some() {
+        return None;
+    }
+    let (s, _) = crate::road_superelevations::schedule(def, b).ok()?;
+    Some((s, crate::road_superelevations::normal(def)))
+}
+
+/// A curve's PI data in KGM's order (KGM 2019 şartname s. 5 and EK-10; docs/adr/0982, 0983): the name and turn, the
+/// deflection A in grad, R, the simple curve's T = R·tan(|Δ|/2) and L = R·|Δ| (KGM's S1: `T=131.445`, `L=258.800` for
+/// R 600 and 27.45958 grad, its clothoids of 76.8 m apart), then from the superelevation schedule the rate S in percent,
+/// Lr, Lt and La in and out, the widening Gn; last the PI's Y (east) and X (north).
+pub fn curve_data(
+    name: &str,
+    c: &kentos_road::alignment::CurveReport,
+    pi: [f64; 2],
+    schedule: Option<&(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+) -> Vec<String> {
+    let side = if c.delta > 0.0 { "SOL" } else { "SAĞ" };
+    let half = 0.5 * c.delta.abs();
+    let mut lines = vec![
+        format!("{name} ({side})"),
+        format!("A={:.5}", grad(c.delta)),
+        format!("R={}", n2(c.radius)),
+        format!("T={}", n3(c.radius * half.tan())),
+        format!("L={}", n3(c.radius * c.delta.abs())),
+    ];
+    if let Some((s, normal)) = schedule {
+        let got = kentos_road::superelevation_pi::curve_super(s, *normal, c);
+        if let Some(rate) = got.rate {
+            lines.push(format!("S={:.2}", rate * 100.0));
+        }
+        if let (Some(a), Some(b)) = (got.entry, got.exit) {
+            lines.push(format!("Lr={}-{}", n3(a.runoff), n3(b.runoff)));
+            lines.push(format!("Lt={}-{}", n3(a.runout), n3(b.runout)));
+            lines.push(format!("La={}-{}", n3(a.on_tangent), n3(b.on_tangent)));
+        }
+        lines.push(format!("Gn={}", n3(got.widening)));
+    }
+    lines.push(format!("Y={:.3}", pi[0]));
+    lines.push(format!("X={:.3}", pi[1]));
+    lines
+}
+
 /// The objects every alignment of the drawing draws at 1:`scale` on a paper turned `turn` degrees.
 pub fn objects(doc: &Document, scale: f64, turn: f64) -> Vec<NewObject> {
     let m = scale.max(1.0) / 1000.0;
@@ -215,7 +274,8 @@ pub fn objects(doc: &Document, scale: f64, turn: f64) -> Vec<NewObject> {
             out.push(path(&pis, None, 0.13, Some(LineType::Dashed)));
         }
         hectometres(&mut out, &b, m, h, turn);
-        curves(&mut out, &def, &b, m, h, turn);
+        let schedule = schedule_for(doc, &def.id, &b);
+        curves(&mut out, &def, &b, schedule.as_ref(), m, h, turn);
         ends(&mut out, &b, m, h, turn);
     }
     out
@@ -315,6 +375,7 @@ fn curves(
     out: &mut Vec<NewObject>,
     def: &kentos_commands::AlignmentDef,
     b: &Built,
+    schedule: Option<&(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
     m: f64,
     h: f64,
     turn: f64,
@@ -373,23 +434,7 @@ fn curves(
         } else {
             [0.0, 1.0]
         };
-        let side = if c.delta > 0.0 { "SOL" } else { "SAĞ" };
-        let mut lines = vec![
-            format!("{name} ({side})"),
-            format!("A={:.5}", grad(c.delta)),
-            format!("R={}", n2(c.radius)),
-            if (c.t_in - c.t_out).abs() < 5e-4 {
-                format!("T={}", n2(c.t_in))
-            } else {
-                format!("T={}-{}", n2(c.t_in), n2(c.t_out))
-            },
-            format!("L={}", n2(c.arc)),
-        ];
-        if c.spiral_in > 0.0 || c.spiral_out > 0.0 {
-            lines.push(format!("Lr={}-{}", n2(c.spiral_in), n2(c.spiral_out)));
-        }
-        lines.push(format!("Y={:.3}", pi.x));
-        lines.push(format!("X={:.3}", pi.y));
+        let lines = curve_data(&name, c, pt, schedule);
         // Upright on the paper, 4 mm beyond the PI away from the curve: above it when the outside is up (the block
         // grows up from there), below it otherwise; left aligned when the outside is to the right.
         let r = turn.to_radians();
@@ -402,11 +447,30 @@ fn curves(
         } else {
             -h
         };
-        let align = if u[0] * ex[0] + u[1] * ex[1] >= 0.0 {
+        let rightward = u[0] * ex[0] + u[1] * ex[1] >= 0.0;
+        let align = if rightward {
             TextAlign::MiddleLeft
         } else {
             TextAlign::MiddleRight
         };
+        // KGM's frame (EK-10, EK-11): a rule along the texts' aligned edge, one under the name and one over Y, X. The
+        // texts run `dir` along the paper from the edge; a line is at most 0.5 h a character wide (Barlow's figures
+        // measured 0.465 h on the PDF), so the rules reach past the longest.
+        let dir = if rightward { 1.0 } else { -1.0 };
+        let wide = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0) as f64 * 0.5 * h + 0.5 * h;
+        let edge = |y: f64, along: f64| {
+            let x = dir * along;
+            [corner[0] + ex[0] * x + ey[0] * y, corner[1] + ex[1] * x + ey[1] * y]
+        };
+        let gap = 0.6 * h;
+        let (top, bottom) = (first + 0.5 * pitch, first - pitch * (lines.len() as f64 - 0.5));
+        out.push(path(&[edge(top, -gap), edge(bottom, -gap)], None, 0.18, None));
+        let under_name = first - 0.5 * pitch;
+        out.push(path(&[edge(under_name, -gap), edge(under_name, wide)], None, 0.18, None));
+        if let Some(iy) = lines.iter().position(|l| l.starts_with("Y=")) {
+            let over_y = first - pitch * (iy as f64 - 0.5);
+            out.push(path(&[edge(over_y, -gap), edge(over_y, wide)], None, 0.18, None));
+        }
         for (i, l) in lines.into_iter().enumerate() {
             let y = first - pitch * i as f64;
             let at = [corner[0] + ey[0] * y, corner[1] + ey[1] * y];

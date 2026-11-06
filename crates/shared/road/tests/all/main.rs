@@ -37,5 +37,6 @@ mod sources;
 mod sampling;
 mod superelevation;
 mod superelevation_physics;
+mod superelevation_pi;
 mod swept;
 mod widening;

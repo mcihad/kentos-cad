@@ -211,10 +211,28 @@ fn screens_kgm() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens_axes() {
+    shoot_kgm_sheet("yol-y76", "y76", "2026-11-06");
+}
+
+/// The PI data with the superelevation (docs/adr/0983): S, Lr, Lt, La and Gn from the sample's schedule, and KGM's
+/// simple-curve T and L. The same sheet as [`screens_axes`]; `.run/gui-evidence/yol-y77/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_pi_data -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_pi_data() {
+    shoot_kgm_sheet("yol-y77", "y77", "2026-11-06");
+}
+
+/// KGM's A1 plan–profile sheet of the sample at 1:2000 with its schedule, light and dark, and its PDF, into
+/// `.run/gui-evidence/<folder>/<prefix>-pafta-*`.
+fn shoot_kgm_sheet(folder: &str, prefix: &str, date: &str) {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y76");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence").join(folder);
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
@@ -235,13 +253,13 @@ fn screens_axes() {
         send(&mut app, W::Dever(Some("d-1".into())));
         send(&mut app, W::Make);
         snapshot.settle(&mut app, App::view, &mut update);
-        let file = out.join(format!("y76-pafta-{name}.png"));
+        let file = out.join(format!("{prefix}-pafta-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         if theme == "light" {
             let doc = &app.document.as_ref().expect("a drawing").model;
-            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06").expect("the book's PDF");
-            let file = out.join("y76-pafta.pdf");
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", date).expect("the book's PDF");
+            let file = out.join(format!("{prefix}-pafta.pdf"));
             std::fs::write(&file, pdf.bytes).expect("writes the PDF");
             println!("{}", file.display());
         }

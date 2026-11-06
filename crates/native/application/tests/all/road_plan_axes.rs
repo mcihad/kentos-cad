@@ -57,7 +57,27 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     let grad = delta.abs() * 200.0 / std::f64::consts::PI;
     assert!(has(&format!("A={grad:.5}")), "A={grad:.5} in {words:?}");
     assert!(has("S1 (SOL)"), "a left turn: the bearing grows");
-    assert!(has("R=150.00") && has("Lr=40.00-40.00"));
+    assert!(has("R=150.00"));
+    // KGM's simple curve (docs/adr/0983): T = R·tan(Δ/2), L = R·Δ, the clothoids apart.
+    assert!(has(&format!("T={:.3}", 150.0 * (0.5 * delta.abs()).tan())), "T in {words:?}");
+    assert!(has(&format!("L={:.3}", 150.0 * delta.abs())), "L in {words:?}");
+    // The sample's only schedule, rows on the right (outside): −2.5 % at 150 to +6 % at 200 and back from 300 to 350.
+    // Level at 150 + 50 · 2.5/8.5: Lt = 250/17, Lr = 600/17 each way. TS from the clothoids' series (p, k), ST = TS +
+    // R·Δ + Ls: the rise starts 44.7 m before TS, and the way out is back to normal 7.9 m before ST (La 0).
+    let (r, ls) = (150.0_f64, 40.0_f64);
+    let p = ls.powi(2) / (24.0 * r) - ls.powi(4) / (2688.0 * r.powi(3));
+    let k = ls / 2.0 - ls.powi(3) / (240.0 * r * r);
+    let ts = (b[0] - a[0]).hypot(b[1] - a[1]) - ((r + p) * (0.5 * delta.abs()).tan() + k);
+    let st = ts + r * delta.abs() + ls;
+    assert!(has("S=6.00"), "S in {words:?}");
+    assert!(has(&format!("Lr={0:.3}-{0:.3}", 600.0 / 17.0)), "Lr in {words:?}");
+    assert!(has(&format!("Lt={0:.3}-{0:.3}", 250.0 / 17.0)), "Lt in {words:?}");
+    assert!(has(&format!("La={:.3}-{:.3}", ts - 150.0, (350.0 - st).max(0.0))), "La in {words:?}");
+    assert!(has("Gn=0.000"));
+    // KGM's order: S, Lr, Lt, La, Gn between L and Y.
+    let at = |w: &str| words.iter().position(|(t, _)| t.starts_with(w)).unwrap();
+    let order = ["A=", "R=", "T=", "L=", "S=", "Lr=", "Lt=", "La=", "Gn=", "Y=", "X="].map(at);
+    assert!(order.windows(2).all(|w| w[0] < w[1]), "{order:?}");
     assert!(
         has(&format!("Y={:.3}", b[0])) && has(&format!("X={:.3}", b[1])),
         "KGM: Y east, X north"

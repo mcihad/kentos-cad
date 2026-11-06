@@ -100,7 +100,8 @@ Kabul görmüş, standart:
 
 ## Açık
 
-- **Some bilgisinde S, Gn, Lt, La:** dever ve genişleme çizelgelerinden okunmuyor; V (hız) de yazılmıyor.
+- ~~**Some bilgisinde S, Gn, Lt, La:**~~ Y77'de, ADR 0983: aksın dever çizelgesinden. Aynı işte `T=` ve `L=` KGM'nin
+  basit kurbuna, `Lr=` klotoid boyundan rampa boyuna döndü. V (hız) yazılmıyor: projede tasarım hızı yok.
 - **Klotoid kutuları** (KGM'nin `S1/1`, `S1/2` A, Ls, Y, X kutuları).
 - **Km eşitliğinin kesir yazısı** (İLERİ/GERİ).
 - **Kuzey oku** (paftada ayrı bir öğe olarak var) ve aksın noktalı-çizgili gösterimi: KGM'de okunamadı.
