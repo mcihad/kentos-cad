@@ -471,3 +471,90 @@ fn an_empty_place_draws_the_profile_under_the_drawing() {
     assert!(drawn.max_y < before.min_y, "the profile ({}) stays under the drawing ({})", drawn.max_y, before.min_y);
     assert!((drawn.min_x - before.min_x).abs() < 50.0, "from the drawing's left edge, the heights' texts left of it");
 }
+
+/// The corridor cases' drawing (fixtures/road/v1/corridor-bands.json): corridor c-1 on the profile's alignment.
+fn corridor_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let bands: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/road/v1/corridor-bands.json")).expect("json");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(bands["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Çizime yaz with KGM's bands and a corridor (docs/adr/0994): its slope and platform rows go over the frame, as
+/// Yol paftaları draws them; with KentOS's bands the choice is not sent (the command would refuse it).
+#[test]
+fn the_window_draws_the_corridor_rows() {
+    let mut app = corridor_app();
+    let _ = app.update(Message::Run("profile.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::DrawLayer("0".into()));
+    send(&mut app, W::Corridor(Some("c-1".into())));
+    send(&mut app, W::Draw);
+    let rows = |app: &App| {
+        app.document.as_ref().expect("doc").model.entities().filter(|e| matches!(e, kentos_commands::Entity::Text(t) if t.text == "PLATFORM GEN.")).count()
+    };
+    assert_eq!(rows(&app), 0, "KentOS's bands: no rows");
+    send(&mut app, W::Kgm(true));
+    let before_ids: std::collections::HashSet<u32> =
+        app.document.as_ref().expect("doc").model.entities().map(|e| e.base().id).collect();
+    let doc = &app.document.as_ref().expect("doc").model;
+    app.spatial.sync(doc);
+    let before = app.spatial.extent().expect("a drawing");
+    send(&mut app, W::Draw);
+    assert_eq!(rows(&app), 1, "KGM's bands: the rows over the frame");
+    // Yer left empty: the rows over the frame stay under the drawing too (docs/adr/0991; Y88's first picture).
+    let doc = &app.document.as_ref().expect("doc").model;
+    let new: Vec<f64> = doc.entities().filter(|e| !before_ids.contains(&e.base().id)).map(|e| f64::from(e.base().id)).collect();
+    app.spatial.sync(doc);
+    let drawn = app.spatial.store().extent(Some(&new)).expect("its box");
+    assert!(drawn.max_y < before.min_y, "the rows ({}) stay under the drawing ({})", drawn.max_y, before.min_y);
+}
+
+/// The Boykesit window's KGM line (Dever bandı, Şev ve platform) and the profile drawn with the rows, light and dark;
+/// `.run/gui-evidence/yol-y88/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib profile_window_tests::screens_corridor_choice -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_corridor_choice() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y88");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = corridor_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("profile.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::DrawLayer("0".into()));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Corridor(Some("c-1".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y88-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Draw);
+        let _ = app.update(Message::Profiles(W::Cancel));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y88-cizim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

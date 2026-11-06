@@ -353,6 +353,8 @@ pub struct Window {
     pub(crate) dever: Option<String>,
     /// Çizime yaz's span of elevation as typed (docs/adr/0990): empty, the frame as high as the lines.
     pub(crate) span: String,
+    /// With KGM's bands, the corridor whose slope and platform rows go over the frame (docs/adr/0989, 0994).
+    pub(crate) corridor: Option<String>,
     /// Düşey kurp boyu over the window (profile_lengths_window.rs, docs/adr/0935 §3).
     pub(crate) lengths: Option<Box<crate::profile_lengths_window::Lengths>>,
     /// The values typed there, kept while the program runs when it is closed.
@@ -477,6 +479,7 @@ pub enum Event {
     /// KentOS's bands (false) or KGM's (true), docs/adr/0980.
     Kgm(bool),
     Span(String),
+    Corridor(Option<String>),
     /// The superelevation schedule KGM's Dever band draws (its id); none: no schedule.
     Dever(Option<String>),
     Draw,
@@ -834,6 +837,7 @@ impl App {
             Event::Place(t) => w.place = t,
             Event::Kgm(on) => w.kgm = on,
             Event::Span(t) => w.span = t,
+            Event::Corridor(id) => w.corridor = id,
             Event::Dever(id) => w.dever = id,
             Event::Draw => return self.draw_profile(),
             Event::Cancel => {
@@ -940,18 +944,24 @@ impl App {
             to: None,
             bands: w.kgm.then_some(kentos_commands::ProfileBands::Kgm),
             superelevation: if w.kgm { w.dever.clone() } else { None },
-            // Docs/adr/0989: the rows are chosen in Yol paftaları; this window has no corridor choice yet.
-            corridor: None,
+            // Docs/adr/0989, 0994: KGM's slope and platform rows, with KGM's bands only.
+            corridor: if w.kgm { w.corridor.clone() } else { None },
             // Docs/adr/0990: empty or not a number, no split; a number at most zero the command refuses.
             span: number(&w.span).ok().flatten(),
             expected_revision: None,
         };
         if auto {
-            // Drawn at the origin first (nothing written), then moved down by how far its frame reaches over it.
+            // Drawn at the origin first (nothing written), then moved down by how far its frame reaches over it, KGM's
+            // rows over the frame too (Y88's picture had them on the plan's points).
             let up = match self.document.as_mut().map(|doc| {
-                kentos_native_application::road_profiles_draw::plan(&ExecutionContext::new(&mut doc.model), &input)
+                let rows = if input.corridor.is_some() {
+                    kentos_native_application::road_profiles_draw::corridor_rows_height(&doc.model, 2.5)
+                } else {
+                    0.0
+                };
+                (kentos_native_application::road_profiles_draw::plan(&ExecutionContext::new(&mut doc.model), &input), rows)
             }) {
-                Some(kentos_commands::CommandResult::Completed { output, .. }) => output.frame[1][1],
+                Some((kentos_commands::CommandResult::Completed { output, .. }, rows)) => output.frame[1][1] + rows,
                 _ => 0.0,
             };
             input.at = self.under_drawing(up);
@@ -1152,20 +1162,50 @@ impl App {
             Some(chosen),
             move |i| msg(Event::Dever(ids[i].clone())),
         );
-        let mut line = row![
+        // Docs/adr/0994: the corridors of the profile's alignment, for KGM's slope and platform rows.
+        let corridors: Vec<(String, String)> = self
+            .document
+            .as_ref()
+            .map(|d| {
+                d.model
+                    .road_corridors()
+                    .iter()
+                    .filter(|c| c.alignment == alignment)
+                    .map(|c| (c.id.clone(), c.name.clone()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let picked = w.corridor.as_ref().and_then(|id| corridors.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+        let cids: Vec<Option<String>> = std::iter::once(None).chain(corridors.iter().map(|(i, _)| Some(i.clone()))).collect();
+        let corridor = Select::new(
+            std::iter::once("Satır yok".to_owned()).chain(corridors.iter().map(|(_, n)| n.clone())).map(Choice::new),
+            Some(picked),
+            move |i| msg(Event::Corridor(cids[i].clone())),
+        );
+        let line = row![
             label::strong("Çizime"),
             words::field("Katman", layer, None),
             words::field("Yer (Y; X)", kentos_ui::widget::text_field("Çizimin altı", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
             words::field("Bantlar", container(bands).width(130), None),
             // Docs/adr/0990: KGM's kot taşıma, the frame a fixed span of elevation high.
             words::field("Kot aralığı (m)", kentos_ui::widget::text_field("Sığdır", &w.span).on_input(|t| msg(Event::Span(t))).width(80), None),
+            space::horizontal().width(Fill),
+            words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        if w.kgm {
-            line = line.push(words::field("Dever bandı", container(dever).width(170), None));
+        if !w.kgm {
+            return line.into();
         }
-        line.push(words::secondary(DRAW, saved.then(|| msg(Event::Draw)))).into()
+        // KGM's own choices on a line of their own: with the corridor's the row ran past a 1100 px window (Y84's
+        // picture had the Dever bandı reach its edge).
+        let kgm = row![
+            words::field("Dever bandı", container(dever).width(200), None),
+            words::field("Şev ve platform", container(corridor).width(200), None),
+        ]
+        .spacing(10)
+        .align_y(iced::alignment::Vertical::Bottom);
+        column![line, kgm].spacing(8).into()
     }
 
     fn road_profile_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message> {
