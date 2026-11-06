@@ -642,6 +642,44 @@ codes! {
     WORK_FULL = "work_full", Failed, false, "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.";
     /// A relinked source's new file holds other content: what was derived from it is out of date.
     SOURCE_CONTENT_CHANGED = "source_content_changed", Warning, false, "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil.";
+    /// A record of the GNSS archive the project does not have (plan/map-cad.md MAP-03, docs/adr/1340).
+    UNKNOWN_SURVEY_RECORD = "unknown_survey_record", Failed, false, "GNSS arşivinde bu kimlikte kayıt yok.";
+    /// A name, mark, recipe or reason of the GNSS archive against its rule.
+    INVALID_SURVEY_TEXT = "invalid_survey_text", Failed, false, "Ad, işaret, tarif ya da neden boşlukla başlamayan ve bitmeyen, sınırı aşmayan bir metin olmalı.";
+    /// A number, time, antenna or epoch of the GNSS archive against its rule.
+    INVALID_SURVEY_VALUE = "invalid_survey_value", Failed, false, "GNSS arşivinin bir değeri (sayı, zaman, anten, epok) kuralına uymuyor.";
+    /// A GNSS file that is neither a RINEX observation file nor a GPX or an NMEA log with a position.
+    UNREADABLE_GNSS_FILE = "unreadable_gnss_file", Failed, false, "Dosya okunamadı: RINEX gözlem dosyası, GPX ya da konumu olan bir NMEA kaydı olmalı.";
+    /// A record an accepted point or a use rests on.
+    SURVEY_IN_USE = "survey_in_use", Failed, false, "Kabul edilen bir nokta ya da bir dayanan bu kayda dayanıyor; önce onu çıkarın ya da yeniden üretin.";
+    /// A solution's frame that is not a geographic system of the registry.
+    UNKNOWN_FRAME = "unknown_frame", Failed, false, "Çözümün çerçevesi kayıttaki coğrafi bir sistem olmalı (4326 WGS 84, 5252 TUREF).";
+    /// A receiver solution with no position to take.
+    NO_OBSERVATIONS = "no_observations", Failed, false, "Seçilen aralıkta ve fix'lerde ham ölçüm yok.";
+    /// A receiver solution's position without an ellipsoidal height.
+    NO_ELLIPSOIDAL_HEIGHT = "no_ellipsoidal_height", Failed, false, "Ham ölçümün elipsoit yüksekliği yok (GPX'in yüksekliğinin datumu bilinmez).";
+    /// An excluded solution where it cannot be.
+    SOLUTION_EXCLUDED = "solution_excluded", Failed, false, "Çözüm dışlanmış; önce dışlamayı kaldırın.";
+    /// A solution of another mark.
+    MARK_MISMATCH = "mark_mismatch", Failed, false, "Çözüm bu işaretin değil.";
+    /// Too few or too many solutions for the method.
+    METHOD_COUNT = "method_count", Failed, false, "Tek çözüm yöntemi bir, ortalamalar en az iki çözüm ister.";
+    /// A weighted mean of solutions without σ.
+    SIGMA_MISSING = "sigma_missing", Failed, false, "Ağırlıklı ortalama her çözümün σ'sını ister.";
+    /// Solutions in other frames or epochs, or of campaigns with other epoch decisions.
+    SOLUTIONS_DIFFER = "solutions_differ", Failed, false, "Çözümler aynı çerçeve ve epokta, arazi ölçümleri aynı epok kararında olmalı.";
+    /// A session without an antenna height.
+    ANTENNA_UNKNOWN = "antenna_unknown", Failed, false, "Oturumun anten yüksekliği yok; anteni ve yüksekliğin ölçüldüğü yeri girin.";
+    /// An eccentric antenna (not reduced in this slice).
+    ANTENNA_ECCENTRIC = "antenna_eccentric", Failed, false, "Anten işaretin dışında (doğu/kuzey dış merkezlik); dış merkezli anten bu sürümde indirgenmez.";
+    /// A mark that already has an accepted point.
+    ALREADY_ACCEPTED = "already_accepted", Failed, false, "Bu işaretin kabul edilen noktası var; Yeniden üret ile güncelleyin.";
+    /// The GNSS archive would pass its most records.
+    SURVEY_FULL = "survey_full", Failed, false, "GNSS arşivi en çok kayıt sınırında.";
+    /// What was given for a session differs from what its RINEX header says (what was given is kept).
+    RINEX_DIFFERS = "rinex_differs", Warning, false, "Verilen değer RINEX başlığındakinden farklı; verilen yazıldı.";
+    /// Lines of a GNSS file not read (a cut log): the positions read are kept, the file with its revision.
+    GNSS_LINES_SKIPPED = "gnss_lines_skipped", Warning, false, "Dosyanın bazı satırları okunmadı; okunan konumlar yazıldı.";
     /// A terrain surface's definition, or the project's surfaces with it, against their rules.
     INVALID_TERRAIN = "invalid_terrain", Failed, false, "Yüzeyin tanımı ya da onunla projenin yüzeyleri kurallarına uymuyor.";
     /// `set` without the surface, or a query's places without the surface they are on.

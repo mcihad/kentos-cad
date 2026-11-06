@@ -763,6 +763,9 @@ fn command_tool(c: &Value) -> Value {
             // Its remove takes an item of a map's work away, its forget a derivation record; its relink points rasters
             // and images at another file (docs/adr/1200 §3).
             | "map.work.edit"
+            // Its remove takes records of the GNSS archive away, its exclude leaves a solution out, its regenerate
+            // moves an accepted point (docs/adr/1340 §4).
+            | "map.survey.edit"
             // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
             | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).

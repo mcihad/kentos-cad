@@ -127,6 +127,7 @@ pub const UNITS: &[(&str, &str)] = &[
     ("m/s2", "Metre bölü saniye kare: ivme ve yavaşlama."),
     ("m/s3", "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor)."),
     ("s", "Saniye."),
+    ("m2", "Metre kare: bir konum kovaryansının ve varyansının birimi (σ²)."),
     (
         "day-min",
         "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir).",

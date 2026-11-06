@@ -54795,6 +54795,428 @@
       ]
     },
     {
+      "id": "map.survey.query",
+      "version": 1,
+      "title": "GNSS arşivini sorgula",
+      "summary": "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. Retler: not_a_map_project, invalid_uid, entity_not_found.",
+      "aliases": [
+        "gnssarsivi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a\nfile is only looked for. `uid` also says what that object is in the archive.\n\nRefusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "MapSurveyQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.survey.query` v1: the archive in its order, the object asked about, how many accepted points and\nuses are out of date, whether it was deep, and the revision read.",
+        "properties": {
+          "campaigns": {
+            "items": {
+              "$ref": "#/$defs/SurveyCampaignRow"
+            },
+            "type": "array"
+          },
+          "deep": {
+            "type": "boolean"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/$defs/SurveyMarkRow"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyObject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/SurveyPointRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/$defs/SurveySessionRow"
+            },
+            "type": "array"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/SurveyUseRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "campaigns",
+          "sessions",
+          "marks",
+          "points",
+          "uses",
+          "stale",
+          "deep",
+          "revision"
+        ],
+        "title": "MapSurveyTree",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.survey.query` v1: the archive in its order, the object asked about, how many accepted points and\nuses are out of date, whether it was deep, and the revision read.",
+        "properties": {
+          "campaigns": {
+            "items": {
+              "$ref": "#/$defs/SurveyCampaignRow"
+            },
+            "type": "array"
+          },
+          "deep": {
+            "type": "boolean"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/$defs/SurveyMarkRow"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyObject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/SurveyPointRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/$defs/SurveySessionRow"
+            },
+            "type": "array"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/SurveyUseRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "campaigns",
+          "sessions",
+          "marks",
+          "points",
+          "uses",
+          "stale",
+          "deep",
+          "revision"
+        ],
+        "title": "MapSurveyTree",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_map_project",
+          "invalid_uid",
+          "entity_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dosyaları okuyarak, kabul edilen bir noktanın ölçüsüyle",
+          "input": {
+            "deep": true,
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        }
+      ]
+    },
+    {
+      "id": "map.survey.edit",
+      "version": 1,
+      "title": "GNSS arşivini düzenle",
+      "summary": "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system).",
+      "aliases": [
+        "gnssarsividuzenle"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.survey.edit` v1: one operation, one undo step (“Arazi ölçümü ekle”, “Arazi ölçümünü değiştir”,\n“GNSS oturumu ekle”, “Oturumu değiştir”, “Alıcı çözümü”, “Çözüm ekle”, “Çözümü dışla”, “Dışlamayı kaldır”,\n“Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_survey_record`, `unknown_work_item`, `invalid_survey_text`, `invalid_survey_value`, `invalid_file_path`,\n`file_not_found`, `unreadable_gnss_file`, `nothing_to_set`, `survey_in_use`, `unknown_frame`, `no_observations`,\n`no_ellipsoidal_height`, `solution_excluded`, `mark_mismatch`, `method_count`, `sigma_missing`,\n`solutions_differ`, `antenna_unknown`, `antenna_eccentric`, `already_accepted`, `layer_not_found`, `layer_locked`,\n`no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, and the coordinate chain's own\n(`epoch_unsupported`, `velocity_missing`, `geoid_missing` …) when the point cannot be moved into the project.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/MapSurveyOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "MapSurveyEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.survey.edit` v1 (and its plan): the record it made or changed, the accepted point's object and\nrevision, how many positions a session took from its file, how many records a remove took, how many accepted points\nand uses are out of date after, and the drawing's revision.",
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "pointRevision": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "stale",
+          "revision"
+        ],
+        "title": "MapSurveyEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.survey.edit` v1 (and its plan): the record it made or changed, the accepted point's object and\nrevision, how many positions a session took from its file, how many records a remove took, how many accepted points\nand uses are out of date after, and the drawing's revision.",
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "pointRevision": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "stale",
+          "revision"
+        ],
+        "title": "MapSurveyEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "not_a_map_project",
+          "unknown_survey_record",
+          "unknown_work_item",
+          "invalid_survey_text",
+          "invalid_survey_value",
+          "invalid_file_path",
+          "file_not_found",
+          "unreadable_gnss_file",
+          "nothing_to_set",
+          "survey_in_use",
+          "unknown_frame",
+          "no_observations",
+          "no_ellipsoidal_height",
+          "solution_excluded",
+          "mark_mismatch",
+          "method_count",
+          "sigma_missing",
+          "solutions_differ",
+          "antenna_unknown",
+          "antenna_eccentric",
+          "already_accepted",
+          "layer_not_found",
+          "layer_locked",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "survey_full",
+          "epoch_unsupported",
+          "velocity_missing",
+          "geoid_missing",
+          "no_system"
+        ],
+        "warnings": [
+          "rinex_differs",
+          "gnss_lines_skipped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "RINEX dosyasından oturum",
+          "input": {
+            "operation": {
+              "campaign": "kp-1",
+              "file": "/veri/N1_3070.26o",
+              "op": "session"
+            }
+          }
+        },
+        {
+          "title": "İki günün çözümünün ortalamasını kabul et",
+          "input": {
+            "operation": {
+              "layer": "gnss",
+              "mark": "N1",
+              "method": "mean",
+              "op": "accept",
+              "solutions": [
+                "cz-1",
+                "cz-2"
+              ]
+            }
+          }
+        },
+        {
+          "title": "Kötü çözümü silmeden dışla",
+          "input": {
+            "operation": {
+              "op": "exclude",
+              "reason": "Ağaç altında, float'a düştü",
+              "solution": "cz-3"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -93504,6 +93926,120 @@
       "meaning": "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil."
     },
     {
+      "code": "unknown_survey_record",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "GNSS arşivinde bu kimlikte kayıt yok."
+    },
+    {
+      "code": "invalid_survey_text",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ad, işaret, tarif ya da neden boşlukla başlamayan ve bitmeyen, sınırı aşmayan bir metin olmalı."
+    },
+    {
+      "code": "invalid_survey_value",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "GNSS arşivinin bir değeri (sayı, zaman, anten, epok) kuralına uymuyor."
+    },
+    {
+      "code": "unreadable_gnss_file",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya okunamadı: RINEX gözlem dosyası, GPX ya da konumu olan bir NMEA kaydı olmalı."
+    },
+    {
+      "code": "survey_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kabul edilen bir nokta ya da bir dayanan bu kayda dayanıyor; önce onu çıkarın ya da yeniden üretin."
+    },
+    {
+      "code": "unknown_frame",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çözümün çerçevesi kayıttaki coğrafi bir sistem olmalı (4326 WGS 84, 5252 TUREF)."
+    },
+    {
+      "code": "no_observations",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Seçilen aralıkta ve fix'lerde ham ölçüm yok."
+    },
+    {
+      "code": "no_ellipsoidal_height",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ham ölçümün elipsoit yüksekliği yok (GPX'in yüksekliğinin datumu bilinmez)."
+    },
+    {
+      "code": "solution_excluded",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çözüm dışlanmış; önce dışlamayı kaldırın."
+    },
+    {
+      "code": "mark_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çözüm bu işaretin değil."
+    },
+    {
+      "code": "method_count",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tek çözüm yöntemi bir, ortalamalar en az iki çözüm ister."
+    },
+    {
+      "code": "sigma_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağırlıklı ortalama her çözümün σ'sını ister."
+    },
+    {
+      "code": "solutions_differ",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çözümler aynı çerçeve ve epokta, arazi ölçümleri aynı epok kararında olmalı."
+    },
+    {
+      "code": "antenna_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Oturumun anten yüksekliği yok; anteni ve yüksekliğin ölçüldüğü yeri girin."
+    },
+    {
+      "code": "antenna_eccentric",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Anten işaretin dışında (doğu/kuzey dış merkezlik); dış merkezli anten bu sürümde indirgenmez."
+    },
+    {
+      "code": "already_accepted",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu işaretin kabul edilen noktası var; Yeniden üret ile güncelleyin."
+    },
+    {
+      "code": "survey_full",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "GNSS arşivi en çok kayıt sınırında."
+    },
+    {
+      "code": "rinex_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Verilen değer RINEX başlığındakinden farklı; verilen yazıldı."
+    },
+    {
+      "code": "gnss_lines_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dosyanın bazı satırları okunmadı; okunan konumlar yazıldı."
+    },
+    {
       "code": "invalid_terrain",
       "kind": "failed",
       "retryable": false,
@@ -100211,6 +100747,10 @@
       "meaning": "Saniye."
     },
     {
+      "unit": "m2",
+      "meaning": "Metre kare: bir konum kovaryansının ve varyansının birimi (σ²)."
+    },
+    {
       "unit": "day-min",
       "meaning": "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir)."
     },
@@ -100537,6 +101077,26 @@
     }
   ],
   "$defs": {
+    "AcceptMethod": {
+      "description": "How an accepted point is made of its solutions.",
+      "oneOf": [
+        {
+          "const": "single",
+          "description": "One solution.",
+          "type": "string"
+        },
+        {
+          "const": "mean",
+          "description": "The arithmetic mean of two or more.",
+          "type": "string"
+        },
+        {
+          "const": "weighted",
+          "description": "Each component weighted by 1/σ².",
+          "type": "string"
+        }
+      ]
+    },
     "AccessSource": {
       "description": "Where a person's role in a project comes from.",
       "oneOf": [
@@ -102973,6 +103533,33 @@
       },
       "required": [
         "scale"
+      ],
+      "type": "object"
+    },
+    "AntennaReference": {
+      "description": "Where an antenna's height was measured to: the antenna reference point straight up (RINEX's `DELTA H`), or slant to\nthe antenna's edge.",
+      "enum": [
+        "arp",
+        "slant"
+      ],
+      "type": "string"
+    },
+    "AntennaUsed": {
+      "additionalProperties": false,
+      "description": "A session's vertical antenna height an accepted point's result was made with.",
+      "properties": {
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "session": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "session",
+        "height"
       ],
       "type": "object"
     },
@@ -125599,6 +126186,25 @@
         }
       ]
     },
+    "FixCount": {
+      "description": "How many of a session's positions had a fix.",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "fix": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fix",
+        "count"
+      ],
+      "type": "object"
+    },
     "FixtureClearance": {
       "additionalProperties": false,
       "description": "The free room a fixture needs in front of it: a rectangle `width` wide, `depth` deep, centred on the front of the\nblock's own box (its +y side).",
@@ -128025,6 +128631,96 @@
         "columns",
         "types",
         "geometry"
+      ],
+      "type": "object"
+    },
+    "GnssPoint": {
+      "description": "A GNSS position as the file wrote it (docs/adr/0169 §1, §6): its kind\n(`wpt`, `rtept`, `trkpt` of GPX; `gga` of NMEA), its name, its WGS 84\nlatitude and longitude (degrees), its height as written (GPX's `ele`;\nGGA's above mean sea level), the geoid's height above the WGS 84\nellipsoid, the ellipsoidal height (the two summed, when both are\ngiven), its time as the file gives it, its fix (named: `3B`, `RTK\nsabit` …), satellites in use, HDOP, and the file's line.",
+      "properties": {
+        "ellipsoidal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "fix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "geoid": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "hdop": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "height": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "lat": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "line": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "lon": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "satellites": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "time": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "lat",
+        "lon",
+        "line"
       ],
       "type": "object"
     },
@@ -138478,6 +139174,698 @@
         "reason"
       ],
       "type": "object"
+    },
+    "MapSurvey": {
+      "additionalProperties": false,
+      "description": "A map project's GNSS campaign archive.",
+      "properties": {
+        "campaigns": {
+          "items": {
+            "$ref": "#/$defs/SurveyCampaign"
+          },
+          "type": "array"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/SurveyPoint"
+          },
+          "type": "array"
+        },
+        "sessions": {
+          "items": {
+            "$ref": "#/$defs/SurveySession"
+          },
+          "type": "array"
+        },
+        "solutions": {
+          "items": {
+            "$ref": "#/$defs/SurveySolution"
+          },
+          "type": "array"
+        },
+        "uses": {
+          "items": {
+            "$ref": "#/$defs/SurveyUse"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "MapSurveyOperation": {
+      "description": "What `map.survey.edit` does.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A new campaign `kp-N`: its name, the map's work item it is (a campaign item), its operator, its epoch decision\nand the velocity grid that moves solutions to it.",
+          "properties": {
+            "epoch": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "year"
+            },
+            "name": {
+              "type": "string"
+            },
+            "op": {
+              "const": "campaign",
+              "type": "string"
+            },
+            "operator": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "velocity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SurveyGrid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "work": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A campaign's name, work item, operator, epoch decision or velocity grid.",
+          "properties": {
+            "campaign": {
+              "type": "string"
+            },
+            "epoch": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "year"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "setCampaign",
+              "type": "string"
+            },
+            "operator": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "velocity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SurveyGrid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "work": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "campaign"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A new session `os-N` of a campaign. With a file (an absolute path): a RINEX observation file's header gives the\nmark, receiver, antenna, times and time system; an NMEA log or a GPX file its positions and their first and\nlast times. What is given here wins over the file (warning `rinex_differs` says where they differ).",
+          "properties": {
+            "antenna": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SurveyAntenna"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "campaign": {
+              "type": "string"
+            },
+            "end": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "file": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "mark": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "session",
+              "type": "string"
+            },
+            "operator": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "receiver": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SurveyReceiver"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "start": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "timeSystem": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimeSystem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "campaign"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A session's mark (not while an accepted point uses it), times, receiver, antenna or operator. A new antenna\nheight puts the accepted points made with the old one out of date.",
+          "properties": {
+            "antenna": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SurveyAntenna"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "end": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "mark": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "setSession",
+              "type": "string"
+            },
+            "operator": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "receiver": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SurveyReceiver"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "session": {
+              "type": "string"
+            },
+            "start": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "timeSystem": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimeSystem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "session"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The receiver's solution `cz-N` of a session: the mean of its positions `from`..`to` (both in; all when not\ngiven) whose fix is one of `fixes` (any when empty), each with an ellipsoidal height; its frame and the antenna\nheight the receiver took off are the user's to say.",
+          "properties": {
+            "antennaApplied": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "epoch": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "year"
+            },
+            "fixes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "from": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "index"
+            },
+            "op": {
+              "const": "solve",
+              "type": "string"
+            },
+            "session": {
+              "type": "string"
+            },
+            "srid": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "epsg"
+            },
+            "to": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "index"
+            }
+          },
+          "required": [
+            "op",
+            "session",
+            "srid",
+            "antennaApplied"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A solution `cz-N` from elsewhere (a processing report, a PPP service, a controller's record) with its quality,\ncovariance, report file and recipe.",
+          "properties": {
+            "age": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "s"
+            },
+            "antennaApplied": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "correction": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "covariance": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 6,
+              "minItems": 6,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "m2"
+            },
+            "epoch": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "year"
+            },
+            "epochs": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
+            "fix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "hdop": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "1"
+            },
+            "height": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "kind": {
+              "$ref": "#/$defs/SolutionKind"
+            },
+            "lat": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            },
+            "lon": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            },
+            "op": {
+              "const": "solution",
+              "type": "string"
+            },
+            "recipe": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "report": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "satellites": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
+            "session": {
+              "type": "string"
+            },
+            "sigma": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "m"
+            },
+            "srid": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "epsg"
+            }
+          },
+          "required": [
+            "op",
+            "session",
+            "kind",
+            "lat",
+            "lon",
+            "height",
+            "srid",
+            "antennaApplied"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A solution left out, with why; it stays in the record.",
+          "properties": {
+            "op": {
+              "const": "exclude",
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "solution": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "solution",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An excluded solution taken back.",
+          "properties": {
+            "op": {
+              "const": "include",
+              "type": "string"
+            },
+            "solution": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "solution"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Whether a solution goes into the adjustment.",
+          "properties": {
+            "adjust": {
+              "type": "boolean"
+            },
+            "op": {
+              "const": "adjust",
+              "type": "string"
+            },
+            "solution": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "solution",
+            "adjust"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A mark's point accepted: its object on `layer` (the active layer when not given) and `kn-N`, in one step.",
+          "properties": {
+            "layer": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "mark": {
+              "type": "string"
+            },
+            "method": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/AcceptMethod"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "op": {
+              "const": "accept",
+              "type": "string"
+            },
+            "solutions": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "op",
+            "mark",
+            "solutions"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An accepted point made again with the antennas and epoch decision now (and, given, other solutions or method):\nits older result is kept, its object moves, its revision goes up.",
+          "properties": {
+            "method": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/AcceptMethod"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "op": {
+              "const": "regenerate",
+              "type": "string"
+            },
+            "point": {
+              "type": "string"
+            },
+            "solutions": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "point"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Objects recorded as made from accepted points by `operation`, at their revisions now.",
+          "properties": {
+            "op": {
+              "const": "use",
+              "type": "string"
+            },
+            "operation": {
+              "type": "string"
+            },
+            "points": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "uids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "op",
+            "uids",
+            "points",
+            "operation"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A record taken away: a campaign (with its sessions and solutions), a session (with its solutions), a solution,\nan accepted point's record (its object stays) or a use. What an accepted point or a use rests on is not.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "op": {
+              "const": "remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "id"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "MapWork": {
       "additionalProperties": false,
@@ -158471,6 +159859,26 @@
       ],
       "type": "object"
     },
+    "PointRevision": {
+      "additionalProperties": false,
+      "description": "An accepted point's revision a use was made from.",
+      "properties": {
+        "point": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "point",
+        "revision"
+      ],
+      "type": "object"
+    },
     "PointShape": {
       "description": "A point's shape.",
       "enum": [
@@ -161525,6 +162933,17 @@
             "null"
           ],
           "x-unit": "epsg"
+        },
+        "mapSurvey": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MapSurvey"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A map project's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340): campaigns, sessions, solutions,\naccepted points and what was made from them; absent: none. Only a CAD project drawn for a map has it (`.kcad`\nschema 194)."
         },
         "mapWork": {
           "anyOf": [
@@ -166522,6 +167941,46 @@
           "type": "string"
         }
       ]
+    },
+    "RinexFacts": {
+      "additionalProperties": false,
+      "description": "What a RINEX observation file's header said that is kept nowhere else: its version (as written), the marker's\nnumber, the interval (s) and the approximate position (ECEF XYZ, m).",
+      "properties": {
+        "approximate": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "interval": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "s"
+        },
+        "markerNumber": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "type": "object"
     },
     "RingGeometry": {
       "description": "A closed ring in vertex + bulge form (a polygon hole).",
@@ -171993,6 +173452,26 @@
         "insertion"
       ],
       "type": "string"
+    },
+    "SolutionKind": {
+      "description": "What made a solution.",
+      "oneOf": [
+        {
+          "const": "receiver",
+          "description": "The receiver's own real-time solution, from its log.",
+          "type": "string"
+        },
+        {
+          "const": "processed",
+          "description": "A baseline, PPK or static solution processed in office software.",
+          "type": "string"
+        },
+        {
+          "const": "ppp",
+          "description": "A precise point positioning service's.",
+          "type": "string"
+        }
+      ]
     },
     "SolveStatus": {
       "description": "How a solve ended (docs/adr/0334 §4).",
@@ -177963,6 +179442,786 @@
       ],
       "type": "object"
     },
+    "SurveyAntenna": {
+      "additionalProperties": false,
+      "description": "A session's antenna: its type and serial, the height measured and to where; a slant height with the maker's\nradius and the measuring point's height above the ARP; the eccentricity east and north (m).",
+      "properties": {
+        "east": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "north": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "offset": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "radius": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "reference": {
+          "$ref": "#/$defs/AntennaReference"
+        },
+        "serial": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "height"
+      ],
+      "type": "object"
+    },
+    "SurveyCampaign": {
+      "additionalProperties": false,
+      "description": "A survey campaign.",
+      "properties": {
+        "epoch": {
+          "description": "The epoch its accepted points are given in (decimal year); none: the project's.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "id": {
+          "description": "`kp-N`.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "operator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "velocity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyGrid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The velocity grid that moves its solutions to that epoch."
+        },
+        "work": {
+          "description": "The map's work item it is (`is-N`, docs/adr/1200), by id alone.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "SurveyCampaignRow": {
+      "description": "A campaign as it stands: whether the map's work item it names is still there, how many sessions it has.",
+      "properties": {
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "operator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sessions": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "velocity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "work": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workMissing": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sessions"
+      ],
+      "type": "object"
+    },
+    "SurveyFile": {
+      "additionalProperties": false,
+      "description": "A file the archive rests on: an absolute path and the SHA-256 of the content read (its revision).",
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/SurveyFileFormat"
+        },
+        "path": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "revision",
+        "format"
+      ],
+      "type": "object"
+    },
+    "SurveyFileFormat": {
+      "description": "What a session's original file is.",
+      "oneOf": [
+        {
+          "enum": [
+            "rinex",
+            "nmea",
+            "gpx"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "report",
+          "description": "A processing report (a solution's).",
+          "type": "string"
+        }
+      ]
+    },
+    "SurveyFileRow": {
+      "description": "A session's file as it stands.",
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/SurveyFileFormat"
+        },
+        "path": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/SurveyFileState"
+        }
+      },
+      "required": [
+        "path",
+        "revision",
+        "format",
+        "state"
+      ],
+      "type": "object"
+    },
+    "SurveyFileState": {
+      "description": "How a session's file stands: there (looked for only), the content read, other content, not there.",
+      "enum": [
+        "found",
+        "current",
+        "changed",
+        "missing"
+      ],
+      "type": "string"
+    },
+    "SurveyGrid": {
+      "additionalProperties": false,
+      "description": "A grid by its name and SHA-256 (lower-case hex), as the device's grid library keeps it.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "SurveyMarkRow": {
+      "description": "A mark: its sessions in the archive's order, its solutions, its accepted point.",
+      "properties": {
+        "mark": {
+          "type": "string"
+        },
+        "point": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sessions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "solutions": {
+          "items": {
+            "$ref": "#/$defs/SurveySolutionRow"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "mark",
+        "sessions",
+        "solutions"
+      ],
+      "type": "object"
+    },
+    "SurveyObject": {
+      "description": "What one object is in the archive: the accepted point it is (with its solutions), or the uses it is in.",
+      "properties": {
+        "point": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyPointRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "solutions": {
+          "items": {
+            "$ref": "#/$defs/SurveySolutionRow"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "used": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyUseRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "uid"
+      ],
+      "type": "object"
+    },
+    "SurveyPoint": {
+      "additionalProperties": false,
+      "description": "A point accepted into the project: its mark, its object, its result now and its older ones (oldest first).",
+      "properties": {
+        "history": {
+          "items": {
+            "$ref": "#/$defs/SurveyResult"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "`kn-N`.",
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/SurveyResult"
+        },
+        "uid": {
+          "$ref": "#/$defs/EntityId"
+        }
+      },
+      "required": [
+        "id",
+        "mark",
+        "uid",
+        "result"
+      ],
+      "type": "object"
+    },
+    "SurveyPointRow": {
+      "description": "An accepted point as it stands: its state and why, its result now, how many older results it keeps.",
+      "properties": {
+        "history": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/SurveyResult"
+        },
+        "state": {
+          "$ref": "#/$defs/SurveyState"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "mark",
+        "uid",
+        "state",
+        "result",
+        "history"
+      ],
+      "type": "object"
+    },
+    "SurveyReceiver": {
+      "additionalProperties": false,
+      "description": "A session's receiver: its type, serial and firmware.",
+      "properties": {
+        "firmware": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "serial": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "SurveyReplay": {
+      "description": "A recorded session replayed: its fixes in the order they first come (a position without one is `—`), how many\ntimes an RTK fixed position was followed by another fix, how many steps between timed positions were not forward or\nlonger than twice the usual step, and the usual step (s).",
+      "properties": {
+        "fixes": {
+          "items": {
+            "$ref": "#/$defs/FixCount"
+          },
+          "type": "array"
+        },
+        "floatDrops": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "nominal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "s"
+        },
+        "timeJumps": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "fixes",
+        "floatDrops",
+        "timeJumps"
+      ],
+      "type": "object"
+    },
+    "SurveyResult": {
+      "additionalProperties": false,
+      "description": "What an accepted point is, once made: its solutions and method, the mark's position in the solutions' frame and\nepoch, the epoch decision it was moved to, each session's vertical antenna height, σ when known, the project's x,\ny and z, whether the coordinate chain was complete, and why it was made again.",
+      "properties": {
+        "antenna": {
+          "items": {
+            "$ref": "#/$defs/AntennaUsed"
+          },
+          "type": "array"
+        },
+        "chain": {
+          "description": "`complete` or `limited` (docs/adr/1230).",
+          "type": "string"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "lat": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "lon": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "method": {
+          "$ref": "#/$defs/AcceptMethod"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "sigma": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "solutions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "epsg"
+        },
+        "targetEpoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "revision",
+        "solutions",
+        "method",
+        "lat",
+        "lon",
+        "height",
+        "srid",
+        "antenna",
+        "x",
+        "y",
+        "chain"
+      ],
+      "type": "object"
+    },
+    "SurveySession": {
+      "additionalProperties": false,
+      "description": "A session: one occupation of one mark.",
+      "properties": {
+        "antenna": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyAntenna"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "campaign": {
+          "type": "string"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "`os-N`.",
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "observations": {
+          "description": "The positions an NMEA log or a GPX file gave, as the reader read them.",
+          "items": {
+            "$ref": "#/$defs/GnssPoint"
+          },
+          "type": "array"
+        },
+        "operator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "receiver": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyReceiver"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rinex": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RinexFacts"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timeSystem": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeSystem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "campaign",
+        "mark"
+      ],
+      "type": "object"
+    },
+    "SurveySessionRow": {
+      "description": "A session as it stands: its antenna and vertical height, its file, how many positions it holds, the replay of\nthem, how many solutions it has.",
+      "properties": {
+        "antenna": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyAntenna"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "campaign": {
+          "type": "string"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyFileRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "observations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "receiver": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyReceiver"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replay": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyReplay"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "solutions": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timeSystem": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeSystem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "id",
+        "campaign",
+        "mark",
+        "observations",
+        "solutions"
+      ],
+      "type": "object"
+    },
     "SurveySettings": {
       "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
       "properties": {
@@ -178141,6 +180400,392 @@
         "name",
         "reading",
         "distance"
+      ],
+      "type": "object"
+    },
+    "SurveySolution": {
+      "additionalProperties": false,
+      "description": "A provider's solution of a session.",
+      "properties": {
+        "adjust": {
+          "description": "It goes into the adjustment (when not excluded).",
+          "type": "boolean"
+        },
+        "age": {
+          "description": "The largest correction age (s).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "s"
+        },
+        "antennaApplied": {
+          "description": "The vertical ARP height its maker took off (m); 0: the position is the antenna's.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "correction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "covariance": {
+          "description": "The full covariance NN, NE, NU, EE, EU, UU (m²).",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m2"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "epochs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "excluded": {
+          "description": "Why it is left out; present: excluded (it stays in the record).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fixes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "from": {
+          "description": "A receiver solution's positions: the first and last place in the session's (both in) and the fixes taken.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        },
+        "hdop": {
+          "description": "The largest HDOP (no unit: geometry, not metres).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "height": {
+          "description": "The ellipsoidal height (m).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "description": "`cz-N`.",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SolutionKind"
+        },
+        "lat": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "lon": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "recipe": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "report": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "satellites": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "session": {
+          "type": "string"
+        },
+        "sigma": {
+          "description": "σ north, east, up (m).",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "srid": {
+          "description": "The geographic system its coordinates are in (an EPSG code of the registry).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "epsg"
+        },
+        "to": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "id",
+        "session",
+        "kind",
+        "lat",
+        "lon",
+        "height",
+        "srid",
+        "antennaApplied"
+      ],
+      "type": "object"
+    },
+    "SurveySolutionRow": {
+      "description": "A solution as it stands for its mark: last measured, accepted (the accepted point's result now uses it), in the\nadjustment (marked and not excluded), excluded and why; the mark's height by its session's antenna now.",
+      "properties": {
+        "accepted": {
+          "type": "boolean"
+        },
+        "adjusted": {
+          "type": "boolean"
+        },
+        "antennaApplied": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "epochs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "excluded": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SolutionKind"
+        },
+        "lat": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "latest": {
+          "type": "boolean"
+        },
+        "lon": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "markHeight": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "session": {
+          "type": "string"
+        },
+        "sigma": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "epsg"
+        }
+      },
+      "required": [
+        "id",
+        "session",
+        "kind",
+        "lat",
+        "lon",
+        "height",
+        "srid",
+        "antennaApplied",
+        "latest",
+        "accepted",
+        "adjusted"
+      ],
+      "type": "object"
+    },
+    "SurveyState": {
+      "description": "How an accepted point or a use stands: up to date, out of date (why says it), its object gone.",
+      "enum": [
+        "current",
+        "stale",
+        "missing"
+      ],
+      "type": "string"
+    },
+    "SurveyUse": {
+      "additionalProperties": false,
+      "description": "Objects made from accepted points (a surface, a contour): the operation, the objects and each point's revision.",
+      "properties": {
+        "id": {
+          "description": "`kb-N`.",
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/PointRevision"
+          },
+          "type": "array"
+        },
+        "uids": {
+          "items": {
+            "$ref": "#/$defs/EntityId"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "operation",
+        "uids",
+        "points"
+      ],
+      "type": "object"
+    },
+    "SurveyUseRow": {
+      "description": "A use as it stands: how many of its objects the drawing holds of how many, its state and why.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "recorded": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "state": {
+          "$ref": "#/$defs/SurveyState"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "operation",
+        "objects",
+        "recorded",
+        "state"
       ],
       "type": "object"
     },
@@ -183511,6 +186156,19 @@
         "matrixHeight"
       ],
       "type": "object"
+    },
+    "TimeSystem": {
+      "description": "A time system a session's times are in (RINEX 3.05's codes, and UTC).",
+      "enum": [
+        "gps",
+        "utc",
+        "glo",
+        "gal",
+        "bdt",
+        "qzs",
+        "irn"
+      ],
+      "type": "string"
     },
     "TimeVersionKind": {
       "description": "What is written at the date.",

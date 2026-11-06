@@ -263,6 +263,30 @@ değiştirip yeniden üret. Eski rapor korunurken hangi nokta ve yüzeyin
 güncelliğini yitirdiği görülsün. Kapat–aç, eksik kaynak ve iptal hiçbir ham
 veriyi kaybetmesin. Gerçek donanım kabulü ayrıca beklesin.
 
+**6 Kasım 2026 — MAP-03.1 (dal `map-03-gnss-kampanya`, [ADR 1340](../docs/adr/1340-gnss-campaign-archive.md)), madde açık.**
+CAD/GIS işareti: arşivin düzenlenmesi (GNSS arşivi paneli, Ölçüm oturumu ekle, `map.survey.edit`) yalnız KentOS
+Harita'nın; kabul edilen noktalar ve kalitesi (Kabul edilen noktalar, Öznitelikler › GNSS ölçümü, `map.survey.query`)
+Harita ve GIS'in. Kanıtlanan alt maddeler: (1) kalıcı model `settings.mapSurvey` (`.kcad` şema 194, geçici numara):
+arazi ölçümü (harita işi öğesine yalnız kimliğiyle bağlı; epok kararı, hız ızgarası), ölçüm oturumu (işaret, zaman ve
+zaman sistemi, alıcı, anten: ARP'ye düşey ya da eğik √(S²−R²)−offset, operatör, orijinal dosya SHA-256'sıyla, ham
+ölçümler), çözüm (alıcı, işlenmiş, PPP; çerçeve ve epok, uygulanmış anten yüksekliği, fix, epok/uydu/HDOP, σ, tam
+kovaryans, düzeltme kaynağı ve yaşı, işleme raporu, yeniden işleme tarifi), kabul edilen nokta (sonucu ve eski
+sonuçları) ve dayanan; ham ölçüm, sağlayıcının çözümü ve kabul edilen nokta ayrı kimliklerdedir. (2) Mevcut GPX/NMEA
+okuyucusu yeniden yazılmadan oturuma bağlandı (fix, uydu, HDOP, yükseklikler korunur; HDOP birimsiz, RTK sabit
+doğruluk garantisi sayılmaz). (3) RINEX 2.11/3.05/4.00 gözlem başlığı okunur (işaret, alıcı, anten ve DELTA H/E/N,
+ilk/son gözlem zamanı ve zaman sistemi, aralık); işlenmiş/PPP çözümü kovaryansı ve raporuyla alınır. (4) Aynı işaretin
+günleri ayrı oturumdur; son ölçülen, kabul edilen ve dengelemeye giren ayrı görünür; çözüm nedeniyle silinmeden
+dışlanır; anten ya da epok kararı değişince nokta güncel değildir, yeniden üretme eski sonucu korur, nesneyi taşır ve
+ona dayanan yüzeyi güncel değil gösterir. (5) Kayıtlı oturum oynatması: kesik satır, RTK sabitten düşüş ve zaman
+atlaması sayılır. Kabulden kanıtlananlar: bir noktaya iki oturum ve iki çözüm; anten kararı değişip yeniden üretildi
+(eski rapor korundu, yüzey güncel değil); epok kararı hız ızgarasıyla yeniden üretildi, ızgarasız reddedildi;
+kapat–aç (`.kcad`), eksik kaynak dosyası ve kapatılan dosya penceresi ham veriyi kaybetmez. `map.survey.query` 22,
+`map.survey.edit` 73 ortak durum (bağımsız `scripts/fixtures/map_survey_cases.py`: kurallar ADR'den, RINEX sütunlarla,
+NMEA `gnss_nmea_cases.py` ile, projeye taşıma PROJ ile). **Açık:** baz vektörü ve tam kovaryanslı ağ dengelemesi
+(`adjust` bugün işarettir), dış merkezli anten indirgemesi ve ANTEX, RINEX gözlemlerinin kendisi, PPK/PPP çözücü
+adaptörü, GGA'nın düzeltme yaşı, dayanan kaydının yüzey komutlarınca kendiliğinden yazılması, gerçek kullanıcı
+projesinde GUI kabulü, web. Canlı RTK/NTRIP (HYB-24) ertelendi; gerçek alıcı kabulü ayrıca bekler. Madde `[ ]` kalır.
+
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K12], [K20], [K25]–[K27].

@@ -795,6 +795,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut cad_work = None;
     let mut road = None;
     let mut map_work = None;
+    let mut map_survey = None;
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1040,6 +1041,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "autoSelect" if has.layer_geometry => auto_select = Some(r.bool()?),
             // Schema 98 (docs/adr/0583 §3): the map's system.
             // Schema 188 (docs/adr/1200 §2): a map project's work structure, read whole and checked.
+            // Schema 194 (docs/adr/1340 §5): a map project's GNSS archive, read whole and checked.
+            "mapSurvey" if has.map_survey => {
+                let (v, at): (kentos_contracts::MapSurvey, usize) = objects::json_part(r, "GNSS arşivi")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş GNSS arşivi yazılmaz"));
+                }
+                if let Some((field, words)) = v.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
+                }
+                map_survey = Some(v);
+            }
             "mapWork" if has.map_work => {
                 let (v, at): (kentos_contracts::MapWork, usize) = objects::json_part(r, "harita işi")?;
                 if v.is_empty() {
@@ -1792,12 +1804,16 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         return Err(relation("road", "yol ayarları yalnız yol projesinin olur (cadWork road)", r));
     }
     // A map's work structure is a map project's (docs/adr/1200 §2).
+    if map_survey.is_some() && cad_work != Some(CadWork::Map) {
+        return Err(relation("mapSurvey", "GNSS arşivi yalnız harita projesinin olur (cadWork map)", r));
+    }
     if map_work.is_some() && cad_work != Some(CadWork::Map) {
         return Err(relation("mapWork", "harita işi yalnız harita projesinin olur (cadWork map)", r));
     }
     Ok(ProjectSettings {
         road,
         map_work,
+        map_survey,
         source_bases,
         heights,
         coordinate_epoch,

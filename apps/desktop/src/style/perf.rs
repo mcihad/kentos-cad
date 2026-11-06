@@ -196,6 +196,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             coordinate_epoch: None,
             road: None,
             map_work: None,
+            map_survey: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

@@ -333,6 +333,8 @@ COMMANDS: dict[str, Any] = {
     "file.publish.sheets": file.publish.sheets,
     "file.publish.status": file.publish.status,
     "file.recover": file.recover,
+    "map.survey.edit": map.survey.edit,
+    "map.survey.query": map.survey.query,
     "map.work.edit": map.work.edit,
     "map.work.query": map.work.query,
     "project.access.revoke": project.access.revoke,

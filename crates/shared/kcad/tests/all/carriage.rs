@@ -154,6 +154,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         coordinate_epoch: _,
         road: _,
         map_work: _,
+        map_survey: _,
     } = s;
     vec![
         "srid",
@@ -208,6 +209,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         "coordinateEpoch",
         "road",
         "mapWork",
+        "mapSurvey",
     ]
 }
 

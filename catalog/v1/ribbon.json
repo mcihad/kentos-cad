@@ -999,6 +999,27 @@
       ]
      },
      {
+      "label": "GNSS arşivi",
+      "icon": "gnssArchive",
+      "works": [
+       "map"
+      ],
+      "items": [
+       {
+        "command": "map.survey",
+        "size": "large"
+       },
+       {
+        "command": "map.survey.import",
+        "size": "small"
+       },
+       {
+        "command": "map.survey.select",
+        "size": "small"
+       }
+      ]
+     },
+     {
       "label": "Poligon ve alım",
       "icon": "surveyTraverse",
       "items": [
@@ -6834,7 +6855,17 @@
    "workspace.cad": [],
    "workspace.gis": [],
    "workspace.plan3d": [],
-   "workspace.disaster": []
+   "workspace.disaster": [],
+   "map.survey": [
+    "harita"
+   ],
+   "map.survey.import": [
+    "harita"
+   ],
+   "map.survey.select": [
+    "harita",
+    "cbs"
+   ]
   }
  }
 }

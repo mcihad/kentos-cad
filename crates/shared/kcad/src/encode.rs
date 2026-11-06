@@ -529,7 +529,8 @@ impl<'d> Encoder<'d> {
             + usize::from(s.line_type_scale.is_some())
             + usize::from(s.auto_select.is_some())
             + usize::from(s.road.is_some())
-            + usize::from(s.map_work.is_some());
+            + usize::from(s.map_work.is_some())
+            + usize::from(s.map_survey.is_some());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
             self.key("ucs");
@@ -705,6 +706,23 @@ impl<'d> Encoder<'d> {
         if !s.line_types.is_empty() {
             self.key("lineTypes");
             self.at(Seg::Name("lineTypes"), |e| e.line_types(&s.line_types))?;
+        }
+        // Schema 194 (docs/adr/1340 §5): a map project's GNSS archive, as its JSON (after lineTypes); a map project's
+        // only.
+        if let Some(v) = &s.map_survey {
+            self.key("mapSurvey");
+            self.at(Seg::Name("mapSurvey"), |e| {
+                if v.is_empty() {
+                    return Err(e.fail(Code::BadValue, "boş GNSS arşivi yazılmaz"));
+                }
+                if s.cad_work != Some(kentos_contracts::CadWork::Map) {
+                    return Err(e.fail(Code::BadValue, "GNSS arşivi yalnız harita projesinin olur (cadWork map)"));
+                }
+                if let Some((field, words)) = v.problem() {
+                    return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
+                }
+                e.json(&serde_json::to_value(v).unwrap_or_default())
+            })?;
         }
         self.key("plotScale");
         self.at(Seg::Name("plotScale"), |e| e.float(s.plot_scale))?;
@@ -2243,6 +2261,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 194 (docs/adr/1340 §5): a map project's GNSS archive.
+    if doc.settings.map_survey.is_some() {
+        return crate::SCHEMA_WITH_MAP_SURVEY;
+    }
     // Schema 192 (docs/adr/0979): an alignment PI's ove.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_ove) {
         return crate::SCHEMA_WITH_ROAD_OVE;

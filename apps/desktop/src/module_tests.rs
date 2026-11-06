@@ -132,6 +132,7 @@ fn each_work_shows_its_own_tabs_and_panels() {
         [
             "Sorgu",
             "Saha",
+            "GNSS arşivi",
             "Poligon ve alım",
             "Kestirme ve dengeleme",
             "Noktalar",
@@ -144,7 +145,7 @@ fn each_work_shows_its_own_tabs_and_panels() {
         ids(app.ribbon_tabs()),
         ids(catalog().tabs_in(Workspace::Cad))
     );
-    assert_eq!(panels(&app, "survey").len(), 6);
+    assert_eq!(panels(&app, "survey").len(), 7);
     // CBS is as it was.
     let app = app_with_drawing();
     assert_eq!(app.work_mode(), Workspace::Gis);
@@ -654,6 +655,18 @@ fn found(app: &mut App, query: &str) -> Vec<String> {
             crate::ribbon_search::Hit::Model { id, .. } => format!("processing.model.{id}"),
         })
         .collect()
+}
+
+/// The GNSS archive (docs/adr/1340 §1): its editing is KentOS Harita's, its accepted points are read in KentOS GIS
+/// too; a road's survey tab has no GNSS arşivi, a building none of it.
+#[test]
+fn the_gnss_archive_is_haritas_and_its_points_gis_reads() {
+    offers_as(Some(Module::Map), &["map.survey", "map.survey.import", "map.survey.select"], &[]);
+    offers_as(Some(Module::Gis), &["map.survey.select"], &["map.survey", "map.survey.import"]);
+    offers_as(None, &["map.survey", "map.survey.import", "map.survey.select"], &[]);
+    for module in [Module::Architecture, Module::Road] {
+        offers_as(Some(module), &[], &["map.survey", "map.survey.import", "map.survey.select"]);
+    }
 }
 
 #[test]

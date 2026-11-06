@@ -584,6 +584,10 @@ pub const PORTED: &[&str] = &[
     "network.subnetworks",
     // docs/adr/0569: Olay bağları (event_links_window.rs).
     "linearRef.eventLinks",
+    // docs/adr/1340 §6: GNSS arşivi, Ölçüm oturumu ekle, Kabul edilen noktalar (map_survey_panel.rs).
+    "map.survey",
+    "map.survey.import",
+    "map.survey.select",
     // plan/road.md Y2.4: Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs).
     "terrain.surfaces",
     "terrain.new",

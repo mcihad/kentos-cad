@@ -87,6 +87,7 @@ UNITS: dict[str, str] = {
     "m/s2": "Metre bölü saniye kare: ivme ve yavaşlama.",
     "m/s3": "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor).",
     "s": "Saniye.",
+    "m2": "Metre kare: bir konum kovaryansının ve varyansının birimi (σ²).",
     "day-min": "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir).",
     "system": "Adı verilen koordinat sisteminin kendi birimi.",
     "arcsec": "Yay saniyesi (″).",
@@ -109,6 +110,22 @@ UNITS: dict[str, str] = {
     "kg/L": "Kilogram bölü litre: yakıtın litresinin salımı.",
     "volume/h": "Saatte hacim: üretim.",
 }
+
+
+class AcceptMethod(_StrEnum):
+    """How an accepted point is made of its solutions.
+
+    - ``single``: One solution.
+    - ``mean``: The arithmetic mean of two or more.
+    - ``weighted``: Each component weighted by 1/σ².
+    """
+    SINGLE = "single"
+    MEAN = "mean"
+    WEIGHTED = "weighted"
+
+
+AcceptMethodName = Literal["single", "mean", "weighted"]
+"""The names of :class:`AcceptMethod`, for a plain string."""
 
 
 class AccessSource(_StrEnum):
@@ -312,6 +329,18 @@ class AnnotativeOperation(_StrEnum):
 
 AnnotativeOperationName = Literal["make", "unmake", "add", "remove", "set", "reset"]
 """The names of :class:`AnnotativeOperation`, for a plain string."""
+
+
+class AntennaReference(_StrEnum):
+    """Where an antenna's height was measured to: the antenna reference point straight up (RINEX's `DELTA H`), or slant to
+    the antenna's edge.
+    """
+    ARP = "arp"
+    SLANT = "slant"
+
+
+AntennaReferenceName = Literal["arp", "slant"]
+"""The names of :class:`AntennaReference`, for a plain string."""
 
 
 class ArchAuditCheck(_StrEnum):
@@ -6629,6 +6658,22 @@ SnapKindNameName = Literal["endpoint", "midpoint", "center", "node", "quadrant",
 """The names of :class:`SnapKindName`, for a plain string."""
 
 
+class SolutionKind(_StrEnum):
+    """What made a solution.
+
+    - ``receiver``: The receiver's own real-time solution, from its log.
+    - ``processed``: A baseline, PPK or static solution processed in office software.
+    - ``ppp``: A precise point positioning service's.
+    """
+    RECEIVER = "receiver"
+    PROCESSED = "processed"
+    PPP = "ppp"
+
+
+SolutionKindName = Literal["receiver", "processed", "ppp"]
+"""The names of :class:`SolutionKind`, for a plain string."""
+
+
 class SolveStatus(_StrEnum):
     """How a solve ended (docs/adr/0334 §4).
 
@@ -7139,6 +7184,47 @@ SuperelevationPivotName = Literal["centerline", "leftEdge", "rightEdge", "inside
 """The names of :class:`SuperelevationPivot`, for a plain string."""
 
 
+class SurveyFileFormat(_StrEnum):
+    """What a session's original file is.
+
+    - ``rinex``
+    - ``nmea``
+    - ``gpx``
+    - ``report``: A processing report (a solution's).
+    """
+    RINEX = "rinex"
+    NMEA = "nmea"
+    GPX = "gpx"
+    REPORT = "report"
+
+
+SurveyFileFormatName = Literal["rinex", "nmea", "gpx", "report"]
+"""The names of :class:`SurveyFileFormat`, for a plain string."""
+
+
+class SurveyFileState(_StrEnum):
+    """How a session's file stands: there (looked for only), the content read, other content, not there."""
+    FOUND = "found"
+    CURRENT = "current"
+    CHANGED = "changed"
+    MISSING = "missing"
+
+
+SurveyFileStateName = Literal["found", "current", "changed", "missing"]
+"""The names of :class:`SurveyFileState`, for a plain string."""
+
+
+class SurveyState(_StrEnum):
+    """How an accepted point or a use stands: up to date, out of date (why says it), its object gone."""
+    CURRENT = "current"
+    STALE = "stale"
+    MISSING = "missing"
+
+
+SurveyStateName = Literal["current", "stale", "missing"]
+"""The names of :class:`SurveyState`, for a plain string."""
+
+
 class SyncDirection(_StrEnum):
     """Which way a sync goes.
 
@@ -7435,6 +7521,21 @@ class TextScript(_StrEnum):
 
 TextScriptName = Literal["super", "sub", "stack"]
 """The names of :class:`TextScript`, for a plain string."""
+
+
+class TimeSystem(_StrEnum):
+    """A time system a session's times are in (RINEX 3.05's codes, and UTC)."""
+    GPS = "gps"
+    UTC = "utc"
+    GLO = "glo"
+    GAL = "gal"
+    BDT = "bdt"
+    QZS = "qzs"
+    IRN = "irn"
+
+
+TimeSystemName = Literal["gps", "utc", "glo", "gal", "bdt", "qzs", "irn"]
+"""The names of :class:`TimeSystem`, for a plain string."""
 
 
 class TimeVersionKind(_StrEnum):
@@ -9751,6 +9852,38 @@ class LengthenChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> LengthenChange:
         return _variant(_LENGTHEN_CHANGE, "LengthenChange", "kind", data).from_json(data)
+
+
+class MapSurveyOperation(_Union):
+    """What `map.survey.edit` does.
+
+    One of:
+
+    - :class:`CampaignMapSurveyOperation` (``op: campaign``)
+    - :class:`SetCampaignMapSurveyOperation` (``op: setCampaign``)
+    - :class:`SessionMapSurveyOperation` (``op: session``)
+    - :class:`SetSessionMapSurveyOperation` (``op: setSession``)
+    - :class:`SolveMapSurveyOperation` (``op: solve``)
+    - :class:`SolutionMapSurveyOperation` (``op: solution``)
+    - :class:`ExcludeMapSurveyOperation` (``op: exclude``)
+    - :class:`IncludeMapSurveyOperation` (``op: include``)
+    - :class:`AdjustMapSurveyOperation` (``op: adjust``)
+    - :class:`AcceptMapSurveyOperation` (``op: accept``)
+    - :class:`RegenerateMapSurveyOperation` (``op: regenerate``)
+    - :class:`UseMapSurveyOperation` (``op: use``)
+    - :class:`RemoveMapSurveyOperation` (``op: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "op"
+
+    @property
+    def op(self) -> str:
+        """The name of the variant (``op`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurveyOperation:
+        return _variant(_MAP_SURVEY_OPERATION, "MapSurveyOperation", "op", data).from_json(data)
 
 
 class MapWorkOperation(_Union):
@@ -14684,6 +14817,29 @@ class AnnotativeScale(_Model):
             point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             text_shift=UNSET if "textShift" not in data else None if data["textShift"] is None else TextShift.from_json(data["textShift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AntennaUsed(_Model):
+    """A session's vertical antenna height an accepted point's result was made with.
+    Attributes:
+        height: Unit: m.
+    """
+    session: str
+    height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["session"] = self.session
+        out["height"] = float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AntennaUsed:
+        return cls(
+            session=data["session"],
+            height=float(data["height"]),
         )
 
 
@@ -35482,6 +35638,29 @@ class FinishGrid(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FixCount(_Model):
+    """How many of a session's positions had a fix.
+    Attributes:
+        count: Unit: count.
+    """
+    fix: str
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fix"] = self.fix
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FixCount:
+        return cls(
+            fix=data["fix"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FixtureClearance(_Model):
     """The free room a fixture needs in front of it: a rectangle `width` wide, `depth` deep, centred on the front of the
     block's own box (its +y side).
@@ -38282,6 +38461,80 @@ class GmlLayerWritten(_Model):
             columns=list(data["columns"]),
             types=list(data["types"]),
             geometry=data["geometry"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GnssPoint(_Model):
+    """A GNSS position as the file wrote it (docs/adr/0169 §1, §6): its kind
+    (`wpt`, `rtept`, `trkpt` of GPX; `gga` of NMEA), its name, its WGS 84
+    latitude and longitude (degrees), its height as written (GPX's `ele`;
+    GGA's above mean sea level), the geoid's height above the WGS 84
+    ellipsoid, the ellipsoidal height (the two summed, when both are
+    given), its time as the file gives it, its fix (named: `3B`, `RTK
+    sabit` …), satellites in use, HDOP, and the file's line.
+    Attributes:
+        lat: Unit: deg.
+        lon: Unit: deg.
+        line: Unit: count.
+        ellipsoidal: Unit: m.
+        geoid: Unit: m.
+        hdop: Unit: 1.
+        height: Unit: m.
+        satellites: Unit: count.
+    """
+    kind: str
+    lat: float
+    lon: float
+    line: int
+    ellipsoidal: float | None | Unset = UNSET
+    fix: str | None | Unset = UNSET
+    geoid: float | None | Unset = UNSET
+    hdop: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    satellites: int | None | Unset = UNSET
+    time: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["line"] = self.line
+        if self.ellipsoidal is not UNSET:
+            out["ellipsoidal"] = None if self.ellipsoidal is None else float(self.ellipsoidal)
+        if self.fix is not UNSET:
+            out["fix"] = self.fix
+        if self.geoid is not UNSET:
+            out["geoid"] = None if self.geoid is None else float(self.geoid)
+        if self.hdop is not UNSET:
+            out["hdop"] = None if self.hdop is None else float(self.hdop)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.satellites is not UNSET:
+            out["satellites"] = self.satellites
+        if self.time is not UNSET:
+            out["time"] = self.time
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GnssPoint:
+        return cls(
+            kind=data["kind"],
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            line=data["line"],
+            ellipsoidal=UNSET if "ellipsoidal" not in data else None if data["ellipsoidal"] is None else float(data["ellipsoidal"]),
+            fix=data.get("fix", UNSET),
+            geoid=UNSET if "geoid" not in data else None if data["geoid"] is None else float(data["geoid"]),
+            hdop=UNSET if "hdop" not in data else None if data["hdop"] is None else float(data["hdop"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            name=data.get("name", UNSET),
+            satellites=data.get("satellites", UNSET),
+            time=data.get("time", UNSET),
         )
 
 
@@ -50696,6 +50949,192 @@ class LostPin(_Model):
         return cls(
             uid=data["uid"],
             reason=_enum_in(PinLoss, data["reason"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapSurvey(_Model):
+    """A map project's GNSS campaign archive."""
+    campaigns: list[SurveyCampaign] | Unset = UNSET
+    points: list[SurveyPoint] | Unset = UNSET
+    sessions: list[SurveySession] | Unset = UNSET
+    solutions: list[SurveySolution] | Unset = UNSET
+    uses: list[SurveyUse] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.campaigns is not UNSET:
+            out["campaigns"] = [e0.to_json() for e0 in self.campaigns]
+        if self.points is not UNSET:
+            out["points"] = [e0.to_json() for e0 in self.points]
+        if self.sessions is not UNSET:
+            out["sessions"] = [e0.to_json() for e0 in self.sessions]
+        if self.solutions is not UNSET:
+            out["solutions"] = [e0.to_json() for e0 in self.solutions]
+        if self.uses is not UNSET:
+            out["uses"] = [e0.to_json() for e0 in self.uses]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurvey:
+        return cls(
+            campaigns=[SurveyCampaign.from_json(e0) for e0 in data["campaigns"]] if "campaigns" in data else UNSET,
+            points=[SurveyPoint.from_json(e0) for e0 in data["points"]] if "points" in data else UNSET,
+            sessions=[SurveySession.from_json(e0) for e0 in data["sessions"]] if "sessions" in data else UNSET,
+            solutions=[SurveySolution.from_json(e0) for e0 in data["solutions"]] if "solutions" in data else UNSET,
+            uses=[SurveyUse.from_json(e0) for e0 in data["uses"]] if "uses" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapSurveyEdit(_Model):
+    """Input of `map.survey.edit` v1: one operation, one undo step (“Arazi ölçümü ekle”, “Arazi ölçümünü değiştir”,
+    “GNSS oturumu ekle”, “Oturumu değiştir”, “Alıcı çözümü”, “Çözüm ekle”, “Çözümü dışla”, “Dışlamayı kaldır”,
+    “Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”).
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
+    `unknown_survey_record`, `unknown_work_item`, `invalid_survey_text`, `invalid_survey_value`, `invalid_file_path`,
+    `file_not_found`, `unreadable_gnss_file`, `nothing_to_set`, `survey_in_use`, `unknown_frame`, `no_observations`,
+    `no_ellipsoidal_height`, `solution_excluded`, `mark_mismatch`, `method_count`, `sigma_missing`,
+    `solutions_differ`, `antenna_unknown`, `antenna_eccentric`, `already_accepted`, `layer_not_found`, `layer_locked`,
+    `no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, and the coordinate chain's own
+    (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …) when the point cannot be moved into the project.
+    """
+    operation: MapSurveyOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurveyEdit:
+        return cls(
+            operation=MapSurveyOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapSurveyEdited(_Model):
+    """Output of `map.survey.edit` v1 (and its plan): the record it made or changed, the accepted point's object and
+    revision, how many positions a session took from its file, how many records a remove took, how many accepted points
+    and uses are out of date after, and the drawing's revision.
+    Attributes:
+        stale: Unit: count.
+        observations: Unit: count.
+        point_revision: Unit: version.
+        removed: Unit: count.
+    """
+    stale: int
+    revision: str
+    id: str | None | Unset = UNSET
+    observations: int | Unset = UNSET
+    point_revision: int | None | Unset = UNSET
+    removed: int | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["stale"] = self.stale
+        out["revision"] = self.revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.observations is not UNSET:
+            out["observations"] = self.observations
+        if self.point_revision is not UNSET:
+            out["pointRevision"] = self.point_revision
+        if self.removed is not UNSET:
+            out["removed"] = self.removed
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurveyEdited:
+        return cls(
+            stale=data["stale"],
+            revision=data["revision"],
+            id=data.get("id", UNSET),
+            observations=data.get("observations", UNSET),
+            point_revision=data.get("pointRevision", UNSET),
+            removed=data.get("removed", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapSurveyQuery(_Model):
+    """Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a
+    file is only looked for. `uid` also says what that object is in the archive.
+
+    Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+    """
+    deep: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.deep is not UNSET:
+            out["deep"] = self.deep
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurveyQuery:
+        return cls(
+            deep=data.get("deep", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapSurveyTree(_Model):
+    """Output of `map.survey.query` v1: the archive in its order, the object asked about, how many accepted points and
+    uses are out of date, whether it was deep, and the revision read.
+    Attributes:
+        stale: Unit: count.
+    """
+    campaigns: list[SurveyCampaignRow]
+    sessions: list[SurveySessionRow]
+    marks: list[SurveyMarkRow]
+    points: list[SurveyPointRow]
+    uses: list[SurveyUseRow]
+    stale: int
+    deep: bool
+    revision: str
+    object: SurveyObject | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["campaigns"] = [e0.to_json() for e0 in self.campaigns]
+        out["sessions"] = [e0.to_json() for e0 in self.sessions]
+        out["marks"] = [e0.to_json() for e0 in self.marks]
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["uses"] = [e0.to_json() for e0 in self.uses]
+        out["stale"] = self.stale
+        out["deep"] = self.deep
+        out["revision"] = self.revision
+        if self.object is not UNSET:
+            out["object"] = None if self.object is None else self.object.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurveyTree:
+        return cls(
+            campaigns=[SurveyCampaignRow.from_json(e0) for e0 in data["campaigns"]],
+            sessions=[SurveySessionRow.from_json(e0) for e0 in data["sessions"]],
+            marks=[SurveyMarkRow.from_json(e0) for e0 in data["marks"]],
+            points=[SurveyPointRow.from_json(e0) for e0 in data["points"]],
+            uses=[SurveyUseRow.from_json(e0) for e0 in data["uses"]],
+            stale=data["stale"],
+            deep=data["deep"],
+            revision=data["revision"],
+            object=UNSET if "object" not in data else None if data["object"] is None else SurveyObject.from_json(data["object"]),
         )
 
 
@@ -63254,6 +63693,29 @@ class PointPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointRevision(_Model):
+    """An accepted point's revision a use was made from.
+    Attributes:
+        revision: Unit: version.
+    """
+    point: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["point"] = self.point
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointRevision:
+        return cls(
+            point=data["point"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointStation(_Model):
     """A point's station and offset: the nearest foot, every foot by distance, or the end it lies beyond.
     Attributes:
@@ -68147,6 +68609,9 @@ class ProjectSettings(_Model):
         linear_events: The project's links of event layers to their routes (docs/adr/0569), in the list's order.
         map_srid: The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
             the project's own. Changing it changes no coordinate. Unit: epsg.
+        map_survey: A map project's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340): campaigns, sessions, solutions,
+            accepted points and what was made from them; absent: none. Only a CAD project drawn for a map has it (`.kcad`
+            schema 194).
         map_work: A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
             derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
         named_ucs: The project's named UCSs, in the order they were kept.
@@ -68220,6 +68685,7 @@ class ProjectSettings(_Model):
     lineage: list[LineageRecord] | Unset = UNSET
     linear_events: list[EventLink] | Unset = UNSET
     map_srid: int | None | Unset = UNSET
+    map_survey: MapSurvey | None | Unset = UNSET
     map_work: MapWork | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
@@ -68305,6 +68771,8 @@ class ProjectSettings(_Model):
             out["linearEvents"] = [e0.to_json() for e0 in self.linear_events]
         if self.map_srid is not UNSET:
             out["mapSrid"] = self.map_srid
+        if self.map_survey is not UNSET:
+            out["mapSurvey"] = None if self.map_survey is None else self.map_survey.to_json()
         if self.map_work is not UNSET:
             out["mapWork"] = None if self.map_work is None else self.map_work.to_json()
         if self.named_ucs is not UNSET:
@@ -68390,6 +68858,7 @@ class ProjectSettings(_Model):
             lineage=[LineageRecord.from_json(e0) for e0 in data["lineage"]] if "lineage" in data else UNSET,
             linear_events=[EventLink.from_json(e0) for e0 in data["linearEvents"]] if "linearEvents" in data else UNSET,
             map_srid=data.get("mapSrid", UNSET),
+            map_survey=UNSET if "mapSurvey" not in data else None if data["mapSurvey"] is None else MapSurvey.from_json(data["mapSurvey"]),
             map_work=UNSET if "mapWork" not in data else None if data["mapWork"] is None else MapWork.from_json(data["mapWork"]),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
@@ -73466,6 +73935,40 @@ class RevisionsMark(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RinexFacts(_Model):
+    """What a RINEX observation file's header said that is kept nowhere else: its version (as written), the marker's
+    number, the interval (s) and the approximate position (ECEF XYZ, m).
+    Attributes:
+        approximate: Unit: m.
+        interval: Unit: s.
+    """
+    version: str
+    approximate: list[float] | None | Unset = UNSET
+    interval: float | None | Unset = UNSET
+    marker_number: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["version"] = self.version
+        if self.approximate is not UNSET:
+            out["approximate"] = None if self.approximate is None else [float(e0) for e0 in self.approximate]
+        if self.interval is not UNSET:
+            out["interval"] = None if self.interval is None else float(self.interval)
+        if self.marker_number is not UNSET:
+            out["markerNumber"] = self.marker_number
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RinexFacts:
+        return cls(
+            version=data["version"],
+            approximate=UNSET if "approximate" not in data else None if data["approximate"] is None else [float(e0) for e0 in data["approximate"]],
+            interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+            marker_number=data.get("markerNumber", UNSET),
         )
 
 
@@ -86566,6 +87069,345 @@ class SurveyAdjustedPoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurveyAntenna(_Model):
+    """A session's antenna: its type and serial, the height measured and to where; a slant height with the maker's
+    radius and the measuring point's height above the ARP; the eccentricity east and north (m).
+    Attributes:
+        height: Unit: m.
+        east: Unit: m.
+        north: Unit: m.
+        offset: Unit: m.
+        radius: Unit: m.
+    """
+    height: float
+    east: float | None | Unset = UNSET
+    north: float | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    reference: AntennaReference | AntennaReferenceName | Unset = UNSET
+    serial: str | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["height"] = float(self.height)
+        if self.east is not UNSET:
+            out["east"] = None if self.east is None else float(self.east)
+        if self.north is not UNSET:
+            out["north"] = None if self.north is None else float(self.north)
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.reference is not UNSET:
+            out["reference"] = _enum_out(self.reference)
+        if self.serial is not UNSET:
+            out["serial"] = self.serial
+        if self.type is not UNSET:
+            out["type"] = self.type
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyAntenna:
+        return cls(
+            height=float(data["height"]),
+            east=UNSET if "east" not in data else None if data["east"] is None else float(data["east"]),
+            north=UNSET if "north" not in data else None if data["north"] is None else float(data["north"]),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            reference=_enum_in(AntennaReference, data["reference"]) if "reference" in data else UNSET,
+            serial=data.get("serial", UNSET),
+            type=data.get("type", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyCampaign(_Model):
+    """A survey campaign.
+    Attributes:
+        id: `kp-N`.
+        epoch: The epoch its accepted points are given in (decimal year); none: the project's. Unit: year.
+        velocity: The velocity grid that moves its solutions to that epoch.
+        work: The map's work item it is (`is-N`, docs/adr/1200), by id alone.
+    """
+    id: str
+    name: str
+    epoch: float | None | Unset = UNSET
+    operator: str | None | Unset = UNSET
+    velocity: SurveyGrid | None | Unset = UNSET
+    work: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.operator is not UNSET:
+            out["operator"] = self.operator
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else self.velocity.to_json()
+        if self.work is not UNSET:
+            out["work"] = self.work
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyCampaign:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            operator=data.get("operator", UNSET),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else SurveyGrid.from_json(data["velocity"]),
+            work=data.get("work", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyCampaignRow(_Model):
+    """A campaign as it stands: whether the map's work item it names is still there, how many sessions it has.
+    Attributes:
+        sessions: Unit: count.
+        epoch: Unit: year.
+    """
+    id: str
+    name: str
+    sessions: int
+    epoch: float | None | Unset = UNSET
+    operator: str | None | Unset = UNSET
+    velocity: str | None | Unset = UNSET
+    work: str | None | Unset = UNSET
+    work_missing: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["sessions"] = self.sessions
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.operator is not UNSET:
+            out["operator"] = self.operator
+        if self.velocity is not UNSET:
+            out["velocity"] = self.velocity
+        if self.work is not UNSET:
+            out["work"] = self.work
+        if self.work_missing is not UNSET:
+            out["workMissing"] = self.work_missing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyCampaignRow:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            sessions=data["sessions"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            operator=data.get("operator", UNSET),
+            velocity=data.get("velocity", UNSET),
+            work=data.get("work", UNSET),
+            work_missing=data.get("workMissing", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyFile(_Model):
+    """A file the archive rests on: an absolute path and the SHA-256 of the content read (its revision)."""
+    path: str
+    revision: str
+    format: SurveyFileFormat | SurveyFileFormatName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["revision"] = self.revision
+        out["format"] = _enum_out(self.format)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyFile:
+        return cls(
+            path=data["path"],
+            revision=data["revision"],
+            format=_enum_in(SurveyFileFormat, data["format"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyFileRow(_Model):
+    """A session's file as it stands."""
+    path: str
+    revision: str
+    format: SurveyFileFormat | SurveyFileFormatName
+    state: SurveyFileState | SurveyFileStateName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["revision"] = self.revision
+        out["format"] = _enum_out(self.format)
+        out["state"] = _enum_out(self.state)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyFileRow:
+        return cls(
+            path=data["path"],
+            revision=data["revision"],
+            format=_enum_in(SurveyFileFormat, data["format"]),
+            state=_enum_in(SurveyFileState, data["state"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyGrid(_Model):
+    """A grid by its name and SHA-256 (lower-case hex), as the device's grid library keeps it."""
+    name: str
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyGrid:
+        return cls(
+            name=data["name"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyMarkRow(_Model):
+    """A mark: its sessions in the archive's order, its solutions, its accepted point."""
+    mark: str
+    sessions: list[str]
+    solutions: list[SurveySolutionRow]
+    point: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mark"] = self.mark
+        out["sessions"] = list(self.sessions)
+        out["solutions"] = [e0.to_json() for e0 in self.solutions]
+        if self.point is not UNSET:
+            out["point"] = self.point
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyMarkRow:
+        return cls(
+            mark=data["mark"],
+            sessions=list(data["sessions"]),
+            solutions=[SurveySolutionRow.from_json(e0) for e0 in data["solutions"]],
+            point=data.get("point", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyObject(_Model):
+    """What one object is in the archive: the accepted point it is (with its solutions), or the uses it is in."""
+    uid: str
+    point: SurveyPointRow | None | Unset = UNSET
+    solutions: list[SurveySolutionRow] | Unset = UNSET
+    used: SurveyUseRow | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else self.point.to_json()
+        if self.solutions is not UNSET:
+            out["solutions"] = [e0.to_json() for e0 in self.solutions]
+        if self.used is not UNSET:
+            out["used"] = None if self.used is None else self.used.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyObject:
+        return cls(
+            uid=data["uid"],
+            point=UNSET if "point" not in data else None if data["point"] is None else SurveyPointRow.from_json(data["point"]),
+            solutions=[SurveySolutionRow.from_json(e0) for e0 in data["solutions"]] if "solutions" in data else UNSET,
+            used=UNSET if "used" not in data else None if data["used"] is None else SurveyUseRow.from_json(data["used"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyPoint(_Model):
+    """A point accepted into the project: its mark, its object, its result now and its older ones (oldest first).
+    Attributes:
+        id: `kn-N`.
+    """
+    id: str
+    mark: str
+    uid: str
+    result: SurveyResult
+    history: list[SurveyResult] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["mark"] = self.mark
+        out["uid"] = self.uid
+        out["result"] = self.result.to_json()
+        if self.history is not UNSET:
+            out["history"] = [e0.to_json() for e0 in self.history]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyPoint:
+        return cls(
+            id=data["id"],
+            mark=data["mark"],
+            uid=data["uid"],
+            result=SurveyResult.from_json(data["result"]),
+            history=[SurveyResult.from_json(e0) for e0 in data["history"]] if "history" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyPointRow(_Model):
+    """An accepted point as it stands: its state and why, its result now, how many older results it keeps.
+    Attributes:
+        history: Unit: count.
+    """
+    id: str
+    mark: str
+    uid: str
+    state: SurveyState | SurveyStateName
+    result: SurveyResult
+    history: int
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["mark"] = self.mark
+        out["uid"] = self.uid
+        out["state"] = _enum_out(self.state)
+        out["result"] = self.result.to_json()
+        out["history"] = self.history
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyPointRow:
+        return cls(
+            id=data["id"],
+            mark=data["mark"],
+            uid=data["uid"],
+            state=_enum_in(SurveyState, data["state"]),
+            result=SurveyResult.from_json(data["result"]),
+            history=data["history"],
+            why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveyPoints(_Model):
     """`cad.survey.points`' input.
 
@@ -86632,6 +87474,278 @@ class SurveyPointsWritten(_Model):
             revision=data["revision"],
             angle_misclosure=UNSET if "angleMisclosure" not in data else None if data["angleMisclosure"] is None else float(data["angleMisclosure"]),
             linear_misclosure=UNSET if "linearMisclosure" not in data else None if data["linearMisclosure"] is None else float(data["linearMisclosure"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyReceiver(_Model):
+    """A session's receiver: its type, serial and firmware."""
+    type: str
+    firmware: str | None | Unset = UNSET
+    serial: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["type"] = self.type
+        if self.firmware is not UNSET:
+            out["firmware"] = self.firmware
+        if self.serial is not UNSET:
+            out["serial"] = self.serial
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyReceiver:
+        return cls(
+            type=data["type"],
+            firmware=data.get("firmware", UNSET),
+            serial=data.get("serial", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyReplay(_Model):
+    """A recorded session replayed: its fixes in the order they first come (a position without one is `—`), how many
+    times an RTK fixed position was followed by another fix, how many steps between timed positions were not forward or
+    longer than twice the usual step, and the usual step (s).
+    Attributes:
+        float_drops: Unit: count.
+        time_jumps: Unit: count.
+        nominal: Unit: s.
+    """
+    fixes: list[FixCount]
+    float_drops: int
+    time_jumps: int
+    nominal: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fixes"] = [e0.to_json() for e0 in self.fixes]
+        out["floatDrops"] = self.float_drops
+        out["timeJumps"] = self.time_jumps
+        if self.nominal is not UNSET:
+            out["nominal"] = None if self.nominal is None else float(self.nominal)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyReplay:
+        return cls(
+            fixes=[FixCount.from_json(e0) for e0 in data["fixes"]],
+            float_drops=data["floatDrops"],
+            time_jumps=data["timeJumps"],
+            nominal=UNSET if "nominal" not in data else None if data["nominal"] is None else float(data["nominal"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyResult(_Model):
+    """What an accepted point is, once made: its solutions and method, the mark's position in the solutions' frame and
+    epoch, the epoch decision it was moved to, each session's vertical antenna height, σ when known, the project's x,
+    y and z, whether the coordinate chain was complete, and why it was made again.
+    Attributes:
+        revision: Unit: version.
+        lat: Unit: deg.
+        lon: Unit: deg.
+        height: Unit: m.
+        srid: Unit: epsg.
+        x: Unit: system.
+        y: Unit: system.
+        chain: `complete` or `limited` (docs/adr/1230).
+        epoch: Unit: year.
+        sigma: Unit: m.
+        target_epoch: Unit: year.
+        z: Unit: elevation.
+    """
+    revision: int
+    solutions: list[str]
+    method: AcceptMethod | AcceptMethodName
+    lat: float
+    lon: float
+    height: float
+    srid: int
+    antenna: list[AntennaUsed]
+    x: float
+    y: float
+    chain: str
+    epoch: float | None | Unset = UNSET
+    reasons: list[str] | Unset = UNSET
+    sigma: list[float] | None | Unset = UNSET
+    target_epoch: float | None | Unset = UNSET
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        out["solutions"] = list(self.solutions)
+        out["method"] = _enum_out(self.method)
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["height"] = float(self.height)
+        out["srid"] = self.srid
+        out["antenna"] = [e0.to_json() for e0 in self.antenna]
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["chain"] = self.chain
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.reasons is not UNSET:
+            out["reasons"] = list(self.reasons)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
+        if self.target_epoch is not UNSET:
+            out["targetEpoch"] = None if self.target_epoch is None else float(self.target_epoch)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyResult:
+        return cls(
+            revision=data["revision"],
+            solutions=list(data["solutions"]),
+            method=_enum_in(AcceptMethod, data["method"]),
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            height=float(data["height"]),
+            srid=data["srid"],
+            antenna=[AntennaUsed.from_json(e0) for e0 in data["antenna"]],
+            x=float(data["x"]),
+            y=float(data["y"]),
+            chain=data["chain"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            reasons=list(data["reasons"]) if "reasons" in data else UNSET,
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+            target_epoch=UNSET if "targetEpoch" not in data else None if data["targetEpoch"] is None else float(data["targetEpoch"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveySession(_Model):
+    """A session: one occupation of one mark.
+    Attributes:
+        id: `os-N`.
+        observations: The positions an NMEA log or a GPX file gave, as the reader read them.
+    """
+    id: str
+    campaign: str
+    mark: str
+    antenna: SurveyAntenna | None | Unset = UNSET
+    end: str | None | Unset = UNSET
+    file: SurveyFile | None | Unset = UNSET
+    observations: list[GnssPoint] | Unset = UNSET
+    operator: str | None | Unset = UNSET
+    receiver: SurveyReceiver | None | Unset = UNSET
+    rinex: RinexFacts | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+    time_system: TimeSystem | TimeSystemName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["campaign"] = self.campaign
+        out["mark"] = self.mark
+        if self.antenna is not UNSET:
+            out["antenna"] = None if self.antenna is None else self.antenna.to_json()
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.observations is not UNSET:
+            out["observations"] = [e0.to_json() for e0 in self.observations]
+        if self.operator is not UNSET:
+            out["operator"] = self.operator
+        if self.receiver is not UNSET:
+            out["receiver"] = None if self.receiver is None else self.receiver.to_json()
+        if self.rinex is not UNSET:
+            out["rinex"] = None if self.rinex is None else self.rinex.to_json()
+        if self.start is not UNSET:
+            out["start"] = self.start
+        if self.time_system is not UNSET:
+            out["timeSystem"] = None if self.time_system is None else _enum_out(self.time_system)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveySession:
+        return cls(
+            id=data["id"],
+            campaign=data["campaign"],
+            mark=data["mark"],
+            antenna=UNSET if "antenna" not in data else None if data["antenna"] is None else SurveyAntenna.from_json(data["antenna"]),
+            end=data.get("end", UNSET),
+            file=UNSET if "file" not in data else None if data["file"] is None else SurveyFile.from_json(data["file"]),
+            observations=[GnssPoint.from_json(e0) for e0 in data["observations"]] if "observations" in data else UNSET,
+            operator=data.get("operator", UNSET),
+            receiver=UNSET if "receiver" not in data else None if data["receiver"] is None else SurveyReceiver.from_json(data["receiver"]),
+            rinex=UNSET if "rinex" not in data else None if data["rinex"] is None else RinexFacts.from_json(data["rinex"]),
+            start=data.get("start", UNSET),
+            time_system=UNSET if "timeSystem" not in data else None if data["timeSystem"] is None else _enum_in(TimeSystem, data["timeSystem"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveySessionRow(_Model):
+    """A session as it stands: its antenna and vertical height, its file, how many positions it holds, the replay of
+    them, how many solutions it has.
+    Attributes:
+        observations: Unit: count.
+        solutions: Unit: count.
+        vertical: Unit: m.
+    """
+    id: str
+    campaign: str
+    mark: str
+    observations: int
+    solutions: int
+    antenna: SurveyAntenna | None | Unset = UNSET
+    end: str | None | Unset = UNSET
+    file: SurveyFileRow | None | Unset = UNSET
+    receiver: SurveyReceiver | None | Unset = UNSET
+    replay: SurveyReplay | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+    time_system: TimeSystem | TimeSystemName | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["campaign"] = self.campaign
+        out["mark"] = self.mark
+        out["observations"] = self.observations
+        out["solutions"] = self.solutions
+        if self.antenna is not UNSET:
+            out["antenna"] = None if self.antenna is None else self.antenna.to_json()
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.receiver is not UNSET:
+            out["receiver"] = None if self.receiver is None else self.receiver.to_json()
+        if self.replay is not UNSET:
+            out["replay"] = None if self.replay is None else self.replay.to_json()
+        if self.start is not UNSET:
+            out["start"] = self.start
+        if self.time_system is not UNSET:
+            out["timeSystem"] = None if self.time_system is None else _enum_out(self.time_system)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveySessionRow:
+        return cls(
+            id=data["id"],
+            campaign=data["campaign"],
+            mark=data["mark"],
+            observations=data["observations"],
+            solutions=data["solutions"],
+            antenna=UNSET if "antenna" not in data else None if data["antenna"] is None else SurveyAntenna.from_json(data["antenna"]),
+            end=data.get("end", UNSET),
+            file=UNSET if "file" not in data else None if data["file"] is None else SurveyFileRow.from_json(data["file"]),
+            receiver=UNSET if "receiver" not in data else None if data["receiver"] is None else SurveyReceiver.from_json(data["receiver"]),
+            replay=UNSET if "replay" not in data else None if data["replay"] is None else SurveyReplay.from_json(data["replay"]),
+            start=data.get("start", UNSET),
+            time_system=UNSET if "timeSystem" not in data else None if data["timeSystem"] is None else _enum_in(TimeSystem, data["timeSystem"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
 
@@ -86774,6 +87888,276 @@ class SurveyShot(_Model):
             distance=float(data["distance"]),
             target_height=UNSET if "targetHeight" not in data else None if data["targetHeight"] is None else float(data["targetHeight"]),
             zenith=UNSET if "zenith" not in data else None if data["zenith"] is None else float(data["zenith"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveySolution(_Model):
+    """A provider's solution of a session.
+    Attributes:
+        id: `cz-N`.
+        lat: Unit: deg.
+        lon: Unit: deg.
+        height: The ellipsoidal height (m). Unit: m.
+        srid: The geographic system its coordinates are in (an EPSG code of the registry). Unit: epsg.
+        antenna_applied: The vertical ARP height its maker took off (m); 0: the position is the antenna's. Unit: m.
+        adjust: It goes into the adjustment (when not excluded).
+        age: The largest correction age (s). Unit: s.
+        covariance: The full covariance NN, NE, NU, EE, EU, UU (m²). Unit: m2.
+        epoch: Unit: year.
+        epochs: Unit: count.
+        excluded: Why it is left out; present: excluded (it stays in the record).
+        from_: A receiver solution's positions: the first and last place in the session's (both in) and the fixes taken. Unit: index.
+        hdop: The largest HDOP (no unit: geometry, not metres). Unit: 1.
+        satellites: Unit: count.
+        sigma: σ north, east, up (m). Unit: m.
+        to: Unit: index.
+    """
+    id: str
+    session: str
+    kind: SolutionKind | SolutionKindName
+    lat: float
+    lon: float
+    height: float
+    srid: int
+    antenna_applied: float
+    adjust: bool | Unset = UNSET
+    age: float | None | Unset = UNSET
+    correction: str | None | Unset = UNSET
+    covariance: list[float] | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
+    epochs: int | None | Unset = UNSET
+    excluded: str | None | Unset = UNSET
+    fix: str | None | Unset = UNSET
+    fixes: list[str] | Unset = UNSET
+    from_: int | None | Unset = UNSET
+    hdop: float | None | Unset = UNSET
+    recipe: str | None | Unset = UNSET
+    report: SurveyFile | None | Unset = UNSET
+    satellites: int | None | Unset = UNSET
+    sigma: list[float] | None | Unset = UNSET
+    to: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["session"] = self.session
+        out["kind"] = _enum_out(self.kind)
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["height"] = float(self.height)
+        out["srid"] = self.srid
+        out["antennaApplied"] = float(self.antenna_applied)
+        if self.adjust is not UNSET:
+            out["adjust"] = self.adjust
+        if self.age is not UNSET:
+            out["age"] = None if self.age is None else float(self.age)
+        if self.correction is not UNSET:
+            out["correction"] = self.correction
+        if self.covariance is not UNSET:
+            out["covariance"] = None if self.covariance is None else [float(e0) for e0 in self.covariance]
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epochs is not UNSET:
+            out["epochs"] = self.epochs
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.fix is not UNSET:
+            out["fix"] = self.fix
+        if self.fixes is not UNSET:
+            out["fixes"] = list(self.fixes)
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.hdop is not UNSET:
+            out["hdop"] = None if self.hdop is None else float(self.hdop)
+        if self.recipe is not UNSET:
+            out["recipe"] = self.recipe
+        if self.report is not UNSET:
+            out["report"] = None if self.report is None else self.report.to_json()
+        if self.satellites is not UNSET:
+            out["satellites"] = self.satellites
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveySolution:
+        return cls(
+            id=data["id"],
+            session=data["session"],
+            kind=_enum_in(SolutionKind, data["kind"]),
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            height=float(data["height"]),
+            srid=data["srid"],
+            antenna_applied=float(data["antennaApplied"]),
+            adjust=data.get("adjust", UNSET),
+            age=UNSET if "age" not in data else None if data["age"] is None else float(data["age"]),
+            correction=data.get("correction", UNSET),
+            covariance=UNSET if "covariance" not in data else None if data["covariance"] is None else [float(e0) for e0 in data["covariance"]],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epochs=data.get("epochs", UNSET),
+            excluded=data.get("excluded", UNSET),
+            fix=data.get("fix", UNSET),
+            fixes=list(data["fixes"]) if "fixes" in data else UNSET,
+            from_=data.get("from", UNSET),
+            hdop=UNSET if "hdop" not in data else None if data["hdop"] is None else float(data["hdop"]),
+            recipe=data.get("recipe", UNSET),
+            report=UNSET if "report" not in data else None if data["report"] is None else SurveyFile.from_json(data["report"]),
+            satellites=data.get("satellites", UNSET),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveySolutionRow(_Model):
+    """A solution as it stands for its mark: last measured, accepted (the accepted point's result now uses it), in the
+    adjustment (marked and not excluded), excluded and why; the mark's height by its session's antenna now.
+    Attributes:
+        lat: Unit: deg.
+        lon: Unit: deg.
+        height: Unit: m.
+        srid: Unit: epsg.
+        antenna_applied: Unit: m.
+        epoch: Unit: year.
+        epochs: Unit: count.
+        mark_height: Unit: m.
+        sigma: Unit: m.
+    """
+    id: str
+    session: str
+    kind: SolutionKind | SolutionKindName
+    lat: float
+    lon: float
+    height: float
+    srid: int
+    antenna_applied: float
+    latest: bool
+    accepted: bool
+    adjusted: bool
+    epoch: float | None | Unset = UNSET
+    epochs: int | None | Unset = UNSET
+    excluded: str | None | Unset = UNSET
+    fix: str | None | Unset = UNSET
+    mark_height: float | None | Unset = UNSET
+    sigma: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["session"] = self.session
+        out["kind"] = _enum_out(self.kind)
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["height"] = float(self.height)
+        out["srid"] = self.srid
+        out["antennaApplied"] = float(self.antenna_applied)
+        out["latest"] = self.latest
+        out["accepted"] = self.accepted
+        out["adjusted"] = self.adjusted
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epochs is not UNSET:
+            out["epochs"] = self.epochs
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.fix is not UNSET:
+            out["fix"] = self.fix
+        if self.mark_height is not UNSET:
+            out["markHeight"] = None if self.mark_height is None else float(self.mark_height)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveySolutionRow:
+        return cls(
+            id=data["id"],
+            session=data["session"],
+            kind=_enum_in(SolutionKind, data["kind"]),
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            height=float(data["height"]),
+            srid=data["srid"],
+            antenna_applied=float(data["antennaApplied"]),
+            latest=data["latest"],
+            accepted=data["accepted"],
+            adjusted=data["adjusted"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epochs=data.get("epochs", UNSET),
+            excluded=data.get("excluded", UNSET),
+            fix=data.get("fix", UNSET),
+            mark_height=UNSET if "markHeight" not in data else None if data["markHeight"] is None else float(data["markHeight"]),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyUse(_Model):
+    """Objects made from accepted points (a surface, a contour): the operation, the objects and each point's revision.
+    Attributes:
+        id: `kb-N`.
+    """
+    id: str
+    operation: str
+    uids: list[str]
+    points: list[PointRevision]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["operation"] = self.operation
+        out["uids"] = list(self.uids)
+        out["points"] = [e0.to_json() for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyUse:
+        return cls(
+            id=data["id"],
+            operation=data["operation"],
+            uids=list(data["uids"]),
+            points=[PointRevision.from_json(e0) for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyUseRow(_Model):
+    """A use as it stands: how many of its objects the drawing holds of how many, its state and why.
+    Attributes:
+        objects: Unit: count.
+        recorded: Unit: count.
+    """
+    id: str
+    operation: str
+    objects: int
+    recorded: int
+    state: SurveyState | SurveyStateName
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["operation"] = self.operation
+        out["objects"] = self.objects
+        out["recorded"] = self.recorded
+        out["state"] = _enum_out(self.state)
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyUseRow:
+        return cls(
+            id=data["id"],
+            operation=data["operation"],
+            objects=data["objects"],
+            recorded=data["recorded"],
+            state=_enum_in(SurveyState, data["state"]),
+            why=list(data["why"]) if "why" in data else UNSET,
         )
 
 
@@ -106908,6 +108292,491 @@ class DynamicLengthenChange(LengthenChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class CampaignMapSurveyOperation(MapSurveyOperation):
+    """A new campaign `kp-N`: its name, the map's work item it is (a campaign item), its operator, its epoch decision
+    and the velocity grid that moves solutions to it.
+    Attributes:
+        epoch: Unit: year.
+    """
+    TAG_VALUE: ClassVar[str] = "campaign"
+    name: str
+    epoch: float | None | Unset = UNSET
+    operator: str | None | Unset = UNSET
+    velocity: SurveyGrid | None | Unset = UNSET
+    work: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "campaign"}
+        out["name"] = self.name
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.operator is not UNSET:
+            out["operator"] = self.operator
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else self.velocity.to_json()
+        if self.work is not UNSET:
+            out["work"] = self.work
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CampaignMapSurveyOperation:
+        return cls(
+            name=data["name"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            operator=data.get("operator", UNSET),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else SurveyGrid.from_json(data["velocity"]),
+            work=data.get("work", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetCampaignMapSurveyOperation(MapSurveyOperation):
+    """A campaign's name, work item, operator, epoch decision or velocity grid.
+    Attributes:
+        epoch: Unit: year.
+    """
+    TAG_VALUE: ClassVar[str] = "setCampaign"
+    campaign: str
+    epoch: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    operator: str | None | Unset = UNSET
+    velocity: SurveyGrid | None | Unset = UNSET
+    work: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "setCampaign"}
+        out["campaign"] = self.campaign
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.operator is not UNSET:
+            out["operator"] = self.operator
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else self.velocity.to_json()
+        if self.work is not UNSET:
+            out["work"] = self.work
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetCampaignMapSurveyOperation:
+        return cls(
+            campaign=data["campaign"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            name=data.get("name", UNSET),
+            operator=data.get("operator", UNSET),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else SurveyGrid.from_json(data["velocity"]),
+            work=data.get("work", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SessionMapSurveyOperation(MapSurveyOperation):
+    """A new session `os-N` of a campaign. With a file (an absolute path): a RINEX observation file's header gives the
+    mark, receiver, antenna, times and time system; an NMEA log or a GPX file its positions and their first and
+    last times. What is given here wins over the file (warning `rinex_differs` says where they differ).
+    """
+    TAG_VALUE: ClassVar[str] = "session"
+    campaign: str
+    antenna: SurveyAntenna | None | Unset = UNSET
+    end: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    mark: str | None | Unset = UNSET
+    operator: str | None | Unset = UNSET
+    receiver: SurveyReceiver | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+    time_system: TimeSystem | TimeSystemName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "session"}
+        out["campaign"] = self.campaign
+        if self.antenna is not UNSET:
+            out["antenna"] = None if self.antenna is None else self.antenna.to_json()
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        if self.operator is not UNSET:
+            out["operator"] = self.operator
+        if self.receiver is not UNSET:
+            out["receiver"] = None if self.receiver is None else self.receiver.to_json()
+        if self.start is not UNSET:
+            out["start"] = self.start
+        if self.time_system is not UNSET:
+            out["timeSystem"] = None if self.time_system is None else _enum_out(self.time_system)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SessionMapSurveyOperation:
+        return cls(
+            campaign=data["campaign"],
+            antenna=UNSET if "antenna" not in data else None if data["antenna"] is None else SurveyAntenna.from_json(data["antenna"]),
+            end=data.get("end", UNSET),
+            file=data.get("file", UNSET),
+            mark=data.get("mark", UNSET),
+            operator=data.get("operator", UNSET),
+            receiver=UNSET if "receiver" not in data else None if data["receiver"] is None else SurveyReceiver.from_json(data["receiver"]),
+            start=data.get("start", UNSET),
+            time_system=UNSET if "timeSystem" not in data else None if data["timeSystem"] is None else _enum_in(TimeSystem, data["timeSystem"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetSessionMapSurveyOperation(MapSurveyOperation):
+    """A session's mark (not while an accepted point uses it), times, receiver, antenna or operator. A new antenna
+    height puts the accepted points made with the old one out of date.
+    """
+    TAG_VALUE: ClassVar[str] = "setSession"
+    session: str
+    antenna: SurveyAntenna | None | Unset = UNSET
+    end: str | None | Unset = UNSET
+    mark: str | None | Unset = UNSET
+    operator: str | None | Unset = UNSET
+    receiver: SurveyReceiver | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+    time_system: TimeSystem | TimeSystemName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "setSession"}
+        out["session"] = self.session
+        if self.antenna is not UNSET:
+            out["antenna"] = None if self.antenna is None else self.antenna.to_json()
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        if self.operator is not UNSET:
+            out["operator"] = self.operator
+        if self.receiver is not UNSET:
+            out["receiver"] = None if self.receiver is None else self.receiver.to_json()
+        if self.start is not UNSET:
+            out["start"] = self.start
+        if self.time_system is not UNSET:
+            out["timeSystem"] = None if self.time_system is None else _enum_out(self.time_system)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetSessionMapSurveyOperation:
+        return cls(
+            session=data["session"],
+            antenna=UNSET if "antenna" not in data else None if data["antenna"] is None else SurveyAntenna.from_json(data["antenna"]),
+            end=data.get("end", UNSET),
+            mark=data.get("mark", UNSET),
+            operator=data.get("operator", UNSET),
+            receiver=UNSET if "receiver" not in data else None if data["receiver"] is None else SurveyReceiver.from_json(data["receiver"]),
+            start=data.get("start", UNSET),
+            time_system=UNSET if "timeSystem" not in data else None if data["timeSystem"] is None else _enum_in(TimeSystem, data["timeSystem"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SolveMapSurveyOperation(MapSurveyOperation):
+    """The receiver's solution `cz-N` of a session: the mean of its positions `from`..`to` (both in; all when not
+    given) whose fix is one of `fixes` (any when empty), each with an ellipsoidal height; its frame and the antenna
+    height the receiver took off are the user's to say.
+    Attributes:
+        srid: Unit: epsg.
+        antenna_applied: Unit: m.
+        epoch: Unit: year.
+        from_: Unit: index.
+        to: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "solve"
+    session: str
+    srid: int
+    antenna_applied: float
+    epoch: float | None | Unset = UNSET
+    fixes: list[str] | Unset = UNSET
+    from_: int | None | Unset = UNSET
+    to: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "solve"}
+        out["session"] = self.session
+        out["srid"] = self.srid
+        out["antennaApplied"] = float(self.antenna_applied)
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.fixes is not UNSET:
+            out["fixes"] = list(self.fixes)
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SolveMapSurveyOperation:
+        return cls(
+            session=data["session"],
+            srid=data["srid"],
+            antenna_applied=float(data["antennaApplied"]),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            fixes=list(data["fixes"]) if "fixes" in data else UNSET,
+            from_=data.get("from", UNSET),
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SolutionMapSurveyOperation(MapSurveyOperation):
+    """A solution `cz-N` from elsewhere (a processing report, a PPP service, a controller's record) with its quality,
+    covariance, report file and recipe.
+    Attributes:
+        lat: Unit: deg.
+        lon: Unit: deg.
+        height: Unit: m.
+        srid: Unit: epsg.
+        antenna_applied: Unit: m.
+        age: Unit: s.
+        covariance: Unit: m2.
+        epoch: Unit: year.
+        epochs: Unit: count.
+        hdop: Unit: 1.
+        satellites: Unit: count.
+        sigma: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "solution"
+    session: str
+    kind: SolutionKind | SolutionKindName
+    lat: float
+    lon: float
+    height: float
+    srid: int
+    antenna_applied: float
+    age: float | None | Unset = UNSET
+    correction: str | None | Unset = UNSET
+    covariance: list[float] | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
+    epochs: int | None | Unset = UNSET
+    fix: str | None | Unset = UNSET
+    hdop: float | None | Unset = UNSET
+    recipe: str | None | Unset = UNSET
+    report: str | None | Unset = UNSET
+    satellites: int | None | Unset = UNSET
+    sigma: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "solution"}
+        out["session"] = self.session
+        out["kind"] = _enum_out(self.kind)
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["height"] = float(self.height)
+        out["srid"] = self.srid
+        out["antennaApplied"] = float(self.antenna_applied)
+        if self.age is not UNSET:
+            out["age"] = None if self.age is None else float(self.age)
+        if self.correction is not UNSET:
+            out["correction"] = self.correction
+        if self.covariance is not UNSET:
+            out["covariance"] = None if self.covariance is None else [float(e0) for e0 in self.covariance]
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epochs is not UNSET:
+            out["epochs"] = self.epochs
+        if self.fix is not UNSET:
+            out["fix"] = self.fix
+        if self.hdop is not UNSET:
+            out["hdop"] = None if self.hdop is None else float(self.hdop)
+        if self.recipe is not UNSET:
+            out["recipe"] = self.recipe
+        if self.report is not UNSET:
+            out["report"] = self.report
+        if self.satellites is not UNSET:
+            out["satellites"] = self.satellites
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SolutionMapSurveyOperation:
+        return cls(
+            session=data["session"],
+            kind=_enum_in(SolutionKind, data["kind"]),
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            height=float(data["height"]),
+            srid=data["srid"],
+            antenna_applied=float(data["antennaApplied"]),
+            age=UNSET if "age" not in data else None if data["age"] is None else float(data["age"]),
+            correction=data.get("correction", UNSET),
+            covariance=UNSET if "covariance" not in data else None if data["covariance"] is None else [float(e0) for e0 in data["covariance"]],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epochs=data.get("epochs", UNSET),
+            fix=data.get("fix", UNSET),
+            hdop=UNSET if "hdop" not in data else None if data["hdop"] is None else float(data["hdop"]),
+            recipe=data.get("recipe", UNSET),
+            report=data.get("report", UNSET),
+            satellites=data.get("satellites", UNSET),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExcludeMapSurveyOperation(MapSurveyOperation):
+    """A solution left out, with why; it stays in the record."""
+    TAG_VALUE: ClassVar[str] = "exclude"
+    solution: str
+    reason: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "exclude"}
+        out["solution"] = self.solution
+        out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExcludeMapSurveyOperation:
+        return cls(
+            solution=data["solution"],
+            reason=data["reason"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IncludeMapSurveyOperation(MapSurveyOperation):
+    """An excluded solution taken back."""
+    TAG_VALUE: ClassVar[str] = "include"
+    solution: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "include"}
+        out["solution"] = self.solution
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IncludeMapSurveyOperation:
+        return cls(
+            solution=data["solution"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdjustMapSurveyOperation(MapSurveyOperation):
+    """Whether a solution goes into the adjustment."""
+    TAG_VALUE: ClassVar[str] = "adjust"
+    solution: str
+    adjust: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "adjust"}
+        out["solution"] = self.solution
+        out["adjust"] = self.adjust
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustMapSurveyOperation:
+        return cls(
+            solution=data["solution"],
+            adjust=data["adjust"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AcceptMapSurveyOperation(MapSurveyOperation):
+    """A mark's point accepted: its object on `layer` (the active layer when not given) and `kn-N`, in one step."""
+    TAG_VALUE: ClassVar[str] = "accept"
+    mark: str
+    solutions: list[str]
+    layer: str | None | Unset = UNSET
+    method: AcceptMethod | AcceptMethodName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "accept"}
+        out["mark"] = self.mark
+        out["solutions"] = list(self.solutions)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AcceptMapSurveyOperation:
+        return cls(
+            mark=data["mark"],
+            solutions=list(data["solutions"]),
+            layer=data.get("layer", UNSET),
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(AcceptMethod, data["method"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegenerateMapSurveyOperation(MapSurveyOperation):
+    """An accepted point made again with the antennas and epoch decision now (and, given, other solutions or method):
+    its older result is kept, its object moves, its revision goes up.
+    """
+    TAG_VALUE: ClassVar[str] = "regenerate"
+    point: str
+    method: AcceptMethod | AcceptMethodName | None | Unset = UNSET
+    solutions: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "regenerate"}
+        out["point"] = self.point
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        if self.solutions is not UNSET:
+            out["solutions"] = None if self.solutions is None else list(self.solutions)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegenerateMapSurveyOperation:
+        return cls(
+            point=data["point"],
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(AcceptMethod, data["method"]),
+            solutions=UNSET if "solutions" not in data else None if data["solutions"] is None else list(data["solutions"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UseMapSurveyOperation(MapSurveyOperation):
+    """Objects recorded as made from accepted points by `operation`, at their revisions now."""
+    TAG_VALUE: ClassVar[str] = "use"
+    uids: list[str]
+    points: list[str]
+    operation: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "use"}
+        out["uids"] = list(self.uids)
+        out["points"] = list(self.points)
+        out["operation"] = self.operation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UseMapSurveyOperation:
+        return cls(
+            uids=list(data["uids"]),
+            points=list(data["points"]),
+            operation=data["operation"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveMapSurveyOperation(MapSurveyOperation):
+    """A record taken away: a campaign (with its sessions and solutions), a session (with its solutions), a solution,
+    an accepted point's record (its object stays) or a use. What an accepted point or a use rests on is not.
+    """
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveMapSurveyOperation:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddMapWorkOperation(MapWorkOperation):
     """A new item `is-N`: its kind, name, layers (each in no other item) and, for a file the project rests on, the
     file (an absolute path; its SHA-256 is its revision).
@@ -117718,6 +119587,9 @@ _LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions"
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
+_MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "remove": RemoveMapSurveyOperation}
+
+
 _MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation}
 
 
@@ -117959,6 +119831,9 @@ _XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperat
 
 
 __all__ = [
+    "AcceptMapSurveyOperation",
+    "AcceptMethod",
+    "AcceptMethodName",
     "AcceptOptionsOperation",
     "AccessSource",
     "AccessSourceName",
@@ -118020,6 +119895,7 @@ __all__ = [
     "AdjustDifference",
     "AdjustKnownHeight",
     "AdjustKnownPoint",
+    "AdjustMapSurveyOperation",
     "AdjustObservation",
     "AdjustWork",
     "AdoptMaterialsOperation",
@@ -118106,6 +119982,9 @@ __all__ = [
     "AnnotativeOperation",
     "AnnotativeOperationName",
     "AnnotativeScale",
+    "AntennaReference",
+    "AntennaReferenceName",
+    "AntennaUsed",
     "AnyCell",
     "ApplyComboOptionsOperation",
     "ApplyPageSetupPaperOp",
@@ -118345,6 +120224,7 @@ __all__ = [
     "CalculateFieldsWriteOp",
     "CalloutKind",
     "CalloutKindName",
+    "CampaignMapSurveyOperation",
     "CaseworkBreak",
     "CaseworkBreakName",
     "CaseworkBuilt",
@@ -118959,6 +120839,7 @@ __all__ = [
     "EventSide",
     "EventSideName",
     "ExceptModulesOperation",
+    "ExcludeMapSurveyOperation",
     "ExplodeDensity",
     "ExportAtlas",
     "ExportBlock",
@@ -119063,6 +120944,7 @@ __all__ = [
     "FitTableEdit",
     "FitTextEdit",
     "FixConstraintRule",
+    "FixCount",
     "FixedPaperAnnotationScale",
     "FixedPaperAtlasScale",
     "FixedPaperMapView",
@@ -119176,6 +121058,7 @@ __all__ = [
     "GmlExported",
     "GmlFileWritten",
     "GmlLayerWritten",
+    "GnssPoint",
     "GpkgCoverage",
     "GpkgExported",
     "GpkgImported",
@@ -119358,6 +121241,7 @@ __all__ = [
     "ImportShp",
     "ImportSld",
     "ImportedLayer",
+    "IncludeMapSurveyOperation",
     "InfoCard",
     "InputSpaceNumberOrder",
     "InputState",
@@ -119691,6 +121575,12 @@ __all__ = [
     "LossKindName",
     "LostPin",
     "MapPaperItemKind",
+    "MapSurvey",
+    "MapSurveyEdit",
+    "MapSurveyEdited",
+    "MapSurveyOperation",
+    "MapSurveyQuery",
+    "MapSurveyTree",
     "MapValuesMigrationStep",
     "MapWork",
     "MapWorkEdit",
@@ -120329,6 +122219,7 @@ __all__ = [
     "PointLabelModeName",
     "PointPart",
     "PointPlan",
+    "PointRevision",
     "PointSelectRegion",
     "PointShape",
     "PointShapeName",
@@ -120626,6 +122517,7 @@ __all__ = [
     "RefreshMapWorkOperation",
     "RefreshOpeningsOperation",
     "RefreshTablesOperation",
+    "RegenerateMapSurveyOperation",
     "RegionsLedgerBy",
     "RegisteredArea",
     "RegistryDatum",
@@ -120677,6 +122569,7 @@ __all__ = [
     "RemoveIslandsHatchEdit",
     "RemoveItemsPaperOp",
     "RemoveJoinsOp",
+    "RemoveMapSurveyOperation",
     "RemoveMapWorkOperation",
     "RemoveMasterPaperOp",
     "RemoveMaterialsOperation",
@@ -120774,6 +122667,7 @@ __all__ = [
     "RevisionMarked",
     "RevisionPlan",
     "RevisionsMark",
+    "RinexFacts",
     "RingGeometry",
     "RoadDrawingDef",
     "RoadDrawingLeft",
@@ -120912,8 +122806,10 @@ __all__ = [
     "ServiceKindName",
     "ServiceLayer",
     "ServiceParam",
+    "SessionMapSurveyOperation",
     "SetArchOperation",
     "SetAtlasPaperOp",
+    "SetCampaignMapSurveyOperation",
     "SetCellTableEdit",
     "SetDimensionSetEdit",
     "SetDrawingInfoPaperOp",
@@ -120930,6 +122826,7 @@ __all__ = [
     "SetPagePaperOp",
     "SetParameterEdit",
     "SetScheduleOperation",
+    "SetSessionMapSurveyOperation",
     "SetShapeElevation",
     "SetSheet",
     "SetSheetMasterPaperOp",
@@ -121048,7 +122945,11 @@ __all__ = [
     "SnapFound",
     "SnapKindName",
     "SnapKindNameName",
+    "SolutionKind",
+    "SolutionKindName",
+    "SolutionMapSurveyOperation",
     "SolveConstraintEdit",
+    "SolveMapSurveyOperation",
     "SolveStatus",
     "SolveStatusName",
     "SourceBase",
@@ -121290,10 +123191,35 @@ __all__ = [
     "SurveyAdjust",
     "SurveyAdjusted",
     "SurveyAdjustedPoint",
+    "SurveyAntenna",
+    "SurveyCampaign",
+    "SurveyCampaignRow",
+    "SurveyFile",
+    "SurveyFileFormat",
+    "SurveyFileFormatName",
+    "SurveyFileRow",
+    "SurveyFileState",
+    "SurveyFileStateName",
+    "SurveyGrid",
+    "SurveyMarkRow",
+    "SurveyObject",
+    "SurveyPoint",
+    "SurveyPointRow",
     "SurveyPoints",
     "SurveyPointsWritten",
+    "SurveyReceiver",
+    "SurveyReplay",
+    "SurveyResult",
+    "SurveySession",
+    "SurveySessionRow",
     "SurveySettings",
     "SurveyShot",
+    "SurveySolution",
+    "SurveySolutionRow",
+    "SurveyState",
+    "SurveyStateName",
+    "SurveyUse",
+    "SurveyUseRow",
     "SurveyWork",
     "SweptClearance",
     "SweptDraw",
@@ -121472,6 +123398,8 @@ __all__ = [
     "TileMatrix",
     "TimeQueried",
     "TimeQuery",
+    "TimeSystem",
+    "TimeSystemName",
     "TimeVersion",
     "TimeVersionKind",
     "TimeVersionKindName",
@@ -121583,6 +123511,7 @@ __all__ = [
     "UpdateOpeningTypesOperation",
     "UpdateRelationsOp",
     "UpdateReviewNoteOp",
+    "UseMapSurveyOperation",
     "ValueMap",
     "ValueProblem",
     "ValuesFieldsWriteOp",

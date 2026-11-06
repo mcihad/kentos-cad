@@ -56,6 +56,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve `cad.topology.repair`'in web işleyicisi; WASM `topologyCheck`'in istisnası `anywhere` almıyor (hep yerine bağlı).
 - MAP-01 / ADR 1200: `map.work.query` ve `map.work.edit`'in web işleyicisi, `io/kcad.ts` şema 188 (`mapWork`), Harita
   işi paneli ve Öznitelikler'in Kaynağı bölümü.
+- MAP-03 / ADR 1340: `map.survey.query` ve `map.survey.edit`'in web işleyicisi, RINEX başlığı okuyucusunun WASM'ı,
+  `io/kcad.ts` şema 194 (`mapSurvey`), GNSS arşivi paneli ve Öznitelikler › GNSS ölçümü, şerit komutları (`map.survey`,
+  `map.survey.import`, `map.survey.select`) ve resimleri.
 - CAD-ADV-12 / ADR 1100: `cad.standards.install`'ın blok ve pafta şablonu satırları (`block`, `sheetTemplate`,
   `unavailable`, `library`, `uses`), `kentos-ofis` kitaplığının web'de okunması, `io/kcad.ts` şema 183
   (`approvedSheetTemplates`), Standart kaynaklarını kur penceresinin Kitaplık/Kullanım sütunları ve Öznitelikler'in

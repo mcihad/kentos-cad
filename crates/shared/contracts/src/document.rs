@@ -507,6 +507,12 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub map_work: Option<crate::MapWork>,
+    /// A map project's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340): campaigns, sessions, solutions,
+    /// accepted points and what was made from them; absent: none. Only a CAD project drawn for a map has it (`.kcad`
+    /// schema 194).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub map_survey: Option<crate::MapSurvey>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names

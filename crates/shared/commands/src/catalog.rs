@@ -9361,6 +9361,68 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::MAP_SURVEY_QUERY.into(),
+            version: crate::MAP_SURVEY_QUERY_VERSION,
+            title: "GNSS arşivini sorgula".into(),
+            summary: "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. \
+                      Retler: not_a_map_project, invalid_uid, entity_not_found."
+                .into(),
+            aliases: vec!["gnssarsivi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapSurveyQuery>(),
+            output: schema::<crate::MapSurveyTree>(),
+            plan: Some(schema::<crate::MapSurveyTree>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dosyaları okuyarak, kabul edilen bir noktanın ölçüsüyle".into(),
+                input: json!({ "deep": true, "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::MAP_SURVEY_EDIT.into(),
+            version: crate::MAP_SURVEY_EDIT_VERSION,
+            title: "GNSS arşivini düzenle".into(),
+            summary: "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz. \
+                      Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system)."
+                .into(),
+            aliases: vec!["gnssarsividuzenle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapSurveyEdit>(),
+            output: schema::<crate::MapSurveyEdited>(),
+            plan: Some(schema::<crate::MapSurveyEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "RINEX dosyasından oturum".into(),
+                    input: json!({ "operation": { "op": "session", "campaign": "kp-1", "file": "/veri/N1_3070.26o" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki günün çözümünün ortalamasını kabul et".into(),
+                    input: json!({ "operation": { "op": "accept", "mark": "N1", "solutions": ["cz-1", "cz-2"], "method": "mean", "layer": "gnss" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kötü çözümü silmeden dışla".into(),
+                    input: json!({ "operation": { "op": "exclude", "solution": "cz-3", "reason": "Ağaç altında, float'a düştü" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -15652,6 +15714,8 @@ mod tests {
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdit>(e.input.clone()).map(|_| ()),
+                    crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
+                    crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
@@ -16588,6 +16652,8 @@ mod tests {
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdited>(output.clone()).map(|_| ()),
+                        crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
+                        crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
