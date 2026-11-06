@@ -581,3 +581,35 @@ fn screens_earthwork_rows() {
         }
     }
 }
+
+/// Y90's picture (docs/adr/0996): the DKY row, Ana Brükner with 40 % of its cut unsuitable from 100 to 250 and 30 %
+/// from 450, on KGM's A1 sheet at 1:1000.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_dky_row -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_dky_row() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y90");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let (mut app, _) = App::boot(None);
+    let bands: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/road/v1/earthwork-bands.json")).expect("json");
+    let case = bands["cases"].as_array().and_then(|c| c.iter().find(|c| !c["setup"].is_null())).expect("the DKY case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::Run("road.sheets"));
+    send(&mut app, W::Alignment("g-1".into()));
+    send(&mut app, W::Field(1, "1000".into()));
+    send(&mut app, W::Profile(Some("b-1".into())));
+    send(&mut app, W::Kgm(true));
+    send(&mut app, W::Haul(Some("h-1".into())));
+    send(&mut app, W::Make);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-07").expect("the book's PDF");
+    let file = out.join("y90-pafta.pdf");
+    std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+    println!("{}", file.display());
+}

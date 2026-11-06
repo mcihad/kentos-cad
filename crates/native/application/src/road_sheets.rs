@@ -193,7 +193,10 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         road_profiles_draw::bands_depth(doc, 2.5)
     };
     // Docs/adr/0995: KGM's earthwork rows go between the frame and the bands.
-    let depth = depth + if input.haul.is_some() { road_profiles_draw::earthwork_rows_height(doc, 2.5) } else { 0.0 };
+    let dky = input.haul.as_ref().is_some_and(|n| {
+        crate::road_hauls::find(doc.road_hauls(), n, "haul").is_ok_and(|(_, h)| !h.unsuitable.is_empty())
+    });
+    let depth = depth + if input.haul.is_some() { road_profiles_draw::earthwork_rows_height(doc, 2.5, dky) } else { 0.0 };
     let gap = 0.4 * depth;
     // Docs/adr/0989: KGM's slope and platform rows stand over each view's frame.
     let rise = if input.corridor.is_some() { road_profiles_draw::corridor_rows_height(doc, 2.5) } else { 0.0 };

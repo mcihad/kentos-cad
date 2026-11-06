@@ -26,11 +26,13 @@ pub struct Section {
     pub values: [f64; 5],
 }
 
-/// The sections and the stations of the balance points DN is written at.
+/// The sections, the stations of the balance points DN is written at, and the stretches of cut unsuitable for fill
+/// (docs/adr/0996; KGM's DKY, "dolguda kullanılamayan yarma"): their stations and their unsuitable cut (m³).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Earthwork {
     pub sections: Vec<Section>,
     pub balance: Vec<f64>,
+    pub unsuitable: Vec<[f64; 3]>,
 }
 
 /// A volume as KGM writes it: whole cubic metres, "-" for less than half of one.
@@ -47,7 +49,7 @@ pub(crate) fn earthwork(doc: &Document, def: &kentos_commands::HaulDef) -> Resul
     let (report, _, alignment) = crate::road_volumes::compute_on(doc, vdef)?;
     let rows = &report.rows;
     let (Some(first), Some(last)) = (rows.first().map(|r| r.from), rows.last().map(|r| r.to)) else {
-        return Ok(Earthwork { sections: Vec::new(), balance: Vec::new() });
+        return Ok(Earthwork { sections: Vec::new(), balance: Vec::new(), unsuitable: Vec::new() });
     };
     // The cuts: the ends and the balance points between.
     let mut cuts = vec![first];
@@ -93,7 +95,26 @@ pub(crate) fn earthwork(doc: &Document, def: &kentos_commands::HaulDef) -> Resul
     if (end - def.balance).abs() <= 1e-9 * scale {
         balance.push(last);
     }
-    Ok(Earthwork { sections, balance })
+    // DKY (docs/adr/0996): each stretch's unsuitable cut, its share of the raw cut over it, a row shared by length.
+    let unsuitable = def
+        .unsuitable
+        .iter()
+        .filter_map(|u| {
+            let (a, b) = (u.from.max(first), u.to.min(last));
+            (b > a).then(|| {
+                let v: f64 = rows
+                    .iter()
+                    .filter(|r| r.to > r.from)
+                    .map(|r| {
+                        let (lo, hi) = (r.from.max(a), r.to.min(b));
+                        if hi > lo { (hi - lo) / (r.to - r.from) * r.cut.unwrap_or(0.0) } else { 0.0 }
+                    })
+                    .sum();
+                [a, b, v * u.share]
+            })
+        })
+        .collect();
+    Ok(Earthwork { sections, balance, unsuitable })
 }
 
 #[cfg(test)]
@@ -107,8 +128,9 @@ mod tests {
     fn sections_are_the_references() {
         let all: serde_json::Value =
             serde_json::from_str(include_str!("../../../../fixtures/road/v1/earthwork-bands.json")).expect("json");
-        let doc = Document::from_snapshot_v2(serde_json::from_value(all["setup"].clone()).expect("setup")).expect("opens");
         for case in all["cases"].as_array().expect("cases") {
+            let setup = if case["setup"].is_null() { &all["setup"] } else { &case["setup"] };
+            let doc = Document::from_snapshot_v2(serde_json::from_value(setup.clone()).expect("setup")).expect("opens");
             let name = case["haul"].as_str().unwrap();
             let def = doc.road_hauls().iter().find(|h| h.id == name || h.name == name).expect("haul").clone();
             let got = earthwork(&doc, &def).unwrap_or_else(|_| panic!("sections of {name}"));
@@ -117,6 +139,12 @@ mod tests {
             let wb = want["balance"].as_array().unwrap();
             assert_eq!(got.balance.len(), wb.len(), "{}: {:?}", case["name"], got.balance);
             assert!(got.balance.iter().zip(wb).all(|(a, b)| near(*a, b, 1e-6)), "{}: {:?}", case["name"], got.balance);
+            let wu = want["unsuitable"].as_array().unwrap();
+            assert_eq!(got.unsuitable.len(), wu.len(), "{}", case["name"]);
+            for (g, w) in got.unsuitable.iter().zip(wu) {
+                let w = w.as_array().unwrap();
+                assert!(near(g[0], &w[0], 1e-6) && near(g[1], &w[1], 1e-6) && near(g[2], &w[2], 1e-3), "{}: {g:?}", case["name"]);
+            }
             let ws = want["sections"].as_array().unwrap();
             assert_eq!(got.sections.len(), ws.len(), "{}", case["name"]);
             for (g, w) in got.sections.iter().zip(ws) {

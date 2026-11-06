@@ -33,6 +33,8 @@ pub const BANDS: [&str; 5] = ["Km", "Siyah kot", "Kırmızı kot", "Fark", "Eği
 pub const KGM_BANDS: [(&str, f64); 6] =
     [("Kırmızı Kot", 7.0), ("Siyah Kot", 7.0), ("Kilometre", 9.0), ("Yatay Geometri", 6.0), ("Düşey Geometri", 7.0), ("Dever", 7.0)];
 const RED: &str = "#d62828";
+/// KGM's 2024 sheets mark the cut unsuitable for fill (DKY) in green.
+const GREEN: &str = "#2a9d3a";
 
 /// A number as Rust writes an f64.
 fn num(v: f64) -> String {
@@ -794,14 +796,36 @@ fn earthwork_rows(
         // Left of the line, as the 2024 sheets write it: turned a quarter, the words grow to the left of their foot
         // (Y89's first picture had the line through them).
         // Masked: the rows' lines ran across them.
-        out.push(masked(turned([x(*s) - 0.3 * h, y0 - 0.5 * depth], words, 0.8 * h, TextAlign::BottomCenter, None, 90.0)));
+        // At the view's start inside it, right of the frame's edge (Y90's picture had it in the names' column).
+        let foot = if *s <= s0 + 1e-9 { x(*s) + 1.1 * h } else { x(*s) - 0.3 * h };
+        out.push(masked(turned([foot, y0 - 0.5 * depth], words, 0.8 * h, TextAlign::BottomCenter, None, 90.0)));
     }
-    depth
+    if e.unsuitable.is_empty() {
+        return depth;
+    }
+    // DKY (docs/adr/0996): a row under DEPO, each stretch of unsuitable cut in the view its km and volume as the 2024
+    // sheets note it, a line at each of its ends.
+    let (top, bottom) = (y0 - depth, y0 - depth - row);
+    out.push(line([x0 - names, top], [x0 - names, bottom], None, Some(0.13)));
+    out.push(line([x0, top], [x0, bottom], None, Some(0.13)));
+    out.push(line([x0 - names, bottom], [x1, bottom], None, Some(0.13)));
+    out.push(text([x0 - names + 0.5 * h, bottom + 0.5 * row], "DKY".to_owned(), h, TextAlign::MiddleLeft, None));
+    let km = |s: f64| km_text(c.built.alignment.km(s), 2);
+    for u in e.unsuitable.iter().filter(|u| u[1] > s0 + 1e-9 && u[0] < s1 - 1e-9) {
+        let mid = x(0.5 * (u[0].max(s0) + u[1].min(s1)));
+        let words = format!("KM : {} – {} : {} m³", km(u[0]), km(u[1]), volume_text(u[2]));
+        out.push(text([mid, bottom + 0.5 * row], words, h, TextAlign::MiddleCenter, Some(GREEN)));
+        for q in [u[0], u[1]].into_iter().filter(|q| *q > s0 + 1e-9 && *q < s1 - 1e-9) {
+            out.push(line([x(q), top], [x(q), bottom], Some(GREEN), Some(0.25)));
+        }
+    }
+    depth + row
 }
 
-/// How deep KGM's earthwork rows under a view are (docs/adr/0995), in drawing units, with texts `height` paper mm.
-pub fn earthwork_rows_height(doc: &kentos_domain::Document, height: f64) -> f64 {
-    crate::road_earthwork_bands::ROWS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
+/// How deep KGM's earthwork rows under a view are (docs/adr/0995), in drawing units, with texts `height` paper mm; a
+/// DKY row more where the mass haul diagram has unsuitable cut (docs/adr/0996).
+pub fn earthwork_rows_height(doc: &kentos_domain::Document, height: f64, dky: bool) -> f64 {
+    (crate::road_earthwork_bands::ROWS.len() + usize::from(dky)) as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
 }
 
 /// How deep the bands under a view are, in drawing units, with texts `height` paper millimetres high.
