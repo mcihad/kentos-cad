@@ -159,10 +159,11 @@ fn check(doc: &Document, input: &AlignmentsImport) -> Result<Checked, Stop> {
             revision: 1,
             pis: pis
                 .iter()
-                .map(|p| AlignmentPi { id: p.id.clone(), x: p.x, y: p.y, radius: p.radius, spiral_in: p.spiral_in, spiral_out: p.spiral_out, ove: false })
+                .map(|p| AlignmentPi { id: p.id.clone(), x: p.x, y: p.y, radius: p.radius, spiral_in: p.spiral_in, spiral_out: p.spiral_out, ove: false, speed: None })
                 .collect(),
             offset_of: None,
             stationing: stationing(a),
+            design_speed: None,
         };
         let mut with = list.clone();
         with.push(def.clone());

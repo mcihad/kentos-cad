@@ -2243,6 +2243,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 193 (docs/adr/0985): an alignment's design speed or a PI's own.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_speed) {
+        return crate::SCHEMA_WITH_ROAD_SPEED;
+    }
     // Schema 192 (docs/adr/0979): an alignment PI's ove.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_ove) {
         return crate::SCHEMA_WITH_ROAD_OVE;

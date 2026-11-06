@@ -25,4 +25,9 @@ spiralOut?: number,
  * The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
  * schema 192): both curves turn the same way, of different radii, with no clothoid on the side they share.
  */
-ove?: boolean, };
+ove?: boolean, 
+/**
+ * The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):
+ * KGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road.
+ */
+speed?: number, };

@@ -250,7 +250,7 @@ AlignmentFitMethodName = Literal["elements", "bestFit"]
 class AlignmentsEditOperation(_StrEnum):
     """What `road.alignments.edit` does.
 
-    - ``set``: The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.
+    - ``set``: The given fields (`name`, `pis`, `stationing`, `offset`, `designSpeed`) replace the alignment's.
     - ``reverse``: The alignment runs the other way: its PIs in reverse order, each PI's clothoids swapped; its start km is kept and
     - ``remove``: The alignment goes; refused while a parallel axis follows it (`alignment_in_use`).
     """
@@ -12870,6 +12870,10 @@ class AlignmentDef(_Model):
     Attributes:
         id: Unique in the project; what a profile, a corridor or a parallel axis names.
         name: Its name (“Ana aks”), unique in the project.
+        design_speed: The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for
+            and the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre
+            seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
+            has its source's. Unit: km/h.
         offset_of: A parallel axis's source; absent for an alignment of its own.
         pis: Its start, PIs and end; empty for a parallel axis.
         revision: Grows by one with every change of its geometry or km; absent: 0. Unit: version.
@@ -12877,6 +12881,7 @@ class AlignmentDef(_Model):
     """
     id: str
     name: str
+    design_speed: float | None | Unset = UNSET
     offset_of: AlignmentOffset | None | Unset = UNSET
     pis: list[AlignmentPi] | Unset = UNSET
     revision: int | Unset = UNSET
@@ -12886,6 +12891,8 @@ class AlignmentDef(_Model):
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["name"] = self.name
+        if self.design_speed is not UNSET:
+            out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
         if self.offset_of is not UNSET:
             out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
         if self.pis is not UNSET:
@@ -12901,6 +12908,7 @@ class AlignmentDef(_Model):
         return cls(
             id=data["id"],
             name=data["name"],
+            design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
             offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
             pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
             revision=data.get("revision", UNSET),
@@ -13318,6 +13326,8 @@ class AlignmentPi(_Model):
         ove: The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
             schema 192): both curves turn the same way, of different radii, with no clothoid on the side they share.
         radius: The curve's radius; absent or 0: no curve (a kink). Unit: m.
+        speed: The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):
+            KGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road. Unit: km/h.
         spiral_in: The entry clothoid's length; absent or 0: none. Unit: m.
         spiral_out: The exit clothoid's length; absent or 0: none. Unit: m.
     """
@@ -13326,6 +13336,7 @@ class AlignmentPi(_Model):
     y: float
     ove: bool | Unset = UNSET
     radius: float | Unset = UNSET
+    speed: float | None | Unset = UNSET
     spiral_in: float | Unset = UNSET
     spiral_out: float | Unset = UNSET
 
@@ -13338,6 +13349,8 @@ class AlignmentPi(_Model):
             out["ove"] = self.ove
         if self.radius is not UNSET:
             out["radius"] = float(self.radius)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
         if self.spiral_in is not UNSET:
             out["spiralIn"] = float(self.spiral_in)
         if self.spiral_out is not UNSET:
@@ -13352,6 +13365,7 @@ class AlignmentPi(_Model):
             y=float(data["y"]),
             ove=data.get("ove", UNSET),
             radius=float(data["radius"]) if "radius" in data else UNSET,
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
             spiral_in=float(data["spiralIn"]) if "spiralIn" in data else UNSET,
             spiral_out=float(data["spiralOut"]) if "spiralOut" in data else UNSET,
         )
@@ -13725,8 +13739,11 @@ class AlignmentsCreate(_Model):
     curves' tangent lengths pass each other; the message names both PIs and by how much), `invalid_stationing` (an
     equation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where
     a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        design_speed: The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve. Unit: km/h.
     """
     name: str
+    design_speed: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     id: str | None | Unset = UNSET
     offset_of: AlignmentOffset | None | Unset = UNSET
@@ -13736,6 +13753,8 @@ class AlignmentsCreate(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
+        if self.design_speed is not UNSET:
+            out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.id is not UNSET:
@@ -13752,6 +13771,7 @@ class AlignmentsCreate(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> AlignmentsCreate:
         return cls(
             name=data["name"],
+            design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
             expected_revision=data.get("expectedRevision", UNSET),
             id=data.get("id", UNSET),
             offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
@@ -13770,11 +13790,13 @@ class AlignmentsEdit(_Model):
     (the edited alignment or a parallel axis following it folds), `alignment_in_use` (remove while a parallel axis
     follows it), `invalid_revision`, `revision_conflict`.
     Attributes:
+        design_speed: The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays. Unit: km/h.
         offset: A parallel axis's offset, m, right positive. Unit: m.
         stationing: The km; an empty one (no start, no equation) clears it.
     """
     alignment: str
     operation: AlignmentsEditOperation | AlignmentsEditOperationName
+    design_speed: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
@@ -13785,6 +13807,8 @@ class AlignmentsEdit(_Model):
         out: dict[str, Any] = {}
         out["alignment"] = self.alignment
         out["operation"] = _enum_out(self.operation)
+        if self.design_speed is not UNSET:
+            out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.name is not UNSET:
@@ -13802,6 +13826,7 @@ class AlignmentsEdit(_Model):
         return cls(
             alignment=data["alignment"],
             operation=_enum_in(AlignmentsEditOperation, data["operation"]),
+            design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
             expected_revision=data.get("expectedRevision", UNSET),
             name=data.get("name", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),

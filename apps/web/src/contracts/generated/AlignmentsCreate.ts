@@ -14,4 +14,8 @@ import type { AlignmentStationing } from "./AlignmentStationing";
  * equation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where
  * a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
  */
-export type AlignmentsCreate = { name: string, id?: string, pis?: Array<AlignmentPi>, offsetOf?: AlignmentOffset, stationing?: AlignmentStationing, expectedRevision?: string, };
+export type AlignmentsCreate = { name: string, id?: string, pis?: Array<AlignmentPi>, offsetOf?: AlignmentOffset, stationing?: AlignmentStationing, 
+/**
+ * The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve.
+ */
+designSpeed?: number, expectedRevision?: string, };

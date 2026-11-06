@@ -239,9 +239,43 @@ fn screens_kgm_2024() {
     shoot_kgm_sheet("yol-y78", "y78", "2026-11-06");
 }
 
+/// The PI box with V (docs/adr/0985): the sample's main alignment at a design speed of 80 km/h;
+/// `.run/gui-evidence/yol-y79/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_design_speed -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_design_speed() {
+    shoot_kgm_sheet_with("yol-y79", "y79", "2026-11-06", |app| {
+        let doc = app.document.as_mut().expect("a drawing");
+        let edit = kentos_commands::AlignmentsEdit {
+            alignment: "g-1".into(),
+            operation: kentos_commands::AlignmentsEditOperation::Set,
+            name: None,
+            pis: None,
+            stationing: None,
+            offset: None,
+            design_speed: Some(80.0),
+            expected_revision: None,
+        };
+        let done = kentos_native_application::road_alignments_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            edit,
+        );
+        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    });
+}
+
 /// KGM's A1 plan–profile sheet of the sample at 1:2000 with its schedule, light and dark, and its PDF, into
 /// `.run/gui-evidence/<folder>/<prefix>-pafta-*`.
 fn shoot_kgm_sheet(folder: &str, prefix: &str, date: &str) {
+    shoot_kgm_sheet_with(folder, prefix, date, |_| {});
+}
+
+/// [`shoot_kgm_sheet`] with the drawing first changed by `prepare`.
+fn shoot_kgm_sheet_with(folder: &str, prefix: &str, date: &str, prepare: impl Fn(&mut App)) {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
@@ -252,6 +286,7 @@ fn shoot_kgm_sheet(folder: &str, prefix: &str, date: &str) {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = kgm_app();
+        prepare(&mut app);
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");

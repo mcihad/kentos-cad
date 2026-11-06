@@ -252,6 +252,7 @@ fn schedule_for(
 ///
 /// ```text
 /// S - 1 (Sol)
+/// V = 80               the curve's design speed, km/h: its PI's, else the alignment's (docs/adr/0985)
 /// D = 19.0937          the deflection in grad
 /// R = 1500.00
 /// L = 449.88           R·D
@@ -268,11 +269,12 @@ fn schedule_for(
 /// With clothoids D, L and T are the circular part's and X, Y the point where the tangents at SC and CS meet, then
 /// `S-D` the whole deflection and `S-X`, `S-Y` the PI: KGM's 2019 EK-10 writes `A=27.45958` and `S-A=35.60832` for
 /// R 600 and clothoids of 76.8 m (35.60832 − 27.45958 = 76.8/600 rad), EK-13 the same; the 2024 sheets name the
-/// deflection D, so the whole one is `S-D` here (docs/adr/0984: the name is ours, the values KGM's). V is not written:
-/// a road project holds no design speed. `inner` is the SC–CS tangents' meeting point.
+/// deflection D, so the whole one is `S-D` here (docs/adr/0984: the name is ours, the values KGM's). V is written when
+/// the curve has a design speed. `inner` is the SC–CS tangents' meeting point.
 pub fn curve_data(
     number: usize,
     c: &kentos_road::alignment::CurveReport,
+    speed: Option<f64>,
     pi: [f64; 2],
     inner: Option<[f64; 2]>,
     schedule: Option<&(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
@@ -280,13 +282,16 @@ pub fn curve_data(
     let side = if c.delta > 0.0 { "Sol" } else { "Sağ" };
     let clothoid = c.spiral_in > 0.0 || c.spiral_out > 0.0;
     let dc = if clothoid { (c.arc / c.radius).max(0.0) } else { c.delta.abs() };
-    let mut lines = vec![
-        format!("S - {number} ({side})"),
+    let mut lines = vec![format!("S - {number} ({side})")];
+    if let Some(v) = speed {
+        lines.push(format!("V = {}", kmh(v)));
+    }
+    lines.extend([
         format!("D = {:.4}", grad(dc)),
         format!("R = {}", n2(c.radius)),
         format!("L = {}", n2(c.radius * dc)),
         format!("T = {}", n2(c.radius * (0.5 * dc).tan())),
-    ];
+    ]);
     if let Some((s, normal)) = schedule {
         let got = kentos_road::superelevation_pi::curve_super(s, *normal, c);
         lines.push(format!("Se = % {}", n2(got.rate * 100.0)));
@@ -306,6 +311,11 @@ pub fn curve_data(
         lines.push(format!("S-Y = {}", grouped(pi[0])));
     }
     lines
+}
+
+/// A speed as KGM writes it: whole km/h without decimals (`V = 80`), else to one decimal.
+fn kmh(v: f64) -> String {
+    if (v - v.round()).abs() < 1e-9 { format!("{v:.0}") } else { format!("{v:.1}") }
 }
 
 /// Where the lines through `a` and `b` in directions `ta` and `tb` (radians) meet; none when they are parallel.
@@ -521,7 +531,7 @@ fn curves(
             (Some(a), Some(z)) => meet([a.x, a.y], a.direction, [z.x, z.y], z.direction),
             _ => None,
         };
-        let lines = curve_data(named, c, pt, inner, schedule);
+        let lines = curve_data(named, c, pi.speed.or(def.design_speed), pt, inner, schedule);
         let r = turn.to_radians();
         let (ex, ey) = ([r.cos(), r.sin()], [-r.sin(), r.cos()]);
         // Upright on the paper: a point `x` along and `y` up from `o`.
@@ -645,6 +655,26 @@ fn curves(
         }
         let top = bottom + height;
         let at = |x: f64, y: f64| on(corner, x, y);
+        let ix = lines.iter().position(|l| l.starts_with("X ="));
+        for (i, l) in lines.into_iter().enumerate() {
+            let y = top - 0.2 * h - pitch * (i as f64 + 0.5);
+            let mut line = text(
+                at(left + 1.2 * h, y),
+                l,
+                h,
+                turn,
+                turn,
+                TextAlign::MiddleLeft,
+                if i == 0 { Some(RED) } else { None },
+            );
+            // Masked: a survey point under the box read into its text ("S○1", Y79's picture). The mask is the text's
+            // own: a mask the box's width (a paragraph's `box_width`) covered the rules too, as a map draws texts over
+            // lines whatever their order. A point beside a short line still shows (docs/adr/0985 §Açık).
+            if let EntityGeometry::Text { mask, .. } = &mut line.geometry {
+                *mask = true;
+            }
+            out.push(line);
+        }
         out.push(path(
             &[at(left, bottom), at(left + width, bottom), at(left + width, top), at(left, top), at(left, bottom)],
             None,
@@ -655,20 +685,8 @@ fn curves(
         out.push(path(&[at(left + 0.75 * h, bottom), at(left + 0.75 * h, top)], None, 0.5, None));
         let rule = |y: f64| path(&[at(left, y), at(left + width, y)], None, 0.35, None);
         out.push(rule(top - 0.2 * h - pitch));
-        if let Some(ix) = lines.iter().position(|l| l.starts_with("X =")) {
+        if let Some(ix) = ix {
             out.push(rule(top - 0.2 * h - pitch * ix as f64));
-        }
-        for (i, l) in lines.into_iter().enumerate() {
-            let y = top - 0.2 * h - pitch * (i as f64 + 0.5);
-            out.push(text(
-                at(left + 1.2 * h, y),
-                l,
-                h,
-                turn,
-                turn,
-                TextAlign::MiddleLeft,
-                if i == 0 { Some(RED) } else { None },
-            ));
         }
     }
 }

@@ -126,7 +126,7 @@ haritanın kenarından taşıyor, son satırları kırpılıyordu.
 
 ## Açık
 
-- **V:** tasarım hızı alanı yok.
+- ~~**V:** tasarım hızı alanı yok.~~ Y79, ADR 0985: aksın proje hızı ve kurbun kendi hızı.
 - **Birden çok dever çizelgeli aks** (ADR 0983).
 - **Kutunun PI'ya bağ çizgisi:** 2024 örneğinde yok, biz de çizmiyoruz. Kalabalık paftada hangi kutunun hangi kurba
   ait olduğu adla okunur.

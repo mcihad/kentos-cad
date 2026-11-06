@@ -34,6 +34,7 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsCreate) -> Result<Chec
         pis: input.pis.clone(),
         offset_of: input.offset_of.clone(),
         stationing: input.stationing.clone().filter(|s| !s.is_empty()),
+        design_speed: input.design_speed,
     };
     let mut list = own.to_vec();
     list.push(def);

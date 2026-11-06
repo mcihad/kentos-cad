@@ -55,16 +55,19 @@ const REMOVE_PI: &str = "Satırı sil";
 const FROM_SELECTION: &str = "Seçili çizgiden al";
 const LABEL: &str = "Km'yi çizime yaz";
 
-/// A PI as typed: its id and its numbers' texts.
+/// The column index an edit of a PI's id comes with (its numbers are 0–5: Y, X, R, L in, L out, V).
+const PI_ID: usize = usize::MAX;
+
+/// A PI as typed: its id and its numbers' texts (Y, X, R, L in, L out, and V: its curve's own design speed, docs/adr/0985).
 #[derive(Debug, Clone, PartialEq)]
 pub struct PiRow {
     id: String,
-    texts: [String; 5],
+    texts: [String; 6],
     /// An ove clothoid to the next PI's curve (docs/adr/0979).
     ove: bool,
     /// The values as the project holds them: a text still showing one is that value, not its three decimals (a PI
     /// moved by the rounding moves an ove's solved A, docs/adr/0979 §4).
-    kept: [f64; 5],
+    kept: [f64; 6],
 }
 
 /// An equation as typed.
@@ -86,6 +89,8 @@ pub struct Row {
     equations: Vec<EquationRow>,
     /// A parallel axis: its source's id and its offset's text.
     parallel: Option<(String, String)>,
+    /// The design speed's text, km/h (docs/adr/0985); empty: none.
+    speed: String,
 }
 
 fn text(v: f64) -> String {
@@ -119,9 +124,16 @@ impl Row {
                 .iter()
                 .map(|p| PiRow {
                     id: p.id.clone(),
-                    texts: [trimmed(p.x), trimmed(p.y), text(p.radius), text(p.spiral_in), text(p.spiral_out)],
+                    texts: [
+                        trimmed(p.x),
+                        trimmed(p.y),
+                        text(p.radius),
+                        text(p.spiral_in),
+                        text(p.spiral_out),
+                        text(p.speed.unwrap_or(0.0)),
+                    ],
                     ove: p.ove,
-                    kept: [p.x, p.y, p.radius, p.spiral_in, p.spiral_out],
+                    kept: [p.x, p.y, p.radius, p.spiral_in, p.spiral_out, p.speed.unwrap_or(0.0)],
                 })
                 .collect(),
             start: if d.stationing.is_some() { trimmed(st.start) } else { String::new() },
@@ -135,6 +147,7 @@ impl Row {
                 })
                 .collect(),
             parallel: d.offset_of.as_ref().map(|o| (o.alignment.clone(), trimmed(o.offset))),
+            speed: text(d.design_speed.unwrap_or(0.0)),
         }
     }
 
@@ -142,7 +155,7 @@ impl Row {
     fn def(&self) -> Result<AlignmentDef, String> {
         let mut pis = Vec::new();
         for (i, p) in self.pis.iter().enumerate() {
-            let mut v = [0.0; 5];
+            let mut v = [0.0; 6];
             for (j, t) in p.texts.iter().enumerate() {
                 let shown = if j < 2 { trimmed(p.kept[j]) } else { text(p.kept[j]) };
                 if *t == shown {
@@ -152,7 +165,7 @@ impl Row {
                 v[j] = match number(t) {
                     Ok(Some(n)) => n,
                     Ok(None) if j >= 2 => 0.0,
-                    _ => return Err(format!("{}. satırın {} değeri sayı olmalı.", i + 1, ["Y", "X", "R", "L giriş", "L çıkış"][j])),
+                    _ => return Err(format!("{}. satırın {} değeri sayı olmalı.", i + 1, ["Y", "X", "R", "L giriş", "L çıkış", "V"][j])),
                 };
             }
             pis.push(AlignmentPi {
@@ -163,6 +176,7 @@ impl Row {
                 spiral_in: v[3],
                 spiral_out: v[4],
                 ove: p.ove,
+                speed: (v[5] != 0.0).then_some(v[5]),
             });
         }
         let stationing = if self.parallel.is_some() {
@@ -193,6 +207,11 @@ impl Row {
             }),
             None => None,
         };
+        let design_speed = if offset_of.is_some() {
+            None
+        } else {
+            number(&self.speed).map_err(|_| "Proje hızı sayı olmalı (km/sa).".to_owned())?.filter(|v| *v != 0.0)
+        };
         Ok(AlignmentDef {
             id: self.id.clone(),
             name: self.name.clone(),
@@ -200,6 +219,7 @@ impl Row {
             pis: if offset_of.is_some() { Vec::new() } else { pis },
             offset_of,
             stationing,
+            design_speed,
         })
     }
 }
@@ -230,6 +250,8 @@ pub enum Event {
     Reverse,
     Name(String),
     Start(String),
+    /// The design speed typed (docs/adr/0985).
+    Speed(String),
     PiChoose(usize),
     Pi(usize, usize, String),
     /// The PI's ove to the next curve turned on or off (docs/adr/0979).
@@ -502,11 +524,12 @@ impl App {
                     pis: if parallel {
                         Vec::new()
                     } else {
-                        ["a", "b"].iter().map(|id| PiRow { id: (*id).to_owned(), texts: Default::default(), ove: false, kept: [f64::NAN; 5] }).collect()
+                        ["a", "b"].iter().map(|id| PiRow { id: (*id).to_owned(), texts: Default::default(), ove: false, kept: [f64::NAN; 6] }).collect()
                     },
                     start: String::new(),
                     equations: Vec::new(),
                     parallel: source.filter(|_| parallel).map(|s| (s, "7,5".to_owned())),
+                    speed: String::new(),
                 });
                 w.chosen = Some(w.rows.len() - 1);
                 w.pi = None;
@@ -534,6 +557,11 @@ impl App {
                     r.start = t;
                 }
             }
+            Event::Speed(t) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.speed = t;
+                }
+            }
             Event::PiChoose(j) => w.pi = Some(j),
             Event::PiOve(j) => {
                 if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pis.get_mut(j)) {
@@ -543,7 +571,7 @@ impl App {
             }
             Event::Pi(j, k, t) => {
                 if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pis.get_mut(j)) {
-                    if k == 5 {
+                    if k == PI_ID {
                         p.id = t;
                     } else {
                         p.texts[k] = t;
@@ -557,7 +585,7 @@ impl App {
                     let id = (1..).map(|n| format!("p{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
                     // Before the end, or after the chosen row.
                     let at = w.pi.map_or(r.pis.len().saturating_sub(1), |j| (j + 1).min(r.pis.len().saturating_sub(1))).max(1);
-                    r.pis.insert(at.min(r.pis.len()), PiRow { id, texts: Default::default(), ove: false, kept: [f64::NAN; 5] });
+                    r.pis.insert(at.min(r.pis.len()), PiRow { id, texts: Default::default(), ove: false, kept: [f64::NAN; 6] });
                     w.pi = Some(at);
                 }
             }
@@ -583,9 +611,9 @@ impl App {
                             } else {
                                 format!("p{i}")
                             },
-                            texts: [trimmed(p[0]), trimmed(p[1]), String::new(), String::new(), String::new()],
+                            texts: [trimmed(p[0]), trimmed(p[1]), String::new(), String::new(), String::new(), String::new()],
                             ove: false,
-                            kept: [p[0], p[1], 0.0, 0.0, 0.0],
+                            kept: [p[0], p[1], 0.0, 0.0, 0.0, 0.0],
                         })
                         .collect();
                 }
@@ -763,6 +791,7 @@ impl App {
             pis: None,
             stationing: None,
             offset: None,
+            design_speed: None,
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else {
@@ -835,6 +864,7 @@ impl App {
                 pis: None,
                 stationing: None,
                 offset: None,
+                design_speed: None,
                 expected_revision: None,
             };
             if !self.alignment_write(|cx| road_alignments_edit::execute(cx, edit)) {
@@ -855,6 +885,8 @@ impl App {
                         pis: (k.pis != d.pis && d.offset_of.is_none()).then(|| d.pis.clone()),
                         stationing: (k.stationing != d.stationing).then(|| d.stationing.clone().unwrap_or_default()),
                         offset: d.offset_of.as_ref().filter(|_| k.offset_of != d.offset_of).map(|o| o.offset),
+                        // 0 clears it (docs/adr/0985).
+                        design_speed: (k.design_speed != d.design_speed).then(|| d.design_speed.unwrap_or(0.0)),
                         expected_revision: None,
                     };
                     if !self.alignment_write(|cx| road_alignments_edit::execute(cx, edit)) {
@@ -868,6 +900,7 @@ impl App {
                         pis: d.pis.clone(),
                         offset_of: d.offset_of.clone(),
                         stationing: d.stationing.clone(),
+                        design_speed: d.design_speed,
                         expected_revision: None,
                     };
                     if !self.alignment_write(|cx| road_alignments_create::execute(cx, create)) {
@@ -1003,7 +1036,15 @@ impl App {
             }
             None => {
                 let start = kentos_ui::widget::text_field("0", &r.start).on_input(|t| msg(Event::Start(t)));
-                col = col.push(row![words::field("Ad", name, None), words::field("Başlangıç km (m)", start, None)].spacing(12));
+                let speed = kentos_ui::widget::text_field("80", &r.speed).on_input(|t| msg(Event::Speed(t)));
+                col = col.push(
+                    row![
+                        words::field("Ad", name, None),
+                        words::field("Başlangıç km (m)", start, None),
+                        words::field("Proje hızı (km/sa)", speed, None),
+                    ]
+                    .spacing(12),
+                );
                 let pis = &r.pis;
                 let fill = |title| road_dialog::Col { title, width: None, number: true };
                 let table = road_dialog::edit_table(
@@ -1014,6 +1055,7 @@ impl App {
                         fill("R (m)"),
                         fill("L giriş (m)"),
                         fill("L çıkış (m)"),
+                        fill("V (km/sa)"),
                         road_dialog::col("Ove", 56.0),
                     ],
                     pis.len(),
@@ -1021,12 +1063,12 @@ impl App {
                         let p = &pis[j];
                         let end = j == 0 || j + 1 == pis.len();
                         match k {
-                            0 => road_dialog::edit(&p.id, false, move |t| msg(Event::Pi(j, 5, t))),
+                            0 => road_dialog::edit(&p.id, false, move |t| msg(Event::Pi(j, PI_ID, t))),
                             // The ends have no curve: their R and spirals are not typed; the PI before the end has no
                             // curve after it to run into.
                             k if end && k >= 3 => kentos_ui::widget::table::text("—").into(),
-                            6 if j + 2 >= pis.len() => kentos_ui::widget::table::text("—").into(),
-                            6 => container(crate::style::fields::check(
+                            7 if j + 2 >= pis.len() => kentos_ui::widget::table::text("—").into(),
+                            7 => container(crate::style::fields::check(
                                 if p.ove { kentos_ui::widget::tree_view::Check::Checked } else { kentos_ui::widget::tree_view::Check::Unchecked },
                                 "",
                                 Some(msg(Event::PiOve(j))),
@@ -1118,6 +1160,7 @@ impl App {
             },
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Başlangıç km (m)", text) => Some(msg(Event::Start(text.to_owned()))),
+            Control::Fill("Proje hızı (km/sa)", text) => Some(msg(Event::Speed(text.to_owned()))),
             Control::Fill("Noktanın km'si", text) => Some(msg(Event::Point(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

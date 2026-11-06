@@ -37737,7 +37737,7 @@
       "id": "road.alignments.create",
       "version": 1,
       "title": "Aks oluştur",
-      "summary": "Yol projesinde (cadWork road) PI'lardan bir yatay güzergâh (aks) kurar ve tanımını projenin yol ayarlarına yazar: aliyman, kurp ve klotoid tek analitik biçimde (kentos.alignment/1). pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. ove: true bir PI'nın kurbunu sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne dönen, yarıçapları farklı, aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür, ortadaki aliyman klotoidin başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A, boy, başladığı km ve iki dairenin arası. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinde (cadWork road) PI'lardan bir yatay güzergâh (aks) kurar ve tanımını projenin yol ayarlarına yazar: aliyman, kurp ve klotoid tek analitik biçimde (kentos.alignment/1). pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. ove: true bir PI'nın kurbunu sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne dönen, yarıçapları farklı, aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür, ortadaki aliyman klotoidin başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A, boy, başladığı km ve iki dairenin arası. designSpeed yolun proje hızıdır (km/sa, 0'dan büyük, en çok 200; ADR 0985); bir PI'nın speed'i yalnız kendi kurbu içindir (KGM aynı yolda bir kurba V=110, kavşaktakine V=50 yazar); paftadaki some bilgisinin V'si budur; paralel aksın hızı kaynağınındır. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision, revision_conflict.",
       "aliases": [
         "aksolustur",
         "guzergah"
@@ -37757,6 +37757,15 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `road.alignments.create` v1: a new alignment from its PIs, or a parallel axis (`offsetOf`) of one; its id\nwhen not given is the first free of `g-1`, `g-2` …\n\nRefusals, in this order: `not_a_road_project`, `invalid_alignment` (the definition by `road_problem`, path the\nfield's; or PIs that make no alignment: two at one place, the direction turning back, a curve on the start or the\nend), `alignment_spirals_long` (a PI's clothoids turn more than its deflection), `alignment_curves_overlap` (two\ncurves' tangent lengths pass each other; the message names both PIs and by how much), `invalid_stationing` (an\nequation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where\na curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.",
         "properties": {
+          "designSpeed": {
+            "description": "The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "km/h"
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -37988,7 +37997,7 @@
       "id": "road.alignments.edit",
       "version": 1,
       "title": "Aksı düzenle",
-      "summary": "Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel aksta offset) aksınkinin yerini alır; boş stationing km'yi sıfırlar. reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel aksta offset, designSpeed) aksınkinin yerini alır; boş stationing km'yi sıfırlar, designSpeed 0 proje hızını kaldırır; proje hızı ve PI'ların speed'i geometri değildir, aksın revizyonu artmaz (ADR 0985). reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use, invalid_revision, revision_conflict.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -38007,6 +38016,15 @@
         "properties": {
           "alignment": {
             "type": "string"
+          },
+          "designSpeed": {
+            "description": "The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "km/h"
           },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -101576,6 +101594,15 @@
       "additionalProperties": false,
       "description": "A horizontal alignment's definition (docs/adr/0901): its PIs, or the alignment it is parallel to; its km.",
       "properties": {
+        "designSpeed": {
+          "description": "The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for\nand the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre\nseçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis\nhas its source's.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "km/h"
+        },
         "id": {
           "description": "Unique in the project; what a profile, a corridor or a parallel axis names.",
           "type": "string"
@@ -101965,6 +101992,15 @@
           "type": "number",
           "x-unit": "m"
         },
+        "speed": {
+          "description": "The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):\nKGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "km/h"
+        },
         "spiralIn": {
           "description": "The entry clothoid's length; absent or 0: none.",
           "format": "double",
@@ -102312,7 +102348,7 @@
       "oneOf": [
         {
           "const": "set",
-          "description": "The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.",
+          "description": "The given fields (`name`, `pis`, `stationing`, `offset`, `designSpeed`) replace the alignment's.",
           "type": "string"
         },
         {

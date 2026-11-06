@@ -196,3 +196,19 @@ fn a_map_that_does_not_show_the_pi_leaves_its_box_by_the_pi() {
         }
     }
 }
+
+#[test]
+fn the_box_writes_the_curves_design_speed() {
+    // Docs/adr/0985: V is the PI's own speed, else the alignment's; none, no V line (KGM 2024: `V = 80`).
+    let (_, mut setup) = sample();
+    let v_line = |setup: &serde_json::Value| -> Vec<String> {
+        let doc = Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(setup.clone()).unwrap())
+            .unwrap();
+        texts(&with_axes(&doc, 1000.0, 0.0).expect("a copy")).into_iter().map(|(t, _)| t).filter(|t| t.starts_with("V =")).collect()
+    };
+    assert!(v_line(&setup).is_empty(), "no speed, no V");
+    setup["settings"]["road"]["alignments"][0]["designSpeed"] = serde_json::json!(80.0);
+    assert_eq!(v_line(&setup), vec!["V = 80".to_owned()]);
+    setup["settings"]["road"]["alignments"][0]["pis"][1]["speed"] = serde_json::json!(62.5);
+    assert_eq!(v_line(&setup), vec!["V = 62.5".to_owned()], "the curve's own speed stands for it");
+}

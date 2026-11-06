@@ -522,6 +522,12 @@ pub struct AlignmentPi {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub ove: bool,
+    /// The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):
+    /// KGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub speed: Option<f64>,
 }
 
 /// A parallel axis's source (docs/adr/0901 §8): the alignment and how far right of it (left negative).
@@ -605,6 +611,14 @@ pub struct AlignmentDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub stationing: Option<AlignmentStationing>,
+    /// The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for
+    /// and the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre
+    /// seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
+    /// has its source's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub design_speed: Option<f64>,
 }
 
 /// A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own
@@ -3549,6 +3563,9 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
                 if a.stationing.is_some() {
                     return fail(at("stationing"), "paralel aksın km'si kaynağınındır");
                 }
+                if a.design_speed.is_some() {
+                    return fail(at("designSpeed"), "paralel aksın proje hızı kaynağınındır");
+                }
                 let source = list.iter().find(|b| b.id == o.alignment);
                 match source {
                     None => return fail(at("offsetOf.alignment"), "kaynak aks projede yok"),
@@ -3580,9 +3597,15 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
                     if p.radius < 0.0 || p.spiral_in < 0.0 || p.spiral_out < 0.0 {
                         return fail(pat("radius"), "yarıçap ve klotoid boyları eksi olamaz");
                     }
+                    if p.speed.is_some_and(|v| !speed_ok(v)) {
+                        return fail(pat("speed"), &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"));
+                    }
                 }
             }
             _ => return fail(at("pis"), "aks ya PI'larıyla ya bir aksa paralel kurulur, ikisi birden değil"),
+        }
+        if a.design_speed.is_some_and(|v| !speed_ok(v)) {
+            return fail(at("designSpeed"), &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"));
         }
         if let Some(st) = &a.stationing {
             if !st.start.is_finite() {
@@ -3597,6 +3620,14 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
         }
     }
     None
+}
+
+/// The highest design speed a road takes (km/h, docs/adr/0985): a bound of sense, not a standard's. Design speed
+/// tables end at 130 km/h (AASHTO Green Book, RAA); Türkiye's highest legal limit is 140 km/h on toll motorways.
+pub const MAX_DESIGN_SPEED: f64 = 200.0;
+
+fn speed_ok(v: f64) -> bool {
+    v.is_finite() && v > 0.0 && v <= MAX_DESIGN_SPEED
 }
 
 fn word_ok(s: &str) -> bool {
@@ -3723,11 +3754,12 @@ mod tests {
             name: "Ana aks".into(),
             revision: 1,
             pis: vec![
-                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
-                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
+                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false, speed: None },
+                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false, speed: None },
             ],
             offset_of: None,
             stationing: None,
+            design_speed: None,
         };
         let side = AlignmentDef {
             id: "g-2".into(),

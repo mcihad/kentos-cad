@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `192`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-193.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `193`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-194.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -835,6 +835,11 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 **Şema 192** (ADR 0979; ROAD-ALIGN-15): aks noktasının `ove`'si (mantıksal; yalnız `true` yazılır): o noktanın kurbu bir
 sonraki noktanın kurbuna bir ove klotoidiyle bağlanır, A PI'lardan çözülür. Yazıcı 192'yi bir aks noktası `ove` taşıyınca
 seçer; 191 ve öncesi alanı `unknown_field` sayar (`broken/road-ove-in-schema-191.kcad`). Örnek `road-ove.json/.kcad`.
+
+**Şema 193** (ADR 0985; ROAD-SEC-11): aksın `designSpeed`'i ve aks noktasının `speed`'i (km/sa, 0'dan büyük, en çok 200;
+paralel aksın kendisininki olmaz, kaynağınınkini kullanır). Noktanın hızı yalnız kendi kurbu içindir, yoksa aksınki
+geçerlidir; plandaki some bilgisinin `V`'si budur. Yazıcı 193'ü bir aks ya da nokta hız taşıyınca seçer; 192 ve öncesi
+alanları `unknown_field` sayar (`broken/road-speed-in-schema-192.kcad`). Örnek `road-speed.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,
