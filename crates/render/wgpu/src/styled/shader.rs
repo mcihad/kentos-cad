@@ -51,6 +51,8 @@ pub fn shared_source() -> String {
 pub fn source() -> String {
     let mut source = shared_source().replacen("fn dashCover(", "fn inlineDashCover(", 1);
     source.push_str(include_str!("dashes.wgsl"));
+    // Instanced blocks (docs/adr/1063 §2), native only as the long patterns are.
+    source.push_str(include_str!("instances.wgsl"));
     source
 }
 

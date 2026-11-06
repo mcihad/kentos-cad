@@ -55,6 +55,8 @@ pub(super) fn remote_cumulative_phase_matches_local_reference(gpu: &mut Gpu) {
             effect: None,
             weight_cap: 0.,
             line_type_loss: None,
+            lod: None,
+            instances: None,
         };
         let layer = StyledLayer {
             data: vec![-3., 0., 3., 0., hi, 0.],
@@ -193,6 +195,8 @@ pub(super) fn full_patterns_match_independent_samples(gpu: &mut Gpu) {
                     effect: None,
                     weight_cap: 0.,
                     line_type_loss: None,
+                    lod: None,
+                    instances: None,
                 });
             }
             let id = 1000 + case as u64 * 2 + u64::from(hatch);

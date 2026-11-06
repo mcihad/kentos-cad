@@ -342,6 +342,7 @@ fn cancel(app: &mut App, h: &mut Harness, file: &Path) -> Value {
 /// Everything measured on the drawing of `n` objects in `file`, in this process.
 fn measure(n: usize, file: &Path) -> Value {
     let (mut app, _) = App::boot(None);
+    shortcuts_from_env(&mut app);
     // The commands go through the agents' link, as Python and MCP send them (a socket's path must be short).
     let socket = std::env::temp_dir().join(format!("kentos-large-{}.sock", std::process::id()));
     let _ = std::fs::remove_file(&socket);
@@ -609,7 +610,8 @@ fn large() {
     let report = json!({
         "label": label, "environment": env, "gpu": adapter(),
         "setup": { "sizes": sizes, "window": [super::frame::WINDOW.width, super::frame::WINDOW.height],
-            "profile": "release (lto thin)", "seed": mixed::SEED, "budgetMs": BUDGET_MS },
+            "profile": "release (lto thin)", "seed": mixed::SEED, "budgetMs": BUDGET_MS,
+            "shortcuts": std::env::var("KENTOS_PERF_SHORTCUTS").unwrap_or_else(|_| "on".into()) },
         "rows": rows,
     });
     let date = super::flat::chrono_free_date();
@@ -627,6 +629,35 @@ fn large() {
         }
         Err(_) => println!("{}", serde_json::to_string_pretty(&report).expect("JSON")),
     }
+}
+
+/// `KENTOS_PERF_SETTINGS` (`graphics.msaa=1;graphics.hiDpi=false`): typed settings chosen before a diagnosis runs,
+/// as the settings window would; never set for a measured report.
+fn settings_from_env(app: &mut App) {
+    let Ok(list) = std::env::var("KENTOS_PERF_SETTINGS") else {
+        return;
+    };
+    for one in list.split(';').filter(|s| !s.trim().is_empty()) {
+        let (key, value) = one.split_once('=').expect("key=value");
+        let value = serde_json::from_str(value).unwrap_or_else(|_| Value::from(value));
+        let refused = app.settings.choose(&[(key.trim(), value)]);
+        assert!(refused.is_empty(), "{one}: refused");
+    }
+    app.apply_settings();
+}
+
+/// `KENTOS_PERF_SHORTCUTS` (docs/adr/1063): the drawing area's shortcuts a run measures, `off` (the plain build, the
+/// "önce" of a comparison), `instancing` or `lod` (one of them); unset, both (the app's own).
+pub(super) fn shortcuts_from_env(app: &mut App) {
+    let asked = std::env::var("KENTOS_PERF_SHORTCUTS").unwrap_or_default();
+    let (instancing, lod) = match asked.as_str() {
+        "off" => (false, false),
+        "instancing" => (true, false),
+        "lod" => (false, true),
+        _ => (true, true),
+    };
+    app.styles.instancing = instancing;
+    app.styles.curve_lod = lod;
 }
 
 /// Which kind of object the far view's GPU time goes to (docs/adr/1062 §3): the mixed drawing of
@@ -664,6 +695,8 @@ fn layers() {
         }
         let count = snapshot.entities.len();
         let (mut app, _) = App::boot(None);
+        settings_from_env(&mut app);
+        shortcuts_from_env(&mut app);
         h.settle(&mut app);
         let doc = Document::from_v2(snapshot, None).expect("the drawing opens");
         let first = h.frame_with(&mut app, &[], move |app| {

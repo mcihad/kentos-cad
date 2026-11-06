@@ -699,6 +699,13 @@ impl Blocks {
         )
     }
 
+    /// [`Self::placed`] for a host that draws a definition once and its inserts by their placement (the screen's
+    /// instanced blocks, docs/adr/1063 §2): the definition (a dynamic insert's own variant), the placement and
+    /// whether it is a similarity. Its pieces are what [`Self::expand`] places, an attribute's text left as defined.
+    pub fn placement_of(&self, insert: &Shape) -> Option<(Arc<Flat>, Affine, bool)> {
+        self.placed(insert)
+    }
+
     /// An insert's definition, its placement from the base-relative pieces to the drawing, and whether that is a
     /// similarity (no y factor of its own).
     fn placed(&self, insert: &Shape) -> Option<(Arc<Flat>, Affine, bool)> {

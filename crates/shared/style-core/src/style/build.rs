@@ -39,6 +39,8 @@ use super::{charts, dots, groups, heat, inverted, thematic};
 use crate::expr::rows::{Layout, RowsInput, Table};
 use crate::expr::{Expr, Measured, Needs, Scope, Unit as ReadingUnit, Value};
 
+mod instances;
+
 /// Symbol levels across classes: every fill before any line, every line before any marker.
 const LEVEL_FILL: f64 = 0.0;
 const LEVEL_LINE: f64 = 1000.0;
@@ -465,6 +467,11 @@ pub struct View {
     /// A view of a split drawing area that draws the walls at a detail of its own (docs/adr/0696's 29 October
     /// addendum): the walls' and the architectural objects' pieces at it; none, the store's.
     pub walls: Option<kentos_geometry_core::geom::wall::View>,
+    /// The drawing area's own (docs/adr/1063 §2): a block's inserts drawn by their placement from their definition
+    /// drawn once, where that draws the same (`instances`); false for paper and every other host.
+    pub instancing: bool,
+    /// The drawing area's own (docs/adr/1063 §3): curves' strokes with coarser detail levels for far views.
+    pub curve_lod: bool,
 }
 
 impl PartialEq for View {
@@ -472,6 +479,8 @@ impl PartialEq for View {
         self.position_low == o.position_low && self.plot_precision == o.plot_precision && self.fills == o.fills
             && self.area_edges == o.area_edges
             && self.walls == o.walls
+            && self.instancing == o.instancing
+            && self.curve_lod == o.curve_lod
             && match (self.map, o.map) {
                 (None, None) => true,
                 (Some(a), Some(b)) => std::ptr::eq(a, b),
@@ -491,6 +500,8 @@ impl Default for View {
             area_edges: true,
             map: None,
             walls: None,
+            instancing: false,
+            curve_lod: false,
         }
     }
 }
@@ -593,6 +604,8 @@ impl Patches {
 
 /// A build's own state: the changed symbols, the dots still allowed, the view's scale.
 struct Cx {
+    /// Curves' strokes come with their coarser detail levels (docs/adr/1063 §3).
+    curve_lod: bool,
     plot_precision:bool,
     precision_error:Option<String>,
     patches: Patches,
@@ -663,6 +676,7 @@ pub fn build_layer_in(
     let mut buf = Vec::new();
     let mut piece_at = 0usize;
     let mut cx = Cx {
+        curve_lod: view.curve_lod && view.map.is_none() && !view.plot_precision,
         plot_precision:view.plot_precision,
         precision_error:None,
         patches: Patches::default(),
@@ -671,6 +685,8 @@ pub fn build_layer_in(
     };
     let whole = program.renderer.as_ref().filter(|r| r.whole());
     let mut taken = Taken::default();
+    let mut instancer = (view.instancing && view.map.is_none() && view.walls.is_none() && !view.plot_precision)
+        .then(|| instances::Instancer::new(store, o));
     for (i, &id) in o.ids.iter().enumerate() {
         let [mode, a, simple, color] = [
             o.objects[4 * i],
@@ -725,6 +741,25 @@ pub fn build_layer_in(
                 &mut cx,
                 &mut taken,
             );
+            continue;
+        }
+        // A block's insert by its placement from its definition drawn once (docs/adr/1063 §2).
+        if let (Some(inst), Some((x, sets))) = (instancer.as_mut(), pieces)
+            && inst.draw(
+                store,
+                item,
+                x,
+                sets,
+                [mode, simple, color, o.bands.get(i).copied().unwrap_or(0)],
+                program,
+                &values,
+                &env,
+                view,
+                &mut buf,
+                &mut sink,
+                &mut cx,
+            )
+        {
             continue;
         }
         let mut one = |shape: &Shape, a: i32, simple: i32, sink: &mut BatchSink| {
@@ -888,8 +923,24 @@ fn draw_object(
         return;
     }
     // A leader's lines through the line symbol, its arrowhead through the fill symbol (docs/adr/0146 §5).
-    for geom in &parts {
-        draw_part(geom, [mode, a, simple], program, values, env, sink, cx);
+    match instances::level_radius(shape).filter(|_| cx.curve_lod && parts.len() == 1) {
+        // A curve's fine chords as before, then its coarser levels' strokes (docs/adr/1063 §3).
+        Some(r) => {
+            sink.set_lod(Some(0));
+            for geom in &parts {
+                draw_part(geom, [mode, a, simple], program, values, env, sink, cx);
+            }
+            for (l, geom) in instances::levels(shape, r).iter().enumerate() {
+                sink.set_lod(Some(l + 1));
+                draw_part(geom, [mode, a, simple], program, values, env, sink, cx);
+            }
+            sink.set_lod(None);
+        }
+        None => {
+            for geom in &parts {
+                draw_part(geom, [mode, a, simple], program, values, env, sink, cx);
+            }
+        }
     }
     // Nokta yoğunluğu's dots and Grafik's chart over what the object draws (docs/adr/0213 §2.4, §2.5).
     if mode == MODE_RENDERER {

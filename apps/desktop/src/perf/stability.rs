@@ -226,7 +226,13 @@ fn stability() {
     let band_edge = tol / 2f64.powi(band + 1);
     let quarter_edge = 2f64.powf(((near.log2() * 4.0).floor() + 0.5) / 4.0);
     let step = 1e-7;
-    for (name, edge) in [("eğri bandı", band_edge), ("çeyrek oktav", quarter_edge)] {
+    // The styled curves' first coarser level's ceiling (docs/adr/1063 §3): the fine chords above, the coarse below.
+    let level_edge = kentos_native_style::batches::CURVE_LEVELS[0];
+    for (name, edge) in [
+        ("eğri bandı", band_edge),
+        ("çeyrek oktav", quarter_edge),
+        ("eğri düzeyi", level_edge),
+    ] {
         let below = shot(&mut app, &mut h, mid, edge * (1.0 - step));
         let above = shot(&mut app, &mut h, mid, edge * (1.0 + step));
         let further = shot(&mut app, &mut h, mid, edge * (1.0 + 3.0 * step));
@@ -239,6 +245,48 @@ fn stability() {
         println!("ayrıntı {row}");
         out.push(row);
     }
+    // The drawing area's shortcuts against the plain build (docs/adr/1063), one at a time, view by view (near and far,
+    // on both sides of the curves' first level's ceiling, the farthest level): blocks' inserts drawn instanced must
+    // show what the plain build shows (asserted below); the curves' coarser levels are measured and reported, their
+    // far views drawing small circles with fewer overlapping chords (§4).
+    let shortcut_views: Vec<(&str, [f64; 2], f64)> = views
+        .iter()
+        .copied()
+        .chain([
+            ("düzey-alti", mid, level_edge * (1.0 - step)),
+            ("düzey-ustu", mid, level_edge * (1.0 + step)),
+            ("en-uzak-düzey", mid, kentos_native_style::batches::CURVE_LEVELS[2] * 0.5),
+        ])
+        .collect();
+    for (shortcut, on_off) in [("blok örnekleme", [true, false]), ("eğri düzeyleri", [false, true])] {
+        for &(name, c, s) in &shortcut_views {
+            let set = |app: &mut App, on: bool| {
+                app.styles.instancing = on_off[0] && on;
+                app.styles.curve_lod = on_off[1] && on;
+            };
+            set(&mut app, true);
+            let on = shot(&mut app, &mut h, c, s);
+            set(&mut app, false);
+            let off = shot(&mut app, &mut h, c, s);
+            keep(
+                &format!(
+                    "kisayol-{}-{}",
+                    shortcut.split(' ').next_back().unwrap_or(shortcut),
+                    name.replace(' ', "-")
+                ),
+                &on,
+                &off,
+                0,
+                0,
+            );
+            let row = json!({ "shortcut": shortcut, "view": format!("{name} (kısayol)"), "pxPerM": s,
+                "onAgainstOff": compare(&on, &off, r, 0, 0) });
+            println!("kısayol {row}");
+            out.push(row);
+        }
+    }
+    app.styles.instancing = true;
+    app.styles.curve_lod = true;
     // Snaps at source points from each view, 10 px apart.
     let (_, circle) = middle(&app, 6);
     let (_, line) = middle(&app, 0);
@@ -328,6 +376,17 @@ fn stability() {
     // overview's count is reported (a text the view's edge cuts may change who stays near it, docs/adr/1062 §4).
     for row in &out {
         let near = row["view"].as_str().is_some_and(|v| v != "uzak");
+        // Instanced blocks show what the plain build shows, in every view (docs/adr/1063 §2); the curves' levels are
+        // reported (§4).
+        if row["shortcut"] == "blok örnekleme" {
+            assert_eq!(row["onAgainstOff"]["visible"], 0, "instanced blocks draw the same: {row}");
+            continue;
+        }
+        // The curves' level's step is reported: at its ceiling (4 px a metre) its control, a zoom inside level 0,
+        // is not still either, whatever the levels draw (docs/adr/1063 §4).
+        if row["step"] == "eğri düzeyi" || row.get("shortcut").is_some() {
+            continue;
+        }
         for key in ["pan", "panOfWholeCells", "across"] {
             if (near || row.get("step").is_some()) && row.get(key).is_some() {
                 assert_eq!(row[key]["visible"], 0, "{key} holds still: {row}");

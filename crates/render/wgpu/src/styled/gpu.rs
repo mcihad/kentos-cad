@@ -98,6 +98,9 @@ enum Pipe {
     Image,
     Raster,
     Cloud,
+    /// A block definition's strokes and solid areas drawn per insert (docs/adr/1063 §2).
+    StrokeInstanced,
+    SolidInstanced,
 }
 
 struct Pipelines {
@@ -111,6 +114,8 @@ struct Pipelines {
     image: wgpu::RenderPipeline,
     raster: wgpu::RenderPipeline,
     cloud: wgpu::RenderPipeline,
+    stroke_instanced: wgpu::RenderPipeline,
+    solid_instanced: wgpu::RenderPipeline,
 }
 
 impl Pipelines {
@@ -126,6 +131,8 @@ impl Pipelines {
             Pipe::Image => &self.image,
             Pipe::Raster => &self.raster,
             Pipe::Cloud => &self.cloud,
+            Pipe::StrokeInstanced => &self.stroke_instanced,
+            Pipe::SolidInstanced => &self.solid_instanced,
         }
     }
 }
@@ -169,6 +176,23 @@ pub const AREA_FLOATS: usize = 2;
 pub const MARKER_FLOATS: usize = 5;
 /// Floats per raster quad vertex: x, y from the batch's tile, u, v (docs/adr/0204 §5).
 pub const RASTER_FLOATS: usize = 4;
+/// Floats per instance of an instanced batch on the GPU (docs/adr/1063 §2): the linear part by columns, the
+/// translation's high and low parts, the uniform scale and a zero.
+const INSTANCE_GPU_FLOATS: usize = 10;
+
+const INSTANCE_ATTRIBUTES: [wgpu::VertexAttribute; 3] =
+    wgpu::vertex_attr_array![2 => Float32x4, 3 => Float32x4, 4 => Float32x2];
+const INSTANCE_BUFFER: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
+    array_stride: (INSTANCE_GPU_FLOATS * 4) as u64,
+    step_mode: wgpu::VertexStepMode::Instance,
+    attributes: &INSTANCE_ATTRIBUTES,
+};
+/// An instanced definition's stroke segments, each repeated for its six corners.
+const STROKE_MESH_BUFFER: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
+    array_stride: (STROKE_FLOATS * 4) as u64,
+    step_mode: wgpu::VertexStepMode::Vertex,
+    attributes: &STROKE_ATTRIBUTES,
+};
 
 const STROKE_BUFFER: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
     array_stride: (STROKE_FLOATS * 4) as u64,
@@ -520,7 +544,43 @@ impl StyledGpu {
                 raster,
                 cloud,
             ] = &STYLED_PIPELINES;
+            let instanced = |name: &'static str, vertex: &'static str, fragment: &'static str, mesh: wgpu::VertexBufferLayout<'static>| {
+                device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                    label: Some(name),
+                    layout: Some(layout),
+                    vertex: wgpu::VertexState {
+                        module,
+                        entry_point: Some(vertex),
+                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                        buffers: &[mesh, INSTANCE_BUFFER],
+                    },
+                    primitive: wgpu::PrimitiveState {
+                        topology: wgpu::PrimitiveTopology::TriangleList,
+                        cull_mode: None,
+                        ..wgpu::PrimitiveState::default()
+                    },
+                    depth_stencil: None,
+                    multisample: wgpu::MultisampleState {
+                        count: samples,
+                        ..wgpu::MultisampleState::default()
+                    },
+                    fragment: Some(wgpu::FragmentState {
+                        module,
+                        entry_point: Some(fragment),
+                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                        targets: &[Some(wgpu::ColorTargetState {
+                            format,
+                            blend: Some(STRAIGHT),
+                            write_mask: wgpu::ColorWrites::ALL,
+                        })],
+                    }),
+                    multiview: None,
+                    cache: None,
+                })
+            };
             Pipelines {
+                stroke_instanced: instanced("stroke-instanced", "strokeVsInstanced", "strokeFs", STROKE_MESH_BUFFER),
+                solid_instanced: instanced("solid-instanced", "areaVsInstanced", "solidFs", AREA_BUFFER),
                 stroke: pipe(stroke),
                 solid: pipe(solid),
                 hatch: pipe(hatch),
@@ -560,6 +620,7 @@ impl StyledGpu {
         let mut patterns = super::dashes::DashPages::default();
         let mut batches = Vec::with_capacity(layer.batches.len());
         let mut blocks: Vec<u8> = Vec::with_capacity(layer.batches.len() * self.align as usize);
+        let mut own_bytes = 0u64;
         for (i, b) in layer.batches.iter().enumerate() {
             let (pipe, floats, instanced) = match &b.kind {
                 BatchKind::Stroke { .. } => (Pipe::Stroke, STROKE_FLOATS, true),
@@ -639,7 +700,22 @@ impl StyledGpu {
                 }),
                 _ => None,
             };
+            let placed = b
+                .instances
+                .as_ref()
+                .and_then(|inst| self.placed(device, layer, b, inst));
+            if let Some(p) = &placed {
+                own_bytes += p.bytes;
+            }
+            let pipe = match (&placed, pipe) {
+                (Some(_), Pipe::Stroke) => Pipe::StrokeInstanced,
+                (Some(_), Pipe::Solid) => Pipe::SolidInstanced,
+                _ => pipe,
+            };
+            let unplaced = b.instances.is_some() && placed.is_none();
             batches.push(GpuBatch {
+                own: placed,
+                level: 0,
                 raster,
                 cloud,
                 service,
@@ -648,7 +724,12 @@ impl StyledGpu {
                 picture,
                 pipe,
                 bytes: (range.start as u64 * 4)..(range.end as u64 * 4),
-                count: (range.len() / floats) as u32,
+                // An instanced batch no instanced pipeline draws is drawn as nothing, never as its raw numbers.
+                count: if unplaced {
+                    0
+                } else {
+                    (range.len() / floats) as u32
+                },
                 instanced,
                 block,
                 pattern_page,
@@ -710,8 +791,65 @@ impl StyledGpu {
             styles,
             bind,
             batches,
-            bytes: (layer.data.len() * 8 + blocks.len() + pattern_bytes) as u64,
+            bytes: (layer.data.len() * 8 + blocks.len() + pattern_bytes) as u64 + own_bytes,
         }
+    }
+
+    /// An instanced batch's own buffers (docs/adr/1063 §2): its definition's numbers per vertex (a stroke segment once
+    /// for each of its six corners) and its instances with their translations' low parts; none for a batch no
+    /// instanced pipeline draws (it is then drawn as nothing, never as its raw numbers).
+    fn placed(
+        &self,
+        device: &wgpu::Device,
+        layer: &kentos_native_style::batches::StyledLayer,
+        b: &kentos_native_style::StyledBatch,
+        inst: &kentos_native_style::batches::Instances,
+    ) -> Option<Placed> {
+        let stroke = match &b.kind {
+            BatchKind::Stroke { .. } => true,
+            BatchKind::Fill {
+                paint: FillPaintBatch::Solid { .. },
+            } => false,
+            _ => return None,
+        };
+        let data = layer.data.get(b.range.clone())?;
+        let mesh = data.get(..inst.mesh)?;
+        let own = data.get(inst.mesh..)?;
+        let low = |at: usize| layer.low.get(b.range.start + inst.mesh + at).copied().unwrap_or(0.0);
+        let per = kentos_native_style::batches::INSTANCE_FLOATS;
+        let mut instances = Vec::with_capacity(inst.count as usize * INSTANCE_GPU_FLOATS);
+        for (n, x) in own.chunks_exact(per).enumerate() {
+            instances.extend([x[0], x[1], x[2], x[3], x[4], x[5], low(n * per + 4), low(n * per + 5), x[6], 0.0]);
+        }
+        let mesh: Vec<f32> = if stroke {
+            mesh.chunks_exact(STROKE_FLOATS)
+                .flat_map(|seg| std::iter::repeat_n(seg, 6).flatten().copied())
+                .collect()
+        } else {
+            mesh.to_vec()
+        };
+        if mesh.is_empty() || instances.is_empty() {
+            return None;
+        }
+        let make = |label, contents: &[f32]| {
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some(label),
+                contents: bytemuck::cast_slice(contents),
+                usage: wgpu::BufferUsages::VERTEX,
+            })
+        };
+        Some(Placed {
+            bytes: ((mesh.len() + instances.len()) * 4) as u64,
+            vertices: if stroke {
+                (mesh.len() / STROKE_FLOATS) as u32
+            } else {
+                (mesh.len() / AREA_FLOATS) as u32
+            },
+            per_item: if stroke { 6 } else { 1 },
+            mesh: make("kentos.styled.definition", &mesh),
+            instances: make("kentos.styled.instances", &instances),
+            count: (instances.len() / INSTANCE_GPU_FLOATS) as u32,
+        })
     }
 
     /// Before a frame: uploads layers the view has not drawn, drops the ones
@@ -765,6 +903,10 @@ impl StyledGpu {
             for layer in &mut view.layers {
                 let batches = &layer.source.layer.batches;
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
+                    // A curve's detail level for this view (docs/adr/1063 §3).
+                    g.level = b.lod.as_ref().map_or(0, |lod| {
+                        lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
+                    });
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
@@ -1000,6 +1142,10 @@ impl StyledGpu {
                 }
                 let batches = &layer.source.layer.batches;
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
+                    // A curve's detail level for this view (docs/adr/1063 §3).
+                    g.level = b.lod.as_ref().map_or(0, |lod| {
+                        lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
+                    });
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
@@ -1383,14 +1529,52 @@ impl StyledGpu {
                 pass.set_bind_group(0, bind, &[]);
             }
             pass.set_bind_group(1, &layer.bind[b.pattern_page], &[b.offset]);
-            pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
-            if let Some(low) = &layer.low {
-                pass.set_vertex_buffer(1, low.slice(b.bytes.clone()));
-            }
-            if b.instanced {
-                pass.draw(0..6, 0..b.count);
+            // The lens sees its own scale: its curves' level is its own (docs/adr/1063 §3).
+            let source = layer.source.layer.batches.get(i);
+            let level = match (seen, source.and_then(|s| s.lod.as_ref())) {
+                (Some((_, px_per_m, dpr)), Some(lod)) => lod.level(
+                    px_per_m / dpr.max(1e-9),
+                    source.and_then(|s| s.instances.as_ref()).map_or(1.0, |i| i.scale),
+                ),
+                _ => b.level,
+            };
+            let lod = source.and_then(|s| s.lod.as_ref());
+            if let Some(placed) = &b.own {
+                pass.set_vertex_buffer(0, placed.mesh.slice(..));
+                pass.set_vertex_buffer(1, placed.instances.slice(..));
+                let floats = if matches!(b.pipe, Pipe::StrokeInstanced) { STROKE_FLOATS } else { AREA_FLOATS };
+                match lod {
+                    Some(lod) => {
+                        for r in lod.ranges(level) {
+                            let (a, z) = ((r.start / floats) as u32 * placed.per_item, (r.end / floats) as u32 * placed.per_item);
+                            if z > a {
+                                pass.draw(a..z, 0..placed.count);
+                            }
+                        }
+                    }
+                    None => pass.draw(0..placed.vertices, 0..placed.count),
+                }
             } else {
-                pass.draw(0..b.count, 0..1);
+                pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
+                if let Some(low) = &layer.low {
+                    pass.set_vertex_buffer(1, low.slice(b.bytes.clone()));
+                }
+                match (lod, b.instanced) {
+                    (Some(lod), true) => {
+                        let floats = match b.pipe {
+                            Pipe::Marker => MARKER_FLOATS,
+                            _ => STROKE_FLOATS,
+                        };
+                        for r in lod.ranges(level) {
+                            let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
+                            if z > a {
+                                pass.draw(0..6, a..z);
+                            }
+                        }
+                    }
+                    (_, true) => pass.draw(0..6, 0..b.count),
+                    (_, false) => pass.draw(0..b.count, 0..1),
+                }
             }
             if picture.is_some() {
                 pass.set_bind_group(0, frame_bind, &[]);
@@ -1487,7 +1671,22 @@ fn srgb_to_linear(c: f32) -> f32 {
     }
 }
 
+/// An instanced batch's own buffers (docs/adr/1063 §2).
+struct Placed {
+    mesh: wgpu::Buffer,
+    instances: wgpu::Buffer,
+    /// Its definition's vertices (six a stroke segment, one an area's corner), and vertices per item of the core's.
+    vertices: u32,
+    per_item: u32,
+    count: u32,
+    bytes: u64,
+}
+
 struct GpuBatch {
+    /// An instanced batch's buffers (docs/adr/1063 §2); none for one drawn from the layer's buffer.
+    own: Option<Placed>,
+    /// Its curves' detail level this frame (docs/adr/1063 §3).
+    level: usize,
     /// A raster's paint (docs/adr/0204 §5): its tiles in view are drawn instead of its frame.
     raster: Option<super::raster_tiles::RasterPaint>,
     /// A map service's paint (docs/adr/0208 §3, §9): its picture tiles are

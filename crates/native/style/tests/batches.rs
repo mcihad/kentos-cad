@@ -196,6 +196,8 @@ fn builds_the_web_s_batches() {
                 area_edges: view["areaEdges"] != false,
                 map: None,
                 walls: None,
+                instancing: false,
+                curve_lod: false,
             },
             frame: None,
             reading_unit: ReadingUnit::METRE,
