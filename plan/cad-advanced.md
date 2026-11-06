@@ -2486,7 +2486,7 @@ penceresi 1440×900 ve 1100×650'de, iki temada görüntülendi; görüntüler r
 alt nesne bağı, özel durum modeli, PDF yorumu içe alma, blok tanımı/pafta farkı alma ve web karşılığı bu maddenin
 dışında. Sahnelerle sürülen pencere testinin dışında ayrı bir fare kaydı yapılmadı.
 
-### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [~]
+### CAD-ADV-16 — Genel 2B pafta ve yayın işini tek güvenilir üretim akışına bağla [x]
 
 **Öncelik:** P1; yanlış ölçek/çıktı P0. **Kod:** [C25], [C26], [C03].
 **Dayanak:** pafta seti ve baskı önizlemesinin ölçekle üretim ilişkisi.
@@ -2558,6 +2558,14 @@ CTB'nin 0,50 mm siyah 1. kalemi katmana verilip paftaya uygulanınca PDF'teki ç
 CTB/STB **yazıcısı yok**; üst bilginin sağlaması ve tablo dışı kalınlık sırası AutoCAD'le karşılaştırılmadı (rapor
 satırı olarak söylenir); UTF-8 dışı kod sayfası reddedilir. Açık: AutoCAD/Acrobat ile karşı denetim, gerçek CTB
 korpusu, baskı çizgi tiplerinin eşlenmesi. Madde `[~]`.
+
+**Kabulün kanıtı (6 Kasım 2026):** 1:1/1:5/1:20/1:100 detayları tek sette, iki farklı temsilli viewport'tan biri
+değişince öbürünün bayt bayt korunması, bağımsız PDF okuyucu ve Poppler ile ölçü/vektör/metin, güncelliğini yitiren
+pafta ve durdurulan yayın: ADR 1090 kabul testleri ve 32 + 24 bağımsız vaka (ADR 1090, 1112); masaüstünde detay kurma
+penceresi ADR 1112; ikili CTB/STB ve baskıya uygulanması ADR 1130 (MCP kabulünde kalemle PDF çizgisi 0,50 mm siyah).
+Baskı profili kullanıcının temasından etkilenmez: PDF `kentos_plot::book::book_pdf(çizim, paftalar, kullanıcı,
+tarih)`'tır, girdisinde tema yoktur ve tema çizimde saklanmaz. AutoCAD/Acrobat ile karşılaştırma kabul satırı değildir ve
+sahibin kararıyla kapsam dışıdır (CAD-IO-20); CTB/STB yazıcısı doğrulanamadığı için yoktur.
 
 ### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [~]
 
