@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    ProfileBands,
+    ProfileBandsName,
     RoadSheetsLaid,
     RoadSheetsPlan,
     RoadSheetsSections,
@@ -29,15 +31,17 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
     kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit
     görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki
     at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı
-    ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. Şablon yoksa
-    sys:yol-plan-boykesit; paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks
-    altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır.
-    Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları”
-    (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar:
-    road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision,
-    revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile,
-    invalid_road_sheets, katmanın retleri, unknown_template, invalid_options,
-    not_fixed_map, bad_drawing_info.
+    ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri
+    KGM'nin 2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir
+    (ADR 0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar ve A3 şablonun
+    boykesit haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit;
+    paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın
+    ve boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım
+    ve paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri
+    alma adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale.
+    Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment,
+    unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template,
+    invalid_options, not_fixed_map, bad_drawing_info.
     """
     __slots__ = ()
     id = "road.sheets.plan"
@@ -55,6 +59,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         *,
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -66,6 +71,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         profile: str | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -77,20 +83,23 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         profile verilince (aynı aksta) her paftanın km'lerinin boykesit görünümü
         (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki at'ta, her
         biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte
-        gösterir, bir km planda ve boykesitte üst üste düşer. Şablon yoksa
-        sys:yol-plan-boykesit; paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks
-        altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır.
-        Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları”
-        (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar:
-        road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision,
-        revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile,
-        invalid_road_sheets, katmanın retleri, unknown_template, invalid_options,
-        not_fixed_map, bad_drawing_info.
+        gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri KGM'nin
+        2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir (ADR
+        0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar ve A3 şablonun boykesit
+        haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit; paftalar
+        first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve
+        boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve
+        paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma
+        adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler:
+        invalid_revision, revision_conflict, not_a_road_project, unknown_alignment,
+        unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template,
+        invalid_options, not_fixed_map, bad_drawing_info.
 
         Args:
             doc: The drawing it works on.
             alignment:
             at: Unit: length.
+            bands: The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order.
             exaggeration: Unit: 1.
             expected_revision:
             first:
@@ -102,6 +111,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             profile:
             scale: Unit: scale.
             source:
+            superelevation: With `bands: kgm`, the superelevation schedule the views' Dever band draws (its id or name).
             to: Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -118,6 +128,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         return self.execute_input(doc, RoadSheetsPlan(
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
+            bands=bands,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,
@@ -129,6 +140,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             profile=profile,
             scale=scale,
             source=source,
+            superelevation=superelevation,
             to=to,
         ), request_id=request_id, expected=expected)
 
@@ -139,6 +151,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         *,
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -150,6 +163,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         profile: str | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> RoadSheetsLaid:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -158,6 +172,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         return self.plan_input(doc, RoadSheetsPlan(
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
+            bands=bands,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,
@@ -169,6 +184,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             profile=profile,
             scale=scale,
             source=source,
+            superelevation=superelevation,
             to=to,
         ))
 
@@ -179,6 +195,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         *,
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -190,6 +207,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         profile: str | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -198,6 +216,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         return self.validate_input(doc, RoadSheetsPlan(
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
+            bands=bands,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,
@@ -209,6 +228,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             profile=profile,
             scale=scale,
             source=source,
+            superelevation=superelevation,
             to=to,
         ))
 
@@ -219,6 +239,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         *,
         alignment: str,
         at: Sequence[float] | None | Unset = UNSET,
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
@@ -230,6 +251,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         profile: str | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -243,6 +265,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         return self.answer_input(doc, RoadSheetsPlan(
             alignment=alignment,
             at=_opt(at, lambda x: list(x)),
+            bands=bands,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             first=first,
@@ -254,6 +277,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             profile=profile,
             scale=scale,
             source=source,
+            superelevation=superelevation,
             to=to,
         ), op=op, request_id=request_id, expected=expected)
 

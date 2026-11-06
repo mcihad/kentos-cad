@@ -55575,7 +55575,7 @@
       "id": "road.sheets.plan",
       "version": 1,
       "title": "Yol paftaları",
-      "summary": "Aksı plan–boykesit paftalarına dizer (Civil 3D'nin Create View Frames ve Create Sheets'i gibi): bir paftanın aralığı şablonun plan haritasının genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası aralığın kirişinin ortasında, aks soldan sağa akacak biçimde döndürülür; overlap kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. Şablon yoksa sys:yol-plan-boykesit; paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template, invalid_options, not_fixed_map, bad_drawing_info.",
+      "summary": "Aksı plan–boykesit paftalarına dizer (Civil 3D'nin Create View Frames ve Create Sheets'i gibi): bir paftanın aralığı şablonun plan haritasının genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası aralığın kirişinin ortasında, aks soldan sağa akacak biçimde döndürülür; overlap kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri KGM'nin 2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir (ADR 0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar ve A3 şablonun boykesit haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit; paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template, invalid_options, not_fixed_map, bad_drawing_info.",
       "aliases": [
         "yolpaftalari",
         "planboykesit"
@@ -55611,6 +55611,17 @@
               "null"
             ],
             "x-unit": "length"
+          },
+          "bands": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileBands"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order."
           },
           "exaggeration": {
             "format": "double",
@@ -55690,6 +55701,13 @@
               {
                 "type": "null"
               }
+            ]
+          },
+          "superelevation": {
+            "description": "With `bands: kgm`, the superelevation schedule the views' Dever band draws (its id or name).",
+            "type": [
+              "string",
+              "null"
             ]
           },
           "to": {

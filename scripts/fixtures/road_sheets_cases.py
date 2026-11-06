@@ -21,6 +21,7 @@ import mpmath as mp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_cases as pref  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +40,8 @@ MOST = 500
 PLOT = 1000.0
 DEPTH = 5 * 2.4 * 2.5 * PLOT / 1000.0
 GAP = 0.4 * DEPTH
+# Docs/adr/0980: KGM's six bands, 7 + 7 + 9 + 6 + 7 + 7 text heights deep.
+KGM_DEPTH = 43 * 2.5 * PLOT / 1000.0
 STEP_NAME = "Yol paftaları"
 
 
@@ -174,15 +177,18 @@ def lay(input_, sets=()):
             va, vb = max(sa, p0), min(sb, p1)
             if vb > va + 1e-9:
                 ex = input_.get("exaggeration", 10.0)
+                bands = input_.get("bands")
+                dever = pcmd.DEVER if input_.get("superelevation") else None
+                depth = KGM_DEPTH if bands == "kgm" else DEPTH
                 sized, _, _ = pcmd.drawing(profile, [0.0, 0.0], ex=ex, frm=va, to=vb)
                 h = sized["frame"][1][1] - sized["frame"][0][1]
                 at = input_["at"]
                 y0 = at[1] if next_y is None else next_y - h
-                drawn, count, _ = pcmd.drawing(profile, [at[0], y0], ex=ex, frm=va, to=vb)
+                drawn, count, _ = pcmd.drawing(profile, [at[0], y0], ex=ex, frm=va, to=vb, bands=bands, dever=dever)
                 objects += count
-                next_y = y0 - DEPTH - GAP
+                next_y = y0 - depth - (0.4 * depth)
                 row["view"] = drawn["frame"]
-                if h + DEPTH > pheight + 1e-6:
+                if h + depth > pheight + 1e-6:
                     off = True
         if off:
             row["outside"] = True
@@ -220,15 +226,15 @@ def lay(input_, sets=()):
     return out, warnings, objects, kept, book
 
 
-def road_with(sets):
-    road = pcmd.road_of(START)
+def road_with(sets, supers=None):
+    road = pcmd.road_of(START, supers=supers)
     if sets:
         road["sheetSets"] = copy.deepcopy(list(sets))
     return road
 
 
-def setup(sets=()):
-    base = pcmd.setup(START, layers=pcmd.DRAW_LAYERS)
+def setup(sets=(), supers=None):
+    base = pcmd.setup(START, layers=pcmd.DRAW_LAYERS, supers=supers)
     if sets:
         base["settings"]["road"]["sheetSets"] = copy.deepcopy(list(sets))
     return base
@@ -237,16 +243,16 @@ def setup(sets=()):
 FIRST = len(pcmd.ENTITIES) + 1
 
 
-def ok(name, input_, op="execute", sets=(), undo=False):
+def ok(name, input_, op="execute", sets=(), undo=False, supers=None):
     out, warnings, n, kept, book = lay(input_, sets)
     out = {**out, "uids": "$any" if (op == "execute" and n) else [], "revision": "$current"}
     if op == "validate":
-        result, expect = completed(None, warnings), {**UNCHANGED, "road": road_with(sets)}
+        result, expect = completed(None, warnings), {**UNCHANGED, "road": road_with(sets, supers)}
     elif op == "plan":
-        result, expect = completed(out, warnings), {**UNCHANGED, "road": road_with(sets)}
+        result, expect = completed(out, warnings), {**UNCHANGED, "road": road_with(sets, supers)}
     else:
         result = completed(out, warnings)
-        expect = {**STEPPED, "road": road_with(list(sets) + [kept]), "ids": list(range(1, FIRST + n)),
+        expect = {**STEPPED, "road": road_with(list(sets) + [kept], supers), "ids": list(range(1, FIRST + n)),
                   "sheets": book}
     s = step(op, input_, result, expect)
     s["within"] = 1e-6
@@ -254,7 +260,7 @@ def ok(name, input_, op="execute", sets=(), undo=False):
     if undo:
         steps.append({"op": "undo", "returns": STEP_NAME,
                       "expect": {"ids": list(range(1, FIRST)), "canRedo": True, "road": road_with(sets)}})
-    return case(name, steps, setup(sets) if sets else None)
+    return case(name, steps, setup(sets, supers) if (sets or supers) else None)
 
 
 def no(name, input_, setup_=None, sets=(), result=None):
@@ -289,6 +295,10 @@ def cases():
         ok("Adıyla takım, başka takımın yanına", {"alignment": "Ana aks", "name": "Ana yol 1:2000", "scale": 2000},
            sets=[OTHER]),
         ok("Tek geri alma adımı", {**pro, "scale": 1000, "exaggeration": 5.0}, undo=True),
+        # Docs/adr/0980: the profile views with KGM's bands, the second with the Dever band's schedule.
+        ok("KGM bantlarıyla, 1:1000", {**pro, "scale": 1000, "exaggeration": 5.0, "bands": "kgm"}),
+        ok("KGM bantları ve dever çizelgesiyle", {**pro, "scale": 1000, "exaggeration": 5.0, "bands": "kgm",
+                                                 "superelevation": "Ana dever"}, supers=[pcmd.DEVER]),
         ok("Gizli katmana uyarıyla, Y-201'den", {**pro, "layerId": "gizli", "scale": 1000, "exaggeration": 5.0,
                                                  "first": "Y-201"}),
         no("Olmayan katman", {**pro, "layerId": "yok"}),
@@ -324,6 +334,7 @@ def main():
                     "boykesit görünümleri road_profile_command_cases.py'nin başvurusundan, plan haritasının boyu "
                     "şablonun dosyasından, kural ADR 0908 §10'dan; KentOS kodu yok.",
             "setup": setup(), "cases": cases()}
+    data = road_grades.fixture(data)  # docs/adr/0977: the schedule's slopes as grades
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

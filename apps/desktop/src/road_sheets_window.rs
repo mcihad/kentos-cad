@@ -50,6 +50,9 @@ pub struct Window {
     pub(crate) layer: Option<String>,
     /// The place (“Y; X”), the scale, the exaggeration, the overlap, the start and the end km, as typed.
     pub(crate) fields: [String; 6],
+    /// The profile views' bands: KGM's 2019 order when set, and the schedule its Dever band draws (docs/adr/0980).
+    pub(crate) kgm: bool,
+    pub(crate) dever: Option<String>,
     pub(crate) preview: Preview,
 }
 
@@ -61,6 +64,10 @@ pub enum Event {
     Layer(String),
     /// 0 the place, 1 the scale, 2 the exaggeration, 3 the overlap, 4 the start, 5 the end.
     Field(usize, String),
+    /// KentOS's bands (false) or KGM's (true), docs/adr/0980.
+    Kgm(bool),
+    /// The schedule KGM's Dever band draws (its id); none: no schedule.
+    Dever(Option<String>),
     Make,
     Close,
 }
@@ -105,6 +112,8 @@ impl Window {
             layer_id: self.profile.as_ref().and(self.layer.clone()),
             at,
             exaggeration: number(&self.fields[2])?,
+            bands: (self.profile.is_some() && self.kgm).then_some(kentos_commands::ProfileBands::Kgm),
+            superelevation: if self.profile.is_some() && self.kgm { self.dever.clone() } else { None },
             scale,
             overlap: number(&self.fields[3])?,
             source: None,
@@ -138,6 +147,8 @@ impl App {
             profile,
             layer,
             fields: ["0; -500".into(), "1000".into(), "5".into(), String::new(), String::new(), String::new()],
+            kgm: false,
+            dever: None,
             preview: Preview::default(),
         }));
         self.dialog = Some(Dialog::RoadSheets);
@@ -168,10 +179,13 @@ impl App {
         match event {
             Event::Alignment(id) => {
                 w.profile = None;
+                w.dever = None;
                 w.alignment = Some(id);
             }
             Event::Profile(p) => w.profile = p,
             Event::Layer(l) => w.layer = Some(l),
+            Event::Kgm(on) => w.kgm = on,
+            Event::Dever(id) => w.dever = id,
             Event::Field(k, t) => w.fields[k.min(5)] = t,
             Event::Make => return self.make_road_sheets(),
             Event::Close => {
@@ -270,6 +284,36 @@ impl App {
             .push(words::field("Baş km (m)", field("baştan", 4, 90.0), None))
             .push(words::field("Son km (m)", field("sona", 5, 90.0), None));
         let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top.align_y(iced::alignment::Vertical::Bottom));
+        // Docs/adr/0980: the profile views' bands, KentOS's or KGM's 2019 order with its Dever band's schedule.
+        if w.profile.is_some() {
+            let bands = Select::new(["KentOS", "KGM 2019"].into_iter().map(Choice::new), Some(usize::from(w.kgm)), |i| {
+                msg(Event::Kgm(i == 1))
+            });
+            let mut second = row![words::field("Bantlar", container(bands).width(130), None)].spacing(10);
+            if w.kgm {
+                let schedules: Vec<(String, String)> = self
+                    .document
+                    .as_ref()
+                    .map(|d| {
+                        d.model
+                            .road_superelevations()
+                            .iter()
+                            .filter(|s| Some(&s.alignment) == w.alignment.as_ref())
+                            .map(|s| (s.id.clone(), s.name.clone()))
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let chosen = w.dever.as_ref().and_then(|id| schedules.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None).chain(schedules.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let dever = Select::new(
+                    std::iter::once("Çizelge yok".to_owned()).chain(schedules.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    Some(chosen),
+                    move |i| msg(Event::Dever(ids[i].clone())),
+                );
+                second = second.push(words::field("Dever bandı", container(dever).width(170), None));
+            }
+            body = body.push(second.align_y(iced::alignment::Vertical::Bottom));
+        }
         match (&w.preview.why, &w.preview.laid) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(l)) => {

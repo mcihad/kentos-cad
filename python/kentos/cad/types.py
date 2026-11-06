@@ -73688,15 +73688,18 @@ class RoadSheetsPlan(_Model):
     (the alignment or a profile view leaves its map on some sheets), `layer_hidden`, `profile_stale`.
     Attributes:
         at: Unit: length.
+        bands: The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order.
         exaggeration: Unit: 1.
         from_: Unit: m.
         options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
         overlap: Unit: m.
         scale: Unit: scale.
+        superelevation: With `bands: kgm`, the superelevation schedule the views' Dever band draws (its id or name).
         to: Unit: m.
     """
     alignment: str
     at: list[float] | None | Unset = UNSET
+    bands: ProfileBands | ProfileBandsName | None | Unset = UNSET
     exaggeration: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     first: str | None | Unset = UNSET
@@ -73708,6 +73711,7 @@ class RoadSheetsPlan(_Model):
     profile: str | None | Unset = UNSET
     scale: int | None | Unset = UNSET
     source: SheetTemplateSource | None | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
     to: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -73715,6 +73719,8 @@ class RoadSheetsPlan(_Model):
         out["alignment"] = self.alignment
         if self.at is not UNSET:
             out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        if self.bands is not UNSET:
+            out["bands"] = None if self.bands is None else _enum_out(self.bands)
         if self.exaggeration is not UNSET:
             out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
         if self.expected_revision is not UNSET:
@@ -73736,6 +73742,8 @@ class RoadSheetsPlan(_Model):
             out["scale"] = self.scale
         if self.source is not UNSET:
             out["source"] = None if self.source is None else self.source.to_json()
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
         if self.to is not UNSET:
             out["to"] = None if self.to is None else float(self.to)
         return out
@@ -73745,6 +73753,7 @@ class RoadSheetsPlan(_Model):
         return cls(
             alignment=data["alignment"],
             at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
+            bands=UNSET if "bands" not in data else None if data["bands"] is None else _enum_in(ProfileBands, data["bands"]),
             exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
             expected_revision=data.get("expectedRevision", UNSET),
             first=data.get("first", UNSET),
@@ -73756,6 +73765,7 @@ class RoadSheetsPlan(_Model):
             profile=data.get("profile", UNSET),
             scale=data.get("scale", UNSET),
             source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
+            superelevation=data.get("superelevation", UNSET),
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
         )
 

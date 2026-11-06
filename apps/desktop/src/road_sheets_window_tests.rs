@@ -107,3 +107,82 @@ fn screens() {
         shot(&mut app, "pafta-ilk");
     }
 }
+
+/// `road.sheets.plan`'s KGM case drawing (docs/adr/0980): the same project with a superelevation schedule by rows.
+fn kgm_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.sheets.plan.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "KGM bantları ve dever çizelgesiyle").expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// KGM's bands on the sheets (docs/adr/0980): deeper bands lay the views further apart, the Dever band's schedule is
+/// the alignment's; one undo step.
+#[test]
+fn the_sheets_take_kgm_s_bands() {
+    let mut app = kgm_app();
+    let _ = app.update(Message::Run("road.sheets"));
+    send(&mut app, W::Field(1, "1000".into()));
+    send(&mut app, W::Profile(Some("b-1".into())));
+    let plain = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("reads");
+    send(&mut app, W::Kgm(true));
+    send(&mut app, W::Dever(Some("d-1".into())));
+    let kgm = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("reads");
+    let gap = |l: &kentos_commands::RoadSheetsLaid| {
+        let v: Vec<[[f64; 2]; 2]> = l.sheets.iter().filter_map(|s| s.view).collect();
+        v[0][0][1] - v[1][1][1]
+    };
+    assert!(gap(&kgm) > gap(&plain), "KGM's bands are deeper: {} against {}", gap(&kgm), gap(&plain));
+    send(&mut app, W::Make);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert!(doc.entities().any(|e| matches!(e, kentos_commands::Entity::Text(t) if t.text == "Yatay Geometri")));
+    let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Model));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert!(app.document.as_ref().expect("a drawing").model.road_sheet_sets().is_empty());
+}
+
+/// The window with KGM's bands and the first sheet, light and dark; `.run/gui-evidence/yol-y74/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_kgm -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_kgm() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y74");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = kgm_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("y74-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("road.sheets"));
+        send(&mut app, W::Field(1, "1000".into()));
+        send(&mut app, W::Profile(Some("b-1".into())));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Dever(Some("d-1".into())));
+        shot(&mut app, "pencere");
+        send(&mut app, W::Make);
+        shot(&mut app, "pafta-ilk");
+    }
+}

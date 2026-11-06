@@ -1,6 +1,6 @@
 # 0980 — Boykesit çiziminde KGM'nin bantları
 
-Tarih: 2026-11-06. Durum: kabul (Y73). Kapsam ROAD-SEC-11'in boykesit paftası, ROAD-DEVER-10 (dever çizelgesinin çizimde
+Tarih: 2026-11-06. Durum: kabul (Y73, Y74). Kapsam ROAD-SEC-11'in boykesit paftası, ROAD-DEVER-10 (dever çizelgesinin çizimde
 gösterimi); ADR 0902 §8 ve 0978'in devamı.
 
 ## Sorun
@@ -101,10 +101,25 @@ istediği yatay geometri ve dever bantları yoktu, sıra da KGM'ninkinden farkl�
 - **Bulgu:** Yazının dönmesi sözleşmede derecedir; ilk denemede π/2 radyan yazıldı ve değerler yatay kaldı. Resimde
   görüldü ve düzeltildi.
 
+## Y74: plan–profil paftaları
+
+`road.sheets.plan` aynı iki girdiyi alır (`bands`, `superelevation`) ve her boykesit görünümüne geçirir.
+
+- **Aralık:** Görünümler arası aralık KGM bantlarının derinliğine göre açılır: 43 yazı yüksekliği, 2,5 mm'de kâğıtta
+  107,5 mm. KentOS bantları 30 mm'dir.
+- **Pencere:** Yol paftaları penceresinde "Bantlar" ve "Dever bandı" seçimleri vardır.
+- **Ortak durumlar:** `road.sheets.plan` 35 durum. Yeniler "KGM bantlarıyla, 1:1000" ve "KGM bantları ve dever
+  çizelgesiyle"; nesne sayılarını başvuru ayrı sayar. Masaüstü testi de geçer.
+- **Bulgu (resimle görüldü):** KentOS'un A3 plan–profil şablonunda (`sys:yol-plan-boykesit`) boykesit haritası
+  kâğıtta 102 mm yüksektir. KGM bantları buna sığmaz: 1:1000'de Düşey Geometri ve Dever bantları haritanın dışında
+  kalır. Komut bunu `road_sheet_outside` uyarısıyla söyler.
+
+  KGM 2019 profil paftalarını "rulo halinde (… 10 veya 20 km'lik kesimler)" ister (s. 13). KGM bantları için bir rulo
+  şablonu ayrı bir iştir; plana yazıldı.
+
 ## Açık
 
-- **Pafta setleri:** `road.sheets` plan–profil paftaları KentOS bantlarıyla çizer. KGM bantlarını seçmek bir sonraki
-  iştir.
+- **KGM rulo şablonu:** KGM bantlarına yer açan plan–profil şablonu henüz yok (Y74 bulgusu).
 - **Öteki bant içerikleri:**
   - KGM'nin örnek paftasındaki hafriyat, şev ve platform satırları;
   - kot taşıma çizgisi;

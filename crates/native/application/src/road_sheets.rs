@@ -181,7 +181,12 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
     }
     let id = (1..).map(|n| format!("ps-{n}")).find(|i| sets.iter().all(|s| s.id != *i)).unwrap_or_default();
     // Each sheet: its plan map, its profile view.
-    let depth = road_profiles_draw::bands_depth(doc, 2.5);
+    // Docs/adr/0980: KGM's bands are deeper than KentOS's.
+    let depth = if input.bands == Some(kentos_commands::ProfileBands::Kgm) {
+        road_profiles_draw::kgm_depth(doc, 2.5)
+    } else {
+        road_profiles_draw::bands_depth(doc, 2.5)
+    };
     let gap = 0.4 * depth;
     let mut frames = Vec::new();
     let mut laid = Vec::new();
@@ -220,8 +225,8 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                     height: None,
                     from: Some(va),
                     to: Some(vb),
-                    bands: None,
-                    superelevation: None,
+                    bands: input.bands,
+                    superelevation: input.superelevation.clone(),
                     expected_revision: None,
                 };
                 let (_, sized, _) = road_profiles_draw::view(doc, &asked)?;
