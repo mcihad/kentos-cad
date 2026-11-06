@@ -2243,6 +2243,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 193 (docs/adr/1201 §1): a map work item's file with its relative path.
+    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_relative) {
+        return crate::SCHEMA_WITH_MAP_WORK_RELATIVE;
+    }
     // Schema 192 (docs/adr/0979): an alignment PI's ove.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_ove) {
         return crate::SCHEMA_WITH_ROAD_OVE;

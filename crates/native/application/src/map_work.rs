@@ -32,7 +32,7 @@ pub(crate) fn map_project(doc: &Document) -> Result<(), Stop> {
 pub(crate) fn item_of_layer<'w>(doc: &Document, work: &'w MapWork, layer: &str) -> Option<&'w WorkItem> {
     let mut id = Some(layer.to_owned());
     while let Some(at) = id {
-        if let Some(item) = work.items.iter().find(|i| i.layers.iter().any(|l| *l == at)) {
+        if let Some(item) = work.items.iter().find(|i| i.layers.contains(&at)) {
             return Some(item);
         }
         id = doc.layers().parent(&at).map(|p| p.id.clone());
@@ -54,24 +54,42 @@ pub(crate) fn file_sha(path: &str) -> Option<String> {
     crate::file_digest::sha256(Path::new(path)).ok().map(|(_, sha)| sha)
 }
 
-/// How each item's file stands, by item id: its state and, read deep, its content's SHA-256.
-fn files(work: &MapWork, deep: bool) -> HashMap<String, (F, Option<String>)> {
+/// How an item's file stands: its state, read deep its content's SHA-256, where it was found and how.
+#[derive(Clone, Debug)]
+pub(crate) struct FileLook {
+    pub state: F,
+    pub sha: Option<String>,
+    pub at: Option<std::path::PathBuf>,
+    pub via: kentos_commands::AssetVia,
+}
+
+/// How each item's file stands, by item id: looked for at its path, then (with the open project's file `drawing`) at
+/// its relative path from the project's folder and in the project's search paths (docs/adr/1201 §1); read deep, its
+/// content's SHA-256 against the item's revision.
+pub(crate) fn files_at(doc: &Document, work: &MapWork, deep: bool, drawing: Option<&str>) -> HashMap<String, FileLook> {
+    let search = &doc.settings().xref_paths;
     work.items
         .iter()
         .filter_map(|i| {
             let f = i.file.as_ref()?;
-            let state = if !deep {
-                (if Path::new(&f.path).is_file() { F::Found } else { F::Missing }, None)
-            } else {
-                match file_sha(&f.path) {
-                    Some(sha) if sha == f.revision => (F::Current, Some(sha)),
-                    Some(sha) => (F::Changed, Some(sha)),
-                    None => (F::Missing, None),
-                }
+            let found = crate::links::find(&f.path, f.relative.as_deref(), drawing, search);
+            let look = match (&found.at, deep) {
+                (None, _) => FileLook { state: F::Missing, sha: None, at: None, via: found.via },
+                (Some(at), false) => FileLook { state: F::Found, sha: None, at: Some(at.clone()), via: found.via },
+                (Some(at), true) => match file_sha(&at.display().to_string()) {
+                    Some(sha) if sha == f.revision => FileLook { state: F::Current, sha: Some(sha), at: Some(at.clone()), via: found.via },
+                    Some(sha) => FileLook { state: F::Changed, sha: Some(sha), at: Some(at.clone()), via: found.via },
+                    None => FileLook { state: F::Missing, sha: None, at: None, via: kentos_commands::AssetVia::None },
+                },
             };
-            Some((i.id.clone(), state))
+            Some((i.id.clone(), look))
         })
         .collect()
+}
+
+/// [`files_at`] at the items' paths only, by item id: the state and, read deep, the SHA-256.
+fn files(doc: &Document, work: &MapWork, deep: bool) -> HashMap<String, (F, Option<String>)> {
+    files_at(doc, work, deep, None).into_iter().map(|(id, l)| (id, (l.state, l.sha))).collect()
 }
 
 /// The source's revision a derivation is judged against: the item's, or read deep, its file's content now.
@@ -103,7 +121,7 @@ fn item_name(work: &MapWork, id: &str) -> String {
 
 /// The objects of out-of-date derivations whose layer `item` holds (an approved item's warning, approval's refusal).
 pub(crate) fn stale_objects_in(doc: &Document, work: &MapWork, item: &WorkItem, deep_files: bool) -> u32 {
-    let files = if deep_files { files(work, true) } else { HashMap::new() };
+    let files = if deep_files { files(doc, work, true) } else { HashMap::new() };
     let mut n = 0usize;
     for d in work.derivations.iter().filter(|d| is_stale(work, d, &files)) {
         for u in &d.uids {
@@ -120,15 +138,24 @@ pub(crate) fn stale_objects_in(doc: &Document, work: &MapWork, item: &WorkItem, 
 }
 
 /// The rows of the work structure as they stand now.
-pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>) -> Result<MapWorkTree, Stop> {
+pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Option<&str>) -> Result<MapWorkTree, Stop> {
     map_project(doc)?;
+    if let Some(d) = drawing.filter(|d| !Path::new(d).is_absolute()) {
+        return Err(Stop::failed(error(
+            codes::INVALID_FILE_PATH,
+            format!("“{d}” mutlak bir yol değil; açık projenin dosyasının tam yolunu verin."),
+            Some("drawing".into()),
+        )));
+    }
     let empty = MapWork::default();
     let work = doc.map_work().unwrap_or(&empty);
     let object = match uid {
         Some(u) => Some(object_source(doc, work, u, deep)?),
         None => None,
     };
-    let files = files(work, deep);
+    let looks = files_at(doc, work, deep, drawing);
+    let files: HashMap<String, (F, Option<String>)> =
+        looks.iter().map(|(id, l)| (id.clone(), (l.state, l.sha.clone()))).collect();
     let held = layer_items(doc, work);
     let mut objects: HashMap<&str, usize> = HashMap::new();
     for (layer, item) in &held {
@@ -186,8 +213,19 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>) -> Result<MapW
             }
         };
         let file = i.file.as_ref().map(|f| {
-            let fs = files.get(&i.id).map_or(F::Missing, |(s, _)| *s);
-            WorkFileRow { path: f.path.clone(), revision: f.revision.clone(), state: fs }
+            let look = looks.get(&i.id);
+            WorkFileRow {
+                path: f.path.clone(),
+                revision: f.revision.clone(),
+                state: look.map_or(F::Missing, |l| l.state),
+                via: look.map_or(kentos_commands::AssetVia::None, |l| l.via),
+                // Where it is when not at its path: the relative path's file or a search path's.
+                at: look
+                    .and_then(|l| l.at.as_ref())
+                    .map(|p| p.display().to_string())
+                    .filter(|p| *p != f.path),
+                relative: f.relative.clone(),
+            }
         });
         match file.as_ref().map(|f| f.state) {
             Some(F::Missing) => {
@@ -263,7 +301,7 @@ fn object_source(doc: &Document, work: &MapWork, uid: &str, deep: bool) -> Resul
         current: None,
     };
     if let Some(d) = work.derivations.iter().find(|d| d.uids.iter().any(|u| u.to_text() == uid)) {
-        let files = if deep { files(work, true) } else { HashMap::new() };
+        let files = if deep { files(doc, work, true) } else { HashMap::new() };
         out.role = WorkObjectRole::Derived;
         out.derivation = Some(d.id.clone());
         out.source = Some(d.source.clone());
@@ -280,7 +318,7 @@ fn object_source(doc: &Document, work: &MapWork, uid: &str, deep: bool) -> Resul
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResult<()> {
-    match tree(cx.doc, input.deep, input.uid.as_deref()) {
+    match tree(cx.doc, input.deep, input.uid.as_deref(), input.drawing.as_deref()) {
         Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -288,7 +326,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResul
 
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResult<MapWorkTree> {
-    match tree(cx.doc, input.deep, input.uid.as_deref()) {
+    match tree(cx.doc, input.deep, input.uid.as_deref(), input.drawing.as_deref()) {
         Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -300,8 +338,8 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: MapWorkQuery) -> CommandRes
 }
 
 /// The tree for a panel (and, with `uid`, the object's source), or why it does not read.
-pub fn preview(doc: &Document, deep: bool, uid: Option<&str>) -> Result<MapWorkTree, String> {
-    tree(doc, deep, uid).map_err(|stop| stop.into_error().message)
+pub fn preview(doc: &Document, deep: bool, uid: Option<&str>, drawing: Option<&str>) -> Result<MapWorkTree, String> {
+    tree(doc, deep, uid, drawing).map_err(|stop| stop.into_error().message)
 }
 
 /// Where one object comes from, read quickly (the items' revisions, no file read), for the properties; none outside a

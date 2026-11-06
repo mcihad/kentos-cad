@@ -93,10 +93,15 @@ impl WorkStatus {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct WorkFile {
-    /// An absolute path.
+    /// An absolute path, as added or last found.
     pub path: String,
     /// The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.
     pub revision: String,
+    /// Its path from the project file's folder, `/` between its parts, written when the project is saved (schema 193,
+    /// docs/adr/1201 §1): a project moved with its data finds the file again; none on another drive.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub relative: Option<String>,
 }
 
 /// An item of the map's work.
@@ -167,6 +172,11 @@ impl MapWork {
         self.items.iter().find(|i| i.id == id)
     }
 
+    /// Whether an item's file keeps its relative path (schema 193, docs/adr/1201 §1).
+    pub fn has_relative(&self) -> bool {
+        self.items.iter().any(|i| i.file.as_ref().is_some_and(|f| f.relative.is_some()))
+    }
+
     /// What is wrong with it, by the field's path and in words; none when it is right.
     pub fn problem(&self) -> Option<(String, String)> {
         map_work_problem(self)
@@ -234,6 +244,9 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
             if !is_sha256_text(&file.revision) {
                 return fail(at("file.revision"), "dosyanın revizyonu 64 küçük onaltılık haneli SHA-256 olmalı");
             }
+            if let Some(why) = file.relative.as_deref().and_then(crate::sources::relative_problem) {
+                return fail(at("file.relative"), &format!("dosyanın göreli yolu {why}"));
+            }
         }
     }
     if work.derivations.len() > MAX_DERIVATIONS {
@@ -299,7 +312,7 @@ mod tests {
                     name: "GNSS 2026-10".into(),
                     status: WorkStatus::Draft,
                     layers: vec!["gnss".into()],
-                    file: Some(WorkFile { path: "/veri/kampanya.nmea".into(), revision: "a".repeat(64) }),
+                    file: Some(WorkFile { path: "/veri/kampanya.nmea".into(), revision: "a".repeat(64), relative: None }),
                 },
                 WorkItem {
                     id: "is-2".into(),

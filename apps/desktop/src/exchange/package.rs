@@ -201,6 +201,10 @@ impl App {
                     0 => {}
                     n => extra += &format!(", {n} dış başvuru kaynağı"),
                 }
+                match count(&|f| f.kind == kentos_commands::PackagedKind::WorkFile) {
+                    0 => {}
+                    n => extra += &format!(", {n} harita işi dosyası"),
+                }
                 match count(&|f| {
                     matches!(
                         f.kind,

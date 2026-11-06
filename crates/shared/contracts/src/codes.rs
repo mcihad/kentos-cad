@@ -642,6 +642,10 @@ codes! {
     WORK_FULL = "work_full", Failed, false, "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.";
     /// A relinked source's new file holds other content: what was derived from it is out of date.
     SOURCE_CONTENT_CHANGED = "source_content_changed", Warning, false, "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil.";
+    /// An external reference or a bound layer on a relinked source's old file that did not follow it (docs/adr/1201 §2).
+    LINK_NOT_FOLLOWED = "link_not_followed", Warning, false, "Eski dosyayı gösteren bir dış başvuru ya da bağlı katman yeni dosyaya geçmedi (son okuduğu içerik farklı ya da bağlı katman); kendi komutuyla yeniden bağlayın (Dış başvurular › Yolu değiştir, Kaynak › Yeniden bağla).";
+    /// Release of an object no derivation of the map's work names (docs/adr/1201 §3).
+    NOT_DERIVED = "not_derived", Failed, false, "Nesne hiçbir türetme kaydında değil; zaten bağımsız çizim.";
     /// A terrain surface's definition, or the project's surfaces with it, against their rules.
     INVALID_TERRAIN = "invalid_terrain", Failed, false, "Yüzeyin tanımı ya da onunla projenin yüzeyleri kurallarına uymuyor.";
     /// `set` without the surface, or a query's places without the surface they are on.

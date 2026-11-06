@@ -180,6 +180,25 @@ başvuru ve bağlı kaynağın öğeyle aynı yerden yeniden bağlanması, dosya
 bağlamsal araçlar (alt madde 3), tipli katman kuralları (alt madde 4), göreli yollar, gerçek kullanıcı projesinde GUI
 kabulü. Madde `[ ]` kalır.
 
+**6 Kasım 2026 — MAP-01.2 ([ADR 1201](../docs/adr/1201-map-work-relative-files-relink-and-contextual-tools.md)).**
+Kapsam işareti: **yalnız Harita (CAD)** — harita işi `cadWork: map` projesinin ayarıdır; komutlar yalnız Harita'nın
+bağlamsal panellerindedir, KentOS GIS/Mimari/Yol sunmaz. **Ortak (Harita + CBS):** göreli yol kuralı, dosya arama
+(`links::find`), Paketle ve `cad.assets.check`. Araştırma: AutoCAD `REFPATHTYPE` (varsayılan göreli), QGIS/ArcGIS Pro
+göreli kaynak yolu, ArcGIS Pro'nun kırık bağları tek yerden onarması, Civil 3D'nin seçime göre bağlamsal sekmesi ve Launch
+Pad'i, veri başvurusunun promote'u; Netcad'in bu konuda resmî belgesi bulunamadı. Düzeltilen hata: harita işi dosyası
+yalnız mutlak yol taşıdığından klasörüyle taşınan ya da Paketle'yle gönderilen projede bütün kaynak öğeler “Dosyası yok”
+oluyordu. Kanıtlanan alt maddeler: (a) öğe dosyasının göreli yolu (`.kcad` şema 193): kayıtta yazılır, açılışta içeriği
+aynıysa alınır, `map.work.query drawing` göreli yolu ve arama yollarını dener (`via`, `at`), Paketle kopyalar,
+`cad.assets.check` listeler; (b) tek yerden yeniden bağlama aynı içeriği yükleyen dış başvuruyu da geçirir, ötekini ve
+bağlı GeoPackage'ı uyarıyla bırakır; (c) `release` (Bağımsız yap); (d) alt madde 3'ün ilk parçası: Seçim/Nokta/Çizgi/
+Alan/Raster bağlamsal sekmelerinde Harita işi paneli (Kaynağını göster, Bağımsız yap; seçimin rolüne göre açık/kapalı) ve
+panelde Seçimi türet; sahibin düzeltmesiyle arayüzde “kampanya” yok (Arazi ölçümleri, Altlıklar, Denetimler, Teslimler) ve
+panelin üstü tek araç satırı. Ortak durumlar `map.work.query` 27, `map.work.edit` 48 (bağımsız `map_work_cases.py`;
+Python koşucusundaki `$tmp:` hatası düzeltildi, 21 eski Python düşüşü kapandı). **Açık:**
+içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı), bağlı GeoPackage'ın geri alınabilir yeniden bağlanması,
+nesne türüne göre (yüzey, plan alanı, altyapı) ayrı bağlamsal araçlar, tipli katman kuralları, dosyasız öğe revizyonu.
+Madde `[ ]` kalır.
+
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 
 **Öncelik:** P0. **Kod dayanağı:** [K04]–[K08], [K09].

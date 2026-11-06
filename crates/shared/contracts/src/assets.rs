@@ -1,5 +1,6 @@
 //! `cad.assets.check` v1 (docs/adr/0349 §2; plan/cad.md `CAD-REF-19`): every file the drawing links to — external
-//! references, linked images, rasters, point clouds, linked tables, attachments and bound layers' sources — with where
+//! references, linked images, rasters, point clouds, linked tables, attachments, bound layers' sources and a map's
+//! work items' files (docs/adr/1201 §2) — with where
 //! it was found and whether it changed since it was read, in one structured answer for the desktop, Python and an AI
 //! agent alike. Read-only: nothing is loaded, nothing written.
 
@@ -34,6 +35,8 @@ pub enum AssetKind {
     Attachment,
     /// A bound layer's source (docs/adr/0503).
     Source,
+    /// A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.
+    WorkFile,
 }
 
 /// Where a linked file was found.
@@ -118,7 +121,7 @@ pub struct AssetStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<crate::BlockId>,
-    /// The bound layer's source id (`kaynak-N`).
+    /// The bound layer's source id (`kaynak-N`), or the map work item's (`is-N`, docs/adr/1201 §2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,

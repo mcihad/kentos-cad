@@ -16,6 +16,9 @@
 
 use crate::corridor::{Built, RegionCrosses, SAME_STATION, coded_points, top_line_of};
 
+/// An overlap being merged: the first strips, the second strips, its area, its least and its most.
+type MergedOverlap = (Vec<usize>, Vec<usize>, f64, f64, f64);
+
 /// A cross's margin against folding: its region, station, the least `1 + κ·(d + o)`, the offset of the point that
 /// gives it and the curvature there.
 #[derive(Clone, Debug, PartialEq)]
@@ -186,7 +189,7 @@ pub fn overlaps(built: &Built) -> Vec<Overlap> {
         }
     }
     // Merge pairs whose first strips touch and whose second strips touch: one overlap of two stretches.
-    let mut out: Vec<(Vec<usize>, Vec<usize>, f64, f64, f64)> = Vec::new();
+    let mut out: Vec<MergedOverlap> = Vec::new();
     for (a, b, area, least, most) in pairs {
         match out.iter_mut().find(|o| o.0.iter().any(|x| *x == a || touch(*x, a)) && o.1.iter().any(|y| *y == b || touch(*y, b))) {
             Some(o) => {

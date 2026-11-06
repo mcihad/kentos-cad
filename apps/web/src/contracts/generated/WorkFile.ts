@@ -5,10 +5,15 @@
  */
 export type WorkFile = { 
 /**
- * An absolute path.
+ * An absolute path, as added or last found.
  */
 path: string, 
 /**
  * The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.
  */
-revision: string, };
+revision: string, 
+/**
+ * Its path from the project file's folder, `/` between its parts, written when the project is saved (schema 193,
+ * docs/adr/1201 §1): a project moved with its data finds the file again; none on another drive.
+ */
+relative?: string, };

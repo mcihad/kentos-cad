@@ -40034,6 +40034,7 @@
           "not_a_road_project",
           "unknown_road_profile",
           "invalid_label",
+          "unknown_superelevation",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -54436,7 +54437,7 @@
       "id": "map.work.query",
       "version": 1,
       "title": "Harita işini sorgula",
-      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (ölçüm kampanyası, referans kaynak, çalışma verisi, tasarım, denetim sonucu, teslim paketi) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (kampanya ya da referans katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. Retler: not_a_map_project, invalid_uid, entity_not_found.",
+      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.",
       "aliases": [
         "haritaisi"
       ],
@@ -54454,10 +54455,17 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).\n`uid` also says where that object comes from.\n\nRefusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
+        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).\n`uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative\npaths and the search paths (docs/adr/1201 §1).\n\nRefusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,\n`entity_not_found`.",
         "properties": {
           "deep": {
             "type": "boolean"
+          },
+          "drawing": {
+            "description": "The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at\nits relative path from this file's folder, then in the project's search paths. None: only at its path.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "uid": {
             "type": [
@@ -54584,6 +54592,7 @@
       "capabilities": {
         "refusals": [
           "not_a_map_project",
+          "invalid_file_path",
           "invalid_uid",
           "entity_not_found"
         ]
@@ -54602,7 +54611,7 @@
       "id": "map.work.edit",
       "version": 1,
       "title": "Harita işini düzenle",
-      "summary": "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, approval_stale, layer_locked, work_full.",
+      "summary": "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. release: verilen nesneler kendi türetme kayıtlarından çıkar (Civil 3D'nin promote'u gibi bağımsız çizim olur), nesnesi kalmayan kayıt gider (freed, released). relink, kaynağı eski dosya olan dış başvuruları da aynı adımda yeni dosyaya geçirir, son yükledikleri içerik yeni dosyanınkiyse (links); başka içerik yükleyen dış başvuruya ve eski dosyadaki bağlı katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz), uyarı link_not_followed (ADR 1201). Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, not_derived, approval_stale, layer_locked, work_full.",
       "aliases": [
         "haritaisiduzenle"
       ],
@@ -54620,7 +54629,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh\nor derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an\nobject another derivation names), `approval_stale`, `layer_locked` (a raster or an image to relink on a locked\nlayer), `work_full`.",
+        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”,\n“Bağımsız yap”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh\nor derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an\nobject another derivation names), `not_derived` (release of an object no derivation names), `approval_stale`,\n`layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),\n`work_full`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -54641,7 +54650,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken\naway with an item, how many derivations are out of date after, and the drawing's revision.",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,\nhow many derivations were taken away with an item (or emptied by a release), how many objects a\nrelease let go of, how many derivations are out of date after, and the drawing's revision.",
         "properties": {
           "derivation": {
             "type": [
@@ -54655,11 +54664,25 @@
               "null"
             ]
           },
+          "freed": {
+            "description": "How many objects a release let go of.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "item": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "links": {
+            "description": "How many external references a relink pointed at the new file (docs/adr/1201 §2).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "released": {
             "format": "uint32",
@@ -54692,7 +54715,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken\naway with an item, how many derivations are out of date after, and the drawing's revision.",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,\nhow many derivations were taken away with an item (or emptied by a release), how many objects a\nrelease let go of, how many derivations are out of date after, and the drawing's revision.",
         "properties": {
           "derivation": {
             "type": [
@@ -54706,11 +54729,25 @@
               "null"
             ]
           },
+          "freed": {
+            "description": "How many objects a release let go of.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "item": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "links": {
+            "description": "How many external references a relink pointed at the new file (docs/adr/1201 §2).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "released": {
             "format": "uint32",
@@ -54759,20 +54796,22 @@
           "invalid_uid",
           "entity_not_found",
           "already_derived",
+          "not_derived",
           "approval_stale",
           "layer_locked",
           "work_full"
         ],
         "warnings": [
-          "source_content_changed"
+          "source_content_changed",
+          "link_not_followed"
         ]
       },
       "examples": [
         {
-          "title": "GNSS kampanyası, dosyasıyla",
+          "title": "GNSS arazi ölçümü, dosyasıyla",
           "input": {
             "operation": {
-              "file": "/veri/kampanya.nmea",
+              "file": "/veri/gnss-2026-10.nmea",
               "kind": "campaign",
               "layers": [
                 "gnss"
@@ -93504,6 +93543,18 @@
       "meaning": "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil."
     },
     {
+      "code": "link_not_followed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Eski dosyayı gösteren bir dış başvuru ya da bağlı katman yeni dosyaya geçmedi (son okuduğu içerik farklı ya da bağlı katman); kendi komutuyla yeniden bağlayın (Dış başvurular › Yolu değiştir, Kaynak › Yeniden bağla)."
+    },
+    {
+      "code": "not_derived",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne hiçbir türetme kaydında değil; zaten bağımsız çizim."
+    },
+    {
       "code": "invalid_terrain",
       "kind": "failed",
       "retryable": false,
@@ -105339,6 +105390,11 @@
           "const": "source",
           "description": "A bound layer's source (docs/adr/0503).",
           "type": "string"
+        },
+        {
+          "const": "workFile",
+          "description": "A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.",
+          "type": "string"
         }
       ]
     },
@@ -105430,7 +105486,7 @@
           ]
         },
         "source": {
-          "description": "The bound layer's source id (`kaynak-N`).",
+          "description": "The bound layer's source id (`kaynak-N`), or the map work item's (`is-N`, docs/adr/1201 §2).",
           "type": [
             "string",
             "null"
@@ -138598,7 +138654,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that\nshowed the old file, in one step; the new file's content is the item's revision (other content than before:\nwarning `source_content_changed`, its derivations out of date).",
+          "description": "An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that\nshowed the old file, in one step; the new file's content is the item's revision (other content than before:\nwarning `source_content_changed`, its derivations out of date). External references whose source was the old\nfile follow it in the same step when the new file's content is the one they last loaded (docs/adr/1201 §2); one\nthat loaded other content, and a bound layer on the old file (its link is the project's setting, outside undo),\nstay (warning `link_not_followed`: Dış başvurular › Yolu değiştir, Kaynak › Yeniden bağla).",
           "properties": {
             "file": {
               "type": "string"
@@ -138680,6 +138736,27 @@
           "required": [
             "op",
             "derivation"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Objects let go of their derivations (Civil 3D's promote, docs/adr/1201 §3): each object out of the derivation\nthat names it, a derivation left without objects taken away; the objects stay, the user's own drawing.",
+          "properties": {
+            "op": {
+              "const": "release",
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "op",
+            "uids"
           ],
           "type": "object"
         }
@@ -148386,6 +148463,11 @@
         {
           "const": "mapping",
           "description": "An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).",
+          "type": "string"
+        },
+        {
+          "const": "workFile",
+          "description": "A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.",
           "type": "string"
         }
       ]
@@ -189589,8 +189671,15 @@
       "description": "The file an item is: where it is and the content the project last accepted.",
       "properties": {
         "path": {
-          "description": "An absolute path.",
+          "description": "An absolute path, as added or last found.",
           "type": "string"
+        },
+        "relative": {
+          "description": "Its path from the project file's folder, `/` between its parts, written when the project is saved (schema 193,\ndocs/adr/1201 §1): a project moved with its data finds the file again; none on another drive.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "revision": {
           "description": "The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.",
@@ -189606,20 +189695,39 @@
     "WorkFileRow": {
       "description": "An item's file: where, the revision the project accepted, how it stands.",
       "properties": {
+        "at": {
+          "description": "The file found when it is not at its path (its relative path's or a search path's).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "path": {
           "type": "string"
+        },
+        "relative": {
+          "description": "Its relative path as the project keeps it.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "revision": {
           "type": "string"
         },
         "state": {
           "$ref": "#/$defs/WorkFileState"
+        },
+        "via": {
+          "$ref": "#/$defs/AssetVia",
+          "description": "Where it was found (docs/adr/1201 §1): at its path, at its relative path from the project's folder, in a\nsearch path; `none` when missing."
         }
       },
       "required": [
         "path",
         "revision",
-        "state"
+        "state",
+        "via"
       ],
       "type": "object"
     },

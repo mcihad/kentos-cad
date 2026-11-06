@@ -2495,6 +2495,9 @@ def document(d):
     if "mapWork" in d["settings"]:
         # A map project's work structure (docs/adr/1200 §2).
         schema = max(schema, 188)
+    if any("relative" in (i.get("file") or {}) for i in d["settings"].get("mapWork", {}).get("items", [])):
+        # A map work item's file with its path from the project file's folder (docs/adr/1201 §1).
+        schema = max(schema, 193)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3453,7 +3456,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-193.kcad"] = container(root(cmap(parts), version=uint(193)))
+    files["schema-version-194.kcad"] = container(root(cmap(parts), version=uint(194)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5797,6 +5800,18 @@ def build():
         broken_work = copy.deepcopy(mapped)
         change(broken_work)
         out[f"broken/map-work-{name}.kcad"] = container(document(broken_work))
+    # Schema 193 (docs/adr/1201 §1): the items' files with their paths from the project file's folder (one inside it,
+    # one beside it); schema 192 refuses the field, an absolute, a climbing and an empty relative path are refused.
+    rel = load("map-work-relative.json")
+    rel_data = document(rel)
+    assert rel_data.count(b"\x67version\x18\xc1") == 1, "a map work file's relative path is schema 193"
+    out["map-work-relative.kcad"] = container(rel_data)
+    out["broken/map-work-relative-in-schema-192.kcad"] = container(
+        rel_data.replace(b"\x67version\x18\xc1", b"\x67version\x18\xc0"))
+    for name, value in (("absolute", "/veri/kampanya.nmea"), ("climbs", "veri/../../kampanya.nmea"), ("empty", "")):
+        broken_rel = copy.deepcopy(rel)
+        broken_rel["settings"]["mapWork"]["items"][0]["file"]["relative"] = value
+        out[f"broken/map-work-relative-{name}.kcad"] = container(document(broken_rel))
     # Schema 186 (docs/adr/1023): a dimension style naming its value's text style (an SHX one) beside one without;
     # schema 185 refuses the field; an empty name and one with spaces at its ends are refused.
     dimmed = load("dimension-text-style.json")

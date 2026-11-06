@@ -18,7 +18,7 @@ uid?: string,
  */
 block?: BlockId, 
 /**
- * The bound layer's source id (`kaynak-N`).
+ * The bound layer's source id (`kaynak-N`), or the map work item's (`is-N`, docs/adr/1201 §2).
  */
 source?: string, 
 /**

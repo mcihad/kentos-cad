@@ -142,6 +142,20 @@
     }
   ],
   "commands": {
+    "map.workSource": {
+      "level": "query",
+      "via": [
+        "map.work.query"
+      ],
+      "note": "Seçili nesnenin kaynağı map.work.query uid ile; öğenin katmanını seçer ve Harita işi panelini öne getirir (ADR 1201 §5)."
+    },
+    "map.workRelease": {
+      "level": "semantic",
+      "via": [
+        "map.work.edit"
+      ],
+      "note": "Seçimdeki türetilmiş nesneler map.work.edit release ile tek adımda bağımsız olur (ADR 1201 §4)."
+    },
     "cad.flatten": {
       "level": "semantic",
       "via": [

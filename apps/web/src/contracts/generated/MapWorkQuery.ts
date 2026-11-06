@@ -3,8 +3,15 @@
 /**
  * Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
  * and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
- * `uid` also says where that object comes from.
+ * `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
+ * paths and the search paths (docs/adr/1201 §1).
  *
- * Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+ * Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,
+ * `entity_not_found`.
  */
-export type MapWorkQuery = { deep?: boolean, uid?: string, };
+export type MapWorkQuery = { deep?: boolean, 
+/**
+ * The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
+ * its relative path from this file's folder, then in the project's search paths. None: only at its path.
+ */
+drawing?: string, uid?: string, };

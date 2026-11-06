@@ -184,7 +184,8 @@ pub(super) fn level_radius(s: &Shape) -> Option<f64> {
 /// the sagitta `R (1 − cos(π/n))` at most the tolerance, `R = r · px_per_m`; between the coarsest and the fine count.
 fn chords(r: f64, px_per_m: f64) -> f64 {
     let px = r * px_per_m;
-    if !(px > CURVE_TOLERANCE_PX) {
+    // NaN too: not greater.
+    if px.partial_cmp(&CURVE_TOLERANCE_PX) != Some(std::cmp::Ordering::Greater) {
         return LEAST_CHORDS;
     }
     let n = (std::f64::consts::PI / acos(1.0 - CURVE_TOLERANCE_PX / px)).ceil();

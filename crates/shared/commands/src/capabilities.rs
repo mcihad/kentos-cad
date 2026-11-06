@@ -1738,7 +1738,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.profiles.draw",
-        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_road_profile", "invalid_label"], LAYER, REVISION],
+        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_road_profile", "invalid_label", "unknown_superelevation"], LAYER, REVISION],
         warnings: &["layer_hidden", "profile_stale", "profile_surface_gone"],
         targets: none,
     },
@@ -2366,7 +2366,7 @@ const ENTRIES: &[Entry] = &[
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
     Entry {
         id: "map.work.query",
-        refusals: &[&["not_a_map_project", "invalid_uid", "entity_not_found"]],
+        refusals: &[&["not_a_map_project", "invalid_file_path", "invalid_uid", "entity_not_found"]],
         warnings: &[],
         targets: none,
     },
@@ -2389,12 +2389,13 @@ const ENTRIES: &[Entry] = &[
                 "invalid_uid",
                 "entity_not_found",
                 "already_derived",
+                "not_derived",
                 "approval_stale",
                 "layer_locked",
                 "work_full",
             ],
         ],
-        warnings: &["source_content_changed"],
+        warnings: &["source_content_changed", "link_not_followed"],
         targets: none,
     },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).

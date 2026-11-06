@@ -5104,6 +5104,38 @@
    "tests": 0
   },
   {
+   "id": "map.workRelease",
+   "kind": "command",
+   "title": "Bağımsız yap",
+   "level": "semantic",
+   "via": [
+    "map.work.edit"
+   ],
+   "operation": null,
+   "python": "Connection: map.work.edit",
+   "mcp": "map.work.edit",
+   "note": "Seçimdeki türetilmiş nesneler map.work.edit release ile tek adımda bağımsız olur (ADR 1201 §4).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "map.workSource",
+   "kind": "command",
+   "title": "Kaynağını göster",
+   "level": "query",
+   "via": [
+    "map.work.query"
+   ],
+   "operation": null,
+   "python": "Connection: map.work.query",
+   "mcp": "map.work.query",
+   "note": "Seçili nesnenin kaynağı map.work.query uid ile; öğenin katmanını seçer ve Harita işi panelini öne getirir (ADR 1201 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "mesh.add",
    "kind": "command",
    "title": "Mesh ekle…",

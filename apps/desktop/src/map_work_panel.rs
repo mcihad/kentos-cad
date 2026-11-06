@@ -11,7 +11,7 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-use iced::widget::{button, column, container, row};
+use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     WorkDerivationRow, MapWorkEdit, MapWorkOperation, MapWorkTree, WorkFileState as F, WorkKind as K, WorkRow,
@@ -22,7 +22,6 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_work, map_work_edit};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
-use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Status, StatusItem, StatusTree};
 
 use crate::app::{App, Message};
@@ -51,6 +50,9 @@ pub enum Event {
     Deep(bool),
     Fold(String),
     Filter(Option<Status>),
+    /// The item the selection is recorded as derived from (`derive`), and the recording.
+    DeriveFrom(String),
+    Derive,
 }
 
 fn msg(e: Event) -> Message {
@@ -66,6 +68,8 @@ pub struct PanelState {
     name: String,
     toggled: HashSet<String>,
     filter: Option<Status>,
+    /// The item with a file the selection is recorded as derived from (Seçimi türet).
+    derive_from: Option<String>,
     read: RefCell<Option<Read>>,
 }
 
@@ -77,6 +81,7 @@ impl Default for PanelState {
             name: String::new(),
             toggled: HashSet::new(),
             filter: None,
+            derive_from: None,
             read: RefCell::new(None),
         }
     }
@@ -90,21 +95,21 @@ impl std::fmt::Debug for PanelState {
 
 /// The kinds by their contract name, the heading and the icon of each.
 const KINDS: [(&str, K, &str, &str); 6] = [
-    ("campaign", K::Campaign, "Ölçüm kampanyaları", "importGnss"),
-    ("reference", K::Reference, "Referans kaynaklar", "sourceLinked"),
+    ("campaign", K::Campaign, "Arazi ölçümleri", "importGnss"),
+    ("reference", K::Reference, "Altlıklar", "sourceLinked"),
     ("working", K::Working, "Çalışma verisi", "layers"),
     ("design", K::Design, "Tasarımlar", "surveyNetwork"),
-    ("check", K::Check, "Denetim sonuçları", "check"),
-    ("delivery", K::Delivery, "Teslim paketleri", "export"),
+    ("check", K::Check, "Denetimler", "check"),
+    ("delivery", K::Delivery, "Teslimler", "export"),
 ];
 
 const KIND_CHOICES: [crate::style::fields::Choice; 6] = [
-    ("campaign", "Ölçüm kampanyası"),
-    ("reference", "Referans kaynak"),
+    ("campaign", "Arazi ölçümü"),
+    ("reference", "Altlık"),
     ("working", "Çalışma verisi"),
     ("design", "Tasarım"),
-    ("check", "Denetim sonucu"),
-    ("delivery", "Teslim paketi"),
+    ("check", "Denetim"),
+    ("delivery", "Teslim"),
 ];
 
 fn kind_of(name: &str) -> K {
@@ -152,7 +157,9 @@ impl App {
         {
             return Some(answer.clone());
         }
-        let answer = map_work::preview(&doc.model, deep, None);
+        // A moved project's files are found by their relative paths and the search paths (docs/adr/1201 §1).
+        let drawing = doc.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string());
+        let answer = map_work::preview(&doc.model, deep, None, drawing.as_deref());
         *kept = Some((revision, deep, answer.clone()));
         Some(answer)
     }
@@ -243,8 +250,139 @@ impl App {
                 }
             }
             Event::Filter(f) => self.map_work.filter = f,
+            Event::DeriveFrom(id) => self.map_work.derive_from = Some(id),
+            Event::Derive => self.map_work_derive(),
         }
         Task::none()
+    }
+
+    /// The lasting ids of the selected objects.
+    fn selected_uids(&self) -> Vec<String> {
+        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        self.selection.ids().iter().filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect()
+    }
+
+    /// Where each selected object comes from in the map's work (read quickly: the items' revisions).
+    fn selected_sources(&self) -> Vec<kentos_commands::WorkObjectSource> {
+        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        self.selected_uids().iter().filter_map(|u| map_work::source_of(&doc.model, u)).collect()
+    }
+
+    /// `map.workSource` (docs/adr/1201 §3): one selected object's source said, its item's layer chosen in Katmanlar
+    /// and Harita işi brought to the front: Civil 3D's contextual tab's way to the source of what is selected.
+    pub(crate) fn map_work_show_source(&mut self) {
+        let Some(src) = self.selected_sources().into_iter().next() else {
+            self.say(Level::Warn, "Seçili nesne harita işinin bir öğesinde değil.");
+            return;
+        };
+        let Some(work) = self.document.as_ref().and_then(|d| d.model.map_work().cloned()) else { return };
+        let name = |id: &Option<String>| {
+            id.as_deref().and_then(|i| work.item(i)).map_or_else(|| "?".to_owned(), |i| i.name.clone())
+        };
+        let words = match src.role {
+            kentos_commands::WorkObjectRole::Derived => format!(
+                "Nesne “{}” kaynağından türetildi ({}, {}); {}.",
+                name(&src.source),
+                src.derivation.clone().unwrap_or_default(),
+                src.operation.clone().unwrap_or_default(),
+                if src.current == Some(false) { "kaynağı sonra değişti, güncel değil" } else { "güncel" }
+            ),
+            kentos_commands::WorkObjectRole::Source => format!("Nesne “{}” öğesinin kaynak verisi.", name(&src.source)),
+            kentos_commands::WorkObjectRole::Free => match &src.item {
+                Some(_) => format!("Nesne “{}” öğesinde, kullanıcının bağımsız çizimi.", name(&src.item)),
+                None => "Nesne harita işinin bir öğesinde değil; kullanıcının bağımsız çizimi.".to_owned(),
+            },
+        };
+        let item = src.source.clone().or(src.item.clone());
+        if let Some(first) = item.as_deref().and_then(|i| work.item(i)).and_then(|i| i.layers.first()) {
+            self.selected_layer = Some(first.clone());
+        }
+        if item.is_some() {
+            // Its row not hidden by a filter.
+            self.map_work.filter = None;
+        }
+        if self.open_panel(crate::app::Panel::MapWork) {
+            if !self.right_panel_shown() {
+                self.toggle_right_panel();
+            }
+            self.docks.update(kentos_ui::widget::docking::Event::Selected(crate::app::Panel::MapWork));
+        }
+        self.say(Level::Info, words);
+    }
+
+    /// `map.workRelease` (docs/adr/1201 §3): the selected derived objects let go of their derivations, one step.
+    pub(crate) fn map_work_release(&mut self) {
+        let uids: Vec<String> = self
+            .selected_sources()
+            .into_iter()
+            .filter(|s| s.role == kentos_commands::WorkObjectRole::Derived)
+            .map(|s| s.uid)
+            .collect();
+        if uids.is_empty() {
+            self.say(Level::Warn, "Seçimde türetilmiş nesne yok; bağımsız yapılacak bir şey yok.");
+            return;
+        }
+        if let Some(out) = self.map_work_edit(MapWorkOperation::Release { uids }) {
+            let gone = match out.released {
+                0 => String::new(),
+                n => format!(" {n} türetme kaydı boşaldı ve kalktı."),
+            };
+            self.say(Level::Success, format!("{} nesne bağımsız çizim oldu; kaynağını izlemiyor.{gone}", out.freed));
+        }
+    }
+
+    /// Seçimi türet: the selected objects recorded as made from the item chosen, at its revision now.
+    fn map_work_derive(&mut self) {
+        let Some(source) = self.map_work.derive_from.clone().or_else(|| self.file_items().first().map(|i| i.0.clone()))
+        else {
+            return;
+        };
+        let uids = self.underived_uids();
+        if uids.is_empty() {
+            return;
+        }
+        let operation = MapWorkOperation::Derive { source, uids, operation: "Elle türetme kaydı".into() };
+        if let Some(out) = self.map_work_edit(operation) {
+            self.say(Level::Success, format!("Seçim türetildi diye kaydedildi ({}).", out.derivation.unwrap_or_default()));
+        }
+    }
+
+    /// The selected objects no derivation names yet: what Seçimi türet records (a derived one is already another's).
+    fn underived_uids(&self) -> Vec<String> {
+        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        let Some(work) = doc.model.map_work() else { return self.selected_uids() };
+        // One pass over the records' objects (the panel draws every frame; a record may hold an import's 10⁵ points).
+        let mut left: Vec<String> = self.selected_uids();
+        let mut wanted: HashSet<String> = left.iter().cloned().collect();
+        for x in work.derivations.iter().flat_map(|d| d.uids.iter()) {
+            if wanted.is_empty() {
+                break;
+            }
+            wanted.remove(&x.to_text());
+        }
+        left.retain(|u| wanted.contains(u));
+        left
+    }
+
+    /// The items with a file, by id and name: what a derivation can come from.
+    fn file_items(&self) -> Vec<(String, String)> {
+        self.document
+            .as_ref()
+            .and_then(|d| d.model.map_work())
+            .map(|w| w.items.iter().filter(|i| i.file.is_some()).map(|i| (i.id.clone(), i.name.clone())).collect())
+            .unwrap_or_default()
+    }
+
+    /// Whether `map.workSource` and `map.workRelease` have something to work on (`App::available`).
+    pub(crate) fn map_work_available(&self, id: &str) -> bool {
+        if self.selection.is_empty() || self.selection.len() > 10_000 {
+            return false;
+        }
+        let sources = self.selected_sources();
+        match id {
+            "map.workSource" => sources.iter().any(|s| s.item.is_some() || s.source.is_some()),
+            _ => sources.iter().any(|s| s.role == kentos_commands::WorkObjectRole::Derived),
+        }
     }
 
     fn select_slots(&mut self, slots: Vec<Slot>) {
@@ -289,33 +427,55 @@ impl App {
             Ok(t) => t,
             Err(why) => return container(label::caption(why)).padding([8, 12]).into(),
         };
-        let add = row![
+        // One row (the owner, 6 Kasım 2026: four rows of buttons took the panel's room): the new item's kind and name,
+        // then icon buttons whose words are their tips: add with the layer chosen, add with a file, read the files.
+        let tools = row![
             container(crate::style::fields::select(&KIND_CHOICES, self.map_work.kind, |k| msg(Event::Kind(k))))
-                .width(150),
-            crate::style::fields::input(None, "Adı", &self.map_work.name, false, false)
+                .width(118),
+            crate::style::fields::input(None, "Yeni öğenin adı", &self.map_work.name, false, false)
                 .on_input(|n| msg(Event::Name(n)))
                 .on_submit(msg(Event::Add(false))),
+            crate::style::strip::icon_button(
+                Icon::Layers,
+                "Ekle: Katmanlar'da seçili katmanla (Enter)",
+                Some(msg(Event::Add(false))),
+            ),
+            crate::style::strip::icon_button(Icon::Folder, "Ekle: dosyasıyla…", Some(msg(Event::Add(true)))),
+            crate::style::strip::icon_toggle(
+                Icon::Hash,
+                "Dosyaları oku: içeriklerini (SHA-256) kabul edilen revizyonla karşılaştır",
+                self.map_work.deep,
+                msg(Event::Deep(!self.map_work.deep)),
+            ),
         ]
-        .spacing(6)
+        .spacing(4)
         .align_y(Center);
-        let buttons = row![
-            button(label::body("Katmanla ekle"))
-                .style(kentos_ui::style::button::secondary)
-                .padding([3, 10])
-                .on_press(msg(Event::Add(false))),
-            button(label::body("Dosyayla ekle…"))
-                .style(kentos_ui::style::button::secondary)
-                .padding([3, 10])
-                .on_press(msg(Event::Add(true))),
-        ]
-        .spacing(6);
-        let on = |b: bool| if b { Check::Checked } else { Check::Unchecked };
-        let deep = crate::style::fields::check(
-            on(self.map_work.deep),
-            "Dosyaları oku (SHA-256)".to_owned(),
-            Some(msg(Event::Deep(!self.map_work.deep))),
-        );
-        let head = column![add, buttons, deep].spacing(6).padding([4, 12]).width(Fill);
+        let mut head = column![tools].spacing(6).padding([4, 12]).width(Fill);
+        // Seçimi türet (docs/adr/1201 §3): the selection recorded as made from an item with a file.
+        let sources = self.file_items();
+        let free = if sources.is_empty() || self.selection.len() > 10_000 { 0 } else { self.underived_uids().len() };
+        if free > 0 {
+            let chosen = self
+                .map_work
+                .derive_from
+                .clone()
+                .filter(|c| sources.iter().any(|s| s.0 == *c))
+                .unwrap_or_else(|| sources[0].0.clone());
+            let pick = crate::style::fields::select_owned(sources, &chosen, |id| msg(Event::DeriveFrom(id)));
+            head = head.push(
+                row![
+                    label::caption(format!("{free} nesnenin kaynağı:")),
+                    container(pick).width(Fill),
+                    crate::style::strip::icon_button(
+                        Icon::Link,
+                        "Seçimi türet: seçili nesneleri bu kaynaktan türetilmiş diye kaydet",
+                        Some(msg(Event::Derive)),
+                    ),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+        }
         let mut items = Vec::new();
         for (name, kind, heading, glyph) in KINDS {
             let rows: Vec<&WorkRow> = tree.items.iter().filter(|i| i.kind == kind).collect();

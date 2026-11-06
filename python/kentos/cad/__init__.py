@@ -2775,6 +2775,7 @@ __all__ = [
     "RelativeGradient",
     "ReleaseCaseworkChange",
     "ReleaseElevationsOperation",
+    "ReleaseMapWorkOperation",
     "RelinkImagesOperation",
     "RelinkMapWorkOperation",
     "RelinkSourcesEditOp",

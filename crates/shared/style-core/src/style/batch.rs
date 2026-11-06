@@ -26,6 +26,9 @@ use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, g
 use super::resolve::Scale;
 use crate::js::number;
 
+/// An instance's outline: its main coordinates, its levels' coordinates, its far proxy's, and its own extent.
+type InstanceParts<'a> = (&'a [f64], &'a [Vec<f64>], &'a [f64], Option<&'a [f64]>);
+
 /// Height of a text marker's box relative to its font size (`TEXT_BOX`).
 pub const TEXT_BOX: f64 = 1.25;
 
@@ -696,7 +699,7 @@ impl BatchSink {
             // An instanced batch's numbers are its definition's (its own levels with them), then its instances.
             // Its definition's far proxy after the levels (docs/adr/1065 §2), and its extent.
             let empty: &[Vec<f64>] = &[];
-            let (main, levels, proxy, own): (&[f64], &[Vec<f64>], &[f64], Option<&[f64]>) = match &e.inst {
+            let (main, levels, proxy, own): InstanceParts<'_> = match &e.inst {
                 Some((def, j)) => (
                     def.batches[*j].data.as_slice(),
                     def.batches[*j].lods.as_slice(),

@@ -3,4 +3,4 @@
 /**
  * What a linked file is.
  */
-export type AssetKind = "xref" | "image" | "raster" | "pointCloud" | "table" | "attachment" | "source";
+export type AssetKind = "xref" | "image" | "raster" | "pointCloud" | "table" | "attachment" | "source" | "workFile";

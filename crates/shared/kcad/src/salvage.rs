@@ -254,7 +254,8 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
     if codec != crate::header::CODEC_NONE {
         return Err(fail("Dosya sıkıştırılmış yazılmış; sıkıştırılmış yük kurtarılmaz."));
     }
-    let declared = u64::from_le_bytes(data[16..24].try_into().expect("eight bytes"));
+    // FIXED_HEADER ≥ 24 holds bytes 16..24.
+    let declared = u64::from_le_bytes([data[16], data[17], data[18], data[19], data[20], data[21], data[22], data[23]]);
     if header_len < FIXED_HEADER || header_len > data.len() {
         return Err(fail("Başlığın boyu dosyadan uzun; yükün nerede başladığı bilinmiyor."));
     }
@@ -378,7 +379,9 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
         }
     }
     // The objects back, half by half.
-    let slot = doc.iter().position(|(k, _)| text(k).as_deref() == Some("entities")).expect("put there");
+    let Some(slot) = doc.iter().position(|(k, _)| text(k).as_deref() == Some("entities")) else {
+        return Err(fail("Çizimin nesneler bölümü bulunamadı; kurtarılamaz."));
+    };
     let (kept_objects, out) = bisect(&root, &doc, slot, objects, "entities", uid_of);
     lost.extend(out);
     doc[slot].1 = Item::Array(kept_objects.clone());

@@ -551,6 +551,7 @@ class AssetKind(_StrEnum):
     - ``table``: A linked table's file.
     - ``attachment``: An object's attachment.
     - ``source``: A bound layer's source (docs/adr/0503).
+    - ``workFile``: A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.
     """
     XREF = "xref"
     IMAGE = "image"
@@ -559,9 +560,10 @@ class AssetKind(_StrEnum):
     TABLE = "table"
     ATTACHMENT = "attachment"
     SOURCE = "source"
+    WORK_FILE = "workFile"
 
 
-AssetKindName = Literal["xref", "image", "raster", "pointCloud", "table", "attachment", "source"]
+AssetKindName = Literal["xref", "image", "raster", "pointCloud", "table", "attachment", "source", "workFile"]
 """The names of :class:`AssetKind`, for a plain string."""
 
 
@@ -4473,6 +4475,7 @@ class PackagedKind(_StrEnum):
     - ``font``: A text style's typeface (left out only: KentOS's own faces come with it).
     - ``profile``: A data profile of the project, `profiller/<ad>.profil.json` (docs/adr/0558).
     - ``mapping``: An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).
+    - ``workFile``: A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.
     """
     SOURCE = "source"
     PICTURE = "picture"
@@ -4483,9 +4486,10 @@ class PackagedKind(_StrEnum):
     FONT = "font"
     PROFILE = "profile"
     MAPPING = "mapping"
+    WORK_FILE = "workFile"
 
 
-PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font", "profile", "mapping"]
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font", "profile", "mapping", "workFile"]
 """The names of :class:`PackagedKind`, for a plain string."""
 
 
@@ -9765,6 +9769,7 @@ class MapWorkOperation(_Union):
     - :class:`RefreshMapWorkOperation` (``op: refresh``)
     - :class:`DeriveMapWorkOperation` (``op: derive``)
     - :class:`ForgetMapWorkOperation` (``op: forget``)
+    - :class:`ReleaseMapWorkOperation` (``op: release``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "op"
@@ -16201,7 +16206,7 @@ class AssetStatus(_Model):
         current: The file's SHA-256 now, when it is not the one kept.
         digest: The SHA-256 kept, when one is.
         found: Where it was found.
-        source: The bound layer's source id (`kaynak-N`).
+        source: The bound layer's source id (`kaynak-N`), or the map work item's (`is-N`, docs/adr/1201 §2).
         tried: The places looked in, in order, when it was not found.
         uid: The object it belongs to (an image, raster, point cloud, table or an object with the attachment), by its
             lasting id.
@@ -50724,15 +50729,17 @@ class MapWork(_Model):
 @dataclass(kw_only=True, slots=True)
 class MapWorkEdit(_Model):
     """Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,
-    “Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”).
+    “Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”,
+    “Bağımsız yap”).
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
     `unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without
     space at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),
     `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh
     or derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an
-    object another derivation names), `approval_stale`, `layer_locked` (a raster or an image to relink on a locked
-    layer), `work_full`.
+    object another derivation names), `not_derived` (release of an object no derivation names), `approval_stale`,
+    `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
+    `work_full`.
     """
     operation: MapWorkOperation
     expected_revision: str | None | Unset = UNSET
@@ -50755,10 +50762,13 @@ class MapWorkEdit(_Model):
 @dataclass(kw_only=True, slots=True)
 class MapWorkEdited(_Model):
     """Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after
-    (its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken
-    away with an item, how many derivations are out of date after, and the drawing's revision.
+    (its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,
+    how many derivations were taken away with an item (or emptied by a release), how many objects a
+    release let go of, how many derivations are out of date after, and the drawing's revision.
     Attributes:
         stale: Unit: count.
+        freed: How many objects a release let go of. Unit: count.
+        links: How many external references a relink pointed at the new file (docs/adr/1201 §2). Unit: count.
         released: Unit: count.
         relinked: Unit: count.
     """
@@ -50766,7 +50776,9 @@ class MapWorkEdited(_Model):
     revision: str
     derivation: str | None | Unset = UNSET
     file_revision: str | None | Unset = UNSET
+    freed: int | Unset = UNSET
     item: str | None | Unset = UNSET
+    links: int | Unset = UNSET
     released: int | Unset = UNSET
     relinked: int | Unset = UNSET
 
@@ -50778,8 +50790,12 @@ class MapWorkEdited(_Model):
             out["derivation"] = self.derivation
         if self.file_revision is not UNSET:
             out["fileRevision"] = self.file_revision
+        if self.freed is not UNSET:
+            out["freed"] = self.freed
         if self.item is not UNSET:
             out["item"] = self.item
+        if self.links is not UNSET:
+            out["links"] = self.links
         if self.released is not UNSET:
             out["released"] = self.released
         if self.relinked is not UNSET:
@@ -50793,7 +50809,9 @@ class MapWorkEdited(_Model):
             revision=data["revision"],
             derivation=data.get("derivation", UNSET),
             file_revision=data.get("fileRevision", UNSET),
+            freed=data.get("freed", UNSET),
             item=data.get("item", UNSET),
+            links=data.get("links", UNSET),
             released=data.get("released", UNSET),
             relinked=data.get("relinked", UNSET),
         )
@@ -50803,17 +50821,25 @@ class MapWorkEdited(_Model):
 class MapWorkQuery(_Model):
     """Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
     and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
-    `uid` also says where that object comes from.
+    `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
+    paths and the search paths (docs/adr/1201 §1).
 
-    Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+    Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,
+    `entity_not_found`.
+    Attributes:
+        drawing: The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
+            its relative path from this file's folder, then in the project's search paths. None: only at its path.
     """
     deep: bool | Unset = UNSET
+    drawing: str | None | Unset = UNSET
     uid: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.deep is not UNSET:
             out["deep"] = self.deep
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.uid is not UNSET:
             out["uid"] = self.uid
         return out
@@ -50822,6 +50848,7 @@ class MapWorkQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> MapWorkQuery:
         return cls(
             deep=data.get("deep", UNSET),
+            drawing=data.get("drawing", UNSET),
             uid=data.get("uid", UNSET),
         )
 
@@ -97496,16 +97523,21 @@ class WorkDerivationRow(_Model):
 class WorkFile(_Model):
     """The file an item is: where it is and the content the project last accepted.
     Attributes:
-        path: An absolute path.
+        path: An absolute path, as added or last found.
         revision: The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.
+        relative: Its path from the project file's folder, `/` between its parts, written when the project is saved (schema 193,
+            docs/adr/1201 §1): a project moved with its data finds the file again; none on another drive.
     """
     path: str
     revision: str
+    relative: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
         out["revision"] = self.revision
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
         return out
 
     @classmethod
@@ -97513,21 +97545,36 @@ class WorkFile(_Model):
         return cls(
             path=data["path"],
             revision=data["revision"],
+            relative=data.get("relative", UNSET),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class WorkFileRow(_Model):
-    """An item's file: where, the revision the project accepted, how it stands."""
+    """An item's file: where, the revision the project accepted, how it stands.
+    Attributes:
+        via: Where it was found (docs/adr/1201 §1): at its path, at its relative path from the project's folder, in a
+            search path; `none` when missing.
+        at: The file found when it is not at its path (its relative path's or a search path's).
+        relative: Its relative path as the project keeps it.
+    """
     path: str
     revision: str
     state: WorkFileState | WorkFileStateName
+    via: AssetVia | AssetViaName
+    at: str | None | Unset = UNSET
+    relative: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
         out["revision"] = self.revision
         out["state"] = _enum_out(self.state)
+        out["via"] = _enum_out(self.via)
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
         return out
 
     @classmethod
@@ -97536,6 +97583,9 @@ class WorkFileRow(_Model):
             path=data["path"],
             revision=data["revision"],
             state=_enum_in(WorkFileState, data["state"]),
+            via=_enum_in(AssetVia, data["via"]),
+            at=data.get("at", UNSET),
+            relative=data.get("relative", UNSET),
         )
 
 
@@ -106992,7 +107042,10 @@ class RemoveMapWorkOperation(MapWorkOperation):
 class RelinkMapWorkOperation(MapWorkOperation):
     """An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that
     showed the old file, in one step; the new file's content is the item's revision (other content than before:
-    warning `source_content_changed`, its derivations out of date).
+    warning `source_content_changed`, its derivations out of date). External references whose source was the old
+    file follow it in the same step when the new file's content is the one they last loaded (docs/adr/1201 §2); one
+    that loaded other content, and a bound layer on the old file (its link is the project's setting, outside undo),
+    stay (warning `link_not_followed`: Dış başvurular › Yolu değiştir, Kaynak › Yeniden bağla).
     """
     TAG_VALUE: ClassVar[str] = "relink"
     item: str
@@ -107069,6 +107122,26 @@ class ForgetMapWorkOperation(MapWorkOperation):
     def from_json(cls, data: Mapping[str, Any]) -> ForgetMapWorkOperation:
         return cls(
             derivation=data["derivation"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReleaseMapWorkOperation(MapWorkOperation):
+    """Objects let go of their derivations (Civil 3D's promote, docs/adr/1201 §3): each object out of the derivation
+    that names it, a derivation left without objects taken away; the objects stay, the user's own drawing.
+    """
+    TAG_VALUE: ClassVar[str] = "release"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "release"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReleaseMapWorkOperation:
+        return cls(
+            uids=list(data["uids"]),
         )
 
 
@@ -117718,7 +117791,7 @@ _LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions"
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
-_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation}
+_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation, "release": ReleaseMapWorkOperation}
 
 
 _MATERIAL_TARGET: dict[str, type[MaterialTarget]] = {"wallStyle": WallStyleMaterialTarget, "wall": WallMaterialTarget, "slab": SlabMaterialTarget}
@@ -120657,6 +120730,7 @@ __all__ = [
     "RelativeGradient",
     "ReleaseCaseworkChange",
     "ReleaseElevationsOperation",
+    "ReleaseMapWorkOperation",
     "RelinkImagesOperation",
     "RelinkMapWorkOperation",
     "RelinkSourcesEditOp",

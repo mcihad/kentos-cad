@@ -481,9 +481,9 @@ impl Store {
     /// million objects' blocks, walls and spaces expanded on the opening's frame): the same store as `put_many`, the
     /// objects put in their order. Native only; the browser's build has no threads.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn put_many_parallel<'a>(
+    pub fn put_many_parallel(
         &mut self,
-        items: Vec<(f64, &'a str, bool, Shape)>,
+        items: Vec<(f64, &str, bool, Shape)>,
         threads: usize,
     ) -> usize {
         let threads = threads.clamp(1, 16);

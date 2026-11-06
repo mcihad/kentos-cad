@@ -274,7 +274,7 @@ pub(super) fn ink(
                 if t >= end + if closed { -slack } else { slack } {
                     break;
                 }
-                let t = t.min(end);
+                let t = js_min(t, end);
                 let seg = segments
                     .iter()
                     .position(|g| t <= g.3 && g.3 > g.2)

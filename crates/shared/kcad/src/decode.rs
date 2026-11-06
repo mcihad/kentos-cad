@@ -1045,6 +1045,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş harita işi yazılmaz"));
                 }
+                // Schema 193 (docs/adr/1201 §1): an item's file's relative path.
+                if !has.map_work_relative && v.has_relative() {
+                    return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinin dosyasında relative (şema 193'ten önce yok)"));
+                }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

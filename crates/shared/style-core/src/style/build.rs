@@ -39,6 +39,9 @@ use super::{charts, dots, groups, heat, inverted, thematic};
 use crate::expr::rows::{Layout, RowsInput, Table};
 use crate::expr::{Expr, Measured, Needs, Scope, Unit as ReadingUnit, Value};
 
+/// A border look (its weight's bits, its colour) and its rings, each with whether it is closed.
+type BorderLook = ((Option<u64>, Option<String>), Vec<(Vec<Vec2>, bool)>);
+
 mod instances;
 
 /// Symbol levels across classes: every fill before any line, every line before any marker.
@@ -1035,7 +1038,7 @@ fn table_borders(
     }
     .or_else(|| set_line(simple));
     let Some(symbol) = symbol else { return };
-    let mut looks: Vec<((Option<u64>, Option<String>), Vec<(Vec<Vec2>, bool)>)> = Vec::new();
+    let mut looks: Vec<BorderLook> = Vec::new();
     for b in borders {
         let look = (b.weight.map(f64::to_bits), b.color);
         let path = (b.line.to_vec(), false);

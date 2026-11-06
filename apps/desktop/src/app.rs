@@ -3511,6 +3511,15 @@ impl App {
             "arch.audit" => return self.open_arch_audit(),
             "cad.inspect" => return self.open_cad_inspection(),
             "cad.flatten" => return self.open_flatten(),
+            // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
+            "map.workSource" => {
+                self.map_work_show_source();
+                return Task::none();
+            }
+            "map.workRelease" => {
+                self.map_work_release();
+                return Task::none();
+            }
             "topology.rules" => return self.open_topology_rules(),
             // Ağlar (networks/, docs/adr/0209 §10).
             "network.manage" => return self.open_networks(),
@@ -4000,6 +4009,7 @@ impl App {
             "view.isolateObjects" => doc.is_some() && !self.selection.is_empty() && !self.session.is_running(),
             "view.endObjectIsolation" => doc.is_some_and(kentos_domain::Document::objects_isolated) && !self.session.is_running(),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
+            "map.workSource" | "map.workRelease" => self.map_work_available(id),
             // An attachment goes on one object (attachments.rs, docs/adr/0225 §2), as the web's.
             "attachment.add" | "attachment.addLink" => doc.is_some() && self.selection.len() == 1,
             "edit.previousSelection" => !self.previous_selection_ids().is_empty(),

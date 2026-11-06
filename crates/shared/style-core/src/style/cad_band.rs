@@ -241,7 +241,7 @@ fn dots(
             if t >= total + if closed { -slack } else { slack } {
                 break;
             }
-            places.push(t.min(total));
+            places.push(js_min(t, total));
         }
     }
     places.sort_by(f64::total_cmp);

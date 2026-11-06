@@ -3,4 +3,4 @@
 /**
  * What `cad.topology.exceptions` does to the findings it names.
  */
-export type TopologyExceptionOperation = "mark" | "unmark";
+export type TopologyExceptionOperation = "mark" | "unmark" | "error";

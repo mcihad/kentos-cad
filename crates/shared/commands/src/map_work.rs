@@ -20,9 +20,11 @@ pub const MAP_WORK_EDIT_VERSION: u32 = 1;
 
 /// Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
 /// and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
-/// `uid` also says where that object comes from.
+/// `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
+/// paths and the search paths (docs/adr/1201 §1).
 ///
-/// Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+/// Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,
+/// `entity_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -32,6 +34,11 @@ pub struct MapWorkQuery {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub deep: bool,
+    /// The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
+    /// its relative path from this file's folder, then in the project's search paths. None: only at its path.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
@@ -76,6 +83,17 @@ pub struct WorkFileRow {
     pub path: String,
     pub revision: String,
     pub state: WorkFileState,
+    /// Where it was found (docs/adr/1201 §1): at its path, at its relative path from the project's folder, in a
+    /// search path; `none` when missing.
+    pub via: crate::AssetVia,
+    /// The file found when it is not at its path (its relative path's or a search path's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub at: Option<String>,
+    /// Its relative path as the project keeps it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub relative: Option<String>,
 }
 
 /// An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state
@@ -231,7 +249,10 @@ pub enum MapWorkOperation {
     Remove { item: String },
     /// An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that
     /// showed the old file, in one step; the new file's content is the item's revision (other content than before:
-    /// warning `source_content_changed`, its derivations out of date).
+    /// warning `source_content_changed`, its derivations out of date). External references whose source was the old
+    /// file follow it in the same step when the new file's content is the one they last loaded (docs/adr/1201 §2); one
+    /// that loaded other content, and a bound layer on the old file (its link is the project's setting, outside undo),
+    /// stay (warning `link_not_followed`: Dış başvurular › Yolu değiştir, Kaynak › Yeniden bağla).
     Relink { item: String, file: String },
     /// The item's file as it is now accepted as its revision; its derivations made from before are out of date.
     Refresh { item: String },
@@ -239,18 +260,23 @@ pub enum MapWorkOperation {
     Derive { source: String, uids: Vec<String>, operation: String },
     /// A derivation's record taken away; its objects stay, the user's own drawing.
     Forget { derivation: String },
+    /// Objects let go of their derivations (Civil 3D's promote, docs/adr/1201 §3): each object out of the derivation
+    /// that names it, a derivation left without objects taken away; the objects stay, the user's own drawing.
+    Release { uids: Vec<String> },
 }
 
 /// Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,
-/// “Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”).
+/// “Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”,
+/// “Bağımsız yap”).
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
 /// `unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without
 /// space at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),
 /// `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh
 /// or derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an
-/// object another derivation names), `approval_stale`, `layer_locked` (a raster or an image to relink on a locked
-/// layer), `work_full`.
+/// object another derivation names), `not_derived` (release of an object no derivation names), `approval_stale`,
+/// `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
+/// `work_full`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -265,8 +291,9 @@ pub struct MapWorkEdit {
 }
 
 /// Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after
-/// (its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken
-/// away with an item, how many derivations are out of date after, and the drawing's revision.
+/// (its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,
+/// how many derivations were taken away with an item (or emptied by a release), how many objects a
+/// release let go of, how many derivations are out of date after, and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -290,6 +317,16 @@ pub struct MapWorkEdited {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub released: u32,
+    /// How many external references a relink pointed at the new file (docs/adr/1201 §2).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub links: u32,
+    /// How many objects a release let go of.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub freed: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stale: u32,
     pub revision: String,

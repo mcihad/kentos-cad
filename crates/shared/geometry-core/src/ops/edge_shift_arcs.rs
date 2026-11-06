@@ -10,7 +10,7 @@
 //! bit (`for_area`), the same steps on every platform.
 
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
-use crate::jsmath::{atan2, js_hypot};
+use crate::jsmath::{atan2, js_hypot, js_max};
 use crate::vec2::Vec2;
 
 use super::edge_shift::{NO_AREA, NO_EDGE, PARALLEL, PASSED};
@@ -81,7 +81,7 @@ fn meet(u: Curve, v: Curve, near: Vec2) -> Option<Vec2> {
                 return None;
             }
             let a = (r1 * r1 - r2 * r2 + k * k) / (2.0 * k);
-            let h = (r1 * r1 - a * a).max(0.0).sqrt();
+            let h = js_max(r1 * r1 - a * a, 0.0).sqrt();
             let e = Vec2::new((c2.x - c1.x) / k, (c2.y - c1.y) / k);
             let m = Vec2::new(c1.x + e.x * a, c1.y + e.y * a);
             Some(nearer(Vec2::new(m.x - e.y * h, m.y + e.x * h), Vec2::new(m.x + e.y * h, m.y - e.x * h)))

@@ -78,7 +78,7 @@ fn every_objects_source_is_found_and_follows_its_source() {
     // (under the reference's group): source data; the design surface's line: derived; the free line: the user's own.
     let g1 = source_rows(&mut app, 1);
     assert_eq!(row(&g1, "Rol"), Some("Kaynaktan türetildi"));
-    assert_eq!(row(&g1, "Kaynağı"), Some("GNSS kampanyası 2026-10 (is-1)"));
+    assert_eq!(row(&g1, "Kaynağı"), Some("GNSS ölçümü 2026-10 (is-1)"));
     assert_eq!(row(&g1, "Üretim işlemi"), Some("GNSS içe aktarma"));
     assert_eq!(row(&g1, "Güncellik"), Some("Güncel"));
     assert_eq!(row(&g1, "Kaynak revizyonu").map(str::len), Some(12));

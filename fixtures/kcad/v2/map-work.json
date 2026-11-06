@@ -16,7 +16,7 @@
         {
           "id": "is-1",
           "kind": "campaign",
-          "name": "GNSS kampanyası 2026-10",
+          "name": "GNSS ölçümü 2026-10",
           "layers": [
             "gnss"
           ],

@@ -35,12 +35,17 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
     içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı
     source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive:
     nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi
-    diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. Retler:
-    invalid_revision, revision_conflict, not_a_map_project, unknown_work_item,
-    unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item,
-    nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities,
-    invalid_uid, entity_not_found, already_derived, approval_stale, layer_locked,
-    work_full.
+    diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. release:
+    verilen nesneler kendi türetme kayıtlarından çıkar (Civil 3D'nin promote'u gibi
+    bağımsız çizim olur), nesnesi kalmayan kayıt gider (freed, released). relink,
+    kaynağı eski dosya olan dış başvuruları da aynı adımda yeni dosyaya geçirir, son
+    yükledikleri içerik yeni dosyanınkiyse (links); başka içerik yükleyen dış başvuruya
+    ve eski dosyadaki bağlı katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz),
+    uyarı link_not_followed (ADR 1201). Retler: invalid_revision, revision_conflict,
+    not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text,
+    layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path,
+    file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found,
+    already_derived, not_derived, approval_stale, layer_locked, work_full.
     """
     __slots__ = ()
     id = "map.work.edit"
@@ -72,12 +77,17 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı
         source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive:
         nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi
-        diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. Retler:
-        invalid_revision, revision_conflict, not_a_map_project, unknown_work_item,
-        unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item,
-        nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities,
-        invalid_uid, entity_not_found, already_derived, approval_stale, layer_locked,
-        work_full.
+        diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. release:
+        verilen nesneler kendi türetme kayıtlarından çıkar (Civil 3D'nin promote'u gibi
+        bağımsız çizim olur), nesnesi kalmayan kayıt gider (freed, released). relink,
+        kaynağı eski dosya olan dış başvuruları da aynı adımda yeni dosyaya geçirir, son
+        yükledikleri içerik yeni dosyanınkiyse (links); başka içerik yükleyen dış başvuruya
+        ve eski dosyadaki bağlı katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz),
+        uyarı link_not_followed (ADR 1201). Retler: invalid_revision, revision_conflict,
+        not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text,
+        layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path,
+        file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found,
+        already_derived, not_derived, approval_stale, layer_locked, work_full.
 
         Args:
             doc: The drawing it works on.
@@ -160,19 +170,22 @@ edit = _MapWorkEdit()
 
 class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
     """``map.work.query`` v1. Harita işini sorgula: Harita projesinin iş yapısını bugün
-    okur; hiçbir şey yazmaz: öğeler (ölçüm kampanyası, referans kaynak, çalışma verisi,
-    tasarım, denetim sonucu, teslim paketi) projedeki sırasıyla, her birinin türü, adı,
-    durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları,
-    katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found,
-    current, changed, missing) ve durumu (current, missing, changed, incomplete, stale)
-    nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki
-    revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing:
-    nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun
-    öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (kampanya ya
-    da referans katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi,
-    güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını
-    karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. Retler:
-    not_a_map_project, invalid_uid, entity_not_found.
+    okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım,
+    denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review,
+    approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne
+    sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed,
+    missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle;
+    türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne
+    sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi).
+    Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman
+    profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık
+    katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da
+    free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır;
+    içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası,
+    mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra
+    projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath,
+    none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Retler:
+    not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.
     """
     __slots__ = ()
     id = "map.work.query"
@@ -189,28 +202,34 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         /,
         *,
         deep: bool | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> MapWorkTree:
         """Harita işini sorgula: Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz:
-        öğeler (ölçüm kampanyası, referans kaynak, çalışma verisi, tasarım, denetim sonucu,
-        teslim paketi) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review,
-        approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne
-        sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed,
-        missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle;
-        türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne
-        sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi).
-        Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman
-        profili). uid verilince o nesnenin kaynağı: source (kampanya ya da referans
-        katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da
-        free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır;
-        içeriği değişen dosyanın türevleri güncel değildir. Retler: not_a_map_project,
-        invalid_uid, entity_not_found.
+        öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki
+        sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı,
+        kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul
+        edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current,
+        missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe,
+        üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current,
+        stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da
+        üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin
+        kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı,
+        kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her
+        dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel
+        değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan
+        dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır;
+        dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve
+        relative'i (kayıtlı göreli yol) ADR 1201. Retler: not_a_map_project,
+        invalid_file_path, invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.
             deep:
+            drawing: The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
+                its relative path from this file's folder, then in the project's search paths. None: only at its path.
             uid:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -226,6 +245,7 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         """
         return self.execute_input(doc, MapWorkQuery(
             deep=deep,
+            drawing=drawing,
             uid=uid,
         ), request_id=request_id, expected=expected)
 
@@ -235,6 +255,7 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         /,
         *,
         deep: bool | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> MapWorkTree:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -242,6 +263,7 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         """
         return self.plan_input(doc, MapWorkQuery(
             deep=deep,
+            drawing=drawing,
             uid=uid,
         ))
 
@@ -251,6 +273,7 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         /,
         *,
         deep: bool | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -258,6 +281,7 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         """
         return self.validate_input(doc, MapWorkQuery(
             deep=deep,
+            drawing=drawing,
             uid=uid,
         ))
 
@@ -267,6 +291,7 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         /,
         *,
         deep: bool | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -279,6 +304,7 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         """
         return self.answer_input(doc, MapWorkQuery(
             deep=deep,
+            drawing=drawing,
             uid=uid,
         ), op=op, request_id=request_id, expected=expected)
 

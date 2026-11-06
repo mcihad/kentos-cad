@@ -823,11 +823,13 @@ pub const SCHEMA_WITH_STANDARD_EXCEPTIONS: u32 = 190;
 pub const SCHEMA_WITH_ROAD_GRADES: u32 = 191;
 /// Schema 192 (docs/adr/0979): an alignment PI's `ove`, an ove clothoid into the next PI's curve, its A solved.
 pub const SCHEMA_WITH_ROAD_OVE: u32 = 192;
+/// Schema 193 (docs/adr/1201 §1): a map work item's file keeps its path from the project file's folder (`relative`).
+pub const SCHEMA_WITH_MAP_WORK_RELATIVE: u32 = 193;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 190] = [
+pub const SCHEMAS: [u32; 191] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1018,6 +1020,7 @@ pub const SCHEMAS: [u32; 190] = [
     SCHEMA_WITH_STANDARD_EXCEPTIONS,
     SCHEMA_WITH_ROAD_GRADES,
     SCHEMA_WITH_ROAD_OVE,
+    SCHEMA_WITH_MAP_WORK_RELATIVE,
 ];
 
 /// The file a drawing is saved as.

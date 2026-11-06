@@ -4208,6 +4208,26 @@
        ]
       }
      ]
+    },
+    {
+     "label": "Harita işi",
+     "icon": "workSource",
+     "works": [
+      "map"
+     ],
+     "items": [
+      {
+       "command": "map.workSource",
+       "size": "small"
+      },
+      {
+       "command": "map.workRelease",
+       "size": "small"
+      }
+     ],
+     "modes": [
+      "cad"
+     ]
     }
    ]
   },
@@ -4453,6 +4473,26 @@
      "works": [
       "map",
       "road"
+     ]
+    },
+    {
+     "label": "Harita işi",
+     "icon": "workSource",
+     "works": [
+      "map"
+     ],
+     "items": [
+      {
+       "command": "map.workSource",
+       "size": "small"
+      },
+      {
+       "command": "map.workRelease",
+       "size": "small"
+      }
+     ],
+     "modes": [
+      "cad"
      ]
     }
    ]
@@ -4705,6 +4745,26 @@
      "works": [
       "map",
       "road"
+     ]
+    },
+    {
+     "label": "Harita işi",
+     "icon": "workSource",
+     "works": [
+      "map"
+     ],
+     "items": [
+      {
+       "command": "map.workSource",
+       "size": "small"
+      },
+      {
+       "command": "map.workRelease",
+       "size": "small"
+      }
+     ],
+     "modes": [
+      "cad"
      ]
     }
    ]
@@ -5025,6 +5085,26 @@
      "works": [
       "map",
       "road"
+     ]
+    },
+    {
+     "label": "Harita işi",
+     "icon": "workSource",
+     "works": [
+      "map"
+     ],
+     "items": [
+      {
+       "command": "map.workSource",
+       "size": "small"
+      },
+      {
+       "command": "map.workRelease",
+       "size": "small"
+      }
+     ],
+     "modes": [
+      "cad"
      ]
     }
    ]
@@ -6065,6 +6145,26 @@
      ],
      "works": [
       "map"
+     ]
+    },
+    {
+     "label": "Harita işi",
+     "icon": "workSource",
+     "works": [
+      "map"
+     ],
+     "items": [
+      {
+       "command": "map.workSource",
+       "size": "small"
+      },
+      {
+       "command": "map.workRelease",
+       "size": "small"
+      }
+     ],
+     "modes": [
+      "cad"
      ]
     }
    ]

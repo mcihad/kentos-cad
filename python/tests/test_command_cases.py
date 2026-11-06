@@ -69,6 +69,9 @@ class Case:
         self.wrapper = cad.command(command)
         # A bound layer's file in the setup is a fixture's path (docs/adr/0503).
         setup_text = re.sub(r"\$fixture:([^\s\"]+)", lambda m: str(ROOT / "fixtures" / m.group(1)), json.dumps(setup))
+        # A file the case puts in its own folder (a map work item's moved file, docs/adr/1201 §1), as the desktop's
+        # runner fills it in.
+        setup_text = re.sub(r"\$tmp:([^\s\"]+)", lambda m: json.dumps(str(TMP / m.group(1)))[1:-1], setup_text)
         if setup.get("version") == 2:
             # A drawing of the file's v2 form carries its objects' persistent ids (docs/adr/0576 §3): written by the
             # independent KCAD v2 writer, then opened as a file.

@@ -114,6 +114,8 @@ pub enum PackagedKind {
     Profile,
     /// An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).
     Mapping,
+    /// A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.
+    WorkFile,
 }
 
 /// A file copied into the package.

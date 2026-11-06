@@ -459,6 +459,26 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
                 .is_some_and(|id| gone.contains(id) || rebased.contains(id))
         });
     }
+    // A map work item's file (docs/adr/1201 §2): copied, its link the copy, found as a source's is (its relative path,
+    // the search paths); a file a raster also shows is copied once.
+    if let Some(Value::Array(items)) = value.pointer_mut("/settings/mapWork/items") {
+        for item in items.iter_mut() {
+            let id = item.get("id").and_then(Value::as_str).unwrap_or_default().to_owned();
+            let Some(f) = item.get_mut("file").filter(|f| f.is_object()) else {
+                continue;
+            };
+            let path = f.get("path").and_then(Value::as_str).unwrap_or_default().to_owned();
+            let relative = f.get("relative").and_then(Value::as_str).map(str::to_owned);
+            let Some(at) = find_in(&path, relative.as_deref(), from_ref, &search).at else {
+                left.push(PackageLeft { kind: PackagedKind::WorkFile, path, why: LeftWhy::Missing, at: id, objects: None });
+                continue;
+            };
+            let rel = copies.take(&at, PackagedKind::WorkFile);
+            let abs = rel.split('/').fold(target.clone(), |p, part| p.join(part));
+            f["path"] = Value::String(abs.display().to_string());
+            f["relative"] = Value::String(rel);
+        }
+    }
     profile_files(from_ref, &mut copies, &mut left);
     // The typefaces: KentOS's own faces come with it; a style naming another is drawn in a substitute.
     let (fonts, _) = kentos_native_application::fonts_report::report(doc, &FontsReport::default());

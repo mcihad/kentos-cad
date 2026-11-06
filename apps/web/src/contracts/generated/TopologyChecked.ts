@@ -13,6 +13,10 @@ export type TopologyChecked = { findings: Array<TopologyFinding>,
  */
 total: number, open: number, exceptions: number, lapsed?: number, 
 /**
+ * The findings confirmed as errors (docs/adr/1260 §1): of the open ones.
+ */
+errors?: number, 
+/**
  * The rules checked, and those whose layer (or other layer) the project does not have.
  */
 rules: number, missing?: number, 

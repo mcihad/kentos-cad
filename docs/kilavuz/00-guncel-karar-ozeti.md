@@ -23,6 +23,11 @@
   revizyon, işlem). Anlam katman profilinde (nesne katmanının ya da üstündeki grubun öğesinin), ilişki kayıttadır; yeni
   nesne türü yok. `map.work.query`/`.edit`; Harita işi paneli ve Öznitelikler'in Kaynağı bölümü yalnız Harita'da.
   Onay ofisin teslim kaydıdır, kurum onayı değildir. Komutların kaydı kendiliğinden yazması sonraki iştir.
+  [ADR 1201](../../docs/adr/1201-map-work-relative-files-relink-and-contextual-tools.md): öğe dosyasının göreli yolu
+  (şema 193; açılışta, `map.work.query drawing`'de, Paketle ve `cad.assets.check`'te), yeniden bağlamada aynı içeriği
+  yükleyen dış başvurunun da geçmesi, `release` (Bağımsız yap), bağlamsal sekmelerde yalnız Harita'nın **Harita işi**
+  paneli (Kaynağını göster, Bağımsız yap) ve panelde Seçimi türet. Bağlı GeoPackage'ın bağı geri alma dışında kaldığı için
+  yeniden bağlamaya katılmaz, uyarılır.
 - **KentOS Yol: arazi, aks, boykesit, enkesit, koridor, kübaj ve yol projesi (3 Kasım 2026; [plan/road.md](../../plan/road.md), [ADR 0900](../../docs/adr/0900-road-terrain-surface.md)–[0911](../../docs/adr/0911-road-project-tree-views-and-rebuild.md)).**
   Ayrı ürün modülü (`CadWork::Road`, `Module::Road`, `kentos-yol`; dal `road-01-yuzey`'den birleşti). Hesap
   `crates/shared/road` (`kentos-road`: kısıtlı Delaunay `kentos.cdt/1`, aks ve km denklemleri, düşey kurplar, tip kesit

@@ -571,6 +571,25 @@ impl App {
                 format!("“{name}” katmanının projenin yanındaki kaynağı ({}) son eşleştiği dosya değil; bağlanmadı.", file_name(path)),
             );
         }
+        // A map work item's file (docs/adr/1201 §1).
+        for (_, item, from, to) in &found.work_moved {
+            self.say(
+                Level::Info,
+                format!("Harita işi “{item}” öğesinin dosyası yerinde değildi; projenin yanında bulundu: {} ({from} yerine).", file_name(to)),
+            );
+        }
+        for (_, item, path) in &found.work_missing {
+            self.say(
+                Level::Warn,
+                format!("Harita işi “{item}” öğesinin dosyası bulunamadı ({path}). Harita işi panelinde Yeniden bağla ile gösterin."),
+            );
+        }
+        for (_, item, path) in &found.work_differs {
+            self.say(
+                Level::Warn,
+                format!("Harita işi “{item}” öğesinin projenin yanındaki dosyası ({}) kabul edilen içerik değil; bağlanmadı. Yeniden bağla ile seçin.", file_name(path)),
+            );
+        }
     }
 }
 

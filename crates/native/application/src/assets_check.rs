@@ -252,6 +252,24 @@ pub fn check_in(doc: &Document, input: &AssetsCheck) -> AssetsChecked {
             );
         }
     }
+    // A map work item's file (docs/adr/1201 §2): found as a source's is, then in the search paths.
+    if w.wants(AssetKind::WorkFile) {
+        let search = w.search.clone();
+        for i in doc.map_work().map_or(&[][..], |m| m.items.as_slice()) {
+            let Some(f) = &i.file else { continue };
+            w.file(
+                AssetKind::WorkFile,
+                &f.path,
+                f.relative.as_deref(),
+                &search,
+                Some(&f.revision),
+                None,
+                None,
+                Some(i.id.clone()),
+                Some(i.name.clone()),
+            );
+        }
+    }
     let mut counts = AssetCounts::default();
     for a in &w.out {
         match a.state {

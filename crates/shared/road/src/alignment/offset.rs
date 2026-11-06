@@ -127,7 +127,6 @@ pub fn check(al: &Alignment, d: f64) -> Result<(), OffsetError> {
             }
         }
     }
-    drop(keep);
     match first {
         Some((a, b)) => {
             let kink = al

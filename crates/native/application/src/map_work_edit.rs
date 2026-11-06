@@ -100,6 +100,9 @@ fn full() -> Stop {
 struct Change {
     work: MapWork,
     relink: Vec<(Slot, Entity)>,
+    /// External references whose source follows the relinked file (docs/adr/1201 §2).
+    blocks: Vec<kentos_commands::BlockDefinition>,
+    freed: u32,
     label: &'static str,
     item: Option<String>,
     derivation: Option<String>,
@@ -113,6 +116,8 @@ impl Change {
         Change {
             work,
             relink: Vec::new(),
+            blocks: Vec::new(),
+            freed: 0,
             label,
             item: None,
             derivation: None,
@@ -132,7 +137,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             name_ok(name, "operation.name")?;
             layers_ok(doc, &now, layers, None)?;
             let file = match file {
-                Some(path) => Some(WorkFile { path: path.clone(), revision: read_file(path, "operation.file")? }),
+                Some(path) => Some(WorkFile { path: path.clone(), revision: read_file(path, "operation.file")?, relative: None }),
                 None => None,
             };
             if now.items.len() >= kentos_commands::MAX_WORK_ITEMS {
@@ -209,7 +214,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             let mut relink = Vec::new();
             for (uid, entity) in doc.entities_with_uids() {
                 let layer = &entity.base().layer_id;
-                if !item_of_layer(doc, &now, layer).is_some_and(|i| i.id == *item) {
+                if item_of_layer(doc, &now, layer).is_none_or(|i| i.id != *item) {
                     continue;
                 }
                 let mut next = entity.clone();
@@ -235,8 +240,46 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             if let Some(f) = work.items.iter_mut().find(|i| i.id == *item).and_then(|i| i.file.as_mut()) {
                 f.path = file.clone();
                 f.revision = sha.clone();
+                // The next save writes the new place's relative path (docs/adr/1201 §1).
+                f.relative = None;
             }
             let mut warnings = Vec::new();
+            // External references on the old file follow it when they loaded the same content (docs/adr/1201 §2): a
+            // path, never a reload; one that loaded other content is left to Dış başvurular › Yolu değiştir.
+            let mut blocks = Vec::new();
+            for def in doc.blocks() {
+                let Some(x) = def.xref.as_ref().filter(|x| x.parent.is_none() && same_file(&x.path, &was.path)) else {
+                    continue;
+                };
+                if x.digest == sha {
+                    let mut next = (**def).clone();
+                    if let Some(nx) = next.xref.as_mut() {
+                        nx.path = file.clone();
+                        nx.relative = None;
+                    }
+                    blocks.push(next);
+                } else {
+                    warnings.push(CommandWarning {
+                        code: codes::LINK_NOT_FOLLOWED.into(),
+                        message: format!(
+                            "“{}” dış başvurusu başka bir içerik yüklemiş; yeni dosyaya Dış başvurular › Yolu değiştir ile geçirin.",
+                            def.name
+                        ),
+                        path: Some("operation.file".into()),
+                    });
+                }
+            }
+            // A bound layer's link is the project's setting, outside undo (docs/adr/0506): said, not changed.
+            for link in doc.settings().sources.iter().filter(|l| same_file(&l.path, &was.path)) {
+                warnings.push(CommandWarning {
+                    code: codes::LINK_NOT_FOLLOWED.into(),
+                    message: format!(
+                        "“{}” katmanı eski dosyaya bağlı; Kaynak › Yeniden bağla ile yeni dosyaya bağlayın.",
+                        doc.layers().path(&link.layer)
+                    ),
+                    path: Some("operation.file".into()),
+                });
+            }
             if sha != was.revision {
                 let n = work.derivations.iter().filter(|d| d.source == *item).count();
                 warnings.push(CommandWarning {
@@ -250,6 +293,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             }
             Ok(Change {
                 relink,
+                blocks,
                 item: Some(item.clone()),
                 file_revision: Some(sha),
                 warnings,
@@ -347,7 +391,49 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             work.derivations.retain(|d| d.id != *derivation);
             Ok(Change { derivation: Some(derivation.clone()), ..Change::new(work, "Türetme kaydını sil") })
         }
+        Op::Release { uids } => {
+            if uids.is_empty() {
+                return Err(fail(
+                    codes::NO_ENTITIES,
+                    "Bağımsız yapılacak nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.".into(),
+                    "operation.uids",
+                ));
+            }
+            let mut ids: Vec<kentos_commands::EntityId> = Vec::new();
+            for (i, u) in uids.iter().enumerate() {
+                let at = format!("operation.uids[{i}]");
+                if !checks::is_uid_text(u) {
+                    return Err(fail(codes::INVALID_UID, format!("“{u}” geçerli bir nesne kimliği değil."), &at));
+                }
+                let id = Uuid::parse_str(u).ok().map(|x| kentos_commands::EntityId(*x.as_bytes()));
+                // A derived object deleted from the drawing may still be let go of: its record names it.
+                let Some(id) = id.filter(|id| now.derivations.iter().any(|d| d.uids.contains(id))) else {
+                    return Err(fail(
+                        codes::NOT_DERIVED,
+                        format!("“{u}” nesnesi hiçbir türetme kaydında değil; zaten bağımsız çizim."),
+                        &at,
+                    ));
+                };
+                if !ids.contains(&id) {
+                    ids.push(id);
+                }
+            }
+            let mut work = now.clone();
+            let before = work.derivations.len();
+            for d in &mut work.derivations {
+                d.uids.retain(|u| !ids.contains(u));
+            }
+            work.derivations.retain(|d| !d.uids.is_empty());
+            let released = u32::try_from(before - work.derivations.len()).unwrap_or(u32::MAX);
+            let freed = u32::try_from(ids.len()).unwrap_or(u32::MAX);
+            Ok(Change { released, freed, ..Change::new(work, "Bağımsız yap") })
+        }
     }
+}
+
+/// Whether two kept paths name the same file: the same text, else the same file on disk.
+fn same_file(a: &str, b: &str) -> bool {
+    a == b || std::fs::canonicalize(a).ok().is_some_and(|x| std::fs::canonicalize(b).ok().is_some_and(|y| x == y))
 }
 
 fn output(c: &Change, revision: String) -> MapWorkEdited {
@@ -357,6 +443,8 @@ fn output(c: &Change, revision: String) -> MapWorkEdited {
         file_revision: c.file_revision.clone(),
         relinked: u32::try_from(c.relink.len()).unwrap_or(u32::MAX),
         released: c.released,
+        links: u32::try_from(c.blocks.len()).unwrap_or(u32::MAX),
+        freed: c.freed,
         stale: stale_count(&c.work),
         revision,
     }
@@ -369,10 +457,17 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapWorkEdit) -> CommandResult<Map
     };
     let label = change.label;
     let relink = change.relink.clone();
+    let blocks = change.blocks.clone();
     let work = change.work.clone();
     let _ = cx.doc.transact(label, |doc| -> Result<(), ()> {
         if !relink.is_empty() {
             doc.update_many(relink, label);
+        }
+        for block in blocks {
+            // A source's path only: the definition stays as it was checked.
+            if doc.update_block(block).is_err() {
+                return Err(());
+            }
         }
         doc.set_map_work(Some(work), label);
         Ok(())

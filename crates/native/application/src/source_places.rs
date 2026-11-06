@@ -79,6 +79,12 @@ pub fn with_relative(settings: &mut ProjectSettings, project_file: &Path) {
             s.relative = relative_path(folder, Path::new(&s.path));
         }
     }
+    // A map work item's file, the same way (docs/adr/1201 §1).
+    if let Some(work) = &mut settings.map_work {
+        for f in work.items.iter_mut().filter_map(|i| i.file.as_mut()) {
+            f.relative = relative_path(folder, Path::new(&f.path));
+        }
+    }
 }
 
 /// What opening found of the project's bound files.
@@ -90,11 +96,20 @@ pub struct Located {
     pub missing: Vec<(String, String, String)>,
     /// Links whose relative path names a file with another content: id, layer, that file. Not moved.
     pub differs: Vec<(String, String, String)>,
+    /// Map work items' files (docs/adr/1201 §1), the same three ways: item id, item name, the paths.
+    pub work_moved: Vec<(String, String, String, String)>,
+    pub work_missing: Vec<(String, String, String)>,
+    pub work_differs: Vec<(String, String, String)>,
 }
 
 impl Located {
     pub fn is_empty(&self) -> bool {
-        self.moved.is_empty() && self.missing.is_empty() && self.differs.is_empty()
+        self.moved.is_empty()
+            && self.missing.is_empty()
+            && self.differs.is_empty()
+            && self.work_moved.is_empty()
+            && self.work_missing.is_empty()
+            && self.work_differs.is_empty()
     }
 }
 
@@ -136,7 +151,28 @@ pub fn relocate(doc: &mut Document, project_file: &Path) -> Located {
             found.differs.push((s.id.clone(), s.layer.clone(), to));
         }
     }
-    if !found.moved.is_empty() {
+    // A map work item's file moved with the project: taken at its relative path when its content is the item's
+    // revision (docs/adr/1201 §1); another content there waits for the user (Yeniden bağla, Yenile).
+    if let Some(work) = &mut settings.map_work {
+        for item in &mut work.items {
+            let Some(f) = item.file.as_mut().filter(|f| !Path::new(&f.path).is_file()) else {
+                continue;
+            };
+            let at = f.relative.as_deref().map(|rel| resolve(folder, rel)).filter(|p| p.is_file());
+            let Some(at) = at else {
+                found.work_missing.push((item.id.clone(), item.name.clone(), f.path.clone()));
+                continue;
+            };
+            let to = at.display().to_string();
+            // Streamed: an orthophoto may be large.
+            if crate::file_digest::sha256(&at).is_ok_and(|(_, sha)| sha == f.revision) {
+                found.work_moved.push((item.id.clone(), item.name.clone(), std::mem::replace(&mut f.path, to.clone()), to));
+            } else {
+                found.work_differs.push((item.id.clone(), item.name.clone(), to));
+            }
+        }
+    }
+    if !found.moved.is_empty() || !found.work_moved.is_empty() {
         doc.set_settings(settings);
     }
     found

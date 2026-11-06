@@ -306,10 +306,7 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
         let mut via: Vec<Option<(usize, usize)>> = vec![None; nodes];
         let mut done = vec![false; nodes];
         d[start] = 0.0;
-        loop {
-            let Some(u) = (0..nodes).filter(|u| !done[*u] && d[*u].is_finite()).min_by(|a, b| d[*a].total_cmp(&d[*b])) else {
-                break;
-            };
+        while let Some(u) = (0..nodes).filter(|u| !done[*u] && d[*u].is_finite()).min_by(|a, b| d[*a].total_cmp(&d[*b])) {
             done[u] = true;
             for &(v, l, r) in &adjacency[u] {
                 if d[u] + l < d[v] {

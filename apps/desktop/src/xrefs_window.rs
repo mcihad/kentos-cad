@@ -1032,6 +1032,7 @@ impl App {
                 AssetKind::Attachment => "Ek",
                 AssetKind::Source => "Bağlı katman",
                 AssetKind::Xref => "Dış başvuru",
+                AssetKind::WorkFile => "Harita işi dosyası",
             };
             let (state, kind) = match a.state {
                 AssetState::Ok => ("Yerinde", Kind::Ok),

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `192`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-193.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `193`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-194.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -831,6 +831,12 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `unknown_field`, satır sonlu hücreyi `bad_value` ile reddeder. Örnek `table-extraction.kcad`; eski şemada
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
+
+**Şema 193** (ADR 1201 §1; MAP-01): harita işi öğesinin dosyasının `relative`'i (metin): proje dosyasının klasöründen
+yol, `/` ayırıcı, `..` yalnız başta, boş ya da mutlak değil (bağlı GeoPackage'ın `relative`'iyle aynı kural). Yazıcı 193'ü
+bir öğenin dosyası `relative` taşıyınca seçer; 192 ve öncesi alanı `unknown_field` sayar
+(`broken/map-work-relative-in-schema-192.kcad`); mutlak, ortasında `..` taşıyan ve boş yol `bad_value`
+(`broken/map-work-relative-absolute.kcad`, `-climbs`, `-empty`). Örnek `map-work-relative.json/.kcad`.
 
 **Şema 192** (ADR 0979; ROAD-ALIGN-15): aks noktasının `ove`'si (mantıksal; yalnız `true` yazılır): o noktanın kurbu bir
 sonraki noktanın kurbuna bir ove klotoidiyle bağlanır, A PI'lardan çözülür. Yazıcı 192'yi bir aks noktası `ove` taşıyınca
