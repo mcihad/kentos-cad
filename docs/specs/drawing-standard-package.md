@@ -34,7 +34,13 @@ blocks, hatch definitions, templates, palette items or viewport overrides.
 Version 2 keeps the same `format`, `id`, `revision` and `standard` fields and
 requires a `resources` object. Its supported fields are `lineTypes`,
 `hatchPatterns`, `blocks`, `sheetTemplates`, `leaderStyles`,
-`textStyleDefinitions` and `dimensionStyleDefinitions`. The first two
+`textStyleDefinitions`, `dimensionStyleDefinitions` and `toolPalettes`. A tool palette (docs/adr/1014) is
+`{id, name, description?, tools}`; each tool is `{id, title, description?, category?, command, commandVersion,
+input}`: a catalog command, its version and its whole input object (at most 64 KiB as JSON). At most 50 palettes,
+1–200 tools each; palette ids are unique without regard to case, tool ids unique in their palette; ids, names, titles
+and commands are 1–128 bytes without surrounding spaces; versions are positive. Palettes are read where the package is
+bound and never installed in the drawing; `cad.standards.palettes` says, for each tool, whether its command takes its
+input on the drawing. The first two
 hold the corresponding KentOS project definitions. `blocks` holds a block name and its existing library
 `publication` metadata (`familyId`, `typeId`, `typeName`, `release`), without
 embedding geometry. `sheetTemplates` holds approved template IDs and revision
