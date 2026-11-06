@@ -43,7 +43,7 @@ def pi(id, x, y, r=0, l1=0, l2=0):
 
 def full(p):
     return {"id": p["id"], "x": p["x"], "y": p["y"], "radius": p.get("radius", 0), "spiralIn": p.get("spiralIn", 0),
-            "spiralOut": p.get("spiralOut", 0)}
+            "spiralOut": p.get("spiralOut", 0), "ove": p.get("ove", False)}
 
 
 MAIN_PIS = [pi("a", X0, Y0), pi("p1", X0 + 600, Y0, 400, 80, 80), pi("b", X0 + 1100, Y0 + 500)]
@@ -331,7 +331,39 @@ def chain_message(e, pis):
         return failed("invalid_alignment",
                       f"{e['pi']} noktasının kurpu olamaz: başlangıç ve bitişte kurp yok, klotoid yarıçapla verilir, "
                       "değerler eksi olmaz.", at(e["pi"]))
+    # Docs/adr/0979: the ove's refusals.
+    if k == "BadOve":
+        why = {"NoNextCurve": "kendisinin ve sonraki PI'nın kurpu olmalı, sonraki bitiş olamaz",
+               "Reverse": "iki kurp aynı yöne dönmeli (ters kurpta ove olmaz)",
+               "EqualRadii": "iki kurbun yarıçapı farklı olmalı",
+               "SpiralOnSharedSide": "ilk kurbun çıkış ve ikincinin giriş klotoidi olmamalı, ove onların yerine geçer",
+               "Chained": "art arda iki ove henüz kurulmuyor"}[e["why"]]
+        return failed("invalid_alignment", f"{e['pi']} noktasında ove olamaz: {why}.", at(e["pi"]))
+    if k == "OveTooLong":
+        return failed("alignment_curves_overlap",
+                      f"{e['a']}–{e['b']} arasına ove sığmıyor: en uzun ovede bile (ikinci kurbun yayı biter) ortadaki "
+                      f"aliyman {e['excess']:.3f} m uzun kalıyor. PI'ları yaklaştırın ya da yarıçapları değiştirin.",
+                      at(e["b"]))
+    if k == "OveAmbiguous":
+        return failed("invalid_alignment",
+                      f"{e['a']}–{e['b']} arasında birden çok ove var (A = "
+                      f"{', '.join(f'{v:.3f}' for v in e['parameters'])}); hangisi istendiği PI'lar oynatılarak "
+                      "seçilmeli.", at(e["b"]))
     raise ValueError(k)
+
+
+def ove_pis(*args, **kw):
+    """The reference's PIs of a known ove (road_alignment_cases.ove_pis), as a command writes them."""
+    out = []
+    for p in ref.ove_pis(*args, **kw):
+        q = {"id": p["id"], "x": float(p["x"]), "y": float(p["y"])}
+        for k in ("radius", "spiralIn", "spiralOut"):
+            if p[k]:
+                q[k] = float(p[k])
+        if p.get("ove"):
+            q["ove"] = True
+        out.append(q)
+    return out
 
 
 def refusal_of(pis):
@@ -497,6 +529,12 @@ def create_cases():
     rev = [pi(p["id"], p["x"], p["y"], p["radius"], p["spiralIn"], p["spiralOut"]) for p in rev]
     ok("Ters kurp: araya aliyman girmez", {"name": "Ters kurp", "pis": rev},
        {"id": "g-2", "name": "Ters kurp", "revision": 1, "pis": rev})
+    # Docs/adr/0979: an ove between two curves turning the same way, its A solved on the PIs.
+    egg = ove_pis(500, 200, 250, 0.6, 1.0, at=(X0, Y0 + 3000))
+    ok("Ove: R 500'den R 200'e", {"name": "Oveli", "pis": egg}, {"id": "g-2", "name": "Oveli", "revision": 1, "pis": egg})
+    egg2 = ove_pis(500, 200, 250, 0.6, 1.1, 80, 60, at=(X0, Y0 + 4000), right=True, opening=True)
+    ok("Ove: açılan, sağa, klotoidli", {"name": "Açılan ove", "pis": egg2},
+       {"id": "g-2", "name": "Açılan ove", "revision": 1, "pis": egg2})
     ok("Paralel aks, sağda 7,5 m", {"name": "Sağ kenar", "offsetOf": {"alignment": "g-1", "offset": 7.5}},
        {"id": "g-2", "name": "Sağ kenar", "revision": 1, "offsetOf": {"alignment": "g-1", "offset": 7.5}})
     ok("Paralel aks, solda 12 m, kaynağın adıyla değil kimliğiyle",
@@ -524,6 +562,13 @@ def create_cases():
     over = [pi("a", X0, Y0 + 8000), pi("p1", X0 + 300, Y0 + 8000, 300, 50, 50), pi("p2", X0 + 450, Y0 + 8150, 300, 50, 50),
             pi("b", X0 + 450, Y0 + 8500)]
     no("Kurplar biniyor", {"name": "Yan yol", "pis": over}, refusal_of(over))
+    far = ove_pis(500, 200, 250, 0.6, 1.0, at=(X0, Y0 + 9000))
+    far = [far[0], far[1], {**far[2], "x": far[2]["x"] + 400}, {**far[3], "x": far[3]["x"] + 400}]
+    no("Ove sığmıyor: ortadaki aliyman uzun", {"name": "Yan yol", "pis": far}, refusal_of(far))
+    twice = ove_pis(1000, 900, 120, 0.3, 0.3, at=(X0, Y0 + 9500))
+    no("İki ove çözümü", {"name": "Yan yol", "pis": twice}, refusal_of(twice))
+    rov = [{**p, **({"ove": True} if p["id"] == "p1" else {})} for p in rev]
+    no("Ters kurpta ove olmaz", {"name": "Yan yol", "pis": rov}, refusal_of(rov))
     same = [pi("a", X0, Y0), pi("p1", X0 + 100, Y0), pi("p2", X0 + 100, Y0), pi("b", X0 + 200, Y0 + 50)]
     no("Aynı yerde iki PI", {"name": "Yan yol", "pis": same}, refusal_of(same))
     back = [pi("a", X0, Y0), pi("p1", X0 + 100, Y0), pi("b", X0 + 50, Y0)]

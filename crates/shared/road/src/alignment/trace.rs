@@ -30,7 +30,7 @@ pub enum TraceError {
 }
 
 fn pi(id: String, p: [f64; 2], radius: f64) -> PiInput {
-    PiInput { id, x: p[0], y: p[1], radius, spiral_in: 0.0, spiral_out: 0.0 }
+    PiInput { id, x: p[0], y: p[1], radius, spiral_in: 0.0, spiral_out: 0.0, ove: false }
 }
 
 /// The ids of `n` PIs: `a`, `p1`, …, `b`.

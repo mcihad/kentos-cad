@@ -2539,6 +2539,9 @@ def document(d):
             or any("bench" in v for v in road.get("volumes", [])):
         # A road project's grades as rise over run (docs/adr/0977); an older reader would take them for percent.
         schema = max(schema, 187)
+    if any(p.get("ove") for a in road.get("alignments", []) for p in a.get("pis", [])):
+        # An alignment PI's ove (docs/adr/0979).
+        schema = max(schema, 188)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3414,7 +3417,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-188.kcad"] = container(root(cmap(parts), version=uint(188)))
+    files["schema-version-189.kcad"] = container(root(cmap(parts), version=uint(189)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5936,6 +5939,12 @@ def build():
     assert gd.count(b"\x67version\x18\xbb") == 1, "a volume on a grid is schema 179; the grades make it 187 (docs/adr/0977)"
     out["road-volume-grid.kcad"] = container(gd)
     out["broken/road-volume-grid-in-schema-178.kcad"] = container(gd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xb2"))
+    # Schema 188 (docs/adr/0979): an alignment PI's ove; schema 187 refuses it as unknown.
+    oved = load("road-ove.json")
+    od = document(oved)
+    assert od.count(b"\x67version\x18\xbc") == 1, "an ove is schema 188"
+    out["road-ove.kcad"] = container(od)
+    out["broken/road-ove-in-schema-187.kcad"] = container(od.replace(b"\x67version\x18\xbc", b"\x67version\x18\xbb"))
     # Schema 187 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

@@ -77,11 +77,11 @@ fn same_radius(a: f64, b: f64) -> bool {
 /// The PIs of `elements` (ids `a`, `p1`, …, `b`).
 pub fn pis_of(elements: &[FitElement]) -> Result<Vec<PiInput>, FitError> {
     let Some(first) = elements.first() else { return Err(FitError::Empty) };
-    let mut out = vec![PiInput { id: "a".into(), x: first.start[0], y: first.start[1], radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 }];
+    let mut out = vec![PiInput { id: "a".into(), x: first.start[0], y: first.start[1], radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false }];
     let mut n = 0;
     let mut push = |out: &mut Vec<PiInput>, p: [f64; 2], radius: f64, spiral_in: f64, spiral_out: f64| {
         n += 1;
-        out.push(PiInput { id: format!("p{n}"), x: p[0], y: p[1], radius, spiral_in, spiral_out });
+        out.push(PiInput { id: format!("p{n}"), x: p[0], y: p[1], radius, spiral_in, spiral_out, ove: false });
     };
     let mut i = 0;
     while i < elements.len() {
@@ -161,6 +161,6 @@ pub fn pis_of(elements: &[FitElement]) -> Result<Vec<PiInput>, FitError> {
         i = to + 1;
     }
     let last = &elements[elements.len() - 1];
-    out.push(PiInput { id: "b".into(), x: last.end[0], y: last.end[1], radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 });
+    out.push(PiInput { id: "b".into(), x: last.end[0], y: last.end[1], radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false });
     Ok(out)
 }

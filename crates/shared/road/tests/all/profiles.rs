@@ -31,6 +31,7 @@ fn every_profile_crosses_where_the_reference_says() {
                 radius: n(&p["radius"]),
                 spiral_in: n(&p["spiralIn"]),
                 spiral_out: n(&p["spiralOut"]),
+                ove: false,
             })
             .collect();
         let al = align(&pis).expect("an alignment");
@@ -88,6 +89,7 @@ fn picture() {
             radius: n(&p["radius"]),
             spiral_in: n(&p["spiralIn"]),
             spiral_out: n(&p["spiralOut"]),
+            ove: false,
         })
         .collect();
     let al = align(&pis).unwrap();

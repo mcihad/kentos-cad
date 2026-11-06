@@ -233,20 +233,23 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
     kurp ve klotoid tek analitik biçimde (kentos.alignment/1). pis başlangıç, ara PI'lar
     ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve
     spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde
-    kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir.
-    offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m):
-    kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun
-    yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing başlangıç
-    km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead:
-    sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden
-    türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis). Cevap aksın raporudur: boy
-    (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama
-    elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları,
-    TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı.
-    Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır.
-    Retler: not_a_road_project, invalid_alignment, alignment_spirals_long,
-    alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision,
-    revision_conflict.
+    kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. ove:
+    true bir PI'nın kurbunu sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne
+    dönen, yarıçapları farklı, aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür,
+    ortadaki aliyman klotoidin başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A,
+    boy, başladığı km ve iki dairenin arası. offsetOf {alignment, offset} bir aksın
+    paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını
+    izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini
+    keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back:
+    eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar
+    mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp,
+    p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu
+    (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa),
+    km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve
+    bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks
+    oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project,
+    invalid_alignment, alignment_spirals_long, alignment_curves_overlap,
+    invalid_stationing, offset_cusp, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.alignments.create"
@@ -276,19 +279,23 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         biçimde (kentos.alignment/1). pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da
         radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış
         klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin
-        içe R+p kadar ötelenmiş doğrularının kesişimidir. offsetOf {alignment, offset} bir
-        aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz,
-        kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da
-        kendini keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri
-        (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra
-        artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris,
-        p3/kurp, p3/cikis). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu
-        (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa),
-        km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve
-        bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks
-        oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project,
-        invalid_alignment, alignment_spirals_long, alignment_curves_overlap,
-        invalid_stationing, offset_cusp, invalid_revision, revision_conflict.
+        içe R+p kadar ötelenmiş doğrularının kesişimidir. ove: true bir PI'nın kurbunu
+        sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne dönen, yarıçapları farklı,
+        aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür, ortadaki aliyman klotoidin
+        başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A, boy, başladığı km ve iki
+        dairenin arası. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı,
+        sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir
+        kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing
+        başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki
+        km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri
+        PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis, p3/ove). Cevap aksın
+        raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla,
+        sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma,
+        teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI
+        geometrisine artığı. Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk
+        boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long,
+        alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.

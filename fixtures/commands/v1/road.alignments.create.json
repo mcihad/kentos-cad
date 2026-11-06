@@ -2868,6 +2868,762 @@
       ]
     },
     {
+      "name": "Ove: R 500'den R 200'e",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Oveli",
+            "pis": [
+              {
+                "id": "a",
+                "x": 484662.1008409654,
+                "y": 4423169.392742018
+              },
+              {
+                "id": "p1",
+                "x": 484909.70152543834,
+                "y": 4423000.0,
+                "radius": 500.0,
+                "ove": true
+              },
+              {
+                "id": "p2",
+                "x": 485249.6026353735,
+                "y": 4423000.0,
+                "radius": 200.0
+              },
+              {
+                "id": "b",
+                "x": 485411.69332713395,
+                "y": 4423252.441295442
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    143.02713011067877
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    143.02713011067877,
+                    505.52713011055965
+                  ]
+                },
+                {
+                  "element": "p1/ove",
+                  "change": "added",
+                  "after": [
+                    505.52713011055965,
+                    693.0271301115288
+                  ]
+                },
+                {
+                  "element": "p2/kurp",
+                  "change": "added",
+                  "after": [
+                    693.0271301115288,
+                    736.7771301106324
+                  ]
+                },
+                {
+                  "element": "p2/aliyman",
+                  "change": "added",
+                  "after": [
+                    736.7771301106324,
+                    903.8589402964882
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Oveli",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Oveli",
+                "revision": 1,
+                "length": 903.8589402964882,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 903.8589402964882,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 143.02713011067877,
+                    "km": 0.0,
+                    "start": [
+                      484662.1008409654,
+                      4423169.392742018
+                    ],
+                    "direction": -0.5999999999991157,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 143.02713011067877,
+                    "length": 362.49999999988086,
+                    "km": 143.02713011067877,
+                    "start": [
+                      484780.14622534416,
+                      4423088.63354951
+                    ],
+                    "direction": -0.5999999999991157,
+                    "k0": 0.002,
+                    "k1": 0.002,
+                    "radius": 500.0
+                  },
+                  {
+                    "id": "p1/ove",
+                    "kind": "spiral",
+                    "station": 505.52713011055965,
+                    "length": 187.50000000096918,
+                    "km": 505.52713011055965,
+                    "start": [
+                      485124.80482873425,
+                      4423005.202523351
+                    ],
+                    "direction": 0.12500000000064612,
+                    "k0": 0.002,
+                    "k1": 0.005,
+                    "a": 250.0000000006461
+                  },
+                  {
+                    "id": "p2/kurp",
+                    "kind": "arc",
+                    "station": 693.0271301115288,
+                    "length": 43.74999999910352,
+                    "km": 693.0271301115288,
+                    "start": [
+                      485293.9579451518,
+                      4423077.900484542
+                    ],
+                    "direction": 0.7812500000040382,
+                    "k0": 0.005,
+                    "k1": 0.005,
+                    "radius": 200.0
+                  },
+                  {
+                    "id": "p2/aliyman",
+                    "kind": "tangent",
+                    "station": 736.7771301106324,
+                    "length": 167.08181018585591,
+                    "km": 736.7771301106324,
+                    "start": [
+                      485321.4186398219,
+                      4423111.846800081
+                    ],
+                    "direction": 0.9999999999995558,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 0.5999999999991157,
+                    "radius": 500.0,
+                    "spiralIn": 0.0,
+                    "spiralOut": 0.0,
+                    "tIn": 156.97286988918614,
+                    "tOut": 90.29847456108664,
+                    "arc": 362.49999999988086,
+                    "stations": [
+                      143.02713011067877,
+                      143.02713011067877,
+                      505.52713011055965,
+                      693.0271301115288
+                    ],
+                    "centre": [
+                      485062.4674620413,
+                      4423501.301356965
+                    ]
+                  },
+                  {
+                    "pi": "p2",
+                    "delta": 0.9999999999995558,
+                    "radius": 200.0,
+                    "spiralIn": 0.0,
+                    "spiralOut": 0.0,
+                    "tIn": 249.60263537404708,
+                    "tOut": 132.91818981399487,
+                    "arc": 43.74999999910352,
+                    "stations": [
+                      505.52713011055965,
+                      693.0271301115288,
+                      736.7771301106324,
+                      736.7771301106324
+                    ],
+                    "centre": [
+                      485153.1244428603,
+                      4423219.907261255
+                    ]
+                  }
+                ],
+                "joins": [
+                  {
+                    "between": [
+                      "p1",
+                      "p2"
+                    ],
+                    "reverse": false,
+                    "ove": {
+                      "a": 250.0000000006461,
+                      "length": 187.50000000096918,
+                      "station": 505.52713011055965,
+                      "gap": 4.362848627664481
+                    }
+                  }
+                ],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 143.02713011067877,
+                    "before": "a/aliyman",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.002
+                  },
+                  {
+                    "station": 505.52713011055965,
+                    "before": "p1/kurp",
+                    "after": "p1/ove",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 693.0271301115288,
+                    "before": "p1/ove",
+                    "after": "p2/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 8.96831017167883e-44
+                  },
+                  {
+                    "station": 736.7771301106324,
+                    "before": "p2/kurp",
+                    "after": "p2/aliyman",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.005
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Oveli",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 484662.1008409654,
+                      "y": 4423169.392742018
+                    },
+                    {
+                      "id": "p1",
+                      "x": 484909.70152543834,
+                      "y": 4423000.0,
+                      "radius": 500.0,
+                      "ove": true
+                    },
+                    {
+                      "id": "p2",
+                      "x": 485249.6026353735,
+                      "y": 4423000.0,
+                      "radius": 200.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 485411.69332713395,
+                      "y": 4423252.441295442
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Ove: açılan, sağa, klotoidli",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Açılan ove",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485402.5330399659,
+                "y": 4423732.637791982
+              },
+              {
+                "id": "p1",
+                "x": 485266.45420353825,
+                "y": 4424000.0,
+                "radius": 200.0,
+                "spiralIn": 60.0,
+                "ove": true
+              },
+              {
+                "id": "p2",
+                "x": 484908.7571908014,
+                "y": 4424000.0,
+                "radius": 500.0,
+                "spiralOut": 80.0
+              },
+              {
+                "id": "b",
+                "x": 484661.1565063285,
+                "y": 4423830.607257982
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mapping": [
+                {
+                  "element": "a/aliyman",
+                  "change": "added",
+                  "after": [
+                    0.0,
+                    125.44545606639095
+                  ]
+                },
+                {
+                  "element": "p1/giris",
+                  "change": "added",
+                  "after": [
+                    125.44545606639095,
+                    185.44545606639096
+                  ]
+                },
+                {
+                  "element": "p1/kurp",
+                  "change": "added",
+                  "after": [
+                    185.44545606639096,
+                    219.19545606553706
+                  ]
+                },
+                {
+                  "element": "p1/ove",
+                  "change": "added",
+                  "after": [
+                    219.19545606553706,
+                    406.6954560664492
+                  ]
+                },
+                {
+                  "element": "p2/kurp",
+                  "change": "added",
+                  "after": [
+                    406.6954560664492,
+                    729.1954560663659
+                  ]
+                },
+                {
+                  "element": "p2/cikis",
+                  "change": "added",
+                  "after": [
+                    729.1954560663659,
+                    809.1954560663659
+                  ]
+                },
+                {
+                  "element": "p2/aliyman",
+                  "change": "added",
+                  "after": [
+                    809.1954560663659,
+                    913.0105110016929
+                  ]
+                }
+              ],
+              "dependents": [],
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1
+                },
+                {
+                  "id": "g-2",
+                  "name": "Açılan ove",
+                  "revision": 1
+                }
+              ],
+              "revision": "$current",
+              "alignment": {
+                "id": "g-2",
+                "name": "Açılan ove",
+                "revision": 1,
+                "length": 913.0105110016929,
+                "ground": "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).",
+                "kmStart": 0.0,
+                "kmEnd": 913.0105110016929,
+                "elements": [
+                  {
+                    "id": "a/aliyman",
+                    "kind": "tangent",
+                    "station": 0.0,
+                    "length": 125.44545606639095,
+                    "km": 0.0,
+                    "start": [
+                      485402.5330399659,
+                      4423732.637791982
+                    ],
+                    "direction": 2.041592653590262,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  },
+                  {
+                    "id": "p1/giris",
+                    "kind": "spiral",
+                    "station": 125.44545606639095,
+                    "length": 60.0,
+                    "km": 125.44545606639095,
+                    "start": [
+                      485345.63146764366,
+                      4423844.435705715
+                    ],
+                    "direction": 2.041592653590262,
+                    "k0": 0.0,
+                    "k1": 0.005,
+                    "a": 109.54451150103323
+                  },
+                  {
+                    "id": "p1/kurp",
+                    "kind": "arc",
+                    "station": 185.44545606639096,
+                    "length": 33.74999999914609,
+                    "km": 185.44545606639096,
+                    "start": [
+                      485315.80754381814,
+                      4423896.429356637
+                    ],
+                    "direction": 2.191592653590262,
+                    "k0": 0.005,
+                    "k1": 0.005,
+                    "radius": 200.0
+                  },
+                  {
+                    "id": "p1/ove",
+                    "kind": "spiral",
+                    "station": 219.19545606553706,
+                    "length": 187.50000000091217,
+                    "km": 219.19545606553706,
+                    "start": [
+                      485293.9579451518,
+                      4423922.099515458
+                    ],
+                    "direction": 2.3603426535859926,
+                    "k0": 0.005,
+                    "k1": 0.002,
+                    "a": 250.0000000006081
+                  },
+                  {
+                    "id": "p2/kurp",
+                    "kind": "arc",
+                    "station": 406.6954560664492,
+                    "length": 322.49999999991667,
+                    "km": 406.6954560664492,
+                    "start": [
+                      485124.8048287342,
+                      4423994.797476649
+                    ],
+                    "direction": 3.016592653589185,
+                    "k0": 0.002,
+                    "k1": 0.002,
+                    "radius": 500.0
+                  },
+                  {
+                    "id": "p2/cikis",
+                    "kind": "spiral",
+                    "station": 729.1954560663659,
+                    "length": 80.0,
+                    "km": 729.1954560663659,
+                    "start": [
+                      484814.02739311976,
+                      4423932.6082328735
+                    ],
+                    "direction": 3.6615926535890186,
+                    "k0": 0.002,
+                    "k1": 0.0,
+                    "a": 200.0
+                  },
+                  {
+                    "id": "p2/aliyman",
+                    "kind": "tangent",
+                    "station": 809.1954560663659,
+                    "length": 103.81505493532698,
+                    "km": 809.1954560663659,
+                    "start": [
+                      484746.83876853046,
+                      4423889.225647376
+                    ],
+                    "direction": -2.541592653590568,
+                    "k0": 0.0,
+                    "k1": 0.0
+                  }
+                ],
+                "curves": [
+                  {
+                    "pi": "p1",
+                    "delta": 1.0999999999995311,
+                    "radius": 200.0,
+                    "spiralIn": 60.0,
+                    "spiralOut": 0.0,
+                    "tIn": 174.55454393328657,
+                    "tOut": 266.4542035387821,
+                    "arc": 33.74999999914609,
+                    "stations": [
+                      125.44545606639095,
+                      185.44545606639096,
+                      219.19545606553706,
+                      406.6954560664492
+                    ],
+                    "centre": [
+                      485153.1244428603,
+                      4423780.092738745
+                    ]
+                  },
+                  {
+                    "pi": "p2",
+                    "delta": 0.5999999999992252,
+                    "radius": 500.0,
+                    "spiralIn": 0.0,
+                    "spiralOut": 80.0,
+                    "tIn": 91.24280919808737,
+                    "tOut": 196.18494506448988,
+                    "arc": 322.49999999991667,
+                    "stations": [
+                      219.19545606553706,
+                      406.6954560664492,
+                      729.1954560663659,
+                      809.1954560663659
+                    ],
+                    "centre": [
+                      485062.4674620413,
+                      4423498.698643035
+                    ]
+                  }
+                ],
+                "joins": [
+                  {
+                    "between": [
+                      "p1",
+                      "p2"
+                    ],
+                    "reverse": false,
+                    "ove": {
+                      "a": 250.0000000006081,
+                      "length": 187.50000000091217,
+                      "station": 219.19545606553706,
+                      "gap": 4.3628486276618474
+                    }
+                  }
+                ],
+                "residual": 0.0,
+                "residualDirection": 0.0,
+                "algorithm": "kentos.alignment/1",
+                "seams": [
+                  {
+                    "station": 125.44545606639095,
+                    "before": "a/aliyman",
+                    "after": "p1/giris",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 185.44545606639096,
+                    "before": "p1/giris",
+                    "after": "p1/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 219.19545606553706,
+                    "before": "p1/kurp",
+                    "after": "p1/ove",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 406.6954560664492,
+                    "before": "p1/ove",
+                    "after": "p2/kurp",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 4.484155085839415e-44
+                  },
+                  {
+                    "station": 729.1954560663659,
+                    "before": "p2/kurp",
+                    "after": "p2/cikis",
+                    "place": 0.0,
+                    "direction": 0.0,
+                    "curvature": 0.0
+                  },
+                  {
+                    "station": 809.1954560663659,
+                    "before": "p2/cikis",
+                    "after": "p2/aliyman",
+                    "place": 0.0,
+                    "direction": 9.183549615799121e-41,
+                    "curvature": 0.0
+                  }
+                ]
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                },
+                {
+                  "id": "g-2",
+                  "name": "Açılan ove",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485402.5330399659,
+                      "y": 4423732.637791982
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485266.45420353825,
+                      "y": 4424000.0,
+                      "radius": 200.0,
+                      "spiralIn": 60.0,
+                      "ove": true
+                    },
+                    {
+                      "id": "p2",
+                      "x": 484908.7571908014,
+                      "y": 4424000.0,
+                      "radius": 500.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 484661.1565063285,
+                      "y": 4423830.607257982
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
       "name": "Paralel aks, sağda 7,5 m",
       "steps": [
         {
@@ -5042,6 +5798,259 @@
               "code": "alignment_curves_overlap",
               "message": "p1–p2 aliymanına kurplar sığmıyor: teğet boyları aliymandan 86.672 m uzun. Yarıçapı ya da klotoidleri küçültün, PI'ları uzaklaştırın.",
               "path": "pis[2]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Ove sığmıyor: ortadaki aliyman uzun",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 484662.1008409654,
+                "y": 4429169.392742018
+              },
+              {
+                "id": "p1",
+                "x": 484909.70152543834,
+                "y": 4429000.0,
+                "radius": 500.0,
+                "ove": true
+              },
+              {
+                "id": "p2",
+                "x": 485649.6026353735,
+                "y": 4429000.0,
+                "radius": 200.0
+              },
+              {
+                "id": "b",
+                "x": 485811.69332713395,
+                "y": 4429252.441295442
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "alignment_curves_overlap",
+              "message": "p1–p2 arasına ove sığmıyor: en uzun ovede bile (ikinci kurbun yayı biter) ortadaki aliyman 386.159 m uzun kalıyor. PI'ları yaklaştırın ya da yarıçapları değiştirin.",
+              "path": "pis[2]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "İki ove çözümü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 484569.4917534819,
+                "y": 4429588.656061999
+              },
+              {
+                "id": "p1",
+                "x": 484856.0927002196,
+                "y": 4429500.0,
+                "radius": 1000.0,
+                "ove": true
+              },
+              {
+                "id": "p2",
+                "x": 485143.98336147564,
+                "y": 4429500.0,
+                "radius": 900.0
+              },
+              {
+                "id": "b",
+                "x": 485430.5843082133,
+                "y": 4429588.656061999
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "p1–p2 arasında birden çok ove var (A = 120.000, 399.125); hangisi istendiği PI'lar oynatılarak seçilmeli.",
+              "path": "pis[2]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "alignments": [
+                {
+                  "id": "g-1",
+                  "name": "Ana aks",
+                  "revision": 1,
+                  "pis": [
+                    {
+                      "id": "a",
+                      "x": 485000.0,
+                      "y": 4420000.0
+                    },
+                    {
+                      "id": "p1",
+                      "x": 485600.0,
+                      "y": 4420000.0,
+                      "radius": 400.0,
+                      "spiralIn": 80.0,
+                      "spiralOut": 80.0
+                    },
+                    {
+                      "id": "b",
+                      "x": 486100.0,
+                      "y": 4420500.0
+                    }
+                  ],
+                  "stationing": {
+                    "start": 2000.0
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "Ters kurpta ove olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "name": "Yan yol",
+            "pis": [
+              {
+                "id": "a",
+                "x": 485000.0,
+                "y": 6000.0
+              },
+              {
+                "id": "p1",
+                "x": 485400.0,
+                "y": 6000.0,
+                "radius": 300.0,
+                "spiralIn": 60.0,
+                "spiralOut": 60.0,
+                "ove": true
+              },
+              {
+                "id": "p2",
+                "x": 485615.3548585885,
+                "y": 6180.70418241383,
+                "radius": 250.0,
+                "spiralIn": 50.0,
+                "spiralOut": 50.0
+              },
+              {
+                "id": "b",
+                "x": 485910.79718449217,
+                "y": 6128.60972911375
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_alignment",
+              "message": "p1 noktasında ove olamaz: iki kurp aynı yöne dönmeli (ters kurpta ove olmaz).",
+              "path": "pis[1]"
             }
           },
           "expect": {

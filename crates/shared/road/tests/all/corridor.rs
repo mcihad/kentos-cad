@@ -27,6 +27,7 @@ fn pis(v: &Value) -> Vec<PiInput> {
             radius: n(&p["radius"]),
             spiral_in: n(&p["spiralIn"]),
             spiral_out: n(&p["spiralOut"]),
+            ove: false,
         })
         .collect()
 }

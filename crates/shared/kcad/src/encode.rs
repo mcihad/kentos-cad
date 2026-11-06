@@ -2161,6 +2161,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 188 (docs/adr/0979): an alignment PI's ove.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_ove) {
+        return crate::SCHEMA_WITH_ROAD_OVE;
+    }
     // Schema 187 (docs/adr/0977): a road project's grades as rise over run (a reader of 186 would take them for percent).
     if doc.settings.road.as_ref().is_some_and(kentos_contracts::RoadSettings::has_grades) {
         return crate::SCHEMA_WITH_ROAD_GRADES;

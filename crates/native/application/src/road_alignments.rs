@@ -114,6 +114,38 @@ fn chain_stop(e: ChainError, field: &str, pis: &[PiInput]) -> Stop {
             ),
             &at(&b),
         ),
+        ChainError::BadOve { pi, why } => fail(
+            codes::INVALID_ALIGNMENT,
+            format!("{pi} noktasında ove olamaz: {}.", ove_why(why)),
+            &at(&pi),
+        ),
+        ChainError::OveTooLong { a, b, excess } => fail(
+            codes::ALIGNMENT_CURVES_OVERLAP,
+            format!(
+                "{a}–{b} arasına ove sığmıyor: en uzun ovede bile (ikinci kurbun yayı biter) ortadaki aliyman {excess:.3} m uzun kalıyor. PI'ları yaklaştırın ya da yarıçapları değiştirin."
+            ),
+            &at(&b),
+        ),
+        ChainError::OveAmbiguous { a, b, parameters } => fail(
+            codes::INVALID_ALIGNMENT,
+            format!(
+                "{a}–{b} arasında birden çok ove var (A = {}); hangisi istendiği PI'lar oynatılarak seçilmeli.",
+                parameters.iter().map(|v| format!("{v:.3}")).collect::<Vec<_>>().join(", ")
+            ),
+            &at(&b),
+        ),
+    }
+}
+
+/// Why an ove cannot be on a PI, as the refusal says it.
+pub fn ove_why(why: kentos_road::alignment::chain::OveWhy) -> &'static str {
+    use kentos_road::alignment::chain::OveWhy as W;
+    match why {
+        W::NoNextCurve => "kendisinin ve sonraki PI'nın kurpu olmalı, sonraki bitiş olamaz",
+        W::Reverse => "iki kurp aynı yöne dönmeli (ters kurpta ove olmaz)",
+        W::EqualRadii => "iki kurbun yarıçapı farklı olmalı",
+        W::SpiralOnSharedSide => "ilk kurbun çıkış ve ikincinin giriş klotoidi olmamalı, ove onların yerine geçer",
+        W::Chained => "art arda iki ove henüz kurulmuyor",
     }
 }
 
@@ -127,6 +159,7 @@ pub(crate) fn pis_of(def: &AlignmentDef) -> Vec<PiInput> {
             radius: p.radius,
             spiral_in: p.spiral_in,
             spiral_out: p.spiral_out,
+            ove: p.ove,
         })
         .collect()
 }
@@ -407,6 +440,7 @@ pub(crate) fn report(doc: &Document, def: &AlignmentDef, built: &Built) -> Align
             .map(|j| AlignmentJoinRow {
                 between: j.between.clone(),
                 reverse: j.reverse,
+                ove: j.ove.map(|o| kentos_commands::AlignmentOveRow { a: o.a, length: o.length, station: o.station, gap: o.gap }),
             })
             .collect(),
         residual: c.residual.place,

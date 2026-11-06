@@ -158,7 +158,7 @@ fn check(doc: &Document, input: &AlignmentsFit) -> Result<Checked, Stop> {
         revision: 1,
         pis: pis
             .iter()
-            .map(|p| AlignmentPi { id: p.id.clone(), x: p.x, y: p.y, radius: p.radius, spiral_in: 0.0, spiral_out: 0.0 })
+            .map(|p| AlignmentPi { id: p.id.clone(), x: p.x, y: p.y, radius: p.radius, spiral_in: 0.0, spiral_out: 0.0, ove: false })
             .collect(),
         offset_of: None,
         stationing: (start != 0.0).then(|| AlignmentStationing { start, equations: Vec::new() }),

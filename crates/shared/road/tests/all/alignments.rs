@@ -31,6 +31,7 @@ pub fn pis(v: &Value) -> Vec<PiInput> {
             radius: n(&p["radius"]),
             spiral_in: n(&p["spiralIn"]),
             spiral_out: n(&p["spiralOut"]),
+            ove: p["ove"].as_bool().unwrap_or(false),
         })
         .collect()
 }
@@ -45,6 +46,9 @@ fn error_kind(e: &ChainError) -> &'static str {
         ChainError::TurnTooSharp { .. } => "TurnTooSharp",
         ChainError::SpiralsLong { .. } => "SpiralsLong",
         ChainError::CurvesOverlap { .. } => "CurvesOverlap",
+        ChainError::BadOve { .. } => "BadOve",
+        ChainError::OveTooLong { .. } => "OveTooLong",
+        ChainError::OveAmbiguous { .. } => "OveAmbiguous",
     }
 }
 
@@ -72,6 +76,22 @@ fn every_case_is_what_the_reference_says() {
                     assert_eq!(pi, want["pi"].as_str().unwrap());
                     near(*turn, n(&want["turn"]), ANGLE, name);
                     near(*delta, n(&want["delta"]), ANGLE, name);
+                }
+                ChainError::BadOve { pi, why } => {
+                    assert_eq!(pi, want["pi"].as_str().unwrap(), "{name}");
+                    assert_eq!(format!("{why:?}"), want["why"].as_str().unwrap(), "{name}");
+                }
+                ChainError::OveTooLong { a, b, excess } => {
+                    assert_eq!((a.as_str(), b.as_str()), (want["a"].as_str().unwrap(), want["b"].as_str().unwrap()));
+                    near(*excess, n(&want["excess"]), PLACE, name);
+                }
+                ChainError::OveAmbiguous { a, b, parameters } => {
+                    assert_eq!((a.as_str(), b.as_str()), (want["a"].as_str().unwrap(), want["b"].as_str().unwrap()));
+                    let w = want["parameters"].as_array().unwrap();
+                    assert_eq!(parameters.len(), w.len(), "{name}");
+                    for (p, q) in parameters.iter().zip(w) {
+                        near(*p, n(q), 1e-6, name);
+                    }
                 }
                 ChainError::TurnTooSharp { pi }
                 | ChainError::SamePlace { pi }
@@ -138,6 +158,20 @@ fn every_case_is_what_the_reference_says() {
             })
             .collect();
         assert_eq!(joins, want, "{name}: joins");
+        // Docs/adr/0979: the ove's A solved on the PIs, its length, where it starts and the circles' gap.
+        for (j, w) in al.joins.iter().zip(c["joins"].as_array().unwrap()) {
+            match (&j.ove, w.get("ove")) {
+                (None, None) => {}
+                (Some(o), Some(w)) => {
+                    let what = format!("{name} ove");
+                    near(o.a, n(&w["a"]), 1e-6, &what);
+                    near(o.length, n(&w["length"]), PLACE, &what);
+                    near(o.station, n(&w["station"]), PLACE, &what);
+                    near(o.gap, n(&w["gap"]), PLACE, &what);
+                }
+                (got, want) => panic!("{name}: ove {got:?} against {want:?}"),
+            }
+        }
         for w in c["at"].as_array().unwrap() {
             let s = n(&w["station"]);
             let got = al.at(s).unwrap_or_else(|| panic!("{name}: at {s}"));
@@ -322,7 +356,7 @@ fn picture() {
 /// (docs/adr/0970); its outer side holds. A cusp names its element and its tightest radius.
 #[test]
 fn a_kinks_inner_offset_crosses_at_the_textbook_stations() {
-    let p = |id: &str, x: f64, y: f64, radius: f64| PiInput { id: id.into(), x, y, radius, spiral_in: 0.0, spiral_out: 0.0 };
+    let p = |id: &str, x: f64, y: f64, radius: f64| PiInput { id: id.into(), x, y, radius, spiral_in: 0.0, spiral_out: 0.0, ove: false };
     let kinked = build(&[p("a", 0.0, 0.0, 0.0), p("p1", 600.0, 0.0, 0.0), p("b", 1100.0, 500.0, 0.0)]).expect("builds");
     for d in [-0.3f64, -7.5, -40.0] {
         let reach = d.abs() * (std::f64::consts::PI / 8.0).tan();

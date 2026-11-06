@@ -41,6 +41,7 @@ fn the_crossings_and_the_clip_are_the_references() {
                 radius: n(&p["radius"]),
                 spiral_in: n(&p["spiralIn"]),
                 spiral_out: n(&p["spiralOut"]),
+                ove: false,
             })
             .collect();
         let al = build(&pis).expect("builds");
@@ -92,7 +93,7 @@ fn the_breaks_carry_the_ground_better_than_an_interval() {
         }
     }
     let s = surface::build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds");
-    let pi = |id: &str, x: f64, y: f64, r: f64, l: f64| PiInput { id: id.into(), x: x0 + x, y: y0 + y, radius: r, spiral_in: l, spiral_out: l };
+    let pi = |id: &str, x: f64, y: f64, r: f64, l: f64| PiInput { id: id.into(), x: x0 + x, y: y0 + y, radius: r, spiral_in: l, spiral_out: l, ove: false };
     let al = build(&[pi("a", 60.0, 90.0, 0.0, 0.0), pi("p1", 470.0, 330.0, 300.0, 60.0), pi("b", 860.0, 250.0, 0.0, 0.0)]).unwrap();
     let profile = ground_breaks(&s, &al, 0.0, al.length);
     // The largest and the root-mean-square height error at the breaks of the linear reading through `kept`.

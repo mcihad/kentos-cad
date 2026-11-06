@@ -521,3 +521,99 @@ fn screens_offset_fix() {
         shot(&mut app, "kirik");
     }
 }
+
+/// The ove (docs/adr/0979): the alignment of `road.alignments.create`'s ove case, R 500 into R 200 on the PIs the
+/// reference built from A = 250.
+fn ove_app() -> App {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.alignments.create.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ove: R 500'den R 200'e").expect("the case");
+    let pis = case["steps"][0]["input"]["pis"].clone();
+    app(serde_json::json!([{"id": "g-1", "name": "Oveli aks", "revision": 1, "pis": pis}]))
+}
+
+/// Where the ove case's PIs are, with room round them (the drawing's own line is the other alignment's).
+fn ove_bounds() -> kentos_render_wgpu::Bounds {
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.alignments.create.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ove: R 500'den R 200'e").expect("the case");
+    let pts: Vec<[f64; 2]> = case["steps"][0]["input"]["pis"]
+        .as_array()
+        .expect("pis")
+        .iter()
+        .map(|p| [p["x"].as_f64().unwrap_or(0.0), p["y"].as_f64().unwrap_or(0.0)])
+        .collect();
+    let (x0, x1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p[0]), b.max(p[0])));
+    let (y0, y1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p[1]), b.max(p[1])));
+    kentos_render_wgpu::Bounds { min_x: x0 - 50.0, min_y: y0 - 150.0, max_x: x1 + 50.0, max_y: y1 + 50.0 }
+}
+
+/// The Ove column: ticked, the status says the A the PIs solve (250, as built) and its length; unticked, the two
+/// curves are a compound pair with a tangent; saved so, the PI loses its ove, and one undo step brings it back.
+#[test]
+fn an_ove_is_ticked_solved_and_saved() {
+    let mut app = ove_app();
+    let _ = app.update(Message::Run("alignment.editor"));
+    send(&mut app, W::Choose(0));
+    let said = |app: &App| -> String { app.alignment_window.as_ref().map(crate::alignment_window::status_of).unwrap_or_default() };
+    // The PIs are the reference's built from A = 250, kept as the project holds them (not their three decimals).
+    assert!(said(&app).contains("p1–p2 ovesi A 250,000 m, L 187,500 m, daireler arası 4,363 m"), "{}", said(&app));
+    assert!(app.alignment_window.as_ref().is_some_and(|w| w.impact.is_none()), "unchanged PIs move no station");
+    send(&mut app, W::PiOve(1));
+    assert!(!said(&app).contains("ovesi"), "{}", said(&app));
+    send(&mut app, W::Save);
+    assert!(!alignments(&app)[0].pis[1].ove, "saved without the ove");
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    assert_eq!(doc.undo().as_deref(), Some("Aksı düzenle"));
+    assert!(alignments(&app)[0].pis[1].ove, "one undo step brings it back");
+}
+
+/// The ove in the window and on the plan, wide and narrow, light and dark; `.run/gui-evidence/yol-y72/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib alignment_window_tests::screens_ove -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_ove() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y72");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = ove_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y72-ove-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::PiOve(1));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y72-ovesiz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        // The ove's km on the plan (`road.alignments.label`): the line through both curves and the ove between.
+        send(&mut app, W::PiOve(1));
+        send(&mut app, W::LabelLayer("km".into()));
+        send(&mut app, W::Label);
+        let _ = app.update(Message::Alignments(W::Cancel));
+        app.viewport.camera.fit(&ove_bounds(), 24.0);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y72-ove-planda-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+

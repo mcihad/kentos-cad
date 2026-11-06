@@ -20,4 +20,9 @@ spiralIn?: number,
 /**
  * The exit clothoid's length; absent or 0: none.
  */
-spiralOut?: number, };
+spiralOut?: number, 
+/**
+ * The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
+ * schema 188): both curves turn the same way, of different radii, with no clothoid on the side they share.
+ */
+ove?: boolean, };

@@ -12896,14 +12896,18 @@ class AlignmentJoinRow(_Model):
     """Two curves with no tangent between them.
     Attributes:
         reverse: A reverse curve (S) when true, a compound curve when false.
+        ove: The ove clothoid between them when the first PI asks for one (docs/adr/0979).
     """
     between: list[str]
     reverse: bool
+    ove: AlignmentOveRow | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["between"] = list(self.between)
         out["reverse"] = self.reverse
+        if self.ove is not UNSET:
+            out["ove"] = None if self.ove is None else self.ove.to_json()
         return out
 
     @classmethod
@@ -12911,6 +12915,7 @@ class AlignmentJoinRow(_Model):
         return cls(
             between=list(data["between"]),
             reverse=data["reverse"],
+            ove=UNSET if "ove" not in data else None if data["ove"] is None else AlignmentOveRow.from_json(data["ove"]),
         )
 
 
@@ -13000,6 +13005,39 @@ class AlignmentOffset(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignmentOveRow(_Model):
+    """An ove clothoid (docs/adr/0979): its parameter A solved on the PIs, its length A²·|1/R2 − 1/R1|, the station it
+    starts at and the least gap between the two circles (an ove exists only while it is above 0).
+    Attributes:
+        a: Unit: m.
+        length: Unit: m.
+        station: Unit: m.
+        gap: Unit: m.
+    """
+    a: float
+    length: float
+    station: float
+    gap: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = float(self.a)
+        out["length"] = float(self.length)
+        out["station"] = float(self.station)
+        out["gap"] = float(self.gap)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignmentOveRow:
+        return cls(
+            a=float(data["a"]),
+            length=float(data["length"]),
+            station=float(data["station"]),
+            gap=float(data["gap"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AlignmentPi(_Model):
     """A PI of an alignment (docs/adr/0901 §2): its persistent id, its place, and the curve on it. The first and the last
     are the alignment's start and end and carry no curve.
@@ -13007,6 +13045,8 @@ class AlignmentPi(_Model):
         id: Unique in the alignment; the elements' ids come from it (`p3/kurp`).
         x: Unit: m.
         y: Unit: m.
+        ove: The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
+            schema 188): both curves turn the same way, of different radii, with no clothoid on the side they share.
         radius: The curve's radius; absent or 0: no curve (a kink). Unit: m.
         spiral_in: The entry clothoid's length; absent or 0: none. Unit: m.
         spiral_out: The exit clothoid's length; absent or 0: none. Unit: m.
@@ -13014,6 +13054,7 @@ class AlignmentPi(_Model):
     id: str
     x: float
     y: float
+    ove: bool | Unset = UNSET
     radius: float | Unset = UNSET
     spiral_in: float | Unset = UNSET
     spiral_out: float | Unset = UNSET
@@ -13023,6 +13064,8 @@ class AlignmentPi(_Model):
         out["id"] = self.id
         out["x"] = float(self.x)
         out["y"] = float(self.y)
+        if self.ove is not UNSET:
+            out["ove"] = self.ove
         if self.radius is not UNSET:
             out["radius"] = float(self.radius)
         if self.spiral_in is not UNSET:
@@ -13037,6 +13080,7 @@ class AlignmentPi(_Model):
             id=data["id"],
             x=float(data["x"]),
             y=float(data["y"]),
+            ove=data.get("ove", UNSET),
             radius=float(data["radius"]) if "radius" in data else UNSET,
             spiral_in=float(data["spiralIn"]) if "spiralIn" in data else UNSET,
             spiral_out=float(data["spiralOut"]) if "spiralOut" in data else UNSET,
@@ -116243,6 +116287,7 @@ __all__ = [
     "AlignmentLabelRow",
     "AlignmentListed",
     "AlignmentOffset",
+    "AlignmentOveRow",
     "AlignmentPi",
     "AlignmentPlace",
     "AlignmentReport",

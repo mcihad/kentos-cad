@@ -117,9 +117,9 @@ fn the_steady_state_bounds_the_drive() {
     ] {
         let d: f64 = f64::to_radians(deflection);
         let pis = vec![
-            PiInput { id: "a".into(), x: -400.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 },
-            PiInput { id: "p".into(), x: 0.0, y: 0.0, radius, spiral_in: spiral, spiral_out: spiral },
-            PiInput { id: "b".into(), x: 400.0 * d.cos(), y: 400.0 * d.sin(), radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 },
+            PiInput { id: "a".into(), x: -400.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
+            PiInput { id: "p".into(), x: 0.0, y: 0.0, radius, spiral_in: spiral, spiral_out: spiral, ove: false },
+            PiInput { id: "b".into(), x: 400.0 * d.cos(), y: 400.0 * d.sin(), radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
         ];
         let al = build(&pis).expect("builds");
         let n = (al.length / 0.25).ceil() as usize;

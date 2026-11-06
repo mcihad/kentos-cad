@@ -120,6 +120,7 @@ __all__ = [
     "AlignmentLabelRow",
     "AlignmentListed",
     "AlignmentOffset",
+    "AlignmentOveRow",
     "AlignmentPi",
     "AlignmentPlace",
     "AlignmentReport",

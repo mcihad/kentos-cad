@@ -242,6 +242,28 @@ pub struct AlignmentJoinRow {
     pub between: [String; 2],
     /// A reverse curve (S) when true, a compound curve when false.
     pub reverse: bool,
+    /// The ove clothoid between them when the first PI asks for one (docs/adr/0979).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ove: Option<AlignmentOveRow>,
+}
+
+/// An ove clothoid (docs/adr/0979): its parameter A solved on the PIs, its length A²·|1/R2 − 1/R1|, the station it
+/// starts at and the least gap between the two circles (an ove exists only while it is above 0).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AlignmentOveRow {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub a: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub gap: f64,
 }
 
 /// An alignment as it builds now.

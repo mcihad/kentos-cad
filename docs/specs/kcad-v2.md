@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `187`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-188.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `188`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-189.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -831,6 +831,10 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `unknown_field`, satır sonlu hücreyi `bad_value` ile reddeder. Örnek `table-extraction.kcad`; eski şemada
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
+
+**Şema 188** (ADR 0979; ROAD-ALIGN-15): aks noktasının `ove`'si (mantıksal; yalnız `true` yazılır): o noktanın kurbu bir
+sonraki noktanın kurbuna bir ove klotoidiyle bağlanır, A PI'lardan çözülür. Yazıcı 188'i bir aks noktası `ove` taşıyınca
+seçer; 187 ve öncesi alanı `unknown_field` sayar (`broken/road-ove-in-schema-187.kcad`). Örnek `road-ove.json/.kcad`.
 
 **Şema 187** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

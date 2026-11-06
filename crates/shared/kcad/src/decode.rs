@@ -667,6 +667,11 @@ pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
     road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
 }
 
+/// Whether road settings carry schema 188's field: an alignment PI's ove (docs/adr/0979).
+pub(crate) fn road_has_ove(road: &kentos_contracts::RoadSettings) -> bool {
+    road.alignments.iter().any(|a| a.pis.iter().any(|p| p.ove))
+}
+
 /// Whether road settings carry schema 167's field: a superelevation's axis of rotation (docs/adr/0931 §2).
 pub(crate) fn road_has_pivot(road: &kentos_contracts::RoadSettings) -> bool {
     road.superelevations.iter().any(|s| s.pivot.is_some())
@@ -1460,6 +1465,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_pavement && road_has_pavement(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "tip kesitin üstyapısı ve kübajın kuralı şema 166 ister"));
+                }
+                if !has.road_ove && road_has_ove(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "aks noktasının ovesi şema 188 ister"));
                 }
                 if !has.road_pivot && road_has_pivot(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 167 ister"));

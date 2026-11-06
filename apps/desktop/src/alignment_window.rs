@@ -60,6 +60,11 @@ const LABEL: &str = "Km'yi çizime yaz";
 pub struct PiRow {
     id: String,
     texts: [String; 5],
+    /// An ove clothoid to the next PI's curve (docs/adr/0979).
+    ove: bool,
+    /// The values as the project holds them: a text still showing one is that value, not its three decimals (a PI
+    /// moved by the rounding moves an ove's solved A, docs/adr/0979 §4).
+    kept: [f64; 5],
 }
 
 /// An equation as typed.
@@ -115,6 +120,8 @@ impl Row {
                 .map(|p| PiRow {
                     id: p.id.clone(),
                     texts: [trimmed(p.x), trimmed(p.y), text(p.radius), text(p.spiral_in), text(p.spiral_out)],
+                    ove: p.ove,
+                    kept: [p.x, p.y, p.radius, p.spiral_in, p.spiral_out],
                 })
                 .collect(),
             start: if d.stationing.is_some() { trimmed(st.start) } else { String::new() },
@@ -137,6 +144,11 @@ impl Row {
         for (i, p) in self.pis.iter().enumerate() {
             let mut v = [0.0; 5];
             for (j, t) in p.texts.iter().enumerate() {
+                let shown = if j < 2 { trimmed(p.kept[j]) } else { text(p.kept[j]) };
+                if *t == shown {
+                    v[j] = p.kept[j];
+                    continue;
+                }
                 v[j] = match number(t) {
                     Ok(Some(n)) => n,
                     Ok(None) if j >= 2 => 0.0,
@@ -150,6 +162,7 @@ impl Row {
                 radius: v[2],
                 spiral_in: v[3],
                 spiral_out: v[4],
+                ove: p.ove,
             });
         }
         let stationing = if self.parallel.is_some() {
@@ -219,6 +232,8 @@ pub enum Event {
     Start(String),
     PiChoose(usize),
     Pi(usize, usize, String),
+    /// The PI's ove to the next curve turned on or off (docs/adr/0979).
+    PiOve(usize),
     PiAdd,
     PiRemove,
     FromSelection,
@@ -317,6 +332,7 @@ fn status(rows: &[Row], r: &Row) -> (String, bool) {
             radius: p.radius,
             spiral_in: p.spiral_in,
             spiral_out: p.spiral_out,
+            ove: p.ove,
         })
         .collect();
     let al = match core::build(&pis) {
@@ -346,6 +362,19 @@ fn status(rows: &[Row], r: &Row) -> (String, bool) {
     );
     if joins > 0 {
         words.push_str(&format!(" · {joins} ters kurp"));
+    }
+    // Docs/adr/0979: each ove's A solved on the PIs, its length and the circles' gap.
+    for j in &al.joins {
+        if let Some(o) = &j.ove {
+            words.push_str(&format!(
+                " · {}–{} ovesi A {} m, L {} m, daireler arası {} m",
+                j.between[0],
+                j.between[1],
+                comma(o.a),
+                comma(o.length),
+                comma(o.gap)
+            ));
+        }
     }
     // Continuity (docs/adr/0967): kinks (a direction jump) and curvature jumps (a circular curve without a clothoid),
     // else G2 throughout.
@@ -382,6 +411,12 @@ fn chain_words(e: &core::ChainError) -> String {
             "{a}–{b} aliymanına kurplar sığmıyor, {} m taşıyor",
             format!("{excess:.3}").replace('.', ",")
         ),
+        E::BadOve { pi, why } => format!("{pi} noktasında ove olamaz: {}", kentos_native_application::road_alignments::ove_why(*why)),
+        E::OveTooLong { a, b, excess } => format!(
+            "{a}–{b} arasına ove sığmıyor, ortadaki aliyman {} m uzun",
+            format!("{excess:.3}").replace('.', ",")
+        ),
+        E::OveAmbiguous { a, b, .. } => format!("{a}–{b} arasında birden çok ove var; PI'ları oynatın"),
     }
 }
 
@@ -467,7 +502,7 @@ impl App {
                     pis: if parallel {
                         Vec::new()
                     } else {
-                        ["a", "b"].iter().map(|id| PiRow { id: (*id).to_owned(), texts: Default::default() }).collect()
+                        ["a", "b"].iter().map(|id| PiRow { id: (*id).to_owned(), texts: Default::default(), ove: false, kept: [f64::NAN; 5] }).collect()
                     },
                     start: String::new(),
                     equations: Vec::new(),
@@ -500,6 +535,12 @@ impl App {
                 }
             }
             Event::PiChoose(j) => w.pi = Some(j),
+            Event::PiOve(j) => {
+                if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pis.get_mut(j)) {
+                    p.ove = !p.ove;
+                }
+                w.pi = Some(j);
+            }
             Event::Pi(j, k, t) => {
                 if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pis.get_mut(j)) {
                     if k == 5 {
@@ -516,7 +557,7 @@ impl App {
                     let id = (1..).map(|n| format!("p{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
                     // Before the end, or after the chosen row.
                     let at = w.pi.map_or(r.pis.len().saturating_sub(1), |j| (j + 1).min(r.pis.len().saturating_sub(1))).max(1);
-                    r.pis.insert(at.min(r.pis.len()), PiRow { id, texts: Default::default() });
+                    r.pis.insert(at.min(r.pis.len()), PiRow { id, texts: Default::default(), ove: false, kept: [f64::NAN; 5] });
                     w.pi = Some(at);
                 }
             }
@@ -543,6 +584,8 @@ impl App {
                                 format!("p{i}")
                             },
                             texts: [trimmed(p[0]), trimmed(p[1]), String::new(), String::new(), String::new()],
+                            ove: false,
+                            kept: [p[0], p[1], 0.0, 0.0, 0.0],
                         })
                         .collect();
                 }
@@ -964,15 +1007,32 @@ impl App {
                 let pis = &r.pis;
                 let fill = |title| road_dialog::Col { title, width: None, number: true };
                 let table = road_dialog::edit_table(
-                    vec![road_dialog::col("PI", 80.0), fill("Y (m)"), fill("X (m)"), fill("R (m)"), fill("L giriş (m)"), fill("L çıkış (m)")],
+                    vec![
+                        road_dialog::col("PI", 80.0),
+                        fill("Y (m)"),
+                        fill("X (m)"),
+                        fill("R (m)"),
+                        fill("L giriş (m)"),
+                        fill("L çıkış (m)"),
+                        road_dialog::col("Ove", 56.0),
+                    ],
                     pis.len(),
                     move |j, k| {
                         let p = &pis[j];
                         let end = j == 0 || j + 1 == pis.len();
                         match k {
                             0 => road_dialog::edit(&p.id, false, move |t| msg(Event::Pi(j, 5, t))),
-                            // The ends have no curve: their R and spirals are not typed.
+                            // The ends have no curve: their R and spirals are not typed; the PI before the end has no
+                            // curve after it to run into.
                             k if end && k >= 3 => kentos_ui::widget::table::text("—").into(),
+                            6 if j + 2 >= pis.len() => kentos_ui::widget::table::text("—").into(),
+                            6 => container(crate::style::fields::check(
+                                if p.ove { kentos_ui::widget::tree_view::Check::Checked } else { kentos_ui::widget::tree_view::Check::Unchecked },
+                                "",
+                                Some(msg(Event::PiOve(j))),
+                            ))
+                            .center_x(Fill)
+                            .into(),
                             k => road_dialog::edit(&p.texts[k - 1], true, move |t| msg(Event::Pi(j, k - 1, t))),
                         }
                     },

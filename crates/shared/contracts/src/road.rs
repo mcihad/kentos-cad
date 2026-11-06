@@ -517,6 +517,11 @@ pub struct AlignmentPi {
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_out: f64,
+    /// The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
+    /// schema 188): both curves turn the same way, of different radii, with no clothoid on the side they share.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub ove: bool,
 }
 
 /// A parallel axis's source (docs/adr/0901 §8): the alignment and how far right of it (left negative).
@@ -3718,8 +3723,8 @@ mod tests {
             name: "Ana aks".into(),
             revision: 1,
             pis: vec![
-                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 },
-                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0 },
+                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
+                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
             ],
             offset_of: None,
             stationing: None,
