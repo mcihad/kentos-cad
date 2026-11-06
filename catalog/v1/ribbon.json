@@ -347,7 +347,8 @@
        "tool.reverse",
        "tool.matchProperties",
        "tool.vertex",
-       "tool.reshape"
+       "tool.reshape",
+       "cad.flatten"
       ],
       "launcher": {
        "tab": "modify",
@@ -1443,6 +1444,7 @@
       ],
       "overflow": [
        "leader.addArm",
+       "leader.bindTip",
        "leader.removeArm",
        "leader.align",
        "leader.collect",
@@ -1510,6 +1512,10 @@
          "map",
          "road"
         ]
+       },
+       {
+        "command": "review.notes",
+        "size": "small"
        }
       ]
      },
