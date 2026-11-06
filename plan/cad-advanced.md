@@ -2599,6 +2599,14 @@ ve aynı içerikli blok tanımlarını birleştirir (yerleştirmeler tutulan tan
 uygulanan tarifi sırası, eşikleri ve kapsamıyla verir. CAD denetiminde **Eksene döndür** ve **Tek tanımda birleştir**.
 41 bağımsız vaka ilk koşuda geçti. Açık: ayrı kurtarma kopyası, kısmi okuma, çoklu çizgi kenarı; madde `[~]`.
 
+**Bozuk çizimin ayrı kopyaya kurtarılması (6 Kasım 2026, [ADR 1013](../docs/adr/1013-recovering-a-damaged-kcad-into-a-separate-copy.md)):**
+`file.recover` ve Dosya › **Kurtar**: katı okuyucunun reddettiği `.kcad` (özeti tutmayan, kesik, bozuk nesneli) ayrı
+bir okuyucuyla açılır; kurtarılan her parça katı okuyucudan geçer, çıkarılan bölüm ve nesne okuyucunun sözüyle ve
+kalıcı kimliğiyle listelenir, kesikte kaybolan ayarlar boş çizimin değeriyle konur ve söylenir. Kopya
+`<ad>-kurtarilan.kcad` olarak yazılır, kaynak yalnız okunur. 22 bağımsız vaka ve yapıdan beklentili testler geçti;
+ilk koşu kesikten sonra sahte nesne okuyan bir hatayı gösterdi, düzeltildi. Açık: blok tanımı düzeyinde bölme, gerçek
+disk dolu senaryosu; madde `[~]`.
+
 ### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [~]
 
 **Öncelik:** P0; diğer maddeler boyunca uygulanır. **Kod:** [C05], [C13], [C31].

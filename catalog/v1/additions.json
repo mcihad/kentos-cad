@@ -1609,6 +1609,20 @@
       "status": "implemented"
     },
     {
+      "id": "file.recover",
+      "title": "Bozuk çizimi kurtar…",
+      "short": "Kurtar",
+      "icon": "audit",
+      "description": "Normal açılışın reddettiği bir .kcad dosyasından okunabilen her şeyi ayrı bir kopyaya (<ad>-kurtarilan.kcad) yazar ve açar; kaynak dosyaya dokunulmaz. Okunmayan çizim bölümleri ve nesneler kalıcı kimlikleri ve nedenleriyle Komut geçmişinde listelenir; kesik dosyada kaybolan ayarlar boş çizimin değeriyle konur ve söylenir. file.recover ile.",
+      "aliases": [
+        "RECOVER",
+        "KURTAR"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
       "id": "file.package",
       "title": "Paketle…",
       "icon": "projectPack",

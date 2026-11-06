@@ -289,6 +289,13 @@
     "file.export.geojson": {
       "level": "none"
     },
+    "file.recover": {
+      "level": "semantic",
+      "via": [
+        "file.recover"
+      ],
+      "note": "Kurtar file.recover'ı yürütür (ADR 1013): kopyayı kaynağın yanına yazar, sonucu Komut geçmişine yazar ve kopyayı açar."
+    },
     "file.package": {
       "level": "semantic",
       "via": [

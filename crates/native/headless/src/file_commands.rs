@@ -1150,6 +1150,11 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
         let typed:kentos_commands::PublishSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
         return Ok(crate::publish::run(doc,&typed,op,progress));
     }
+    if command == kentos_commands::FILE_RECOVER {
+        // Kurtar (docs/adr/1013): from file to file; the open drawing is not read or written.
+        let typed: kentos_commands::RecoverKcad = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        return Ok((crate::recover::run(&typed, op), None));
+    }
     if command==kentos_commands::FILE_PUBLISH_STATUS {
         let typed:kentos_commands::PublishStatus=serde_json::from_value(input).map_err(|e|e.to_string())?;
         return Ok((crate::publish_status::run(doc,&typed,op,progress),None));
@@ -1787,6 +1792,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_ATLAS => FILE_EXPORT_ATLAS_VERSION,
         kentos_commands::FILE_EXPORT_GIS => kentos_commands::FILE_EXPORT_GIS_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
+        kentos_commands::FILE_RECOVER => kentos_commands::FILE_RECOVER_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
 }
@@ -1863,6 +1869,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         kentos_commands::FILE_PUBLISH_SHEETS=>serde_json::from_value::<kentos_commands::PublishSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         kentos_commands::FILE_PUBLISH_STATUS=>serde_json::from_value::<kentos_commands::PublishStatus>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_RECOVER => serde_json::from_value::<kentos_commands::RecoverKcad>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         _ => serde_json::from_value::<ExportPdf>(input.clone())

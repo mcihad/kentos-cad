@@ -1744,6 +1744,7 @@ codes! {
     TABLE_EXISTS = "table_exists", Failed, false, "Dosyada aynı adlı tablo var; üzerine yazmak için replaceTables isteyin ya da başka bir ad verin. Dosyaya dokunulmadı.";
     /// A file to read that is not there (`file.import.dxf`, docs/adr/0257 §3).
     FILE_NOT_FOUND = "file_not_found", Failed, false, "Okunacak dosya yok.";
+    KCAD_UNRECOVERABLE = "kcad_unrecoverable", Failed, false, "Dosyadan bir çizim okunamıyor: başlığı ya da çizimin zorunlu bir bölümü bozuk; kurtarılacak bir şey yok.";
     /// A file to import that cannot be read as its format.
     /// An irreversible polyline conversion needs explicit acceptance.
     POLYLINE_GEOMETRY_LOSS = "polyline_geometry_loss", Failed, false, "Çoklu çizginin genişliği, yayı veya kotu kayıpsız aktarılamıyor; seçenekleri düzeltin veya önce plan üzerinde allowPolylineLoss=true ile ayrıntılı kayıp raporunu inceleyin.";

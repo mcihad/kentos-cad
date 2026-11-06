@@ -14381,6 +14381,34 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // Kurtar (docs/adr/1013), held by fixtures/commands/v1/file.recover.json.
+        CommandDescriptor {
+            id: crate::FILE_RECOVER.into(),
+            version: crate::FILE_RECOVER_VERSION,
+            title: "Bozuk çizimi kurtar".into(),
+            summary: "Normal okuyucunun açmadığı bir .kcad dosyasından (path) okunabilen her şeyi ayrı bir kopyaya yazar (target; verilmezse kaynağın yanında <ad>-kurtarilan.kcad). Kaynak yalnız okunur, üzerine hiçbir zaman yazılmaz; kopya var olan bir dosyanın üzerine yazılmaz (file_exists). \
+                      Özeti tutmayan, kesik ya da sonunda fazla baytı olan dosya da okunur; yük kesildiği yere kadar okunur. Kurtarılan her parça normal okuyucunun bütün kurallarından geçer: okunmasını engelleyen çizim bölümü (document.<anahtar>) ve tek başına okunmayan nesne (entities[i], kalıcı kimliğiyle) çıkarılır, okuyucunun kendi koduyla ve sözüyle lost'ta listelenir. Kesik dosyada kaybolan zorunlu bölümler (ayarlar, etkin katman) boş çizimin değeriyle konur ve söylenir: koordinat sistemi bilinmez, yeniden atanmalıdır. \
+                      Sağlam okunan dosya whole: true ile söylenir, kopya yazılmaz. plan yazmadan söyler. Açık çizimi değiştirmez, geri alma adımı değildir. \
+                      Retler: invalid_file_path, file_not_found, file_exists, kcad_unrecoverable, file_unwritable."
+                .into(),
+            aliases: vec!["kurtar".into(), "recover".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RecoverKcad>(),
+            output: schema::<crate::KcadRecovered>(),
+            plan: Some(schema::<crate::KcadRecovered>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bozuk çizimin kurtarılan kopyası".into(),
+                input: json!({ "path": "/tmp/pafta.kcad" }),
+                output: None,
+            }],
+        },
         // WBLOCK (docs/adr/0316 §3).
         CommandDescriptor {
             id: crate::FILE_EXPORT_BLOCK.into(),
@@ -15211,6 +15239,9 @@ mod tests {
                     }
                     crate::FILE_EXPORT_BLOCK => {
                         serde_json::from_value::<crate::ExportBlock>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_RECOVER => {
+                        serde_json::from_value::<crate::RecoverKcad>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_SERVICE => {
                         serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())

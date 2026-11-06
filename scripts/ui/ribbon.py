@@ -154,7 +154,7 @@ def file_tab(cad):
                [EXPORT, S("file.takeFrom"), S("file.saveSelection")]
     return T("file", "Dosya", [
         P("Proje", "fileNew", [L("file.new"), L("file.open"), S("file.start")]),
-        P("Kaydet", "save", [L("file.save"), S("file.saveAs"), S("file.package")]),
+        P("Kaydet", "save", [L("file.save"), S("file.saveAs"), S("file.package"), S("file.recover")]),
         P("Çizimler", "docTabOpen", [S("file.openTab"), S("file.nextTab"), S("file.closeTab")]),
         P("Bulut", "cloud", [L("cloud.open"), L("cloud.upload"), S("cloud.share"), S("cloud.history"), S("cloud.conflicts")],
           overflow=["cloud.uploadFile", "cloud.openNewest", "cloud.rename", "cloud.delete", "server.check"]),

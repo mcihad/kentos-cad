@@ -1,0 +1,608 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.recover",
+ "commandVersion": 1,
+ "host": "headless-file",
+ "title": "Bozuk çizimi kurtar",
+ "note": "ADR 1013. Bağımsız başvuru scripts/fixtures/recover_cases.py: hasarlar geçerli drawing.kcad'den bayt bayt yapılır, beklenen sonuç hasarın yapılışından ve tools/kcad/kcad.py'nin okuduğu kimliklerden gelir; KentOS kodu yok.",
+ "cases": [
+  {
+   "name": "Sağlam dosya: bütün, kopya yazılmaz",
+   "file": "butun.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": true,
+    "written": false,
+    "containerHas": [],
+    "objectsRead": 15,
+    "objectsKept": 15,
+    "lost": [],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "Sağlam dosya, yürüt: yine yazılmaz",
+   "file": "butun.kcad",
+   "op": "execute",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": true,
+    "written": false,
+    "containerHas": [],
+    "objectsRead": 15,
+    "objectsKept": 15,
+    "lost": [],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "Özeti tutmayan dosya: bütün nesneler gelir",
+   "file": "ozet.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "özeti tutmuyor"
+    ],
+    "objectsRead": 15,
+    "objectsKept": 15,
+    "lost": [],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "Sonunda fazla bayt: bütün nesneler gelir",
+   "file": "fazla.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "fazla bayt"
+    ],
+    "objectsRead": 15,
+    "objectsKept": 15,
+    "lost": [],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "1. nesne 0. nesnenin kimliğini taşıyor: yalnız o çıkar",
+   "file": "kimlik-1.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "özeti tutmuyor"
+    ],
+    "objectsRead": 15,
+    "objectsKept": 14,
+    "lost": [
+     {
+      "part": "entities[1]",
+      "uid": "0192f5a07c3e7d4a9b1e4c2f8a6d3e10",
+      "code": "duplicate_uid"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "7. nesne 6. nesnenin kimliğini taşıyor: yalnız o çıkar",
+   "file": "kimlik-7.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "özeti tutmuyor"
+    ],
+    "objectsRead": 15,
+    "objectsKept": 14,
+    "lost": [
+     {
+      "part": "entities[7]",
+      "uid": "0192f5a07c407002ae528061cea17254",
+      "code": "duplicate_uid"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "14. nesne 13. nesnenin kimliğini taşıyor: yalnız o çıkar",
+   "file": "kimlik-14.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "özeti tutmuyor"
+    ],
+    "objectsRead": 15,
+    "objectsKept": 14,
+    "lost": [
+     {
+      "part": "entities[14]",
+      "uid": "ffffffffffffffffffffffffffffffff",
+      "code": "duplicate_uid"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff"
+    ]
+   }
+  },
+  {
+   "name": "2. nesnenin içinde kesik: önceki 2 nesne gelir, ayarlar ve etkin katman yerine konur",
+   "file": "kesik-2.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "kesik"
+    ],
+    "objectsRead": 3,
+    "objectsKept": 2,
+    "lost": [
+     {
+      "part": "document.settings"
+     },
+     {
+      "part": "document.activeLayer"
+     },
+     {
+      "part": "entities[2]"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21"
+    ]
+   }
+  },
+  {
+   "name": "8. nesnenin içinde kesik: önceki 8 nesne gelir, ayarlar ve etkin katman yerine konur",
+   "file": "kesik-8.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "kesik"
+    ],
+    "objectsRead": 9,
+    "objectsKept": 8,
+    "lost": [
+     {
+      "part": "document.settings"
+     },
+     {
+      "part": "document.activeLayer"
+     },
+     {
+      "part": "entities[8]"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365"
+    ]
+   }
+  },
+  {
+   "name": "Başlıktan kısa dosya: kurtarılamaz",
+   "file": "baslik.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "kcad_unrecoverable",
+     "path": "path"
+    }
+   }
+  },
+  {
+   "name": "KCAD değil (JSON): kurtarılamaz",
+   "file": "json.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "kcad_unrecoverable",
+     "path": "path"
+    }
+   }
+  },
+  {
+   "name": "Plan yazmaz",
+   "file": "kimlik-7.kcad",
+   "op": "plan",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": false,
+    "containerHas": [
+     "özeti tutmuyor"
+    ],
+    "objectsRead": 15,
+    "objectsKept": 14,
+    "lost": [
+     {
+      "part": "entities[7]",
+      "uid": "0192f5a07c407002ae528061cea17254",
+      "code": "duplicate_uid"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "Doğrulama yazmaz",
+   "file": "kimlik-7.kcad",
+   "op": "validate",
+   "input": {},
+   "make": [],
+   "expect": {
+    "status": "completed",
+    "output": null
+   }
+  },
+  {
+   "name": "Yürüt: kopya kaynağın yanına yazılır, açılır",
+   "file": "kimlik-7.kcad",
+   "op": "execute",
+   "input": {},
+   "make": [],
+   "expect": {
+    "target": "$work:cizim-kurtarilan.kcad",
+    "whole": false,
+    "written": true,
+    "containerHas": [
+     "özeti tutmuyor"
+    ],
+    "objectsRead": 15,
+    "objectsKept": 14,
+    "lost": [
+     {
+      "part": "entities[7]",
+      "uid": "0192f5a07c407002ae528061cea17254",
+      "code": "duplicate_uid"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c41-7004-8074-a283e0c39476",
+     "0192f5a0-7c41-7005-9185-b394f1d4a587",
+     "0192f5a0-7c42-7006-a296-c4a502e5b698",
+     "0192f5a0-7c42-7007-b3a7-d5b613f6c7a9",
+     "0192f5a0-7c43-7008-84b8-e6c72407d8ba",
+     "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "00000000-0000-0000-0000-000000000001"
+    ]
+   }
+  },
+  {
+   "name": "Yürüt, verilen hedefe",
+   "file": "kesik-8.kcad",
+   "op": "execute",
+   "input": {
+    "target": "$work:baska.kcad"
+   },
+   "make": [],
+   "expect": {
+    "target": "$work:baska.kcad",
+    "whole": false,
+    "written": true,
+    "containerHas": [
+     "kesik"
+    ],
+    "objectsRead": 9,
+    "objectsKept": 8,
+    "lost": [
+     {
+      "part": "document.settings"
+     },
+     {
+      "part": "document.activeLayer"
+     },
+     {
+      "part": "entities[8]"
+     }
+    ],
+    "uids": [
+     "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10",
+     "0192f5a0-7c3e-7d4b-8a2f-5d3e9b7e4f21",
+     "0192f5a0-7c3f-7000-9c30-6e4fac8f5032",
+     "0192f5a0-7c3f-7001-8d41-7f50bd906143",
+     "3f2c8e1a-5b7d-4c9e-a1f0-2d6b8c4e7a95",
+     "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+     "0192f5a0-7c40-7002-ae52-8061cea17254",
+     "0192f5a0-7c40-7003-bf63-9172dfb28365"
+    ]
+   }
+  },
+  {
+   "name": "Kaynak göreli yol: ret",
+   "file": "ozet.kcad",
+   "op": "plan",
+   "input": {
+    "path": "cizim.kcad"
+   },
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "invalid_file_path",
+     "path": "path"
+    }
+   }
+  },
+  {
+   "name": "Kaynak .kcad değil: ret",
+   "file": "ozet.kcad",
+   "op": "plan",
+   "input": {
+    "path": "$work:cizim.dxf"
+   },
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "invalid_file_path",
+     "path": "path"
+    }
+   }
+  },
+  {
+   "name": "Hedef göreli: ret",
+   "file": "ozet.kcad",
+   "op": "plan",
+   "input": {
+    "target": "baska.kcad"
+   },
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "invalid_file_path",
+     "path": "target"
+    }
+   }
+  },
+  {
+   "name": "Hedef .kcad değil: ret",
+   "file": "ozet.kcad",
+   "op": "plan",
+   "input": {
+    "target": "$work:baska.txt"
+   },
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "invalid_file_path",
+     "path": "target"
+    }
+   }
+  },
+  {
+   "name": "Hedef kaynağın kendisi: ret",
+   "file": "ozet.kcad",
+   "op": "plan",
+   "input": {
+    "target": "$work:cizim.kcad"
+   },
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "invalid_file_path",
+     "path": "target"
+    }
+   }
+  },
+  {
+   "name": "Kaynak yok: ret",
+   "file": "ozet.kcad",
+   "op": "plan",
+   "input": {
+    "path": "$work:yok.kcad"
+   },
+   "make": [],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "file_not_found",
+     "path": "path"
+    }
+   }
+  },
+  {
+   "name": "Hedef zaten var: ret, üzerine yazılmaz",
+   "file": "ozet.kcad",
+   "op": "execute",
+   "input": {},
+   "make": [
+    "cizim-kurtarilan.kcad"
+   ],
+   "expect": {
+    "status": "failed",
+    "error": {
+     "code": "file_exists",
+     "path": "target"
+    }
+   }
+  }
+ ]
+}

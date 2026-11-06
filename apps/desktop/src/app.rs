@@ -579,6 +579,8 @@ pub enum Message {
     /// The Denetim tab (arch_audit.rs, docs/adr/0703).
     ArchAudit(crate::arch_audit::Event),
     CadInspection(crate::cad_inspection::Event),
+    /// Kurtar's file, picked (docs/adr/1013).
+    Recover(Option<std::path::PathBuf>),
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
     TopologyRules(crate::topology::rules::Event),
     /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
@@ -2433,6 +2435,8 @@ impl App {
             Message::Topology(event) => return self.topology_event(event),
             Message::ArchAudit(event) => return self.arch_audit_event(event),
             Message::CadInspection(event) => return self.cad_inspection_event(event),
+            Message::Recover(Some(path)) => return self.recover_path(path),
+            Message::Recover(None) => {}
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),
             Message::Address(event) => return self.address_event(event),
@@ -3213,6 +3217,7 @@ impl App {
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
             "file.open" => return self.leave(Then::Open),
+            "file.recover" => return self.recover_file(),
             "file.start" => self.open_start(),
             // A cloud project saves to the server (cloud/file.rs); Farklı kaydet writes a local file.
             "file.save"

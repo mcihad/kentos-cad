@@ -89284,6 +89284,177 @@
       ]
     },
     {
+      "id": "file.recover",
+      "version": 1,
+      "title": "Bozuk çizimi kurtar",
+      "summary": "Normal okuyucunun açmadığı bir .kcad dosyasından (path) okunabilen her şeyi ayrı bir kopyaya yazar (target; verilmezse kaynağın yanında <ad>-kurtarilan.kcad). Kaynak yalnız okunur, üzerine hiçbir zaman yazılmaz; kopya var olan bir dosyanın üzerine yazılmaz (file_exists). Özeti tutmayan, kesik ya da sonunda fazla baytı olan dosya da okunur; yük kesildiği yere kadar okunur. Kurtarılan her parça normal okuyucunun bütün kurallarından geçer: okunmasını engelleyen çizim bölümü (document.<anahtar>) ve tek başına okunmayan nesne (entities[i], kalıcı kimliğiyle) çıkarılır, okuyucunun kendi koduyla ve sözüyle lost'ta listelenir. Kesik dosyada kaybolan zorunlu bölümler (ayarlar, etkin katman) boş çizimin değeriyle konur ve söylenir: koordinat sistemi bilinmez, yeniden atanmalıdır. Sağlam okunan dosya whole: true ile söylenir, kopya yazılmaz. plan yazmadan söyler. Açık çizimi değiştirmez, geri alma adımı değildir. Retler: invalid_file_path, file_not_found, file_exists, kcad_unrecoverable, file_unwritable.",
+      "aliases": [
+        "kurtar",
+        "recover"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `file.recover` v1. Refusals, in order: `invalid_file_path` (`path` or `target` not an absolute `.kcad`\npath, or `target` the source itself), `file_not_found` (`path`), `file_exists` (`target`), `kcad_unrecoverable`\n(nothing of a drawing can be read), `file_unwritable`.",
+        "properties": {
+          "path": {
+            "description": "The damaged file: an absolute `.kcad` path.",
+            "type": "string"
+          },
+          "target": {
+            "description": "Where the recovered copy goes: an absolute `.kcad` path that is not there yet; absent: `<name>-kurtarilan.kcad`\nbeside the source.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "RecoverKcad",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.recover` v1.",
+        "properties": {
+          "container": {
+            "description": "What was wrong with the container, in words.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "lost": {
+            "description": "Each part left out or put in place, the drawing's parts first, then the objects in the file's order.",
+            "items": {
+              "$ref": "#/$defs/RecoveredLoss"
+            },
+            "type": "array"
+          },
+          "objectsKept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objectsRead": {
+            "description": "The objects the file held (as far as it could be read), and how many came back.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "target": {
+            "description": "The copy's path (written by an execute, unless the file was whole).",
+            "type": "string"
+          },
+          "whole": {
+            "description": "The file read whole: nothing to recover, no copy written.",
+            "type": "boolean"
+          },
+          "written": {
+            "description": "Whether this call wrote the copy.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "whole",
+          "written",
+          "container",
+          "objectsRead",
+          "objectsKept",
+          "lost"
+        ],
+        "title": "KcadRecovered",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.recover` v1.",
+        "properties": {
+          "container": {
+            "description": "What was wrong with the container, in words.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "lost": {
+            "description": "Each part left out or put in place, the drawing's parts first, then the objects in the file's order.",
+            "items": {
+              "$ref": "#/$defs/RecoveredLoss"
+            },
+            "type": "array"
+          },
+          "objectsKept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objectsRead": {
+            "description": "The objects the file held (as far as it could be read), and how many came back.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "target": {
+            "description": "The copy's path (written by an execute, unless the file was whole).",
+            "type": "string"
+          },
+          "whole": {
+            "description": "The file read whole: nothing to recover, no copy written.",
+            "type": "boolean"
+          },
+          "written": {
+            "description": "Whether this call wrote the copy.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "whole",
+          "written",
+          "container",
+          "objectsRead",
+          "objectsKept",
+          "lost"
+        ],
+        "title": "KcadRecovered",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "file_exists",
+          "kcad_unrecoverable",
+          "file_unwritable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bozuk çizimin kurtarılan kopyası",
+          "input": {
+            "path": "/tmp/pafta.kcad"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.block",
       "version": 1,
       "title": "Bloğu dosyaya yaz",
@@ -95072,6 +95243,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Okunacak dosya yok."
+    },
+    {
+      "code": "kcad_unrecoverable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyadan bir çizim okunamıyor: başlığı ya da çizimin zorunlu bir bölümü bozuk; kurtarılacak bir şey yok."
     },
     {
       "code": "polyline_geometry_loss",
@@ -162005,6 +162182,31 @@
       "required": [
         "recordsIn",
         "recordsOut"
+      ],
+      "type": "object"
+    },
+    "RecoveredLoss": {
+      "description": "One part the recovery left out.",
+      "properties": {
+        "part": {
+          "description": "`document.<key>` for a part of the drawing, `entities[i]` for an object at its place in the file.",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Why: the strict reader's code and words, or what was put in place.",
+          "type": "string"
+        },
+        "uid": {
+          "description": "The object's persistent id (32 hex digits) when it could be read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "part",
+        "reason"
       ],
       "type": "object"
     },

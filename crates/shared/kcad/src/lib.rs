@@ -46,6 +46,7 @@ mod encode;
 mod error;
 mod header;
 mod opening;
+pub mod salvage;
 mod space;
 mod watch;
 

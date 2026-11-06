@@ -549,6 +549,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::explode_scenes::scenes());
     all.extend(crate::open_health::scenes());
     all.extend(crate::import_decision_scenes::scenes());
+    all.extend(crate::recover_file::scenes());
     all.extend(crate::clipboard_scenes::scenes());
     all.extend(crate::wipeout_scenes::scenes());
     all.extend(crate::wall_scenes::scenes());

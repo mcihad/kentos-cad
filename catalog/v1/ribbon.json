@@ -41,6 +41,10 @@
        {
         "command": "file.package",
         "size": "small"
+       },
+       {
+        "command": "file.recover",
+        "size": "small"
        }
       ]
      },
@@ -2748,6 +2752,10 @@
        },
        {
         "command": "file.package",
+        "size": "small"
+       },
+       {
+        "command": "file.recover",
         "size": "small"
        }
       ]

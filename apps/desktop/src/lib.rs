@@ -51,6 +51,7 @@ mod schedule_window;
 mod arch_audit;
 mod cad_inspection;
 mod open_health;
+mod recover_file;
 #[cfg(test)]
 mod import_decision_scenes;
 mod viewmark_refs;

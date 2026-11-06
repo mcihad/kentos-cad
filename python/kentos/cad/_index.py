@@ -328,6 +328,7 @@ COMMANDS: dict[str, Any] = {
     "file.preflight.sheets": file.preflight.sheets,
     "file.publish.sheets": file.publish.sheets,
     "file.publish.status": file.publish.status,
+    "file.recover": file.recover,
     "project.access.revoke": project.access.revoke,
     "project.archive": project.archive,
     "project.changes": project.changes,

@@ -6971,6 +6971,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.recover",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_not_found",
+            "file_exists",
+            "kcad_unrecoverable",
+            "file_unwritable",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "file.export.block",
         refusals: &[&[
             "invalid_file_path",

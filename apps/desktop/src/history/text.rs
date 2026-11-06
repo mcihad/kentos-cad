@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 405] = [
+pub(crate) const TITLES: [(&str, &str); 416] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -37,7 +37,12 @@ pub(crate) const TITLES: [(&str, &str); 405] = [
     ("cad.entities.paste", "Yapıştır"),
     ("cad.drawing.audit", "Denetle"),
     ("cad.drawing.compare", "Revizyonları karşılaştır"),
+    ("cad.drawing.repair", "Çizimi onar"),
+    ("cad.drawing.take", "Seçilen farkları al"),
+    ("cad.review.notes.edit", "İnceleme notunu düzenle"),
+    ("cad.review.notes.list", "İnceleme notlarını listele"),
     ("cad.entities.offset", "Nesneleri ötele"),
+    ("cad.entities.flatten", "2B düzleme indir"),
     ("cad.entities.order", "Çizim sırasını değiştir"),
     ("cad.annotations.scales", "Açıklamanın ölçekleri"),
     ("cad.nurbs.create", "NURBS eğrisi oluştur"),
@@ -102,6 +107,8 @@ pub(crate) const TITLES: [(&str, &str); 405] = [
     ("cad.inserts.clip", "Kırp"),
     ("cad.assets.check", "Bağlı dosyalar"),
     ("cad.schedules.create", "Çizelge"),
+    ("cad.extract.run", "Veri çıkarımı"),
+    ("cad.extract.table", "Veri çıkarımı tablosu"),
     ("cad.schedules.edit", "Çizelgeyi düzenle"),
     ("cad.schedules.query", "Çizelgeyi oku"),
     ("cad.openings.create", "Açıklık ekle"),
@@ -303,6 +310,7 @@ pub(crate) const TITLES: [(&str, &str); 405] = [
     ("cad.library.edit", "Stil kitaplığı"),
     ("cad.styles.impact", "Stil değişikliğinin etkisi"),
     ("cad.standards.resolve", "Proje standartlarını birleştir"),
+    ("cad.standards.install", "Standart kaynaklarını kur"),
     ("cad.standards.conflicts", "Bağlı standartlardaki farklı tanımları göster"),
     ("cad.standards.check", "Standardı denetle"),
     ("cad.standards.apply", "Standardı uygula"),
@@ -356,6 +364,7 @@ pub(crate) const TITLES: [(&str, &str); 405] = [
     ("cad.sheets.create", "Şablondan pafta oluştur"),
     ("cad.sheets.fit", "Görünüm penceresini nesnelere sığdır"),
     ("cad.sheets.levels", "Kat planı paftaları"),
+    ("cad.sheets.details", "Detay paftaları"),
     ("cad.sheets.edit", "Pafta kitabı"),
     ("cad.dimensionsets.create", "Duvar ölçüleri oluştur"),
     ("cad.dimensionsets.edit", "Duvar ölçülerini düzenle"),
@@ -413,10 +422,12 @@ pub(crate) const TITLES: [(&str, &str); 405] = [
     ("file.import.maplibre", "MapLibre stilinden görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.dwg", "DWG dışa aktar"),
+    ("file.recover", "Bozuk çizimi kurtar"),
     ("file.export.block", "Bloğu dosyaya yaz"),
     ("file.export.pdf", "PDF olarak yazdır"),
     ("file.preflight.sheets", "Baskı öncesi tam denetim"),
     ("file.publish.sheets", "Paftaları toplu yayınla"),
+    ("file.publish.status", "Yayın durumu"),
 ];
 
 /// A command's title, or its id when the table has none.

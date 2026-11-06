@@ -44697,6 +44697,50 @@ class JunctionsWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class KcadRecovered(_Model):
+    """Output of `file.recover` v1.
+    Attributes:
+        target: The copy's path (written by an execute, unless the file was whole).
+        whole: The file read whole: nothing to recover, no copy written.
+        written: Whether this call wrote the copy.
+        container: What was wrong with the container, in words.
+        objects_read: The objects the file held (as far as it could be read), and how many came back. Unit: count.
+        objects_kept: Unit: count.
+        lost: Each part left out or put in place, the drawing's parts first, then the objects in the file's order.
+    """
+    target: str
+    whole: bool
+    written: bool
+    container: list[str]
+    objects_read: int
+    objects_kept: int
+    lost: list[RecoveredLoss]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["target"] = self.target
+        out["whole"] = self.whole
+        out["written"] = self.written
+        out["container"] = list(self.container)
+        out["objectsRead"] = self.objects_read
+        out["objectsKept"] = self.objects_kept
+        out["lost"] = [e0.to_json() for e0 in self.lost]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KcadRecovered:
+        return cls(
+            target=data["target"],
+            whole=data["whole"],
+            written=data["written"],
+            container=list(data["container"]),
+            objects_read=data["objectsRead"],
+            objects_kept=data["objectsKept"],
+            lost=[RecoveredLoss.from_json(e0) for e0 in data["lost"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class KmAsk(_Model):
     """A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).
     Attributes:
@@ -70600,6 +70644,63 @@ class RecordsPlan(_Model):
         return cls(
             entities=[Entity.from_json(e0) for e0 in data["entities"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecoverKcad(_Model):
+    """Input of `file.recover` v1. Refusals, in order: `invalid_file_path` (`path` or `target` not an absolute `.kcad`
+    path, or `target` the source itself), `file_not_found` (`path`), `file_exists` (`target`), `kcad_unrecoverable`
+    (nothing of a drawing can be read), `file_unwritable`.
+    Attributes:
+        path: The damaged file: an absolute `.kcad` path.
+        target: Where the recovered copy goes: an absolute `.kcad` path that is not there yet; absent: `<name>-kurtarilan.kcad`
+            beside the source.
+    """
+    path: str
+    target: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.target is not UNSET:
+            out["target"] = self.target
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecoverKcad:
+        return cls(
+            path=data["path"],
+            target=data.get("target", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecoveredLoss(_Model):
+    """One part the recovery left out.
+    Attributes:
+        part: `document.<key>` for a part of the drawing, `entities[i]` for an object at its place in the file.
+        reason: Why: the strict reader's code and words, or what was put in place.
+        uid: The object's persistent id (32 hex digits) when it could be read.
+    """
+    part: str
+    reason: str
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["part"] = self.part
+        out["reason"] = self.reason
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecoveredLoss:
+        return cls(
+            part=data["part"],
+            reason=data["reason"],
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -116859,6 +116960,7 @@ __all__ = [
     "JunctionsTie",
     "JunctionsTied",
     "JunctionsWritten",
+    "KcadRecovered",
     "KeySourcesEditOp",
     "KindExtractValue",
     "KmAsk",
@@ -117989,6 +118091,8 @@ __all__ = [
     "RecordsPage",
     "RecordsPaged",
     "RecordsPlan",
+    "RecoverKcad",
+    "RecoveredLoss",
     "RecreateHatchEdit",
     "RectPaperShapeKind",
     "RectangleClipBoundary",
