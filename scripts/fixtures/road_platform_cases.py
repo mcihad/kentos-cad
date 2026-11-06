@@ -60,7 +60,8 @@ CONFLICT = {"status": "conflict", "error": {
     "çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}
 BAD_REVISION = failed("invalid_revision", "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı "
                       "yazısıdır. Sürümü belgeden ya da komutun planından alın.", "expectedRevision")
-NOT_ROAD = failed("not_a_road_project", "Platform yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.")
+NOT_ROAD = failed("not_a_road_project", "Platform Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim "
+                  "ikisinden biri değil.")
 
 
 def num(v):
@@ -129,7 +130,8 @@ def setup(platforms=START, work="road"):
                              "z": terrain_z(sid, x, y)})
     settings = {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                 "plotScale": 1000.0, "workspace": "cad", "cadWork": work, "drawingFont": "barlow"}
-    if work == "road":
+    if work in ("road", "map"):
+        # A map project holds surfaces and pads too (docs/adr/1580).
         settings["road"] = road_of(platforms)
     return {"format": "kentos.document", "version": 2, "name": "Platformlar", "settings": settings,
             "origin": {"x": 0.0, "y": 0.0}, "layers": layers, "activeLayer": "0", "entities": entities,
@@ -542,7 +544,7 @@ def edit_cases():
     ok("Erim kısalınca açık çizgiler uyarısı", {"operation": "set", "platform": "p-1", "reach": 1.0})
     ok("Aynı değerler: sürüm artmaz", {"operation": "set", "platform": "p-1", "cut": 1.5})
     ok("Kaldır", {"operation": "remove", "platform": "p-2"})
-    cases.append(case("Yol projesi değil", [step("execute", new, NOT_ROAD, UNCHANGED)], setup(work="map")))
+    cases.append(case("Yol projesi değil", [step("execute", new, NOT_ROAD, UNCHANGED)], setup(work="architecture")))
     no("Olmayan platformu kaldır", {"operation": "remove", "platform": "yok"})
     no("Olmayan yüzey", {**new, "surface": "Yok"})
     no("Yeniden bağlanmaz", {"operation": "rebind", "platform": "p-1"})
@@ -615,7 +617,9 @@ def query_cases():
        [flat], balanced(flat, -3.0, 2.0, 1e9))
     ok("İşaret değişmeyen aralık: denge yok", {"platform": "p-1", "balance": {"low": 1.0, "high": 3.0, "tolerance": 50.0}},
        [flat], balanced(flat, 1.0, 3.0, 50.0))
-    cases.append(case("Yol projesi değil", [step("execute", {}, NOT_ROAD, UNCHANGED)], setup(work="map")))
+    cases.append(case("Yol projesi değil", [step("execute", {}, NOT_ROAD, UNCHANGED)], setup(work="architecture")))
+    # A map project grades its pads as a road project does (docs/adr/1580).
+    cases.append({**copy.deepcopy(cases[1]), "name": "Harita projesinde de platform", "setup": setup(work="map")})
     no("Olmayan platform", {"platform": "yok"}, failed("unknown_platform", "“yok” kimlikli ya da adlı platform projede yok.", "platform"))
     no("Dengeleme tek platform ister", {"balance": {"low": -1.0, "high": 1.0, "tolerance": 1.0}},
        failed("invalid_platform", "Dengeleme tek platform içindir: platform verin.", "balance"))
@@ -692,7 +696,7 @@ def draw_cases():
        start=[{**P1, "corners": [[0.0, 0.0], [40.0, 0.0], [40.0, 30.0], [20.0, 30.0], [20.0, 15.0], [0.0, 15.0]]}])
     ok("Açık çizgilerle: yalnız sınır", {**base, "labels": True}, start=[{**P1, "reach": 1.0}])
     ok("Kazı ve dolgu birlikte: hacimsiz yazı değil", base, start=[{**P1, "base": [0.0, 0.0, 101.5]}])
-    no("Yol projesi değil", base, NOT_ROAD, setup(work="map"))
+    no("Yol projesi değil", base, NOT_ROAD, setup(work="architecture"))
     no("Olmayan platform", {**base, "platform": "yok"},
        failed("unknown_platform", "“yok” kimlikli ya da adlı platform projede yok.", "platform"))
     no("Olmayan katman", {**base, "layerId": "yok"},

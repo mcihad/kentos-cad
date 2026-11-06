@@ -11,12 +11,16 @@ use crate::checks::Stop;
 use crate::codes;
 use crate::road_terrains::fail;
 
-/// Only a road project has pads.
+/// A map or a road project has pads (a square, a car park, a building's platform; docs/adr/1580), as it has surfaces.
 pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
-    if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
+    if crate::road_terrains::holds_surfaces(doc.settings().cad_work) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Platform yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Platform Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil.".into(),
+            "",
+        ))
     }
 }
 

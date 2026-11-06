@@ -136,8 +136,9 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
-            self.warn("Drenaj yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+        // A map project's surface drains as a road project's (docs/adr/1580).
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+            self.warn("Drenaj Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
         let Some(first) = doc.model.settings().road.as_ref().and_then(|r| r.surfaces.first()) else {

@@ -559,11 +559,11 @@ impl<'d> Encoder<'d> {
                 }
                 // A map project's terrain surfaces are written there too, nothing else of a road (docs/adr/1520).
                 let map = s.cad_work == Some(kentos_contracts::CadWork::Map);
-                if s.cad_work != Some(kentos_contracts::CadWork::Road) && !(map && v.surfaces_only()) {
+                if s.cad_work != Some(kentos_contracts::CadWork::Road) && !(map && v.map_part_only()) {
                     return Err(e.fail(
                         Code::BadValue,
                         if map {
-                            "harita projesinde yol ayarlarından yalnız arazi yüzeyleri yazılır (cadWork map)"
+                            "harita projesinde yol ayarlarından yalnız arazi yüzeyleri ve platformlar yazılır (cadWork map)"
                         } else {
                             "yol ayarları yalnız yol projesinin olur (cadWork road); arazi yüzeyleri harita projesinin de olur"
                         },
@@ -2270,6 +2270,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 197 (docs/adr/1580): a map project's graded pads.
+    if doc.settings.cad_work == Some(kentos_contracts::CadWork::Map)
+        && doc.settings.road.as_ref().is_some_and(|r| !r.platforms.is_empty())
+    {
+        return crate::SCHEMA_WITH_MAP_PLATFORMS;
+    }
     // Schema 196 (docs/adr/1560): a terrain surface's edits.
     if doc.settings.road.as_ref().is_some_and(|r| r.surfaces.iter().any(|s| !s.edits.is_empty())) {
         return crate::SCHEMA_WITH_SURFACE_EDITS;

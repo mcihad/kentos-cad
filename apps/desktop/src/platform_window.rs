@@ -189,8 +189,9 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
-            self.warn("Platform yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+        // A square, a car park, a building's pad: a map project's too (docs/adr/1580).
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+            self.warn("Platform Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
         let surfaces = doc.model.settings().road.as_ref().map(|r| r.surfaces.clone()).unwrap_or_default();

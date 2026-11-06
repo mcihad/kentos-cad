@@ -249,6 +249,12 @@ impl RoadSettings {
         Self { surfaces: Vec::new(), ..self.clone() }.is_empty()
     }
 
+    /// Whether it holds only what a map project may: terrain surfaces and graded pads (`.kcad` schema 197,
+    /// docs/adr/1580).
+    pub fn map_part_only(&self) -> bool {
+        Self { surfaces: Vec::new(), platforms: Vec::new(), ..self.clone() }.is_empty()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.surfaces.is_empty()
             && self.alignments.is_empty()

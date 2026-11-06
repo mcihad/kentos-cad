@@ -171,3 +171,77 @@ fn screens() {
         shot(&mut app, "plan");
     }
 }
+
+/// The same drawing as a KentOS Harita project (its road settings: the surfaces and the pads only, docs/adr/1580).
+fn map_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.platforms.edit.json")).expect("cases");
+    let mut setup = cases["setup"].clone();
+    setup["settings"]["cadWork"] = serde_json::json!("map");
+    let road = setup["settings"]["road"].clone();
+    setup["settings"]["road"] = serde_json::json!({ "surfaces": road["surfaces"], "platforms": road["platforms"] });
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.program = Some(kentos_launch::Module::Map);
+    app
+}
+
+/// docs/adr/1580: a Harita project grades, balances and saves a pad as a Yol project does (a square, a car park, a
+/// building's platform), and its drawing saves and opens again as a .kcad of schema 197.
+#[test]
+fn a_map_project_grades_its_pads() {
+    let mut app = map_app();
+    assert!(app.offers("platform.editor") && app.offers("drainage.editor"));
+    let _ = app.update(Message::Run("platform.editor"));
+    assert_eq!(app.dialog, Some(Dialog::Platforms));
+    let w = app.platform_window.as_ref().expect("open");
+    let r = w.preview.report.clone().unwrap_or_else(|| panic!("grades: {:?}", w.preview.why));
+    assert!(r.fill.is_some() || r.cut.is_some(), "{r:?}");
+    send(&mut app, W::Field(8, "3".into()));
+    send(&mut app, W::Save);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert_eq!(doc.road_platforms()[0].fill, 3.0);
+    let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("a map project with pads writes");
+    let back = kentos_kcad::decode(&bytes).expect("and reads again");
+    assert_eq!(back.settings.road.expect("road settings").platforms[0].fill, 3.0);
+    // Drenaj reads its surface too.
+    let _ = app.update(Message::Run("drainage.editor"));
+    assert_eq!(app.dialog, Some(Dialog::Drainage));
+}
+
+/// Tesviye and Drenaj in KentOS Harita: the Arazi tab and the pad window; `.run/gui-evidence/harita-tesviye-1580/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib platform_window_tests::screens_map -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "writes pictures"]
+fn screens_map() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/harita-tesviye-1580");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = map_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-arazi-sekmesi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::Run("platform.editor"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-platform-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

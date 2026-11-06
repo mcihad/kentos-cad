@@ -1811,11 +1811,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     // are written there too, and nothing else of a road (docs/adr/1520).
     if let Some(v) = &road {
         let map = cad_work == Some(CadWork::Map) && has.map_surfaces;
-        if cad_work != Some(CadWork::Road) && !(map && v.surfaces_only()) {
+        // Since schema 197 a map project's graded pads too (docs/adr/1580).
+        let fits = if has.map_platforms { v.map_part_only() } else { v.surfaces_only() };
+        if cad_work != Some(CadWork::Road) && !(map && fits) {
             return Err(relation(
                 "road",
                 if map {
-                    "harita projesinde yol ayarlarından yalnız arazi yüzeyleri yazılır (cadWork map)"
+                    "harita projesinde yol ayarlarından yalnız arazi yüzeyleri ve platformlar yazılır (cadWork map)"
                 } else {
                     "yol ayarları yalnız yol projesinin olur (cadWork road); arazi yüzeyleri harita projesinin de olur (şema 195)"
                 },

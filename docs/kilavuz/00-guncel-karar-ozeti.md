@@ -38,6 +38,8 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Harita projesinde tesviye ve drenaj (7 Kasım 2026; MAP-15, [ADR 1580](../../docs/adr/1580-map-project-grading-and-drainage.md)).**
+  `road.platforms.*` ve `road.drainage.*` Harita'da da; `.kcad` şema 197 harita projesinin `road.platforms`'ını yazar.
 - **Yüzey düzenlemeleri (7 Kasım 2026; MAP-14, [ADR 1560](../../docs/adr/1560-terrain-surface-edits.md)).**
   `TerrainSurfaceDef.edits` (addPoint, setHeight, addEdge, removeTriangle) her kuruluşta sırayla; yapılamayan
   `left`'te `edits[k]`; `.kcad` şema 196; Arazi yüzeyleri › Düzenlemeler çizimden seçimle.

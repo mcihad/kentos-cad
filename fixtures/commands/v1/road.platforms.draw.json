@@ -10757,7 +10757,7 @@
       "status": "failed",
       "error": {
        "code": "not_a_road_project",
-       "message": "Platform yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+       "message": "Platform Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."
       }
      },
      "expect": {
@@ -10781,7 +10781,7 @@
      "angleUnit": "deg",
      "plotScale": 1000.0,
      "workspace": "cad",
-     "cadWork": "map",
+     "cadWork": "architecture",
      "drawingFont": "barlow"
     },
     "origin": {

@@ -89,7 +89,8 @@ fn capacity(def: &kentos_commands::CulvertDef) -> Option<(f64, f64)> {
 
 /// The query answered now, and its warnings.
 pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQueried, Vec<CommandWarning>), Stop> {
-    terrains::road_project(doc)?;
+    // A map project's surface drains as a road project's does (docs/adr/1580).
+    terrains::terrain_project(doc)?;
     judged(input)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
     let culvert = match input.catchment.as_ref().and_then(|c| c.culvert.as_deref()) {

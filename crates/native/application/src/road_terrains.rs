@@ -36,19 +36,6 @@ pub(crate) fn terrain_project(doc: &Document) -> Result<(), Stop> {
     }
 }
 
-/// Only a road project: drainage and the other road works.
-pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
-    if doc.settings().cad_work == Some(CadWork::Road) {
-        Ok(())
-    } else {
-        Err(fail(
-            codes::NOT_A_ROAD_PROJECT,
-            "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
-            "",
-        ))
-    }
-}
-
 /// The project's surfaces.
 pub(crate) fn surfaces(doc: &Document) -> &[TerrainSurfaceDef] {
     doc.settings().road.as_ref().map_or(&[], |r| &r.surfaces[..])

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `196`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-197.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `197`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-198.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -888,6 +888,11 @@ yerde), `removeTriangle` (`x`, `y`); sayılar sonlu; boş liste yazılmaz; kural
 yüzeyin düzenlemesi varken seçer; 195 ve öncesi alanı `unknown_field` sayar
 (`broken/surface-edits-in-schema-195.kcad`). Örnek `surface-edits.json/.kcad`; bozuk
 `broken/surface-edits-edge-of-no-length.kcad`.
+
+**Şema 197** (ADR 1580; MAP-15): harita projesinin platformları. `cadWork: map` projesinin `road`'u yüzeylerin
+yanında `platforms` da taşır (şema 159'un platform kuralları); başka bir yol parçası yine `bad_value`'dur. Yazıcı
+197'yi harita projesinde platform varken seçer; 196 ve öncesi bunu `bad_value` sayar
+(`broken/map-platforms-in-schema-196.kcad`). Örnek `map-platforms.json/.kcad`.
 
 **Şema 189** (ADR 1260; MAP-07): topoloji ayarlarının kalite `profile`'ı ve istisnanın
 `decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 189'u yalnız profil ya da bu alanlardan biri

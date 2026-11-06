@@ -106,13 +106,14 @@ fn an_architecture_project_has_no_surfaces() {
 }
 
 /// docs/adr/1520: a Harita project makes, accepts and draws a surface as a Yol project does; the Arazi tab offers the
-/// surfaces and their analysis, not Tesviye or Drenaj.
+/// surfaces and their analysis, and since docs/adr/1580 Tesviye and Drenaj; the section query stays Yol's.
 #[test]
 fn a_map_project_makes_a_surface_and_its_contours() {
     let mut app = app("map");
     app.program = Some(kentos_launch::Module::Map);
     assert!(app.offers("terrain.surfaces") && app.offers("terrain.analysis"));
-    assert!(!app.offers("platform.editor") && !app.offers("drainage.editor"), "Yol's own works");
+    assert!(app.offers("platform.editor") && app.offers("drainage.editor"), "a map project grades and drains");
+    assert!(!app.offers("mesh.query"), "Yol's own section query");
     made(&mut app);
     let made = kentos_native_application::road_terrains::made_surfaces(&app.document.as_ref().expect("doc").model);
     assert_eq!((made.len(), made[0].1.state), (1, kentos_commands::TerrainState::Current));

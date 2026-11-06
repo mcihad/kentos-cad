@@ -51,8 +51,8 @@ CONFLICT = {"status": "conflict", "error": {
     "çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}
 BAD_REVISION = failed("invalid_revision", "Beklenen sürüm “on” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı "
                       "yazısıdır. Sürümü belgeden ya da komutun planından alın.", "expectedRevision")
-NOT_ROAD = failed("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi "
-                  "değil.")
+NOT_ROAD = failed("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu "
+                  "çizim ikisinden biri değil.")
 
 
 def step(op, inp, result, expect):
@@ -102,10 +102,13 @@ def setup(work="road"):
                                       "z": f(x, y)})
                 s["uids"].append(UID.format(k))
     s["settings"]["cadWork"] = work
-    if work == "road":
+    if work in ("road", "map"):
         s["settings"]["road"]["surfaces"] += [{"id": "t-3", "name": "Vadi", "points": {"layers": ["vadi"]}},
                                               {"id": "t-4", "name": "Çukur", "points": {"layers": ["cukur"]}},
                                               {"id": "t-5", "name": "Düz", "points": {"layers": ["duz"]}}]
+        if work == "map":
+            # A map project keeps its surfaces (and pads) only, nothing else of a road (docs/adr/1520, 1580).
+            s["settings"]["road"] = {"surfaces": s["settings"]["road"]["surfaces"]}
     else:
         s["settings"].pop("road", None)
     return s
@@ -307,6 +310,8 @@ def cases():
       failed("terrain_unbuildable", ANY))
     out[-1]["steps"][0]["result"]["error"] = {"code": "terrain_unbuildable", "message": ANY}
     q("Yol projesi değil", {"surface": "Vadi", "drops": [[0.0, 0.0]]}, NOT_ROAD, setup_="$map")
+    # A map project's surface drains as a road project's (docs/adr/1580).
+    out.append({**copy.deepcopy(out[0]), "name": "Harita projesinde de su damlası", "setup": "$harita"})
     return out
 
 
@@ -385,6 +390,8 @@ def document(command, title, found):
     road = setup()
     for c in found:
         if c.get("setup") == "$map":
+            c["setup"] = setup(work="architecture")
+        elif c.get("setup") == "$harita":
             c["setup"] = setup(work="map")
     return {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
             "note": "scripts/fixtures/road_drainage_cases.py'den; kafes arazilerde kapalı biçimle (vadi, elmas çukur, "

@@ -475,6 +475,7 @@
      {
       "label": "Tesviye",
       "works": [
+       "map",
        "road"
       ],
       "icon": "platformEditor",
@@ -488,6 +489,7 @@
      {
       "label": "Drenaj",
       "works": [
+       "map",
        "road"
       ],
       "icon": "drainageEditor",

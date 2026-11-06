@@ -850,6 +850,13 @@ birlikte güncellensin. Delikli/örtüşmeyen yüzeylerde kapsam ve dışlanan
 bölge açıklansın. Basit prizmatik örnekte analitik hacim; gerçek örnekte
 bağımsız yöntem karşılaştırması yap. İptal ve Undo bütün türevleri kapsasın.
 
+**7 Kasım 2026 — Harita projesinde tesviye ve drenaj ([ADR 1580](../docs/adr/1580-map-project-grading-and-drainage.md)).**
+Kapsam: **Harita + Yol**. Araştırma: OpenSite saha tasarımını yoldan ayrı sunar (arazi, kazı/dolgu, drenaj); Civil 3D
+grading koridordan bağımsız; Planlı Alanlar İmar Yönetmeliği tabii/tesviye edilmiş zemin. Kanıtlanan: platform (taban
+kotu, eğim/yön, şevler, gün ışığı, dengeleme) ve drenaj (gölet, damla, havza, debi) Harita projesinde; `.kcad` şema 197
+harita projesinin platformlarını yazar; Arazi sekmesinin Tesviye ve Drenaj panelleri Harita'da. Açık: hacim yöntemi ve
+hata sınırı raporu, kabarma/sıkışma ve malzeme, stok sahası, canlı kesit türevi.
+
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 
 **Öncelik:** P1 teknik envanter/tasarım; P2 uzman çözücüler. **Kod:** [K31], [K32], [K40].
