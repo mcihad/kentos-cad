@@ -49,47 +49,63 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     let words = texts(&copy);
     let has = |w: &str| words.iter().any(|(t, _)| t == w);
 
-    // S1's deflection from its PIs' bearings: |atan2(300, 260) − atan2(10, 280)| in grad, five decimals.
+    // The curve's data as KGM's June 2024 sample sheets write it (docs/adr/0984), worked out from the drawing's PIs
+    // without KentOS. The deflection Δ from the PIs' bearings: |atan2(300, 260) − atan2(10, 280)|.
     let pis = &setup["settings"]["road"]["alignments"][0]["pis"];
     let p = |i: usize| [pis[i]["x"].as_f64().unwrap(), pis[i]["y"].as_f64().unwrap()];
     let (a, b, c) = (p(0), p(1), p(2));
-    let delta = (c[1] - b[1]).atan2(c[0] - b[0]) - (b[1] - a[1]).atan2(b[0] - a[0]);
-    let grad = delta.abs() * 200.0 / std::f64::consts::PI;
-    assert!(has(&format!("A={grad:.5}")), "A={grad:.5} in {words:?}");
-    assert!(has("S1 (SOL)"), "a left turn: the bearing grows");
-    assert!(has("R=150.00"));
-    // KGM's simple curve (docs/adr/0983): T = R·tan(Δ/2), L = R·Δ, the clothoids apart.
-    assert!(has(&format!("T={:.3}", 150.0 * (0.5 * delta.abs()).tan())), "T in {words:?}");
-    assert!(has(&format!("L={:.3}", 150.0 * delta.abs())), "L in {words:?}");
+    let delta = ((c[1] - b[1]).atan2(c[0] - b[0]) - (b[1] - a[1]).atan2(b[0] - a[0])).abs();
+    let grad = |rad: f64| rad * 200.0 / std::f64::consts::PI;
+    // R 150 and clothoids of 40 m: D, L and T are the circular part's, Dc = Δ − 2·Ls/(2R) (KGM 2019 EK-10: A and S-A).
+    let (r, ls) = (150.0_f64, 40.0_f64);
+    let dc = delta - ls / r;
+    assert!(has("S - 1 (Sol)"), "a left turn: the bearing grows; {words:?}");
+    assert!(has(&format!("D = {:.4}", grad(dc))), "D in {words:?}");
+    assert!(has("R = 150.00"));
+    assert!(has(&format!("L = {:.2}", r * dc)), "L in {words:?}");
+    assert!(has(&format!("T = {:.2}", r * (0.5 * dc).tan())), "T in {words:?}");
+    assert!(has(&format!("S-D = {:.4}", grad(delta))), "S-D in {words:?}");
     // The sample's only schedule, rows on the right (outside): −2.5 % at 150 to +6 % at 200 and back from 300 to 350.
     // Level at 150 + 50 · 2.5/8.5: Lt = 250/17, Lr = 600/17 each way. TS from the clothoids' series (p, k), ST = TS +
     // R·Δ + Ls: the rise starts 44.7 m before TS, and the way out is back to normal 7.9 m before ST (La 0).
-    let (r, ls) = (150.0_f64, 40.0_f64);
-    let p = ls.powi(2) / (24.0 * r) - ls.powi(4) / (2688.0 * r.powi(3));
+    let shift = ls.powi(2) / (24.0 * r) - ls.powi(4) / (2688.0 * r.powi(3));
     let k = ls / 2.0 - ls.powi(3) / (240.0 * r * r);
-    let ts = (b[0] - a[0]).hypot(b[1] - a[1]) - ((r + p) * (0.5 * delta.abs()).tan() + k);
-    let st = ts + r * delta.abs() + ls;
-    assert!(has("S=6.00"), "S in {words:?}");
-    assert!(has(&format!("Lr={0:.3}-{0:.3}", 600.0 / 17.0)), "Lr in {words:?}");
-    assert!(has(&format!("Lt={0:.3}-{0:.3}", 250.0 / 17.0)), "Lt in {words:?}");
-    assert!(has(&format!("La={:.3}-{:.3}", ts - 150.0, (350.0 - st).max(0.0))), "La in {words:?}");
-    assert!(has("Gn=0.000"));
-    // KGM's order: S, Lr, Lt, La, Gn between L and Y.
-    let at = |w: &str| words.iter().position(|(t, _)| t.starts_with(w)).unwrap();
-    let order = ["A=", "R=", "T=", "L=", "S=", "Lr=", "Lt=", "La=", "Gn=", "Y=", "X="].map(at);
+    let ts = (b[0] - a[0]).hypot(b[1] - a[1]) - ((r + shift) * (0.5 * delta).tan() + k);
+    let st = ts + r * delta + ls;
+    assert!(has("Se = % 6.00"), "Se in {words:?}");
+    assert!(has(&format!("Lr = {0:.2} - {0:.2}", 600.0 / 17.0)), "Lr in {words:?}");
+    assert!(has(&format!("Lt = {0:.2} - {0:.2}", 250.0 / 17.0)), "Lt in {words:?}");
+    assert!(has(&format!("La = {:.2} - {:.2}", ts - 150.0, (350.0 - st).max(0.0))), "La in {words:?}");
+    assert!(has("Gn = 0.00"));
+    // KGM 2024's order, then the 2019 sheets' whole curve.
+    let at = |w: &str| words.iter().position(|(t, _)| t.starts_with(w)).unwrap_or_else(|| panic!("{w} in {words:?}"));
+    let order = ["S - 1", "D =", "R =", "L =", "T =", "Se =", "Lr =", "Lt =", "La =", "Gn =", "X =", "Y =", "S-D =",
+        "S-X =", "S-Y ="].map(at);
     assert!(order.windows(2).all(|w| w[0] < w[1]), "{order:?}");
-    assert!(
-        has(&format!("Y={:.3}", b[0])) && has(&format!("X={:.3}", b[1])),
-        "KGM: Y east, X north"
-    );
+    // X, Y: where the tangents at SC and CS meet, on the bisector inside the PI by the two external distances'
+    // difference, (R + p)·sec(Δ/2) − R less R·sec(Dc/2) − R. S-X, S-Y: the PI. North first, in groups of three.
+    let value = |w: &str| -> f64 {
+        let (_, v) = words[at(w)].0.split_once('=').unwrap();
+        v.replace(' ', "").parse().unwrap()
+    };
+    let unit = |v: [f64; 2]| {
+        let l = v[0].hypot(v[1]);
+        [v[0] / l, v[1] / l]
+    };
+    let (ua, uc) = (unit([a[0] - b[0], a[1] - b[1]]), unit([c[0] - b[0], c[1] - b[1]]));
+    let w = unit([ua[0] + uc[0], ua[1] + uc[1]]);
+    let inside = ((r + shift) / (0.5 * delta).cos() - r) - (r / (0.5 * dc).cos() - r);
+    let inner = [b[0] + w[0] * inside, b[1] + w[1] * inside];
+    assert!((value("X =") - inner[1]).abs() < 1e-3 && (value("Y =") - inner[0]).abs() < 1e-3, "{inner:?}");
+    assert!((value("S-X =") - b[1]).abs() < 1e-4 && (value("S-Y =") - b[0]).abs() < 1e-4);
 
-    // The main points: TS, SC, CS, ST with the curve's name and a km of three decimals.
+    // The main points: TS1, SC1, CS1, ST1 and a km of two decimals (KGM 2024: `TO1=0+100.42`).
     for code in ["TS", "SC", "CS", "ST"] {
         assert!(
             words
                 .iter()
-                .any(|(t, _)| t.starts_with(&format!("{code} S1 1+"))
-                    && t.split('.').nth(1).is_some_and(|d| d.len() == 3)),
+                .any(|(t, _)| t.starts_with(&format!("{code}1=1+"))
+                    && t.split('.').nth(1).is_some_and(|d| d.len() == 2)),
             "{code} in {words:?}"
         );
     }
@@ -103,7 +119,8 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
             "digit {d}"
         );
     }
-    assert!(has("PROJE BAŞI KM: 1+000.000"));
+    // The project's ends with their km and coordinates (KGM 2019 şartname; the 2024 sheets).
+    assert!(has("PROJE BAŞI KM : 1+000.00") && has("X = 50.0000") && has("Y = 20.0000"), "{words:?}");
     // Every text reads left to right on the paper turned 29.847°.
     for (t, r) in &words {
         let on = (r - 29.847).rem_euclid(360.0);
@@ -121,4 +138,61 @@ fn a_drawing_without_alignments_has_no_copy() {
             .unwrap();
     assert!(!kentos_native_application::road_plan_axes::has_axes(&plain));
     assert!(with_axes(&plain, 1000.0, 0.0).is_none());
+}
+
+#[test]
+fn the_curve_data_stays_inside_the_map() {
+    // A map 80 m tall at 1:1000 round the PI: the box (16 lines of 4 m) would run 65 m below it and the map would cut
+    // its last lines (docs/adr/0984); it moves up into the map, 2 m from the edge, and every line stays in.
+    use kentos_native_application::road_plan_axes::{Room, with_axes_on};
+    let (doc, setup) = sample();
+    let pi = &setup["settings"]["road"]["alignments"][0]["pis"][1];
+    let center = [pi["x"].as_f64().unwrap(), pi["y"].as_f64().unwrap()];
+    let room = Room { center, half: [200.0, 40.0] };
+    let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(room)).expect("a copy");
+    let lines: Vec<(String, [f64; 2])> = copy
+        .entities()
+        .filter(|e| e.base().layer_id == LAYER)
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some((t.text.clone(), [t.p.x, t.p.y])),
+            _ => None,
+        })
+        .filter(|(t, _)| ["D =", "Lr =", "X =", "Y =", "S-D =", "S-Y ="].iter().any(|w| t.starts_with(w)))
+        // The box's, not the project ends' X and Y (260 m and 280 m from this PI, outside the map).
+        .filter(|(_, p)| (p[0] - center[0]).abs() < 200.0)
+        .collect();
+    assert!(lines.len() >= 6, "{lines:?}");
+    for (t, p) in &lines {
+        assert!((p[1] - center[1]).abs() <= 40.0 - 2.0 + 1e-9, "{t} at {p:?}");
+    }
+    // Without the map the box hangs below the PI as before.
+    let free = with_axes_on(doc.reading_copy(), 1000.0, 0.0, None).expect("a copy");
+    let lowest = free
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Text(t) if t.text.starts_with("S-Y =") => Some(t.p.y),
+            _ => None,
+        })
+        .fold(f64::INFINITY, f64::min);
+    assert!(lowest < center[1] - 40.0, "{lowest}");
+}
+
+#[test]
+fn a_map_that_does_not_show_the_pi_leaves_its_box_by_the_pi() {
+    // The profile's map on the same sheet shows another part of the drawing: it does not pull S - 1's box into itself
+    // (docs/adr/0984; Y78's picture had a second box under the plan).
+    use kentos_native_application::road_plan_axes::{Room, with_axes_on};
+    let (doc, setup) = sample();
+    let pi = &setup["settings"]["road"]["alignments"][0]["pis"][1];
+    let pi = [pi["x"].as_f64().unwrap(), pi["y"].as_f64().unwrap()];
+    let far = Room { center: [pi[0], pi[1] - 1000.0], half: [300.0, 100.0] };
+    let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(far)).expect("a copy");
+    for e in copy.entities() {
+        if let Entity::Text(t) = e
+            && ["D =", "S-Y ="].iter().any(|w| t.text.starts_with(w))
+        {
+            assert!((t.p.y - far.center[1]).abs() > far.half[1], "{} drawn in the far map at {:?}", t.text, t.p);
+            assert!((t.p.y - pi[1]).abs() < 100.0, "{} stays by its PI: {:?}", t.text, t.p);
+        }
+    }
 }

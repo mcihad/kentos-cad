@@ -35,9 +35,10 @@ pub struct TransitionEnd {
 /// A curve's superelevation as its PI data writes it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CurveSuper {
-    /// S: the slope toward the centre at the circular part's middle (a grade; the lesser side's), none when the
-    /// schedule does not bank the curve there (an adverse or level crown).
-    pub rate: Option<f64>,
+    /// S (Se): the slope toward the centre at the circular part's middle (a grade; the lesser side's), negative where
+    /// the schedule leaves the curve in normal crown: KGM's 2024 sample sheets write `Se = % -2.00` for such a curve
+    /// (docs/adr/0984).
+    pub rate: f64,
     /// Gn: the inside's extra width there (m).
     pub widening: f64,
     /// The way in and the way out; none where the outside's slopes do not run from the normal crown through level to
@@ -117,7 +118,7 @@ pub fn curve_super(schedule: &Schedule, normal: Crossfall, curve: &CurveReport) 
         (&schedule.left, normal.left, wr)
     };
     CurveSuper {
-        rate: (rate > EPS).then_some(rate),
+        rate,
         widening,
         entry: end(outside, n_out, mid, -1.0, curve.stations[0]),
         exit: end(outside, n_out, mid, 1.0, curve.stations[3]),

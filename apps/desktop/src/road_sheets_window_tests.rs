@@ -226,6 +226,19 @@ fn screens_pi_data() {
     shoot_kgm_sheet("yol-y77", "y77", "2026-11-06");
 }
 
+/// The plan map as KGM's June 2024 sample sheets draw it (docs/adr/0984): the PI data box with D, Se and the
+/// clothoid curve's S-D, S-X, S-Y, the main points `TS1=…`, the PI's triangle and the ends' coordinates;
+/// `.run/gui-evidence/yol-y78/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_kgm_2024 -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_kgm_2024() {
+    shoot_kgm_sheet("yol-y78", "y78", "2026-11-06");
+}
+
 /// KGM's A1 plan–profile sheet of the sample at 1:2000 with its schedule, light and dark, and its PDF, into
 /// `.run/gui-evidence/<folder>/<prefix>-pafta-*`.
 fn shoot_kgm_sheet(folder: &str, prefix: &str, date: &str) {

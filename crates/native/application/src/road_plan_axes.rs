@@ -3,20 +3,19 @@
 //! drew the survey points and nothing of the road. A map now draws a reading copy of the drawing with the alignments
 //! added as objects on a layer of their own, sized for the map's scale; the drawing itself is not touched.
 //!
-//! What is drawn follows KGM's sample plan–profile sheets (KGM 2019 şartname EK-10–13), Büyük Ölçekli Harita
-//! Yönetmeliği md. 80 (the axis's points “aliyman üstü noktalar, some noktası, To, TF”) and the Turkish practice
-//! (İTÜ, MEGEP *Yol Projesi*, Netcad's codes):
+//! What is drawn follows KGM's sample sheets of June 2024 (Etüt, Proje ve Çevre Dairesi Başkanlığı, *Örnek
+//! Paftalar*, the newest the KGM publishes; docs/adr/0984), the clothoid curves of the 2019 şartname's EK-10–13,
+//! Büyük Ölçekli Harita Yönetmeliği md. 80 (the axis's points “aliyman üstü noktalar, some noktası, To, TF”) and the
+//! Turkish practice (İTÜ, MEGEP *Yol Projesi*, Netcad's codes):
 //!
-//! - the axis, red (İTÜ: “Geçki ekseni: Kırmızı, kalın”), a parallel axis thin;
+//! - the axis, red and dash-dot as the 2024 sheets draw it, a parallel axis thin;
 //! - a tick across the axis at every hectometre, the full km (`6+000`) along the axis at a round km and the
 //!   hectometre's digit elsewhere;
 //! - each curve's main points (TO and TF; TS, SC, CS and ST with clothoids) as a line across the axis with the code,
-//!   the curve's name and the km to three decimals along it (`TF S1 0+412.118`);
-//! - each curve's PI as a dot named S1, S2 … and its curve data outside the curve: the turn (SAĞ, SOL), the
-//!   deflection A in grad to five decimals (KGM writes the deflection as A), R, the simple curve's T and L, the
-//!   superelevation's S, Lr, Lt, La and Gn from the alignment's schedule (docs/adr/0983), and the PI's Y (east) and X
-//!   (north);
-//! - the PI line, thin and dashed, and PROJE BAŞI and PROJE SONU with their km.
+//!   the curve's number and the km to two decimals along it (`TO1=0+100.42`);
+//! - each curve's PI as a triangle with its name boxed (`S - 1`), and its curve data in a framed box outside the
+//!   curve (see [`curve_data`]);
+//! - the PI line, thin and dashed, and PROJE BAŞI and PROJE SONU with their km and coordinates.
 //!
 //! Sizes are paper millimetres times the map's scale: texts 2.5 mm (the band texts of docs/adr/0980), ticks 3 mm.
 
@@ -38,6 +37,25 @@ const TEXT_MM: f64 = 2.5;
 const TICK_MM: f64 = 1.5;
 /// A main point's line, each side of the axis.
 const MAIN_MM: f64 = 6.0;
+/// The widest a character of the drawing font is, in text heights (Barlow's figures measured 0.465 h on the PDF).
+const WIDE: f64 = 0.5;
+
+/// The part of the drawing a map shows (docs/adr/0984): its centre on the ground and half its width and height along
+/// the paper as the map's content is turned, in metres. A curve's data box is kept inside it: below a PI near the map's
+/// edge the box ran off the map and the map cut its last lines (Y77's and Y78's first pictures lost Y and S-X, S-Y).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Room {
+    pub center: [f64; 2],
+    pub half: [f64; 2],
+}
+
+impl Room {
+    /// A map's room: its centre and its content rectangle (paper micrometres) at 1:`scale`.
+    pub fn of_map(center: [f64; 2], width_um: i32, height_um: i32, scale: f64) -> Room {
+        let ground = |um: i32| f64::from(um) / 1e6 * scale;
+        Room { center, half: [0.5 * ground(width_um), 0.5 * ground(height_um)] }
+    }
+}
 
 /// Whether the drawing has an alignment a map would draw.
 pub fn has_axes(doc: &Document) -> bool {
@@ -48,12 +66,12 @@ pub fn has_axes(doc: &Document) -> bool {
 /// so the axis runs left to right) draws it: a reading copy with the alignments on [`LAYER`]; none when it has no
 /// alignment. The texts read left to right on that paper.
 pub fn with_axes(doc: &Document, scale: f64, turn: f64) -> Option<Document> {
-    with_axes_on(doc.reading_copy(), scale, turn)
+    with_axes_on(doc.reading_copy(), scale, turn, None)
 }
 
-/// [`with_axes`] on a copy already made (a map's copy at its scale).
-pub fn with_axes_on(mut copy: Document, scale: f64, turn: f64) -> Option<Document> {
-    let objects = objects(&copy, scale, turn);
+/// [`with_axes`] on a copy already made (a map's copy at its scale), the curves' data kept inside `room` when given.
+pub fn with_axes_on(mut copy: Document, scale: f64, turn: f64, room: Option<Room>) -> Option<Document> {
+    let objects = objects(&copy, scale, turn, room);
     if objects.is_empty() {
         return None;
     }
@@ -199,9 +217,18 @@ fn n2(v: f64) -> String {
     format!("{v:.2}")
 }
 
-/// A length as KGM's PI data writes it: metres to three decimals (EK-10: `T=131.445`, `Lr=76.800-76.800`).
-fn n3(v: f64) -> String {
-    format!("{v:.3}")
+/// A coordinate as KGM's 2024 sheets write it: four decimals, the whole metres in groups of three (`4 349 283.7346`).
+pub fn grouped(v: f64) -> String {
+    let s = format!("{:.4}", v.abs());
+    let (whole, part) = s.split_once('.').unwrap_or((&s, ""));
+    let mut out = String::new();
+    for (i, ch) in whole.chars().enumerate() {
+        if i > 0 && (whole.len() - i) % 3 == 0 {
+            out.push(' ');
+        }
+        out.push(ch);
+    }
+    format!("{}{out}.{part}", if v < 0.0 { "-" } else { "" })
 }
 
 /// The superelevation schedule a plan map reads a curve's S, Gn and Lr, Lt, La from: the alignment's only schedule,
@@ -221,48 +248,104 @@ fn schedule_for(
     Some((s, crate::road_superelevations::normal(def)))
 }
 
-/// A curve's PI data in KGM's order (KGM 2019 şartname s. 5 and EK-10; docs/adr/0982, 0983): the name and turn, the
-/// deflection A in grad, R, the simple curve's T = R·tan(|Δ|/2) and L = R·|Δ| (KGM's S1: `T=131.445`, `L=258.800` for
-/// R 600 and 27.45958 grad, its clothoids of 76.8 m apart), then from the superelevation schedule the rate S in percent,
-/// Lr, Lt and La in and out, the widening Gn; last the PI's Y (east) and X (north).
+/// A curve's PI data as KGM's June 2024 sample sheets write it (docs/adr/0984; KGM 2019 şartname s. 5):
+///
+/// ```text
+/// S - 1 (Sol)
+/// D = 19.0937          the deflection in grad
+/// R = 1500.00
+/// L = 449.88           R·D
+/// T = 226.64           R·tan(D/2)
+/// Se = % 2.20          from the schedule: the slope toward the centre, negative in normal crown
+/// Lr = 22.00 - 22.00   in and out
+/// Lt = 20.00 - 20.00
+/// La = 36.42 - 36.70
+/// Gn = 0.00
+/// X = 4 349 283.7346   north
+/// Y = 542 198.1906     east
+/// ```
+///
+/// With clothoids D, L and T are the circular part's and X, Y the point where the tangents at SC and CS meet, then
+/// `S-D` the whole deflection and `S-X`, `S-Y` the PI: KGM's 2019 EK-10 writes `A=27.45958` and `S-A=35.60832` for
+/// R 600 and clothoids of 76.8 m (35.60832 − 27.45958 = 76.8/600 rad), EK-13 the same; the 2024 sheets name the
+/// deflection D, so the whole one is `S-D` here (docs/adr/0984: the name is ours, the values KGM's). V is not written:
+/// a road project holds no design speed. `inner` is the SC–CS tangents' meeting point.
 pub fn curve_data(
-    name: &str,
+    number: usize,
     c: &kentos_road::alignment::CurveReport,
     pi: [f64; 2],
+    inner: Option<[f64; 2]>,
     schedule: Option<&(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
 ) -> Vec<String> {
-    let side = if c.delta > 0.0 { "SOL" } else { "SAĞ" };
-    let half = 0.5 * c.delta.abs();
+    let side = if c.delta > 0.0 { "Sol" } else { "Sağ" };
+    let clothoid = c.spiral_in > 0.0 || c.spiral_out > 0.0;
+    let dc = if clothoid { (c.arc / c.radius).max(0.0) } else { c.delta.abs() };
     let mut lines = vec![
-        format!("{name} ({side})"),
-        format!("A={:.5}", grad(c.delta)),
-        format!("R={}", n2(c.radius)),
-        format!("T={}", n3(c.radius * half.tan())),
-        format!("L={}", n3(c.radius * c.delta.abs())),
+        format!("S - {number} ({side})"),
+        format!("D = {:.4}", grad(dc)),
+        format!("R = {}", n2(c.radius)),
+        format!("L = {}", n2(c.radius * dc)),
+        format!("T = {}", n2(c.radius * (0.5 * dc).tan())),
     ];
     if let Some((s, normal)) = schedule {
         let got = kentos_road::superelevation_pi::curve_super(s, *normal, c);
-        if let Some(rate) = got.rate {
-            lines.push(format!("S={:.2}", rate * 100.0));
-        }
+        lines.push(format!("Se = % {}", n2(got.rate * 100.0)));
         if let (Some(a), Some(b)) = (got.entry, got.exit) {
-            lines.push(format!("Lr={}-{}", n3(a.runoff), n3(b.runoff)));
-            lines.push(format!("Lt={}-{}", n3(a.runout), n3(b.runout)));
-            lines.push(format!("La={}-{}", n3(a.on_tangent), n3(b.on_tangent)));
+            lines.push(format!("Lr = {} - {}", n2(a.runoff), n2(b.runoff)));
+            lines.push(format!("Lt = {} - {}", n2(a.runout), n2(b.runout)));
+            lines.push(format!("La = {} - {}", n2(a.on_tangent), n2(b.on_tangent)));
         }
-        lines.push(format!("Gn={}", n3(got.widening)));
+        lines.push(format!("Gn = {}", n2(got.widening)));
     }
-    lines.push(format!("Y={:.3}", pi[0]));
-    lines.push(format!("X={:.3}", pi[1]));
+    let at = if clothoid { inner.unwrap_or(pi) } else { pi };
+    lines.push(format!("X = {}", grouped(at[1])));
+    lines.push(format!("Y = {}", grouped(at[0])));
+    if clothoid {
+        lines.push(format!("S-D = {:.4}", grad(c.delta)));
+        lines.push(format!("S-X = {}", grouped(pi[1])));
+        lines.push(format!("S-Y = {}", grouped(pi[0])));
+    }
     lines
 }
 
-/// The objects every alignment of the drawing draws at 1:`scale` on a paper turned `turn` degrees.
-pub fn objects(doc: &Document, scale: f64, turn: f64) -> Vec<NewObject> {
+/// Where the lines through `a` and `b` in directions `ta` and `tb` (radians) meet; none when they are parallel.
+fn meet(a: [f64; 2], ta: f64, b: [f64; 2], tb: f64) -> Option<[f64; 2]> {
+    let (da, db) = ([ta.cos(), ta.sin()], [tb.cos(), tb.sin()]);
+    let cross = da[0] * db[1] - da[1] * db[0];
+    if cross.abs() < 1e-12 {
+        return None;
+    }
+    let t = ((b[0] - a[0]) * db[1] - (b[1] - a[1]) * db[0]) / cross;
+    Some([a[0] + t * da[0], a[1] + t * da[1]])
+}
+
+/// The objects every alignment of the drawing draws at 1:`scale` on a paper turned `turn` degrees, the curves' data
+/// inside `room`.
+pub fn objects(doc: &Document, scale: f64, turn: f64, room: Option<Room>) -> Vec<NewObject> {
     let m = scale.max(1.0) / 1000.0;
     let h = TEXT_MM * m;
     let mut out = Vec::new();
-    for (def, built) in made_alignments(doc) {
+    let made = made_alignments(doc);
+    // Every axis sampled every half text height: a curve's data box keeps clear of them.
+    let mut roads: Vec<[f64; 2]> = Vec::new();
+    for b in made.iter().filter_map(|(_, b)| b.as_ref().ok()) {
+        let n = ((b.length() / (0.5 * h)).ceil() as usize).clamp(1, 200_000);
+        roads.extend((0..=n).filter_map(|i| b.place(b.length() * i as f64 / n as f64)).map(|p| [p.x, p.y]));
+        // The main points' lines and their texts (`TS1=1+194.71`, 13 characters or so) stand out from the axis.
+        for c in b.core.curves.iter().filter(|c| c.radius > 0.0 && c.radius.is_finite()) {
+            for s in c.stations {
+                let Some(p) = b.place(s) else { continue };
+                let (_, nrm) = frame(p.direction);
+                let reach = MAIN_MM * m + 0.5 * h + 13.0 * WIDE * h;
+                let k = (2.0 * reach / (0.5 * h)).ceil() as usize;
+                roads.extend((0..=k).map(|i| {
+                    let d = -MAIN_MM * m + (reach + MAIN_MM * m) * i as f64 / k as f64;
+                    [p.x + nrm[0] * d, p.y + nrm[1] * d]
+                }));
+            }
+        }
+    }
+    for (def, built) in made {
         let Ok(b) = built else { continue };
         let parallel = def.offset_of.is_some();
         axis(&mut out, &b, parallel, m);
@@ -275,7 +358,7 @@ pub fn objects(doc: &Document, scale: f64, turn: f64) -> Vec<NewObject> {
         }
         hectometres(&mut out, &b, m, h, turn);
         let schedule = schedule_for(doc, &def.id, &b);
-        curves(&mut out, &def, &b, schedule.as_ref(), m, h, turn);
+        curves(&mut out, &def, &b, schedule.as_ref(), room, &roads, Paper { m, h, turn });
         ends(&mut out, &b, m, h, turn);
     }
     out
@@ -304,7 +387,8 @@ fn axis(out: &mut Vec<NewObject>, b: &Built, parallel: bool, _m: f64) {
         }
     }
     if pts.len() > 1 {
-        out.push(path(&pts, Some(RED), weight, None));
+        // KGM's 2024 sheets draw the axis red and dash-dot.
+        out.push(path(&pts, Some(RED), weight, Some(LineType::Dashdot)));
     }
 }
 
@@ -371,22 +455,30 @@ fn hectometres(out: &mut Vec<NewObject>, b: &Built, m: f64, h: f64, turn: f64) {
     }
 }
 
+/// The paper a map draws on: metres a paper millimetre stands for, the text height (m) and the content's turn (°).
+#[derive(Clone, Copy)]
+struct Paper {
+    m: f64,
+    h: f64,
+    turn: f64,
+}
+
 fn curves(
     out: &mut Vec<NewObject>,
     def: &kentos_commands::AlignmentDef,
     b: &Built,
     schedule: Option<&(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
-    m: f64,
-    h: f64,
-    turn: f64,
+    room: Option<Room>,
+    roads: &[[f64; 2]],
+    paper: Paper,
 ) {
+    let Paper { m, h, turn } = paper;
     let mut named = 0usize;
     for c in &b.core.curves {
         if c.radius <= 0.0 || !c.radius.is_finite() {
             continue;
         }
         named += 1;
-        let name = format!("S{named}");
         let codes = main_codes(c.spiral_in, c.spiral_out);
         let mut seen: Vec<f64> = Vec::new();
         for (i, s) in c.stations.iter().enumerate() {
@@ -399,10 +491,10 @@ fn curves(
             let len = MAIN_MM * m;
             let c0 = [p.x - n[0] * len, p.y - n[1] * len];
             let c1 = [p.x + n[0] * len, p.y + n[1] * len];
-            out.push(path(&[c0, c1], Some(RED), 0.25, None));
-            // Along the line, beyond its left end.
+            out.push(path(&[c0, c1], None, 0.25, None));
+            // Along the line, beyond its left end: `TO1=0+100.42` (KGM 2024).
             let at = [p.x + n[0] * (len + 0.5 * h), p.y + n[1] * (len + 0.5 * h)];
-            let words = format!("{} {name} {}", codes[i], km_text(p.km, 3));
+            let words = format!("{}{named}={}", codes[i], km_text(p.km, 2));
             out.push(text(
                 at,
                 words,
@@ -410,7 +502,7 @@ fn curves(
                 (p.direction + std::f64::consts::FRAC_PI_2).to_degrees(),
                 turn,
                 TextAlign::MiddleLeft,
-                Some(RED),
+                None,
             ));
         }
         // The PI and its curve data, outside the curve (away from the centre).
@@ -418,15 +510,6 @@ fn curves(
             continue;
         };
         let pt = [pi.x, pi.y];
-        out.push(object(
-            EntityGeometry::Circle {
-                c: Vec2 { x: pt[0], y: pt[1] },
-                r: 0.75 * m,
-            },
-            None,
-            Some(0.25),
-            None,
-        ));
         let away = [pt[0] - c.centre[0], pt[1] - c.centre[1]];
         let len = away[0].hypot(away[1]);
         let u = if len > 1e-9 {
@@ -434,66 +517,159 @@ fn curves(
         } else {
             [0.0, 1.0]
         };
-        let lines = curve_data(&name, c, pt, schedule);
-        // Upright on the paper, 4 mm beyond the PI away from the curve: above it when the outside is up (the block
-        // grows up from there), below it otherwise; left aligned when the outside is to the right.
+        let inner = match (b.place(c.stations[1]), b.place(c.stations[2])) {
+            (Some(a), Some(z)) => meet([a.x, a.y], a.direction, [z.x, z.y], z.direction),
+            _ => None,
+        };
+        let lines = curve_data(named, c, pt, inner, schedule);
         let r = turn.to_radians();
         let (ex, ey) = ([r.cos(), r.sin()], [-r.sin(), r.cos()]);
+        // Upright on the paper: a point `x` along and `y` up from `o`.
+        let on = |o: [f64; 2], x: f64, y: f64| [o[0] + ex[0] * x + ey[0] * y, o[1] + ex[1] * x + ey[1] * y];
+        // The PI as the 2024 sheets mark it: a triangle, 2.5 mm a side, and its name boxed on the curve's side.
+        let side = 2.5 * m;
+        let rise = side * 0.75_f64.sqrt();
+        out.push(path(
+            &[
+                on(pt, 0.0, 2.0 * rise / 3.0),
+                on(pt, -0.5 * side, -rise / 3.0),
+                on(pt, 0.5 * side, -rise / 3.0),
+                on(pt, 0.0, 2.0 * rise / 3.0),
+            ],
+            None,
+            0.25,
+            None,
+        ));
+        // The name beside the triangle, on the side the data box does not take: between the PI and the curve it sat on
+        // the parallel axis and the PI lines (Y78's first picture).
+        let name = format!("S - {named}");
+        let half = [0.5 * (name.chars().count() as f64 * WIDE + 0.6) * h, 0.7 * h];
+        let beside = if u[0] * ex[0] + u[1] * ex[1] >= 0.0 { -1.0 } else { 1.0 };
+        let name_at = on(pt, beside * (0.5 * side + 1.0 * m + half[0]), 0.0);
+        out.push(path(
+            &[
+                on(name_at, -half[0], -half[1]),
+                on(name_at, half[0], -half[1]),
+                on(name_at, half[0], half[1]),
+                on(name_at, -half[0], half[1]),
+                on(name_at, -half[0], -half[1]),
+            ],
+            None,
+            0.18,
+            None,
+        ));
+        out.push(text(name_at, name, h, turn, turn, TextAlign::MiddleCenter, None));
+        // The data box, 4 mm beyond the PI away from the curve: above it when the outside is up, below it otherwise;
+        // to the right when the outside is to the right. KGM 2024's frame: a box, a double rule along the left, a rule
+        // under the name and one over X, Y. A line is at most WIDE h a character (Barlow's figures measured 0.465 h).
         let corner = [pt[0] + u[0] * 4.0 * m, pt[1] + u[1] * 4.0 * m];
+        // Only a map that shows the PI places its box: another map of the drawing (the profile's, on the same sheet)
+        // pulled a box it does not show into its own frame (Y78's picture); there the box stays by its PI, cut away.
+        let room = room.filter(|r| {
+            let d = [pt[0] - r.center[0], pt[1] - r.center[1]];
+            (d[0] * ex[0] + d[1] * ex[1]).abs() <= r.half[0] && (d[0] * ey[0] + d[1] * ey[1]).abs() <= r.half[1]
+        });
         let pitch = 1.6 * h;
+        let height = pitch * lines.len() as f64 + 0.4 * h;
+        let width = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0) as f64 * WIDE * h + 2.2 * h;
+        let mut left = if u[0] * ex[0] + u[1] * ex[1] >= 0.0 { 0.0 } else { -width };
         let up = u[0] * ey[0] + u[1] * ey[1] >= 0.0;
-        let first = if up {
-            pitch * (lines.len() as f64 - 1.0)
+        let mut bottom = if up { 0.0 } else { -height };
+        // Where it goes (docs/adr/0984): outside the PI as above when that is inside the map and 6 mm clear of every
+        // axis and main point's line and text; else across the road, 6 mm beyond the axes over the box's width; else moved inside the map, 2 mm from
+        // its edge (a box taller or wider than the map keeps its top and left). Below a PI near the map's edge the box
+        // ran off the map; moved straight in, it sat on the road (Y78's pictures).
+        let paper = |p: &[f64; 2]| {
+            let d = [p[0] - corner[0], p[1] - corner[1]];
+            [d[0] * ex[0] + d[1] * ex[1], d[0] * ey[0] + d[1] * ey[1]]
+        };
+        let near: Vec<[f64; 2]> = roads.iter().map(paper).collect();
+        let clear = 6.0 * m;
+        let free = |l: f64, b: f64| {
+            !near.iter().any(|q| q[0] > l - clear && q[0] < l + width + clear && q[1] > b - clear && q[1] < b + height + clear)
+        };
+        let fits = |l: f64, b: f64| {
+            room.is_none_or(|r| {
+                let d = [corner[0] - r.center[0], corner[1] - r.center[1]];
+                let c = [d[0] * ex[0] + d[1] * ex[1], d[0] * ey[0] + d[1] * ey[1]];
+                let (lo, hi) = ([-r.half[0] + 2.0 * m, -r.half[1] + 2.0 * m], [r.half[0] - 2.0 * m, r.half[1] - 2.0 * m]);
+                c[0] + l >= lo[0] && c[0] + l + width <= hi[0] && c[1] + b >= lo[1] && c[1] + b + height <= hi[1]
+            })
+        };
+        // Across this curve's own axis first (another axis crossing the box's width far off must not set it), then
+        // past any axis the box still meets, a few times.
+        let beyond = |pts: &mut dyn Iterator<Item = [f64; 2]>, l: f64| {
+            let ys = pts.filter(|q| q[0] > l - clear && q[0] < l + width + clear).map(|q| q[1]);
+            if up {
+                ys.fold(f64::INFINITY, f64::min) - clear - height
+            } else {
+                ys.fold(f64::NEG_INFINITY, f64::max) + clear
+            }
+        };
+        let step = 0.5 * h;
+        let n = ((b.length() / step).ceil() as usize).clamp(1, 200_000);
+        let mut own = (0..=n).filter_map(|i| b.place(b.length() * i as f64 / n as f64)).map(|p| paper(&[p.x, p.y]));
+        let mut across = beyond(&mut own, left);
+        for _ in 0..6 {
+            if !across.is_finite() || free(left, across) {
+                break;
+            }
+            let mut met = near.iter().copied().filter(|q| q[1] > across - clear && q[1] < across + height + clear);
+            across = beyond(&mut met, left);
+        }
+        let placed = if fits(left, bottom) && free(left, bottom) {
+            true
+        } else if across.is_finite() && fits(left, across) && free(left, across) {
+            bottom = across;
+            true
         } else {
-            -h
+            false
         };
-        let rightward = u[0] * ex[0] + u[1] * ex[1] >= 0.0;
-        let align = if rightward {
-            TextAlign::MiddleLeft
-        } else {
-            TextAlign::MiddleRight
-        };
-        // KGM's frame (EK-10, EK-11): a rule along the texts' aligned edge, one under the name and one over Y, X. The
-        // texts run `dir` along the paper from the edge; a line is at most 0.5 h a character wide (Barlow's figures
-        // measured 0.465 h on the PDF), so the rules reach past the longest.
-        let dir = if rightward { 1.0 } else { -1.0 };
-        let wide = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0) as f64 * 0.5 * h + 0.5 * h;
-        let edge = |y: f64, along: f64| {
-            let x = dir * along;
-            [corner[0] + ex[0] * x + ey[0] * y, corner[1] + ex[1] * x + ey[1] * y]
-        };
-        let gap = 0.6 * h;
-        let (top, bottom) = (first + 0.5 * pitch, first - pitch * (lines.len() as f64 - 0.5));
-        out.push(path(&[edge(top, -gap), edge(bottom, -gap)], None, 0.18, None));
-        let under_name = first - 0.5 * pitch;
-        out.push(path(&[edge(under_name, -gap), edge(under_name, wide)], None, 0.18, None));
-        if let Some(iy) = lines.iter().position(|l| l.starts_with("Y=")) {
-            let over_y = first - pitch * (iy as f64 - 0.5);
-            out.push(path(&[edge(over_y, -gap), edge(over_y, wide)], None, 0.18, None));
+        if let (false, Some(room)) = (placed, room) {
+            let d = [corner[0] - room.center[0], corner[1] - room.center[1]];
+            let c = [d[0] * ex[0] + d[1] * ex[1], d[0] * ey[0] + d[1] * ey[1]];
+            let keep = |from: f64, size: f64, half: f64, high_first: bool| {
+                let (lo, hi) = (-half + 2.0 * m, half - 2.0 * m);
+                if size > hi - lo {
+                    if high_first { hi - size - from } else { lo - from }
+                } else if from < lo {
+                    lo - from
+                } else if from + size > hi {
+                    hi - (from + size)
+                } else {
+                    0.0
+                }
+            };
+            left += keep(c[0] + left, width, room.half[0], false);
+            bottom += keep(c[1] + bottom, height, room.half[1], true);
+        }
+        let top = bottom + height;
+        let at = |x: f64, y: f64| on(corner, x, y);
+        out.push(path(
+            &[at(left, bottom), at(left + width, bottom), at(left + width, top), at(left, top), at(left, bottom)],
+            None,
+            0.25,
+            None,
+        ));
+        out.push(path(&[at(left + 0.45 * h, bottom), at(left + 0.45 * h, top)], None, 0.18, None));
+        out.push(path(&[at(left + 0.75 * h, bottom), at(left + 0.75 * h, top)], None, 0.5, None));
+        let rule = |y: f64| path(&[at(left, y), at(left + width, y)], None, 0.35, None);
+        out.push(rule(top - 0.2 * h - pitch));
+        if let Some(ix) = lines.iter().position(|l| l.starts_with("X =")) {
+            out.push(rule(top - 0.2 * h - pitch * ix as f64));
         }
         for (i, l) in lines.into_iter().enumerate() {
-            let y = first - pitch * i as f64;
-            let at = [corner[0] + ey[0] * y, corner[1] + ey[1] * y];
+            let y = top - 0.2 * h - pitch * (i as f64 + 0.5);
             out.push(text(
-                at,
+                at(left + 1.2 * h, y),
                 l,
                 h,
                 turn,
                 turn,
-                align,
+                TextAlign::MiddleLeft,
                 if i == 0 { Some(RED) } else { None },
             ));
         }
-        let name_at = [pt[0] - u[0] * 2.0 * m, pt[1] - u[1] * 2.0 * m];
-        out.push(text(
-            name_at,
-            name,
-            h,
-            turn,
-            turn,
-            TextAlign::MiddleCenter,
-            Some(RED),
-        ));
     }
 }
 
@@ -511,16 +687,30 @@ fn ends(out: &mut Vec<NewObject>, b: &Built, m: f64, h: f64, turn: f64) {
             0.35,
             None,
         ));
+        // KGM 2024: the words, `KM : 0+000.00` and the point's X and Y (the 2019 şartname: “Proje başı ve sonunda kot
+        // ve koordinat değerleri yazılacaktır”; the elevation is the profile's). The lines run down the paper as the
+        // reader sees them, whichever way the text was turned to read.
+        let degrees = (p.direction - std::f64::consts::FRAC_PI_2).to_degrees();
+        let (on_paper, _) = readable(degrees - turn, TextAlign::MiddleLeft);
+        let down = (on_paper + turn - 90.0).to_radians();
         let at = [p.x - n[0] * (len + 0.5 * h), p.y - n[1] * (len + 0.5 * h)];
-        out.push(text(
-            at,
-            format!("{words} KM: {}", km_text(p.km, 3)),
-            h,
-            (p.direction - std::f64::consts::FRAC_PI_2).to_degrees(),
-            turn,
-            TextAlign::MiddleLeft,
-            None,
-        ));
+        let lines = [
+            format!("{words} KM : {}", km_text(p.km, 2)),
+            format!("X = {}", grouped(p.y)),
+            format!("Y = {}", grouped(p.x)),
+        ];
+        for (i, l) in lines.into_iter().enumerate() {
+            let k = 1.6 * h * i as f64;
+            out.push(text(
+                [at[0] + down.cos() * k, at[1] + down.sin() * k],
+                l,
+                h,
+                degrees,
+                turn,
+                TextAlign::MiddleLeft,
+                None,
+            ));
+        }
     }
 }
 
@@ -554,6 +744,15 @@ mod tests {
             readable(200.0, TextAlign::MiddleCenter),
             (20.0, TextAlign::MiddleCenter)
         );
+    }
+
+    #[test]
+    fn coordinates_in_groups_of_three() {
+        // KGM 2024: `X =4 349 283.7346`, `Y =   542 198.1906`.
+        assert_eq!(grouped(4_349_283.734_6), "4 349 283.7346");
+        assert_eq!(grouped(542_198.190_6), "542 198.1906");
+        assert_eq!(grouped(12.5), "12.5000");
+        assert_eq!(grouped(-1234.0), "-1 234.0000");
     }
 
     #[test]

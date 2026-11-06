@@ -36,7 +36,7 @@ fn kgms_sample_curve_reads_as_kgm_wrote_it() {
         let rule = CurveRule { pi: "s1".into(), rate: 0.06, runoff: 76.8, on_tangent: 0.0, widening: 0.0 };
         let (s, _) = from_curves(&al, normal, &[rule]).expect("the schedule builds");
         let got = curve_super(&s, normal, &al.curves[0]);
-        close(got.rate.expect("banked"), 0.06, "S");
+        close(got.rate, 0.06, "S");
         close(got.widening, 0.0, "Gn");
         for (end, what) in [(got.entry, "entry"), (got.exit, "exit")] {
             let e = end.unwrap_or_else(|| panic!("{what}"));
@@ -69,7 +69,7 @@ fn rows_read_by_their_crossings() {
     ];
     let s = from_rows(&rows).expect("rows");
     let got = curve_super(&s, normal, c);
-    close(got.rate.expect("banked"), 0.05, "S");
+    close(got.rate, 0.05, "S");
     // In: level at 330 + 70 · 2/7 = 350, so Lt = 20, Lr = 400 − 350 = 50, La = 400 − 330 = 70.
     let e = got.entry.expect("entry");
     close(e.runout, 20.0, "Lt in");
@@ -102,11 +102,13 @@ fn a_transition_on_the_curve_leaves_no_tangent_part() {
 }
 
 #[test]
-fn an_unbanked_curve_has_no_rate_and_no_transition() {
+fn an_unbanked_curve_has_its_adverse_slope_and_no_transition() {
+    // KGM's 2024 sample (S-7, R 3500): `Se = % -2.00`, the outside's normal crown falling away from the centre.
     let al = quarter();
     let normal = Crossfall { left: -0.02, right: -0.02 };
     let got = curve_super(&from_rows(&[]).unwrap(), normal, &al.curves[0]);
-    assert_eq!((got.rate, got.entry, got.exit), (None, None, None));
+    close(got.rate, -0.02, "Se");
+    assert_eq!((got.entry, got.exit), (None, None));
     close(got.widening, 0.0, "Gn");
 }
 

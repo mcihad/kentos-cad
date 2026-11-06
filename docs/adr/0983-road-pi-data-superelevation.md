@@ -1,6 +1,9 @@
 # 0983 — Some bilgisinde dever: S, Lr, Lt, La, Gn; basit kurbun T ve L'si
 
-Tarih: 2026-11-06. Durum: kabul (Y77). Kapsam ROAD-SEC-11'in plan haritası ve ROAD-DEVER-10; ADR 0982 §Açık ("Some
+Tarih: 2026-11-06. Durum: kabul (Y77); **T, L ve kutu biçimi ADR 0984 ile değişti.** Bu ADR'nin "T ve L basit
+kurbundur (R·tan(Δ/2), R·Δ)" sonucu klotoidli kurpta yanlıştı. KGM'nin kutusundaki A, toplam sapma değil dairesel
+kısmın sapmasıdır; EK-10'un `S-A=35.60832` satırı bunu gösteriyor. L dairesel yaydır, T R·tan(D/2)'dir. Kutu artık
+KGM'nin Haziran 2024 örnek paftalarının biçimindedir (`D`, `Se`, iki ondalık). Kapsam ROAD-SEC-11'in plan haritası ve ROAD-DEVER-10; ADR 0982 §Açık ("Some
 bilgisinde S, Gn, Lt, La").
 
 ## Sorun
