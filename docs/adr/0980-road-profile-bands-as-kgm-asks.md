@@ -115,11 +115,13 @@ istediği yatay geometri ve dever bantları yoktu, sıra da KGM'ninkinden farkl�
   kalır. Komut bunu `road_sheet_outside` uyarısıyla söyler.
 
   KGM 2019 profil paftalarını "rulo halinde (… 10 veya 20 km'lik kesimler)" ister (s. 13). KGM bantları için bir rulo
-  şablonu ayrı bir iştir; plana yazıldı.
+  şablonu ayrı bir iştir; plana yazıldı. (Y75 düzeltmesi: o "rulo" Brükner içindir; plan–profil paftası A1'dir, ADR
+  0981.)
 
 ## Açık
 
-- **KGM rulo şablonu:** KGM bantlarına yer açan plan–profil şablonu henüz yok (Y74 bulgusu).
+- ~~**KGM rulo şablonu**~~: Y75'te KGM'nin A1 plan–profil paftası oldu (ADR 0981). "Rulo" KGM'de Brükner içindir;
+  plan–profil paftası A1'dir.
 - **Öteki bant içerikleri:**
   - KGM'nin örnek paftasındaki hafriyat, şev ve platform satırları;
   - kot taşıma çizgisi;

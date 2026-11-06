@@ -4,7 +4,8 @@
 An alignment laid on plan–profile sheets by the references and no KentOS code: the alignment's points and km are
 road_alignment_cases.py's (40 digits, through road_profile_command_cases.py's drawing), each profile view's frame and
 objects road_profile_command_cases.py's `drawing` over the sheet's stations; the plan map's size is the template's
-(`crates/shared/sheet/templates/yol-plan-boykesit.json`, data), the rest the rule of docs/adr/0908 §10 written here.
+(`crates/shared/sheet/templates/yol-plan-boykesit.json`, and with KGM's bands `yol-plan-boykesit-kgm.json`, docs/adr/0981;
+data), the rest the rule of docs/adr/0908 §10 written here.
 
     uv run --no-project --python 3.11 --with triangle --with numpy --with mpmath --with pyproj \\
         python3 scripts/fixtures/road_sheets_cases.py [--check]
@@ -26,11 +27,17 @@ import road_profile_cases as pref  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/road.sheets.plan.json"
-TEMPLATE = json.loads((ROOT / "crates/shared/sheet/templates/yol-plan-boykesit.json").read_text(encoding="utf-8"))
-ITEMS = TEMPLATE["sheet"]["items"]
-PLAN = next(i for i in ITEMS if i["id"] == "plan")
-PROFILE = next(i for i in ITEMS if i["id"] == "boykesit")
-PAGE = TEMPLATE["sheet"]["page"]["size"]
+def template(name):
+    """A road template's items, its plan and profile maps and its page (the template's file, data)."""
+    t = json.loads((ROOT / f"crates/shared/sheet/templates/{name}.json").read_text(encoding="utf-8"))
+    items = t["sheet"]["items"]
+    return (items, next(i for i in items if i["id"] == "plan"), next(i for i in items if i["id"] == "boykesit"),
+            t["sheet"]["page"]["size"])
+
+
+ITEMS, PLAN, PROFILE, PAGE = template("yol-plan-boykesit")
+# Docs/adr/0981: KGM's A1 plan–profile sheet, the default with KGM's bands.
+KGM = template("yol-plan-boykesit-kgm")
 
 completed, failed, step, case = pcmd.completed, pcmd.failed, pcmd.step, pcmd.case
 UNCHANGED, STEPPED, CONFLICT, BAD_REVISION = pcmd.UNCHANGED, pcmd.STEPPED, pcmd.CONFLICT, pcmd.BAD_REVISION
@@ -114,8 +121,10 @@ def lay(input_, sets=()):
     if profile is not None and input_["layerId"] == "grup":
         raise Refused(failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir "
                                             "katman seçin.", "layerId"))
-    source = input_.get("source", {"type": "system", "id": "sys:yol-plan-boykesit"})
-    if source["id"] not in ("sys:yol-plan-boykesit", "sys:cad-teknik"):
+    default = "sys:yol-plan-boykesit-kgm" if input_.get("bands") == "kgm" else "sys:yol-plan-boykesit"
+    source = input_.get("source", {"type": "system", "id": default})
+    items, plan_item, profile_item, page = KGM if source["id"] == "sys:yol-plan-boykesit-kgm" else (ITEMS, PLAN, PROFILE, PAGE)
+    if source["id"] not in ("sys:yol-plan-boykesit", "sys:yol-plan-boykesit-kgm", "sys:cad-teknik"):
         raise Refused(failed("unknown_template", f"“{source['id']}” sistem şablonu yok; cad.sheets.set(details=true) ile "
                                                  "şablonları listeleyin.", "source.id"))
     for field in ("name", "center", "scale"):
@@ -125,12 +134,12 @@ def lay(input_, sets=()):
     if source["id"] == "sys:cad-teknik" and profile is not None:
         raise Refused(failed("not_fixed_map", "Şablonun paftasında iki görünüm penceresi yok; plan–boykesit paftası "
                                               "planı birinciye, boykesiti ikinciye koyar.", "source"))
-    scale = input_.get("scale", PLAN["kind"]["view"]["scale"])
+    scale = input_.get("scale", plan_item["kind"]["view"]["scale"])
     if not 1 <= scale <= 1_000_000:
         raise Refused(bad("scale", "Ölçek 1 ile 1 000 000 arası olmalı."))
-    width = PLAN["frame"]["width"] / 1e6 * scale
-    height = PLAN["frame"]["height"] / 1e6 * scale
-    pheight = PROFILE["frame"]["height"] / 1e6 * scale
+    width = plan_item["frame"]["width"] / 1e6 * scale
+    height = plan_item["frame"]["height"] / 1e6 * scale
+    pheight = profile_item["frame"]["height"] / 1e6 * scale
     overlap = input_.get("overlap", 0.0)
     if not 0 <= overlap < 0.5 * width:
         raise Refused(bad("overlap", f"Bindirme 0 ile bir paftanın boyunun yarısı ({num(0.5 * width)} m) arasında "
@@ -218,8 +227,8 @@ def lay(input_, sets=()):
         kept["overlap"] = overlap
     book = [{"drawingInfo": {"number": r["number"], "title": r["title"], "revision": "", "status": "",
                              "subset": ["Yol", a["name"]]},
-             "id": r["sheet"], "name": f"{r['number']} {r['title']}", "width": PAGE["width"] / 1000,
-             "height": PAGE["height"] / 1000, "items": len(ITEMS),
+             "id": r["sheet"], "name": f"{r['number']} {r['title']}", "width": page["width"] / 1000,
+             "height": page["height"] / 1000, "items": len(items),
              "maps": [{"item": f"{r['sheet']}-item-1", "name": "Plan", "scale": float(scale)},
                       {"item": f"{r['sheet']}-item-2", "name": "Boykesit", "scale": float(scale)}]}
             for r in sheets]

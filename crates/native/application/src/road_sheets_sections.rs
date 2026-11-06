@@ -37,7 +37,7 @@ fn prepare(doc: &Document, input: &RoadSheetsSections) -> Result<Laid, Stop> {
     };
     let (stations, [across, down], warnings) = road_sections_draw::pitch(doc, &asked(input.stations.clone(), input.at, Some(1)))?;
     let source = input.source.clone().unwrap_or(kentos_commands::SheetTemplateSource::System { id: DEFAULT_TEMPLATE.into() });
-    let template = template_of(Some(&source))?;
+    let template = template_of(Some(&source), false)?;
     let options: template::InstanceOptions = serde_json::from_value(input.options.clone()).map_err(|e| {
         Stop::failed(error("invalid_options", format!("Şablon seçenekleri okunamadı: {e}"), Some("options".into())))
     })?;

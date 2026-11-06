@@ -15,7 +15,7 @@ use kentos_sheet::template::*;
 use kentos_sheet::*;
 use std::collections::BTreeSet;
 
-pub const SYSTEM_IDS: [&str; 12] = [
+pub const SYSTEM_IDS: [&str; 13] = [
     "sys:genel-a4-dikey",
     "sys:genel-a3-yatay",
     "sys:rapor-sayfasi",
@@ -27,6 +27,7 @@ pub const SYSTEM_IDS: [&str; 12] = [
     "sys:gis-tematik",
     "sys:gis-atlas",
     "sys:yol-plan-boykesit",
+    "sys:yol-plan-boykesit-kgm",
     "sys:baski-kalibrasyonu",
 ];
 

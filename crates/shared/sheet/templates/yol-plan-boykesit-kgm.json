@@ -1,0 +1,561 @@
+{
+  "schema": "kentos.sheet.template/1",
+  "meta": {
+    "id": "sys:yol-plan-boykesit-kgm",
+    "revision": 1,
+    "name": "Yol plan–boykesit paftası (KGM, A1)",
+    "description": "KGM'nin 2019 Kesin ve Ön Projeler Teknik Şartnamesine göre A1 yatay (594 × 841 mm) yol paftası: üstte planda aksın bir parçası, altta aynı km'lerin boykesit görünümü ve KGM'nin bantları (Kırmızı Kot, Siyah Kot, Kilometre, Yatay Geometri, Düşey Geometri, Dever; ADR 0980–0981) aynı yatay ölçekte; sağ üstte KGM'nin klişesi (yol adı; bölge, il, kontrol kesim no; dosya no, pafta no ve pafta sayısı). Örnek paftalardaki gibi 1/1000'de yaklaşık 790 m.",
+    "category": "yol",
+    "tags": [
+      "yol",
+      "plan",
+      "boykesit",
+      "güzergâh",
+      "KGM"
+    ],
+    "papers": [
+      {
+        "paper": "a1",
+        "orientation": "landscape"
+      },
+      {
+        "paper": "a0",
+        "orientation": "landscape"
+      },
+      {
+        "paper": "a2",
+        "orientation": "landscape"
+      }
+    ],
+    "workspaces": [
+      "cad"
+    ],
+    "projectTypes": [
+      "road"
+    ],
+    "created": "2026-11-06T00:00:00Z",
+    "updated": "2026-11-06T00:00:00Z",
+    "author": "KentOS"
+  },
+  "sheet": {
+    "id": "yol-plan-boykesit-kgm",
+    "name": "Yol plan–boykesit paftası (KGM, A1)",
+    "page": {
+      "paper": "a1",
+      "orientation": "landscape",
+      "size": {
+        "width": 841000,
+        "height": 594000
+      },
+      "margins": {
+        "top": 10000,
+        "right": 10000,
+        "bottom": 10000,
+        "left": 20000
+      }
+    },
+    "items": [
+      {
+        "id": "cerceve",
+        "name": "Pafta çerçevesi",
+        "frame": {
+          "left": 20000,
+          "top": 10000,
+          "width": 811000,
+          "height": 574000
+        },
+        "constraints": {
+          "h": "leftRight",
+          "v": "topBottom",
+          "relativeTo": "margins"
+        },
+        "locked": true,
+        "kind": {
+          "type": "border",
+          "style": "double",
+          "stroke": {
+            "width": 700
+          },
+          "innerStroke": {
+            "width": 350
+          },
+          "gap": 5000,
+          "zones": {
+            "size": 50000,
+            "text": {
+              "size": 2500,
+              "weight": 500
+            }
+          },
+          "centringMarks": true
+        }
+      },
+      {
+        "id": "plan",
+        "name": "Plan",
+        "frame": {
+          "left": 30000,
+          "top": 20000,
+          "width": 791000,
+          "height": 230000
+        },
+        "constraints": {
+          "h": "leftRight",
+          "v": "topBottom",
+          "relativeTo": "margins"
+        },
+        "kind": {
+          "type": "map",
+          "view": {
+            "type": "fixed",
+            "scale": 1000
+          }
+        }
+      },
+      {
+        "id": "boykesit",
+        "name": "Boykesit",
+        "frame": {
+          "left": 30000,
+          "top": 256000,
+          "width": 791000,
+          "height": 318000
+        },
+        "constraints": {
+          "h": "leftRight",
+          "v": "topBottom",
+          "relativeTo": "margins"
+        },
+        "kind": {
+          "type": "map",
+          "view": {
+            "type": "fixed",
+            "scale": 1000
+          }
+        }
+      },
+      {
+        "id": "antet",
+        "name": "Antet",
+        "frame": {
+          "left": 656000,
+          "top": 20000,
+          "width": 160000,
+          "height": 35000
+        },
+        "constraints": {
+          "h": "right",
+          "v": "top",
+          "relativeTo": "margins"
+        },
+        "fill": "#ffffff",
+        "kind": {
+          "type": "titleBlock",
+          "outer": {
+            "width": 500
+          },
+          "inner": {
+            "width": 180
+          },
+          "cellPadding": 1000,
+          "valueStyle": {
+            "size": 2400,
+            "weight": 400
+          },
+          "rows": [
+            {
+              "height": 20,
+              "cells": [
+                {
+                  "width": 6,
+                  "label": "YOL",
+                  "value": "[% @proje_adi %]",
+                  "style": {
+                    "size": 3600,
+                    "weight": 600
+                  }
+                }
+              ]
+            },
+            {
+              "height": 8,
+              "cells": [
+                {
+                  "width": 2,
+                  "label": "BÖLGE",
+                  "value": "[% @birim %]",
+                  "align": "center"
+                },
+                {
+                  "width": 2,
+                  "label": "İL",
+                  "value": "[% @il %]",
+                  "align": "center"
+                },
+                {
+                  "width": 2,
+                  "label": "K.KES.NO",
+                  "value": "[% @kontrol_kesim %]",
+                  "align": "center"
+                }
+              ]
+            },
+            {
+              "height": 8,
+              "cells": [
+                {
+                  "width": 2,
+                  "label": "DOSYA NO",
+                  "value": "[% @dosya_no %]",
+                  "align": "center"
+                },
+                {
+                  "width": 2,
+                  "label": "PAF.NO",
+                  "value": "[% @sayfa %]",
+                  "align": "center"
+                },
+                {
+                  "width": 2,
+                  "label": "TOP. PAF",
+                  "value": "[% @sayfa_sayisi %]",
+                  "align": "center"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "variants": [
+      {
+        "id": "yatay-a4",
+        "name": "A4 yatay",
+        "when": {
+          "orientation": "landscape",
+          "maxWidth": 300000
+        },
+        "reference": {
+          "width": 297000,
+          "height": 210000
+        },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": {
+              "left": 20000,
+              "top": 10000,
+              "width": 267000,
+              "height": 190000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "plan",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 247000,
+              "height": 75000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "boykesit",
+            "frame": {
+              "left": 30000,
+              "top": 100000,
+              "width": 247000,
+              "height": 95000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": {
+              "left": 167000,
+              "top": 20000,
+              "width": 110000,
+              "height": 25000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "right",
+              "v": "top",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "dikey-a4",
+        "name": "A4 dikey",
+        "when": {
+          "orientation": "portrait",
+          "maxWidth": 230000
+        },
+        "reference": {
+          "width": 210000,
+          "height": 297000
+        },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": {
+              "left": 20000,
+              "top": 10000,
+              "width": 180000,
+              "height": 277000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "plan",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 160000,
+              "height": 110000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "boykesit",
+            "frame": {
+              "left": 30000,
+              "top": 135000,
+              "width": 160000,
+              "height": 147000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": {
+              "left": 80000,
+              "top": 20000,
+              "width": 110000,
+              "height": 25000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "right",
+              "v": "top",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "yatay",
+        "name": "Yatay",
+        "when": {
+          "orientation": "landscape"
+        },
+        "reference": {
+          "width": 841000,
+          "height": 594000
+        },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": {
+              "left": 20000,
+              "top": 10000,
+              "width": 811000,
+              "height": 574000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "plan",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 791000,
+              "height": 230000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "boykesit",
+            "frame": {
+              "left": 30000,
+              "top": 256000,
+              "width": 791000,
+              "height": 318000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": {
+              "left": 656000,
+              "top": 20000,
+              "width": 160000,
+              "height": 35000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "right",
+              "v": "top",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "dikey",
+        "name": "Dikey",
+        "when": {
+          "orientation": "portrait"
+        },
+        "reference": {
+          "width": 594000,
+          "height": 841000
+        },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": {
+              "left": 20000,
+              "top": 10000,
+              "width": 564000,
+              "height": 821000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "plan",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 544000,
+              "height": 330000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "boykesit",
+            "frame": {
+              "left": 30000,
+              "top": 360000,
+              "width": 544000,
+              "height": 461000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "leftRight",
+              "v": "topBottom",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": {
+              "left": 409000,
+              "top": 20000,
+              "width": 160000,
+              "height": 35000
+            },
+            "rotation": 0,
+            "constraints": {
+              "h": "right",
+              "v": "top",
+              "relativeTo": "margins"
+            },
+            "hidden": false
+          }
+        ]
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "birim",
+      "label": "Bölge"
+    },
+    {
+      "name": "il",
+      "label": "İl"
+    },
+    {
+      "name": "kontrol_kesim",
+      "label": "Kontrol kesim no"
+    },
+    {
+      "name": "dosya_no",
+      "label": "Dosya no"
+    }
+  ]
+}

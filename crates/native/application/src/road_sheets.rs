@@ -23,6 +23,8 @@ use crate::{ExecutionContext, road_profiles, road_profiles_draw, sheets_edit};
 
 /// The template when none is given: KentOS's plan–profile sheet.
 pub const DEFAULT_TEMPLATE: &str = "sys:yol-plan-boykesit";
+/// KGM's A1 plan–profile sheet (docs/adr/0981), the default with KGM's bands: its profile map holds them.
+pub const KGM_TEMPLATE: &str = "sys:yol-plan-boykesit-kgm";
 /// The undo steps' names.
 pub const STEP: &str = "Yol paftaları";
 pub const SECTIONS_STEP: &str = "Enkesit paftaları";
@@ -45,12 +47,15 @@ pub(crate) struct Laid {
     pub(crate) warnings: Vec<CommandWarning>,
 }
 
-/// The template `source` names, or KentOS's plan–profile sheet.
-pub(crate) fn template_of(source: Option<&SheetTemplateSource>) -> Result<template::Template, Stop> {
+/// The template `source` names, or KentOS's plan–profile sheet (KGM's A1 one with KGM's bands, docs/adr/0981).
+pub(crate) fn template_of(source: Option<&SheetTemplateSource>, kgm: bool) -> Result<template::Template, Stop> {
     match source {
-        None => template::system_template(DEFAULT_TEMPLATE).cloned().ok_or_else(|| {
-            Stop::failed(error("unknown_template", format!("“{DEFAULT_TEMPLATE}” sistem şablonu yok."), Some("source".into())))
-        }),
+        None => {
+            let id = if kgm { KGM_TEMPLATE } else { DEFAULT_TEMPLATE };
+            template::system_template(id).cloned().ok_or_else(|| {
+                Stop::failed(error("unknown_template", format!("“{id}” sistem şablonu yok."), Some("source".into())))
+            })
+        }
         Some(SheetTemplateSource::System { id }) => template::system_template(id).cloned().ok_or_else(|| {
             Stop::failed(error(
                 "unknown_template",
@@ -118,7 +123,7 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
     {
         checks::layer(doc, p)?;
     }
-    let template = template_of(input.source.as_ref())?;
+    let template = template_of(input.source.as_ref(), input.bands == Some(kentos_commands::ProfileBands::Kgm))?;
     let options: template::InstanceOptions = serde_json::from_value(input.options.clone()).map_err(|e| {
         Stop::failed(error("invalid_options", format!("Şablon seçenekleri okunamadı: {e}"), Some("options".into())))
     })?;

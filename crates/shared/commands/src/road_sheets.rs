@@ -22,7 +22,7 @@ fn empty_options() -> serde_json::Value {
 
 /// Input of `road.sheets.plan` v1: the alignment by its id or name, its stations from `from` to `to` (internal, m; its
 /// ends without them), laid on sheets of `source`'s template (KentOS's plan–profile sheet, `sys:yol-plan-boykesit`,
-/// without one) at 1:`scale` (the template's plan map's without it). A sheet's stretch is the plan map's width on the
+/// without one; KGM's A1 one, `sys:yol-plan-boykesit-kgm`, with `bands: kgm`, docs/adr/0981) at 1:`scale` (the template's plan map's without it). A sheet's stretch is the plan map's width on the
 /// ground; the next starts `overlap` metres before its end (0 without it). With a `profile` (on the same alignment) each
 /// sheet's profile view is drawn on `layerId`, the first's lower left at `at`, each next under the one before, and the
 /// template's second map shows it. The set is named `name` (“‹alignment› paftaları” without it) and the sheets numbered

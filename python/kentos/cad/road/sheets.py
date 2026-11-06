@@ -33,15 +33,17 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
     at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı
     ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri
     KGM'nin 2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir
-    (ADR 0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar ve A3 şablonun
-    boykesit haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit;
-    paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın
-    ve boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım
-    ve paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri
-    alma adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale.
-    Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_alignment,
-    unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template,
-    invalid_options, not_fixed_map, bad_drawing_info.
+    (ADR 0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar, A3 şablonun boykesit
+    haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit, bands:
+    kgm ile KGM'nin A1 paftası sys:yol-plan-boykesit-kgm (plan 791 × 230 mm, boykesit
+    791 × 318 mm, sağ üstte KGM klişesi; ADR 0981); paftalar first'ten (yoksa Y-101)
+    numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol
+    ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı
+    “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar:
+    road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision,
+    revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile,
+    invalid_road_sheets, katmanın retleri, unknown_template, invalid_options,
+    not_fixed_map, bad_drawing_info.
     """
     __slots__ = ()
     id = "road.sheets.plan"
@@ -85,15 +87,17 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte
         gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri KGM'nin
         2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir (ADR
-        0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar ve A3 şablonun boykesit
-        haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit; paftalar
-        first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve
-        boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve
-        paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma
-        adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler:
-        invalid_revision, revision_conflict, not_a_road_project, unknown_alignment,
-        unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template,
-        invalid_options, not_fixed_map, bad_drawing_info.
+        0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar, A3 şablonun boykesit
+        haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit, bands:
+        kgm ile KGM'nin A1 paftası sys:yol-plan-boykesit-kgm (plan 791 × 230 mm, boykesit
+        791 × 318 mm, sağ üstte KGM klişesi; ADR 0981); paftalar first'ten (yoksa Y-101)
+        numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol
+        ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı
+        “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar:
+        road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision,
+        revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile,
+        invalid_road_sheets, katmanın retleri, unknown_template, invalid_options,
+        not_fixed_map, bad_drawing_info.
 
         Args:
             doc: The drawing it works on.

@@ -62,6 +62,8 @@ pub fn sample_values() -> Vec<VariableValue> {
         ("pafta_no", "J29-c-23-b"),
         ("kontrol_eden", "A. Kaya"),
         ("il", "Ankara"),
+        ("kontrol_kesim", "16-02"),
+        ("dosya_no", "2026/37"),
         ("ilce", "Çankaya"),
         ("mahalle", "Kızılay"),
         ("ada", "1234"),

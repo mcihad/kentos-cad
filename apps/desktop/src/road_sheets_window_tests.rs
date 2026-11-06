@@ -120,7 +120,8 @@ fn kgm_app() -> App {
     app
 }
 
-/// KGM's bands on the sheets (docs/adr/0980): deeper bands lay the views further apart, the Dever band's schedule is
+/// KGM's bands on the sheets (docs/adr/0980, 0981): they take KGM's A1 sheet, whose plan map is 791 mm long against
+/// the A3 one's 370 mm and whose profile map holds the profile and its 107.5 mm of bands; the Dever band's schedule is
 /// the alignment's; one undo step.
 #[test]
 fn the_sheets_take_kgm_s_bands() {
@@ -132,11 +133,10 @@ fn the_sheets_take_kgm_s_bands() {
     send(&mut app, W::Kgm(true));
     send(&mut app, W::Dever(Some("d-1".into())));
     let kgm = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("reads");
-    let gap = |l: &kentos_commands::RoadSheetsLaid| {
-        let v: Vec<[[f64; 2]; 2]> = l.sheets.iter().filter_map(|s| s.view).collect();
-        v[0][0][1] - v[1][1][1]
-    };
-    assert!(gap(&kgm) > gap(&plain), "KGM's bands are deeper: {} against {}", gap(&kgm), gap(&plain));
+    assert_eq!((plain.length, plain.sheets.len()), (370.0, 2), "KentOS's A3 sheet at 1:1000");
+    assert_eq!((kgm.length, kgm.height, kgm.sheets.len()), (791.0, 230.0, 1), "KGM's A1 sheet at 1:1000");
+    let view = kgm.sheets[0].view.expect("a profile view");
+    assert!(view[1][1] - view[0][1] + 107.5 <= 318.0, "the profile and KGM's bands fit the A1 profile map: {view:?}");
     send(&mut app, W::Make);
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert!(doc.entities().any(|e| matches!(e, kentos_commands::Entity::Text(t) if t.text == "Yatay Geometri")));
@@ -145,7 +145,7 @@ fn the_sheets_take_kgm_s_bands() {
     assert!(app.document.as_ref().expect("a drawing").model.road_sheet_sets().is_empty());
 }
 
-/// The window with KGM's bands and the first sheet, light and dark; `.run/gui-evidence/yol-y74/`:
+/// The window with KGM's bands and the first sheet, light and dark; `.run/gui-evidence/yol-y75/` (KGM's A1 sheet):
 ///
 /// ```text
 /// cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_kgm -- --ignored --nocapture
@@ -156,7 +156,7 @@ fn screens_kgm() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y74");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y75");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
@@ -171,7 +171,7 @@ fn screens_kgm() {
         };
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
-            let file = out.join(format!("y74-{file}-{name}.png"));
+            let file = out.join(format!("y75-{file}-{name}.png"));
             snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
         };
@@ -184,5 +184,7 @@ fn screens_kgm() {
         shot(&mut app, "pencere");
         send(&mut app, W::Make);
         shot(&mut app, "pafta-ilk");
+        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::InspectorTab::Preflight)));
+        shot(&mut app, "pafta-ondenetim");
     }
 }

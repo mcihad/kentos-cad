@@ -209,6 +209,11 @@
           "matches": true
         },
         {
+          "fit": "workspace",
+          "id": "sys:yol-plan-boykesit-kgm",
+          "matches": true
+        },
+        {
           "id": "sys:baski-kalibrasyonu",
           "fit": "workspace",
           "matches": true
@@ -313,6 +318,12 @@
           "matches": false
         },
         {
+          "badge": "CAD şablonu",
+          "fit": "other",
+          "id": "sys:yol-plan-boykesit-kgm",
+          "matches": false
+        },
+        {
           "id": "sys:baski-kalibrasyonu",
           "fit": "other",
           "matches": false,
@@ -378,6 +389,11 @@
         {
           "fit": "common",
           "id": "sys:yol-plan-boykesit",
+          "matches": true
+        },
+        {
+          "fit": "common",
+          "id": "sys:yol-plan-boykesit-kgm",
           "matches": true
         },
         {
