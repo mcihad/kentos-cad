@@ -4129,6 +4129,21 @@
       "status": "implemented"
     },
     {
+      "id": "sheet.plotStyles",
+      "title": "Baskı stili tablosu…",
+      "short": "Baskı stili",
+      "icon": "colorModeMono",
+      "description": "AutoCAD'in renge bağlı (.ctb, 255 kalem) ya da adlı (.stb) baskı stili tablosunu pafta kitabına baskı profili olarak alan pencere: kalemler KentOS'un basacağı gibi (renk, tarama, kalınlık, uç, birleşim) ve aynı basılmayan her alan adıyla önizlenir; kalemler katmanlara elle verilir (katmanın renginden tahmin edilmez), profil seçilen paftalara uygulanır. İçe aktar tek geri alma adımıdır; dosya yalnız okunur.",
+      "aliases": [
+        "BASKISTILI",
+        "CTB",
+        "STB"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
+    },
+    {
       "id": "sheet.details",
       "title": "Detay paftaları…",
       "short": "Detay paftaları",

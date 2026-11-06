@@ -12580,6 +12580,35 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // AutoCAD plot style tables (docs/adr/1130), held together by fixtures/commands/v1/cad.plotstyles.import.json.
+        CommandDescriptor {
+            id: crate::CAD_PLOTSTYLES_IMPORT.into(),
+            version: crate::CAD_PLOTSTYLES_IMPORT_VERSION,
+            title: "Baskı stili tablosu içe aktar".into(),
+            summary: "AutoCAD'in ikili baskı stili tablosunu (.ctb renge bağlı, ACI 1–255 için 255 kalem; .stb adlı stiller) pafta kitabına bir baskı profili olarak alır (docs/adr/1130). Dosya yalnız okunur: 60 baytlık üst bilgi (PIAFILEVERSION_2.0,CTBVER1|STBVER1,compress, pmzlibcodec, üç küçük-sonlu u32) ve zlib ile sıkıştırılmış ad=değer metni. Her alan açıkça eşlenir: renk (-1 nesnenin; 0xC2/0xC3 türlü RGB #rrggbb), gri tonlama, tarama (yalnız titreşim açıkken), kalınlık (kalınlık tablosunun mm değeri µm'ye; 0 nesnenin), uç/birleşim (elmas yok), çizgi tipi (0 sürekli, 31 nesnenin; 1–30 eşlenmez). KentOS'un başka bastığı her şey losses'ta türü, ağırlığı (lost, approximate, note), stilleri ve dosyadaki değerleriyle söylenir; sessiz kırpma yoktur. Profil dosyanın biçimini, SHA-256'sını ve adını taşır. assignments kalemleri ya da stilleri model katmanlarına ({type:modelLayer,id}) veya kâğıt öğelerine açıkça verir (katmanın RGB'sinden kalem tahmin edilmez); sheets profili paftalara uygular, yayın onunla basar. Kitabın tek değişikliğidir; inverse geri alır. Plan yazmaz. Aynı ad ya da aynı dosya ikinci kez duplicate_plot_profile; .ctb/.stb olmayan dosya unsupported_plot_style_file; bozuk üst bilgi, metin ya da alan bad_plot_style_file."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PlotStylesImport>(),
+            output: schema::<crate::PlotStylesImported>(),
+            plan: Some(schema::<crate::PlotStylesImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Siyah-beyaz CTB'yi al, 1. kalemi Duvar katmanına ver ve A-101 paftasına uygula".into(),
+                input: json!({
+                    "path": "siyah.ctb",
+                    "assignments": [{ "target": { "type": "modelLayer", "id": "duvar" }, "key": { "type": "aci", "index": 1 } }],
+                    "sheets": ["a-101"]
+                }),
+                output: None,
+            }],
+        },
         // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
         // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -15684,6 +15713,9 @@ mod tests {
                     crate::CAD_SHEETS_DETAILS => {
                         serde_json::from_value::<crate::SheetsDetails>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_PLOTSTYLES_IMPORT => {
+                        serde_json::from_value::<crate::PlotStylesImport>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_CREATE => {
                         serde_json::from_value::<crate::SheetsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -16623,6 +16655,10 @@ mod tests {
                         }
                         crate::CAD_SHEETS_DETAILS => {
                             serde_json::from_value::<crate::SheetsDetailed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PLOTSTYLES_IMPORT => {
+                            serde_json::from_value::<crate::PlotStylesImported>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_UNITS_CHANGE => {

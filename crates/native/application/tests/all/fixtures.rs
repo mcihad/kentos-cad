@@ -99,7 +99,7 @@ use kentos_native_application::{
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
     openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
-    settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, sheets_details, slabs_create,
+    settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, sheets_details, plot_styles_import, slabs_create,
     slabs_edit, snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit,
     survey_adjust, survey_points, tables_edit, texts_check, texts_edit, time_version, transform,
     ucs_set, units_change, views_edit, walls_create, walls_distances, walls_edit, walls_from_lines,
@@ -1687,6 +1687,11 @@ impl Input for kentos_commands::LegendsMaterials {
 }
 
 impl Input for kentos_commands::SheetsDetails {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::PlotStylesImport {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -5800,6 +5805,7 @@ fn run_op(
         kentos_commands::CAD_SHEETS_FIT => run!(sheets_fit, SheetsFit),
         kentos_commands::CAD_SHEETS_LEVELS => run!(sheets_levels, kentos_commands::SheetsLevels),
         kentos_commands::CAD_SHEETS_DETAILS => run!(sheets_details, kentos_commands::SheetsDetails),
+        kentos_commands::CAD_PLOTSTYLES_IMPORT => run!(plot_styles_import, kentos_commands::PlotStylesImport),
         kentos_commands::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_commands::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
@@ -6588,6 +6594,31 @@ fn check(
                     serde_json::to_value(kentos_native_application::sheets_edit::sheets_in(doc))
                         .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, want, "paftalar", at)?;
+            }
+            // The book's plot profiles, and the profile each sheet's plot settings name (docs/adr/1130).
+            "plotProfiles" | "sheetProfiles" => {
+                let book = match doc.sheets() {
+                    Some(s) => kentos_sheet::project::read_project_sheets(s)
+                        .map_err(|e| format!("{at}: kitap okunamadı: {}", e.message))?
+                        .0,
+                    None => Default::default(),
+                };
+                let got = if key == "plotProfiles" {
+                    serde_json::to_value(&book.plot_profiles).map_err(|e| format!("{at}: {e}"))?
+                } else {
+                    Value::Object(
+                        book.sheets
+                            .iter()
+                            .map(|s| {
+                                (
+                                    s.id.clone(),
+                                    json!(s.plot.as_ref().and_then(|p| p.settings.profile.clone())),
+                                )
+                            })
+                            .collect(),
+                    )
+                };
+                expect_same(&got, want, key, at)?;
             }
             // The project's text and dimension styles without their ids: a new one's is a UUIDv7 (docs/adr/0312 §3).
             "styleNames" => {

@@ -2113,6 +2113,7 @@ impl App {
             Asking::TableEditor => self.table_editor_view(),
             Asking::Extract => self.extract_view(),
             Asking::SheetDetails => self.sheet_details_view(),
+            Asking::PlotStyles => self.plot_styles_view(),
             Asking::PointBatch => self.point_batch_view(),
         }
     }

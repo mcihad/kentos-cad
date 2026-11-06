@@ -13,8 +13,8 @@
 //! one step (“Tabloyu düzenle”).
 
 use iced::keyboard::key::Named;
-use iced::widget::{Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack};
-use iced::{Center, Element, Fill, Length, Task, Theme};
+use iced::widget::{Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack, text_editor};
+use iced::{Center, Element, Fill, Length, Padding, Task, Theme};
 use kentos_commands::{
     CommandResult, Entity, FieldSource, ProjectValue, SourceOverrides, TableAlign, TableEdit, TableEntity,
     TableGrid, TablesEdit, TablesOperation,
@@ -89,8 +89,10 @@ pub struct Editor {
     blocks: Vec<String>,
     active: (usize, usize),
     anchor: (usize, usize),
-    /// The bar's words, as typed.
+    /// The bar's words, as typed (a line break where Shift+Enter put one, docs/adr/1131).
     words: String,
+    /// The bar's editor: the same words with its cursor; set with [`Editor::set_words`].
+    bar: text_editor::Content,
     problem: Option<String>,
     /// The grid's vertical scroll, logical pixels.
     scroll: f32,
@@ -160,6 +162,8 @@ pub enum Event {
     /// A double click on a cell: its words in the bar.
     Write,
     Words(String),
+    /// An edit or a move in the bar's editor.
+    Bar(text_editor::Action),
     /// Enter in the bar: the words written, the cell below.
     Commit,
     Tool(Tool),
@@ -212,6 +216,13 @@ impl Editor {
     /// The cell holding a cell's words: a merged range's top left.
     fn owner(&self, (r, c): (usize, usize)) -> (usize, usize) {
         range_at(&self.draft, r, c).map_or((r, c), |g| (g.row, g.col))
+    }
+
+    /// The bar's words and its editor set together, the cursor at their end.
+    fn set_words(&mut self, words: String) {
+        self.bar = text_editor::Content::with_text(&words);
+        self.bar.perform(text_editor::Action::Move(text_editor::Motion::DocumentEnd));
+        self.words = words;
     }
 
     /// What the bar shows for a cell: its formula, else its words.
@@ -279,7 +290,7 @@ impl Editor {
         self.frame = self.draft.frame.map_or_else(String::new, |w| {
             kentos_geometry_core::display::fixed(w / self.scale * 1000.0, 2)
         });
-        self.words = self.words_at(self.owner(self.active));
+        self.set_words(self.words_at(self.owner(self.active)));
     }
 
     /// Moves the active cell by rows and columns, over merged ranges; with `extend` the anchor stays.
@@ -353,6 +364,7 @@ impl App {
             active: (0, 0),
             anchor: (0, 0),
             words: String::new(),
+            bar: text_editor::Content::new(),
             problem: None,
             scroll: 0.0,
             dragging: false,
@@ -536,13 +548,15 @@ impl App {
             }
             Event::Release => e.dragging = false,
             Event::Write => {
-                e.words = e.words_at(e.owner(e.active));
-                task = Task::batch([
-                    iced::widget::operation::focus(Id::new(BAR)),
-                    iced::widget::operation::move_cursor_to_end(Id::new(BAR)),
-                ]);
+                e.set_words(e.words_at(e.owner(e.active)));
+                task = iced::widget::operation::focus(Id::new(BAR));
             }
-            Event::Words(t) => e.words = t,
+            Event::Words(t) => e.set_words(t),
+            Event::Bar(action) => {
+                e.bar.perform(action);
+                // The editor's own line ending is the platform's; a cell's line break is `\n` (docs/adr/1030 §7).
+                e.words = e.bar.text().replace("\r\n", "\n");
+            }
             Event::Commit => {
                 // A schedule's cell that is not its objects' own field is read only (docs/adr/0733 §6).
                 if let Some(Err(why)) = self
@@ -551,7 +565,7 @@ impl App {
                     .and_then(|d| schedule_cell(&d.model, &e.saved, e.active))
                 {
                     e.problem = Some(why);
-                    e.words = e.words_at(e.active);
+                    e.set_words(e.words_at(e.active));
                     return Task::none();
                 }
                 group.extend(commit_edits(e));
@@ -571,7 +585,7 @@ impl App {
                 if bar {
                     match key {
                         Named::Escape => {
-                            e.words = e.words_at(e.owner(e.active));
+                            e.set_words(e.words_at(e.owner(e.active)));
                             task = iced::widget::operation::focus(Id::new("table-grid"));
                         }
                         Named::Tab => {
@@ -594,11 +608,8 @@ impl App {
                             e.step(1, 0, false);
                         }
                         Named::Enter | Named::F2 => {
-                            e.words = e.words_at(e.owner(e.active));
-                            task = Task::batch([
-                                iced::widget::operation::focus(Id::new(BAR)),
-                                iced::widget::operation::move_cursor_to_end(Id::new(BAR)),
-                            ]);
+                            e.set_words(e.words_at(e.owner(e.active)));
+                            task = iced::widget::operation::focus(Id::new(BAR));
                         }
                         Named::Delete | Named::Backspace => group.extend(clear_edits(e)),
                         Named::Escape => return self.table_editor_event(Event::Close),
@@ -608,11 +619,8 @@ impl App {
             }
             Event::Typed(t, bar) => {
                 if !bar {
-                    e.words = t;
-                    task = Task::batch([
-                        iced::widget::operation::focus(Id::new(BAR)),
-                        iced::widget::operation::move_cursor_to_end(Id::new(BAR)),
-                    ]);
+                    e.set_words(t);
+                    task = iced::widget::operation::focus(Id::new(BAR));
                 }
             }
             Event::Save => {
@@ -1119,11 +1127,15 @@ impl App {
                 .width(Length::Fixed(typography::scaled(72.0)))
                 .center_x(Length::Fixed(typography::scaled(72.0)))
                 .style(style::container::header),
-            kentos_ui::widget::text_field("", &e.words)
+            // Enter writes the cell, Shift+Enter breaks its line (docs/adr/1131); Tab and Esc are the window's.
+            text_editor(&e.bar)
                 .id(Id::new(BAR))
-                .on_input(|t| msg(Event::Words(t)))
-                .on_submit(msg(Event::Commit))
-                .width(Fill),
+                .on_action(|a| msg(Event::Bar(a)))
+                .key_binding(bar_keys)
+                .padding(Padding::from([5, 8]))
+                .height(Length::Shrink)
+                .max_height(typography::scaled(ROW_PX * 4.0))
+                .style(style::field::text_area),
         ]
         .spacing(8)
         .align_y(Center);
@@ -1217,7 +1229,9 @@ impl App {
                 let h = span_rows as f32 * row_px;
                 let active = top == e.active;
                 let chosen = in_range(i, j);
-                let mut text = label::body(words).wrapping(iced::widget::text::Wrapping::None);
+                // A cell's lines on its one row, a ↵ where each breaks.
+                let shown = if words.contains('\n') { words.replace('\n', " ↵ ") } else { words };
+                let mut text = label::body(shown).wrapping(iced::widget::text::Wrapping::None);
                 if look.bold.unwrap_or(heading) {
                     text = text.font(typography::ui_strong());
                 }
@@ -1419,7 +1433,7 @@ impl App {
             (None, Some(Ok(says))) => words::text_line(words::Kind::Ok, says),
             (None, Some(Err(why))) => words::text_line(words::Kind::Warn, why),
             (None, None) => label::caption(format!(
-                "{n} satır × {m} sütun; {} × {}. Çift tık, Enter ya da F2 hücreyi yazar, Shift ile alan seçilir.",
+                "{n} satır × {m} sütun; {} × {}. Çift tık, Enter ya da F2 hücreyi yazar, Shift+Enter hücrede yeni satır açar, Shift ile alan seçilir.",
                 format.length(width),
                 format.length(depth)
             ))
@@ -1507,6 +1521,19 @@ fn cell_note(e: &Editor) -> String {
 fn hex_color(hex: &str) -> iced::Color {
     let n = u32::from_str_radix(hex.trim_start_matches('#'), 16).unwrap_or(0);
     iced::Color::from_rgb8((n >> 16) as u8, (n >> 8) as u8, n as u8)
+}
+
+/// The bar's keys: Enter writes the cell (as the field's submit did), Shift+Enter or Alt+Enter breaks its line; Tab and Esc are left
+/// to the window (`table_editor_key`), the rest are the editor's own.
+fn bar_keys(press: text_editor::KeyPress) -> Option<text_editor::Binding<Message>> {
+    use iced::keyboard::Key;
+    match press.key.as_ref() {
+        // Shift+Enter, or Alt+Enter as AutoCAD's table cell takes it.
+        Key::Named(Named::Enter) if press.modifiers.shift() || press.modifiers.alt() => Some(text_editor::Binding::Enter),
+        Key::Named(Named::Enter) => Some(text_editor::Binding::Custom(msg(Event::Commit))),
+        Key::Named(Named::Tab | Named::Escape) => None,
+        _ => text_editor::Binding::from_key_press(press),
+    }
 }
 
 /// A toolbar button by its words (its tip, as the web's `aria-label`): a trace's `press`.
@@ -1959,3 +1986,7 @@ mod contrast_tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "editor_tests.rs"]
+mod tests;

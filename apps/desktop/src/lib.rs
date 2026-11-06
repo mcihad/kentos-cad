@@ -57,6 +57,7 @@ mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;
 mod sheet_details_window;
+mod plot_styles_window;
 mod flatten_window;
 mod xrefs_review_view;
 mod xrefs_watch;
@@ -734,6 +735,10 @@ mod arch_project_scenes;
 mod xref_scenes;
 #[cfg(test)]
 mod sheet_detail_scenes;
+#[cfg(test)]
+mod plot_style_scenes;
+#[cfg(test)]
+mod extract_tail_scenes;
 #[cfg(test)]
 mod flatten_scenes;
 #[cfg(test)]

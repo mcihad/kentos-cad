@@ -2673,6 +2673,10 @@
         "size": "small"
        },
        {
+        "command": "sheet.plotStyles",
+        "size": "small"
+       },
+       {
         "command": "sheet.levels",
         "size": "small",
         "works": [

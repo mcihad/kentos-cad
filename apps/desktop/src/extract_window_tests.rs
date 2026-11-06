@@ -106,6 +106,53 @@ fn the_window_previews_the_shared_recipe_without_writing_and_places_its_table() 
     assert!(app.dialog.is_none());
 }
 
+/// A drawing of more than `PREVIEW_INLINE` lines: the preview runs on its own thread (the window keeps its rows and
+/// says how far it is), Durdur stops it and says so, an older thread's answer is dropped and the newest is kept
+/// (docs/adr/1131 §3).
+#[test]
+fn a_large_drawing_previews_on_its_own_thread_and_durdur_stops_it() {
+    use crate::tables::extract::PREVIEW_INLINE;
+    use crate::tools_scenes::{E, N, Objects, open_edited};
+    let (mut app, _) = App::boot(None);
+    let mut o = Objects::new();
+    for k in 0..=PREVIEW_INLINE {
+        let y = N + k as f64;
+        o.push("cizim", serde_json::json!({ "kind": "line", "a": { "x": E, "y": y }, "b": { "x": E + 2.0, "y": y } }));
+    }
+    open_edited(&mut app, o, |_| {});
+    let _ = app.update(Message::Run("table.extract"));
+    send(&mut app, X::Kind("line", true));
+    let x = app.extract.as_ref().expect("open");
+    let (generation, watch) = x.running.clone().expect("on its own thread");
+    assert!(x.result.is_none(), "nothing yet");
+    send(&mut app, X::Stop);
+    let x = app.extract.as_ref().expect("open");
+    assert!(x.running.is_none());
+    assert!(watch.stop.load(std::sync::atomic::Ordering::Relaxed), "the thread is told to stop");
+    assert!(x.result.as_ref().is_some_and(|r| r.as_ref().is_err_and(|e| e.contains("durduruldu"))));
+    // Its answer, coming late, is not the window's any more; the next preview's is.
+    send(&mut app, X::Total(true));
+    let newest = app.extract.as_ref().and_then(|x| x.running.clone()).expect("a new preview").0;
+    assert!(newest > generation);
+    let late = Box::new(Some((kentos_commands::CommandResult::Cancelled, std::time::Duration::ZERO)));
+    send(&mut app, X::Previewed(generation, late));
+    assert!(app.extract.as_ref().is_some_and(|x| x.running.is_some()), "an older answer is dropped");
+    let doc = app.document.as_ref().expect("a drawing");
+    let input = kentos_commands::ExtractRun {
+        recipe: Some(app.extract.as_ref().expect("open").recipe()),
+        table: None,
+        base: None,
+        drawing_path: None,
+        expected_revision: None,
+    };
+    let answer = kentos_native_application::extract_run::plan_in(&doc.model, &input);
+    send(&mut app, X::Previewed(newest, Box::new(Some((answer, std::time::Duration::from_millis(5))))));
+    let x = app.extract.as_ref().expect("open");
+    assert!(x.running.is_none());
+    let out = x.result.clone().expect("an answer").expect("rows");
+    assert_eq!(out.occurrences as usize, PREVIEW_INLINE + 1, "every line, once");
+}
+
 /// The window with the parts list, the placed table broken into parts with its heading again, wide and narrow, light
 /// and dark; `.run/gui-evidence/cad-adv-13/`:
 ///

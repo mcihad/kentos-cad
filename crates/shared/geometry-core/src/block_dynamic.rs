@@ -572,6 +572,17 @@ impl Dynamic {
         entities: &[Entity],
         values: Option<&Params>,
     ) -> Vec<(Entity, usize)> {
+        self.vary_split(entities, values).0
+    }
+
+    /// [`Dynamic::vary_traced`] and the objects the visibility state hides, each where the actions put it. A piece is
+    /// hidden by its source's id, so an array action's copies of a hidden piece are hidden with it (docs/adr/1131 §2).
+    #[allow(clippy::type_complexity)]
+    pub fn vary_split(
+        &self,
+        entities: &[Entity],
+        values: Option<&Params>,
+    ) -> (Vec<(Entity, usize)>, Vec<(Entity, usize)>) {
         let mut out: Vec<Entity> = entities.to_vec();
         let mut sources: Vec<usize> = (0..out.len()).collect();
         let mut next_id = out
@@ -690,23 +701,28 @@ impl Dynamic {
                 _ => {}
             }
         }
-        // The visibility state's hidden objects (one visibility parameter at most).
-        for p in &self.parameters {
-            if let Parameter::Visibility { states, .. } = p
-                && let Some(ParamValue::Text(state)) = self.value(p, values)
-                && let Some((_, hidden)) = states.iter().find(|(n, _)| *n == state)
-            {
-                let kept: Vec<bool> = out
-                    .iter()
-                    .map(|e| local_id(e).is_none_or(|id| !hidden.contains(&id)))
-                    .collect();
-                let mut k = kept.iter();
-                out.retain(|_| *k.next().unwrap_or(&true));
-                let mut k = kept.iter();
-                sources.retain(|_| *k.next().unwrap_or(&true));
+        // The visibility state's hidden objects (one visibility parameter at most), by the id of the object each is or
+        // was copied from.
+        let mut drawn = Vec::with_capacity(out.len());
+        let mut hidden_out = Vec::new();
+        let hides = self.parameters.iter().find_map(|p| match p {
+            Parameter::Visibility { states, .. } => match self.value(p, values) {
+                Some(ParamValue::Text(state)) => {
+                    states.iter().find(|(n, _)| *n == state).map(|(_, h)| h)
+                }
+                _ => None,
+            },
+            _ => None,
+        });
+        for (e, source) in out.into_iter().zip(sources) {
+            let id = entities.get(source).and_then(local_id);
+            if hides.is_some_and(|h| id.is_some_and(|id| h.contains(&id))) {
+                hidden_out.push((e, source));
+            } else {
+                drawn.push((e, source));
             }
         }
-        out.into_iter().zip(sources).collect()
+        (drawn, hidden_out)
     }
 }
 

@@ -75705,6 +75705,309 @@
       ]
     },
     {
+      "id": "cad.plotstyles.import",
+      "version": 1,
+      "title": "Baskı stili tablosu içe aktar",
+      "summary": "AutoCAD'in ikili baskı stili tablosunu (.ctb renge bağlı, ACI 1–255 için 255 kalem; .stb adlı stiller) pafta kitabına bir baskı profili olarak alır (docs/adr/1130). Dosya yalnız okunur: 60 baytlık üst bilgi (PIAFILEVERSION_2.0,CTBVER1|STBVER1,compress, pmzlibcodec, üç küçük-sonlu u32) ve zlib ile sıkıştırılmış ad=değer metni. Her alan açıkça eşlenir: renk (-1 nesnenin; 0xC2/0xC3 türlü RGB #rrggbb), gri tonlama, tarama (yalnız titreşim açıkken), kalınlık (kalınlık tablosunun mm değeri µm'ye; 0 nesnenin), uç/birleşim (elmas yok), çizgi tipi (0 sürekli, 31 nesnenin; 1–30 eşlenmez). KentOS'un başka bastığı her şey losses'ta türü, ağırlığı (lost, approximate, note), stilleri ve dosyadaki değerleriyle söylenir; sessiz kırpma yoktur. Profil dosyanın biçimini, SHA-256'sını ve adını taşır. assignments kalemleri ya da stilleri model katmanlarına ({type:modelLayer,id}) veya kâğıt öğelerine açıkça verir (katmanın RGB'sinden kalem tahmin edilmez); sheets profili paftalara uygular, yayın onunla basar. Kitabın tek değişikliğidir; inverse geri alır. Plan yazmaz. Aynı ad ya da aynı dosya ikinci kez duplicate_plot_profile; .ctb/.stb olmayan dosya unsupported_plot_style_file; bozuk üst bilgi, metin ya da alan bad_plot_style_file.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.plotstyles.import` v1.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_input` (an empty path or name),\n`file_not_found`, `file_unreadable`, then the reader's (`plot_style_file_too_large`, `unsupported_plot_style_file`,\n`bad_plot_style_file`, `plot_style_encoding`, `plot_style_kind_mismatch`, `duplicate_plot_style`,\n`plot_profile_too_large`), `book_unreadable`, `duplicate_plot_profile` (a profile of that name, or the same file\nalready imported), `layer_not_found` / `unknown_item` (an assignment's target), `bad_plot_assignment` (a target\ntwice, or a pen or style the table lacks), `unknown_sheet`.",
+        "properties": {
+          "assignments": {
+            "default": [],
+            "description": "Pens or styles given to model layers (`{target:{type:\"modelLayer\", id}, key:{type:\"aci\", index}}`) or paper\nitems; a CTB pen is never guessed from a layer's RGB colour (docs/adr/0609).",
+            "items": {
+              "$ref": "#/$defs/PaperPlotAssignment"
+            },
+            "type": "array"
+          },
+          "base": {
+            "description": "The folder a relative path is read from (the drawing's).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The profile's name; absent: the file's name without its extension.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The `.ctb` or `.stb` file: as given when absolute, else from `base`.",
+            "type": "string"
+          },
+          "sheets": {
+            "default": [],
+            "description": "The sheets the profile is applied to (their plot settings name it and hold its copy), by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "PlotStylesImport",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.plotstyles.import` v1 (its plan's too): the book change, the profile and what the reading said.",
+        "properties": {
+          "applied": {
+            "description": "The sheets the profile was applied to.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "The table's own description.",
+            "type": "string"
+          },
+          "exact": {
+            "description": "Styles carried without a lost or approximate field.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "format": {
+            "description": "`ctb` or `stb`.",
+            "type": "string"
+          },
+          "inverse": {
+            "description": "The operations that take the change back, in the order to apply them\n(an input of this command again).",
+            "items": true,
+            "type": "array"
+          },
+          "inversePictures": {
+            "description": "Previous embedded bytes when the operation changed them. Restore together with inverse operations,\npassing these as pictures and replacePictures=true. Omitted when bytes did not change.",
+            "items": {
+              "$ref": "#/$defs/SheetPicture"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "label": {
+            "description": "What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).",
+            "type": "string"
+          },
+          "losses": {
+            "description": "What KentOS plots otherwise, by kind: its severity, words, the styles it touches and the file's values.",
+            "items": {
+              "$ref": "#/$defs/PaperPlotLoss"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "$ref": "#/$defs/PaperPlotProfile",
+            "description": "The profile written to the book, with its source."
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The book's sheets after the change, in its order.",
+            "items": {
+              "$ref": "#/$defs/SheetInfo"
+            },
+            "type": "array"
+          },
+          "styles": {
+            "description": "Styles in the file (a CTB's 255 pens; a STB's, Normal among them).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "label",
+          "inverse",
+          "sheets",
+          "revision",
+          "profile",
+          "format",
+          "description",
+          "styles",
+          "exact",
+          "losses",
+          "applied"
+        ],
+        "title": "PlotStylesImported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.plotstyles.import` v1 (its plan's too): the book change, the profile and what the reading said.",
+        "properties": {
+          "applied": {
+            "description": "The sheets the profile was applied to.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "The table's own description.",
+            "type": "string"
+          },
+          "exact": {
+            "description": "Styles carried without a lost or approximate field.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "format": {
+            "description": "`ctb` or `stb`.",
+            "type": "string"
+          },
+          "inverse": {
+            "description": "The operations that take the change back, in the order to apply them\n(an input of this command again).",
+            "items": true,
+            "type": "array"
+          },
+          "inversePictures": {
+            "description": "Previous embedded bytes when the operation changed them. Restore together with inverse operations,\npassing these as pictures and replacePictures=true. Omitted when bytes did not change.",
+            "items": {
+              "$ref": "#/$defs/SheetPicture"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "label": {
+            "description": "What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).",
+            "type": "string"
+          },
+          "losses": {
+            "description": "What KentOS plots otherwise, by kind: its severity, words, the styles it touches and the file's values.",
+            "items": {
+              "$ref": "#/$defs/PaperPlotLoss"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "$ref": "#/$defs/PaperPlotProfile",
+            "description": "The profile written to the book, with its source."
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The book's sheets after the change, in its order.",
+            "items": {
+              "$ref": "#/$defs/SheetInfo"
+            },
+            "type": "array"
+          },
+          "styles": {
+            "description": "Styles in the file (a CTB's 255 pens; a STB's, Normal among them).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "label",
+          "inverse",
+          "sheets",
+          "revision",
+          "profile",
+          "format",
+          "description",
+          "styles",
+          "exact",
+          "losses",
+          "applied"
+        ],
+        "title": "PlotStylesImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "file_not_found",
+          "file_unreadable",
+          "plot_style_file_too_large",
+          "unsupported_plot_style_file",
+          "bad_plot_style_file",
+          "plot_style_encoding",
+          "plot_style_kind_mismatch",
+          "duplicate_plot_style",
+          "plot_profile_too_large",
+          "book_unreadable",
+          "duplicate_plot_profile",
+          "layer_not_found",
+          "unknown_item",
+          "bad_plot_assignment",
+          "unknown_sheet"
+        ],
+        "warnings": [
+          "plot_style_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Siyah-beyaz CTB'yi al, 1. kalemi Duvar katmanına ver ve A-101 paftasına uygula",
+          "input": {
+            "assignments": [
+              {
+                "key": {
+                  "index": 1,
+                  "type": "aci"
+                },
+                "target": {
+                  "id": "duvar",
+                  "type": "modelLayer"
+                }
+              }
+            ],
+            "path": "siyah.ctb",
+            "sheets": [
+              "a-101"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sheets.edit",
       "version": 1,
       "title": "Pafta kitabı",
@@ -98234,6 +98537,66 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Yenileme elle girilen bir değeri ya da kullanıcı satırını kaybettirecekti; tablo olduğu gibi kaldı."
+    },
+    {
+      "code": "plot_style_file_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Baskı stili tablosu 4 MiB sınırını aşıyor."
+    },
+    {
+      "code": "unsupported_plot_style_file",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya bir AutoCAD baskı stili tablosu (.ctb/.stb) değil."
+    },
+    {
+      "code": "bad_plot_style_file",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Baskı stili tablosu okunamadı: üst bilgisi, sıkıştırılmış metni ya da bir alanı bozuk."
+    },
+    {
+      "code": "plot_style_encoding",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablonun metni UTF-8 değil; kod sayfası bilinmediği için adlar okunamaz."
+    },
+    {
+      "code": "plot_style_kind_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Üst bilgi ile tablonun türü çelişiyor: CTB renge bağlı, STB adlı tablodur."
+    },
+    {
+      "code": "duplicate_plot_style",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aynı baskı stili tabloda iki kez var."
+    },
+    {
+      "code": "plot_profile_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Baskı profili 4096 stil ya da 100000 atama sınırını aşıyor."
+    },
+    {
+      "code": "duplicate_plot_profile",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kitapta bu adda ya da aynı dosyadan alınmış bir baskı profili var."
+    },
+    {
+      "code": "bad_plot_assignment",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Atamanın hedefi tek olmalı; atanan kalem ya da stil tabloda bulunmalı."
+    },
+    {
+      "code": "plot_style_losses",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tablonun bazı alanları KentOS'ta aynı basılmıyor; rapor her birini adıyla söylüyor."
     },
     {
       "code": "legacy_file",
@@ -151166,6 +151529,87 @@
         }
       ]
     },
+    "PaperPlotLoss": {
+      "description": "One line of the report: a kind, the styles it touches (an ACI as its number, a named style by its name) and the\nfile's values that made it, each once in first-seen order.",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/PaperPlotLossKind"
+        },
+        "severity": {
+          "$ref": "#/$defs/PaperPlotLossSeverity"
+        },
+        "styles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "words": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "severity",
+        "words",
+        "styles",
+        "values"
+      ],
+      "type": "object"
+    },
+    "PaperPlotLossKind": {
+      "description": "What a report line is about, in the order the report lists them (docs/adr/1130 §3).",
+      "enum": [
+        "colorKind",
+        "modeColor",
+        "grayscale",
+        "grayscaleColor",
+        "dither",
+        "screenWithoutDither",
+        "policyBits",
+        "physicalPen",
+        "virtualPen",
+        "linetype",
+        "lineweightOutside",
+        "lineweightRounded",
+        "endStyle",
+        "joinStyle",
+        "fillStyle",
+        "description",
+        "normalChanged",
+        "unknownField",
+        "scaleFactor",
+        "checksum",
+        "length"
+      ],
+      "type": "string"
+    },
+    "PaperPlotLossSeverity": {
+      "description": "How much a reported field differs from what AutoCAD plots.",
+      "oneOf": [
+        {
+          "const": "lost",
+          "description": "Not carried: the object's own look is plotted instead.",
+          "type": "string"
+        },
+        {
+          "const": "approximate",
+          "description": "Carried by KentOS's nearest rule, which may differ from AutoCAD's.",
+          "type": "string"
+        },
+        {
+          "const": "note",
+          "description": "Said for the record; what is plotted is the same.",
+          "type": "string"
+        }
+      ]
+    },
     "PaperPlotProfile": {
       "additionalProperties": false,
       "properties": {
@@ -151196,6 +151640,17 @@
         },
         "name": {
           "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaperPlotSource"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The AutoCAD table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a\nprofile made in KentOS."
         }
       },
       "required": [
@@ -151302,6 +151757,29 @@
       },
       "type": "object"
     },
+    "PaperPlotSource": {
+      "additionalProperties": false,
+      "description": "Where an imported profile came from: the file's format, the SHA-256 of its bytes and its name (docs/adr/0609 §1).",
+      "properties": {
+        "file": {
+          "description": "The file's name, without its folder.",
+          "type": "string"
+        },
+        "format": {
+          "$ref": "#/$defs/PaperPlotStyleFormat"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "sha256",
+        "file"
+      ],
+      "type": "object"
+    },
     "PaperPlotStyle": {
       "additionalProperties": false,
       "properties": {
@@ -151386,6 +151864,14 @@
         "style"
       ],
       "type": "object"
+    },
+    "PaperPlotStyleFormat": {
+      "description": "Which AutoCAD table a file is.",
+      "enum": [
+        "ctb",
+        "stb"
+      ],
+      "type": "string"
     },
     "PaperPlotStyleKey": {
       "oneOf": [

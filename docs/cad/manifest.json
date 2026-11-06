@@ -9041,6 +9041,22 @@
    "tests": 0
   },
   {
+   "id": "sheet.plotStyles",
+   "kind": "command",
+   "title": "Baskı stili tablosu…",
+   "level": "semantic",
+   "via": [
+    "cad.plotstyles.import"
+   ],
+   "operation": null,
+   "python": "kentos.cad.plotstyles.import",
+   "mcp": "cad.plotstyles.import",
+   "note": "Pencere tabloyu cad.plotstyles.import'un planıyla yazmadan önizler; İçe aktar aynı girdiyle komutu çalıştırır, profil ve paftaların baskı ayarı tek geri alma adımıdır (ADR 1130). Python ve MCP aynı komutu kullanır.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "sheet.preflight",
    "kind": "command",
    "title": "Ön denetim",

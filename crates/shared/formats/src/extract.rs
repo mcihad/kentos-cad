@@ -12,6 +12,7 @@
 //! cells round them (`display::fixed`).
 
 use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use kentos_contracts::{
     ArrayCount, AssocArray, BlockDefinition, DimensionEntity, Entity, ExtractValue,
@@ -77,6 +78,9 @@ pub struct Row {
 pub struct Notes {
     /// Pieces a visibility state hides and objects on a hidden or frozen layer that would have been counted.
     pub hidden: usize,
+    /// Of those, the pieces a dynamic block's visibility state hides (an array action's copies of them too,
+    /// docs/adr/1131 §2).
+    pub hidden_states: usize,
     /// External references whose content was not loaded, by block name.
     pub unloaded: Vec<String>,
     /// External references not looked into because the recipe reads their drawing itself, by block name.
@@ -228,6 +232,8 @@ struct Frame<'a> {
     similar: bool,
     layer: Option<&'a str>,
     hidden: bool,
+    /// Hidden by a dynamic block's visibility state, here or above.
+    state: bool,
     depth: usize,
 }
 
@@ -294,6 +300,9 @@ impl<'a> Walk<'a, '_> {
             if takes {
                 if hidden && !self.recipe.scope.hidden {
                     self.notes.hidden += 1;
+                    if frame.state {
+                        self.notes.hidden_states += 1;
+                    }
                 } else if self.counted(path.clone()) {
                     let occurrence = self.read(e, core, def, layer_name, &path, frame);
                     self.out.push(occurrence);
@@ -333,6 +342,9 @@ impl<'a> Walk<'a, '_> {
         }
         if hidden && !self.recipe.scope.hidden {
             self.notes.hidden += 1;
+            if frame.state {
+                self.notes.hidden_states += 1;
+            }
             return;
         }
         if self.counted(path.clone()) {
@@ -379,6 +391,7 @@ impl<'a> Walk<'a, '_> {
             similar: frame.similar && y_scale.is_none_or(|y| y == *scale),
             layer: Some(layer_id),
             hidden,
+            state: frame.state,
             depth: frame.depth + 1,
         };
         let xref = def.xref.as_ref();
@@ -402,31 +415,28 @@ impl<'a> Walk<'a, '_> {
             })
             .collect();
         let params = core_params(&i.parameters);
-        let varied = d.vary_traced(&cores, params.as_ref());
-        let mut drawn = vec![false; def.entities.len()];
-        for (e, source) in &varied {
-            let Some(piece) = def.entities.get(*source) else {
-                continue;
-            };
-            drawn[*source] = true;
-            let id = e
-                .rest
-                .iter()
-                .find_map(|(k, v)| match (k.as_str(), v) {
-                    ("id", Json::Num(n)) if *n >= 0.0 => Some(*n as u32),
-                    _ => None,
-                })
-                .unwrap_or(piece.base().id);
-            self.visit(piece, Some(&e.shape), segment(*source, id), &next);
-        }
-        // What the visibility state hides: counted only with `scope.hidden`, as defined (no action moved it).
+        // The pieces as the values draw them, and those the visibility state hides where the actions put them (an
+        // array action's copies of a hidden piece are hidden too, docs/adr/1131 §2): counted only with `scope.hidden`.
+        let (drawn, hidden) = d.vary_split(&cores, params.as_ref());
         let hidden_frame = Frame {
             hidden: true,
+            state: true,
             ..next.clone()
         };
-        for (k, piece) in def.entities.iter().enumerate() {
-            if !drawn[k] {
-                self.visit(piece, None, segment(k, piece.base().id), &hidden_frame);
+        for (list, at) in [(&drawn, &next), (&hidden, &hidden_frame)] {
+            for (e, source) in list {
+                let Some(piece) = def.entities.get(*source) else {
+                    continue;
+                };
+                let id = e
+                    .rest
+                    .iter()
+                    .find_map(|(k, v)| match (k.as_str(), v) {
+                        ("id", Json::Num(n)) if *n >= 0.0 => Some(*n as u32),
+                        _ => None,
+                    })
+                    .unwrap_or(piece.base().id);
+                self.visit(piece, Some(&e.shape), segment(*source, id), at);
             }
         }
     }
@@ -654,6 +664,21 @@ fn joined(
     }))
 }
 
+/// How far a running extraction is and whether it is to stop (docs/adr/1131 §3): `total` the drawings' top-level
+/// objects, `done` those walked; `stop` is looked at every [`WATCH_EVERY`] objects, and a stopped extraction answers
+/// [`CANCELLED`] with nothing half made.
+#[derive(Debug, Default)]
+pub struct Watch {
+    pub done: AtomicUsize,
+    pub total: AtomicUsize,
+    pub stop: AtomicBool,
+}
+
+/// How many top-level objects are walked between two looks at [`Watch::stop`].
+pub const WATCH_EVERY: usize = 256;
+/// The refusal of a stopped extraction.
+pub const CANCELLED: &str = "cancelled";
+
 /// Works `recipe` out over `drawings` (the open one first when it reads it), `join` the joined table's rows (its
 /// first its headings) when it joins one. `shown` writes a dimension's text as the project shows it (its prefix,
 /// unit and measured value given).
@@ -664,6 +689,21 @@ pub fn extract(
     decimals: Decimals,
     shown: &dyn Fn(&DimensionEntity, &str, &str, f64) -> String,
 ) -> Result<Extracted, Refusal> {
+    extract_watched(recipe, drawings, join, decimals, shown, &Watch::default())
+}
+
+/// [`extract`] that says how far it is and stops when asked (`watch`).
+pub fn extract_watched(
+    recipe: &ExtractionRecipe,
+    drawings: &[Drawing<'_>],
+    join: Option<&[Vec<String>]>,
+    decimals: Decimals,
+    shown: &dyn Fn(&DimensionEntity, &str, &str, f64) -> String,
+    watch: &Watch,
+) -> Result<Extracted, Refusal> {
+    watch
+        .total
+        .store(drawings.iter().map(|d| d.objects.len()).sum(), Ordering::Relaxed);
     if let Some((at, words)) = kentos_contracts::extraction_recipe_problem(recipe) {
         return Err(("invalid_extraction_recipe", at, words));
     }
@@ -709,10 +749,15 @@ pub fn extract(
             similar: true,
             layer: None,
             hidden: false,
+            state: false,
             depth: 0,
         };
         let mut placed_arrays = vec![false; d.arrays.len()];
-        for (uid, e) in &d.objects {
+        for (n, (uid, e)) in d.objects.iter().enumerate() {
+            watch.done.fetch_add(1, Ordering::Relaxed);
+            if n % WATCH_EVERY == 0 && watch.stop.load(Ordering::Relaxed) {
+                return Err((CANCELLED, "recipe".into(), "Veri çıkarımı durduruldu; tablo yazılmadı.".into()));
+            }
             if let Some(&k) = item_of.get(uid) {
                 if !placed_arrays[k] {
                     placed_arrays[k] = true;

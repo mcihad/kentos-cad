@@ -1,4 +1,5 @@
 //! Native, versioned plot tables: indexed colours and named styles are different key spaces.
+pub mod acad;
 pub mod apply;
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "ts")]
@@ -147,6 +148,11 @@ pub struct PlotProfile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub default_style: Option<String>,
+    /// The AutoCAD table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
+    /// profile made in KentOS.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<acad::PlotSource>,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -238,6 +244,16 @@ pub fn validate(p: &PlotProfile) -> Result<()> {
         return Err(bad(
             "unknown_plot_style",
             "Varsayılan adlı baskı stili tabloda yok.",
+        ));
+    }
+    if let Some(src) = &p.source
+        && (src.sha256.len() != 64
+            || !src.sha256.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            || !name(&src.file))
+    {
+        return Err(bad(
+            "bad_plot_profile",
+            "Profilin kaynağı 64 haneli küçük harfli SHA-256 ve bir dosya adı taşımalı.",
         ));
     }
     let mut targets = std::collections::BTreeSet::new();

@@ -4728,6 +4728,61 @@ PaperPictureFitName = Literal["stretch", "contain", "cover", "original"]
 """The names of :class:`PaperPictureFit`, for a plain string."""
 
 
+class PaperPlotLossKind(_StrEnum):
+    """What a report line is about, in the order the report lists them (docs/adr/1130 §3)."""
+    COLOR_KIND = "colorKind"
+    MODE_COLOR = "modeColor"
+    GRAYSCALE = "grayscale"
+    GRAYSCALE_COLOR = "grayscaleColor"
+    DITHER = "dither"
+    SCREEN_WITHOUT_DITHER = "screenWithoutDither"
+    POLICY_BITS = "policyBits"
+    PHYSICAL_PEN = "physicalPen"
+    VIRTUAL_PEN = "virtualPen"
+    LINETYPE = "linetype"
+    LINEWEIGHT_OUTSIDE = "lineweightOutside"
+    LINEWEIGHT_ROUNDED = "lineweightRounded"
+    END_STYLE = "endStyle"
+    JOIN_STYLE = "joinStyle"
+    FILL_STYLE = "fillStyle"
+    DESCRIPTION = "description"
+    NORMAL_CHANGED = "normalChanged"
+    UNKNOWN_FIELD = "unknownField"
+    SCALE_FACTOR = "scaleFactor"
+    CHECKSUM = "checksum"
+    LENGTH = "length"
+
+
+PaperPlotLossKindName = Literal["colorKind", "modeColor", "grayscale", "grayscaleColor", "dither", "screenWithoutDither", "policyBits", "physicalPen", "virtualPen", "linetype", "lineweightOutside", "lineweightRounded", "endStyle", "joinStyle", "fillStyle", "description", "normalChanged", "unknownField", "scaleFactor", "checksum", "length"]
+"""The names of :class:`PaperPlotLossKind`, for a plain string."""
+
+
+class PaperPlotLossSeverity(_StrEnum):
+    """How much a reported field differs from what AutoCAD plots.
+
+    - ``lost``: Not carried: the object's own look is plotted instead.
+    - ``approximate``: Carried by KentOS's nearest rule, which may differ from AutoCAD's.
+    - ``note``: Said for the record; what is plotted is the same.
+    """
+    LOST = "lost"
+    APPROXIMATE = "approximate"
+    NOTE = "note"
+
+
+PaperPlotLossSeverityName = Literal["lost", "approximate", "note"]
+"""The names of :class:`PaperPlotLossSeverity`, for a plain string."""
+
+
+class PaperPlotStyleFormat(_StrEnum):
+    """Which AutoCAD table a file is."""
+    CTB = "ctb"
+    STB = "stb"
+
+
+PaperPlotStyleFormatName = Literal["ctb", "stb"]
+"""The names of :class:`PaperPlotStyleFormat`, for a plain string."""
+
+
 class PaperPlotTableKind(_StrEnum):
     COLOR_DEPENDENT = "colorDependent"
     NAMED = "named"
@@ -58188,13 +58243,50 @@ class PaperPlotAssignment(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PaperPlotLoss(_Model):
+    """One line of the report: a kind, the styles it touches (an ACI as its number, a named style by its name) and the
+    file's values that made it, each once in first-seen order.
+    """
+    kind: PaperPlotLossKind | PaperPlotLossKindName
+    severity: PaperPlotLossSeverity | PaperPlotLossSeverityName
+    words: str
+    styles: list[str]
+    values: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["severity"] = _enum_out(self.severity)
+        out["words"] = self.words
+        out["styles"] = list(self.styles)
+        out["values"] = list(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotLoss:
+        return cls(
+            kind=_enum_in(PaperPlotLossKind, data["kind"]),
+            severity=_enum_in(PaperPlotLossSeverity, data["severity"]),
+            words=data["words"],
+            styles=list(data["styles"]),
+            values=list(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PaperPlotProfile(_Model):
+    """
+    Attributes:
+        source: The AutoCAD table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
+            profile made in KentOS.
+    """
     id: str
     name: str
     kind: PaperPlotTableKind | PaperPlotTableKindName
     entries: list[PaperPlotStyleEntry]
     assignments: list[PaperPlotAssignment] = field(default_factory=list)
     default_style: str | None | Unset = UNSET
+    source: PaperPlotSource | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -58205,6 +58297,8 @@ class PaperPlotProfile(_Model):
         out["assignments"] = [e0.to_json() for e0 in self.assignments]
         if self.default_style is not UNSET:
             out["defaultStyle"] = self.default_style
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
         return out
 
     @classmethod
@@ -58216,6 +58310,7 @@ class PaperPlotProfile(_Model):
             entries=[PaperPlotStyleEntry.from_json(e0) for e0 in data["entries"]],
             assignments=[PaperPlotAssignment.from_json(e0) for e0 in data["assignments"]] if "assignments" in data else list(),
             default_style=data.get("defaultStyle", UNSET),
+            source=UNSET if "source" not in data else None if data["source"] is None else PaperPlotSource.from_json(data["source"]),
         )
 
 
@@ -58256,6 +58351,32 @@ class PaperPlotSettings(_Model):
             profile=data.get("profile", UNSET),
             profile_snapshot=UNSET if "profileSnapshot" not in data else None if data["profileSnapshot"] is None else PaperPlotProfile.from_json(data["profileSnapshot"]),
             scale=PaperPlotScale.from_json(data["scale"]) if "scale" in data else (lambda: PaperPlotScale.from_json({'ratio': {'model': 1.0, 'paper': 1.0}, 'type': 'ratio'}))(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PaperPlotSource(_Model):
+    """Where an imported profile came from: the file's format, the SHA-256 of its bytes and its name (docs/adr/0609 §1).
+    Attributes:
+        file: The file's name, without its folder.
+    """
+    format: PaperPlotStyleFormat | PaperPlotStyleFormatName
+    sha256: str
+    file: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = _enum_out(self.format)
+        out["sha256"] = self.sha256
+        out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PaperPlotSource:
+        return cls(
+            format=_enum_in(PaperPlotStyleFormat, data["format"]),
+            sha256=data["sha256"],
+            file=data["file"],
         )
 
 
@@ -61246,6 +61367,123 @@ class PlatformsWritten(_Model):
             platforms=[PlatformListed.from_json(e0) for e0 in data["platforms"]],
             revision=data["revision"],
             platform=UNSET if "platform" not in data else None if data["platform"] is None else PlatformReport.from_json(data["platform"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlotStylesImport(_Model):
+    """Input of `cad.plotstyles.import` v1.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_input` (an empty path or name),
+    `file_not_found`, `file_unreadable`, then the reader's (`plot_style_file_too_large`, `unsupported_plot_style_file`,
+    `bad_plot_style_file`, `plot_style_encoding`, `plot_style_kind_mismatch`, `duplicate_plot_style`,
+    `plot_profile_too_large`), `book_unreadable`, `duplicate_plot_profile` (a profile of that name, or the same file
+    already imported), `layer_not_found` / `unknown_item` (an assignment's target), `bad_plot_assignment` (a target
+    twice, or a pen or style the table lacks), `unknown_sheet`.
+    Attributes:
+        path: The `.ctb` or `.stb` file: as given when absolute, else from `base`.
+        assignments: Pens or styles given to model layers (`{target:{type:"modelLayer", id}, key:{type:"aci", index}}`) or paper
+            items; a CTB pen is never guessed from a layer's RGB colour (docs/adr/0609).
+        base: The folder a relative path is read from (the drawing's).
+        name: The profile's name; absent: the file's name without its extension.
+        sheets: The sheets the profile is applied to (their plot settings name it and hold its copy), by id.
+    """
+    path: str
+    assignments: list[PaperPlotAssignment] = field(default_factory=list)
+    base: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    sheets: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["assignments"] = [e0.to_json() for e0 in self.assignments]
+        if self.base is not UNSET:
+            out["base"] = self.base
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        out["sheets"] = list(self.sheets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlotStylesImport:
+        return cls(
+            path=data["path"],
+            assignments=[PaperPlotAssignment.from_json(e0) for e0 in data["assignments"]] if "assignments" in data else list(),
+            base=data.get("base", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            sheets=list(data["sheets"]) if "sheets" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlotStylesImported(_Model):
+    """Output of `cad.plotstyles.import` v1 (its plan's too): the book change, the profile and what the reading said.
+    Attributes:
+        label: What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).
+        inverse: The operations that take the change back, in the order to apply them
+            (an input of this command again).
+        sheets: The book's sheets after the change, in its order.
+        revision: The document's revision after the write, as decimal text.
+        profile: The profile written to the book, with its source.
+        format: `ctb` or `stb`.
+        description: The table's own description.
+        styles: Styles in the file (a CTB's 255 pens; a STB's, Normal among them). Unit: count.
+        exact: Styles carried without a lost or approximate field. Unit: count.
+        losses: What KentOS plots otherwise, by kind: its severity, words, the styles it touches and the file's values.
+        applied: The sheets the profile was applied to.
+        inverse_pictures: Previous embedded bytes when the operation changed them. Restore together with inverse operations,
+            passing these as pictures and replacePictures=true. Omitted when bytes did not change.
+    """
+    label: str
+    inverse: list[Any]
+    sheets: list[SheetInfo]
+    revision: str
+    profile: PaperPlotProfile
+    format: str
+    description: str
+    styles: int
+    exact: int
+    losses: list[PaperPlotLoss]
+    applied: list[str]
+    inverse_pictures: list[SheetPicture] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["inverse"] = list(self.inverse)
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["revision"] = self.revision
+        out["profile"] = self.profile.to_json()
+        out["format"] = self.format
+        out["description"] = self.description
+        out["styles"] = self.styles
+        out["exact"] = self.exact
+        out["losses"] = [e0.to_json() for e0 in self.losses]
+        out["applied"] = list(self.applied)
+        if self.inverse_pictures is not UNSET:
+            out["inversePictures"] = None if self.inverse_pictures is None else [e0.to_json() for e0 in self.inverse_pictures]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlotStylesImported:
+        return cls(
+            label=data["label"],
+            inverse=list(data["inverse"]),
+            sheets=[SheetInfo.from_json(e0) for e0 in data["sheets"]],
+            revision=data["revision"],
+            profile=PaperPlotProfile.from_json(data["profile"]),
+            format=data["format"],
+            description=data["description"],
+            styles=data["styles"],
+            exact=data["exact"],
+            losses=[PaperPlotLoss.from_json(e0) for e0 in data["losses"]],
+            applied=list(data["applied"]),
+            inverse_pictures=UNSET if "inversePictures" not in data else None if data["inversePictures"] is None else [SheetPicture.from_json(e0) for e0 in data["inversePictures"]],
         )
 
 
@@ -117516,11 +117754,19 @@ __all__ = [
     "PaperPlotArea",
     "PaperPlotAssignment",
     "PaperPlotColor",
+    "PaperPlotLoss",
+    "PaperPlotLossKind",
+    "PaperPlotLossKindName",
+    "PaperPlotLossSeverity",
+    "PaperPlotLossSeverityName",
     "PaperPlotProfile",
     "PaperPlotScale",
     "PaperPlotSettings",
+    "PaperPlotSource",
     "PaperPlotStyle",
     "PaperPlotStyleEntry",
+    "PaperPlotStyleFormat",
+    "PaperPlotStyleFormatName",
     "PaperPlotStyleKey",
     "PaperPlotTableKind",
     "PaperPlotTableKindName",
@@ -117685,6 +117931,8 @@ __all__ = [
     "PlatformsQueried",
     "PlatformsQuery",
     "PlatformsWritten",
+    "PlotStylesImport",
+    "PlotStylesImported",
     "PointBinding",
     "PointBlockParameter",
     "PointCadElement",

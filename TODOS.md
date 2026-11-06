@@ -82,6 +82,15 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-ADV-16 / ADR 1112: masaüstündeki Detay paftaları penceresinin (`sheet.details`) web karşılığı — detay listesi,
   kesin oran, seçimden %5 paylı kapsam, tablo parçaları, detay başına katman durumu/dondurma/açıklama, kâğıt önizlemesi;
   `cad.sheets.set.table.json` ortak durumlarının web oynatıcısı.
+- CAD-ADV-16 / ADR 1130: `cad.plotstyles.import` işleyicisi (WASM'da aynı `kentos_sheet::plot_profile::acad::read`),
+  `PlotProfile.source` (biçim, SHA-256, dosya adı) için `io/` ve pafta tasarımcısının Baskı profilleri penceresi, Baskı
+  stili tablosu penceresi (`sheet.plotStyles`: kalem/stil önizlemesi, kayıp satırları, katmana elle kalem, paftaya
+  uygulama), `cad.plotstyles.import.json`'un 37 ortak durumu ve `plotstyles/` tablolarının web oynatıcısı. TS türleri
+  üretildi (`PlotStylesImport`, `PlotStylesImported`, `sheet/Plot{Source,Loss,LossKind,LossSeverity,StyleFormat,StyleRead}`).
+- CAD-ADV-13 / ADR 1131: Tabloyu düzenle'nin çok satırlı çubuğu (Shift+Enter / Alt+Enter satır sonu, ızgarada ↵);
+  `cad.extract.run`'ın `notes.hiddenStates`'i ve gizli sayının nedenli sözü; dinamik bloğun görünürlük durumunun dizi
+  eyleminin kopyalarını da gizlemesi (`Dynamic::vary_split`, web çizicisi WASM yeniden derlenince aynı kuralı alır);
+  büyük çizimde önizlemenin Worker'da ilerleme ve Durdur ile çalışması (`extract_watched`'ın `Watch`'ı).
 - CAD-ADV-14 / ADR 1060: Dış başvurular penceresinin inceleme, aday ve önizleme kartı; `resetLayers`; subref'in
   `piece_gone` kuralının web oynatıcısı (`fixtures/subref/v1`) ve WASM yeniden derlemesi (TS türleri üretildi).
 - CAD-ADV-15 / ADR 1000: `.kcad` şema 180 `settings.reviewNotes`, `cad.review.notes.edit/list` ve
