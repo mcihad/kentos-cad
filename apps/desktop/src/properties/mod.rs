@@ -439,6 +439,10 @@ pub(crate) struct InspectScope {
     epoch: u64,
 }
 
+/// Past this many objects of a selection Öznitelikler shows its size and kinds only (AutoCAD's PROPOBJLIMIT default,
+/// docs/adr/1027).
+pub(crate) const PROPERTIES_LIMIT: usize = 25_000;
+
 impl App {
     fn properties_key(&self, doc: &Document) -> PanelKey {
         (doc.session, doc.model.generation(), self.selection.version(), self.properties_scope.epoch)
@@ -494,6 +498,44 @@ impl App {
         let mut types = BTreeMap::<&'static str, usize>::new();
         for (kind, n) in counts {
             *types.entry(kind).or_default() += n;
+        }
+        // Past the limit (AutoCAD's PROPOBJLIMIT, docs/adr/1027): the selection's size and kinds only, no values and no
+        // editors — working out and comparing a million objects' values took most of a select-all.
+        if selected.len() > PROPERTIES_LIMIT {
+            let total: usize = types.values().sum();
+            let kinds = types
+                .iter()
+                .map(|(k, n)| format!("{n} {}", rows::kind_lower(crate::selecting::kind_title(k))))
+                .collect::<Vec<_>>()
+                .join(", ");
+            // The objects on locked layers, each layer looked up once.
+            let layers = doc.model.layers();
+            let mut locked_layers: std::collections::HashMap<&str, bool> = std::collections::HashMap::new();
+            let locked = selected
+                .iter()
+                .filter_map(|s| doc.model.get(*s))
+                .filter(|e| {
+                    let id = e.base().layer_id.as_str();
+                    *locked_layers.entry(id).or_insert_with(|| layers.is_locked(id))
+                })
+                .count();
+            return rows::Panel {
+                summary: rows::Summary::Many { count: total, kinds },
+                meta: Some(format!("{total} nesne")),
+                sections: vec![rows::Section {
+                    id: "large-selection".into(),
+                    title: "Büyük seçim".into(),
+                    rows: vec![
+                        Row::note(&format!("{} nesne seçili.", selected.len())),
+                        Row::note(&format!("Değerler en çok {PROPERTIES_LIMIT} nesnede gösterilir.")),
+                        Row::note("Seçimi ya da tür seçimini daraltın."),
+                        Row::note("Ya da komut kullanın (Katmana taşı)."),
+                    ],
+                }],
+                types: types.into_iter().collect(),
+                total,
+                editable: total - locked,
+            };
         }
         // The program's own rows (module_surfaces.rs).
         let shown = rows::Shown {

@@ -61,6 +61,10 @@ const HOVER_ALPHA: f64 = 0.85;
 const HIGHLIGHT_MARK: f32 = 15.0;
 /// A selection this large is highlighted on several cores (docs/adr/0123).
 const PARALLEL_FROM: usize = 2048;
+/// Past this many selected objects the selection is highlighted as the box round it, not object by object
+/// (AutoCAD's SELECTIONPREVIEWLIMIT default, docs/adr/1027): building a million objects' highlight held the screen
+/// for over half a second.
+pub(crate) const HIGHLIGHT_LIMIT: usize = 20_000;
 
 impl Viewport {
     /// The selection's part and the hovered object's, from the cache when
@@ -127,8 +131,21 @@ impl Viewport {
                     mark_shape: ring,
                 };
                 // A large selection (select all, a window over a map) is built on
-                // the machine's cores; the part is the one built in turn.
-                let part = if selection.len() >= PARALLEL_FROM {
+                // the machine's cores; the part is the one built in turn. Past the limit, the box round it alone.
+                let boxed = (selection.len() > HIGHLIGHT_LIMIT)
+                    .then(|| spatial.and_then(|sp| selection_box(sp, selection.ids())))
+                    .flatten();
+                let part = if let Some(frame) = boxed {
+                    let style = Highlight { fill: None, ..style };
+                    Arc::new(scene::build_highlight(
+                        vec![&frame],
+                        &style,
+                        fixed.origin,
+                        curves.tolerance,
+                        key.below,
+                        clip,
+                    ))
+                } else if selection.len() >= PARALLEL_FROM {
                     let threads = std::thread::available_parallelism()
                         .map_or(1, |n| n.get())
                         .clamp(1, 8);
@@ -187,6 +204,26 @@ impl Viewport {
         };
         (selected, hovered)
     }
+}
+
+/// The box round the selected objects as the geometry store keeps their bounds (docs/adr/1027): one closed area.
+/// None when none of them is in the store.
+fn selection_box(spatial: &Spatial, ids: &[Slot]) -> Option<Entity> {
+    let store = spatial.store();
+    let (mut lo, mut hi) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
+    for slot in ids {
+        if let Some(it) = store.get(f64::from(slot.0)) {
+            let b = &it.bounds;
+            lo = [lo[0].min(b.min_x), lo[1].min(b.min_y)];
+            hi = [hi[0].max(b.max_x), hi[1].max(b.max_y)];
+        }
+    }
+    if !(lo[0] <= hi[0] && lo[1] <= hi[1]) {
+        return None;
+    }
+    serde_json::from_value(serde_json::json!({"kind": "polygon", "id": 0, "layerId": "", "attrs": {},
+        "pts": [{"x": lo[0], "y": lo[1]}, {"x": hi[0], "y": lo[1]}, {"x": hi[0], "y": hi[1]}, {"x": lo[0], "y": hi[1]}]}))
+    .ok()
 }
 
 /// The objects moved into the map's system (docs/adr/0583 §3), their vertices; none without a map. An object whose
@@ -285,6 +322,30 @@ pub(crate) fn objects_of_parallel<'a>(
 
 #[cfg(test)]
 mod tests {
+    /// docs/adr/1027: past the limit the selection is highlighted as the box round it: the box is the store's bounds of
+    /// the selected objects (30 001 lines in a 300 × 100 m grid), a single closed area.
+    #[test]
+    fn a_selection_past_the_limit_is_highlighted_as_its_box() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let mut o = crate::tools_scenes::Objects::new();
+        for k in 0..30_001u32 {
+            let (x, y) = (f64::from(k % 300), f64::from(k / 300));
+            o.line("cizim", [x, y], [x + 0.5, y + 0.25]);
+        }
+        crate::tools_scenes::open(&mut app, o);
+        let ids: Vec<Slot> = (1..=30_001).map(Slot).collect();
+        assert!(ids.len() > super::HIGHLIGHT_LIMIT);
+        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        let frame = super::selection_box(&app.spatial, &ids).expect("a box");
+        let kentos_commands::Entity::Polygon(p) = frame else { panic!("a closed area") };
+        let (e, n) = (crate::tools_scenes::E, crate::tools_scenes::N);
+        let xs: Vec<f64> = p.pts.iter().map(|q| q.x - e).collect();
+        let ys: Vec<f64> = p.pts.iter().map(|q| q.y - n).collect();
+        let near = |a: f64, b: f64| (a - b).abs() < 1e-6;
+        assert!(near(xs.iter().cloned().fold(f64::INFINITY, f64::min), 0.0) && near(xs.iter().cloned().fold(f64::MIN, f64::max), 299.5));
+        assert!(near(ys.iter().cloned().fold(f64::INFINITY, f64::min), 0.0) && near(ys.iter().cloned().fold(f64::MIN, f64::max), 100.25));
+    }
+
     use iced::{Point, Rectangle};
     use kentos_commands::Entity;
     use kentos_render_wgpu::RenderSettings;

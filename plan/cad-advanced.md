@@ -2966,6 +2966,11 @@ bugünkü kareyle piksel piksel aynıdır (`perf::stability` doğrular); kaydır
 10,8 → 2,8 ms; bellek görünüm başına bir resim (~3 MB). **Tutmayan:** 10⁶'da uzak tekerlek (65 ms), Hepsini seç ve
 açılışın ilk karesi 60 Hz'de değil. Madde `[~]`.
 
+**Büyük seçim sınırı (6 Kasım 2026, [ADR 1027](../docs/adr/1027-large-selection-limits.md); sahibin kararı):**
+25 000 nesneyi aşan seçimde Öznitelikler yalnız sayıyı ve türleri, 20 000'i aşan seçimde vurgu seçimin kutusunu
+gösterir (AutoCAD PROPOBJLIMIT/SELECTIONPREVIEWLIMIT varsayılanları); tutamaç sınırı zaten 150. İki test ve resim.
+10⁶ Tümünü seç ölçümü yakınlaştırmada resim yeniden kullanma işiyle birlikte alınacak (sahip “Evet, büyüt” dedi).
+
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].

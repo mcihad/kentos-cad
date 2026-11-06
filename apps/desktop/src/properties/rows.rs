@@ -311,7 +311,7 @@ pub(crate) fn panel(
 }
 
 /// A kind's title in lower case, as Turkish writes it (`toLocaleLowerCase('tr-TR')`).
-fn kind_lower(title: &str) -> String {
+pub(crate) fn kind_lower(title: &str) -> String {
     title
         .chars()
         .flat_map(|c| match c {
