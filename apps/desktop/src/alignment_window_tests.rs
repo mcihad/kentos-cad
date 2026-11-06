@@ -677,3 +677,54 @@ fn screens_speed() {
         println!("{}", file.display());
     }
 }
+
+/// Güzergâh after a LandXML file's roadway speeds came in (docs/adr/0988): Proje hızı 80, p1's V 50;
+/// `.run/gui-evidence/yol-y82/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib alignment_window_tests::screens_landxml_speeds -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_landxml_speeds() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y82");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/road/v1/landxml/aks-hiz.xml");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app(serde_json::json!([]));
+        let input = kentos_commands::AlignmentsImport {
+            path: file.display().to_string(),
+            alignments: None,
+            without_profiles: true,
+            expected_revision: None,
+        };
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let done = kentos_native_application::road_alignments_import::execute(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            input,
+        );
+        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+        let a = &alignments(&app)[0];
+        assert_eq!((a.design_speed, a.pis[1].speed), (Some(80.0), Some(50.0)));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::PiChoose(1));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y82-landxml-hiz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

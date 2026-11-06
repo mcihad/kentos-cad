@@ -2545,6 +2545,74 @@
    ]
   },
   {
+   "name": "Yolun proje hızları: aksın 80, kurbun 50",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:road/v1/landxml/aks-hiz.xml"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "alignments": [
+        {
+         "id": "g-1",
+         "name": "Ana aks",
+         "pis": [
+          {
+           "id": "a",
+           "x": 20.0,
+           "y": 50.0
+          },
+          {
+           "id": "p1",
+           "x": 300.0,
+           "y": 60.0,
+           "radius": 150.0,
+           "spiralIn": 40.0,
+           "spiralOut": 40.0,
+           "speed": 50.0
+          },
+          {
+           "id": "b",
+           "x": 560.0,
+           "y": 360.0
+          }
+         ],
+         "elements": 5,
+         "deviation": 0.0,
+         "profiles": []
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "landxml_left",
+        "path": "alignments",
+        "message": "“Ana aks” aksının 250 km/sa'lik proje hızı alınmadı: 0'dan büyük, en çok 200 km/sa olmalı."
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "LandXML aks al",
+     "expect": {
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
    "name": "Yol projesi değil",
    "steps": [
     {

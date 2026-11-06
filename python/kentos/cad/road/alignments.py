@@ -953,14 +953,18 @@ class _RoadAlignmentsImport(LocalCommand[AlignmentsImport, AlignmentsImported, A
     KentOS aksı olarak alır: PI'lar elemanlardan bulunur (her aliymanlar arası kurp
     grubu bir PI: giriş ve çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı,
     klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks
-    dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km
-    denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol,
-    asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir.
-    alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan
-    bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi
-    ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”.
-    Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment,
-    invalid_alignment, invalid_revision, revision_conflict.
+    dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı).
+    Aksı adıyla anan Roadway'in DesignSpeed'leri (Imperial'da mil/saat, metersPerSecond
+    3,6 ile km/sa'e çevrilir) en uzun aralığınki aksın proje hızı, dairesel kısmının
+    ortası başka hızlı aralığa düşen kurbun kendi hızı olur; 0'dan büyük, en çok 200
+    km/sa olmayan landxml_left ile alınmaz (ADR 0988). Km denklemleri ve withoutProfiles
+    verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler
+    iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer
+    (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid,
+    klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile
+    söylenir. Tek geri alma adımı “LandXML aks al”. Retler: not_a_road_project,
+    file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.alignments.import"
@@ -987,14 +991,18 @@ class _RoadAlignmentsImport(LocalCommand[AlignmentsImport, AlignmentsImported, A
         elemanlardan bulunur (her aliymanlar arası kurp grubu bir PI: giriş ve çıkış
         teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla
         buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks dosyanın elemanlarıyla uç uca
-        karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km denklemleri ve
-        withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol,
-        daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın
-        akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters
-        kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz,
-        landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”. Retler:
-        not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment,
-        invalid_alignment, invalid_revision, revision_conflict.
+        karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Aksı adıyla anan Roadway'in
+        DesignSpeed'leri (Imperial'da mil/saat, metersPerSecond 3,6 ile km/sa'e çevrilir) en
+        uzun aralığınki aksın proje hızı, dairesel kısmının ortası başka hızlı aralığa düşen
+        kurbun kendi hızı olur; 0'dan büyük, en çok 200 km/sa olmayan landxml_left ile
+        alınmaz (ADR 0988). Km denklemleri ve withoutProfiles verilmezse boykesitleri
+        (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna
+        çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi).
+        Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan
+        geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri
+        alma adımı “LandXML aks al”. Retler: not_a_road_project, file_not_found,
+        import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.

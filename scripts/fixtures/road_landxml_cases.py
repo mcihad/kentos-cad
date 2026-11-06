@@ -314,6 +314,7 @@ def check_written():
 
 IMPORT_OUT = ROOT / "fixtures/commands/v1/road.alignments.import.json"
 AKS = HERE / "aks.xml"
+AKS_HIZ = HERE / "aks-hiz.xml"
 STEPPED = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
 
 
@@ -410,6 +411,24 @@ def aks_xml():
             + "".join(parts) + "</Alignments></LandXML>\n")
 
 
+def aks_hiz_xml():
+    """Docs/adr/0988: Ana aks with a roadway's design speeds, 80 km/h but 50 over its curve's middle, and one of
+    250 km/h that is left."""
+    g1 = pcmd.ALIGNED["g-1"]
+    st = [float(x) for x in g1.reports[0]["stations"]]
+    mid = (st[1] + st[2]) / 2
+    assert 250 < mid < 350, mid
+    speeds = ('<DesignSpeed staStart="1000" staEnd="1250" speed="80"/><DesignSpeed staStart="1250" staEnd="1350" speed="50"/>'
+              f'<DesignSpeed staStart="1350" staEnd="{fmt(1000 + float(g1.length))}" speed="80"/>'
+              '<DesignSpeed staStart="1000" staEnd="1010" speed="250"/>')
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n<LandXML xmlns="http://www.landxml.org/schema/LandXML-1.2" '
+            'date="2026-11-06" time="09:00:00" version="1.2"><Units><Metric areaUnit="squareMeter" linearUnit="meter" '
+            'volumeUnit="cubicMeter" temperatureUnit="celsius" pressureUnit="milliBars" velocityUnit="kilometersPerHour"/>'
+            '</Units><Alignments>' + alignment_xml("Ana aks", g1, 1000) + '</Alignments>'
+            '<Roadways><Roadway name="Ana aks" alignmentRefs="Ana aks"><Speeds>' + speeds
+            + '</Speeds></Roadway></Roadways></LandXML>\n')
+
+
 def import_setup(with_alignments=False, work="road"):
     base = ccmd.setup([], work=work)
     base["name"] = "Yol alışverişi"
@@ -499,6 +518,15 @@ def import_cases():
     ok("KentOS'un yazdığı LandXML'in bütün aksları boykesitleriyle", {"path": yol}, ["Ana aks", "Yan aks", "Dar kurp"],
        table=OURS)
 
+    # Docs/adr/0988: a roadway's design speeds: the alignment's the longest stretch's (80), p1's the 50 over its middle;
+    # the 250 is left and said.
+    hiz = f"$fixture:road/v1/landxml/{AKS_HIZ.name}"
+    fast = [{**p, "speed": 50.0} if p["id"] == "p1" else p for p in defined("g-1")]
+    ok("Yolun proje hızları: aksın 80, kurbun 50", {"path": hiz}, ["Ana aks"], table={"Ana aks": (fast, 5, [])})
+    cases[-1]["steps"][0]["result"]["warnings"].insert(0, {
+        "code": "landxml_left", "path": "alignments",
+        "message": "“Ana aks” aksının 250 km/sa'lik proje hızı alınmadı: 0'dan büyük, en çok 200 km/sa olmalı."})
+
     def no(name, input_, result, setup_=None):
         cases.append(case(name, [step("execute", input_, result, UNCHANGED)], setup_))
 
@@ -541,13 +569,15 @@ def main():
     data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
-        if OUT.read_text(encoding="utf-8") != text or AKS.read_text(encoding="utf-8") != aks_xml():
+        if (OUT.read_text(encoding="utf-8") != text or AKS.read_text(encoding="utf-8") != aks_xml()
+                or not AKS_HIZ.exists() or AKS_HIZ.read_text(encoding="utf-8") != aks_hiz_xml()):
             raise SystemExit(f"{OUT} ya da {AKS} güncel değil: python3 {Path(__file__).name}")
         print(f"{OUT.name}: {len(data['cases'])} durum güncel")
         return
     OUT.write_text(text, encoding="utf-8")
     print(f"{OUT.name}: {len(data['cases'])} durum")
     AKS.write_text(aks_xml(), encoding="utf-8")
+    AKS_HIZ.write_text(aks_hiz_xml(), encoding="utf-8")
     data = {"format": "kentos.command-cases", "version": 1, "command": "road.alignments.import", "commandVersion": 1,
             "title": "LandXML'den aks al",
             "note": "scripts/fixtures/road_landxml_cases.py yazar; aks.xml'i başvurunun 40 basamaklı elemanlarından KentOS "

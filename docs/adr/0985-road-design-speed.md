@@ -82,8 +82,8 @@ kutu V'yi yazamıyordu.
 
 - ~~**Denetimlerin hızı aksından okuması:**~~ Y80, ADR 0986. `road.alignments.check`, dever ve genişleme önerileri, görüş mesafesi hızı hâlâ
   parametre olarak alır (ROAD-ALIGN-11).
-- **Km aralığıyla hız** (Civil 3D'nin Design Speeds tablosu, LandXML `DesignSpeed`): bugün aks + kurp. LandXML'den hız
-  okunmuyor.
+- **Km aralığıyla hız** (Civil 3D'nin Design Speeds tablosu): bugün aks + kurp. LandXML `DesignSpeed` Y82'de okunur ve
+  yazılır (ADR 0988).
 - **Kutunun tamamını örten maske:** kısa bir satırın yanındaki nokta görünür. Doğru çözüm alan maskesi (wipeout), ama
   haritanın kopyasına nesne yazan `NewObject` maske taşımıyor.
 - **Proje hızı önerisi** (yol sınıfı, arazi): El Kitabı'nın tablosu okunamadı.

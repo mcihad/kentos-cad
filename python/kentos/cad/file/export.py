@@ -1903,11 +1903,13 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
     kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si
     + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste
     hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa
-    şimdi, UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün
-    yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan
-    yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Retler:
-    not_a_road_project, invalid_file_path, file_exists, unknown_terrain,
-    unknown_alignment, invalid_landxml.
+    şimdi, UTC). Aksın proje hızı ve kurplarının kendi hızları
+    Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı
+    TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks
+    LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına
+    yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi
+    değiştirmez ve geri alma adımı değildir. Retler: not_a_road_project,
+    invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml.
     """
     __slots__ = ()
     id = "file.export.landxml"
@@ -1940,9 +1942,12 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık).
         surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri);
         withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi,
-        UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya
-        da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan
-        söyler. Çizimi değiştirmez ve geri alma adımı değildir. Retler: not_a_road_project,
+        UTC). Aksın proje hızı ve kurplarının kendi hızları
+        Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı
+        TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks
+        LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına
+        yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi
+        değiştirmez ve geri alma adımı değildir. Retler: not_a_road_project,
         invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml.
 
         Args:
